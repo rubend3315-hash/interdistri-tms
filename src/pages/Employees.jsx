@@ -858,31 +858,59 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {contractregels.filter(c => c.status !== 'Inactief').map((contract, index) => (
-                    <tr key={index} className="border-b hover:bg-slate-50">
-                      <td className="py-2 px-3 text-slate-900">
-                        {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
-                      </td>
-                      <td className="py-2 px-3 text-slate-900">
-                        {contract.einddatum ? format(new Date(contract.einddatum), 'dd-MM-yyyy') : '-'}
-                      </td>
-                      <td className="py-2 px-3 text-slate-900">{contract.type_contract}</td>
-                      <td className="py-2 px-3 text-slate-900">{contract.loonschaal || '-'}</td>
-                      <td className="py-2 px-3 text-slate-900">{contract.uren_per_week}</td>
-                      <td className="py-2 px-3 text-center">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setEditingContract({ ...contract, index: contractregels.indexOf(contract) });
-                            setShowContractDialog(true);
-                          }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                  {contractregels.filter(c => c.status !== 'Inactief').map((contract, index) => {
+                    const contractIndex = contractregels.indexOf(contract);
+                    const week1Days = contract.week1 ? Object.entries(contract.week1)
+                      .filter(([, checked]) => checked)
+                      .map(([day]) => day.charAt(0).toUpperCase())
+                      .join('') : '-';
+                    const week2Days = contract.week2 ? Object.entries(contract.week2)
+                      .filter(([, checked]) => checked)
+                      .map(([day]) => day.charAt(0).toUpperCase())
+                      .join('') : '-';
+                    
+                    return (
+                      <React.Fragment key={index}>
+                        <tr className="border-b hover:bg-slate-50">
+                          <td className="py-2 px-3 text-slate-900">
+                            {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
+                          </td>
+                          <td className="py-2 px-3 text-slate-900">
+                            {contract.einddatum ? format(new Date(contract.einddatum), 'dd-MM-yyyy') : '-'}
+                          </td>
+                          <td className="py-2 px-3 text-slate-900">{contract.type_contract}</td>
+                          <td className="py-2 px-3 text-slate-900">{contract.loonschaal || '-'}</td>
+                          <td className="py-2 px-3 text-slate-900">{contract.uren_per_week}</td>
+                          <td className="py-2 px-3 text-center">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setEditingContract({ ...contract, index: contractIndex });
+                                setShowContractDialog(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                        <tr className="bg-slate-50/50 border-b">
+                          <td colSpan="6" className="py-2 px-3">
+                            <div className="flex gap-6 text-xs">
+                              <div>
+                                <p className="text-slate-500 font-medium">Week 1 (oneven):</p>
+                                <p className="text-slate-700">{week1Days}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 font-medium">Week 2 (even):</p>
+                                <p className="text-slate-700">{week2Days}</p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
