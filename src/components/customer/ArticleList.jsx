@@ -4,9 +4,11 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit2, Trash2, Eye } from "lucide-react";
+import { Plus, Edit2, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
 import ArticleForm from "@/components/customer/ArticleForm";
+import { getValidPriceRule } from "@/components/utils/priceRuleUtils";
 
 export default function ArticleList({ customerId }) {
   const [showForm, setShowForm] = useState(false);
