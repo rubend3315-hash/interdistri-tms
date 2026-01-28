@@ -485,7 +485,7 @@ function ProfielTab({ employee, viewOnly }) {
   );
 }
 
-function EmployeeForm({ employee, onSubmit, isSubmitting }) {
+function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
   const [formData, setFormData] = useState(employee || {
     employee_number: '',
     initials: '',
