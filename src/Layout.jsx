@@ -47,6 +47,7 @@ const menuItems = [
       { name: "Medewerkers", icon: Users, page: "Employees" },
       { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
       { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
+      { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
     ]
   },
   {
