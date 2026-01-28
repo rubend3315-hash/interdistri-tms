@@ -190,7 +190,7 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
 
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Gegevensvoorbeeld</Label>
-                <div className="overflow-x-auto border rounded-lg" style={{ maxHeight: "640px", overflowY: "auto" }}>
+                <div className="overflow-x-auto border rounded-lg" style={{ maxHeight: "1600px", overflowY: "auto" }}>
                     <table className="w-full text-xs">
                     <thead className="bg-slate-100 sticky top-0">
                       <tr>
