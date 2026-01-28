@@ -58,6 +58,11 @@ import NiwoPermits from './pages/NiwoPermits';
 import Customers from './pages/Customers';
 import Projects from './pages/Projects';
 import Trips from './pages/Trips';
+import CaoRules from './pages/CaoRules';
+import SalaryTables from './pages/SalaryTables';
+import Holidays from './pages/Holidays';
+import SalaryReports from './pages/SalaryReports';
+import MobileEntry from './pages/MobileEntry';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +78,11 @@ export const PAGES = {
     "Customers": Customers,
     "Projects": Projects,
     "Trips": Trips,
+    "CaoRules": CaoRules,
+    "SalaryTables": SalaryTables,
+    "Holidays": Holidays,
+    "SalaryReports": SalaryReports,
+    "MobileEntry": MobileEntry,
 }
 
 export const pagesConfig = {
