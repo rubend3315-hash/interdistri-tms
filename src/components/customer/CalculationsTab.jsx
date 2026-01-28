@@ -29,14 +29,14 @@ export default function CalculationsTab({ customerId }) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Type periode</Label>
-            <Select value={periodType} onValueChange={setPeriodType}>
+            <Select value={periodType || ""} onValueChange={setPeriodType}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecteer periode type" />
               </SelectTrigger>
               <SelectContent>
-                {periodTypes.map(type => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
+                <SelectItem value="Dag">Dag</SelectItem>
+                <SelectItem value="Week">Week</SelectItem>
+                <SelectItem value="Periode">Periode</SelectItem>
               </SelectContent>
             </Select>
           </div>
