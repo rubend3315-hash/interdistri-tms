@@ -33,6 +33,15 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Validate data before saving
+      const errors = validateImportData(parseResult.rawData, parseResult.columns);
+      
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        setShowValidation(true);
+        throw new Error('Validatiefouten gevonden');
+      }
+
       return base44.entities.CustomerImport.create({
         customer_id: customerId,
         import_name: importName,
