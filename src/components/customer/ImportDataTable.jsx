@@ -130,16 +130,18 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
                 </tr>
               ) : (
                 filteredData.map((row, idx) => (
-                  <tr key={idx} className="border-t hover:bg-slate-50">
-                    <td className="px-3 py-2 text-slate-600 font-medium">{idx + 1}</td>
-                    {columns.map(col => (
-                      <td
-                        key={`${idx}-${col}`}
-                        className="px-3 py-2 text-slate-600 whitespace-nowrap overflow-hidden text-ellipsis max-w-xs"
-                      >
-                        {row[col]}
-                      </td>
-                    ))}
+                   <tr key={idx} className="border-t hover:bg-slate-50">
+                     <td className="px-3 py-2 text-slate-600 font-medium">{idx + 1}</td>
+                     {columns.map(col => (
+                       <td
+                         key={`${idx}-${col}`}
+                         className="px-3 py-2 text-slate-600 whitespace-nowrap overflow-hidden text-ellipsis max-w-xs"
+                       >
+                         {typeof row[col] === 'number' && (row[col] > 30000 && row[col] < 50000) 
+                           ? convertExcelDate(row[col])
+                           : row[col]}
+                       </td>
+                     ))}
                     <td className="px-3 py-2 text-slate-600 whitespace-nowrap text-xs font-medium">
                       {row._importName}
                     </td>
