@@ -23,7 +23,9 @@ import {
   Edit,
   Package,
   ChevronRight,
-  Trash2
+  Trash2,
+  Upload,
+  X
 } from "lucide-react";
 
 export default function Customers() {
@@ -60,6 +62,7 @@ export default function Customers() {
 
   const [formData, setFormData] = useState({
     company_name: "",
+    logo_url: "",
     contact_person: "",
     email: "",
     phone: "",
@@ -78,6 +81,7 @@ export default function Customers() {
   const resetForm = () => {
     setFormData({
       company_name: "",
+      logo_url: "",
       contact_person: "",
       email: "",
       phone: "",
@@ -190,16 +194,20 @@ export default function Customers() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
            {filteredCustomers.map(customer => (
              <Card 
-               key={customer.id} 
-               className="hover:shadow-md transition-shadow group cursor-pointer"
-               onClick={() => navigate(`${createPageUrl('CustomerDetail')}?id=${customer.id}`)}
+             key={customer.id} 
+             className="hover:shadow-md transition-shadow group cursor-pointer"
+             onClick={() => navigate(`${createPageUrl('CustomerDetail')}?id=${customer.id}`)}
              >
-               <CardContent className="p-5">
-                 <div className="flex items-start justify-between">
-                   <div className="flex items-start gap-3 flex-1">
+             <CardContent className="p-5">
+               <div className="flex items-start justify-between">
+                 <div className="flex items-start gap-3 flex-1">
+                   {customer.logo_url ? (
+                     <img src={customer.logo_url} alt={customer.company_name} className="w-12 h-12 rounded-xl object-contain bg-slate-100 flex-shrink-0" />
+                   ) : (
                      <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
                        <Building2 className="w-6 h-6 text-slate-600" />
                      </div>
+                   )}
                      <div className="flex-1">
                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
                          {customer.company_name}
@@ -262,16 +270,53 @@ export default function Customers() {
           </DialogHeader>
           
           <ScrollArea className="h-[60vh] px-6 py-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Bedrijfsnaam *</Label>
-                  <Input
-                    value={formData.company_name}
-                    onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                    required
-                  />
-                </div>
+           <form onSubmit={handleSubmit} className="space-y-4">
+             <div className="space-y-2">
+               <Label>Logo</Label>
+               <div className="flex items-center gap-3">
+                 {formData.logo_url && (
+                   <div className="relative w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center">
+                     <img src={formData.logo_url} alt="Logo" className="w-14 h-14 object-contain" />
+                     <button
+                       type="button"
+                       onClick={() => setFormData({ ...formData, logo_url: "" })}
+                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                     >
+                       <X className="w-3 h-3" />
+                     </button>
+                   </div>
+                 )}
+                 <div className="flex-1">
+                   <input
+                     type="file"
+                     accept="image/*"
+                     onChange={async (e) => {
+                       const file = e.target.files?.[0];
+                       if (file) {
+                         const response = await base44.integrations.Core.UploadFile({ file });
+                         setFormData({ ...formData, logo_url: response.file_url });
+                       }
+                     }}
+                     className="block w-full text-sm text-slate-500
+                       file:mr-4 file:py-2 file:px-4
+                       file:rounded-md file:border-0
+                       file:text-sm file:font-semibold
+                       file:bg-blue-50 file:text-blue-700
+                       hover:file:bg-blue-100"
+                   />
+                 </div>
+               </div>
+             </div>
+
+             <div className="grid grid-cols-2 gap-4">
+               <div className="space-y-2">
+                 <Label>Bedrijfsnaam *</Label>
+                 <Input
+                   value={formData.company_name}
+                   onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                   required
+                 />
+               </div>
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select 
