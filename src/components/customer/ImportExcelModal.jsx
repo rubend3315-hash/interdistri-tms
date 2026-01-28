@@ -75,6 +75,20 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Check for duplicate import
+      const isDuplicate = existingImports.some(imp => 
+        imp.file_name === file.name && imp.total_rows === parseResult.rawData.length
+      );
+      
+      if (isDuplicate) {
+        setValidationErrors([{
+          row: 0,
+          errors: ['Dit bestand is al eerder geïmporteerd. Geen dubbele import toegestaan.']
+        }]);
+        setShowValidation(true);
+        throw new Error('Dubbele import gedetecteerd');
+      }
+
       // Validate data before saving
       const errors = validateImportData(parseResult.rawData, parseResult.columns);
       
