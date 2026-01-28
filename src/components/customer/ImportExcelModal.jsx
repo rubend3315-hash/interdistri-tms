@@ -14,8 +14,6 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
   const [file, setFile] = useState(null);
   const [importName, setImportName] = useState("");
   const [parseResult, setParseResult] = useState(null);
-  const [columnMapping, setColumnMapping] = useState({});
-  const [selectedColumns, setSelectedColumns] = useState(new Set());
   const queryClient = useQueryClient();
 
   const parseMutation = useMutation({
