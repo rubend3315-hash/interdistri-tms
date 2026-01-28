@@ -6,20 +6,30 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 
 const convertExcelDate = (excelDate) => {
-  if (typeof excelDate === 'string') {
-    // If it's already a string date, convert to DD-MM-YYYY
-    const date = new Date(excelDate);
-    return format(date, 'dd-MM-yyyy', { locale: nl });
+  try {
+    if (typeof excelDate === 'string') {
+      // If it's already a string date, convert to DD-MM-YYYY
+      const date = new Date(excelDate);
+      if (isNaN(date.getTime())) {
+        return excelDate;
+      }
+      return format(date, 'dd-MM-yyyy', { locale: nl });
+    }
+    
+    if (typeof excelDate === 'number') {
+      // Excel date numbers (days since Jan 1, 1900)
+      const excelEpoch = new Date(1900, 0, 1);
+      const date = new Date(excelEpoch.getTime() + excelDate * 86400000);
+      if (isNaN(date.getTime())) {
+        return excelDate;
+      }
+      return format(date, 'dd-MM-yyyy', { locale: nl });
+    }
+    
+    return excelDate;
+  } catch (error) {
+    return excelDate;
   }
-  
-  if (typeof excelDate === 'number') {
-    // Excel date numbers (days since Jan 1, 1900)
-    const excelEpoch = new Date(1900, 0, 1);
-    const date = new Date(excelEpoch.getTime() + excelDate * 86400000);
-    return format(date, 'dd-MM-yyyy', { locale: nl });
-  }
-  
-  return excelDate;
 };
 
 export default function ImportDataTable({ imports, onDelete, periodType = "all", selectedDate = "", startDate = "", endDate = "" }) {
