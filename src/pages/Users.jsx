@@ -531,17 +531,17 @@ function RoleMatrixDialog() {
   const categories = ['Basis', 'Beheer', 'Rapportage', 'Admin'];
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <DialogHeader>
         <DialogTitle>Rol-based Permissie Matrix</DialogTitle>
       </DialogHeader>
 
       {/* Role Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
         {roleOrder.map(role => (
-          <div key={role} className={`p-3 rounded-lg border-2 ${ROLES[role].color.replace('text-', 'border-').replace('bg-', 'bg-').split(' ')[0]} bg-opacity-10`}>
-            <p className="font-semibold text-xs md:text-sm">{ROLES[role].label}</p>
-            <p className="text-xs text-slate-600 mt-1">
+          <div key={role} className={`p-2 rounded-lg border-2 text-center ${ROLES[role].color.replace('text-', 'border-').replace('bg-', 'bg-').split(' ')[0]} bg-opacity-10`}>
+            <p className="font-semibold text-xs">{ROLES[role].label}</p>
+            <p className="text-xs text-slate-600 mt-0.5">
               {ROLE_PERMISSIONS[role].length}/{ALL_PERMISSIONS.length}
             </p>
           </div>
@@ -549,7 +549,7 @@ function RoleMatrixDialog() {
       </div>
 
       {/* Matrix by Category */}
-      <div className="space-y-6">
+      <div className="space-y-3">
         {categories.map(category => {
           const categoryPerms = ALL_PERMISSIONS.filter(p => p.category === category);
           return (
