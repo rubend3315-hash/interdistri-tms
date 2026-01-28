@@ -63,6 +63,7 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Vehicles from './pages/Vehicles';
 import CaoRules from './pages/CaoRules';
+import Users from './pages/Users';
 import __Layout from './Layout.jsx';
 
 
@@ -83,6 +84,7 @@ export const PAGES = {
     "Trips": Trips,
     "Vehicles": Vehicles,
     "CaoRules": CaoRules,
+    "Users": Users,
 }
 
 export const pagesConfig = {
