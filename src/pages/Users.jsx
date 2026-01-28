@@ -161,6 +161,25 @@ export default function UsersPage() {
     setSelectedUser({ ...selectedUser, permissions: newPermissions });
   };
 
+  const toggleCategoryPermissions = (category, enable) => {
+    if (!selectedUser) return;
+    const categoryPerms = ALL_PERMISSIONS.filter(p => p.category === category).map(p => p.id);
+    const currentPermissions = selectedUser.permissions || [];
+    const newPermissions = enable
+      ? [...new Set([...currentPermissions, ...categoryPerms])]
+      : currentPermissions.filter(p => !categoryPerms.includes(p));
+    setSelectedUser({ ...selectedUser, permissions: newPermissions });
+  };
+
+  const getCategorySelectState = (category) => {
+    if (!selectedUser) return 'none';
+    const categoryPerms = ALL_PERMISSIONS.filter(p => p.category === category).map(p => p.id);
+    const selected = categoryPerms.filter(p => selectedUser.permissions?.includes(p)).length;
+    if (selected === 0) return 'none';
+    if (selected === categoryPerms.length) return 'all';
+    return 'some';
+  };
+
   const filteredUsers = users.filter(user =>
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
