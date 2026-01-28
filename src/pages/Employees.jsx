@@ -254,7 +254,7 @@ export default function Employees() {
                       <Badge className={getStatusBadge(employee.status)}>
                         {employee.status}
                       </Badge>
-                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
+                      <Button variant="ghost" size="icon" onClick={() => openViewDialog(employee)}>
                         <Edit className="w-4 h-4" />
                       </Button>
                     </div>
