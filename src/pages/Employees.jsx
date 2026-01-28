@@ -146,10 +146,10 @@ export default function Employees() {
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                {selectedEmployee ? 'Medewerker Bewerken' : 'Nieuwe Medewerker'}
-              </DialogTitle>
-            </DialogHeader>
+                <DialogTitle>
+                  {selectedEmployee?.viewOnly ? 'Medewerker Inzien' : selectedEmployee ? 'Medewerker Bewerken' : 'Nieuwe Medewerker'}
+                </DialogTitle>
+              </DialogHeader>
             <Tabs defaultValue={selectedEmployee ? "profiel" : "algemeen"} className="w-full">
               <TabsList className={`grid w-full ${selectedEmployee ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 {selectedEmployee && (
