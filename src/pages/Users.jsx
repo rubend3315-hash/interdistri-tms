@@ -563,7 +563,7 @@ function RoleMatrixDialog() {
                   <tbody>
                     {categoryPerms.map(perm => (
                       <tr key={perm.id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
-                        <td className="py-2.5 px-2 md:px-3 text-slate-700 font-medium text-xs md:text-sm min-w-32 md:w-40">{perm.label}</td>
+                        <td className="py-2 px-2 text-slate-700 font-medium text-xs min-w-28">{perm.label}</td>
                         {roleOrder.map(role => (
                           <td key={role} className="py-2.5 px-1.5 md:px-2 text-center">
                             {ROLE_PERMISSIONS[role]?.includes(perm.id) ? (
