@@ -122,8 +122,6 @@ export default function MobileEntry() {
     start_time: "",
     end_time: "",
     break_minutes: 30,
-    departure_location: "Standplaats",
-    expected_return_time: "",
     notes: ""
   });
 
@@ -219,6 +217,7 @@ export default function MobileEntry() {
 
     const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
     
+    // Submit time entry
     createTimeEntryMutation.mutate({
       employee_id: currentEmployee?.id,
       date: formData.date,
@@ -229,17 +228,42 @@ export default function MobileEntry() {
       break_minutes: Number(formData.break_minutes) || 0,
       total_hours: hours,
       shift_type: "Dag",
-      departure_location: formData.departure_location,
-      expected_return_time: formData.expected_return_time,
       notes: formData.notes,
       status: "Ingediend",
       signature_url: signature
     });
+
+    // Submit all trips
+    if (trips.length > 0) {
+      trips.forEach(trip => {
+        createTripMutation.mutate({
+          employee_id: currentEmployee?.id,
+          date: formData.date,
+          vehicle_id: trip.vehicle_id,
+          customer_id: trip.customer_id,
+          route_name: trip.route_name,
+          planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+          start_km: trip.start_km ? Number(trip.start_km) : null,
+          end_km: trip.end_km ? Number(trip.end_km) : null,
+          total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+          departure_time: trip.start_time,
+          arrival_time: trip.end_time,
+          departure_location: trip.departure_location,
+          notes: trip.notes,
+          status: "Voltooid"
+        });
+      });
+    }
+
+    // Reset form
+    setTrips([]);
+    setSignature(null);
   };
 
   const handleSaveDraft = () => {
     const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
     
+    // Save time entry as draft
     createTimeEntryMutation.mutate({
       employee_id: currentEmployee?.id,
       date: formData.date,
@@ -253,6 +277,28 @@ export default function MobileEntry() {
       notes: formData.notes,
       status: "Concept"
     });
+
+    // Save all trips as drafts
+    if (trips.length > 0) {
+      trips.forEach(trip => {
+        createTripMutation.mutate({
+          employee_id: currentEmployee?.id,
+          date: formData.date,
+          vehicle_id: trip.vehicle_id,
+          customer_id: trip.customer_id,
+          route_name: trip.route_name,
+          planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+          start_km: trip.start_km ? Number(trip.start_km) : null,
+          end_km: trip.end_km ? Number(trip.end_km) : null,
+          total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+          departure_time: trip.start_time,
+          arrival_time: trip.end_time,
+          departure_location: trip.departure_location,
+          notes: trip.notes,
+          status: "Gepland"
+        });
+      });
+    }
   };
 
   const calculateHours = (start, end, breakMinutes) => {
@@ -436,24 +482,6 @@ export default function MobileEntry() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Vertreklocatie</Label>
-                    <Input
-                      value={formData.departure_location}
-                      onChange={(e) => setFormData({ ...formData, departure_location: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Verwachte terugkomst</Label>
-                    <Input
-                      type="time"
-                      value={formData.expected_return_time}
-                      onChange={(e) => setFormData({ ...formData, expected_return_time: e.target.value })}
-                    />
-                  </div>
-                </div>
-
                 <div className="space-y-1">
                   <Label className="text-xs">Opmerkingen</Label>
                   <Textarea
@@ -463,6 +491,14 @@ export default function MobileEntry() {
                     placeholder="Extra informatie..."
                   />
                 </div>
+
+                {trips.length > 0 && (
+                  <div className="p-3 bg-emerald-50 rounded-lg">
+                    <p className="text-xs text-emerald-700 font-medium">
+                      ✓ {trips.length} rit(ten) toegevoegd in Ritten tab
+                    </p>
+                  </div>
+                )}
 
                 {signature && (
                   <div className="p-2 bg-emerald-50 rounded-lg">
@@ -476,7 +512,7 @@ export default function MobileEntry() {
                     variant="outline" 
                     className="flex-1"
                     onClick={handleSaveDraft}
-                    disabled={createTimeEntryMutation.isPending}
+                    disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Tussentijds opslaan
@@ -484,7 +520,7 @@ export default function MobileEntry() {
                   <Button 
                     className="flex-1 bg-blue-600 hover:bg-blue-700"
                     onClick={handleSubmitEntry}
-                    disabled={createTimeEntryMutation.isPending}
+                    disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Indienen
@@ -549,6 +585,19 @@ export default function MobileEntry() {
                         }}
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs">Vertreklocatie</Label>
+                    <Input
+                      value={trip.departure_location}
+                      onChange={(e) => {
+                        const newTrips = [...trips];
+                        newTrips[index] = { ...trip, departure_location: e.target.value };
+                        setTrips(newTrips);
+                      }}
+                      placeholder="bijv. Standplaats"
+                    />
                   </div>
 
                   <div className="space-y-1">
@@ -682,6 +731,7 @@ export default function MobileEntry() {
               onClick={() => setTrips([...trips, {
                 start_time: "",
                 end_time: "",
+                departure_location: "Standplaats",
                 vehicle_id: "",
                 start_km: "",
                 end_km: "",
@@ -694,68 +744,6 @@ export default function MobileEntry() {
               <Plus className="w-5 h-5 mr-2" />
               Regel Toevoegen
             </Button>
-
-            {trips.length > 0 && (
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => {
-                    trips.forEach(trip => {
-                      createTripMutation.mutate({
-                        employee_id: currentEmployee?.id,
-                        date: formData.date,
-                        vehicle_id: trip.vehicle_id,
-                        customer_id: trip.customer_id,
-                        route_name: trip.route_name,
-                        planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
-                        start_km: trip.start_km ? Number(trip.start_km) : null,
-                        end_km: trip.end_km ? Number(trip.end_km) : null,
-                        total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
-                        departure_time: trip.start_time,
-                        arrival_time: trip.end_time,
-                        notes: trip.notes,
-                        status: "Gepland"
-                      });
-                    });
-                  }}
-                  disabled={createTripMutation.isPending}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Tussentijds opslaan
-                </Button>
-                <Button 
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  onClick={() => {
-                    if (!signature) {
-                      setShowSignatureDialog(true);
-                      return;
-                    }
-                    trips.forEach(trip => {
-                      createTripMutation.mutate({
-                        employee_id: currentEmployee?.id,
-                        date: formData.date,
-                        vehicle_id: trip.vehicle_id,
-                        customer_id: trip.customer_id,
-                        route_name: trip.route_name,
-                        planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
-                        start_km: trip.start_km ? Number(trip.start_km) : null,
-                        end_km: trip.end_km ? Number(trip.end_km) : null,
-                        total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
-                        departure_time: trip.start_time,
-                        arrival_time: trip.end_time,
-                        notes: trip.notes,
-                        status: "Voltooid"
-                      });
-                    });
-                  }}
-                  disabled={createTripMutation.isPending}
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Indienen
-                </Button>
-              </div>
-            )}
           </TabsContent>
 
           {/* Inspectie Tab */}
