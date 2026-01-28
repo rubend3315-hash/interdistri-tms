@@ -17,7 +17,6 @@ import {
   Plus,
   DollarSign,
   Calendar,
-  Trash2,
   Euro,
   Copy,
   Info
@@ -60,12 +59,7 @@ export default function SalaryTables() {
     }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.SalaryTable.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['salaryTables'] });
-    }
-  });
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -313,7 +307,6 @@ export default function SalaryTables() {
                         <TableHead>Uurloon 100%</TableHead>
                         <TableHead>Uurloon 130%</TableHead>
                         <TableHead>Uurloon 150%</TableHead>
-                        <TableHead className="w-20">Acties</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -352,21 +345,6 @@ export default function SalaryTables() {
                               <TableCell>€ {hourly100.toFixed(2)}</TableCell>
                               <TableCell>€ {hourly130.toFixed(2)}</TableCell>
                               <TableCell>€ {hourly150.toFixed(2)}</TableCell>
-                              <TableCell>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-red-600 hover:text-red-700"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (confirm('Weet je zeker dat je deze invoer wilt verwijderen?')) {
-                                      deleteMutation.mutate(entry.id);
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </TableCell>
                             </TableRow>
                           );
                         })}
