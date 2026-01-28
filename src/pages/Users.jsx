@@ -468,6 +468,16 @@ export default function UsersPage() {
               </p>
             </div>
 
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Input
+                placeholder="Zoeken in permissies..."
+                value={permissionSearchTerm}
+                onChange={(e) => setPermissionSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               {['supervisor', 'editor', 'user'].map(role => (
                 <Button
