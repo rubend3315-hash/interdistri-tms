@@ -183,10 +183,93 @@ export default function ImportDataTable({ importData, customerArticles, onDelete
         </Card>
       )}
 
+      {/* Zoeken en Filteren */}
+      <Card className="bg-slate-50">
+        <CardHeader>
+          <CardTitle className="text-base">Zoeken en filteren</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Zoeken in alle kolommen</label>
+            <div className="relative">
+              <Input
+                placeholder="Typ hier om te zoeken..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-3"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded"
+                >
+                  <X className="w-4 h-4 text-slate-400" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {columns.length > 0 && (
+            <div>
+              <label className="text-sm font-medium block mb-2">Filteren per kolom</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                {columns.map(col => {
+                  const uniqueValues = getUniqueValues(col);
+                  return (
+                    <div key={col}>
+                      <Select
+                        value={columnFilters[col] || ""}
+                        onValueChange={(value) => 
+                          setColumnFilters(prev => ({
+                            ...prev,
+                            [col]: value
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="text-xs h-8">
+                          <SelectValue placeholder={col} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={null}>Alles</SelectItem>
+                          {uniqueValues.slice(0, 50).map(val => (
+                            <SelectItem key={val} value={String(val)}>
+                              {String(val).substring(0, 30)}
+                            </SelectItem>
+                          ))}
+                          {uniqueValues.length > 50 && (
+                            <SelectItem value="_more" disabled>
+                              ... en {uniqueValues.length - 50} meer
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {(searchTerm || Object.values(columnFilters).some(v => v)) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchTerm("");
+                setColumnFilters({});
+              }}
+              className="text-xs"
+            >
+              Filters wissen
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Data Tabel */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Gegevens ({importData.total_rows} rijen)</CardTitle>
+          <CardTitle>Gegevens ({filteredData.length} van {importData.total_rows} rijen)</CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={exportToCSV}>
               <Download className="w-4 h-4 mr-2" />
