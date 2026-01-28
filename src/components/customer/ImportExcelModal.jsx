@@ -87,7 +87,8 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
           <DialogTitle>Excel bestand importeren</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 flex flex-col max-h-[calc(100vh-200px)]">
+          <div className="flex-1 overflow-y-auto space-y-4">
           {showValidation ? (
             <>
               <Card className="bg-red-50 border-red-200">
