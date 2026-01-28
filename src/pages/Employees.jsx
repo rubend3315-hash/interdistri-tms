@@ -1300,7 +1300,7 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
   );
 }
 
-function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave, onDelete }) {
+function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) {
   const [formData, setFormData] = useState(reiskosten || {
     startdatum: '',
     einddatum: '',
