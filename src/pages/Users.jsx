@@ -279,53 +279,60 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Info Card */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
-            <div className="text-sm text-blue-900">
-              <p className="font-medium mb-1">Over gebruikersbeheer</p>
-              <p className="text-blue-700">
-                Beheer gebruikers met rollen en granulaire permissies. Klik op "Rol Matrix" om alle rollen en hun permissies in te zien.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="users" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="users">Gebruikers</TabsTrigger>
+          <TabsTrigger value="roles">Rollen</TabsTrigger>
+        </TabsList>
 
-      {/* Search & View Mode */}
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <Input
-              placeholder="Zoek op naam of email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant={viewMode === 'cards' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setViewMode('cards')}
-            >
-              Kaarten
-            </Button>
-            <Button 
-              variant={viewMode === 'table' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setViewMode('table')}
-            >
-              Tabel
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="users" className="space-y-4">
+          {/* Info Card */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div className="text-sm text-blue-900">
+                  <p className="font-medium mb-1">Over gebruikersbeheer</p>
+                  <p className="text-blue-700">
+                    Beheer gebruikers en hun permissies. Gebruikers erven permissies van hun rol.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Users List */}
+          {/* Search & View Mode */}
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <Input
+                  placeholder="Zoek op naam of email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant={viewMode === 'cards' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setViewMode('cards')}
+                >
+                  Kaarten
+                </Button>
+                <Button 
+                  variant={viewMode === 'table' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setViewMode('table')}
+                >
+                  Tabel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Users List */}
       {isLoading ? (
         <div className="text-center py-12 text-slate-500">Laden...</div>
       ) : filteredUsers.length === 0 ? (
