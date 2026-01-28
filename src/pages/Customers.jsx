@@ -188,65 +188,68 @@ export default function Customers() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCustomers.map(customer => (
-            <Card 
-              key={customer.id} 
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => openEditDialog(customer)}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-                      <Building2 className="w-6 h-6 text-slate-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">
-                        {customer.company_name}
-                      </h3>
-                      {customer.contact_person && (
-                        <p className="text-sm text-slate-500">{customer.contact_person}</p>
-                      )}
-                    </div>
-                  </div>
-                  <Badge variant={customer.status === 'Actief' ? 'success' : 'secondary'}>
-                    {customer.status}
-                  </Badge>
-                </div>
+           {filteredCustomers.map(customer => (
+             <Card 
+               key={customer.id} 
+               className="hover:shadow-md transition-shadow group cursor-pointer"
+               onClick={() => navigate(`${createPageUrl('CustomerDetail')}?id=${customer.id}`)}
+             >
+               <CardContent className="p-5">
+                 <div className="flex items-start justify-between">
+                   <div className="flex items-start gap-3 flex-1">
+                     <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                       <Building2 className="w-6 h-6 text-slate-600" />
+                     </div>
+                     <div className="flex-1">
+                       <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                         {customer.company_name}
+                       </h3>
+                       {customer.contact_person && (
+                         <p className="text-sm text-slate-500">{customer.contact_person}</p>
+                       )}
+                     </div>
+                   </div>
+                   <div className="flex flex-col items-end gap-2">
+                     <Badge variant={customer.status === 'Actief' ? 'success' : 'secondary'}>
+                       {customer.status}
+                     </Badge>
+                     <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-400" />
+                   </div>
+                 </div>
 
-                <div className="mt-4 space-y-1.5">
-                  {customer.phone && (
-                    <p className="text-sm text-slate-600 flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-slate-400" />
-                      {customer.phone}
-                    </p>
-                  )}
-                  {customer.email && (
-                    <p className="text-sm text-slate-600 flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-slate-400" />
-                      {customer.email}
-                    </p>
-                  )}
-                  {customer.city && (
-                    <p className="text-sm text-slate-600 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400" />
-                      {customer.city}
-                    </p>
-                  )}
-                </div>
+                 <div className="mt-4 space-y-1.5">
+                   {customer.phone && (
+                     <p className="text-sm text-slate-600 flex items-center gap-2">
+                       <Phone className="w-4 h-4 text-slate-400" />
+                       {customer.phone}
+                     </p>
+                   )}
+                   {customer.email && (
+                     <p className="text-sm text-slate-600 flex items-center gap-2">
+                       <Mail className="w-4 h-4 text-slate-400" />
+                       {customer.email}
+                     </p>
+                   )}
+                   {customer.city && (
+                     <p className="text-sm text-slate-600 flex items-center gap-2">
+                       <MapPin className="w-4 h-4 text-slate-400" />
+                       {customer.city}
+                     </p>
+                   )}
+                 </div>
 
-                {customer.articles?.length > 0 && (
-                  <div className="mt-3 pt-3 border-t">
-                    <p className="text-xs text-slate-500 flex items-center gap-1">
-                      <Package className="w-3.5 h-3.5" />
-                      {customer.articles.length} artikel(en)
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                 {customer.articles?.length > 0 && (
+                   <div className="mt-3 pt-3 border-t">
+                     <p className="text-xs text-slate-500 flex items-center gap-1">
+                       <Package className="w-3.5 h-3.5" />
+                       {customer.articles.length} artikel(en)
+                     </p>
+                   </div>
+                 )}
+               </CardContent>
+             </Card>
+           ))}
+         </div>
       )}
 
       {/* Dialog */}
