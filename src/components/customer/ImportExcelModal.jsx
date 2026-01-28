@@ -54,8 +54,6 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
     setFile(null);
     setImportName("");
     setParseResult(null);
-    setColumnMapping({});
-    setSelectedColumns(new Set());
   };
 
   const handleFileChange = (e) => {
