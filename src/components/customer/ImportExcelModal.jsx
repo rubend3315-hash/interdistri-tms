@@ -286,9 +286,9 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
                Sluiten
              </Button>
            )}
-          </div>
-          </div>
-      </DialogContent>
+           </div>
+           </div>
+           </DialogContent>
     </Dialog>
   );
 }
