@@ -123,6 +123,7 @@ export default function TimeTracking() {
         shift_type: existing.shift_type || "Dag",
         vehicle_id: existing.vehicle_id || "",
         customer_id: existing.customer_id || "",
+        travel_allowance_multiplier: existing.travel_allowance_multiplier || 0,
         notes: existing.notes || ""
       });
     } else {
