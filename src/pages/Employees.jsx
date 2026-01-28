@@ -960,7 +960,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
 
       {/* Dialogs */}
       <ContractDialog
-        open={typeof showContractDialog === 'object' ? true : showContractDialog}
+        open={showContractDialog === true || typeof showContractDialog === 'object'}
         onOpenChange={(open) => {
           if (!open) setShowContractDialog(false);
         }}
