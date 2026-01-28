@@ -431,6 +431,15 @@ export default function CustomerDetail() {
           </div>
         </TabsContent>
 
+        {/* Geschiedenis Tab */}
+        <TabsContent value="history">
+          <ImportHistory
+            imports={imports}
+            onView={(imp) => {}}
+            onDelete={deleteImportMutation.mutate}
+          />
+        </TabsContent>
+
         {/* Berekeningen Tab */}
         <TabsContent value="calculations">
           <CalculationsTab 
