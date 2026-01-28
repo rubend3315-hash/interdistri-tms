@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus, Download, Edit2, Check, Power } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import jsPDF from "jspdf";
+import "jspdf/dist/polyfills.es";
+import html2canvas from "html2canvas";
 import TIModelRouteForm from "./TIModelRouteForm";
 
 export default function TIModelRoutesTab({ customerId }) {
