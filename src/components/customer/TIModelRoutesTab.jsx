@@ -73,15 +73,14 @@ export default function TIModelRoutesTab({ customerId }) {
       format: "a4",
     });
 
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    let y = 20;
+    const margin = 15;
+    let y = 15;
 
     // Title
-    doc.setFontSize(18);
+    doc.setFontSize(20);
     doc.setFont(undefined, "bold");
     doc.text("TI Model Ritten Rapportage", margin, y);
-    y += 8;
+    y += 7;
 
     // Date
     doc.setFontSize(10);
@@ -89,7 +88,7 @@ export default function TIModelRoutesTab({ customerId }) {
     doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL')}`, margin, y);
     y += 10;
 
-    // Summary section
+    // Summary
     doc.setFontSize(11);
     doc.setFont(undefined, "bold");
     doc.text("Samenvatting", margin, y);
@@ -97,104 +96,86 @@ export default function TIModelRoutesTab({ customerId }) {
 
     doc.setFontSize(10);
     doc.setFont(undefined, "normal");
-    const summaryIndent = margin + 5;
-    doc.text(`Totaal ritten: ${routes.length}`, summaryIndent, y);
+    doc.text(`Totaal ritten: ${routes.length}`, margin, y);
     doc.text(`Gemiddelde norm/uur: ${avgNormValue.toFixed(2)}`, 115, y);
     y += 5;
-
-    doc.text(`Totaal stops: ${totalStops}`, summaryIndent, y);
+    doc.text(`Totaal stops: ${totalStops}`, margin, y);
     doc.text(`Gemiddelde norm/besteluur: ${(totalStops / Math.max(routes.length, 1)).toFixed(2)}`, 115, y);
     y += 5;
+    doc.text(`Totaal stuks: ${totalParcels}`, margin, y);
+    y += 10;
 
-    doc.text(`Totaal stuks: ${totalParcels}`, summaryIndent, y);
-    y += 12;
+    // Table with proper widths
+    const tableY = y;
+    const colW = [15, 32, 14, 16, 14, 14, 14, 14, 14];
+    const headerH = 7;
+    const rowH = 6;
 
-    // Table columns with exact widths
-    const cols = [
-      { label: "Ritcode", field: "route_code", width: 12 },
-      { label: "Ritnaam", field: "route_name", width: 28 },
-      { label: "Rittijd (u)", field: "total_time_hours", width: 12 },
-      { label: "Rittijd (HH:MM)", field: "total_time_hhmm", width: 14 },
-      { label: "Stops", field: "number_of_stops", width: 11 },
-      { label: "Stuks", field: "number_of_parcels", width: 11 },
-      { label: "Norm/uur", field: "calculated_norm_per_hour", width: 12 },
-      { label: "Norm/besteluur", field: "manual_norm_per_hour", width: 13 },
-      { label: "Periode", field: "start_date", width: 12 },
-    ];
+    const headers = ["Ritcode", "Ritnaam", "Rittijd (u)", "Rittijd (HH:MM)", "Stops", "Stuks", "Norm/uur", "Norm/besteluur", "Periode"];
+    const fields = ["route_code", "route_name", "total_time_hours", "total_time_hhmm", "number_of_stops", "number_of_parcels", "calculated_norm_per_hour", "manual_norm_per_hour", "start_date"];
 
-    const headerH = 8;
-    const rowH = 7;
-    const tableStartX = margin;
-    let tableY = y;
-
-    // Header row
     doc.setFillColor(47, 67, 132);
     doc.setTextColor(255, 255, 255);
     doc.setFont(undefined, "bold");
     doc.setFontSize(9);
 
-    let x = tableStartX;
-    cols.forEach(col => {
-      doc.rect(x, tableY, col.width, headerH, "F");
-      doc.text(col.label, x + 0.5, tableY + 4, { maxWidth: col.width - 1 });
-      x += col.width;
-    });
-    tableY += headerH;
+    let xPos = margin;
+    for (let i = 0; i < headers.length; i++) {
+      doc.rect(xPos, tableY, colW[i], headerH, "F");
+      doc.text(headers[i], xPos + 1, tableY + 5);
+      xPos += colW[i];
+    }
 
-    // Data rows
+    doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, "normal");
     doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
 
+    let dataY = tableY + headerH;
     routes.forEach((route, idx) => {
-      if (tableY + rowH > pageHeight - 15) {
+      if (dataY + rowH > 200) {
         doc.addPage();
-        tableY = 20;
+        dataY = 15;
         
-        // Redraw header
         doc.setFillColor(47, 67, 132);
         doc.setTextColor(255, 255, 255);
         doc.setFont(undefined, "bold");
         doc.setFontSize(9);
-        x = tableStartX;
-        cols.forEach(col => {
-          doc.rect(x, tableY, col.width, headerH, "F");
-          doc.text(col.label, x + 0.5, tableY + 4, { maxWidth: col.width - 1 });
-          x += col.width;
-        });
-        tableY += headerH;
-        doc.setFont(undefined, "normal");
+        xPos = margin;
+        for (let i = 0; i < headers.length; i++) {
+          doc.rect(xPos, dataY, colW[i], headerH, "F");
+          doc.text(headers[i], xPos + 1, dataY + 5);
+          xPos += colW[i];
+        }
+        dataY += headerH;
         doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, "normal");
       }
 
-      // Alternating row backgrounds
       if (idx % 2 === 0) {
-        doc.setFillColor(245, 245, 245);
-        x = tableStartX;
-        cols.forEach(col => {
-          doc.rect(x, tableY, col.width, rowH, "F");
-          x += col.width;
-        });
+        doc.setFillColor(240, 240, 240);
+        xPos = margin;
+        for (let i = 0; i < colW.length; i++) {
+          doc.rect(xPos, dataY, colW[i], rowH, "F");
+          xPos += colW[i];
+        }
       }
 
-      // Row borders
       doc.setDrawColor(200, 200, 200);
-      x = tableStartX;
-      cols.forEach(col => {
-        doc.rect(x, tableY, col.width, rowH);
-        x += col.width;
-      });
+      xPos = margin;
+      for (let i = 0; i < colW.length; i++) {
+        doc.rect(xPos, dataY, colW[i], rowH);
+        xPos += colW[i];
+      }
 
-      // Row data
       doc.setTextColor(0, 0, 0);
-      x = tableStartX;
-      cols.forEach(col => {
-        let val = route[col.field] || "";
+      xPos = margin;
+      for (let i = 0; i < fields.length; i++) {
+        let val = route[fields[i]] || "";
         if (typeof val === "number") val = val.toFixed(2);
-        doc.text(String(val), x + 1, tableY + 4.5);
-        x += col.width;
-      });
-      tableY += rowH;
+        doc.text(String(val), xPos + 1, dataY + 4);
+        xPos += colW[i];
+      }
+      dataY += rowH;
     });
 
     doc.save("ti-model-ritten.pdf");
