@@ -309,11 +309,12 @@ export default function ImportDataTable({ importData, customerArticles, onDelete
                 </tr>
               </thead>
               <tbody>
-                {importData.data.map((row, idx) => {
-                  const calculation = calculations[idx];
+                {filteredData.map((row, displayIdx) => {
+                  const calculation = calculations.find(c => c.rowIndex === importData.data.indexOf(row));
+                  const originalIdx = importData.data.indexOf(row);
                   return (
-                    <tr key={idx} className="border-t hover:bg-slate-50">
-                      <td className="px-3 py-2 text-slate-600 font-medium">{idx + 1}</td>
+                    <tr key={originalIdx} className="border-t hover:bg-slate-50">
+                      <td className="px-3 py-2 text-slate-600 font-medium">{displayIdx + 1}</td>
                       {columns.map(col => (
                         <td 
                           key={`${idx}-${col}`}
