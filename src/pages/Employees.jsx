@@ -1127,18 +1127,20 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
               <MapPin className="w-5 h-5" />
               Reiskostenvergoeding
             </CardTitle>
-            <Button 
-              size="sm"
-              className="bg-blue-900"
-              onClick={() => {
-                setEditingReiskosten(null);
-                setShowReiskostenDialog(true);
-              }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Reiskostenregel
-            </Button>
-          </div>
+            {!viewOnly && (
+              <Button 
+                size="sm"
+                className="bg-blue-900"
+                onClick={() => {
+                  setEditingReiskosten(null);
+                  setShowReiskostenDialog(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Reiskostenregel
+              </Button>
+            )}
+            </div>
         </CardHeader>
         <CardContent>
           {reiskostenregels.length === 0 ? (
