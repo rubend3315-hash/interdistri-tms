@@ -134,7 +134,7 @@ export default function Layout({ children, currentPageName }) {
           <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
             <Truck className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-slate-900">Interdistri TMS</span>
+          <span className="font-bold text-slate-900">Interdistri</span>
         </div>
         <div className="w-10" />
       </div>
@@ -223,7 +223,7 @@ export default function Layout({ children, currentPageName }) {
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200"
               >
                 <Smartphone className="w-5 h-5 text-slate-400" />
-                <span className="text-sm">Mobiele App</span>
+                <span className="text-sm">Mobiele Invoer</span>
               </Link>
             </div>
           </nav>
@@ -233,7 +233,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="flex items-center gap-3 px-2 py-2">
               <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
                 <span className="text-sm font-semibold text-slate-600">
-                  {user?.full_name?.charAt(0) || 'U'}
+                  {user?.full_name?.charAt(0) || 'G'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
@@ -243,6 +243,7 @@ export default function Layout({ children, currentPageName }) {
               <button 
                 onClick={handleLogout}
                 className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600"
+                title="Afmelden"
               >
                 <LogOut className="w-5 h-5" />
               </button>

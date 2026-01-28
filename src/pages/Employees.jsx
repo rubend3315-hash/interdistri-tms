@@ -1393,6 +1393,7 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
           <div className="space-y-4">
             <div>
               <Label>Weekrooster (verdeling van uren per week)</Label>
+              <p className="text-xs text-slate-500 mt-1">De uren worden automatisch verdeeld over de aangevinkte werkdagen per week</p>
             </div>
 
             <Card>
@@ -1477,10 +1478,10 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
 
             <div className="bg-slate-50 p-3 rounded-lg">
               <p className="text-sm text-slate-600">
-                Gemiddelde per week: <strong>{formData.uren_per_week}u</strong>
+                Totale contractuele uren per week: <strong>{formData.uren_per_week}u</strong>
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                De uren worden automatisch verdeeld over de aangevinkte werkdagen
+                Week 1 en Week 2 kunnen verschillende verdelingen hebben
               </p>
             </div>
           </div>
