@@ -89,12 +89,12 @@ export default function ImportDataTable({ importData, onDelete }) {
                       <SelectValue placeholder={`${col}`} />
                     </SelectTrigger>
                     <SelectContent>
-                       {getUniqueValues(col).map(value => (
-                         <SelectItem key={value} value={String(value)}>
-                           {String(value).substring(0, 30)}
-                         </SelectItem>
-                       ))}
-                     </SelectContent>
+                       {getUniqueValues(col).filter(v => String(v).trim() !== "").map(value => (
+                          <SelectItem key={value} value={String(value)}>
+                            {String(value).substring(0, 30)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                   </Select>
                 ))}
               </div>
