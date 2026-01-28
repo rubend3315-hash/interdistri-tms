@@ -214,6 +214,10 @@ export default function CustomerDetail() {
             <FileText className="w-4 h-4" />
             Opmerkingen
           </TabsTrigger>
+          <TabsTrigger value="ti-model" className="gap-2">
+            <Package className="w-4 h-4" />
+            TI Model Ritten
+          </TabsTrigger>
         </TabsList>
 
         {/* Informatie Tab */}
