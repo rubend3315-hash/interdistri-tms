@@ -495,11 +495,44 @@ export default function UsersPage() {
 
             <div className="space-y-3">
               <Label className="text-base font-semibold">Modules per categorie</Label>
-              {['Basis', 'Beheer', 'Rapportage', 'Admin'].map(category => (
+              {['Basis', 'Beheer', 'Rapportage', 'Admin'].map(category => {
+                const categoryPerms = ALL_PERMISSIONS.filter(p => p.category === category);
+                const filteredPerms = categoryPerms.filter(p => 
+                  p.label.toLowerCase().includes(permissionSearchTerm.toLowerCase())
+                );
+                const selectState = getCategorySelectState(category);
+                
+                if (permissionSearchTerm && filteredPerms.length === 0) return null;
+                
+                return (
                 <div key={category} className="space-y-2">
-                  <h4 className="text-sm font-medium text-slate-700">{category}</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-slate-700">{category}</h4>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => toggleCategoryPermissions(category, true)}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${
+                          selectState === 'none' 
+                            ? 'text-blue-600 hover:bg-blue-50' 
+                            : 'text-blue-600 font-medium'
+                        }`}
+                      >
+                        Alles
+                      </button>
+                      <button
+                        onClick={() => toggleCategoryPermissions(category, false)}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${
+                          selectState === 'all'
+                            ? 'text-slate-600 hover:bg-slate-100'
+                            : 'text-slate-600 font-medium'
+                        }`}
+                      >
+                        Geen
+                      </button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {ALL_PERMISSIONS.filter(p => p.category === category).map(permission => (
+                    {filteredPerms.map(permission => (
                        <div
                          key={permission.id}
                          className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
