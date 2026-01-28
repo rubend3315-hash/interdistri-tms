@@ -91,7 +91,16 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
 
       return true;
     })
-    .sort((a, b) => new Date(b._importDate) - new Date(a._importDate));
+    .sort((a, b) => {
+      // Find the Datum column (case-insensitive)
+      const datumCol = columns.find(col => col.toLowerCase() === 'datum');
+      if (datumCol && a[datumCol] && b[datumCol]) {
+        const dateA = new Date(a[datumCol]);
+        const dateB = new Date(b[datumCol]);
+        return dateB - dateA; // Newest first
+      }
+      return 0;
+    });
 
   const exportToCSV = () => {
     const headers = [...columns, 'Import'].join(',');
