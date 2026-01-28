@@ -73,12 +73,7 @@ export default function Employees() {
     }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Employee.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-    }
-  });
+
 
   const handleSubmit = (formData) => {
     if (selectedEmployee) {
@@ -836,32 +831,37 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
           {contractregels.length === 0 ? (
             <p className="text-center text-slate-500 py-4">Nog geen contractregels toegevoegd</p>
           ) : (
-            <div className="space-y-2">
-              {contractregels.map((contract, index) => (
-                <div key={index} className="p-3 border rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">{contract.type_contract}</p>
-                      <p className="text-sm text-slate-600">
-                        {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
-                        {contract.einddatum && ` - ${format(new Date(contract.einddatum), 'dd-MM-yyyy')}`}
-                      </p>
-                      <p className="text-sm text-slate-600">{contract.uren_per_week} uur/week</p>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => {
-                        setEditingContract({ ...contract, index });
-                        setShowContractDialog(true);
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+           <div className="space-y-2">
+             {contractregels.filter(c => c.status !== 'Inactief').map((contract, index) => (
+               <div key={index} className="p-3 border rounded-lg">
+                 <div className="flex justify-between items-start">
+                   <div>
+                     <div className="flex items-center gap-2">
+                       <p className="font-medium">{contract.type_contract}</p>
+                       {contract.status === 'Inactief' && (
+                         <Badge className="bg-slate-100 text-slate-700">Inactief</Badge>
+                       )}
+                     </div>
+                     <p className="text-sm text-slate-600">
+                       {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
+                       {contract.einddatum && ` - ${format(new Date(contract.einddatum), 'dd-MM-yyyy')}`}
+                     </p>
+                     <p className="text-sm text-slate-600">{contract.uren_per_week} uur/week</p>
+                   </div>
+                   <Button 
+                     variant="ghost" 
+                     size="icon"
+                     onClick={() => {
+                       setEditingContract({ ...contract, index: contractregels.indexOf(contract) });
+                       setShowContractDialog(true);
+                     }}
+                   >
+                     <Edit className="w-4 h-4" />
+                   </Button>
+                 </div>
+               </div>
+             ))}
+           </div>
           )}
         </CardContent>
       </Card>
@@ -892,11 +892,16 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
             <p className="text-center text-slate-500 py-4">Nog geen reiskostenregels</p>
           ) : (
             <div className="space-y-2">
-              {reiskostenregels.map((regel, index) => (
+              {reiskostenregels.filter(r => r.status !== 'Inactief').map((regel, index) => (
                 <div key={index} className="p-3 border rounded-lg">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-medium">{regel.afstand_km} km enkele reis</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{regel.afstand_km} km enkele reis</p>
+                        {regel.status === 'Inactief' && (
+                          <Badge className="bg-slate-100 text-slate-700">Inactief</Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-slate-600">
                         {regel.startdatum && format(new Date(regel.startdatum), 'dd-MM-yyyy')}
                         {regel.einddatum && ` - ${format(new Date(regel.einddatum), 'dd-MM-yyyy')}`}
@@ -907,7 +912,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
                       variant="ghost" 
                       size="icon"
                       onClick={() => {
-                        setEditingReiskosten({ ...regel, index });
+                        setEditingReiskosten({ ...regel, index: reiskostenregels.indexOf(regel) });
                         setShowReiskostenDialog(true);
                       }}
                     >
@@ -952,15 +957,20 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
             </div>
           ) : (
             <div className="space-y-2">
-              {weekroosters.map((rooster, index) => (
+              {weekroosters.filter(w => w.status !== 'Inactief').map((rooster, index) => (
                 <div key={index} className="p-3 border rounded-lg">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <p className="font-medium">
-                        {rooster.startdatum && format(new Date(rooster.startdatum), 'dd-MM-yyyy')}
-                        {rooster.einddatum && ` - ${format(new Date(rooster.einddatum), 'dd-MM-yyyy')}`}
-                        {!rooster.einddatum && ' - doorlopend'}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">
+                          {rooster.startdatum && format(new Date(rooster.startdatum), 'dd-MM-yyyy')}
+                          {rooster.einddatum && ` - ${format(new Date(rooster.einddatum), 'dd-MM-yyyy')}`}
+                          {!rooster.einddatum && ' - doorlopend'}
+                        </p>
+                        {rooster.status === 'Inactief' && (
+                          <Badge className="bg-slate-100 text-slate-700">Inactief</Badge>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                         <div>
                           <p className="text-slate-600 font-medium">Week 1 (Oneven):</p>
@@ -986,7 +996,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
                       variant="ghost" 
                       size="icon"
                       onClick={() => {
-                        setEditingWeekrooster({ ...rooster, index });
+                        setEditingWeekrooster({ ...rooster, index: weekroosters.indexOf(rooster) });
                         setShowWeekroosterDialog(true);
                       }}
                     >
@@ -1023,6 +1033,12 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
           }
           setShowContractDialog(false);
         }}
+        onDelete={(index) => {
+          const newContracts = [...contractregels];
+          newContracts[index] = { ...newContracts[index], status: 'Inactief' };
+          setContractregels(newContracts);
+          setShowContractDialog(false);
+        }}
       />
 
       <ReiskostenDialog
@@ -1038,6 +1054,12 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
           } else {
             setReiskostenregels([...reiskostenregels, regel]);
           }
+          setShowReiskostenDialog(false);
+        }}
+        onDelete={(index) => {
+          const newRegels = [...reiskostenregels];
+          newRegels[index] = { ...newRegels[index], status: 'Inactief' };
+          setReiskostenregels(newRegels);
           setShowReiskostenDialog(false);
         }}
       />
@@ -1056,12 +1078,18 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
           }
           setShowWeekroosterDialog(false);
         }}
+        onDelete={(index) => {
+          const newRoosters = [...weekroosters];
+          newRoosters[index] = { ...newRoosters[index], status: 'Inactief' };
+          setWeekrewkoosters(newRoosters);
+          setShowWeekroosterDialog(false);
+        }}
       />
     </div>
   );
 }
 
-function ContractDialog({ open, onOpenChange, contract, onSave }) {
+function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
   const [formData, setFormData] = useState(contract || {
     startdatum: '',
     einddatum: '',
@@ -1070,7 +1098,8 @@ function ContractDialog({ open, onOpenChange, contract, onSave }) {
     uren_per_week: 40,
     week1: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
     week2: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
-    reiskostenvergoeding: 'Woon-werkverkeer'
+    reiskostenvergoeding: 'Woon-werkverkeer',
+    status: 'Actief'
   });
 
   useEffect(() => {
@@ -1238,7 +1267,31 @@ function ContractDialog({ open, onOpenChange, contract, onSave }) {
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select 
+              value={formData.status || 'Actief'}
+              onValueChange={(v) => setFormData({ ...formData, status: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Actief">Actief</SelectItem>
+                <SelectItem value="Inactief">Inactief</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex gap-2">
+            {contract?.index !== undefined && onDelete && (
+              <Button 
+                variant="destructive" 
+                onClick={() => onDelete(contract.index)}
+              >
+                Inactiveren
+              </Button>
+            )}
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Annuleren
             </Button>
@@ -1256,12 +1309,13 @@ function ContractDialog({ open, onOpenChange, contract, onSave }) {
   );
 }
 
-function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) {
+function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave, onDelete }) {
   const [formData, setFormData] = useState(reiskosten || {
     startdatum: '',
     einddatum: '',
     afstand_km: 0,
-    vergoeding_per_dag: 0
+    vergoeding_per_dag: 0,
+    status: 'Actief'
   });
 
   useEffect(() => {
@@ -1358,7 +1412,31 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) 
             <p className="text-xs text-slate-500">Dit is de eindvergoeding die gebruikt wordt voor berekeningen</p>
           </div>
 
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select 
+              value={formData.status || 'Actief'}
+              onValueChange={(v) => setFormData({ ...formData, status: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Actief">Actief</SelectItem>
+                <SelectItem value="Inactief">Inactief</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex gap-2">
+            {reiskosten?.index !== undefined && onDelete && (
+              <Button 
+                variant="destructive" 
+                onClick={() => onDelete(reiskosten.index)}
+              >
+                Inactiveren
+              </Button>
+            )}
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Annuleren
             </Button>
@@ -1376,12 +1454,13 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) 
   );
 }
 
-function WeekroosterDialog({ open, onOpenChange, weekrooster, onSave }) {
+function WeekroosterDialog({ open, onOpenChange, weekrooster, onSave, onDelete }) {
   const [formData, setFormData] = useState(weekrooster || {
     startdatum: '',
     einddatum: '',
     week1: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
-    week2: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false }
+    week2: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
+    status: 'Actief'
   });
 
   useEffect(() => {
@@ -1462,7 +1541,31 @@ function WeekroosterDialog({ open, onOpenChange, weekrooster, onSave }) {
             </CardContent>
           </Card>
 
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select 
+              value={formData.status || 'Actief'}
+              onValueChange={(v) => setFormData({ ...formData, status: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Actief">Actief</SelectItem>
+                <SelectItem value="Inactief">Inactief</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex gap-2">
+            {weekrooster?.index !== undefined && onDelete && (
+              <Button 
+                variant="destructive" 
+                onClick={() => onDelete(weekrooster.index)}
+              >
+                Inactiveren
+              </Button>
+            )}
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Annuleren
             </Button>
