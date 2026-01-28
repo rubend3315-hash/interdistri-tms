@@ -470,20 +470,15 @@ export default function UsersPage() {
                   <h4 className="text-sm font-medium text-slate-700">{category}</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {ALL_PERMISSIONS.filter(p => p.category === category).map(permission => (
-                      <label
-                        key={permission.id}
-                        className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
-                          selectedUser?.permissions?.includes(permission.id)
-                            ? 'bg-blue-50 border-blue-300'
-                            : 'bg-white border-slate-200 hover:bg-slate-50'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUser?.permissions?.includes(permission.id) || false}
-                          onChange={() => togglePermission(permission.id)}
-                          className="sr-only"
-                        />
+                       <div
+                         key={permission.id}
+                         className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
+                           selectedUser?.permissions?.includes(permission.id)
+                             ? 'bg-blue-50 border-blue-300'
+                             : 'bg-white border-slate-200 hover:bg-slate-50'
+                         }`}
+                         onClick={() => togglePermission(permission.id)}
+                       >
                         <div className={`w-4 h-4 rounded flex items-center justify-center text-xs ${
                           selectedUser?.permissions?.includes(permission.id)
                             ? 'bg-blue-600 text-white'
