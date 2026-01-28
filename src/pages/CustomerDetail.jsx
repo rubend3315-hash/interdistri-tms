@@ -462,6 +462,11 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* TI Model Ritten Tab */}
+        <TabsContent value="ti-model">
+          <TIModelRoutesTab customerId={customerId} />
+        </TabsContent>
       </Tabs>
 
       {/* Import Modal */}
