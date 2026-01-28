@@ -72,128 +72,120 @@ export default function TIModelRoutesTab({ customerId }) {
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    let yPosition = 15;
+    let yPosition = 12;
 
-    // Header met titel en datum
-    pdf.setFontSize(20);
+    // Title
+    pdf.setFontSize(18);
     pdf.setFont(undefined, "bold");
     pdf.text("TI Model Ritten Rapportage", 15, yPosition);
-    yPosition += 8;
+    yPosition += 7;
 
-    pdf.setFontSize(10);
+    // Generated date
+    pdf.setFontSize(9);
     pdf.setFont(undefined, "normal");
     const generatedDate = new Date().toLocaleDateString('nl-NL');
     pdf.text(`Gegenereerd: ${generatedDate}`, 15, yPosition);
-    yPosition += 10;
+    yPosition += 8;
 
-    // Samenvattingsection
-    pdf.setFontSize(11);
+    // Summary section title
+    pdf.setFontSize(10);
     pdf.setFont(undefined, "bold");
-    pdf.text("Samenvatthing", 15, yPosition);
+    pdf.text("Samenvattting", 15, yPosition);
     yPosition += 6;
 
-    pdf.setFontSize(9);
+    // Summary stats in two columns
+    pdf.setFontSize(8);
     pdf.setFont(undefined, "normal");
+    const col1X = 15;
+    const col2X = 110;
     
-    // Twee kolommen voor statistieken
-    const stats = [
-      `Totaal ritten: ${routes.length}`,
-      `Totaal stops: ${totalStops}`,
-      `Totaal stuks: ${totalParcels}`,
-    ];
+    pdf.text(`Totaal ritten: ${routes.length}`, col1X, yPosition);
+    pdf.text(`Gemiddelde norm/uur: ${avgNormValue.toFixed(2)}`, col2X, yPosition);
+    yPosition += 4;
     
-    const stats2 = [
-      `Gemiddelde norm/uur: ${avgNormValue.toFixed(2)}`,
-      `Gemiddelde norm/besteluur: ${(totalStops / routes.length).toFixed(2)}`,
-    ];
+    pdf.text(`Totaal stops: ${totalStops}`, col1X, yPosition);
+    pdf.text(`Gemiddelde norm/besteluur: ${(totalStops / Math.max(routes.length, 1)).toFixed(2)}`, col2X, yPosition);
+    yPosition += 4;
+    
+    pdf.text(`Totaal stuks: ${totalParcels}`, col1X, yPosition);
+    yPosition += 8;
 
-    stats.forEach((stat, i) => {
-      pdf.text(stat, 15, yPosition);
-      yPosition += 5;
-    });
-
-    yPosition -= 15;
-    stats2.forEach((stat, i) => {
-      pdf.text(stat, 100, yPosition);
-      yPosition += 5;
-    });
-
-    yPosition += 10;
-
-    // Tabel
+    // Table setup
     const columns = [
-      { header: "Ritcode", dataKey: "route_code", width: 12 },
-      { header: "Ritnaam", dataKey: "route_name", width: 28 },
-      { header: "Ritijd (u)", dataKey: "total_time_hours", width: 12 },
-      { header: "Ritijd (HH:MM)", dataKey: "total_time_hhmm", width: 14 },
-      { header: "Stops", dataKey: "number_of_stops", width: 10 },
-      { header: "Stuks", dataKey: "number_of_parcels", width: 10 },
-      { header: "Normuur", dataKey: "calculated_norm_per_hour", width: 12 },
-      { header: "Norm/besteluur", dataKey: "manual_norm_per_hour", width: 14 },
+      { header: "Ritcode", dataKey: "route_code", width: 14 },
+      { header: "Ritnaam", dataKey: "route_name", width: 24 },
+      { header: "Ritijd (u)", dataKey: "total_time_hours", width: 13 },
+      { header: "Ritijd (HH:MM)", dataKey: "total_time_hhmm", width: 15 },
+      { header: "Stops", dataKey: "number_of_stops", width: 11 },
+      { header: "Stuks", dataKey: "number_of_parcels", width: 11 },
+      { header: "Normuur", dataKey: "calculated_norm_per_hour", width: 13 },
+      { header: "Norm/besteluur", dataKey: "manual_norm_per_hour", width: 15 },
       { header: "Periode", dataKey: "start_date", width: 14 },
     ];
 
-    const headerHeight = 7;
-    const rowHeight = 6;
+    const headerHeight = 6;
+    const rowHeight = 5;
     let currentY = yPosition;
+    const tableStartX = 15;
 
-    // Headers met achtergrond
-    pdf.setFillColor(18, 54, 125); // Donkerblauw
-    pdf.setTextColor(255, 255, 255); // Wit
+    // Table header with dark blue background
+    pdf.setFillColor(22, 46, 115); // Dark blue
+    pdf.setTextColor(255, 255, 255); // White text
     pdf.setFont(undefined, "bold");
-    pdf.setFontSize(8);
+    pdf.setFontSize(7);
 
-    let xPos = 15;
+    let xPos = tableStartX;
     columns.forEach((col) => {
-      pdf.rect(xPos - 1, currentY - 5, col.width, headerHeight, "F");
-      pdf.text(col.header, xPos + 1, currentY);
+      pdf.rect(xPos, currentY - headerHeight + 1, col.width, headerHeight, "F");
+      pdf.text(col.header, xPos + 1, currentY - 1, { maxWidth: col.width - 2 });
       xPos += col.width;
     });
-    currentY += headerHeight;
+    currentY += 1;
 
-    // Data rows
-    pdf.setTextColor(0, 0, 0); // Zwart
+    // Table data rows
     pdf.setFont(undefined, "normal");
-    pdf.setFontSize(8);
+    pdf.setFontSize(7);
+    pdf.setTextColor(0, 0, 0); // Black text
 
     routes.forEach((route, index) => {
+      // Page break check
       if (currentY + rowHeight > pageHeight - 10) {
-        // Nieuwe pagina
         pdf.addPage();
-        currentY = 15;
+        currentY = 12;
 
-        // Headers herhalen
-        pdf.setFillColor(18, 54, 125);
+        // Repeat header on new page
+        pdf.setFillColor(22, 46, 115);
         pdf.setTextColor(255, 255, 255);
         pdf.setFont(undefined, "bold");
-        xPos = 15;
+        xPos = tableStartX;
         columns.forEach((col) => {
-          pdf.rect(xPos - 1, currentY - 5, col.width, headerHeight, "F");
-          pdf.text(col.header, xPos + 1, currentY);
+          pdf.rect(xPos, currentY - headerHeight + 1, col.width, headerHeight, "F");
+          pdf.text(col.header, xPos + 1, currentY - 1, { maxWidth: col.width - 2 });
           xPos += col.width;
         });
-        currentY += headerHeight;
-        pdf.setTextColor(0, 0, 0);
+        currentY += 1;
         pdf.setFont(undefined, "normal");
+        pdf.setTextColor(0, 0, 0);
       }
 
-      // Alternerende rij kleuren
+      // Alternate row colors
       if (index % 2 === 0) {
-        pdf.setFillColor(240, 244, 248); // Lichtblauw
-        xPos = 15;
+        pdf.setFillColor(245, 248, 252); // Light blue
+        xPos = tableStartX;
         columns.forEach((col) => {
-          pdf.rect(xPos - 1, currentY - 5, col.width, rowHeight, "F");
+          pdf.rect(xPos, currentY - rowHeight + 1, col.width, rowHeight, "F");
           xPos += col.width;
         });
       }
 
-      xPos = 15;
+      // Row data
+      xPos = tableStartX;
       columns.forEach((col) => {
         let value = route[col.dataKey] || "";
         if (typeof value === "number") {
           value = value.toFixed(2);
         }
-        pdf.text(String(value), xPos + 1, currentY);
+        pdf.text(String(value), xPos + 1, currentY, { maxWidth: col.width - 2 });
         xPos += col.width;
       });
       currentY += rowHeight;
