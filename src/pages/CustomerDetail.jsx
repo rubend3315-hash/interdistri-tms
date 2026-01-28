@@ -139,6 +139,8 @@ export default function CustomerDetail() {
     });
   };
 
+  const isPostNL = customer?.company_name === 'PostNL';
+
   if (isLoading) {
     return (
       <div className="space-y-6">
