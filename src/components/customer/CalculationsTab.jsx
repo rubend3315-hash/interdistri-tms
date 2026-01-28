@@ -67,11 +67,12 @@ export default function CalculationsTab({ imports, customerArticles }) {
           <CardTitle className="text-base">Import selecteren</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Select value={selectedImportId} onValueChange={setSelectedImportId}>
+          <Select value={selectedImportId || "none"} onValueChange={(v) => setSelectedImportId(v === "none" ? "" : v)}>
             <SelectTrigger>
               <SelectValue placeholder="Selecteer een import" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="none">Selecteer import</SelectItem>
               {imports.map(imp => (
                 <SelectItem key={imp.id} value={imp.id}>
                   {imp.import_name} ({imp.total_rows} rijen)
