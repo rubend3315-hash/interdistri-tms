@@ -275,6 +275,61 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* CSV Import Dialog */}
+      <Dialog open={showImportCSV} onOpenChange={setShowImportCSV}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Prijsregels Importeren</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {csvImportError && (
+              <Alert className="bg-red-50 border-red-200">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription>
+                  <p className="text-red-800 font-semibold mb-2">Fouten bij import:</p>
+                  <ul className="text-sm text-red-700 space-y-1">
+                    {csvImportError.map((err, i) => <li key={i}>• {err}</li>)}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <p className="text-sm font-semibold text-slate-900 mb-2">CSV Format:</p>
+              <code className="text-xs text-slate-600 block bg-white p-2 rounded font-mono">
+                start_date,end_date,price,notes<br/>
+                2026-01-01,2026-12-31,0.50,Winter tarief<br/>
+                2027-01-01,,0.55,Nieuw jaar
+              </code>
+              <p className="text-xs text-slate-500 mt-2">• Einddatum is optioneel<br/>• Noten zijn optioneel</p>
+            </div>
+
+            <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleCSVImport}
+                className="hidden"
+                id="csv-input"
+              />
+              <label htmlFor="csv-input" className="cursor-pointer block">
+                <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <span className="text-sm font-medium text-slate-700">Klik om CSV te selecteren</span>
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => {
+                setShowImportCSV(false);
+                setCsvImportError(null);
+              }}>
+                Sluiten
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
