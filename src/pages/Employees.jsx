@@ -1036,8 +1036,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                       .filter(([, checked]) => checked)
                       .map(([day]) => day.charAt(0).toUpperCase())
                       .join('') : '-';
-                    const colors = ['bg-blue-50', 'bg-emerald-50', 'bg-purple-50', 'bg-amber-50'];
-                    const bgColor = colors[index % colors.length];
+                    const bgColor = index === 0 ? 'bg-blue-50' : '';
 
                     return (
                       <React.Fragment key={index}>
