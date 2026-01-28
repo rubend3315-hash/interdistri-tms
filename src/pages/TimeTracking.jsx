@@ -84,6 +84,7 @@ export default function TimeTracking() {
     shift_type: "Dag",
     vehicle_id: "",
     customer_id: "",
+    travel_allowance_multiplier: 0,
     notes: ""
   });
 
