@@ -11,31 +11,66 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Users, Plus, Mail, Shield, User, Search, Edit, CheckSquare } from "lucide-react";
 import { format } from "date-fns";
 
+const ROLES = {
+  admin: {
+    label: 'Administrator',
+    color: 'bg-purple-100 text-purple-700',
+    description: 'Volledige toegang tot alle functies'
+  },
+  supervisor: {
+    label: 'Supervisor',
+    color: 'bg-blue-100 text-blue-700',
+    description: 'Beheer en supervisie'
+  },
+  editor: {
+    label: 'Editor',
+    color: 'bg-amber-100 text-amber-700',
+    description: 'Gegevens aanpassen'
+  },
+  user: {
+    label: 'Medewerker',
+    color: 'bg-slate-100 text-slate-700',
+    description: 'Basis toegang'
+  }
+};
+
+const ROLE_PERMISSIONS = {
+  admin: [
+    'dashboard', 'timetracking', 'trips', 'planning', 'approvals', 'shifttime',
+    'employees', 'users', 'vehicles', 'niwo', 'customers', 'projects', 'cao', 'salary', 'holidays', 'reports', 'mobile'
+  ],
+  supervisor: ['dashboard', 'timetracking', 'trips', 'planning', 'approvals', 'employees', 'vehicles', 'projects'],
+  editor: ['dashboard', 'timetracking', 'employees', 'vehicles', 'customers', 'projects'],
+  user: ['dashboard', 'timetracking', 'trips', 'mobile']
+};
+
 const ALL_PERMISSIONS = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'timetracking', label: 'Tijdregistratie' },
-  { id: 'trips', label: 'Ritten' },
-  { id: 'planning', label: 'Planning' },
-  { id: 'approvals', label: 'Goedkeuringen' },
-  { id: 'shifttime', label: 'Dienst-Shifttijd' },
-  { id: 'employees', label: 'Medewerkers' },
-  { id: 'users', label: 'Gebruikers' },
-  { id: 'vehicles', label: 'Voertuigen' },
-  { id: 'niwo', label: 'NIWO Vergunningen' },
-  { id: 'customers', label: 'Klanten' },
-  { id: 'projects', label: 'Projecten' },
-  { id: 'cao', label: 'CAO-regels' },
-  { id: 'salary', label: 'Loontabellen' },
-  { id: 'holidays', label: 'Feestdagen' },
-  { id: 'reports', label: 'Loonrapporten' },
-  { id: 'mobile', label: 'Mobiele App' }
+  { id: 'dashboard', label: 'Dashboard', category: 'Basis' },
+  { id: 'timetracking', label: 'Tijdregistratie', category: 'Basis' },
+  { id: 'trips', label: 'Ritten', category: 'Basis' },
+  { id: 'planning', label: 'Planning', category: 'Basis' },
+  { id: 'approvals', label: 'Goedkeuringen', category: 'Beheer' },
+  { id: 'shifttime', label: 'Dienst-Shifttijd', category: 'Beheer' },
+  { id: 'employees', label: 'Medewerkers', category: 'Beheer' },
+  { id: 'users', label: 'Gebruikers', category: 'Admin' },
+  { id: 'vehicles', label: 'Voertuigen', category: 'Beheer' },
+  { id: 'niwo', label: 'NIWO Vergunningen', category: 'Beheer' },
+  { id: 'customers', label: 'Klanten', category: 'Beheer' },
+  { id: 'projects', label: 'Projecten', category: 'Beheer' },
+  { id: 'cao', label: 'CAO-regels', category: 'Admin' },
+  { id: 'salary', label: 'Loontabellen', category: 'Admin' },
+  { id: 'holidays', label: 'Feestdagen', category: 'Admin' },
+  { id: 'reports', label: 'Loonrapporten', category: 'Rapportage' },
+  { id: 'mobile', label: 'Mobiele App', category: 'Basis' }
 ];
 
 export default function UsersPage() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
+  const [showRoleMatrix, setShowRoleMatrix] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'table'
   const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
@@ -110,6 +145,19 @@ export default function UsersPage() {
     });
   };
 
+  const applyRolePermissions = (role) => {
+    if (!selectedUser) return;
+    const permissions = ROLE_PERMISSIONS[role] || [];
+    setSelectedUser({ ...selectedUser, permissions });
+  };
+
+  const handleToggleStatus = (user, newStatus) => {
+    const newRole = newStatus ? user.role : 'inactive';
+    base44.entities.User.update(user.id, { role: newRole }).then(() => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    });
+  };
+
   const togglePermission = (permissionId) => {
     if (!selectedUser) return;
     const currentPermissions = selectedUser.permissions || [];
@@ -125,10 +173,10 @@ export default function UsersPage() {
   );
 
   const getRoleBadge = (role) => {
-    return role === 'admin' 
-      ? 'bg-purple-100 text-purple-700'
-      : 'bg-blue-100 text-blue-700';
+    return ROLES[role]?.color || 'bg-slate-100 text-slate-700';
   };
+
+  const isUserActive = (user) => user.role !== 'inactive';
 
   if (currentUser?.role !== 'admin') {
     return (
@@ -149,9 +197,21 @@ export default function UsersPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Gebruikersbeheer</h1>
-          <p className="text-slate-500">Beheer gebruikers en uitnodigingen</p>
+          <p className="text-slate-500">Beheer gebruikers, rollen en permissies</p>
         </div>
-        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+        <div className="flex gap-2">
+          <Dialog open={showRoleMatrix} onOpenChange={setShowRoleMatrix}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Shield className="w-4 h-4" />
+                Rol Matrix
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <RoleMatrixDialog />
+            </DialogContent>
+          </Dialog>
+          <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
           <DialogTrigger asChild>
             <Button className="bg-blue-900 hover:bg-blue-800">
               <Plus className="w-4 h-4 mr-2" />
@@ -231,9 +291,9 @@ export default function UsersPage() {
         </CardContent>
       </Card>
 
-      {/* Search */}
+      {/* Search & View Mode */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <Input
@@ -242,6 +302,22 @@ export default function UsersPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant={viewMode === 'cards' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setViewMode('cards')}
+            >
+              Kaarten
+            </Button>
+            <Button 
+              variant={viewMode === 'table' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setViewMode('table')}
+            >
+              Tabel
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -253,6 +329,69 @@ export default function UsersPage() {
         <Card className="text-center py-12">
           <Users className="w-12 h-12 mx-auto text-slate-300 mb-3" />
           <p className="text-slate-500">Geen gebruikers gevonden</p>
+        </Card>
+      ) : viewMode === 'table' ? (
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-slate-50">
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Naam</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Email</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Rol</th>
+                  <th className="text-center py-3 px-4 font-semibold text-slate-700">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Aangemaakt</th>
+                  <th className="text-center py-3 px-4 font-semibold text-slate-700">Acties</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="border-b hover:bg-slate-50">
+                    <td className="py-3 px-4">
+                      <div className="font-medium text-slate-900">{user.full_name || 'Naamloos'}</div>
+                    </td>
+                    <td className="py-3 px-4 text-slate-600">{user.email}</td>
+                    <td className="py-3 px-4">
+                      <Badge className={getRoleBadge(user.role)}>
+                        {ROLES[user.role]?.label || user.role}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center">
+                        {isUserActive(user) ? (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                            <span className="text-xs text-emerald-700">Actief</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-slate-300 rounded-full" />
+                            <span className="text-xs text-slate-500">Inactief</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-slate-500">
+                      {user.created_date ? format(new Date(user.created_date), 'dd-MM-yyyy') : '-'}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        {user.role !== 'admin' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditPermissions(user)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
@@ -272,7 +411,7 @@ export default function UsersPage() {
                     </div>
                   </div>
                   <Badge className={getRoleBadge(user.role)}>
-                    {user.role === 'admin' ? 'Administrator' : 'Gebruiker'}
+                    {ROLES[user.role]?.label || user.role}
                   </Badge>
                 </div>
               </CardHeader>
@@ -304,47 +443,66 @@ export default function UsersPage() {
 
       {/* Permissions Dialog */}
       <Dialog open={showPermissionsDialog} onOpenChange={setShowPermissionsDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Permissies beheren - {selectedUser?.full_name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-slate-50 p-3 rounded-lg">
               <p className="text-sm text-slate-700">
-                <strong>Let op:</strong> Administrators hebben automatisch toegang tot alle functies.
-                Voor gewone gebruikers kun je hieronder specifieke permissies instellen.
+                <strong>Rol sjablonen:</strong> Klik op een rol om snel alle permissies in te stellen.
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-base font-semibold">Beschikbare modules</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {ALL_PERMISSIONS.map(permission => (
-                  <label
-                    key={permission.id}
-                    className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedUser?.permissions?.includes(permission.id)
-                        ? 'bg-blue-50 border-blue-300'
-                        : 'bg-white border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedUser?.permissions?.includes(permission.id) || false}
-                      onChange={() => togglePermission(permission.id)}
-                      className="sr-only"
-                    />
-                    <div className={`w-5 h-5 rounded flex items-center justify-center text-xs ${
-                      selectedUser?.permissions?.includes(permission.id)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-200'
-                    }`}>
-                      {selectedUser?.permissions?.includes(permission.id) && '✓'}
-                    </div>
-                    <span className="text-sm">{permission.label}</span>
-                  </label>
-                ))}
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              {['supervisor', 'editor', 'user'].map(role => (
+                <Button
+                  key={role}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => applyRolePermissions(role)}
+                  className="justify-start"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  {ROLES[role].label}
+                </Button>
+              ))}
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Modules per categorie</Label>
+              {['Basis', 'Beheer', 'Rapportage', 'Admin'].map(category => (
+                <div key={category} className="space-y-2">
+                  <h4 className="text-sm font-medium text-slate-700">{category}</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ALL_PERMISSIONS.filter(p => p.category === category).map(permission => (
+                      <label
+                        key={permission.id}
+                        className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
+                          selectedUser?.permissions?.includes(permission.id)
+                            ? 'bg-blue-50 border-blue-300'
+                            : 'bg-white border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUser?.permissions?.includes(permission.id) || false}
+                          onChange={() => togglePermission(permission.id)}
+                          className="sr-only"
+                        />
+                        <div className={`w-4 h-4 rounded flex items-center justify-center text-xs ${
+                          selectedUser?.permissions?.includes(permission.id)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-200'
+                        }`}>
+                          {selectedUser?.permissions?.includes(permission.id) && '✓'}
+                        </div>
+                        <span className="text-sm">{permission.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="flex gap-2 pt-4">
@@ -370,6 +528,65 @@ export default function UsersPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function RoleMatrixDialog() {
+  const roleOrder = ['admin', 'supervisor', 'editor', 'user'];
+  
+  return (
+    <div className="space-y-4">
+      <DialogHeader>
+        <DialogTitle>Rol-based Permissie Matrix</DialogTitle>
+      </DialogHeader>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th className="text-left py-2 px-3 font-semibold text-slate-700 border-b">Module</th>
+              {roleOrder.map(role => (
+                <th key={role} className="text-center py-2 px-3 font-semibold text-slate-700 border-b">
+                  <Badge className={ROLES[role].color}>{ROLES[role].label}</Badge>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {ALL_PERMISSIONS.map(perm => (
+              <tr key={perm.id} className="border-b hover:bg-slate-50">
+                <td className="py-2 px-3 text-slate-700 font-medium">{perm.label}</td>
+                {roleOrder.map(role => (
+                  <td key={role} className="py-2 px-3 text-center">
+                    {ROLE_PERMISSIONS[role]?.includes(perm.id) ? (
+                      <div className="flex justify-center">
+                        <div className="w-5 h-5 bg-emerald-100 rounded flex items-center justify-center">
+                          <span className="text-emerald-700 text-xs font-bold">✓</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-center">
+                        <div className="w-5 h-5 bg-slate-100 rounded flex items-center justify-center">
+                          <span className="text-slate-400 text-xs">−</span>
+                        </div>
+                      </div>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-900">
+        <p className="font-medium mb-1">Over deze matrix:</p>
+        <ul className="list-disc list-inside space-y-1 text-blue-800">
+          <li><strong>Admin:</strong> Volledige toegang tot alles</li>
+          <li><strong>Supervisor:</strong> Beheer en supervisie van kern functies</li>
+          <li><strong>Editor:</strong> Gegevens aanpassen en beheren</li>
+          <li><strong>User:</strong> Basis toegang tot dagelijkse functies</li>
+        </ul>
+      </div>
     </div>
   );
 }
