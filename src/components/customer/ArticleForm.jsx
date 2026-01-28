@@ -145,15 +145,26 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
         <Card className="bg-slate-50">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Prijsregels</CardTitle>
-            <Button 
-              type="button" 
-              size="sm" 
-              variant="outline"
-              onClick={() => setShowPriceRuleForm(true)}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Regel Toevoegen
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                size="sm" 
+                variant="outline"
+                onClick={() => setShowImportCSV(true)}
+              >
+                <Upload className="w-4 h-4 mr-1" />
+                CSV Importeren
+              </Button>
+              <Button 
+                type="button" 
+                size="sm" 
+                variant="outline"
+                onClick={() => setShowPriceRuleForm(true)}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Regel Toevoegen
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-2">
             {(!formData.price_rules || formData.price_rules.length === 0) ? (
