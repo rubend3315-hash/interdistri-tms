@@ -67,7 +67,6 @@ const ALL_PERMISSIONS = [
 export default function UsersPage() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
-  const [showRoleMatrix, setShowRoleMatrix] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [permissionSearchTerm, setPermissionSearchTerm] = useState('');
