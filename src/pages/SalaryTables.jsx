@@ -151,7 +151,12 @@ export default function SalaryTables() {
     return matchesType && matchesPeriod;
   });
 
-  const getScaleColor = (scale) => {
+  const getScaleColor = (scale, step) => {
+    // Min Trede krijgt een speciale kleur
+    if (step != null && step < 0) {
+      return 'bg-orange-100 text-orange-800';
+    }
+    
     const colors = {
       'C': 'bg-blue-100 text-blue-800',
       'D': 'bg-green-100 text-green-800',
@@ -334,8 +339,8 @@ export default function SalaryTables() {
                                   : '-'}
                               </TableCell>
                               <TableCell>
-                                <Badge className={getScaleColor(entry.scale)}>
-                                  Schaal {entry.scale}
+                                <Badge className={getScaleColor(entry.scale, entry.step)}>
+                                  {entry.step != null && entry.step < 0 ? 'Min Trede' : `Schaal ${entry.scale}`}
                                 </Badge>
                               </TableCell>
                               <TableCell>{entry.scale} Trede {entry.step || '-'}</TableCell>
