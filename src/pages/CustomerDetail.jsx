@@ -17,6 +17,7 @@ import ImportDataTable from "@/components/customer/ImportDataTable";
 import CalculationsTab from "@/components/customer/CalculationsTab";
 import ImportHistory from "@/components/customer/ImportHistory";
 import ArticleList from "@/components/customer/ArticleList";
+import TIModelRoutesTab from "@/components/customer/TIModelRoutesTab";
 import {
   ArrowLeft,
   Save,
