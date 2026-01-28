@@ -118,12 +118,11 @@ export default function CalculationsTab({ imports, customerArticles }) {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-blue-900">Artikel kolom</label>
-                <Select value={articleColumn || "none"} onValueChange={(v) => setArticleColumn(v === "none" ? "" : v)}>
+                <Select value={articleColumn || ""} onValueChange={(v) => setArticleColumn(v)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Optioneel" />
+                    <SelectValue placeholder="Niet selecteren" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Niet selecteren</SelectItem>
                     {columns.map(col => (
                       <SelectItem key={col} value={col}>{col}</SelectItem>
                     ))}
