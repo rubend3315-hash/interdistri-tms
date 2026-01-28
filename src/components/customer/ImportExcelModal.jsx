@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Upload, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { validateImportData } from "@/components/utils/validateImportData";
+import ImportSummary from "@/components/customer/ImportSummary";
 
 // Functie om Excel datum (getal) naar DD-MM-JJJJ te converteren
 const formatExcelDate = (value) => {
