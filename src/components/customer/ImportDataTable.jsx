@@ -63,14 +63,17 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
     : [];
 
   // Filter data based on period selection
+  const datumCol = columns.find(col => col.toLowerCase() === 'datum');
+  
   const filteredData = uniqueData
     .filter(row => {
       if (periodType === "all") return true;
+      if (!datumCol || !row[datumCol]) return false;
 
-      const importDate = convertExcelDate(row._importDate);
+      const rowDate = convertExcelDate(row[datumCol]);
 
       if (periodType === "day") {
-        return importDate === selectedDate;
+        return rowDate === selectedDate;
       }
 
       if (periodType === "week") {
@@ -81,12 +84,12 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
 
-        const importDateObj = new Date(importDate);
-        return importDateObj >= weekStart && importDateObj <= weekEnd;
+        const rowDateObj = new Date(rowDate);
+        return rowDateObj >= weekStart && rowDateObj <= weekEnd;
       }
 
       if (periodType === "period") {
-        return importDate >= startDate && importDate <= endDate;
+        return rowDate >= startDate && rowDate <= endDate;
       }
 
       return true;
