@@ -1004,12 +1004,6 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
           }
           setShowReiskostenDialog(false);
         }}
-        onDelete={(index) => {
-          const newRegels = [...reiskostenregels];
-          newRegels[index] = { ...newRegels[index], status: 'Inactief' };
-          setReiskostenregels(newRegels);
-          setShowReiskostenDialog(false);
-        }}
       />
     </div>
   );
