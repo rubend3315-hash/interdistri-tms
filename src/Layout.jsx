@@ -45,13 +45,18 @@ const menuItems = [
     label: "HR & Beheer",
     items: [
       { name: "Medewerkers", icon: Users, page: "Employees" },
+      { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
+      { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
+    ]
+  },
+  {
+    label: "Beheer",
+    items: [
       { name: "Gebruikers", icon: Settings, page: "Users" },
       { name: "Voertuigen", icon: Car, page: "Vehicles" },
       { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
       { name: "Klanten", icon: Building2, page: "Customers" },
       { name: "Projecten", icon: FolderKanban, page: "Projects" },
-      { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
-      { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
       { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
     ]
   },
