@@ -8,7 +8,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { format } from "date-fns";
 import { validateImportData } from "@/components/utils/validateImportData";
+
+// Functie om Excel datum (getal) naar DD-MM-JJJJ te converteren
+const formatExcelDate = (value) => {
+  if (!value || typeof value !== 'number') return value;
+  
+  // Excel datums zijn getallen (dagen sinds 1900-01-01)
+  if (value > 30000 && value < 50000) {
+    try {
+      // Excel epoch is 1900-01-01, JavaScript epoch is 1970-01-01
+      const excelDate = new Date((value - 25569) * 86400 * 1000);
+      return format(excelDate, 'dd-MM-yyyy');
+    } catch {
+      return value;
+    }
+  }
+  return value;
+};
 
 export default function ImportExcelModal({ open, onOpenChange, customerId, customerArticles }) {
   const [file, setFile] = useState(null);
@@ -212,7 +230,7 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
                               key={`${idx}-${col}`} 
                               className="px-3 py-2 text-slate-600 whitespace-nowrap overflow-hidden text-ellipsis max-w-xs"
                             >
-                              {row[col]}
+                              {formatExcelDate(row[col])}
                             </td>
                           ))}
                         </tr>
