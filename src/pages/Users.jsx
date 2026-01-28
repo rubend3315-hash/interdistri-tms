@@ -70,6 +70,7 @@ export default function UsersPage() {
   const [showRoleMatrix, setShowRoleMatrix] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [permissionSearchTerm, setPermissionSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('cards');
   const queryClient = useQueryClient();
 

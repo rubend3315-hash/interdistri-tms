@@ -51,6 +51,7 @@ import Approvals from './pages/Approvals';
 import CaoRules from './pages/CaoRules';
 import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
+import Employees from './pages/Employees';
 import Holidays from './pages/Holidays';
 import MobileEntry from './pages/MobileEntry';
 import NiwoPermits from './pages/NiwoPermits';
@@ -63,7 +64,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Employees from './pages/Employees';
 import __Layout from './Layout.jsx';
 
 
@@ -72,6 +72,7 @@ export const PAGES = {
     "CaoRules": CaoRules,
     "Customers": Customers,
     "Dashboard": Dashboard,
+    "Employees": Employees,
     "Holidays": Holidays,
     "MobileEntry": MobileEntry,
     "NiwoPermits": NiwoPermits,
@@ -84,7 +85,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Employees": Employees,
 }
 
 export const pagesConfig = {
