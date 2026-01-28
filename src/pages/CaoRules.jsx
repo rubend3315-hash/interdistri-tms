@@ -60,10 +60,13 @@ export default function CaoRules() {
     }
   });
 
+  const salaryScales = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'Jeugdloon', 'Individueel'].sort();
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     rule_type: "Toeslag",
+    salary_scale: "",
     percentage: "",
     fixed_amount: "",
     start_time: "",
@@ -79,6 +82,7 @@ export default function CaoRules() {
       name: "",
       description: "",
       rule_type: "Toeslag",
+      salary_scale: "",
       percentage: "",
       fixed_amount: "",
       start_time: "",
@@ -95,6 +99,7 @@ export default function CaoRules() {
     setFormData({
       ...rule,
       applies_to_days: rule.applies_to_days || [],
+      salary_scale: rule.salary_scale || "",
       percentage: rule.percentage || "",
       fixed_amount: rule.fixed_amount || ""
     });
@@ -205,6 +210,11 @@ export default function CaoRules() {
                               <p className="text-sm text-slate-500 mt-1">{rule.description}</p>
                             )}
                             <div className="flex flex-wrap gap-4 mt-3 text-sm">
+                              {rule.salary_scale && (
+                                <span className="flex items-center gap-1">
+                                  <Badge variant="outline">Schaal {rule.salary_scale}</Badge>
+                                </span>
+                              )}
                               {rule.percentage && (
                                 <span className="flex items-center gap-1 text-slate-600">
                                   <Percent className="w-4 h-4 text-slate-400" />
@@ -329,6 +339,23 @@ export default function CaoRules() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Loonschaal</Label>
+              <Select 
+                value={formData.salary_scale} 
+                onValueChange={(v) => setFormData({ ...formData, salary_scale: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer schaal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {salaryScales.map(scale => (
+                    <SelectItem key={scale} value={scale}>Schaal {scale}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
