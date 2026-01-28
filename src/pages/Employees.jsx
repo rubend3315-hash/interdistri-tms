@@ -322,9 +322,9 @@ export default function Employees() {
   );
 }
 
-function ProfielTab({ employee }) {
-  return (
-    <div className="space-y-6 py-4">
+function ProfielTab({ employee, viewOnly }) {
+    return (
+      <div className="space-y-6 py-4">
       {/* Header met foto en status */}
       <div className="flex items-start justify-between p-6 bg-slate-50 rounded-xl">
         <div className="flex items-center gap-4">
