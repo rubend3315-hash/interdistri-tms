@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 
 export default function Customers() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
