@@ -1069,7 +1069,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                             )}
                           </td>
                         </tr>
-                        <tr className="bg-slate-50/50 border-b">
+                        <tr className={`${bgColor} border-b opacity-75`}>
                           <td colSpan="6" className="py-2 px-3">
                             <div className="inline-flex gap-6 text-xs">
                               <div className="flex items-center gap-2">
