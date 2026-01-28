@@ -898,7 +898,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
                           <td colSpan="6" className="py-2 px-3">
                             <div className="inline-flex gap-6 text-xs">
                               <div className="flex items-center gap-2">
-                                <span className="text-slate-500 font-medium">Week 1:</span>
+                                <span className="text-slate-500 font-medium">Week 1 (oneven):</span>
                                 <div className="flex gap-1">
                                   {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map((day, idx) => {
                                     const isWorking = contract.week1?.[day];
