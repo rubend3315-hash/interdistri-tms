@@ -210,6 +210,13 @@ export default function MobileEntry() {
   };
 
   const handleSubmitEntry = () => {
+    // Validatie: er moet minimaal 1 rit zijn ingevoerd
+    if (trips.length === 0) {
+      alert('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen. Ga naar het Ritten tabblad om een rit toe te voegen.');
+      setActiveTab("ritten");
+      return;
+    }
+
     if (!signature) {
       setShowSignatureDialog(true);
       return;
