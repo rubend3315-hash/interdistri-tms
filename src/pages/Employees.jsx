@@ -1027,50 +1027,38 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                 </thead>
                 <tbody>
                   {contractregels && contractregels.length > 0 && contractregels.filter(c => c.status !== 'Inactief').sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum)).map((contract, index) => {
-                    const contractIndex = contractregels.indexOf(contract);
-                    const week1Days = contract.week1 ? Object.entries(contract.week1)
-                      .filter(([, checked]) => checked)
-                      .map(([day]) => day.charAt(0).toUpperCase())
-                      .join('') : '-';
-                    const week2Days = contract.week2 ? Object.entries(contract.week2)
-                      .filter(([, checked]) => checked)
-                      .map(([day]) => day.charAt(0).toUpperCase())
-                      .join('') : '-';
+                    const isExpired = contract.einddatum && isBefore(new Date(contract.einddatum), new Date());
+                    const textColor = isExpired ? 'text-slate-400' : 'text-slate-900';
                     const bgColor = index === 0 ? 'bg-blue-50' : '';
 
                     return (
                       <React.Fragment key={index}>
-                        {(() => {
-                          const isExpired = contract.einddatum && isBefore(new Date(contract.einddatum), new Date());
-                          const textColor = isExpired ? 'text-slate-400' : 'text-slate-900';
-                          return (
-                            <>
-                              <tr className={`border-b ${bgColor} hover:opacity-75`}>
-                                <td className={`py-2 px-3 ${textColor}`}>
-                                  {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
-                                </td>
-                                <td className={`py-2 px-3 ${textColor}`}>
-                                  {contract.einddatum ? format(new Date(contract.einddatum), 'dd-MM-yyyy') : '-'}
-                                </td>
-                                <td className={`py-2 px-3 ${textColor}`}>{contract.type_contract}</td>
-                                <td className={`py-2 px-3 ${textColor}`}>{contract.loonschaal || '-'}</td>
-                                <td className={`py-2 px-3 ${textColor}`}>{contract.uren_per_week}</td>
-                                <td className="py-2 px-3 text-center">
-                                  {!viewOnly && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm"
-                                      onClick={() => {
-                                        setEditingContract({ ...contract, index: contractIndex });
-                                        setShowContractDialog(true);
-                                      }}
-                                    >
-                                      <Edit className="w-4 h-4" />
-                                    </Button>
-                                  )}
-                                </td>
-                              </tr>
-                              <tr className={`${bgColor} border-b opacity-75`}>
+                        <tr className={`border-b ${bgColor} hover:opacity-75`}>
+                          <td className={`py-2 px-3 ${textColor}`}>
+                            {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
+                          </td>
+                          <td className={`py-2 px-3 ${textColor}`}>
+                            {contract.einddatum ? format(new Date(contract.einddatum), 'dd-MM-yyyy') : '-'}
+                          </td>
+                          <td className={`py-2 px-3 ${textColor}`}>{contract.type_contract}</td>
+                          <td className={`py-2 px-3 ${textColor}`}>{contract.loonschaal || '-'}</td>
+                          <td className={`py-2 px-3 ${textColor}`}>{contract.uren_per_week}</td>
+                          <td className="py-2 px-3 text-center">
+                            {!viewOnly && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setEditingContract({ ...contract, index: contractregels.indexOf(contract) });
+                                  setShowContractDialog(true);
+                                }}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                        <tr className={`${bgColor} border-b opacity-75`}>
                           <td colSpan="6" className="py-2 px-3">
                             <div className="inline-flex gap-6 text-xs">
                               <div className="flex items-center gap-2">
@@ -1117,10 +1105,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                               </div>
                             </div>
                           </td>
-                            </tr>
-                            </>
-                          );
-                        })()}
+                        </tr>
                       </React.Fragment>
                     );
                   })}
