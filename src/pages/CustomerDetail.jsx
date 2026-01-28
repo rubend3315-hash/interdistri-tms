@@ -354,10 +354,22 @@ export default function CustomerDetail() {
             Opmerkingen
           </TabsTrigger>
           {isPostNL && (
-            <TabsTrigger value="ti-model" className="gap-2">
-              <Package className="w-4 h-4" />
-              TI Model Ritten
-            </TabsTrigger>
+           <TabsTrigger value="dashboard" className="gap-2">
+             <BarChart3 className="w-4 h-4" />
+             Dashboard
+           </TabsTrigger>
+          )}
+          {isPostNL && (
+           <TabsTrigger value="reports" className="gap-2">
+             <TrendingUp className="w-4 h-4" />
+             AI Rapporten
+           </TabsTrigger>
+          )}
+          {isPostNL && (
+           <TabsTrigger value="ti-model" className="gap-2">
+             <Package className="w-4 h-4" />
+             TI Model Ritten
+           </TabsTrigger>
           )}
         </TabsList>
 
