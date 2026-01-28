@@ -223,48 +223,71 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
               </div>
             </>
           )}
+          </div>
 
-          {!showValidation && parseResult && (
-            <div className="flex justify-end gap-3 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  resetModal();
-                  onOpenChange(false);
-                }}
-              >
-                Annuleren
-              </Button>
-              <Button 
-                className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => saveMutation.mutate()}
-                disabled={saveMutation.isPending || !importName}
-              >
-                {saveMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Valideren...
-                  </>
-                ) : (
-                  "Importeren"
-                )}
-              </Button>
-            </div>
-          )}
-          {!showValidation && !parseResult && (
-            <div className="flex justify-end gap-3 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  resetModal();
-                  onOpenChange(false);
-                }}
-              >
-                Sluiten
-              </Button>
-            </div>
-          )}
-        </div>
+          <div className="border-t pt-4 flex justify-end gap-3">
+           {showValidation ? (
+             <>
+               <Button 
+                 variant="outline" 
+                 onClick={() => setShowValidation(false)}
+               >
+                 Vorige
+               </Button>
+               <Button 
+                 className="bg-blue-600 hover:bg-blue-700"
+                 onClick={() => saveMutation.mutate()}
+                 disabled={saveMutation.isPending}
+               >
+                 {saveMutation.isPending ? (
+                   <>
+                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                     Importeren...
+                   </>
+                 ) : (
+                   "Toch importeren"
+                 )}
+               </Button>
+             </>
+           ) : parseResult ? (
+             <>
+               <Button 
+                 variant="outline" 
+                 onClick={() => {
+                   resetModal();
+                   onOpenChange(false);
+                 }}
+               >
+                 Annuleren
+               </Button>
+               <Button 
+                 className="bg-blue-600 hover:bg-blue-700"
+                 onClick={() => saveMutation.mutate()}
+                 disabled={saveMutation.isPending || !importName}
+               >
+                 {saveMutation.isPending ? (
+                   <>
+                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                     Valideren...
+                   </>
+                 ) : (
+                   "Importeren"
+                 )}
+               </Button>
+             </>
+           ) : (
+             <Button 
+               variant="outline" 
+               onClick={() => {
+                 resetModal();
+                 onOpenChange(false);
+               }}
+             >
+               Sluiten
+             </Button>
+           )}
+          </div>
+          </div>
       </DialogContent>
     </Dialog>
   );
