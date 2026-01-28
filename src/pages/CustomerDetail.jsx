@@ -272,17 +272,17 @@ export default function CustomerDetail() {
                   <div className="space-y-2">
                     <Label>Status</Label>
                     <Select 
-                      value={formData.status || "Actief"} 
-                      onValueChange={(v) => setFormData({ ...formData, status: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecteer status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Actief">Actief</SelectItem>
-                        <SelectItem value="Inactief">Inactief</SelectItem>
-                      </SelectContent>
-                    </Select>
+                       value={formData.status || ""} 
+                       onValueChange={(v) => setFormData({ ...formData, status: v })}
+                     >
+                       <SelectTrigger>
+                         <SelectValue placeholder="Selecteer status" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="Actief">Actief</SelectItem>
+                         <SelectItem value="Inactief">Inactief</SelectItem>
+                       </SelectContent>
+                     </Select>
                   </div>
                 </div>
 
