@@ -1054,23 +1054,24 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
         preFilledData={typeof showContractDialog === 'object' ? showContractDialog : null}
         contractList={contractregels}
         onSave={(contract) => {
+          let newContracts;
           if (editingContract?.index !== undefined) {
-            const newContracts = [...contractregels];
+            newContracts = [...contractregels];
             newContracts[editingContract.index] = contract;
-            setContractregels(newContracts);
           } else {
             // Voor nieuw contract: update vorig contract met einddatum
             if (typeof showContractDialog === 'object' && showContractDialog.prevContractIndex !== undefined) {
-              const newContracts = [...contractregels];
+              newContracts = [...contractregels];
               newContracts[showContractDialog.prevContractIndex] = {
                 ...newContracts[showContractDialog.prevContractIndex],
                 einddatum: contract.startdatum
               };
-              setContractregels([...newContracts, contract]);
+              newContracts.push(contract);
             } else {
-              setContractregels([...contractregels, contract]);
+              newContracts = [...contractregels, contract];
             }
           }
+          handleSaveContract(newContracts);
           setShowContractDialog(false);
         }}
       />
