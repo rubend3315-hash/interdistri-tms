@@ -129,7 +129,7 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
 
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+            <Select value={formData.status || "Actief"} onValueChange={(v) => setFormData({ ...formData, status: v })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
