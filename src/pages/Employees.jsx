@@ -1165,16 +1165,18 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                       </p>
                       <p className="text-sm text-slate-600">€{regel.vergoeding_per_dag}/dag</p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => {
-                        setEditingReiskosten({ ...regel, index: reiskostenregels.indexOf(regel) });
-                        setShowReiskostenDialog(true);
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
+                    {!viewOnly && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => {
+                          setEditingReiskosten({ ...regel, index: reiskostenregels.indexOf(regel) });
+                          setShowReiskostenDialog(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
