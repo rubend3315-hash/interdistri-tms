@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
       fileName: file.name,
       fileUrl: uploadResponse.file_url,
       columns: columns,
-      preview: data.slice(0, 5),
+      preview: data,
       totalRows: data.length,
       rawData: data
     });
