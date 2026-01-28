@@ -88,7 +88,57 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
         </DialogHeader>
 
         <div className="space-y-4">
-          {!parseResult ? (
+          {showValidation ? (
+            <>
+              <Card className="bg-red-50 border-red-200">
+                <CardContent className="pt-6">
+                  <div className="flex gap-2 items-start">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-red-900 mb-3">
+                        {validationErrors.length} rij(en) met validatiefouten
+                      </p>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {validationErrors.map((error, idx) => (
+                          <div key={idx} className="text-xs text-red-800 bg-white rounded p-2">
+                            <p className="font-semibold">Rij {error.row}:</p>
+                            <ul className="list-disc list-inside ml-1">
+                              {error.errors.map((err, errIdx) => (
+                                <li key={errIdx}>{err}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowValidation(false)}
+                >
+                  Vorige
+                </Button>
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => saveMutation.mutate()}
+                  disabled={saveMutation.isPending}
+                >
+                  {saveMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Importeren...
+                    </>
+                  ) : (
+                    "Toch importeren"
+                  )}
+                </Button>
+              </div>
+            </>
+          ) : !parseResult ? (
             <>
               <div className="space-y-2">
                 <Label>Import naam</Label>
