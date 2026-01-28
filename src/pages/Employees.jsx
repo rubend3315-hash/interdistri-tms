@@ -841,7 +841,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
              {contractregels.filter(c => c.status !== 'Inactief').map((contract, index) => (
                <div key={index} className="p-3 border rounded-lg">
                  <div className="flex justify-between items-start">
-                   <div>
+                   <div className="flex-1">
                      <div className="flex items-center gap-2">
                        <p className="font-medium">{contract.type_contract}</p>
                        {contract.status === 'Inactief' && (
@@ -853,6 +853,34 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
                        {contract.einddatum && ` - ${format(new Date(contract.einddatum), 'dd-MM-yyyy')}`}
                      </p>
                      <p className="text-sm text-slate-600">{contract.uren_per_week} uur/week</p>
+                     
+                     {/* Weekrooster weergave */}
+                     {(contract.week1 || contract.week2) && (
+                       <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                         {contract.week1 && (
+                           <div>
+                             <p className="text-slate-600 font-medium">Week 1:</p>
+                             <p className="text-slate-700">
+                               {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
+                                 .filter(d => contract.week1?.[d])
+                                 .map(d => d.substring(0, 2))
+                                 .join(', ')}
+                             </p>
+                           </div>
+                         )}
+                         {contract.week2 && (
+                           <div>
+                             <p className="text-slate-600 font-medium">Week 2:</p>
+                             <p className="text-slate-700">
+                               {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
+                                 .filter(d => contract.week2?.[d])
+                                 .map(d => d.substring(0, 2))
+                                 .join(', ')}
+                             </p>
+                           </div>
+                         )}
+                       </div>
+                     )}
                    </div>
                    <Button 
                      variant="ghost" 
