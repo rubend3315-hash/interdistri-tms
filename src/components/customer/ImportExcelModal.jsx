@@ -48,6 +48,7 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
   const [parseResult, setParseResult] = useState(null);
   const [validationErrors, setValidationErrors] = useState([]);
   const [showValidation, setShowValidation] = useState(false);
+  const [successImport, setSuccessImport] = useState(null);
   const queryClient = useQueryClient();
 
   const parseMutation = useMutation({
