@@ -51,8 +51,16 @@ Deno.serve(async (req) => {
       return !(typeof firstColumnValue === 'string' && firstColumnValue.includes('Totaal'));
     });
 
-    // Detecteer kolommen
-    const columns = headerRow ? Object.keys(headerRow) : Object.keys(data[0] || {});
+    // Detecteer kolommen en filter lege kolommen
+    let columns = headerRow ? Object.keys(headerRow) : Object.keys(data[0] || {});
+    
+    // Filter kolommen die volledig leeg zijn (alleen lege waarden in alle data rijen)
+    columns = columns.filter(col => {
+      return data.some(row => {
+        const value = row[col];
+        return value && value.toString().trim() !== '';
+      });
+    });
 
     return Response.json({
       success: true,
