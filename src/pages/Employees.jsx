@@ -1082,13 +1082,14 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
         reiskosten={editingReiskosten}
         employee={employee}
         onSave={(regel) => {
+          let newRegels;
           if (editingReiskosten?.index !== undefined) {
-            const newRegels = [...reiskostenregels];
+            newRegels = [...reiskostenregels];
             newRegels[editingReiskosten.index] = regel;
-            setReiskostenregels(newRegels);
           } else {
-            setReiskostenregels([...reiskostenregels, regel]);
+            newRegels = [...reiskostenregels, regel];
           }
+          handleSaveReiskosten(newRegels);
           setShowReiskostenDialog(false);
         }}
       />
