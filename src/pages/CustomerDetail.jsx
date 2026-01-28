@@ -34,7 +34,7 @@ import {
   History,
   X,
   Edit2,
-  Search
+  Calendar
 } from "lucide-react";
 
 // Imports Tab Component with unified search and filter
