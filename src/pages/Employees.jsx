@@ -919,7 +919,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-slate-500 font-medium">Week 2:</span>
+                                <span className="text-slate-500 font-medium">Week 2 (even):</span>
                                 <div className="flex gap-1">
                                   {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map((day, idx) => {
                                     const isWorking = contract.week2?.[day];
