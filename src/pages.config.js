@@ -58,11 +58,11 @@ import NiwoPermits from './pages/NiwoPermits';
 import Planning from './pages/Planning';
 import Projects from './pages/Projects';
 import SalaryReports from './pages/SalaryReports';
-import SalaryTables from './pages/SalaryTables';
 import ShiftTime from './pages/ShiftTime';
 import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Vehicles from './pages/Vehicles';
+import SalaryTables from './pages/SalaryTables';
 import __Layout from './Layout.jsx';
 
 
@@ -78,11 +78,11 @@ export const PAGES = {
     "Planning": Planning,
     "Projects": Projects,
     "SalaryReports": SalaryReports,
-    "SalaryTables": SalaryTables,
     "ShiftTime": ShiftTime,
     "TimeTracking": TimeTracking,
     "Trips": Trips,
     "Vehicles": Vehicles,
+    "SalaryTables": SalaryTables,
 }
 
 export const pagesConfig = {

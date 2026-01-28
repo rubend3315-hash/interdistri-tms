@@ -18,15 +18,23 @@ import {
   DollarSign,
   Calendar,
   Trash2,
-  Euro
+  Euro,
+  Copy,
+  Info
 } from "lucide-react";
 
 const tableTypes = ["CAO Beroepsgoederenvervoer", "Bijzondere loontabel"];
+const scaleTypes = ["Reguliere Schalen (C-H)", "Speciale Schalen"];
 
 export default function SalaryTables() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [activeTab, setActiveTab] = useState("CAO Beroepsgoederenvervoer");
+  const [activeScaleTab, setActiveScaleTab] = useState("Reguliere Schalen (C-H)");
+  const [selectedPeriod, setSelectedPeriod] = useState("2026-01-01");
+  const [copyPercentage, setCopyPercentage] = useState(0);
+  const [copyTargetDate, setCopyTargetDate] = useState("");
   const queryClient = useQueryClient();
 
   const { data: salaryEntries = [], isLoading } = useQuery({
@@ -118,24 +126,112 @@ export default function SalaryTables() {
     }
   };
 
-  const filteredEntries = salaryEntries.filter(e => e.table_type === activeTab);
+  // Get unique periods
+  const periods = [...new Set(salaryEntries
+    .filter(e => e.start_date)
+    .map(e => e.start_date)
+  )].sort().reverse();
 
-  // Group by scale
-  const scales = [...new Set(filteredEntries.map(e => e.scale))].sort();
+  // Filter entries
+  const filteredEntries = salaryEntries.filter(e => {
+    const matchesType = e.table_type === activeTab;
+    const matchesPeriod = e.start_date === selectedPeriod;
+    
+    if (activeTab === "CAO Beroepsgoederenvervoer") {
+      const regularScales = ['C', 'D', 'E', 'F', 'G', 'H'];
+      const isRegular = regularScales.includes(e.scale);
+      if (activeScaleTab === "Reguliere Schalen (C-H)") {
+        return matchesType && matchesPeriod && isRegular;
+      } else {
+        return matchesType && matchesPeriod && !isRegular;
+      }
+    }
+    return matchesType && matchesPeriod;
+  });
+
+  const handleCopyPeriod = () => {
+    if (!copyTargetDate) return;
+    
+    const entriesToCopy = salaryEntries.filter(e => 
+      e.start_date === selectedPeriod && e.table_type === activeTab
+    );
+
+    const multiplier = 1 + (copyPercentage / 100);
+    
+    entriesToCopy.forEach(entry => {
+      const newEntry = {
+        ...entry,
+        start_date: copyTargetDate,
+        end_date: null,
+        hourly_rate: entry.hourly_rate ? Number((entry.hourly_rate * multiplier).toFixed(2)) : null,
+        monthly_salary: entry.monthly_salary ? Number((entry.monthly_salary * multiplier).toFixed(2)) : null
+      };
+      delete newEntry.id;
+      delete newEntry.created_date;
+      delete newEntry.updated_date;
+      delete newEntry.created_by;
+      
+      createMutation.mutate(newEntry);
+    });
+
+    setIsCopyDialogOpen(false);
+    setCopyPercentage(0);
+    setCopyTargetDate("");
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Loontabellen</h1>
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
+            <Euro className="w-8 h-8" />
+            Loontabel Beheer
+          </h1>
           <p className="text-slate-500 mt-1">CAO en bijzondere loontabellen beheer</p>
         </div>
-        <Button onClick={openNewDialog} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Nieuwe Invoer
-        </Button>
+        <div className="flex gap-2">
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {periods.map(p => (
+                <SelectItem key={p} value={p}>
+                  {format(new Date(p), "d MMMM yyyy", { locale: nl })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button 
+            variant="outline" 
+            onClick={() => setIsCopyDialogOpen(true)}
+            disabled={!selectedPeriod}
+          >
+            <Copy className="w-4 h-4 mr-2" />
+            Kopieer periode
+          </Button>
+          <Button onClick={openNewDialog} className="bg-blue-900 hover:bg-blue-800">
+            <Plus className="w-4 h-4 mr-2" />
+            Nieuwe Loonschaal
+          </Button>
+        </div>
       </div>
+
+      {/* Info Banner */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="p-4">
+          <div className="flex gap-3 items-start">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-blue-900 font-medium">Periode-gebonden loonschalen</p>
+              <p className="text-xs text-blue-700 mt-1">
+                Loonschalen zijn historisch bewaard per ingangsdatum. Reguliere schalen (C-H) en speciale schalen (Jeugdloon/Minimumloon) hebben verschillende update-frequenties.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -148,6 +244,29 @@ export default function SalaryTables() {
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
+          {activeTab === "CAO Beroepsgoederenvervoer" && (
+            <Tabs value={activeScaleTab} onValueChange={setActiveScaleTab} className="mb-4">
+              <TabsList>
+                {scaleTypes.map(type => {
+                  const count = salaryEntries.filter(e => {
+                    const regularScales = ['C', 'D', 'E', 'F', 'G', 'H'];
+                    const isRegular = regularScales.includes(e.scale);
+                    const matches = e.table_type === activeTab && e.start_date === selectedPeriod;
+                    return type === "Reguliere Schalen (C-H)" 
+                      ? matches && isRegular 
+                      : matches && !isRegular;
+                  }).length;
+                  
+                  return (
+                    <TabsTrigger key={type} value={type}>
+                      {type} <Badge className="ml-2">{count}</Badge>
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </Tabs>
+          )}
+          
           {isLoading ? (
             <Skeleton className="h-96" />
           ) : filteredEntries.length === 0 ? (
@@ -163,14 +282,14 @@ export default function SalaryTables() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50">
-                        <TableHead>Schaal</TableHead>
+                        <TableHead>Ingangsdatum</TableHead>
+                        <TableHead>Categorie</TableHead>
                         <TableHead>Trede</TableHead>
-                        <TableHead>Uurloon</TableHead>
                         <TableHead>Maandloon</TableHead>
-                        <TableHead>Geldig vanaf</TableHead>
-                        <TableHead>Geldig tot</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="w-20"></TableHead>
+                        <TableHead>Uurloon 100%</TableHead>
+                        <TableHead>Uurloon 130%</TableHead>
+                        <TableHead>Uurloon 150%</TableHead>
+                        <TableHead className="w-20">Acties</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -179,60 +298,50 @@ export default function SalaryTables() {
                           if (a.scale !== b.scale) return a.scale.localeCompare(b.scale);
                           return (a.step || 0) - (b.step || 0);
                         })
-                        .map(entry => (
-                          <TableRow 
-                            key={entry.id}
-                            className="cursor-pointer hover:bg-slate-50"
-                            onClick={() => openEditDialog(entry)}
-                          >
-                            <TableCell className="font-semibold">{entry.scale}</TableCell>
-                            <TableCell>{entry.step || '-'}</TableCell>
-                            <TableCell>
-                              <span className="flex items-center gap-1">
-                                <Euro className="w-3.5 h-3.5 text-slate-400" />
-                                {entry.hourly_rate?.toFixed(2)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              {entry.monthly_salary ? (
-                                <span className="flex items-center gap-1">
-                                  <Euro className="w-3.5 h-3.5 text-slate-400" />
-                                  {entry.monthly_salary.toLocaleString()}
-                                </span>
-                              ) : '-'}
-                            </TableCell>
-                            <TableCell>
-                              {entry.start_date 
-                                ? format(new Date(entry.start_date), "d MMM yyyy", { locale: nl })
-                                : '-'}
-                            </TableCell>
-                            <TableCell>
-                              {entry.end_date 
-                                ? format(new Date(entry.end_date), "d MMM yyyy", { locale: nl })
-                                : '-'}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={entry.status === 'Actief' ? 'success' : 'secondary'}>
-                                {entry.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-600 hover:text-red-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (confirm('Weet je zeker dat je deze invoer wilt verwijderen?')) {
-                                    deleteMutation.mutate(entry.id);
-                                  }
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        .map(entry => {
+                          const hourly100 = entry.hourly_rate || 0;
+                          const hourly130 = hourly100 * 1.3;
+                          const hourly150 = hourly100 * 1.5;
+                          
+                          return (
+                            <TableRow 
+                              key={entry.id}
+                              className="cursor-pointer hover:bg-slate-50"
+                              onClick={() => openEditDialog(entry)}
+                            >
+                              <TableCell>
+                                {entry.start_date 
+                                  ? format(new Date(entry.start_date), "d MMM yyyy", { locale: nl })
+                                  : '-'}
+                              </TableCell>
+                              <TableCell className="font-semibold">Schaal {entry.scale}</TableCell>
+                              <TableCell>{entry.scale} Trede {entry.step || '-'}</TableCell>
+                              <TableCell>
+                                {entry.monthly_salary ? (
+                                  <span>€ {entry.monthly_salary.toFixed(2)}</span>
+                                ) : '-'}
+                              </TableCell>
+                              <TableCell>€ {hourly100.toFixed(2)}</TableCell>
+                              <TableCell>€ {hourly130.toFixed(2)}</TableCell>
+                              <TableCell>€ {hourly150.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-red-600 hover:text-red-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm('Weet je zeker dat je deze invoer wilt verwijderen?')) {
+                                      deleteMutation.mutate(entry.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                     </TableBody>
                   </Table>
                 </div>
@@ -361,6 +470,81 @@ export default function SalaryTables() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Copy Period Dialog */}
+      <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Periode Kopiëren met Opslag</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-slate-700">Huidige periode</p>
+              <p className="text-lg font-semibold text-slate-900">
+                {selectedPeriod && format(new Date(selectedPeriod), "d MMMM yyyy", { locale: nl })}
+              </p>
+              <p className="text-sm text-slate-600 mt-1">
+                {filteredEntries.length} loonschaal invoeren
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Nieuwe ingangsdatum *</Label>
+              <Input
+                type="date"
+                value={copyTargetDate}
+                onChange={(e) => setCopyTargetDate(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Percentage opslag (%)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={copyPercentage}
+                onChange={(e) => setCopyPercentage(Number(e.target.value))}
+                placeholder="bijv. 2.5 voor 2.5%"
+              />
+              <p className="text-xs text-slate-500">
+                Laat 0 voor exacte kopie zonder opslag
+              </p>
+            </div>
+
+            {copyPercentage > 0 && (
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-900">
+                  Alle bedragen worden verhoogd met <strong>{copyPercentage}%</strong>
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsCopyDialogOpen(false);
+                  setCopyPercentage(0);
+                  setCopyTargetDate("");
+                }}
+              >
+                Annuleren
+              </Button>
+              <Button 
+                onClick={handleCopyPeriod}
+                className="bg-blue-900 hover:bg-blue-800"
+                disabled={!copyTargetDate}
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Kopiëren
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
