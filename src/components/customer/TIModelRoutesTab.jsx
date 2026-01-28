@@ -54,10 +54,8 @@ export default function TIModelRoutesTab({ customerId }) {
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
-    if (confirm("Weet u zeker dat u deze rit wilt verwijderen?")) {
-      deleteMutation.mutate(id);
-    }
+  const handleToggleStatus = (route) => {
+    toggleStatusMutation.mutate({ id: route.id, is_active: !route.is_active });
   };
 
   const activeRoutes = routes.filter(r => r.is_active);
