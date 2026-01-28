@@ -103,7 +103,7 @@ export default function TIModelRoutesTab({ customerId }) {
     ];
     
     const stats2 = [
-      `Gemiddelde norm/uur: ${avgNorm.toFixed(2)}`,
+      `Gemiddelde norm/uur: ${avgNormValue.toFixed(2)}`,
       `Gemiddelde norm/besteluur: ${(totalStops / routes.length).toFixed(2)}`,
     ];
 
