@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     const sheet = workbook.Sheets[sheetName];
     const rawData = XLSX.utils.sheet_to_json(sheet);
 
-    // Zoek naar "Depot" rij (kolomnamen) en negeer "Totaal" rij
+    // Zoek naar "Depot" rij (kolomnamen)
     let dataStartIndex = 0;
     let headerRow = null;
     
@@ -45,7 +45,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Filter data: start na Depot rij en negeer Totaal rijen
+    // Sla lege rijen over na Depot rij
+    while (dataStartIndex < rawData.length) {
+      const row = rawData[dataStartIndex];
+      const hasAnyValue = Object.values(row).some(val => val && val.toString().trim() !== '');
+      if (hasAnyValue) break;
+      dataStartIndex++;
+    }
+
+    // Filter data: negeer "Totaal" rijen
     let data = rawData.slice(dataStartIndex).filter(row => {
       const firstColumnValue = Object.values(row)[0];
       return !(typeof firstColumnValue === 'string' && firstColumnValue.includes('Totaal'));
