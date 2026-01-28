@@ -49,7 +49,16 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
   const [validationErrors, setValidationErrors] = useState([]);
   const [showValidation, setShowValidation] = useState(false);
   const [successImport, setSuccessImport] = useState(null);
+  const [existingImports, setExistingImports] = useState([]);
   const queryClient = useQueryClient();
+
+  // Fetch existing imports to check for duplicates
+  React.useEffect(() => {
+    if (open && customerId) {
+      base44.entities.CustomerImport.filter({ customer_id: customerId })
+        .then(setExistingImports);
+    }
+  }, [open, customerId]);
 
   const parseMutation = useMutation({
     mutationFn: async (file) => {
