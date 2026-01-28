@@ -479,22 +479,20 @@ export default function UsersPage() {
                          }`}
                          onClick={() => togglePermission(permission.id)}
                        >
-                        <div className={`w-4 h-4 rounded flex items-center justify-center text-xs ${
-                          selectedUser?.permissions?.includes(permission.id)
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-200'
-                        }`}>
-                          {selectedUser?.permissions?.includes(permission.id) && '✓'}
+                         <div className={`w-4 h-4 rounded flex items-center justify-center text-xs ${
+                           selectedUser?.permissions?.includes(permission.id)
+                             ? 'bg-blue-600 text-white'
+                             : 'bg-slate-200'
+                         }`}>
+                           {selectedUser?.permissions?.includes(permission.id) && '✓'}
+                         </div>
+                         <span className="text-sm">{permission.label}</span>
                         </div>
-                        <span className="text-sm">{permission.label}</span>
-                       </div>
-                     ))}
+                      ))}
+                  </div>
                 </div>
-                ))}
-                </div>
-                </div>
-                ))}
-                </div>
+              ))}
+            </div>
 
                 <div className="flex gap-2 pt-4">
               <Button
