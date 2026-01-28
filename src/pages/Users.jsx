@@ -562,11 +562,17 @@ function RoleMatrixDialog() {
                 {category}
               </h3>
               <div className="overflow-x-auto -mx-6 px-6">
-                <table className="w-full text-xs border-collapse">
+                <table className="w-full text-xs border-collapse table-fixed">
+                  <colgroup>
+                    <col style={{width: '112px'}} />
+                    {roleOrder.map(role => (
+                      <col key={role} style={{width: '1fr'}} />
+                    ))}
+                  </colgroup>
                   <tbody>
                     {categoryPerms.map(perm => (
                       <tr key={perm.id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
-                        <td className="py-2 px-2 text-slate-700 font-medium text-xs min-w-28">{perm.label}</td>
+                        <td className="py-2 px-2 text-slate-700 font-medium text-xs">{perm.label}</td>
                         {roleOrder.map(role => (
                           <td key={role} className="py-2 px-1 text-center">
                             {ROLE_PERMISSIONS[role]?.includes(perm.id) ? (
