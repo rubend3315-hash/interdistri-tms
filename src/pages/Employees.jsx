@@ -1015,7 +1015,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
   );
 }
 
-function ContractDialog({ open, onOpenChange, contract, onSave, onDelete, preFilledData, contractList = [] }) {
+function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, contractList = [] }) {
   const { data: salaryTables = [] } = useQuery({
     queryKey: ['salaryTables'],
     queryFn: () => base44.entities.SalaryTable.list(),
