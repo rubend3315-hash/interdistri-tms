@@ -119,6 +119,18 @@ export default function ArticleList({ customerId }) {
                       {article.status}
                     </Badge>
 
+                    {(() => {
+                      const priceStatus = getPriceStatus(article);
+                      return (
+                        <Badge 
+                          variant={priceStatus.status === 'valid' ? 'default' : 'destructive'}
+                          className={priceStatus.status === 'valid' ? 'bg-green-100 text-green-800' : ''}
+                        >
+                          {priceStatus.label}
+                        </Badge>
+                      );
+                    })()}
+
                     <div className="flex gap-2">
                       <Button
                         size="icon"
