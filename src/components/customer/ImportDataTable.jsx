@@ -26,7 +26,7 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
       ...row,
       _importId: importData.id,
       _importName: importData.import_name,
-      _importDate: importData.import_date
+      _importDate: convertExcelDate(importData.import_date)
     }))
   );
 
