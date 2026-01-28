@@ -69,37 +69,7 @@ export default function ImportDataTable({ importData, onDelete }) {
             />
           </div>
 
-          {/* Kolom Filters */}
-          {columns.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-700">Filteren per kolom</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                {columns.map(col => (
-                  <Select
-                    key={col}
-                    value={columnFilters[col] || ""}
-                    onValueChange={(value) =>
-                      setColumnFilters({
-                        ...columnFilters,
-                        [col]: value
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={`${col}`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                       {getUniqueValues(col).filter(v => String(v).trim() !== "").map(value => (
-                          <SelectItem key={value} value={String(value)}>
-                            {String(value).substring(0, 30)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                  </Select>
-                ))}
-              </div>
-            </div>
-          )}
+
 
           {/* Filter Status */}
           <div className="text-sm text-slate-600">
