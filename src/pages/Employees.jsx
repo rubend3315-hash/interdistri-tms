@@ -935,7 +935,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
   );
 }
 
-function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
+function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) {
     const [contractregels, setContractregels] = useState(employee?.contractregels || []);
     const [reiskostenregels, setReiskostenregels] = useState(employee?.reiskostenregels || []);
     const [showContractDialog, setShowContractDialog] = useState(false);
