@@ -21,6 +21,9 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
   });
 
   const [showPriceRuleForm, setShowPriceRuleForm] = useState(false);
+  const [showImportCSV, setShowImportCSV] = useState(false);
+  const [csvImportError, setCsvImportError] = useState(null);
+  const [csvImportSuccess, setCsvImportSuccess] = useState(null);
   const [priceRuleForm, setPriceRuleForm] = useState({
     start_date: format(new Date(), "yyyy-MM-dd"),
     end_date: "",
