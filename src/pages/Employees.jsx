@@ -1426,14 +1426,6 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave, on
           </div>
 
           <div className="flex gap-2">
-            {reiskosten?.index !== undefined && onDelete && (
-              <Button 
-                variant="destructive" 
-                onClick={() => onDelete(reiskosten.index)}
-              >
-                Inactiveren
-              </Button>
-            )}
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Annuleren
             </Button>
