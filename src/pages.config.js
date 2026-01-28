@@ -49,6 +49,7 @@
  */
 import Approvals from './pages/Approvals';
 import CaoRules from './pages/CaoRules';
+import CustomerDetail from './pages/CustomerDetail';
 import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
@@ -64,13 +65,13 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import CustomerDetail from './pages/CustomerDetail';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Approvals": Approvals,
     "CaoRules": CaoRules,
+    "CustomerDetail": CustomerDetail,
     "Customers": Customers,
     "Dashboard": Dashboard,
     "Employees": Employees,
@@ -86,7 +87,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "CustomerDetail": CustomerDetail,
 }
 
 export const pagesConfig = {

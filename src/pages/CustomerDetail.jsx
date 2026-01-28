@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ImportExcelModal from "@/components/customer/ImportExcelModal";
+import ImportDataTable from "@/components/customer/ImportDataTable";
 import {
   ArrowLeft,
   Save,
@@ -22,7 +24,8 @@ import {
   Package,
   FileText,
   Plus,
-  Trash2
+  Trash2,
+  Upload
 } from "lucide-react";
 
 export default function CustomerDetail() {
