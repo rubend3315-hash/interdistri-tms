@@ -141,14 +141,23 @@ export default function Employees() {
           <DialogTrigger asChild>
             <Button className="bg-blue-900 hover:bg-blue-800" onClick={openNewDialog}>
               <Plus className="w-4 h-4 mr-2" />
-              {selectedEmployee?.viewOnly ? 'Bewerken' : 'Nieuwe Medewerker'}
+              Nieuwe Medewerker
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
+            <DialogHeader className="flex flex-row items-center justify-between">
                 <DialogTitle>
                   {selectedEmployee?.viewOnly ? 'Medewerker Inzien' : selectedEmployee ? 'Medewerker Bewerken' : 'Nieuwe Medewerker'}
                 </DialogTitle>
+                {selectedEmployee?.viewOnly && (
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => setSelectedEmployee({ ...selectedEmployee, viewOnly: false })}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Bewerken
+                  </Button>
+                )}
               </DialogHeader>
             <Tabs defaultValue={selectedEmployee?.viewOnly ? "profiel" : selectedEmployee ? "profiel" : "algemeen"} className="w-full">
               <TabsList className={`grid w-full ${selectedEmployee ? 'grid-cols-3' : 'grid-cols-2'}`}>
