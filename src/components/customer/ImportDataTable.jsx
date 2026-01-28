@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Download } from "lucide-react";
 
-export default function ImportDataTable({ imports, onDelete, searchTerm = "" }) {
+export default function ImportDataTable({ imports, onDelete, periodType = "all", selectedDate = "", startDate = "", endDate = "" }) {
   // Collect all data from all imports
   const allData = imports.flatMap(importData => 
     importData.data.map(row => ({
       ...row,
       _importId: importData.id,
-      _importName: importData.import_name
+      _importName: importData.import_name,
+      _importDate: importData.import_date
     }))
   );
 
@@ -17,12 +18,33 @@ export default function ImportDataTable({ imports, onDelete, searchTerm = "" }) 
     ? Object.keys(allData[0]).filter(col => !col.startsWith('_'))
     : [];
 
-  // Filter data based on search
+  // Filter data based on period selection
   const filteredData = allData.filter(row => {
-    const matchesSearch = searchTerm === "" || columns.some(col =>
-      String(row[col]).toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    return matchesSearch;
+    if (periodType === "all") return true;
+
+    const importDate = new Date(row._importDate).toISOString().split('T')[0];
+
+    if (periodType === "day") {
+      return importDate === selectedDate;
+    }
+
+    if (periodType === "week") {
+      const selected = new Date(selectedDate);
+      const dayOfWeek = selected.getDay();
+      const weekStart = new Date(selected);
+      weekStart.setDate(selected.getDate() - dayOfWeek);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+
+      const importDateObj = new Date(importDate);
+      return importDateObj >= weekStart && importDateObj <= weekEnd;
+    }
+
+    if (periodType === "period") {
+      return importDate >= startDate && importDate <= endDate;
+    }
+
+    return true;
   });
 
   const exportToCSV = () => {
