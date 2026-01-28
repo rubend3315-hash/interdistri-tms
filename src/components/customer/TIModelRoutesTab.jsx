@@ -113,35 +113,36 @@ export default function TIModelRoutesTab({ customerId }) {
     pdf.text(`Totaal stuks: ${totalParcels}`, col1X, yPosition);
     yPosition += 14;
 
-    // Table columns
+    // Table columns - smaller width for better fit
     const columns = [
-      { header: "Ritcode", dataKey: "route_code", width: 12 },
-      { header: "Ritnaam", dataKey: "route_name", width: 25 },
-      { header: "Ritijd (u)", dataKey: "total_time_hours", width: 13 },
-      { header: "Ritijd (HH:MM)", dataKey: "total_time_hhmm", width: 15 },
-      { header: "Stops", dataKey: "number_of_stops", width: 10 },
-      { header: "Stuks", dataKey: "number_of_parcels", width: 10 },
-      { header: "Normuur", dataKey: "calculated_norm_per_hour", width: 12 },
-      { header: "Norm/besteluur", dataKey: "manual_norm_per_hour", width: 14 },
-      { header: "Periode", dataKey: "start_date", width: 13 },
+      { header: "Ritcode", dataKey: "route_code", width: 11 },
+      { header: "Ritnaam", dataKey: "route_name", width: 22 },
+      { header: "Ritijd (u)", dataKey: "total_time_hours", width: 11 },
+      { header: "Ritijd (HH:MM)", dataKey: "total_time_hhmm", width: 13 },
+      { header: "Stops", dataKey: "number_of_stops", width: 9 },
+      { header: "Stuks", dataKey: "number_of_parcels", width: 9 },
+      { header: "Norm/u", dataKey: "calculated_norm_per_hour", width: 10 },
+      { header: "Norm/best", dataKey: "manual_norm_per_hour", width: 11 },
+      { header: "Periode", dataKey: "start_date", width: 11 },
     ];
 
     const headerHeight = 8;
     const rowHeight = 7;
-    const tableStartX = 15;
+    const tableStartX = 12;
     let currentY = yPosition;
 
     const drawHeader = (startY) => {
       pdf.setFillColor(34, 47, 102);
       pdf.setTextColor(255, 255, 255);
       pdf.setFont(undefined, "bold");
-      pdf.setFontSize(9);
+      pdf.setFontSize(8);
       pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.3);
 
       let xPos = tableStartX;
       columns.forEach((col) => {
         pdf.rect(xPos, startY, col.width, headerHeight, "FD");
-        pdf.text(col.header, xPos + 1, startY + 5.5);
+        pdf.text(col.header, xPos + 0.5, startY + 5, { maxWidth: col.width - 1 });
         xPos += col.width;
       });
     };
@@ -150,9 +151,10 @@ export default function TIModelRoutesTab({ customerId }) {
     currentY += headerHeight;
 
     pdf.setFont(undefined, "normal");
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     pdf.setTextColor(0, 0, 0);
     pdf.setDrawColor(200, 200, 200);
+    pdf.setLineWidth(0.2);
 
     routes.forEach((route, index) => {
       if (currentY + rowHeight > pageHeight - 10) {
@@ -187,7 +189,7 @@ export default function TIModelRoutesTab({ customerId }) {
         if (typeof value === "number") {
           value = value.toFixed(2);
         }
-        pdf.text(String(value), xPos + 1, currentY + 4.5);
+        pdf.text(String(value).substring(0, 12), xPos + 0.5, currentY + 4, { maxWidth: col.width - 1 });
         xPos += col.width;
       });
       currentY += rowHeight;
