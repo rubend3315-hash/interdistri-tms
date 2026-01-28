@@ -13,18 +13,31 @@ import { validateImportData } from "@/components/utils/validateImportData";
 
 // Functie om Excel datum (getal) naar DD-MM-JJJJ te converteren
 const formatExcelDate = (value) => {
-  if (!value || typeof value !== 'number') return value;
+  if (!value) return value;
   
-  // Excel datums zijn getallen (dagen sinds 1900-01-01)
-  if (value > 30000 && value < 50000) {
-    try {
-      // Excel epoch is 1900-01-01, JavaScript epoch is 1970-01-01
-      const excelDate = new Date((value - 25569) * 86400 * 1000);
-      return format(excelDate, 'dd-MM-yyyy');
-    } catch {
+  // Als het al een string is die lijkt op een datum, return as-is
+  if (typeof value === 'string') {
+    if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(value) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(value)) {
       return value;
     }
   }
+  
+  // Als het een getal is, converteer Excel datum
+  if (typeof value === 'number') {
+    // Excel datums zijn getallen (dagen sinds 1900-01-01)
+    if (value > 30000 && value < 50000) {
+      try {
+        // Excel epoch is 1900-01-01, JavaScript epoch is 1970-01-01
+        const excelDate = new Date((value - 25569) * 86400 * 1000);
+        if (!isNaN(excelDate.getTime())) {
+          return format(excelDate, 'dd-MM-yyyy');
+        }
+      } catch (e) {
+        return value;
+      }
+    }
+  }
+  
   return value;
 };
 
