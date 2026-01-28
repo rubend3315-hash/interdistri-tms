@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ImportExcelModal from "@/components/customer/ImportExcelModal";
 import ImportDataTable from "@/components/customer/ImportDataTable";
+import CalculationsTab from "@/components/customer/CalculationsTab";
 import {
   ArrowLeft,
   Save,
@@ -25,7 +26,8 @@ import {
   FileText,
   Plus,
   Trash2,
-  Upload
+  Upload,
+  Calculator
 } from "lucide-react";
 
 export default function CustomerDetail() {
