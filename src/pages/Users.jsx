@@ -489,7 +489,7 @@ export default function UsersPage() {
                         <span className="text-sm">{permission.label}</span>
                         </div>
                         ))}
-                  </div>
+                        </div>
                 </div>
               ))}
             </div>
