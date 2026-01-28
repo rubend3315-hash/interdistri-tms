@@ -200,7 +200,7 @@ export default function UsersPage() {
                 Rol Matrix
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-6xl">
               <RoleMatrixDialog />
             </DialogContent>
           </Dialog>
