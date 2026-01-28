@@ -951,11 +951,8 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
     });
 
     useEffect(() => {
-      if (employee && contractregels.length === 0) {
-        setContractregels(employee?.contractregels || []);
-        setReiskostenregels(employee?.reiskostenregels || []);
-      } else if (employee && employee.contractregels && !updateMutation.isPending) {
-        setContractregels(employee.contractregels);
+      if (employee && !updateMutation.isPending) {
+        setContractregels(employee.contractregels || []);
         setReiskostenregels(employee.reiskostenregels || []);
       }
     }, [employee?.id]);
