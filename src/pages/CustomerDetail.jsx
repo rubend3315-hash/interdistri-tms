@@ -241,151 +241,226 @@ export default function CustomerDetail() {
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Logo</Label>
-                  <div className="flex items-center gap-3">
-                    {formData.logo_url && (
-                      <div className="relative w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center">
-                        <img src={formData.logo_url} alt="Logo" className="w-18 h-18 object-contain" />
-                        <button
-                          type="button"
-                          onClick={() => setFormData({ ...formData, logo_url: "" })}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+                {isEditMode ? (
+                  <>
+                    {/* Logo Upload - Edit Mode */}
+                    <div className="space-y-2">
+                      <Label>Logo</Label>
+                      <div className="flex items-center gap-3">
+                        {formData.logo_url && (
+                          <div className="relative w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center">
+                            <img src={formData.logo_url} alt="Logo" className="w-18 h-18 object-contain" />
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ ...formData, logo_url: "" })}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const response = await base44.integrations.Core.UploadFile({ file });
+                                setFormData({ ...formData, logo_url: response.file_url });
+                              }
+                            }}
+                            className="block w-full text-sm text-slate-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-md file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-blue-50 file:text-blue-700
+                              hover:file:bg-blue-100"
+                          />
+                        </div>
                       </div>
-                    )}
-                    <div className="flex-1">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const response = await base44.integrations.Core.UploadFile({ file });
-                            setFormData({ ...formData, logo_url: response.file_url });
-                          }
-                        }}
-                        className="block w-full text-sm text-slate-500
-                          file:mr-4 file:py-2 file:px-4
-                          file:rounded-md file:border-0
-                          file:text-sm file:font-semibold
-                          file:bg-blue-50 file:text-blue-700
-                          hover:file:bg-blue-100"
+                    </div>
+
+                    {/* Form Fields - Edit Mode */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Bedrijfsnaam *</Label>
+                        <Input
+                          value={formData.company_name}
+                          onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Status</Label>
+                        <Select 
+                           value={formData.status || ""} 
+                           onValueChange={(v) => setFormData({ ...formData, status: v })}
+                         >
+                           <SelectTrigger>
+                             <SelectValue placeholder="Selecteer status" />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="Actief">Actief</SelectItem>
+                             <SelectItem value="Inactief">Inactief</SelectItem>
+                           </SelectContent>
+                         </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Contactpersoon</Label>
+                        <Input
+                          value={formData.contact_person}
+                          onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Telefoon</Label>
+                        <Input
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>E-mail</Label>
+                      <Input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
                     </div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Bedrijfsnaam *</Label>
-                    <Input
-                      value={formData.company_name}
-                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Status</Label>
-                    <Select 
-                       value={formData.status || ""} 
-                       onValueChange={(v) => setFormData({ ...formData, status: v })}
-                     >
-                       <SelectTrigger>
-                         <SelectValue placeholder="Selecteer status" />
-                       </SelectTrigger>
-                       <SelectContent>
-                         <SelectItem value="Actief">Actief</SelectItem>
-                         <SelectItem value="Inactief">Inactief</SelectItem>
-                       </SelectContent>
-                     </Select>
-                  </div>
-                </div>
+                    <div className="space-y-2">
+                      <Label>Adres</Label>
+                      <Input
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      />
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Contactpersoon</Label>
-                    <Input
-                      value={formData.contact_person}
-                      onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Telefoon</Label>
-                    <Input
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    />
-                  </div>
-                </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Postcode</Label>
+                        <Input
+                          value={formData.postal_code}
+                          onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Plaats</Label>
+                        <Input
+                          value={formData.city}
+                          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Land</Label>
+                        <Input
+                          value={formData.country}
+                          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label>E-mail</Label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>KvK nummer</Label>
+                        <Input
+                          value={formData.kvk_number}
+                          onChange={(e) => setFormData({ ...formData, kvk_number: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>BTW nummer</Label>
+                        <Input
+                          value={formData.btw_number}
+                          onChange={(e) => setFormData({ ...formData, btw_number: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Betalingstermijn (dagen)</Label>
+                        <Input
+                          type="number"
+                          value={formData.payment_terms}
+                          onChange={(e) => setFormData({ ...formData, payment_terms: Number(e.target.value) })}
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* View Mode */}
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Bedrijfsnaam</p>
+                          <p className="text-slate-900 font-medium">{formData.company_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Status</p>
+                          <Badge variant={formData.status === 'Actief' ? 'success' : 'secondary'}>
+                            {formData.status}
+                          </Badge>
+                        </div>
+                      </div>
 
-                <div className="space-y-2">
-                  <Label>Adres</Label>
-                  <Input
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
-                </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Contactpersoon</p>
+                          <p className="text-slate-900">{formData.contact_person || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Telefoon</p>
+                          <p className="text-slate-900">{formData.phone || "-"}</p>
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Postcode</Label>
-                    <Input
-                      value={formData.postal_code}
-                      onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Plaats</Label>
-                    <Input
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Land</Label>
-                    <Input
-                      value={formData.country}
-                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    />
-                  </div>
-                </div>
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">E-mail</p>
+                        <p className="text-slate-900">{formData.email || "-"}</p>
+                      </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>KvK nummer</Label>
-                    <Input
-                      value={formData.kvk_number}
-                      onChange={(e) => setFormData({ ...formData, kvk_number: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>BTW nummer</Label>
-                    <Input
-                      value={formData.btw_number}
-                      onChange={(e) => setFormData({ ...formData, btw_number: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Betalingstermijn (dagen)</Label>
-                    <Input
-                      type="number"
-                      value={formData.payment_terms}
-                      onChange={(e) => setFormData({ ...formData, payment_terms: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">Adres</p>
+                        <p className="text-slate-900">{formData.address || "-"}</p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Postcode</p>
+                          <p className="text-slate-900">{formData.postal_code || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Plaats</p>
+                          <p className="text-slate-900">{formData.city || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Land</p>
+                          <p className="text-slate-900">{formData.country}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">KvK nummer</p>
+                          <p className="text-slate-900">{formData.kvk_number || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">BTW nummer</p>
+                          <p className="text-slate-900">{formData.btw_number || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Betalingstermijn (dagen)</p>
+                          <p className="text-slate-900">{formData.payment_terms}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
