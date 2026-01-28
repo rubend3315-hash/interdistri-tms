@@ -987,12 +987,6 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
           }
           setShowContractDialog(false);
         }}
-        onDelete={(index) => {
-          const newContracts = [...contractregels];
-          newContracts[index] = { ...newContracts[index], status: 'Inactief' };
-          setContractregels(newContracts);
-          setShowContractDialog(false);
-        }}
       />
 
       <ReiskostenDialog
