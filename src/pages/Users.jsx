@@ -610,7 +610,7 @@ function RoleMatrixDialog() {
       {/* Info */}
       <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
         <p className="text-xs font-medium text-slate-900 mb-2">💡 Rol Overzicht</p>
-        <div className="space-y-1.5 text-xs text-slate-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-700">
           <div><strong>Admin:</strong> Volledige controle</div>
           <div><strong>Supervisor:</strong> Beheer & supervisie</div>
           <div><strong>Editor:</strong> Gegevens beheren</div>
