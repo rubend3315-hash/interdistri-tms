@@ -32,7 +32,8 @@ import {
   Upload,
   Calculator,
   History,
-  X
+  X,
+  Edit2
 } from "lucide-react";
 
 export default function CustomerDetail() {
