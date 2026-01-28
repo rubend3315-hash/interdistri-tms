@@ -824,10 +824,15 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
                   .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
 
                 setEditingContract(null);
-                setShowContractDialog(true);
-                // Pass the last contract info to pre-fill dates
-                if (lastActiveContract?.einddatum) {
-                  setShowContractDialog({ startdatum: lastActiveContract.einddatum, prevContract: lastActiveContract });
+                
+                if (lastActiveContract) {
+                  const prevContractIndex = contractregels.indexOf(lastActiveContract);
+                  setShowContractDialog({ 
+                    startdatum: lastActiveContract.startdatum,
+                    prevContractIndex: prevContractIndex 
+                  });
+                } else {
+                  setShowContractDialog(true);
                 }
               }}
             >
