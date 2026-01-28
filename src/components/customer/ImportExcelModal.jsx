@@ -39,22 +39,14 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const filteredData = parseResult.rawData.map(row => {
-        const newRow = {};
-        selectedColumns.forEach(col => {
-          newRow[columnMapping[col] || col] = row[col];
-        });
-        return newRow;
-      });
-
       return base44.entities.CustomerImport.create({
         customer_id: customerId,
         import_name: importName,
         import_date: new Date().toISOString(),
         file_name: file.name,
-        column_mapping: Object.fromEntries(selectedColumns.map(col => [col, columnMapping[col]])),
-        data: filteredData,
-        total_rows: filteredData.length,
+        column_mapping: {},
+        data: parseResult.rawData,
+        total_rows: parseResult.rawData.length,
         calculated_data: [],
         status: 'Concept'
       });
