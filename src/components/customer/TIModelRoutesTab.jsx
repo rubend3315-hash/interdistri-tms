@@ -205,9 +205,7 @@ export default function TIModelRoutesTab({ customerId }) {
   const activeRoutes = routes.filter(r => r.is_active);
   const totalStops = routes.reduce((sum, r) => sum + (r.number_of_stops || 0), 0);
   const totalParcels = routes.reduce((sum, r) => sum + (r.number_of_parcels || 0), 0);
-  const avgNorm = routes.length > 0
-    ? (routes.reduce((sum, r) => sum + (r.calculated_norm_per_hour || 0), 0) / routes.length).toFixed(2)
-    : "0.00";
+  const avgNorm = avgNormValue.toFixed(2);
 
   return (
     <div className="space-y-4">
