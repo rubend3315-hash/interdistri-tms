@@ -1044,16 +1044,20 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
 
                     return (
                       <React.Fragment key={index}>
-                        <tr className={`border-b ${bgColor} hover:opacity-75`}>
-                          <td className="py-2 px-3 text-slate-900">
-                            {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
-                          </td>
-                          <td className="py-2 px-3 text-slate-900">
-                            {contract.einddatum ? format(new Date(contract.einddatum), 'dd-MM-yyyy') : '-'}
-                          </td>
-                          <td className="py-2 px-3 text-slate-900">{contract.type_contract}</td>
-                          <td className="py-2 px-3 text-slate-900">{contract.loonschaal || '-'}</td>
-                          <td className="py-2 px-3 text-slate-900">{contract.uren_per_week}</td>
+                        {(() => {
+                          const isExpired = contract.einddatum && isBefore(new Date(contract.einddatum), new Date());
+                          const textColor = isExpired ? 'text-slate-400' : 'text-slate-900';
+                          return (
+                            <tr className={`border-b ${bgColor} hover:opacity-75`}>
+                              <td className={`py-2 px-3 ${textColor}`}>
+                                {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
+                              </td>
+                              <td className={`py-2 px-3 ${textColor}`}>
+                                {contract.einddatum ? format(new Date(contract.einddatum), 'dd-MM-yyyy') : '-'}
+                              </td>
+                              <td className={`py-2 px-3 ${textColor}`}>{contract.type_contract}</td>
+                              <td className={`py-2 px-3 ${textColor}`}>{contract.loonschaal || '-'}</td>
+                              <td className={`py-2 px-3 ${textColor}`}>{contract.uren_per_week}</td>
                           <td className="py-2 px-3 text-center">
                             {!viewOnly && (
                               <Button 
