@@ -174,8 +174,8 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
 
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Gegevensvoorbeeld</Label>
-                <div className="overflow-x-auto max-h-48 overflow-y-auto border rounded-lg">
-                  <table className="w-full text-xs">
+                <div className="overflow-x-auto overflow-y-auto max-h-48 border rounded-lg">
+                    <table className="w-full min-w-max text-xs">
                     <thead className="bg-slate-100 sticky top-0">
                       <tr>
                         {parseResult.columns.map(col => (
