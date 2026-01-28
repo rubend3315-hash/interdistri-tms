@@ -93,6 +93,11 @@ export default function Employees() {
     setShowDialog(true);
   };
 
+  const openViewDialog = (employee) => {
+    setSelectedEmployee({ ...employee, viewOnly: true });
+    setShowDialog(true);
+  };
+
   const filteredEmployees = employees.filter(emp => {
     const matchesSearch = 
       emp.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
