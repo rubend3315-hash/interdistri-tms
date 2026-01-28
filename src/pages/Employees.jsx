@@ -468,18 +468,20 @@ function ProfielTab({ employee }) {
 function EmployeeForm({ employee, onSubmit, isSubmitting }) {
   const [formData, setFormData] = useState(employee || {
     employee_number: '',
+    initials: '',
     first_name: '',
     last_name: '',
     email: '',
     phone: '',
     date_of_birth: '',
+    in_service_since: '',
     address: '',
     postal_code: '',
     city: '',
     department: 'Transport',
     function: '',
     drivers_license_number: '',
-    drivers_license_categories: [],
+    drivers_license_categories: '',
     drivers_license_expiry: '',
     code95_expiry: '',
     contract_type: 'Vast',
@@ -494,6 +496,32 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
     photo_url: '',
     supervisor_notities: ''
   });
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Bestand is te groot. Maximaal 5MB toegestaan.');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      alert('Alleen afbeeldingen zijn toegestaan.');
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setFormData({ ...formData, photo_url: file_url });
+    } catch (error) {
+      alert('Fout bij uploaden: ' + error.message);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -502,7 +530,43 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+      {/* Pasfoto Upload */}
+      <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border">
+        <div className="relative">
+          {formData.photo_url ? (
+            <img 
+              src={formData.photo_url} 
+              alt="Pasfoto" 
+              className="w-20 h-20 rounded-full object-cover border-2 border-slate-300"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center">
+              <User className="w-8 h-8 text-slate-400" />
+            </div>
+          )}
+        </div>
+        <div className="flex-1">
+          <Label className="text-sm font-medium">Pasfoto</Label>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoUpload}
+            disabled={uploadingPhoto}
+            className="mt-1"
+          />
+          <p className="text-xs text-slate-500 mt-1">Maximaal 5MB</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Voorletter(s)</Label>
+          <Input
+            value={formData.initials}
+            onChange={(e) => setFormData({ ...formData, initials: e.target.value })}
+            placeholder="bijv. R.J."
+          />
+        </div>
         <div className="space-y-2">
           <Label>Voornaam *</Label>
           <Input
@@ -519,16 +583,51 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
             required
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>Personeelsnummer</Label>
+          <Label>Status</Label>
+          <Select 
+            value={formData.status} 
+            onValueChange={(v) => setFormData({ ...formData, status: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statuses.map(status => (
+                <SelectItem key={status} value={status}>{status}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Afdeling *</Label>
+          <Select 
+            value={formData.department} 
+            onValueChange={(v) => setFormData({ ...formData, department: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {departments.map(dept => (
+                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Functie</Label>
           <Input
-            value={formData.employee_number}
-            onChange={(e) => setFormData({ ...formData, employee_number: e.target.value })}
+            value={formData.function}
+            onChange={(e) => setFormData({ ...formData, function: e.target.value })}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Email *</Label>
           <Input
@@ -546,12 +645,23 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Geboortedatum</Label>
           <Input
             type="date"
             value={formData.date_of_birth}
             onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>In dienst sinds</Label>
+          <Input
+            type="date"
+            value={formData.in_service_since}
+            onChange={(e) => setFormData({ ...formData, in_service_since: e.target.value })}
           />
         </div>
       </div>
@@ -581,48 +691,6 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label>Afdeling *</Label>
-          <Select 
-            value={formData.department} 
-            onValueChange={(v) => setFormData({ ...formData, department: v })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {departments.map(dept => (
-                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Functie</Label>
-          <Input
-            value={formData.function}
-            onChange={(e) => setFormData({ ...formData, function: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select 
-            value={formData.status} 
-            onValueChange={(v) => setFormData({ ...formData, status: v })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {statuses.map(status => (
-                <SelectItem key={status} value={status}>{status}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       <div className="border-t pt-4">
         <h3 className="font-medium mb-3">Rijbewijs & Certificaten</h3>
         <div className="grid grid-cols-2 gap-4">
@@ -634,6 +702,16 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
             />
           </div>
           <div className="space-y-2">
+            <Label>Rijbewijs categorie</Label>
+            <Input
+              value={formData.drivers_license_categories}
+              onChange={(e) => setFormData({ ...formData, drivers_license_categories: e.target.value })}
+              placeholder="bijv. B, C, CE"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="space-y-2">
             <Label>Rijbewijs vervaldatum</Label>
             <Input
               type="date"
@@ -641,14 +719,14 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
               onChange={(e) => setFormData({ ...formData, drivers_license_expiry: e.target.value })}
             />
           </div>
-        </div>
-        <div className="space-y-2 mt-4">
-          <Label>Code 95 vervaldatum</Label>
-          <Input
-            type="date"
-            value={formData.code95_expiry}
-            onChange={(e) => setFormData({ ...formData, code95_expiry: e.target.value })}
-          />
+          <div className="space-y-2">
+            <Label>Code 95 vervaldatum</Label>
+            <Input
+              type="date"
+              value={formData.code95_expiry}
+              onChange={(e) => setFormData({ ...formData, code95_expiry: e.target.value })}
+            />
+          </div>
         </div>
       </div>
 
@@ -667,7 +745,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
 
       <div className="border-t pt-4">
         <h3 className="font-medium mb-3">Noodcontact</h3>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Naam</Label>
             <Input
@@ -681,13 +759,6 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
               type="tel"
               value={formData.emergency_contact_phone}
               onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Relatie</Label>
-            <Input
-              value={formData.emergency_contact_relation}
-              onChange={(e) => setFormData({ ...formData, emergency_contact_relation: e.target.value })}
             />
           </div>
         </div>
