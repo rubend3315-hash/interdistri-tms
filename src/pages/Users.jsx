@@ -528,58 +528,94 @@ export default function UsersPage() {
 
 function RoleMatrixDialog() {
   const roleOrder = ['admin', 'supervisor', 'editor', 'user'];
+  const categories = ['Basis', 'Beheer', 'Rapportage', 'Admin'];
   
   return (
     <div className="space-y-4">
       <DialogHeader>
         <DialogTitle>Rol-based Permissie Matrix</DialogTitle>
       </DialogHeader>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr>
-              <th className="text-left py-2 px-3 font-semibold text-slate-700 border-b">Module</th>
-              {roleOrder.map(role => (
-                <th key={role} className="text-center py-2 px-3 font-semibold text-slate-700 border-b">
-                  <Badge className={ROLES[role].color}>{ROLES[role].label}</Badge>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {ALL_PERMISSIONS.map(perm => (
-              <tr key={perm.id} className="border-b hover:bg-slate-50">
-                <td className="py-2 px-3 text-slate-700 font-medium">{perm.label}</td>
-                {roleOrder.map(role => (
-                  <td key={role} className="py-2 px-3 text-center">
-                    {ROLE_PERMISSIONS[role]?.includes(perm.id) ? (
-                      <div className="flex justify-center">
-                        <div className="w-5 h-5 bg-emerald-100 rounded flex items-center justify-center">
-                          <span className="text-emerald-700 text-xs font-bold">✓</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex justify-center">
-                        <div className="w-5 h-5 bg-slate-100 rounded flex items-center justify-center">
-                          <span className="text-slate-400 text-xs">−</span>
-                        </div>
-                      </div>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      {/* Role Summary Cards */}
+      <div className="grid grid-cols-4 gap-2">
+        {roleOrder.map(role => (
+          <div key={role} className={`p-3 rounded-lg border-2 ${ROLES[role].color.replace('text-', 'border-').replace('bg-', 'bg-').split(' ')[0]} bg-opacity-10`}>
+            <p className="font-semibold text-sm">{ROLES[role].label}</p>
+            <p className="text-xs text-slate-600 mt-1">
+              {ROLE_PERMISSIONS[role].length}/{ALL_PERMISSIONS.length} permissies
+            </p>
+          </div>
+        ))}
       </div>
-      <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-900">
-        <p className="font-medium mb-1">Over deze matrix:</p>
-        <ul className="list-disc list-inside space-y-1 text-blue-800">
-          <li><strong>Admin:</strong> Volledige toegang tot alles</li>
-          <li><strong>Supervisor:</strong> Beheer en supervisie van kern functies</li>
-          <li><strong>Editor:</strong> Gegevens aanpassen en beheren</li>
-          <li><strong>User:</strong> Basis toegang tot dagelijkse functies</li>
-        </ul>
+
+      {/* Matrix by Category */}
+      <div className="space-y-6">
+        {categories.map(category => {
+          const categoryPerms = ALL_PERMISSIONS.filter(p => p.category === category);
+          return (
+            <div key={category} className="space-y-2">
+              <h3 className="font-semibold text-slate-900 text-sm uppercase tracking-wider flex items-center gap-2">
+                <div className="w-1 h-4 bg-blue-600 rounded-full" />
+                {category}
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <tbody>
+                    {categoryPerms.map(perm => (
+                      <tr key={perm.id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                        <td className="py-2.5 px-3 text-slate-700 font-medium w-40">{perm.label}</td>
+                        {roleOrder.map(role => (
+                          <td key={role} className="py-2.5 px-2 text-center">
+                            {ROLE_PERMISSIONS[role]?.includes(perm.id) ? (
+                              <div className="flex justify-center">
+                                <div className="w-6 h-6 bg-emerald-100 rounded-md flex items-center justify-center border border-emerald-300">
+                                  <span className="text-emerald-700 font-bold">✓</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex justify-center">
+                                <div className="w-6 h-6 bg-slate-100 rounded-md flex items-center justify-center border border-slate-200">
+                                  <span className="text-slate-300">−</span>
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="grid grid-cols-2 gap-3 pt-4 border-t">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-emerald-100 rounded-md border border-emerald-300 flex items-center justify-center">
+            <span className="text-emerald-700 text-xs font-bold">✓</span>
+          </div>
+          <span className="text-xs text-slate-600">Toegang ingeschakeld</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-center">
+            <span className="text-slate-300 text-xs">−</span>
+          </div>
+          <span className="text-xs text-slate-600">Geen toegang</span>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <p className="text-xs font-medium text-slate-900 mb-2">💡 Rol Overzicht</p>
+        <div className="space-y-1.5 text-xs text-slate-700">
+          <div><strong>Admin:</strong> Volledige controle</div>
+          <div><strong>Supervisor:</strong> Beheer & supervisie</div>
+          <div><strong>Editor:</strong> Gegevens beheren</div>
+          <div><strong>User:</strong> Basis functies</div>
+        </div>
       </div>
     </div>
   );
