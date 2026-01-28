@@ -418,12 +418,19 @@ export default function CustomerDetail() {
                 <ImportDataTable 
                   key={importData.id}
                   importData={importData}
-                  customerArticles={formData.articles}
                   onDelete={deleteImportMutation.mutate}
                 />
               ))
             )}
           </div>
+        </TabsContent>
+
+        {/* Berekeningen Tab */}
+        <TabsContent value="calculations">
+          <CalculationsTab 
+            imports={imports}
+            customerArticles={formData.articles}
+          />
         </TabsContent>
 
         {/* Opmerkingen Tab */}
