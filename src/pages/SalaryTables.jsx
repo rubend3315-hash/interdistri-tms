@@ -139,7 +139,9 @@ export default function SalaryTables() {
     
     if (activeTab === "CAO Beroepsgoederenvervoer") {
       const regularScales = ['C', 'D', 'E', 'F', 'G', 'H'];
-      const isRegular = regularScales.includes(e.scale);
+      // Min Trede entries (step < 0) should be in Special Scales
+      const isMinTrede = e.step != null && e.step < 0;
+      const isRegular = regularScales.includes(e.scale) && !isMinTrede;
       if (activeScaleTab === "Reguliere Schalen (C-H)") {
         return matchesType && matchesPeriod && isRegular;
       } else {
@@ -266,7 +268,8 @@ export default function SalaryTables() {
                 {scaleTypes.map(type => {
                   const count = salaryEntries.filter(e => {
                     const regularScales = ['C', 'D', 'E', 'F', 'G', 'H'];
-                    const isRegular = regularScales.includes(e.scale);
+                    const isMinTrede = e.step != null && e.step < 0;
+                    const isRegular = regularScales.includes(e.scale) && !isMinTrede;
                     const matches = e.table_type === activeTab && e.start_date === selectedPeriod;
                     return type === "Reguliere Schalen (C-H)" 
                       ? matches && isRegular 
