@@ -246,6 +246,10 @@ export default function MobileEntry() {
           start_km: trip.start_km ? Number(trip.start_km) : null,
           end_km: trip.end_km ? Number(trip.end_km) : null,
           total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+          fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
+          adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
+          fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
+          charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
           departure_time: trip.start_time,
           arrival_time: trip.end_time,
           departure_location: trip.departure_location,
@@ -291,6 +295,10 @@ export default function MobileEntry() {
           start_km: trip.start_km ? Number(trip.start_km) : null,
           end_km: trip.end_km ? Number(trip.end_km) : null,
           total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+          fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
+          adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
+          fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
+          charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
           departure_time: trip.start_time,
           arrival_time: trip.end_time,
           departure_location: trip.departure_location,
@@ -648,6 +656,64 @@ export default function MobileEntry() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Brandstof (liter)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={trip.fuel_liters || ""}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, fuel_liters: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">AdBlue (liter)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={trip.adblue_liters || ""}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, adblue_liters: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Km-stand van tanken</Label>
+                      <Input
+                        type="number"
+                        value={trip.fuel_km || ""}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, fuel_km: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">E-laden (kWh)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={trip.charging_kwh || ""}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, charging_kwh: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                        placeholder="Als aan laadpaal"
+                      />
+                    </div>
+                  </div>
+
                   {/* Route Details Section */}
                   <div className="pt-3 border-t">
                     <div className="bg-emerald-600 text-white p-2 rounded-lg mb-3 flex items-center gap-2">
@@ -735,6 +801,10 @@ export default function MobileEntry() {
                 vehicle_id: "",
                 start_km: "",
                 end_km: "",
+                fuel_liters: "",
+                adblue_liters: "",
+                fuel_km: "",
+                charging_kwh: "",
                 customer_id: "",
                 route_name: "",
                 planned_stops: "",

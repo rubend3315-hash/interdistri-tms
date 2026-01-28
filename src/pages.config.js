@@ -47,42 +47,42 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Approvals from './pages/Approvals';
+import CaoRules from './pages/CaoRules';
+import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
-import Vehicles from './pages/Vehicles';
-import TimeTracking from './pages/TimeTracking';
-import Planning from './pages/Planning';
-import Approvals from './pages/Approvals';
-import ShiftTime from './pages/ShiftTime';
-import NiwoPermits from './pages/NiwoPermits';
-import Customers from './pages/Customers';
-import Projects from './pages/Projects';
-import Trips from './pages/Trips';
-import CaoRules from './pages/CaoRules';
-import SalaryTables from './pages/SalaryTables';
 import Holidays from './pages/Holidays';
-import SalaryReports from './pages/SalaryReports';
 import MobileEntry from './pages/MobileEntry';
+import NiwoPermits from './pages/NiwoPermits';
+import Planning from './pages/Planning';
+import Projects from './pages/Projects';
+import SalaryReports from './pages/SalaryReports';
+import SalaryTables from './pages/SalaryTables';
+import ShiftTime from './pages/ShiftTime';
+import TimeTracking from './pages/TimeTracking';
+import Trips from './pages/Trips';
+import Vehicles from './pages/Vehicles';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "Approvals": Approvals,
+    "CaoRules": CaoRules,
+    "Customers": Customers,
     "Dashboard": Dashboard,
     "Employees": Employees,
-    "Vehicles": Vehicles,
-    "TimeTracking": TimeTracking,
-    "Planning": Planning,
-    "Approvals": Approvals,
-    "ShiftTime": ShiftTime,
-    "NiwoPermits": NiwoPermits,
-    "Customers": Customers,
-    "Projects": Projects,
-    "Trips": Trips,
-    "CaoRules": CaoRules,
-    "SalaryTables": SalaryTables,
     "Holidays": Holidays,
-    "SalaryReports": SalaryReports,
     "MobileEntry": MobileEntry,
+    "NiwoPermits": NiwoPermits,
+    "Planning": Planning,
+    "Projects": Projects,
+    "SalaryReports": SalaryReports,
+    "SalaryTables": SalaryTables,
+    "ShiftTime": ShiftTime,
+    "TimeTracking": TimeTracking,
+    "Trips": Trips,
+    "Vehicles": Vehicles,
 }
 
 export const pagesConfig = {
