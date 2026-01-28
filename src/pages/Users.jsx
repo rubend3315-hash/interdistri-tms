@@ -490,10 +490,13 @@ export default function UsersPage() {
                        </div>
                      ))}
                 </div>
-              ))}
-            </div>
+                ))}
+                </div>
+                </div>
+                ))}
+                </div>
 
-            <div className="flex gap-2 pt-4">
+                <div className="flex gap-2 pt-4">
               <Button
                 variant="outline"
                 className="flex-1"
