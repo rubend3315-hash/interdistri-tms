@@ -1036,13 +1036,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
         </CardContent>
       </Card>
 
-      <Button 
-        className="w-full bg-blue-900" 
-        onClick={handleSaveAll}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? 'Opslaan...' : 'Beschikbaarheid Opslaan'}
-      </Button>
+      {/* Auto-save happens on individual save, no button needed */}
 
       {/* Dialogs */}
       <ContractDialog
