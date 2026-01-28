@@ -987,25 +987,24 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                 className="bg-blue-900"
                 onClick={() => {
                   const lastActiveContract = contractregels
-                  .filter(c => c.status !== 'Inactief')
-                  .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
-
-                setEditingContract(null);
-                
-                if (lastActiveContract) {
-                  const prevContractIndex = contractregels.indexOf(lastActiveContract);
-                  setShowContractDialog({ 
-                    startdatum: lastActiveContract.startdatum,
-                    prevContractIndex: prevContractIndex 
-                  });
-                } else {
-                  setShowContractDialog(true);
-                }
-              }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nieuwe Contractregel
-            </Button>
+                    .filter(c => c.status !== 'Inactief')
+                    .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+                  setEditingContract(null);
+                  if (lastActiveContract) {
+                    const prevContractIndex = contractregels.indexOf(lastActiveContract);
+                    setShowContractDialog({ 
+                      startdatum: lastActiveContract.startdatum,
+                      prevContractIndex: prevContractIndex 
+                    });
+                  } else {
+                    setShowContractDialog(true);
+                  }
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nieuwe Contractregel
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
