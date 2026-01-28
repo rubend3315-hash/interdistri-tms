@@ -18,6 +18,36 @@ export default function ImportDataTable({ importData, customerArticles, onDelete
     ? Object.keys(importData.data[0]) 
     : [];
 
+  // Get unique values for each column (for filters)
+  const getUniqueValues = (colName) => {
+    return [...new Set(importData.data.map(row => row[colName]).filter(v => v !== null && v !== undefined))].sort();
+  };
+
+  // Filter and search data
+  const filteredData = useMemo(() => {
+    return importData.data.filter(row => {
+      // Search filter - searches all columns
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = columns.some(col => 
+          String(row[col]).toLowerCase().includes(searchLower)
+        );
+        if (!matchesSearch) return false;
+      }
+
+      // Column filters
+      for (const [colName, filterValue] of Object.entries(columnFilters)) {
+        if (filterValue && filterValue !== "") {
+          if (String(row[colName]).toLowerCase() !== filterValue.toLowerCase()) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+  }, [importData.data, searchTerm, columnFilters, columns]);
+
   const calculateRevenue = () => {
     if (!quantityColumn || !priceColumn) return;
 
