@@ -87,8 +87,8 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
           <DialogTitle>Excel bestand importeren</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 flex flex-col flex-1 overflow-hidden">
-          <div className="overflow-y-auto space-y-4 flex-1">
+        <div className="flex flex-col flex-1 overflow-hidden gap-4">
+          <div className="overflow-y-auto space-y-4 flex-1 min-h-0">
           {showValidation ? (
             <>
               <Card className="bg-red-50 border-red-200">
@@ -190,7 +190,7 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
 
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Gegevensvoorbeeld</Label>
-                <div className="overflow-x-auto border rounded-lg" style={{ maxHeight: "1200px", overflowY: "auto" }}>
+                <div className="overflow-x-auto border rounded-lg flex-1 min-h-0">
                     <table className="w-full text-xs">
                     <thead className="bg-slate-100 sticky top-0">
                       <tr>
