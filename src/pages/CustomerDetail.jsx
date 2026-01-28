@@ -116,6 +116,7 @@ export default function CustomerDetail() {
   const handleSubmit = (e) => {
     e.preventDefault();
     updateMutation.mutate(formData);
+    setIsEditMode(false);
   };
 
   const addArticle = () => {
