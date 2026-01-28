@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, Loader2, AlertCircle } from "lucide-react";
+import { Upload, Loader2 } from "lucide-react";
 
 export default function ImportExcelModal({ open, onOpenChange, customerId, customerArticles }) {
   const [file, setFile] = useState(null);
