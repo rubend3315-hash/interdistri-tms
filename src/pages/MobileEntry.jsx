@@ -28,13 +28,16 @@ import {
   Camera,
   ExternalLink,
   MessageSquare,
-  ClipboardCheck
+  ClipboardCheck,
+  Plus,
+  Trash2
 } from "lucide-react";
 
 export default function MobileEntry() {
   const [activeTab, setActiveTab] = useState("dienst");
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [signature, setSignature] = useState(null);
+  const [trips, setTrips] = useState([]);
   const canvasRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -69,6 +72,11 @@ export default function MobileEntry() {
     enabled: !!user?.email
   });
 
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => base44.entities.Customer.list()
+  });
+
   const createTimeEntryMutation = useMutation({
     mutationFn: (data) => base44.entities.TimeEntry.create(data),
     onSuccess: () => {
@@ -91,6 +99,13 @@ export default function MobileEntry() {
     }
   });
 
+  const createTripMutation = useMutation({
+    mutationFn: (data) => base44.entities.Trip.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+    }
+  });
+
   // Find current employee
   const currentEmployee = employees.find(e => e.email === user?.email);
   const todayShift = shiftTimes[0];
@@ -107,9 +122,6 @@ export default function MobileEntry() {
     start_time: "",
     end_time: "",
     break_minutes: 30,
-    vehicle_id: "",
-    route_name: "",
-    planned_stops: "",
     departure_location: "Standplaats",
     expected_return_time: "",
     notes: ""
@@ -217,7 +229,6 @@ export default function MobileEntry() {
       break_minutes: Number(formData.break_minutes) || 0,
       total_hours: hours,
       shift_type: "Dag",
-      vehicle_id: formData.vehicle_id,
       departure_location: formData.departure_location,
       expected_return_time: formData.expected_return_time,
       notes: formData.notes,
@@ -239,7 +250,6 @@ export default function MobileEntry() {
       break_minutes: Number(formData.break_minutes) || 0,
       total_hours: hours,
       shift_type: "Dag",
-      vehicle_id: formData.vehicle_id,
       notes: formData.notes,
       status: "Concept"
     });
@@ -354,22 +364,21 @@ export default function MobileEntry() {
       {/* Main Content */}
       <div className="p-4 -mt-2">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-4 mb-4">
-            <TabsTrigger value="dienst" className="text-xs">
-              <Clock className="w-4 h-4 mr-1" />
-              Dienst
+          <TabsList className="w-full grid grid-cols-5 mb-4">
+            <TabsTrigger value="dienst" className="text-xs px-2">
+              <Clock className="w-4 h-4" />
             </TabsTrigger>
-            <TabsTrigger value="inspectie" className="text-xs">
-              <ClipboardCheck className="w-4 h-4 mr-1" />
-              Inspectie
+            <TabsTrigger value="ritten" className="text-xs px-2">
+              <Truck className="w-4 h-4" />
             </TabsTrigger>
-            <TabsTrigger value="declaratie" className="text-xs">
-              <FileText className="w-4 h-4 mr-1" />
-              Declaratie
+            <TabsTrigger value="inspectie" className="text-xs px-2">
+              <ClipboardCheck className="w-4 h-4" />
             </TabsTrigger>
-            <TabsTrigger value="overzicht" className="text-xs">
-              <CheckCircle className="w-4 h-4 mr-1" />
-              Overzicht
+            <TabsTrigger value="declaratie" className="text-xs px-2">
+              <FileText className="w-4 h-4" />
+            </TabsTrigger>
+            <TabsTrigger value="overzicht" className="text-xs px-2">
+              <CheckCircle className="w-4 h-4" />
             </TabsTrigger>
           </TabsList>
 
@@ -379,40 +388,22 @@ export default function MobileEntry() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Clock className="w-5 h-5 text-blue-600" />
-                  Diensttijd & Ritten
+                  Diensttijd
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Datum</Label>
-                    <Input
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Voertuig</Label>
-                    <Select 
-                      value={formData.vehicle_id} 
-                      onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Kies" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vehicles.map(v => (
-                          <SelectItem key={v.id} value={v.id}>{v.license_plate}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Datum</Label>
+                  <Input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  />
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Start</Label>
+                    <Label className="text-xs">Start dienst</Label>
                     <Input
                       type="time"
                       value={formData.start_time}
@@ -420,7 +411,7 @@ export default function MobileEntry() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Eind</Label>
+                    <Label className="text-xs">Eind dienst</Label>
                     <Input
                       type="time"
                       value={formData.end_time}
@@ -440,26 +431,25 @@ export default function MobileEntry() {
                 {formData.start_time && formData.end_time && (
                   <div className="p-3 bg-blue-50 rounded-lg text-center">
                     <p className="text-sm text-blue-700">
-                      <strong>Berekende uren:</strong> {calculateHours(formData.start_time, formData.end_time, formData.break_minutes)} uur
+                      <strong>Totaal uren:</strong> {calculateHours(formData.start_time, formData.end_time, formData.break_minutes)} uur
                     </p>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Route naam</Label>
+                    <Label className="text-xs">Vertreklocatie</Label>
                     <Input
-                      value={formData.route_name}
-                      onChange={(e) => setFormData({ ...formData, route_name: e.target.value })}
-                      placeholder="bijv. Utrecht-Amsterdam"
+                      value={formData.departure_location}
+                      onChange={(e) => setFormData({ ...formData, departure_location: e.target.value })}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Aantal stops</Label>
+                    <Label className="text-xs">Verwachte terugkomst</Label>
                     <Input
-                      type="number"
-                      value={formData.planned_stops}
-                      onChange={(e) => setFormData({ ...formData, planned_stops: e.target.value })}
+                      type="time"
+                      value={formData.expected_return_time}
+                      onChange={(e) => setFormData({ ...formData, expected_return_time: e.target.value })}
                     />
                   </div>
                 </div>
@@ -502,6 +492,270 @@ export default function MobileEntry() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Ritten Tab */}
+          <TabsContent value="ritten" className="space-y-4">
+            <Card className="bg-blue-900 text-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Truck className="w-5 h-5" />
+                  Rit Informatie
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-blue-100">
+                  Ritten (Verblijfskosten art. 40 CAO)
+                </p>
+              </CardContent>
+            </Card>
+
+            {trips.map((trip, index) => (
+              <Card key={index} className="border-2 border-slate-200">
+                <CardContent className="p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-slate-900">Rit {index + 1}</h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setTrips(trips.filter((_, i) => i !== index))}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Start Rit</Label>
+                      <Input
+                        type="time"
+                        value={trip.start_time}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, start_time: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Einde Rit</Label>
+                      <Input
+                        type="time"
+                        value={trip.end_time}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, end_time: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs">Kenteken *</Label>
+                    <Select 
+                      value={trip.vehicle_id} 
+                      onValueChange={(v) => {
+                        const newTrips = [...trips];
+                        newTrips[index] = { ...trip, vehicle_id: v };
+                        setTrips(newTrips);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecteer voertuig" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vehicles.map(v => (
+                          <SelectItem key={v.id} value={v.id}>{v.license_plate}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Begin km *</Label>
+                      <Input
+                        type="number"
+                        value={trip.start_km}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, start_km: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Eind km</Label>
+                      <Input
+                        type="number"
+                        value={trip.end_km}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, end_km: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Route Details Section */}
+                  <div className="pt-3 border-t">
+                    <div className="bg-emerald-600 text-white p-2 rounded-lg mb-3 flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      <span className="text-sm font-semibold">Route Details</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Klant (verplicht om te voltooien)</Label>
+                        <Select 
+                          value={trip.customer_id || "none"} 
+                          onValueChange={(v) => {
+                            const newTrips = [...trips];
+                            newTrips[index] = { ...trip, customer_id: v === "none" ? "" : v };
+                            setTrips(newTrips);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecteer klant" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Selecteer klant</SelectItem>
+                            {customers.map(c => (
+                              <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Selecteer route</Label>
+                          <Input
+                            value={trip.route_name}
+                            onChange={(e) => {
+                              const newTrips = [...trips];
+                              newTrips[index] = { ...trip, route_name: e.target.value };
+                              setTrips(newTrips);
+                            }}
+                            placeholder="Routenaam"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Bestelde stops</Label>
+                          <Input
+                            type="number"
+                            value={trip.planned_stops}
+                            onChange={(e) => {
+                              const newTrips = [...trips];
+                              newTrips[index] = { ...trip, planned_stops: e.target.value };
+                              setTrips(newTrips);
+                            }}
+                            placeholder="bijv. 85"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="text-xs">Opmerkingen</Label>
+                        <Textarea
+                          value={trip.notes}
+                          onChange={(e) => {
+                            const newTrips = [...trips];
+                            newTrips[index] = { ...trip, notes: e.target.value };
+                            setTrips(newTrips);
+                          }}
+                          rows={2}
+                          placeholder="Bijzonderheden, vertragingen, problemen..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            <Button 
+              variant="outline" 
+              className="w-full border-dashed border-2 py-6"
+              onClick={() => setTrips([...trips, {
+                start_time: "",
+                end_time: "",
+                vehicle_id: "",
+                start_km: "",
+                end_km: "",
+                customer_id: "",
+                route_name: "",
+                planned_stops: "",
+                notes: ""
+              }])}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Regel Toevoegen
+            </Button>
+
+            {trips.length > 0 && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    trips.forEach(trip => {
+                      createTripMutation.mutate({
+                        employee_id: currentEmployee?.id,
+                        date: formData.date,
+                        vehicle_id: trip.vehicle_id,
+                        customer_id: trip.customer_id,
+                        route_name: trip.route_name,
+                        planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+                        start_km: trip.start_km ? Number(trip.start_km) : null,
+                        end_km: trip.end_km ? Number(trip.end_km) : null,
+                        total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+                        departure_time: trip.start_time,
+                        arrival_time: trip.end_time,
+                        notes: trip.notes,
+                        status: "Gepland"
+                      });
+                    });
+                  }}
+                  disabled={createTripMutation.isPending}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Tussentijds opslaan
+                </Button>
+                <Button 
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => {
+                    if (!signature) {
+                      setShowSignatureDialog(true);
+                      return;
+                    }
+                    trips.forEach(trip => {
+                      createTripMutation.mutate({
+                        employee_id: currentEmployee?.id,
+                        date: formData.date,
+                        vehicle_id: trip.vehicle_id,
+                        customer_id: trip.customer_id,
+                        route_name: trip.route_name,
+                        planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+                        start_km: trip.start_km ? Number(trip.start_km) : null,
+                        end_km: trip.end_km ? Number(trip.end_km) : null,
+                        total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+                        departure_time: trip.start_time,
+                        arrival_time: trip.end_time,
+                        notes: trip.notes,
+                        status: "Voltooid"
+                      });
+                    });
+                  }}
+                  disabled={createTripMutation.isPending}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Indienen
+                </Button>
+              </div>
+            )}
           </TabsContent>
 
           {/* Inspectie Tab */}
