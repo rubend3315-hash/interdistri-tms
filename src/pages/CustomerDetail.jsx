@@ -332,7 +332,7 @@ export default function CustomerDetail() {
           {isPostNL && (
             <TabsTrigger value="imports" className="gap-2">
               <Upload className="w-4 h-4" />
-              Imports ({imports.length})
+              Imports
             </TabsTrigger>
           )}
           <TabsTrigger value="history" className="gap-2">
