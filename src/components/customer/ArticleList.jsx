@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit2, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Plus, Edit2, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import ArticleForm from "@/components/customer/ArticleForm";
 import { getValidPriceRule } from "@/components/utils/priceRuleUtils";
 
@@ -45,8 +45,10 @@ export default function ArticleList({ customerId }) {
     }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Article.delete(id),
+  const toggleStatusMutation = useMutation({
+    mutationFn: (article) => base44.entities.Article.update(article.id, {
+      status: article.status === 'Actief' ? 'Inactief' : 'Actief'
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['articles', customerId] });
     }
@@ -142,9 +144,14 @@ export default function ArticleList({ customerId }) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => deleteMutation.mutate(article.id)}
+                        onClick={() => toggleStatusMutation.mutate(article)}
+                        title={article.status === 'Actief' ? 'Deactiveren' : 'Activeren'}
                       >
-                        <Trash2 className="w-4 h-4 text-red-600" />
+                        {article.status === 'Actief' ? (
+                          <Eye className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <EyeOff className="w-4 h-4 text-slate-400" />
+                        )}
                       </Button>
                     </div>
                   </div>
