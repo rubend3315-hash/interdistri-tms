@@ -123,7 +123,6 @@ export default function CalculationsTab({ imports, customerArticles }) {
                     <SelectValue placeholder="Optioneel" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={null}>-- Geen --</SelectItem>
                     {columns.map(col => (
                       <SelectItem key={col} value={col}>{col}</SelectItem>
                     ))}
