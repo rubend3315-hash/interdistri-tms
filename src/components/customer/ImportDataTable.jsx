@@ -30,8 +30,23 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
     }))
   );
 
-  const columns = allData.length > 0
-    ? Object.keys(allData[0]).filter(col => !col.startsWith('_'))
+  // Remove duplicates based on actual data (excluding metadata)
+  const uniqueData = Array.from(
+    new Map(
+      allData.map(row => {
+        const dataKey = JSON.stringify(
+          Object.keys(row)
+            .filter(k => !k.startsWith('_'))
+            .sort()
+            .reduce((obj, key) => ({ ...obj, [key]: row[key] }), {})
+        );
+        return [dataKey, row];
+      })
+    ).values()
+  );
+
+  const columns = uniqueData.length > 0
+    ? Object.keys(uniqueData[0]).filter(col => !col.startsWith('_'))
     : [];
 
   // Filter data based on period selection
