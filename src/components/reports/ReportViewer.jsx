@@ -1,149 +1,151 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Download, Loader2, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
-import { nl } from "date-fns/locale";
+import { Download, RefreshCw } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export default function ReportViewer({ report, isLoading, onRegenerate }) {
-  const [expandedSections, setExpandedSections] = useState({
-    summary: true,
-    quality: true,
-    trends: true,
-    recommendations: true,
-    metrics: true
-  });
+  const handleExportPDF = async () => {
+    const element = document.getElementById("report-content");
+    if (!element) return;
 
-  const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
+    try {
+      const canvas = await html2canvas(element, { scale: 2 });
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png");
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
 
-  const parseReportContent = (content) => {
-    const sections = {};
-    const lines = content.split('\n');
-    let currentSection = null;
-    let currentContent = [];
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= 297;
 
-    lines.forEach(line => {
-      if (line.includes('Executive Summary')) currentSection = 'summary';
-      else if (line.includes('Data Quality')) currentSection = 'quality';
-      else if (line.includes('Trends')) currentSection = 'trends';
-      else if (line.includes('Recommendations')) currentSection = 'recommendations';
-      else if (line.includes('Key Metrics')) currentSection = 'metrics';
-      else if (currentSection && line.trim()) currentContent.push(line);
-
-      if (line.includes(':') && !line.startsWith('-') && currentSection) {
-        if (sections[currentSection]) {
-          sections[currentSection] += '\n' + line;
-        } else {
-          sections[currentSection] = line;
-        }
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= 297;
       }
-    });
 
-    return sections;
+      pdf.save("rapport.pdf");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+    }
   };
 
-  const sections = parseReportContent(report || '');
-
-  const exportReport = () => {
-    const text = `GEGENEREERD RAPPORT\n${format(new Date(), 'dd MMMM yyyy', { locale: nl })}\n\n${report}`;
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `rapport-${Date.now()}.txt`;
-    a.click();
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-3" />
-          <p className="text-slate-600">Rapport wordt gegenereerd...</p>
-        </CardContent>
-      </Card>
-    );
+  if (!report && !isLoading) {
+    return null;
   }
-
-  if (!report) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-slate-500">Geen rapport gegenereerd. Selecteer criteria en genereer een rapport.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const sectionConfig = {
-    summary: { title: 'Executive Summary', icon: '📊', color: 'bg-blue-50' },
-    quality: { title: 'Data Kwaliteit', icon: '✓', color: 'bg-green-50' },
-    trends: { title: 'Trends & Patronen', icon: '📈', color: 'bg-purple-50' },
-    recommendations: { title: 'Aanbevelingen', icon: '💡', color: 'bg-orange-50' },
-    metrics: { title: 'Sleutelmetrieken', icon: '📊', color: 'bg-slate-50' }
-  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900">Geanalyseerd Rapport</h3>
-          <p className="text-xs text-slate-500 mt-1">
-            Gegenereerd op {format(new Date(), 'dd MMM yyyy HH:mm', { locale: nl })}
-          </p>
-        </div>
-        <Button 
-          onClick={exportReport}
-          variant="outline"
-          size="sm"
-          className="gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Exporteren
-        </Button>
-      </div>
-
-      <div className="grid gap-3">
-        {Object.entries(sectionConfig).map(([key, config]) => (
-          <Card key={key} className={config.color}>
-            <button
-              onClick={() => toggleSection(key)}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-opacity-75 transition"
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Gegenereerd Rapport</CardTitle>
+        {report && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRegenerate}
+              disabled={isLoading}
             >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{config.icon}</span>
-                <CardTitle className="text-base">{config.title}</CardTitle>
-              </div>
-              <Badge variant="outline" className="text-xs">
-                {expandedSections[key] ? '−' : '+'}
-              </Badge>
-            </button>
-            
-            {expandedSections[key] && (
-              <CardContent className="pt-0 pb-4">
-                <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
-                  {sections[key] || 'Geen gegevens beschikbaar'}
-                </div>
-              </CardContent>
-            )}
-          </Card>
-        ))}
-      </div>
-
-      <Button 
-        onClick={onRegenerate}
-        variant="outline"
-        className="w-full gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-        Rapport opnieuw genereren
-      </Button>
-    </div>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Opnieuw genereren
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              disabled={isLoading}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exporteren als PDF
+            </Button>
+          </div>
+        )}
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-4">
+            <div className="h-4 bg-slate-200 rounded animate-pulse" />
+            <div className="h-4 bg-slate-200 rounded animate-pulse w-5/6" />
+            <div className="h-4 bg-slate-200 rounded animate-pulse w-4/6" />
+            <div className="space-y-3 mt-6">
+              <div className="h-3 bg-slate-200 rounded animate-pulse" />
+              <div className="h-3 bg-slate-200 rounded animate-pulse" />
+              <div className="h-3 bg-slate-200 rounded animate-pulse w-5/6" />
+            </div>
+          </div>
+        ) : report ? (
+          <div
+            id="report-content"
+            className="prose prose-sm max-w-none bg-white p-6 rounded-lg"
+          >
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => (
+                  <h1 className="text-2xl font-bold text-slate-900 mb-4">
+                    {children}
+                  </h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="text-xl font-semibold text-slate-800 mt-6 mb-3">
+                    {children}
+                  </h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="text-lg font-semibold text-slate-700 mt-4 mb-2">
+                    {children}
+                  </h3>
+                ),
+                p: ({ children }) => (
+                  <p className="text-slate-700 mb-3 leading-relaxed">
+                    {children}
+                  </p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="list-disc list-inside space-y-2 mb-3 text-slate-700">
+                    {children}
+                  </ul>
+                ),
+                li: ({ children }) => <li className="ml-2">{children}</li>,
+                strong: ({ children }) => (
+                  <strong className="font-semibold text-slate-900">
+                    {children}
+                  </strong>
+                ),
+                table: ({ children }) => (
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full border-collapse border border-slate-300">
+                      {children}
+                    </table>
+                  </div>
+                ),
+                th: ({ children }) => (
+                  <th className="border border-slate-300 bg-slate-100 px-3 py-2 text-left font-semibold">
+                    {children}
+                  </th>
+                ),
+                td: ({ children }) => (
+                  <td className="border border-slate-300 px-3 py-2">
+                    {children}
+                  </td>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-4 border-blue-500 pl-4 italic text-slate-600 my-4">
+                    {children}
+                  </blockquote>
+                ),
+              }}
+            >
+              {report}
+            </ReactMarkdown>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
