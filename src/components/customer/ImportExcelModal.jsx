@@ -124,31 +124,9 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
               </Card>
 
               <div className="space-y-2">
-                <Label className="text-base font-semibold">Kolomselectie</Label>
-                <p className="text-xs text-slate-500">Selecteer welke kolommen u wilt importeren</p>
-                <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto p-3 bg-slate-50 rounded-lg">
-                  {parseResult.columns.map(column => (
-                    <div key={column} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`col-${column}`}
-                        checked={selectedColumns.has(column)}
-                        onCheckedChange={() => toggleColumn(column)}
-                      />
-                      <label 
-                        htmlFor={`col-${column}`}
-                        className="text-sm cursor-pointer flex-1 truncate"
-                      >
-                        {column}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
                 <Label className="text-base font-semibold">Gegevensvoorbeeld</Label>
                 <div className="overflow-x-auto overflow-y-auto max-h-48 border rounded-lg">
-                    <table className="w-full min-w-max text-xs">
+                  <table className="w-full min-w-max text-xs">
                     <thead className="bg-slate-100 sticky top-0">
                       <tr>
                         {parseResult.columns.map(col => (
