@@ -1301,14 +1301,14 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
     return { week1Days, week2Days, avgDays: (week1Days + week2Days) / 2 };
   };
 
-  const calculateHoursPerDay = () => {
-    const { avgDays } = calculateDaysPerWeek();
-    return avgDays > 0 ? (formData.uren_per_week / avgDays).toFixed(1) : 0;
+  const calculateHoursPerDayWeek = (week) => {
+    const daysChecked = Object.values(week).filter(Boolean).length;
+    return daysChecked > 0 ? (formData.uren_per_week / daysChecked).toFixed(1) : 0;
   };
 
   const calculateWeekTotal = (week) => {
     const daysChecked = Object.values(week).filter(Boolean).length;
-    const hoursPerDay = parseFloat(calculateHoursPerDay());
+    const hoursPerDay = parseFloat(calculateHoursPerDayWeek(week));
     return (daysChecked * hoursPerDay).toFixed(1);
   };
 
@@ -1400,13 +1400,13 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Week 1 (Oneven weken)</CardTitle>
+                <CardTitle className="text-sm">Week 1 (Oneven weken) - {calculateHoursPerDayWeek(formData.week1)}u per werkdag</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-7 gap-2">
                   {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map((day, i) => {
                     const key = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'][i];
-                    const hoursPerDay = calculateHoursPerDay();
+                    const hoursPerDay = calculateHoursPerDayWeek(formData.week1);
                     return (
                       <div key={i} className="space-y-1">
                         <Label className="text-xs">{day}</Label>
@@ -1440,13 +1440,13 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Week 2 (Even weken)</CardTitle>
+                <CardTitle className="text-sm">Week 2 (Even weken) - {calculateHoursPerDayWeek(formData.week2)}u per werkdag</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-7 gap-2">
                   {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map((day, i) => {
                     const key = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'][i];
-                    const hoursPerDay = calculateHoursPerDay();
+                    const hoursPerDay = calculateHoursPerDayWeek(formData.week2);
                     return (
                       <div key={i} className="space-y-1">
                         <Label className="text-xs">{day}</Label>
