@@ -12,7 +12,9 @@ export default function ImportDataTable({ importData, customerArticles, onDelete
   const [articleColumn, setArticleColumn] = useState("");
   const [calculations, setCalculations] = useState([]);
 
-  const columns = Object.keys(importData.column_mapping || {});
+  const columns = importData.data && importData.data.length > 0 
+    ? Object.keys(importData.data[0]) 
+    : [];
 
   const calculateRevenue = () => {
     if (!quantityColumn || !priceColumn) return;
