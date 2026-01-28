@@ -83,7 +83,7 @@ export default function ImportDataTable({ importData, customerArticles, onDelete
 
   const exportToCSV = () => {
     const headers = columns.join(',');
-    const rows = importData.data.map(row => 
+    const rows = filteredData.map(row => 
       columns.map(col => `"${row[col]}"`).join(',')
     );
     const csv = [headers, ...rows].join('\n');
