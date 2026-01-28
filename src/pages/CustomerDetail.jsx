@@ -18,6 +18,8 @@ import CalculationsTab from "@/components/customer/CalculationsTab";
 import ImportHistory from "@/components/customer/ImportHistory";
 import ArticleList from "@/components/customer/ArticleList";
 import TIModelRoutesTab from "@/components/customer/TIModelRoutesTab";
+import ReportGenerator from "@/components/reports/ReportGenerator";
+import DataDashboard from "@/components/reports/DataDashboard";
 import {
   ArrowLeft,
   Save,
