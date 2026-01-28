@@ -73,7 +73,6 @@ export default function TIModelRoutesTab({ customerId }) {
       format: "a4",
     });
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     let yPosition = 15;
 
@@ -114,50 +113,48 @@ export default function TIModelRoutesTab({ customerId }) {
     pdf.text(`Totaal stuks: ${totalParcels}`, col1X, yPosition);
     yPosition += 14;
 
-    // Table columns with proper spacing
+    // Table columns
     const columns = [
-      { header: "Ritcode", dataKey: "route_code", width: 13 },
-      { header: "Ritnaam", dataKey: "route_name", width: 26 },
+      { header: "Ritcode", dataKey: "route_code", width: 12 },
+      { header: "Ritnaam", dataKey: "route_name", width: 25 },
       { header: "Ritijd (u)", dataKey: "total_time_hours", width: 13 },
       { header: "Ritijd (HH:MM)", dataKey: "total_time_hhmm", width: 15 },
-      { header: "Stops", dataKey: "number_of_stops", width: 11 },
-      { header: "Stuks", dataKey: "number_of_parcels", width: 11 },
+      { header: "Stops", dataKey: "number_of_stops", width: 10 },
+      { header: "Stuks", dataKey: "number_of_parcels", width: 10 },
       { header: "Normuur", dataKey: "calculated_norm_per_hour", width: 12 },
-      { header: "Norm/besteluur", dataKey: "manual_norm_per_hour", width: 15 },
-      { header: "Periode", dataKey: "start_date", width: 12 },
+      { header: "Norm/besteluur", dataKey: "manual_norm_per_hour", width: 14 },
+      { header: "Periode", dataKey: "start_date", width: 13 },
     ];
 
     const headerHeight = 8;
     const rowHeight = 7;
-    let currentY = yPosition;
     const tableStartX = 15;
+    let currentY = yPosition;
 
-    // Function to draw table header
     const drawHeader = (startY) => {
-      pdf.setFillColor(34, 47, 102); // Dark blue
-      pdf.setTextColor(255, 255, 255); // White text
+      pdf.setFillColor(34, 47, 102);
+      pdf.setTextColor(255, 255, 255);
       pdf.setFont(undefined, "bold");
       pdf.setFontSize(9);
+      pdf.setDrawColor(0, 0, 0);
 
       let xPos = tableStartX;
       columns.forEach((col) => {
-        pdf.rect(xPos, startY, col.width, headerHeight, "F");
-        pdf.text(col.header, xPos + 2, startY + 5.5);
+        pdf.rect(xPos, startY, col.width, headerHeight, "FD");
+        pdf.text(col.header, xPos + 1, startY + 5.5);
         xPos += col.width;
       });
     };
 
-    // Draw initial header
     drawHeader(currentY);
     currentY += headerHeight;
 
-    // Table data rows
     pdf.setFont(undefined, "normal");
     pdf.setFontSize(9);
     pdf.setTextColor(0, 0, 0);
+    pdf.setDrawColor(200, 200, 200);
 
     routes.forEach((route, index) => {
-      // Page break check
       if (currentY + rowHeight > pageHeight - 10) {
         pdf.addPage();
         currentY = 15;
@@ -165,9 +162,9 @@ export default function TIModelRoutesTab({ customerId }) {
         currentY += headerHeight;
       }
 
-      // Alternate row colors
+      // Background color
       if (index % 2 === 0) {
-        pdf.setFillColor(240, 245, 250); // Light blue
+        pdf.setFillColor(240, 245, 250);
         let xPos = tableStartX;
         columns.forEach((col) => {
           pdf.rect(xPos, currentY, col.width, rowHeight, "F");
@@ -176,14 +173,13 @@ export default function TIModelRoutesTab({ customerId }) {
       }
 
       // Row borders
-      pdf.setDrawColor(220, 220, 220);
       let xPos = tableStartX;
       columns.forEach((col) => {
         pdf.rect(xPos, currentY, col.width, rowHeight);
         xPos += col.width;
       });
 
-      // Row data
+      // Data
       pdf.setTextColor(0, 0, 0);
       xPos = tableStartX;
       columns.forEach((col) => {
@@ -191,7 +187,7 @@ export default function TIModelRoutesTab({ customerId }) {
         if (typeof value === "number") {
           value = value.toFixed(2);
         }
-        pdf.text(String(value).substring(0, 15), xPos + 2, currentY + 4.5);
+        pdf.text(String(value), xPos + 1, currentY + 4.5);
         xPos += col.width;
       });
       currentY += rowHeight;
