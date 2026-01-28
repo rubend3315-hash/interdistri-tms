@@ -113,9 +113,9 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Eenheid</Label>
-            <Select value={formData.unit || "stuk"} onValueChange={(v) => setFormData({ ...formData, unit: v })}>
+            <Select value={formData.unit || ""} onValueChange={(v) => setFormData({ ...formData, unit: v })}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Selecteer eenheid" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="stuk">Stuk</SelectItem>
@@ -129,9 +129,9 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
 
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select value={formData.status || "Actief"} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+            <Select value={formData.status || ""} onValueChange={(v) => setFormData({ ...formData, status: v })}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Selecteer status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Actief">Actief</SelectItem>
