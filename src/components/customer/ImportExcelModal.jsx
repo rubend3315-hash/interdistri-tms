@@ -93,6 +93,7 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
         ...createdImport,
         validationErrors: validationErrors
       });
+      setShowValidation(false);
     }
   });
 
