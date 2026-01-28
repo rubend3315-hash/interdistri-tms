@@ -272,7 +272,7 @@ export default function CustomerDetail() {
                   <div className="space-y-2">
                     <Label>Status</Label>
                     <Select 
-                      value={formData.status} 
+                      value={formData.status || "Actief"} 
                       onValueChange={(v) => setFormData({ ...formData, status: v })}
                     >
                       <SelectTrigger>
