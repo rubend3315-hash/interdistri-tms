@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -64,6 +65,7 @@ export default function ShiftTime() {
     date: format(new Date(), 'yyyy-MM-dd'),
     department: "PakketDistributie",
     start_time: "06:00",
+    end_time: "",
     message: ""
   });
 
@@ -72,6 +74,7 @@ export default function ShiftTime() {
       date: format(new Date(), 'yyyy-MM-dd'),
       department: "PakketDistributie",
       start_time: "06:00",
+      end_time: "",
       message: ""
     });
   };
@@ -82,6 +85,7 @@ export default function ShiftTime() {
       date: shift.date,
       department: shift.department,
       start_time: shift.start_time,
+      end_time: shift.end_time || "",
       message: shift.message || ""
     });
     setIsDialogOpen(true);
@@ -133,7 +137,10 @@ export default function ShiftTime() {
                 <p className="text-blue-100 text-sm">Vandaag - {format(new Date(), "EEEE d MMMM", { locale: nl })}</p>
                 <div className="flex items-center gap-3 mt-2">
                   <Clock className="w-8 h-8" />
-                  <span className="text-4xl font-bold">{todayShift.start_time}</span>
+                  <span className="text-4xl font-bold">
+                    {todayShift.start_time}
+                    {todayShift.end_time && ` - ${todayShift.end_time}`}
+                  </span>
                 </div>
                 {todayShift.message && (
                   <p className="mt-4 text-blue-100 bg-blue-500/30 p-3 rounded-lg">
@@ -187,7 +194,10 @@ export default function ShiftTime() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-2xl text-slate-900">{shift.start_time}</span>
+                          <span className="font-bold text-2xl text-slate-900">
+                            {shift.start_time}
+                            {shift.end_time && ` - ${shift.end_time}`}
+                          </span>
                           {shift.date === todayStr && (
                             <Badge className="bg-blue-600">Vandaag</Badge>
                           )}
@@ -253,23 +263,50 @@ export default function ShiftTime() {
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Datum</Label>
+              <Input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Afdeling</Label>
+              <Select
+                value={formData.department}
+                onValueChange={(v) => setFormData({ ...formData, department: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Management">Management</SelectItem>
+                  <SelectItem value="Transport">Transport</SelectItem>
+                  <SelectItem value="PakketDistributie">PakketDistributie</SelectItem>
+                  <SelectItem value="Charters">Charters</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Datum</Label>
-                <Input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Starttijd</Label>
+                <Label>Shifttijd van</Label>
                 <Input
                   type="time"
                   value={formData.start_time}
                   onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
                   required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Shifttijd tot</Label>
+                <Input
+                  type="time"
+                  value={formData.end_time}
+                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
                 />
               </div>
             </div>
