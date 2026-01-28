@@ -30,7 +30,8 @@ import {
   Trash2,
   Upload,
   Calculator,
-  History
+  History,
+  X
 } from "lucide-react";
 
 export default function CustomerDetail() {
@@ -63,6 +64,7 @@ export default function CustomerDetail() {
 
   const [formData, setFormData] = useState({
     company_name: "",
+    logo_url: "",
     contact_person: "",
     email: "",
     phone: "",
@@ -82,6 +84,7 @@ export default function CustomerDetail() {
     if (customer) {
       setFormData({
         company_name: customer.company_name || "",
+        logo_url: customer.logo_url || "",
         contact_person: customer.contact_person || "",
         email: customer.email || "",
         phone: customer.phone || "",
@@ -163,7 +166,7 @@ export default function CustomerDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-6">
         <Button 
           variant="outline" 
           onClick={() => navigate(createPageUrl('Customers'))}
@@ -171,6 +174,9 @@ export default function CustomerDetail() {
         >
           <ArrowLeft className="w-4 h-4" />
         </Button>
+        {customer.logo_url && (
+          <img src={customer.logo_url} alt={customer.company_name} className="h-16 w-16 object-contain" />
+        )}
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-slate-900">{customer.company_name}</h1>
           <p className="text-slate-500 mt-1">{customer.contact_person}</p>
@@ -217,6 +223,43 @@ export default function CustomerDetail() {
                 <CardTitle>Basisgegevens</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Logo</Label>
+                  <div className="flex items-center gap-3">
+                    {formData.logo_url && (
+                      <div className="relative w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center">
+                        <img src={formData.logo_url} alt="Logo" className="w-18 h-18 object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, logo_url: "" })}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const response = await base44.integrations.Core.UploadFile({ file });
+                            setFormData({ ...formData, logo_url: response.file_url });
+                          }
+                        }}
+                        className="block w-full text-sm text-slate-500
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-md file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-blue-50 file:text-blue-700
+                          hover:file:bg-blue-100"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Bedrijfsnaam *</Label>
