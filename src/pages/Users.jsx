@@ -551,13 +551,12 @@ export default function UsersPage() {
                          </div>
                          <span className="text-sm">{permission.label}</span>
                         </div>
-                      ))}
-                  </div>
-                </div>
-                </div>
-                );
-                })}
-                </div>
+                        ))}
+                        </div>
+                        </div>
+                        );
+                        })}
+                        </div>
 
                 <div className="flex gap-2 pt-4">
               <Button
