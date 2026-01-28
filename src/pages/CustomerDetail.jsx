@@ -186,6 +186,10 @@ export default function CustomerDetail() {
             <Package className="w-4 h-4" />
             Artikelen
           </TabsTrigger>
+          <TabsTrigger value="imports" className="gap-2">
+            <Upload className="w-4 h-4" />
+            Imports ({imports.length})
+          </TabsTrigger>
           <TabsTrigger value="notes" className="gap-2">
             <FileText className="w-4 h-4" />
             Opmerkingen
