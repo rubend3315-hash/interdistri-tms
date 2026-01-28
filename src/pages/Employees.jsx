@@ -620,10 +620,19 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
         </div>
         <div className="space-y-2">
           <Label>Functie</Label>
-          <Input
-            value={formData.function}
-            onChange={(e) => setFormData({ ...formData, function: e.target.value })}
-          />
+          <Select 
+            value={formData.function} 
+            onValueChange={(v) => setFormData({ ...formData, function: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecteer functie" />
+            </SelectTrigger>
+            <SelectContent>
+              {functions.map(func => (
+                <SelectItem key={func} value={func}>{func}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
