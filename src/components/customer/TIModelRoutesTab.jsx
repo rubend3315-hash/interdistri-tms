@@ -157,14 +157,16 @@ export default function TIModelRoutesTab({ customerId }) {
                         <button
                           onClick={() => handleEdit(route)}
                           className="text-blue-600 hover:text-blue-800"
+                          title="Bewerken"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(route.id)}
-                          className="text-red-600 hover:text-red-800"
+                          onClick={() => handleToggleStatus(route)}
+                          className={route.is_active ? "text-red-600 hover:text-red-800" : "text-green-600 hover:text-green-800"}
+                          title={route.is_active ? "Inactiveren" : "Activeren"}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Power className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
