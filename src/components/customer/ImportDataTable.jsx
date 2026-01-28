@@ -3,6 +3,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Download } from "lucide-react";
 
+const convertExcelDate = (excelDate) => {
+  if (typeof excelDate === 'string') {
+    // If it's already a string date, return as-is
+    return excelDate.split('T')[0];
+  }
+  
+  if (typeof excelDate === 'number') {
+    // Excel date numbers (days since Jan 1, 1900)
+    const excelEpoch = new Date(1900, 0, 1);
+    const date = new Date(excelEpoch.getTime() + excelDate * 86400000);
+    return date.toISOString().split('T')[0];
+  }
+  
+  return excelDate;
+};
+
 export default function ImportDataTable({ imports, onDelete, periodType = "all", selectedDate = "", startDate = "", endDate = "" }) {
   // Collect all data from all imports
   const allData = imports.flatMap(importData => 
