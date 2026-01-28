@@ -54,6 +54,37 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
     });
   };
 
+  const handleCSVImport = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const csv = event.target?.result;
+        const { rules, errors } = parseCSVPriceRules(csv);
+
+        if (errors.length > 0) {
+          setCsvImportError(errors);
+          setCsvImportSuccess(null);
+          return;
+        }
+
+        setFormData({
+          ...formData,
+          price_rules: [...(formData.price_rules || []), ...rules]
+        });
+        setCsvImportSuccess(`${rules.length} prijsregel(s) geïmporteerd`);
+        setCsvImportError(null);
+        setShowImportCSV(false);
+      } catch (error) {
+        setCsvImportError([error.message]);
+        setCsvImportSuccess(null);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <>
       <div className="space-y-4">
