@@ -936,8 +936,18 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
 }
 
 function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) {
-    const [contractregels, setContractregels] = useState(employee?.contractregels || []);
-    const [reiskostenregels, setReiskostenregels] = useState(employee?.reiskostenregels || []);
+    const [contractregels, setContractregels] = useState(() => {
+      if (Array.isArray(employee?.contractregels) && employee.contractregels.length > 0) {
+        return employee.contractregels;
+      }
+      return [];
+    });
+    const [reiskostenregels, setReiskostenregels] = useState(() => {
+      if (Array.isArray(employee?.reiskostenregels) && employee.reiskostenregels.length > 0) {
+        return employee.reiskostenregels;
+      }
+      return [];
+    });
     const [showContractDialog, setShowContractDialog] = useState(false);
     const [showReiskostenDialog, setShowReiskostenDialog] = useState(false);
     const [editingContract, setEditingContract] = useState(null);
@@ -951,11 +961,13 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
     });
 
     useEffect(() => {
-      if (employee && !updateMutation.isPending) {
-        setContractregels(employee.contractregels || []);
-        setReiskostenregels(employee.reiskostenregels || []);
+      if (employee && Array.isArray(employee.contractregels) && employee.contractregels.length > 0) {
+        setContractregels(employee.contractregels);
       }
-    }, [employee?.id]);
+      if (employee && Array.isArray(employee.reiskostenregels) && employee.reiskostenregels.length > 0) {
+        setReiskostenregels(employee.reiskostenregels);
+      }
+    }, [employee]);
 
     const handleSaveContract = (newContractregels) => {
       setContractregels(newContractregels);
