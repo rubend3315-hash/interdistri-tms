@@ -34,8 +34,8 @@ export default function TIModelRoutesTab({ customerId }) {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.TIModelRoute.delete(id),
+  const toggleStatusMutation = useMutation({
+    mutationFn: ({ id, is_active }) => base44.entities.TIModelRoute.update(id, { is_active }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ti_model_routes", customerId] });
     },
