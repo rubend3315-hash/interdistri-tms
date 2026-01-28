@@ -17,7 +17,6 @@ import {
   Plus,
   DollarSign,
   Calendar,
-  Trash2,
   Euro
 } from "lucide-react";
 
@@ -52,12 +51,7 @@ export default function SalaryTables() {
     }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.SalaryTable.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['salaryTables'] });
-    }
-  });
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -162,16 +156,16 @@ export default function SalaryTables() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead>Schaal</TableHead>
-                        <TableHead>Trede</TableHead>
-                        <TableHead>Uurloon</TableHead>
-                        <TableHead>Maandloon</TableHead>
-                        <TableHead>Geldig vanaf</TableHead>
-                        <TableHead>Geldig tot</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="w-20"></TableHead>
-                      </TableRow>
+                     <TableRow className="bg-slate-50">
+                       <TableHead>Ingangsdatum</TableHead>
+                       <TableHead>Categorie</TableHead>
+                       <TableHead>Trede</TableHead>
+                       <TableHead>Maandloon</TableHead>
+                       <TableHead>Uurloon 100%</TableHead>
+                       <TableHead>Uurloon 130%</TableHead>
+                       <TableHead>Uurloon 150%</TableHead>
+                       <TableHead>Status</TableHead>
+                     </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredEntries
@@ -179,60 +173,38 @@ export default function SalaryTables() {
                           if (a.scale !== b.scale) return a.scale.localeCompare(b.scale);
                           return (a.step || 0) - (b.step || 0);
                         })
-                        .map(entry => (
-                          <TableRow 
-                            key={entry.id}
-                            className="cursor-pointer hover:bg-slate-50"
-                            onClick={() => openEditDialog(entry)}
-                          >
-                            <TableCell className="font-semibold">{entry.scale}</TableCell>
-                            <TableCell>{entry.step || '-'}</TableCell>
-                            <TableCell>
-                              <span className="flex items-center gap-1">
-                                <Euro className="w-3.5 h-3.5 text-slate-400" />
-                                {entry.hourly_rate?.toFixed(2)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              {entry.monthly_salary ? (
-                                <span className="flex items-center gap-1">
-                                  <Euro className="w-3.5 h-3.5 text-slate-400" />
-                                  {entry.monthly_salary.toLocaleString()}
-                                </span>
-                              ) : '-'}
-                            </TableCell>
-                            <TableCell>
-                              {entry.start_date 
-                                ? format(new Date(entry.start_date), "d MMM yyyy", { locale: nl })
-                                : '-'}
-                            </TableCell>
-                            <TableCell>
-                              {entry.end_date 
-                                ? format(new Date(entry.end_date), "d MMM yyyy", { locale: nl })
-                                : '-'}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={entry.status === 'Actief' ? 'success' : 'secondary'}>
-                                {entry.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-600 hover:text-red-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (confirm('Weet je zeker dat je deze invoer wilt verwijderen?')) {
-                                    deleteMutation.mutate(entry.id);
-                                  }
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        .map(entry => {
+                          const hourly100 = entry.hourly_rate || 0;
+                          const hourly130 = hourly100 * 1.3;
+                          const hourly150 = hourly100 * 1.5;
+                          
+                          return (
+                            <TableRow 
+                              key={entry.id}
+                              className="cursor-pointer hover:bg-slate-50"
+                              onClick={() => openEditDialog(entry)}
+                            >
+                              <TableCell>
+                                {entry.start_date 
+                                  ? format(new Date(entry.start_date), "d MMM yyyy", { locale: nl })
+                                  : '-'}
+                              </TableCell>
+                              <TableCell className="font-semibold">{entry.scale}</TableCell>
+                              <TableCell>{entry.step ? `${entry.scale} Trede ${entry.step}` : '-'}</TableCell>
+                              <TableCell>
+                                {entry.monthly_salary ? `€ ${entry.monthly_salary.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
+                              </TableCell>
+                              <TableCell>€ {hourly100.toFixed(2)}</TableCell>
+                              <TableCell>€ {hourly130.toFixed(2)}</TableCell>
+                              <TableCell>€ {hourly150.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <Badge variant={entry.status === 'Actief' ? 'success' : 'secondary'}>
+                                  {entry.status}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                     </TableBody>
                   </Table>
                 </div>
