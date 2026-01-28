@@ -1301,14 +1301,14 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
     return { week1Days, week2Days, avgDays: (week1Days + week2Days) / 2 };
   };
 
-  const calculateHoursPerDayWeek = (week) => {
-    const daysChecked = Object.values(week).filter(Boolean).length;
-    return daysChecked > 0 ? (formData.uren_per_week / daysChecked).toFixed(1) : 0;
+  const calculateHoursPerDay = () => {
+    const { avgDays } = calculateDaysPerWeek();
+    return avgDays > 0 ? (formData.uren_per_week / avgDays).toFixed(1) : 0;
   };
 
   const calculateWeekTotal = (week) => {
     const daysChecked = Object.values(week).filter(Boolean).length;
-    const hoursPerDay = parseFloat(calculateHoursPerDayWeek(week));
+    const hoursPerDay = parseFloat(calculateHoursPerDay());
     return (daysChecked * hoursPerDay).toFixed(1);
   };
 
