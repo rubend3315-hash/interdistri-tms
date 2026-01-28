@@ -450,11 +450,11 @@ export default function UsersPage() {
           ))}
         </div>
       )}
-      </TabsContent>
+       </TabsContent>
 
-      <TabsContent value="roles" className="space-y-4">
-       <RolesTab />
-      </TabsContent>
+       <TabsContent value="roles" className="space-y-4">
+         <RolesTab />
+       </TabsContent>
       </Tabs>
 
       {/* Permissions Dialog */}
