@@ -92,9 +92,12 @@ export default function Approvals() {
   const getEmployee = (id) => employees.find(e => e.id === id);
   const getVehicle = (id) => vehicles.find(v => v.id === id);
 
-  const pendingEntries = timeEntries.filter(e => e.status === 'Ingediend');
-  const approvedEntries = timeEntries.filter(e => e.status === 'Goedgekeurd');
-  const rejectedEntries = timeEntries.filter(e => e.status === 'Afgekeurd');
+  const sortByDateDesc = (entries) => 
+    entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const pendingEntries = sortByDateDesc(timeEntries.filter(e => e.status === 'Ingediend'));
+  const approvedEntries = sortByDateDesc(timeEntries.filter(e => e.status === 'Goedgekeurd'));
+  const rejectedEntries = sortByDateDesc(timeEntries.filter(e => e.status === 'Afgekeurd'));
 
   const EntryCard = ({ entry, showActions = false }) => {
     const employee = getEmployee(entry.employee_id);
