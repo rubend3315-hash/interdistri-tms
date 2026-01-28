@@ -795,6 +795,12 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
   const [editingReiskosten, setEditingReiskosten] = useState(null);
   const [editingWeekrooster, setEditingWeekrooster] = useState(null);
 
+  useEffect(() => {
+    setContractregels(employee?.contractregels || []);
+    setReiskostenregels(employee?.reiskostenregels || []);
+    setWeekrewkoosters(employee?.weekroosters || []);
+  }, [employee]);
+
   const handleSaveAll = () => {
     onSubmit({
       ...employee,
