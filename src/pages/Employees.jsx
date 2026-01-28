@@ -545,8 +545,143 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (!viewOnly) {
+      onSubmit(formData);
+    }
   };
+
+  if (viewOnly) {
+    return (
+      <div className="space-y-4 pt-4">
+        {/* Pasfoto */}
+        <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border">
+          <div>
+            {formData.photo_url ? (
+              <img 
+                src={formData.photo_url} 
+                alt="Pasfoto" 
+                className="w-20 h-20 rounded-full object-cover border-2 border-slate-300"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center">
+                <User className="w-8 h-8 text-slate-400" />
+              </div>
+            )}
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Pasfoto</Label>
+            <p className="text-sm text-slate-600 mt-2">{formData.photo_url ? 'Foto aanwezig' : 'Geen foto'}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Voorletter(s)</Label>
+            <Input value={formData.initials} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>Voornaam</Label>
+            <Input value={formData.first_name} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>Achternaam</Label>
+            <Input value={formData.last_name} readOnly />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Input value={formData.status} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>Afdeling</Label>
+            <Input value={formData.department} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>Functie</Label>
+            <Input value={formData.function} readOnly />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input value={formData.email} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>Telefoon</Label>
+            <Input value={formData.phone} readOnly />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Geboortedatum</Label>
+            <Input type="date" value={formData.date_of_birth} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>In dienst sinds</Label>
+            <Input type="date" value={formData.in_service_since} readOnly />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Adres</Label>
+          <Input value={formData.address} readOnly />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Postcode</Label>
+            <Input value={formData.postal_code} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>Plaats</Label>
+            <Input value={formData.city} readOnly />
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <h3 className="font-medium mb-3">Rijbewijs & Certificaten</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Rijbewijsnummer</Label>
+              <Input value={formData.drivers_license_number} readOnly />
+            </div>
+            <div className="space-y-2">
+              <Label>Rijbewijs categorie</Label>
+              <Input value={formData.drivers_license_categories} readOnly />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <Label>Rijbewijs vervaldatum</Label>
+              <Input type="date" value={formData.drivers_license_expiry} readOnly />
+            </div>
+            <div className="space-y-2">
+              <Label>Code 95 vervaldatum</Label>
+              <Input type="date" value={formData.code95_expiry} readOnly />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <h3 className="font-medium mb-3">Noodcontact</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Naam</Label>
+              <Input value={formData.emergency_contact_name} readOnly />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefoon</Label>
+              <Input value={formData.emergency_contact_phone} readOnly />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 pt-4">
