@@ -87,10 +87,12 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
         status: 'Concept'
       });
     },
-    onSuccess: () => {
+    onSuccess: (createdImport) => {
       queryClient.invalidateQueries({ queryKey: ['customer-imports', customerId] });
-      resetModal();
-      onOpenChange(false);
+      setSuccessImport({
+        ...createdImport,
+        validationErrors: validationErrors
+      });
     }
   });
 
