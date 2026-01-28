@@ -73,7 +73,9 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
       const rowDate = convertExcelDate(row[datumCol]);
 
       if (periodType === "day") {
-        return rowDate === selectedDate;
+        // Convert selectedDate (YYYY-MM-DD) to DD-MM-YYYY for comparison
+        const formattedSelectedDate = format(new Date(selectedDate), 'dd-MM-yyyy', { locale: nl });
+        return rowDate === formattedSelectedDate;
       }
 
       if (periodType === "week") {
@@ -89,7 +91,9 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
       }
 
       if (periodType === "period") {
-        return rowDate >= startDate && rowDate <= endDate;
+        const formattedStart = format(new Date(startDate), 'dd-MM-yyyy', { locale: nl });
+        const formattedEnd = format(new Date(endDate), 'dd-MM-yyyy', { locale: nl });
+        return rowDate >= formattedStart && rowDate <= formattedEnd;
       }
 
       return true;
