@@ -56,8 +56,12 @@ export default function TIModelRoutesTab({ customerId }) {
   };
 
   const handleToggleStatus = (route) => {
-    toggleStatusMutation.mutate({ id: route.id, is_active: !route.is_active });
+   toggleStatusMutation.mutate({ id: route.id, is_active: !route.is_active });
   };
+
+  const avgNormValue = routes.length > 0
+   ? (routes.reduce((sum, r) => sum + (r.calculated_norm_per_hour || 0), 0) / routes.length)
+   : 0;
 
   const exportToPDF = async () => {
     const pdf = new jsPDF({
