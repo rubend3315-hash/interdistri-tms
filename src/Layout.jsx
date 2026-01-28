@@ -85,7 +85,6 @@ export default function Layout({ children, currentPageName }) {
       'Approvals': 'approvals',
       'ShiftTime': 'shifttime',
       'Employees': 'employees',
-      'Roles': 'users',
       'Users': 'users',
       'Vehicles': 'vehicles',
       'NiwoPermits': 'niwo',
