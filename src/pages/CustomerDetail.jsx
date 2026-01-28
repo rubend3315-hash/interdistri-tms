@@ -36,7 +36,9 @@ import {
   History,
   X,
   Edit2,
-  Calendar
+  Calendar,
+  BarChart3,
+  TrendingUp
 } from "lucide-react";
 
 // Imports Tab Component with period selection
