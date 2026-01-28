@@ -166,7 +166,13 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
+            {csvImportSuccess && (
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">{csvImportSuccess}</AlertDescription>
+              </Alert>
+            )}
             {(!formData.price_rules || formData.price_rules.length === 0) ? (
               <p className="text-sm text-slate-500">Geen prijsregels toegevoegd</p>
             ) : (
