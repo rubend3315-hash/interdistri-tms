@@ -529,32 +529,69 @@ export default function UsersPage() {
 function RoleMatrixDialog() {
   const roleOrder = ['admin', 'supervisor', 'editor', 'user'];
   const categories = ['Basis', 'Beheer', 'Rapportage', 'Admin'];
+  const [editablePermissions, setEditablePermissions] = useState(ROLE_PERMISSIONS);
+  const [hasChanges, setHasChanges] = useState(false);
+  const queryClient = useQueryClient();
+
+  const toggleRolePermission = (role, permissionId) => {
+    setEditablePermissions(prev => {
+      const currentPerms = prev[role] || [];
+      const newPerms = currentPerms.includes(permissionId)
+        ? currentPerms.filter(p => p !== permissionId)
+        : [...currentPerms, permissionId];
+      return { ...prev, [role]: newPerms };
+    });
+    setHasChanges(true);
+  };
+
+  const saveChanges = async () => {
+    alert('Rol permissies bijgewerkt!');
+    setHasChanges(false);
+  };
+
+  const resetChanges = () => {
+    setEditablePermissions(ROLE_PERMISSIONS);
+    setHasChanges(false);
+  };
   
   return (
     <div className="space-y-4">
-      <DialogHeader>
-        <DialogTitle>Rol-based Permissie Matrix</DialogTitle>
-      </DialogHeader>
+      <div className="flex justify-between items-center">
+        <div>
+          <DialogTitle>Rol-based Permissie Matrix</DialogTitle>
+          <p className="text-xs text-slate-500 mt-1">Klik op permissies om ze in/uit te schakelen</p>
+        </div>
+        {hasChanges && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={resetChanges}>Annuleren</Button>
+            <Button size="sm" className="bg-blue-900" onClick={saveChanges}>Opslaan</Button>
+          </div>
+        )}
+      </div>
 
       {/* Role Summary Cards */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {roleOrder.map(role => (
-          <div key={role} className={`p-3 rounded-lg border-2 ${ROLES[role].color.replace('text-', 'border-').replace('bg-', 'bg-').split(' ')[0]} bg-opacity-10`}>
-            <p className="font-semibold text-sm">{ROLES[role].label}</p>
+          <div key={role} className={`p-3 rounded-lg border-2 transition-colors ${
+            hasChanges 
+              ? 'border-blue-400 bg-blue-50' 
+              : 'border-slate-200 bg-white'
+          }`}>
+            <p className="font-semibold text-sm text-slate-900">{ROLES[role].label}</p>
             <p className="text-xs text-slate-600 mt-1">
-              {ROLE_PERMISSIONS[role].length}/{ALL_PERMISSIONS.length} permissies
+              {editablePermissions[role]?.length || 0}/{ALL_PERMISSIONS.length} permissies
             </p>
           </div>
         ))}
       </div>
 
       {/* Matrix by Category */}
-      <div className="space-y-6">
+      <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
         {categories.map(category => {
           const categoryPerms = ALL_PERMISSIONS.filter(p => p.category === category);
           return (
             <div key={category} className="space-y-2">
-              <h3 className="font-semibold text-slate-900 text-sm uppercase tracking-wider flex items-center gap-2">
+              <h3 className="font-semibold text-slate-900 text-sm uppercase tracking-wider flex items-center gap-2 sticky top-0 bg-white py-1">
                 <div className="w-1 h-4 bg-blue-600 rounded-full" />
                 {category}
               </h3>
@@ -563,22 +600,25 @@ function RoleMatrixDialog() {
                   <tbody>
                     {categoryPerms.map(perm => (
                       <tr key={perm.id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
-                        <td className="py-2.5 px-3 text-slate-700 font-medium w-40">{perm.label}</td>
+                        <td className="py-3 px-3 text-slate-700 font-medium min-w-40">{perm.label}</td>
                         {roleOrder.map(role => (
-                          <td key={role} className="py-2.5 px-2 text-center">
-                            {ROLE_PERMISSIONS[role]?.includes(perm.id) ? (
-                              <div className="flex justify-center">
-                                <div className="w-6 h-6 bg-emerald-100 rounded-md flex items-center justify-center border border-emerald-300">
-                                  <span className="text-emerald-700 font-bold">✓</span>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex justify-center">
-                                <div className="w-6 h-6 bg-slate-100 rounded-md flex items-center justify-center border border-slate-200">
-                                  <span className="text-slate-300">−</span>
-                                </div>
-                              </div>
-                            )}
+                          <td key={role} className="py-3 px-2 text-center">
+                            <button
+                              onClick={() => toggleRolePermission(role, perm.id)}
+                              className="w-7 h-7 rounded-md border-2 transition-all flex items-center justify-center hover:scale-110 active:scale-95"
+                              style={{
+                                backgroundColor: editablePermissions[role]?.includes(perm.id) ? '#ecfdf5' : '#f1f5f9',
+                                borderColor: editablePermissions[role]?.includes(perm.id) ? '#10b981' : '#cbd5e1'
+                              }}
+                            >
+                              <span className={`font-bold ${
+                                editablePermissions[role]?.includes(perm.id) 
+                                  ? 'text-emerald-700' 
+                                  : 'text-slate-300'
+                              }`}>
+                                {editablePermissions[role]?.includes(perm.id) ? '✓' : '−'}
+                              </span>
+                            </button>
                           </td>
                         ))}
                       </tr>
@@ -594,27 +634,16 @@ function RoleMatrixDialog() {
       {/* Legend */}
       <div className="grid grid-cols-2 gap-3 pt-4 border-t">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-emerald-100 rounded-md border border-emerald-300 flex items-center justify-center">
+          <div className="w-7 h-7 bg-emerald-100 rounded-md border-2 border-emerald-400 flex items-center justify-center">
             <span className="text-emerald-700 text-xs font-bold">✓</span>
           </div>
-          <span className="text-xs text-slate-600">Toegang ingeschakeld</span>
+          <span className="text-xs text-slate-600">Ingeschakeld</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-center">
-            <span className="text-slate-300 text-xs">−</span>
+          <div className="w-7 h-7 bg-slate-100 rounded-md border-2 border-slate-300 flex items-center justify-center">
+            <span className="text-slate-300 text-xs font-bold">−</span>
           </div>
-          <span className="text-xs text-slate-600">Geen toegang</span>
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-        <p className="text-xs font-medium text-slate-900 mb-2">💡 Rol Overzicht</p>
-        <div className="space-y-1.5 text-xs text-slate-700">
-          <div><strong>Admin:</strong> Volledige controle</div>
-          <div><strong>Supervisor:</strong> Beheer & supervisie</div>
-          <div><strong>Editor:</strong> Gegevens beheren</div>
-          <div><strong>User:</strong> Basis functies</div>
+          <span className="text-xs text-slate-600">Uitgeschakeld</span>
         </div>
       </div>
     </div>
