@@ -840,65 +840,47 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
           {contractregels.length === 0 ? (
             <p className="text-center text-slate-500 py-4">Nog geen contractregels toegevoegd</p>
           ) : (
-           <div className="space-y-2">
-             {contractregels.filter(c => c.status !== 'Inactief').map((contract, index) => (
-               <div key={index} className="p-3 border rounded-lg">
-                 <div className="flex justify-between items-start">
-                   <div className="flex-1">
-                     <div className="flex items-center gap-2">
-                       <p className="font-medium">{contract.type_contract}</p>
-                       {contract.status === 'Inactief' && (
-                         <Badge className="bg-slate-100 text-slate-700">Inactief</Badge>
-                       )}
-                     </div>
-                     <p className="text-sm text-slate-600">
-                       {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
-                       {contract.einddatum && ` - ${format(new Date(contract.einddatum), 'dd-MM-yyyy')}`}
-                     </p>
-                     <p className="text-sm text-slate-600">{contract.uren_per_week} uur/week</p>
-                     
-                     {/* Weekrooster weergave */}
-                     {(contract.week1 || contract.week2) && (
-                       <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-                         {contract.week1 && (
-                           <div>
-                             <p className="text-slate-600 font-medium">Week 1:</p>
-                             <p className="text-slate-700">
-                               {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
-                                 .filter(d => contract.week1?.[d])
-                                 .map(d => d.substring(0, 2))
-                                 .join(', ')}
-                             </p>
-                           </div>
-                         )}
-                         {contract.week2 && (
-                           <div>
-                             <p className="text-slate-600 font-medium">Week 2:</p>
-                             <p className="text-slate-700">
-                               {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
-                                 .filter(d => contract.week2?.[d])
-                                 .map(d => d.substring(0, 2))
-                                 .join(', ')}
-                             </p>
-                           </div>
-                         )}
-                       </div>
-                     )}
-                   </div>
-                   <Button 
-                     variant="ghost" 
-                     size="icon"
-                     onClick={() => {
-                       setEditingContract({ ...contract, index: contractregels.indexOf(contract) });
-                       setShowContractDialog(true);
-                     }}
-                   >
-                     <Edit className="w-4 h-4" />
-                   </Button>
-                 </div>
-               </div>
-             ))}
-           </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-slate-50">
+                    <th className="text-left py-2 px-3 font-semibold text-slate-700">Startdatum</th>
+                    <th className="text-left py-2 px-3 font-semibold text-slate-700">Einddatum</th>
+                    <th className="text-left py-2 px-3 font-semibold text-slate-700">Contract</th>
+                    <th className="text-left py-2 px-3 font-semibold text-slate-700">Loonschaal</th>
+                    <th className="text-left py-2 px-3 font-semibold text-slate-700">Uren/week</th>
+                    <th className="text-center py-2 px-3 font-semibold text-slate-700">Acties</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contractregels.filter(c => c.status !== 'Inactief').map((contract, index) => (
+                    <tr key={index} className="border-b hover:bg-slate-50">
+                      <td className="py-2 px-3 text-slate-900">
+                        {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
+                      </td>
+                      <td className="py-2 px-3 text-slate-900">
+                        {contract.einddatum ? format(new Date(contract.einddatum), 'dd-MM-yyyy') : '-'}
+                      </td>
+                      <td className="py-2 px-3 text-slate-900">{contract.type_contract}</td>
+                      <td className="py-2 px-3 text-slate-900">{contract.loonschaal || '-'}</td>
+                      <td className="py-2 px-3 text-slate-900">{contract.uren_per_week}</td>
+                      <td className="py-2 px-3 text-center">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setEditingContract({ ...contract, index: contractregels.indexOf(contract) });
+                            setShowContractDialog(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>
