@@ -52,6 +52,12 @@ import Employees from './pages/Employees';
 import Vehicles from './pages/Vehicles';
 import TimeTracking from './pages/TimeTracking';
 import Planning from './pages/Planning';
+import Approvals from './pages/Approvals';
+import ShiftTime from './pages/ShiftTime';
+import NiwoPermits from './pages/NiwoPermits';
+import Customers from './pages/Customers';
+import Projects from './pages/Projects';
+import Trips from './pages/Trips';
 import __Layout from './Layout.jsx';
 
 
@@ -61,6 +67,12 @@ export const PAGES = {
     "Vehicles": Vehicles,
     "TimeTracking": TimeTracking,
     "Planning": Planning,
+    "Approvals": Approvals,
+    "ShiftTime": ShiftTime,
+    "NiwoPermits": NiwoPermits,
+    "Customers": Customers,
+    "Projects": Projects,
+    "Trips": Trips,
 }
 
 export const pagesConfig = {
