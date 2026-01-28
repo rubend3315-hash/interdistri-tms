@@ -1048,34 +1048,33 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                           const isExpired = contract.einddatum && isBefore(new Date(contract.einddatum), new Date());
                           const textColor = isExpired ? 'text-slate-400' : 'text-slate-900';
                           return (
-                            <tr className={`border-b ${bgColor} hover:opacity-75`}>
-                              <td className={`py-2 px-3 ${textColor}`}>
-                                {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
-                              </td>
-                              <td className={`py-2 px-3 ${textColor}`}>
-                                {contract.einddatum ? format(new Date(contract.einddatum), 'dd-MM-yyyy') : '-'}
-                              </td>
-                              <td className={`py-2 px-3 ${textColor}`}>{contract.type_contract}</td>
-                              <td className={`py-2 px-3 ${textColor}`}>{contract.loonschaal || '-'}</td>
-                              <td className={`py-2 px-3 ${textColor}`}>{contract.uren_per_week}</td>
-                          <td className="py-2 px-3 text-center">
-                            {!viewOnly && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                  setEditingContract({ ...contract, index: contractIndex });
-                                  setShowContractDialog(true);
-                                }}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </td>
-                          </tr>
-                          );
-                          })()}
-                        <tr className={`${bgColor} border-b opacity-75`}>
+                            <>
+                              <tr className={`border-b ${bgColor} hover:opacity-75`}>
+                                <td className={`py-2 px-3 ${textColor}`}>
+                                  {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
+                                </td>
+                                <td className={`py-2 px-3 ${textColor}`}>
+                                  {contract.einddatum ? format(new Date(contract.einddatum), 'dd-MM-yyyy') : '-'}
+                                </td>
+                                <td className={`py-2 px-3 ${textColor}`}>{contract.type_contract}</td>
+                                <td className={`py-2 px-3 ${textColor}`}>{contract.loonschaal || '-'}</td>
+                                <td className={`py-2 px-3 ${textColor}`}>{contract.uren_per_week}</td>
+                                <td className="py-2 px-3 text-center">
+                                  {!viewOnly && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditingContract({ ...contract, index: contractIndex });
+                                        setShowContractDialog(true);
+                                      }}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                </td>
+                              </tr>
+                              <tr className={`${bgColor} border-b opacity-75`}>
                           <td colSpan="6" className="py-2 px-3">
                             <div className="inline-flex gap-6 text-xs">
                               <div className="flex items-center gap-2">
