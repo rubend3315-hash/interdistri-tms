@@ -320,11 +320,11 @@ export default function Customers() {
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select 
-                    value={formData.status || "Actief"} 
+                    value={formData.status || ""} 
                     onValueChange={(v) => setFormData({ ...formData, status: v })}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Selecteer status" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Actief">Actief</SelectItem>
