@@ -66,12 +66,7 @@ const menuItems = [
       { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
     ]
   },
-  {
-    label: "Loon & Rapportage",
-    items: [
-      { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
-    ]
-  }
+
 ];
 
 export default function Layout({ children, currentPageName }) {
