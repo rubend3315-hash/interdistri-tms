@@ -226,8 +226,19 @@ export default function CustomerDetail() {
         <TabsContent value="info">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Basisgegevens</CardTitle>
+                {!isEditMode && (
+                  <Button 
+                    type="button"
+                    onClick={() => setIsEditMode(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    size="sm"
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Bewerken
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
