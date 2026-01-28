@@ -1026,7 +1026,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                   </tr>
                 </thead>
                 <tbody>
-                  {contractregels.filter(c => c.status !== 'Inactief').sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum)).map((contract, index) => {
+                  {contractregels && contractregels.length > 0 && contractregels.filter(c => c.status !== 'Inactief').sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum)).map((contract, index) => {
                     const contractIndex = contractregels.indexOf(contract);
                     const week1Days = contract.week1 ? Object.entries(contract.week1)
                       .filter(([, checked]) => checked)
