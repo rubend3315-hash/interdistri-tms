@@ -72,7 +72,6 @@ export default function CalculationsTab({ imports, customerArticles }) {
               <SelectValue placeholder="Selecteer een import" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Selecteer import</SelectItem>
               {imports.map(imp => (
                 <SelectItem key={imp.id} value={imp.id}>
                   {imp.import_name} ({imp.total_rows} rijen)
