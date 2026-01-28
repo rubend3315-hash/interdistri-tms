@@ -82,7 +82,11 @@ export default function ArticleList({ customerId }) {
         </Card>
       ) : (
         <div className="space-y-2">
-          {articles.map(article => {
+          {[...articles].sort((a, b) => {
+            const numA = parseInt(a.article_number.replace('ART-', '')) || 0;
+            const numB = parseInt(b.article_number.replace('ART-', '')) || 0;
+            return numA - numB;
+          }).map(article => {
             const currentPrice = getCurrentPrice(article);
             return (
               <Card key={article.id} className="hover:shadow-md transition-shadow">
