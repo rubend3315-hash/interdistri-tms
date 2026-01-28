@@ -164,32 +164,30 @@ export default function Employees() {
                 {selectedEmployee && (
                   <TabsTrigger value="profiel">Profiel</TabsTrigger>
                 )}
-                <TabsTrigger value="algemeen" disabled={selectedEmployee?.viewOnly}>Algemene Gegevens</TabsTrigger>
-                <TabsTrigger value="weekrooster" disabled={selectedEmployee?.viewOnly}>Weekrooster en contracten</TabsTrigger>
+                <TabsTrigger value="algemeen">Algemene Gegevens</TabsTrigger>
+                <TabsTrigger value="weekrooster">Weekrooster en contracten</TabsTrigger>
               </TabsList>
               {selectedEmployee && (
                 <TabsContent value="profiel">
                   <ProfielTab employee={selectedEmployee} viewOnly={selectedEmployee.viewOnly} />
                 </TabsContent>
               )}
-              {!selectedEmployee?.viewOnly && (
-                <>
-                  <TabsContent value="algemeen">
-                    <EmployeeForm
-                      employee={selectedEmployee}
-                      onSubmit={handleSubmit}
-                      isSubmitting={createMutation.isPending || updateMutation.isPending}
-                    />
-                  </TabsContent>
-                  <TabsContent value="weekrooster">
-                    <WeekroosterTab
-                      employee={selectedEmployee}
-                      onSubmit={handleSubmit}
-                      isSubmitting={createMutation.isPending || updateMutation.isPending}
-                    />
-                  </TabsContent>
-                </>
-              )}
+              <TabsContent value="algemeen">
+                <EmployeeForm
+                  employee={selectedEmployee}
+                  onSubmit={handleSubmit}
+                  isSubmitting={createMutation.isPending || updateMutation.isPending}
+                  viewOnly={selectedEmployee?.viewOnly}
+                />
+              </TabsContent>
+              <TabsContent value="weekrooster">
+                <WeekroosterTab
+                  employee={selectedEmployee}
+                  onSubmit={handleSubmit}
+                  isSubmitting={createMutation.isPending || updateMutation.isPending}
+                  viewOnly={selectedEmployee?.viewOnly}
+                />
+              </TabsContent>
             </Tabs>
           </DialogContent>
         </Dialog>
