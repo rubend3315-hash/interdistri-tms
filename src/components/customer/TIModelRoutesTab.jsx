@@ -184,7 +184,7 @@ export default function TIModelRoutesTab({ customerId }) {
       <div className="flex justify-between items-center">
         <h3 className="font-semibold text-slate-900">TI Model Ritten</h3>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportToPDF}>
             <Download className="w-4 h-4 mr-2" />
             Export PDF
           </Button>
