@@ -65,15 +65,7 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
    }
   };
 
-  const toggleColumn = (column) => {
-    const newSelected = new Set(selectedColumns);
-    if (newSelected.has(column)) {
-      newSelected.delete(column);
-    } else {
-      newSelected.add(column);
-    }
-    setSelectedColumns(newSelected);
-  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
