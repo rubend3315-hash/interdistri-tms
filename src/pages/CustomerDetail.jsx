@@ -691,6 +691,16 @@ export default function CustomerDetail() {
           </Card>
         </TabsContent>
 
+        {/* Dashboard Tab */}
+        <TabsContent value="dashboard">
+          <DataDashboard imports={imports} />
+        </TabsContent>
+
+        {/* AI Reports Tab */}
+        <TabsContent value="reports">
+          <ReportGenerator imports={imports} articles={formData.articles} />
+        </TabsContent>
+
         {/* TI Model Ritten Tab */}
         <TabsContent value="ti-model">
           <TIModelRoutesTab customerId={customerId} />
