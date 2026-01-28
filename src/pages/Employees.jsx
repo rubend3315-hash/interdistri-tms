@@ -986,7 +986,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                 size="sm"
                 className="bg-blue-900"
                 onClick={() => {
-                const lastActiveContract = contractregels
+                  const lastActiveContract = contractregels
                   .filter(c => c.status !== 'Inactief')
                   .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
 
