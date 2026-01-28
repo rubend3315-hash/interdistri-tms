@@ -1,0 +1,329 @@
+import React from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { format, addDays, differenceInDays, startOfWeek, endOfWeek } from "date-fns";
+import { nl } from "date-fns/locale";
+import { StatCard } from "@/components/ui/stat-card";
+import { AlertCard } from "@/components/ui/alert-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Users,
+  Truck,
+  Clock,
+  CheckSquare,
+  AlertTriangle,
+  ArrowRight,
+  Calendar,
+  FileText,
+  TrendingUp,
+  Car
+} from "lucide-react";
+
+export default function Dashboard() {
+  const today = new Date();
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+
+  const { data: employees = [], isLoading: loadingEmployees } = useQuery({
+    queryKey: ['employees'],
+    queryFn: () => base44.entities.Employee.list()
+  });
+
+  const { data: vehicles = [], isLoading: loadingVehicles } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: () => base44.entities.Vehicle.list()
+  });
+
+  const { data: timeEntries = [], isLoading: loadingTimeEntries } = useQuery({
+    queryKey: ['timeEntries'],
+    queryFn: () => base44.entities.TimeEntry.list()
+  });
+
+  const { data: trips = [], isLoading: loadingTrips } = useQuery({
+    queryKey: ['trips'],
+    queryFn: () => base44.entities.Trip.list()
+  });
+
+  const { data: niwoPermits = [], isLoading: loadingNiwo } = useQuery({
+    queryKey: ['niwoPermits'],
+    queryFn: () => base44.entities.NiwoPermit.list()
+  });
+
+  const isLoading = loadingEmployees || loadingVehicles || loadingTimeEntries || loadingTrips || loadingNiwo;
+
+  // Calculate statistics
+  const activeEmployees = employees.filter(e => e.status === 'Actief').length;
+  const availableVehicles = vehicles.filter(v => v.status === 'Beschikbaar').length;
+  const pendingApprovals = timeEntries.filter(t => t.status === 'Ingediend').length;
+  const todayTrips = trips.filter(t => t.date === format(today, 'yyyy-MM-dd')).length;
+
+  // Find expiring documents
+  const expiringDocuments = [];
+  const warningDays = 30;
+
+  employees.forEach(emp => {
+    if (emp.drivers_license_expiry) {
+      const daysUntil = differenceInDays(new Date(emp.drivers_license_expiry), today);
+      if (daysUntil <= warningDays && daysUntil >= 0) {
+        expiringDocuments.push({
+          type: 'Rijbewijs',
+          name: `${emp.first_name} ${emp.last_name}`,
+          expiry: emp.drivers_license_expiry,
+          daysUntil,
+          link: `Employees?id=${emp.id}`
+        });
+      }
+    }
+    if (emp.code95_expiry) {
+      const daysUntil = differenceInDays(new Date(emp.code95_expiry), today);
+      if (daysUntil <= warningDays && daysUntil >= 0) {
+        expiringDocuments.push({
+          type: 'Code 95',
+          name: `${emp.first_name} ${emp.last_name}`,
+          expiry: emp.code95_expiry,
+          daysUntil,
+          link: `Employees?id=${emp.id}`
+        });
+      }
+    }
+  });
+
+  vehicles.forEach(v => {
+    if (v.apk_expiry) {
+      const daysUntil = differenceInDays(new Date(v.apk_expiry), today);
+      if (daysUntil <= warningDays && daysUntil >= 0) {
+        expiringDocuments.push({
+          type: 'APK',
+          name: v.license_plate,
+          expiry: v.apk_expiry,
+          daysUntil,
+          link: `Vehicles?id=${v.id}`
+        });
+      }
+    }
+  });
+
+  niwoPermits.forEach(p => {
+    if (p.validity_date) {
+      const daysUntil = differenceInDays(new Date(p.validity_date), today);
+      if (daysUntil <= warningDays && daysUntil >= 0) {
+        expiringDocuments.push({
+          type: 'NIWO Vergunning',
+          name: p.permit_number,
+          expiry: p.validity_date,
+          daysUntil,
+          link: `NiwoPermits?id=${p.id}`
+        });
+      }
+    }
+  });
+
+  expiringDocuments.sort((a, b) => a.daysUntil - b.daysUntil);
+
+  // Recent activities
+  const recentTimeEntries = [...timeEntries]
+    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+    .slice(0, 5);
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-slate-500 mt-1">
+            Welkom terug! Hier is een overzicht van vandaag.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link to={createPageUrl("TimeTracking")}>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Clock className="w-4 h-4 mr-2" />
+              Tijdregistratie
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {isLoading ? (
+          <>
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-32 rounded-2xl" />
+            ))}
+          </>
+        ) : (
+          <>
+            <StatCard
+              title="Actieve Medewerkers"
+              value={activeEmployees}
+              icon={Users}
+              subtitle={`${employees.length} totaal`}
+            />
+            <StatCard
+              title="Beschikbare Voertuigen"
+              value={availableVehicles}
+              icon={Car}
+              subtitle={`${vehicles.length} totaal`}
+            />
+            <StatCard
+              title="Ritten Vandaag"
+              value={todayTrips}
+              icon={Truck}
+              subtitle={format(today, "EEEE d MMMM", { locale: nl })}
+            />
+            <StatCard
+              title="Ter Goedkeuring"
+              value={pendingApprovals}
+              icon={CheckSquare}
+              subtitle="Openstaande uren"
+              className={pendingApprovals > 0 ? "ring-2 ring-amber-200" : ""}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Alerts Section */}
+      {expiringDocuments.length > 0 && (
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              Verlopende Documenten
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {expiringDocuments.slice(0, 5).map((doc, index) => (
+              <AlertCard
+                key={index}
+                variant={doc.daysUntil <= 7 ? "error" : "warning"}
+                title={`${doc.type} - ${doc.name}`}
+                description={`Verloopt over ${doc.daysUntil} dagen (${format(new Date(doc.expiry), "d MMMM yyyy", { locale: nl })})`}
+                action="Bekijken"
+                onAction={() => window.location.href = createPageUrl(doc.link)}
+              />
+            ))}
+            {expiringDocuments.length > 5 && (
+              <p className="text-sm text-slate-500 text-center pt-2">
+                En nog {expiringDocuments.length - 5} andere documenten...
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick Actions & Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Snelle Acties</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3">
+            <Link to={createPageUrl("Employees")}>
+              <Button variant="outline" className="w-full h-20 flex-col gap-2">
+                <Users className="w-6 h-6 text-blue-600" />
+                <span className="text-sm">Medewerkers</span>
+              </Button>
+            </Link>
+            <Link to={createPageUrl("Vehicles")}>
+              <Button variant="outline" className="w-full h-20 flex-col gap-2">
+                <Car className="w-6 h-6 text-emerald-600" />
+                <span className="text-sm">Voertuigen</span>
+              </Button>
+            </Link>
+            <Link to={createPageUrl("Planning")}>
+              <Button variant="outline" className="w-full h-20 flex-col gap-2">
+                <Calendar className="w-6 h-6 text-purple-600" />
+                <span className="text-sm">Planning</span>
+              </Button>
+            </Link>
+            <Link to={createPageUrl("Approvals")}>
+              <Button variant="outline" className="w-full h-20 flex-col gap-2 relative">
+                <CheckSquare className="w-6 h-6 text-amber-600" />
+                <span className="text-sm">Goedkeuringen</span>
+                {pendingApprovals > 0 && (
+                  <Badge className="absolute -top-1 -right-1 bg-amber-500 text-white">
+                    {pendingApprovals}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* Recent Time Entries */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Recente Tijdregistraties</CardTitle>
+              <Link to={createPageUrl("TimeTracking")}>
+                <Button variant="ghost" size="sm" className="text-blue-600">
+                  Alles bekijken
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-14" />
+                ))}
+              </div>
+            ) : recentTimeEntries.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-8">
+                Nog geen tijdregistraties
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {recentTimeEntries.map(entry => {
+                  const employee = employees.find(e => e.id === entry.employee_id);
+                  return (
+                    <div 
+                      key={entry.id} 
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                          <Clock className="w-5 h-5 text-slate-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">
+                            {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
+                          </p>
+                          <p className="text-sm text-slate-500">
+                            {entry.date ? format(new Date(entry.date), "d MMM yyyy", { locale: nl }) : '-'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-slate-900">
+                          {entry.total_hours ? `${entry.total_hours}u` : '-'}
+                        </p>
+                        <Badge variant={
+                          entry.status === 'Goedgekeurd' ? 'success' :
+                          entry.status === 'Afgekeurd' ? 'destructive' :
+                          entry.status === 'Ingediend' ? 'warning' : 'secondary'
+                        } className="text-xs">
+                          {entry.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
