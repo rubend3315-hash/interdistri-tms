@@ -38,7 +38,7 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
   const filteredData = allData.filter(row => {
     if (periodType === "all") return true;
 
-    const importDate = new Date(row._importDate).toISOString().split('T')[0];
+    const importDate = convertExcelDate(row._importDate);
 
     if (periodType === "day") {
       return importDate === selectedDate;
