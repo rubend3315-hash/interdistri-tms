@@ -565,7 +565,7 @@ function RoleMatrixDialog() {
                       <tr key={perm.id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
                         <td className="py-2 px-2 text-slate-700 font-medium text-xs min-w-28">{perm.label}</td>
                         {roleOrder.map(role => (
-                          <td key={role} className="py-2.5 px-1.5 md:px-2 text-center">
+                          <td key={role} className="py-2 px-1 text-center">
                             {ROLE_PERMISSIONS[role]?.includes(perm.id) ? (
                               <div className="flex justify-center">
                                 <div className="w-6 h-6 bg-emerald-100 rounded-md flex items-center justify-center border border-emerald-300">
