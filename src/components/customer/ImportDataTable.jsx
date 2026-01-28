@@ -51,7 +51,7 @@ export default function ImportDataTable({ importData, customerArticles, onDelete
   const calculateRevenue = () => {
     if (!quantityColumn || !priceColumn) return;
 
-    const calculated = importData.data.map((row, idx) => {
+    const calculated = filteredData.map((row, idx) => {
       const quantity = parseFloat(row[quantityColumn]) || 0;
       const price = parseFloat(row[priceColumn]) || 0;
       const totalAmount = quantity * price;
