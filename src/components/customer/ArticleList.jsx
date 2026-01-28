@@ -53,16 +53,21 @@ export default function ArticleList({ customerId }) {
   });
 
   const getCurrentPrice = (article) => {
-    if (!article.price_rules || article.price_rules.length === 0) return null;
+    const rule = getValidPriceRule(article.price_rules);
+    return rule ? rule.price : null;
+  };
+
+  const getPriceStatus = (article) => {
+    if (!article.price_rules || article.price_rules.length === 0) {
+      return { status: 'no-price', label: 'Geen prijs ingesteld' };
+    }
     
-    const today = new Date().toISOString().split('T')[0];
-    const validRule = article.price_rules.find(rule => {
-      const startOk = !rule.start_date || rule.start_date <= today;
-      const endOk = !rule.end_date || rule.end_date >= today;
-      return startOk && endOk;
-    });
+    const validRule = getValidPriceRule(article.price_rules);
+    if (!validRule) {
+      return { status: 'expired', label: 'Alle prijsregels verlopen' };
+    }
     
-    return validRule ? validRule.price : null;
+    return { status: 'valid', label: 'Actief' };
   };
 
   return (
