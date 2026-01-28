@@ -343,11 +343,11 @@ export default function TimeTracking() {
             <div className="space-y-2">
               <Label>Diensttype</Label>
               <Select 
-                value={formData.shift_type} 
+                value={formData.shift_type || "Dag"} 
                 onValueChange={(v) => setFormData({ ...formData, shift_type: v })}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecteer diensttype" />
                 </SelectTrigger>
                 <SelectContent>
                   {shiftTypes.map(t => (
