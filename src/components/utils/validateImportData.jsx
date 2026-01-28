@@ -51,9 +51,11 @@ export function validateImportData(data, columns) {
           break;
           
         case 'date':
-          const dateRegex = /^\d{1,2}-\d{1,2}-\d{4}$/;
-          if (!dateRegex.test(value.toString())) {
-            rowErrors.push(`${field}: ongeldige datumformat (DD-MM-YYYY verwacht)`);
+          const dateString = value.toString().trim();
+          // Accept DD-MM-YYYY, YYYY-MM-DD, Excel numbers, or ISO dates
+          const dateRegex = /^(\d{1,2}-\d{1,2}-\d{4}|\d{4}-\d{1,2}-\d{1,2}|\d+|[\dT:.\-Z]+)$/;
+          if (!dateRegex.test(dateString)) {
+            rowErrors.push(`${field}: ongeldige datumformat`);
           }
           break;
           
