@@ -26,12 +26,6 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
     },
     onSuccess: (data) => {
       setParseResult(data);
-      setSelectedColumns(new Set(data.columns));
-      const mapping = {};
-      data.columns.forEach(col => {
-        mapping[col] = col;
-      });
-      setColumnMapping(mapping);
     }
   });
 
