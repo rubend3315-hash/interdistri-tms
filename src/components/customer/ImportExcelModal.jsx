@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -224,17 +223,17 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
             </>
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                resetModal();
-                onOpenChange(false);
-              }}
-            >
-              {parseResult ? "Annuleren" : "Sluiten"}
-            </Button>
-            {parseResult && (
+          {!showValidation && parseResult && (
+            <div className="flex justify-end gap-3 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  resetModal();
+                  onOpenChange(false);
+                }}
+              >
+                Annuleren
+              </Button>
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
                 onClick={() => saveMutation.mutate()}
@@ -243,14 +242,27 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
                 {saveMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Importeren...
+                    Valideren...
                   </>
                 ) : (
                   "Importeren"
                 )}
               </Button>
-            )}
-          </div>
+            </div>
+          )}
+          {!showValidation && !parseResult && (
+            <div className="flex justify-end gap-3 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  resetModal();
+                  onOpenChange(false);
+                }}
+              >
+                Sluiten
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
