@@ -1135,9 +1135,21 @@ function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
       return (a.step || 0) - (b.step || 0);
     });
 
+  const calculateDaysPerWeek = () => {
+    const week1Days = Object.values(formData.week1).filter(Boolean).length;
+    const week2Days = Object.values(formData.week2).filter(Boolean).length;
+    return { week1Days, week2Days, avgDays: (week1Days + week2Days) / 2 };
+  };
+
+  const calculateHoursPerDay = () => {
+    const { avgDays } = calculateDaysPerWeek();
+    return avgDays > 0 ? (formData.uren_per_week / avgDays).toFixed(1) : 0;
+  };
+
   const calculateWeekTotal = (week) => {
     const daysChecked = Object.values(week).filter(Boolean).length;
-    return daysChecked > 0 ? Math.floor(formData.uren_per_week / 2) : 0;
+    const hoursPerDay = parseFloat(calculateHoursPerDay());
+    return (daysChecked * hoursPerDay).toFixed(1);
   };
 
   return (
@@ -1219,7 +1231,12 @@ function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
           </div>
 
           <div className="space-y-4">
-            <Label>Weekrooster (verdeling van uren)</Label>
+            <div className="flex items-center justify-between">
+              <Label>Weekrooster (verdeling van uren)</Label>
+              <div className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
+                {calculateHoursPerDay()}u per werkdag
+              </div>
+            </div>
 
             <Card>
               <CardHeader className="pb-3">
@@ -1229,21 +1246,28 @@ function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
                 <div className="grid grid-cols-7 gap-2">
                   {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map((day, i) => {
                     const key = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'][i];
+                    const hoursPerDay = calculateHoursPerDay();
                     return (
                       <div key={i} className="space-y-1">
                         <Label className="text-xs">{day}</Label>
-                        <Input
-                          type="number"
-                          className="h-8 text-center"
-                          value={formData.week1[key] ? 8 : 0}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setFormData({
+                        <div className={`h-8 flex items-center justify-center rounded border-2 ${
+                          formData.week1[key] 
+                            ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold' 
+                            : 'bg-slate-50 border-slate-200 text-slate-400'
+                        }`}>
+                          {formData.week1[key] ? hoursPerDay : '-'}
+                        </div>
+                        <label className="flex items-center justify-center gap-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.week1[key]}
+                            onChange={() => setFormData({
                               ...formData,
-                              week1: { ...formData.week1, [key]: val > 0 }
-                            });
-                          }}
-                        />
+                              week1: { ...formData.week1, [key]: !formData.week1[key] }
+                            })}
+                            className="w-3 h-3"
+                          />
+                        </label>
                       </div>
                     );
                   })}
@@ -1262,21 +1286,28 @@ function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
                 <div className="grid grid-cols-7 gap-2">
                   {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map((day, i) => {
                     const key = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'][i];
+                    const hoursPerDay = calculateHoursPerDay();
                     return (
                       <div key={i} className="space-y-1">
                         <Label className="text-xs">{day}</Label>
-                        <Input
-                          type="number"
-                          className="h-8 text-center"
-                          value={formData.week2[key] ? 8 : 0}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setFormData({
+                        <div className={`h-8 flex items-center justify-center rounded border-2 ${
+                          formData.week2[key] 
+                            ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold' 
+                            : 'bg-slate-50 border-slate-200 text-slate-400'
+                        }`}>
+                          {formData.week2[key] ? hoursPerDay : '-'}
+                        </div>
+                        <label className="flex items-center justify-center gap-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.week2[key]}
+                            onChange={() => setFormData({
                               ...formData,
-                              week2: { ...formData.week2, [key]: val > 0 }
-                            });
-                          }}
-                        />
+                              week2: { ...formData.week2, [key]: !formData.week2[key] }
+                            })}
+                            className="w-3 h-3"
+                          />
+                        </label>
                       </div>
                     );
                   })}
@@ -1287,9 +1318,14 @@ function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
               </CardContent>
             </Card>
 
-            <p className="text-sm text-slate-600">
-              Gemiddelde per week: <strong>{formData.uren_per_week}.0u</strong>
-            </p>
+            <div className="bg-slate-50 p-3 rounded-lg">
+              <p className="text-sm text-slate-600">
+                Gemiddelde per week: <strong>{formData.uren_per_week}u</strong>
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                De uren worden automatisch verdeeld over de aangevinkte werkdagen
+              </p>
+            </div>
           </div>
 
           <div className="space-y-2">
