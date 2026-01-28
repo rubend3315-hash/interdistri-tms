@@ -987,6 +987,26 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
 
   return (
     <div className="space-y-6 py-4">
+      {/* Debug Info */}
+      <Card className="bg-amber-50 border-amber-200">
+        <CardHeader>
+          <CardTitle className="text-sm">Debug: Employee Data</CardTitle>
+        </CardHeader>
+        <CardContent className="text-xs">
+          <pre className="overflow-auto bg-white p-2 rounded border text-slate-700">
+            {JSON.stringify({
+              employeeId: employee?.id,
+              contractregels: employee?.contractregels,
+              contractregelsCount: employee?.contractregels?.length || 0,
+              reiskostenregels: employee?.reiskostenregels,
+              reiskostenCount: employee?.reiskostenregels?.length || 0,
+              stateContractregels: contractregels,
+              stateContractregelsCount: contractregels.length
+            }, null, 2)}
+          </pre>
+        </CardContent>
+      </Card>
+
       {/* Contractregels */}
       <Card>
         <CardHeader>
