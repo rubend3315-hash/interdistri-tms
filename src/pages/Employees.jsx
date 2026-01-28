@@ -1049,16 +1049,18 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                           <td className="py-2 px-3 text-slate-900">{contract.loonschaal || '-'}</td>
                           <td className="py-2 px-3 text-slate-900">{contract.uren_per_week}</td>
                           <td className="py-2 px-3 text-center">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => {
-                                setEditingContract({ ...contract, index: contractIndex });
-                                setShowContractDialog(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
+                            {!viewOnly && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setEditingContract({ ...contract, index: contractIndex });
+                                  setShowContractDialog(true);
+                                }}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
                           </td>
                         </tr>
                         <tr className="bg-slate-50/50 border-b">
