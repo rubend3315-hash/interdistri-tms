@@ -1,57 +1,25 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Download, X } from "lucide-react";
+import { Trash2, Download } from "lucide-react";
 
 export default function ImportDataTable({ importData, customerArticles, onDelete }) {
   const [quantityColumn, setQuantityColumn] = useState("");
   const [priceColumn, setPriceColumn] = useState("");
   const [articleColumn, setArticleColumn] = useState("");
   const [calculations, setCalculations] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [columnFilters, setColumnFilters] = useState({});
 
   const columns = importData.data && importData.data.length > 0 
     ? Object.keys(importData.data[0]) 
     : [];
 
-  // Get unique values for each column (for filters)
-  const getUniqueValues = (colName) => {
-    return [...new Set(importData.data.map(row => row[colName]).filter(v => v !== null && v !== undefined))].sort();
-  };
-
-  // Filter and search data
-  const filteredData = useMemo(() => {
-    return importData.data.filter(row => {
-      // Search filter - searches all columns
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = columns.some(col => 
-          String(row[col]).toLowerCase().includes(searchLower)
-        );
-        if (!matchesSearch) return false;
-      }
-
-      // Column filters
-      for (const [colName, filterValue] of Object.entries(columnFilters)) {
-        if (filterValue && filterValue !== "") {
-          if (String(row[colName]).toLowerCase() !== filterValue.toLowerCase()) {
-            return false;
-          }
-        }
-      }
-
-      return true;
-    });
-  }, [importData.data, searchTerm, columnFilters, columns]);
-
   const calculateRevenue = () => {
     if (!quantityColumn || !priceColumn) return;
 
-    const calculated = filteredData.map((row, idx) => {
+    const calculated = importData.data.map((row, idx) => {
       const quantity = parseFloat(row[quantityColumn]) || 0;
       const price = parseFloat(row[priceColumn]) || 0;
       const totalAmount = quantity * price;
@@ -83,7 +51,7 @@ export default function ImportDataTable({ importData, customerArticles, onDelete
 
   const exportToCSV = () => {
     const headers = columns.join(',');
-    const rows = filteredData.map(row => 
+    const rows = importData.data.map(row => 
       columns.map(col => `"${row[col]}"`).join(',')
     );
     const csv = [headers, ...rows].join('\n');
@@ -183,93 +151,10 @@ export default function ImportDataTable({ importData, customerArticles, onDelete
         </Card>
       )}
 
-      {/* Zoeken en Filteren */}
-      <Card className="bg-slate-50">
-        <CardHeader>
-          <CardTitle className="text-base">Zoeken en filteren</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Zoeken in alle kolommen</label>
-            <div className="relative">
-              <Input
-                placeholder="Typ hier om te zoeken..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-3"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded"
-                >
-                  <X className="w-4 h-4 text-slate-400" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {columns.length > 0 && (
-            <div>
-              <label className="text-sm font-medium block mb-2">Filteren per kolom</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                {columns.map(col => {
-                  const uniqueValues = getUniqueValues(col);
-                  return (
-                    <div key={col}>
-                      <Select
-                        value={columnFilters[col] || ""}
-                        onValueChange={(value) => 
-                          setColumnFilters(prev => ({
-                            ...prev,
-                            [col]: value
-                          }))
-                        }
-                      >
-                        <SelectTrigger className="text-xs h-8">
-                          <SelectValue placeholder={col} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={null}>Alles</SelectItem>
-                          {uniqueValues.slice(0, 50).map(val => (
-                            <SelectItem key={val} value={String(val)}>
-                              {String(val).substring(0, 30)}
-                            </SelectItem>
-                          ))}
-                          {uniqueValues.length > 50 && (
-                            <SelectItem value="_more" disabled>
-                              ... en {uniqueValues.length - 50} meer
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {(searchTerm || Object.values(columnFilters).some(v => v)) && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearchTerm("");
-                setColumnFilters({});
-              }}
-              className="text-xs"
-            >
-              Filters wissen
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Data Tabel */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Gegevens ({filteredData.length} van {importData.total_rows} rijen)</CardTitle>
+          <CardTitle>Gegevens ({importData.total_rows} rijen)</CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={exportToCSV}>
               <Download className="w-4 h-4 mr-2" />
@@ -309,12 +194,11 @@ export default function ImportDataTable({ importData, customerArticles, onDelete
                 </tr>
               </thead>
               <tbody>
-                {filteredData.map((row, displayIdx) => {
-                  const calculation = calculations.find(c => c.rowIndex === importData.data.indexOf(row));
-                  const originalIdx = importData.data.indexOf(row);
+                {importData.data.map((row, idx) => {
+                  const calculation = calculations[idx];
                   return (
-                    <tr key={originalIdx} className="border-t hover:bg-slate-50">
-                      <td className="px-3 py-2 text-slate-600 font-medium">{displayIdx + 1}</td>
+                    <tr key={idx} className="border-t hover:bg-slate-50">
+                      <td className="px-3 py-2 text-slate-600 font-medium">{idx + 1}</td>
                       {columns.map(col => (
                         <td 
                           key={`${idx}-${col}`}
