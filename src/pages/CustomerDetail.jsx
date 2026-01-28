@@ -37,9 +37,12 @@ import {
   Calendar
 } from "lucide-react";
 
-// Imports Tab Component with unified search and filter
+// Imports Tab Component with period selection
 function ImportsTabContent({ imports, onImportModalOpen, onDelete }) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [periodType, setPeriodType] = useState("all"); // all, day, week, period
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
   if (imports.length === 0) {
     return (
@@ -70,21 +73,79 @@ function ImportsTabContent({ imports, onImportModalOpen, onDelete }) {
         Excel bestand importeren
       </Button>
 
-      {/* Unified Search and Filter */}
+      {/* Period Selection */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Zoeken en filteren</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Periode selectie
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
-            <Input
-              placeholder="Zoeken in alle kolommen..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2">
+            <Button
+              variant={periodType === "all" ? "default" : "outline"}
+              onClick={() => setPeriodType("all")}
+              className="flex-1"
+            >
+              Alles
+            </Button>
+            <Button
+              variant={periodType === "day" ? "default" : "outline"}
+              onClick={() => setPeriodType("day")}
+              className="flex-1"
+            >
+              Dag
+            </Button>
+            <Button
+              variant={periodType === "week" ? "default" : "outline"}
+              onClick={() => setPeriodType("week")}
+              className="flex-1"
+            >
+              Week
+            </Button>
+            <Button
+              variant={periodType === "period" ? "default" : "outline"}
+              onClick={() => setPeriodType("period")}
+              className="flex-1"
+            >
+              Periode
+            </Button>
           </div>
+
+          {periodType === "day" && (
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+          )}
+
+          {periodType === "week" && (
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              label="Week beginning"
+            />
+          )}
+
+          {periodType === "period" && (
+            <div className="space-y-2">
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                placeholder="Start datum"
+              />
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                placeholder="End datum"
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -92,7 +153,10 @@ function ImportsTabContent({ imports, onImportModalOpen, onDelete }) {
       <ImportDataTable 
         imports={imports}
         onDelete={onDelete}
-        searchTerm={searchTerm}
+        periodType={periodType}
+        selectedDate={selectedDate}
+        startDate={startDate}
+        endDate={endDate}
       />
     </div>
   );
