@@ -1391,11 +1391,8 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Weekrooster (verdeling van uren)</Label>
-              <div className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
-                {calculateHoursPerDay()}u per werkdag
-              </div>
+            <div>
+              <Label>Weekrooster (verdeling van uren per week)</Label>
             </div>
 
             <Card>
