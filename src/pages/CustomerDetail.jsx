@@ -43,6 +43,19 @@ export default function CustomerDetail() {
     enabled: !!customerId
   });
 
+  const { data: imports = [] } = useQuery({
+    queryKey: ['customer-imports', customerId],
+    queryFn: () => customerId ? base44.entities.CustomerImport.filter({ customer_id: customerId }) : [],
+    enabled: !!customerId
+  });
+
+  const deleteImportMutation = useMutation({
+    mutationFn: (importId) => base44.entities.CustomerImport.delete(importId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer-imports', customerId] });
+    }
+  });
+
   const [formData, setFormData] = useState({
     company_name: "",
     contact_person: "",
