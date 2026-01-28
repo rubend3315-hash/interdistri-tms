@@ -450,6 +450,12 @@ export default function UsersPage() {
           ))}
         </div>
       )}
+      </TabsContent>
+
+      <TabsContent value="roles" className="space-y-4">
+       <RolesTab />
+      </TabsContent>
+      </Tabs>
 
       {/* Permissions Dialog */}
       <Dialog open={showPermissionsDialog} onOpenChange={setShowPermissionsDialog}>
