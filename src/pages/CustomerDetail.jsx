@@ -32,6 +32,7 @@ export default function CustomerDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const customerId = searchParams.get('id');
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: customer, isLoading } = useQuery({
