@@ -203,26 +203,32 @@ export default function CustomerDetail() {
             <Package className="w-4 h-4" />
             Artikelen
           </TabsTrigger>
-          <TabsTrigger value="imports" className="gap-2">
-            <Upload className="w-4 h-4" />
-            Imports ({imports.length})
-          </TabsTrigger>
+          {isPostNL && (
+            <TabsTrigger value="imports" className="gap-2">
+              <Upload className="w-4 h-4" />
+              Imports ({imports.length})
+            </TabsTrigger>
+          )}
           <TabsTrigger value="history" className="gap-2">
             <History className="w-4 h-4" />
             Geschiedenis
           </TabsTrigger>
-          <TabsTrigger value="calculations" className="gap-2">
-            <Calculator className="w-4 h-4" />
-            Berekeningen
-          </TabsTrigger>
+          {isPostNL && (
+            <TabsTrigger value="calculations" className="gap-2">
+              <Calculator className="w-4 h-4" />
+              Berekeningen
+            </TabsTrigger>
+          )}
           <TabsTrigger value="notes" className="gap-2">
             <FileText className="w-4 h-4" />
             Opmerkingen
           </TabsTrigger>
-          <TabsTrigger value="ti-model" className="gap-2">
-            <Package className="w-4 h-4" />
-            TI Model Ritten
-          </TabsTrigger>
+          {isPostNL && (
+            <TabsTrigger value="ti-model" className="gap-2">
+              <Package className="w-4 h-4" />
+              TI Model Ritten
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Informatie Tab */}
