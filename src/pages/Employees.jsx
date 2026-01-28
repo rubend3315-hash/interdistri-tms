@@ -1181,7 +1181,6 @@ function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
                   <SelectItem value="Vast Contract">Vast Contract</SelectItem>
                   <SelectItem value="Tijdelijk Contract">Tijdelijk Contract</SelectItem>
                   <SelectItem value="Oproepcontract">Oproepcontract</SelectItem>
-                  <SelectItem value="Uitzendcontract">Uitzendcontract</SelectItem>
                 </SelectContent>
               </Select>
             </div>
