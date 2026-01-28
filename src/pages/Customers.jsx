@@ -19,7 +19,6 @@ import {
   Mail,
   MapPin,
   Edit,
-  Trash2,
   Package
 } from "lucide-react";
 
@@ -52,12 +51,7 @@ export default function Customers() {
     }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Customer.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-    }
-  });
+
 
   const [formData, setFormData] = useState({
     company_name: "",
@@ -254,23 +248,8 @@ export default function Customers() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0">
           <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="flex items-center justify-between">
-              <span>{selectedCustomer ? 'Klant Bewerken' : 'Nieuwe Klant'}</span>
-              {selectedCustomer && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => {
-                    if (confirm('Weet je zeker dat je deze klant wilt verwijderen?')) {
-                      deleteMutation.mutate(selectedCustomer.id);
-                      setIsDialogOpen(false);
-                    }
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
+            <DialogTitle>
+              {selectedCustomer ? 'Klant Bewerken' : 'Nieuwe Klant'}
             </DialogTitle>
           </DialogHeader>
           
