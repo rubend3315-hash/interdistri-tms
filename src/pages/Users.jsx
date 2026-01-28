@@ -537,13 +537,16 @@ function RoleMatrixDialog() {
       </DialogHeader>
 
       {/* Role Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+      <div className="flex gap-1">
+        <div className="w-28 flex-shrink-0" />
         {roleOrder.map(role => (
-          <div key={role} className={`p-2 rounded-lg border-2 text-center ${ROLES[role].color.replace('text-', 'border-').replace('bg-', 'bg-').split(' ')[0]} bg-opacity-10`}>
-            <p className="font-semibold text-xs">{ROLES[role].label}</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              {ROLE_PERMISSIONS[role].length}/{ALL_PERMISSIONS.length}
-            </p>
+          <div key={role} className="flex-1 min-w-0">
+            <div className={`p-2 rounded-lg border-2 text-center ${ROLES[role].color.replace('text-', 'border-').replace('bg-', 'bg-').split(' ')[0]} bg-opacity-10`}>
+              <p className="font-semibold text-xs truncate">{ROLES[role].label}</p>
+              <p className="text-xs text-slate-600 mt-0.5">
+                {ROLE_PERMISSIONS[role].length}/{ALL_PERMISSIONS.length}
+              </p>
+            </div>
           </div>
         ))}
       </div>
