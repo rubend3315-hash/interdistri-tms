@@ -5,9 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Download, Search } from "lucide-react";
 
-export default function ImportDataTable({ importData, onDelete }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [columnFilters, setColumnFilters] = useState({});
+export default function ImportDataTable({ importData, onDelete, searchTerm = "", columnFilters = {} }) {
 
   const columns = importData.data && importData.data.length > 0
     ? Object.keys(importData.data[0])
