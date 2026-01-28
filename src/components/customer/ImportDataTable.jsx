@@ -63,33 +63,35 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
     : [];
 
   // Filter data based on period selection
-  const filteredData = uniqueData.filter(row => {
-    if (periodType === "all") return true;
+  const filteredData = uniqueData
+    .filter(row => {
+      if (periodType === "all") return true;
 
-    const importDate = convertExcelDate(row._importDate);
+      const importDate = convertExcelDate(row._importDate);
 
-    if (periodType === "day") {
-      return importDate === selectedDate;
-    }
+      if (periodType === "day") {
+        return importDate === selectedDate;
+      }
 
-    if (periodType === "week") {
-      const selected = new Date(selectedDate);
-      const dayOfWeek = selected.getDay();
-      const weekStart = new Date(selected);
-      weekStart.setDate(selected.getDate() - dayOfWeek);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
+      if (periodType === "week") {
+        const selected = new Date(selectedDate);
+        const dayOfWeek = selected.getDay();
+        const weekStart = new Date(selected);
+        weekStart.setDate(selected.getDate() - dayOfWeek);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
 
-      const importDateObj = new Date(importDate);
-      return importDateObj >= weekStart && importDateObj <= weekEnd;
-    }
+        const importDateObj = new Date(importDate);
+        return importDateObj >= weekStart && importDateObj <= weekEnd;
+      }
 
-    if (periodType === "period") {
-      return importDate >= startDate && importDate <= endDate;
-    }
+      if (periodType === "period") {
+        return importDate >= startDate && importDate <= endDate;
+      }
 
-    return true;
-  });
+      return true;
+    })
+    .sort((a, b) => new Date(b._importDate) - new Date(a._importDate));
 
   const exportToCSV = () => {
     const headers = [...columns, 'Import'].join(',');
