@@ -151,6 +151,12 @@ export default function UsersPage() {
     setSelectedUser({ ...selectedUser, permissions });
   };
 
+  const applyRolePermissions = (role) => {
+    if (!selectedUser) return;
+    const permissions = ROLE_PERMISSIONS[role] || [];
+    setSelectedUser({ ...selectedUser, permissions });
+  };
+
   const handleToggleStatus = (user, newStatus) => {
     const newRole = newStatus ? user.role : 'inactive';
     base44.entities.User.update(user.id, { role: newRole }).then(() => {
