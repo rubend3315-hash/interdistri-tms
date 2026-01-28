@@ -32,6 +32,15 @@ const departments = ['Management', 'Transport', 'PakketDistributie', 'Charters']
 const contractTypes = ['Vast', 'Tijdelijk', 'Oproep', 'Uitzend'];
 const statuses = ['Actief', 'Inactief', 'Uit dienst'];
 const licenseCategories = ['B', 'C', 'CE', 'D', 'DE'];
+const functions = [
+  'Chauffeur',
+  'Pakketbezorger/Folderbezorger',
+  'Magazijnmedewerker',
+  'Planner',
+  'Manager',
+  'Administratie',
+  'Overig'
+];
 
 export default function Employees() {
   const [showDialog, setShowDialog] = useState(false);
