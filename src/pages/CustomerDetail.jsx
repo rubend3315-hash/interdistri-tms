@@ -339,68 +339,7 @@ export default function CustomerDetail() {
 
         {/* Artikelen Tab */}
         <TabsContent value="articles">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Artikelen ({formData.articles.length})</CardTitle>
-              <Button type="button" variant="outline" size="sm" onClick={addArticle}>
-                <Plus className="w-4 h-4 mr-1" />
-                Artikel toevoegen
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {formData.articles.length === 0 ? (
-                <p className="text-sm text-slate-500">Geen artikelen toegevoegd</p>
-              ) : (
-                formData.articles.map((article, index) => (
-                  <div key={index} className="p-3 bg-slate-50 rounded-lg space-y-2">
-                    <div className="grid grid-cols-4 gap-2">
-                      <Input
-                        placeholder="Naam"
-                        value={article.name}
-                        onChange={(e) => updateArticle(index, 'name', e.target.value)}
-                      />
-                      <Input
-                        placeholder="Omschrijving"
-                        value={article.description}
-                        onChange={(e) => updateArticle(index, 'description', e.target.value)}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Prijs"
-                        value={article.price}
-                        onChange={(e) => updateArticle(index, 'price', Number(e.target.value))}
-                      />
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Eenheid"
-                          value={article.unit}
-                          onChange={(e) => updateArticle(index, 'unit', e.target.value)}
-                        />
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => removeArticle(index)}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button 
-                  onClick={handleSubmit}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={updateMutation.isPending}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Opslaan
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <ArticleList customerId={customerId} />
         </TabsContent>
 
         {/* Imports Tab */}
