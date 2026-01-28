@@ -60,8 +60,11 @@ export default function TIModelRoutesTab({ customerId }) {
   };
 
   const avgNormValue = routes.length > 0
-   ? (routes.reduce((sum, r) => sum + (r.calculated_norm_per_hour || 0), 0) / routes.length)
-   : 0;
+    ? (routes.reduce((sum, r) => sum + (r.calculated_norm_per_hour || 0), 0) / routes.length)
+    : 0;
+
+  const totalStops = routes.reduce((sum, r) => sum + (r.number_of_stops || 0), 0);
+  const totalParcels = routes.reduce((sum, r) => sum + (r.number_of_parcels || 0), 0);
 
   const exportToPDF = async () => {
     const pdf = new jsPDF({
