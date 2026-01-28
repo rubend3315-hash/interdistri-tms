@@ -40,7 +40,6 @@ import {
 // Imports Tab Component with unified search and filter
 function ImportsTabContent({ imports, onImportModalOpen, onDelete }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [columnFilters, setColumnFilters] = useState({});
 
   if (imports.length === 0) {
     return (
@@ -89,16 +88,12 @@ function ImportsTabContent({ imports, onImportModalOpen, onDelete }) {
         </CardContent>
       </Card>
 
-      {/* Import Tables */}
-      {imports.map(importData => (
-        <ImportDataTable 
-          key={importData.id}
-          importData={importData}
-          onDelete={onDelete}
-          searchTerm={searchTerm}
-          columnFilters={columnFilters}
-        />
-      ))}
+      {/* Single Import Table with all rows */}
+      <ImportDataTable 
+        imports={imports}
+        onDelete={onDelete}
+        searchTerm={searchTerm}
+      />
     </div>
   );
 }
