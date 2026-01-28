@@ -8,11 +8,33 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Plus, Mail, Shield, User, Search } from "lucide-react";
+import { Users, Plus, Mail, Shield, User, Search, Edit, CheckSquare } from "lucide-react";
 import { format } from "date-fns";
+
+const ALL_PERMISSIONS = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'timetracking', label: 'Tijdregistratie' },
+  { id: 'trips', label: 'Ritten' },
+  { id: 'planning', label: 'Planning' },
+  { id: 'approvals', label: 'Goedkeuringen' },
+  { id: 'shifttime', label: 'Dienst-Shifttijd' },
+  { id: 'employees', label: 'Medewerkers' },
+  { id: 'users', label: 'Gebruikers' },
+  { id: 'vehicles', label: 'Voertuigen' },
+  { id: 'niwo', label: 'NIWO Vergunningen' },
+  { id: 'customers', label: 'Klanten' },
+  { id: 'projects', label: 'Projecten' },
+  { id: 'cao', label: 'CAO-regels' },
+  { id: 'salary', label: 'Loontabellen' },
+  { id: 'holidays', label: 'Feestdagen' },
+  { id: 'reports', label: 'Loonrapporten' },
+  { id: 'mobile', label: 'Mobiele App' }
+];
 
 export default function UsersPage() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const queryClient = useQueryClient();
 
@@ -52,12 +74,49 @@ export default function UsersPage() {
     }
   });
 
+  const updatePermissionsMutation = useMutation({
+    mutationFn: async ({ userId, permissions }) => {
+      return base44.entities.User.update(userId, { permissions });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setShowPermissionsDialog(false);
+      setSelectedUser(null);
+      alert('Permissies bijgewerkt!');
+    },
+    onError: (error) => {
+      alert('Fout bij bijwerken: ' + error.message);
+    }
+  });
+
   const handleInvite = () => {
     if (!inviteData.email) {
       alert('Vul een email adres in');
       return;
     }
     inviteUserMutation.mutate(inviteData);
+  };
+
+  const handleEditPermissions = (user) => {
+    setSelectedUser(user);
+    setShowPermissionsDialog(true);
+  };
+
+  const handleSavePermissions = () => {
+    if (!selectedUser) return;
+    updatePermissionsMutation.mutate({
+      userId: selectedUser.id,
+      permissions: selectedUser.permissions || []
+    });
+  };
+
+  const togglePermission = (permissionId) => {
+    if (!selectedUser) return;
+    const currentPermissions = selectedUser.permissions || [];
+    const newPermissions = currentPermissions.includes(permissionId)
+      ? currentPermissions.filter(p => p !== permissionId)
+      : [...currentPermissions, permissionId];
+    setSelectedUser({ ...selectedUser, permissions: newPermissions });
   };
 
   const filteredUsers = users.filter(user =>
@@ -217,16 +276,100 @@ export default function UsersPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 <div className="text-sm text-slate-600">
                   <span className="text-slate-500">Aangemaakt:</span>{' '}
                   {user.created_date ? format(new Date(user.created_date), 'dd-MM-yyyy') : '-'}
                 </div>
+                {user.role !== 'admin' && (
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-xs text-slate-500">
+                      {user.permissions?.length || 0} permissies
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditPermissions(user)}
+                    >
+                      <Edit className="w-3 h-3 mr-1" />
+                      Permissies
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Permissions Dialog */}
+      <Dialog open={showPermissionsDialog} onOpenChange={setShowPermissionsDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Permissies beheren - {selectedUser?.full_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-slate-50 p-3 rounded-lg">
+              <p className="text-sm text-slate-700">
+                <strong>Let op:</strong> Administrators hebben automatisch toegang tot alle functies.
+                Voor gewone gebruikers kun je hieronder specifieke permissies instellen.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Beschikbare modules</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {ALL_PERMISSIONS.map(permission => (
+                  <label
+                    key={permission.id}
+                    className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedUser?.permissions?.includes(permission.id)
+                        ? 'bg-blue-50 border-blue-300'
+                        : 'bg-white border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedUser?.permissions?.includes(permission.id) || false}
+                      onChange={() => togglePermission(permission.id)}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded flex items-center justify-center text-xs ${
+                      selectedUser?.permissions?.includes(permission.id)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-200'
+                    }`}>
+                      {selectedUser?.permissions?.includes(permission.id) && '✓'}
+                    </div>
+                    <span className="text-sm">{permission.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setShowPermissionsDialog(false);
+                  setSelectedUser(null);
+                }}
+              >
+                Annuleren
+              </Button>
+              <Button
+                className="flex-1 bg-blue-900"
+                onClick={handleSavePermissions}
+                disabled={updatePermissionsMutation.isPending}
+              >
+                <CheckSquare className="w-4 h-4 mr-2" />
+                {updatePermissionsMutation.isPending ? 'Opslaan...' : 'Opslaan'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

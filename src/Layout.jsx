@@ -72,6 +72,36 @@ export default function Layout({ children, currentPageName }) {
     queryFn: () => base44.auth.me(),
   });
 
+  const hasPermission = (page) => {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    
+    const pagePermissionMap = {
+      'Dashboard': 'dashboard',
+      'TimeTracking': 'timetracking',
+      'Trips': 'trips',
+      'Planning': 'planning',
+      'Approvals': 'approvals',
+      'ShiftTime': 'shifttime',
+      'Employees': 'employees',
+      'Users': 'users',
+      'Vehicles': 'vehicles',
+      'NiwoPermits': 'niwo',
+      'Customers': 'customers',
+      'Projects': 'projects',
+      'CaoRules': 'cao',
+      'SalaryTables': 'salary',
+      'Holidays': 'holidays',
+      'SalaryReports': 'reports',
+      'MobileEntry': 'mobile'
+    };
+    
+    const requiredPermission = pagePermissionMap[page];
+    if (!requiredPermission) return true;
+    
+    return user.permissions?.includes(requiredPermission) || false;
+  };
+
   const isMobilePage = currentPageName === "MobileEntry";
 
   if (isMobilePage) {
@@ -158,7 +188,7 @@ export default function Layout({ children, currentPageName }) {
                 </button>
                 {expandedGroups.includes(group.label) && (
                   <div className="space-y-1 mt-1">
-                    {group.items.map((item) => {
+                    {group.items.filter(item => hasPermission(item.page)).map((item) => {
                       const isActive = currentPageName === item.page;
                       return (
                         <Link
