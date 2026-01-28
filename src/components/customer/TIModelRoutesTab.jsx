@@ -130,11 +130,11 @@ export default function TIModelRoutesTab({ customerId }) {
                 </tr>
               ) : (
                 routes.map((route) => (
-                  <tr key={route.id} className="border-b hover:bg-slate-50">
+                  <tr key={route.id} className={`border-b hover:bg-slate-50 ${!route.is_active ? 'opacity-60' : ''}`}>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                        <Check className="w-3 h-3" />
-                        Actief
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${route.is_active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'}`}>
+                        {route.is_active ? <Check className="w-3 h-3" /> : <Power className="w-3 h-3" />}
+                        {route.is_active ? 'Actief' : 'Inactief'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-700">{route.route_code}</td>
