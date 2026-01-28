@@ -63,6 +63,7 @@ import ShiftTime from './pages/ShiftTime';
 import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Vehicles from './pages/Vehicles';
+import Chauffeurs from './pages/Chauffeurs';
 import __Layout from './Layout.jsx';
 
 
@@ -83,6 +84,7 @@ export const PAGES = {
     "TimeTracking": TimeTracking,
     "Trips": Trips,
     "Vehicles": Vehicles,
+    "Chauffeurs": Chauffeurs,
 }
 
 export const pagesConfig = {
