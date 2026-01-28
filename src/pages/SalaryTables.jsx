@@ -149,6 +149,22 @@ export default function SalaryTables() {
     return matchesType && matchesPeriod;
   });
 
+  const getScaleColor = (scale) => {
+    const colors = {
+      'C': 'bg-blue-100 text-blue-800',
+      'D': 'bg-green-100 text-green-800',
+      'E': 'bg-purple-100 text-purple-800',
+      'F': 'bg-amber-100 text-amber-800',
+      'G': 'bg-pink-100 text-pink-800',
+      'H': 'bg-indigo-100 text-indigo-800',
+      'Jeugdloon': 'bg-rose-100 text-rose-800',
+      'A': 'bg-slate-100 text-slate-800',
+      'B': 'bg-slate-100 text-slate-800',
+      'Individueel': 'bg-cyan-100 text-cyan-800'
+    };
+    return colors[scale] || 'bg-slate-100 text-slate-800';
+  };
+
   const handleCopyPeriod = () => {
     if (!copyTargetDate) return;
     
@@ -314,7 +330,11 @@ export default function SalaryTables() {
                                   ? format(new Date(entry.start_date), "d MMM yyyy", { locale: nl })
                                   : '-'}
                               </TableCell>
-                              <TableCell className="font-semibold">Schaal {entry.scale}</TableCell>
+                              <TableCell>
+                                <Badge className={getScaleColor(entry.scale)}>
+                                  Schaal {entry.scale}
+                                </Badge>
+                              </TableCell>
                               <TableCell>{entry.scale} Trede {entry.step || '-'}</TableCell>
                               <TableCell>
                                 {entry.monthly_salary ? (
