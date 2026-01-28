@@ -67,145 +67,137 @@ export default function TIModelRoutesTab({ customerId }) {
   const totalParcels = routes.reduce((sum, r) => sum + (r.number_of_parcels || 0), 0);
 
   const exportToPDF = async () => {
-    const pdf = new jsPDF({
+    const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
       format: "a4",
     });
 
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    let yPos = 12;
-    const leftMargin = 15;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    let y = 20;
 
     // Title
-    pdf.setFontSize(22);
-    pdf.setFont(undefined, "bold");
-    pdf.setTextColor(0, 0, 0);
-    pdf.text("TI Model Ritten Rapportage", leftMargin, yPos);
-    yPos += 8;
+    doc.setFontSize(18);
+    doc.setFont(undefined, "bold");
+    doc.text("TI Model Ritten Rapportage", margin, y);
+    y += 8;
 
-    // Generated date
-    pdf.setFontSize(10);
-    pdf.setFont(undefined, "normal");
-    const generatedDate = new Date().toLocaleDateString('nl-NL');
-    pdf.text(`Gegenereerd: ${generatedDate}`, leftMargin, yPos);
-    yPos += 10;
+    // Date
+    doc.setFontSize(10);
+    doc.setFont(undefined, "normal");
+    doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL')}`, margin, y);
+    y += 10;
 
-    // Samenvatting title
-    pdf.setFontSize(12);
-    pdf.setFont(undefined, "bold");
-    pdf.text("Samenvatting", leftMargin, yPos);
-    yPos += 6;
+    // Summary section
+    doc.setFontSize(11);
+    doc.setFont(undefined, "bold");
+    doc.text("Samenvatting", margin, y);
+    y += 6;
 
-    // Summary stats - two columns
-    pdf.setFontSize(10);
-    pdf.setFont(undefined, "normal");
-    const col1X = leftMargin;
-    const col2X = 110;
+    doc.setFontSize(10);
+    doc.setFont(undefined, "normal");
+    const summaryIndent = margin + 5;
+    doc.text(`Totaal ritten: ${routes.length}`, summaryIndent, y);
+    doc.text(`Gemiddelde norm/uur: ${avgNormValue.toFixed(2)}`, 115, y);
+    y += 5;
 
-    pdf.text(`Totaal ritten: ${routes.length}`, col1X, yPos);
-    pdf.text(`Gemiddelde norm/uur: ${avgNormValue.toFixed(2)}`, col2X, yPos);
-    yPos += 5;
+    doc.text(`Totaal stops: ${totalStops}`, summaryIndent, y);
+    doc.text(`Gemiddelde norm/besteluur: ${(totalStops / Math.max(routes.length, 1)).toFixed(2)}`, 115, y);
+    y += 5;
 
-    pdf.text(`Totaal stops: ${totalStops}`, col1X, yPos);
-    pdf.text(`Gemiddelde norm/besteluur: ${(totalStops / Math.max(routes.length, 1)).toFixed(2)}`, col2X, yPos);
-    yPos += 5;
+    doc.text(`Totaal stuks: ${totalParcels}`, summaryIndent, y);
+    y += 12;
 
-    pdf.text(`Totaal stuks: ${totalParcels}`, col1X, yPos);
-    yPos += 10;
-
-    // Table configuration
-    const tableColumns = [
-      { header: "Ritcode", key: "route_code", width: 11 },
-      { header: "Ritnaam", key: "route_name", width: 26 },
-      { header: "Rittijd (u)", key: "total_time_hours", width: 13 },
-      { header: "Rittijd (HH:MM)", key: "total_time_hhmm", width: 15 },
-      { header: "Stops", key: "number_of_stops", width: 9 },
-      { header: "Stuks", key: "number_of_parcels", width: 9 },
-      { header: "Norm/uur", key: "calculated_norm_per_hour", width: 11 },
-      { header: "Norm/besteluur", key: "manual_norm_per_hour", width: 13 },
-      { header: "Periode", key: "start_date", width: 11 },
+    // Table columns with exact widths
+    const cols = [
+      { label: "Ritcode", field: "route_code", width: 12 },
+      { label: "Ritnaam", field: "route_name", width: 28 },
+      { label: "Rittijd (u)", field: "total_time_hours", width: 12 },
+      { label: "Rittijd (HH:MM)", field: "total_time_hhmm", width: 14 },
+      { label: "Stops", field: "number_of_stops", width: 11 },
+      { label: "Stuks", field: "number_of_parcels", width: 11 },
+      { label: "Norm/uur", field: "calculated_norm_per_hour", width: 12 },
+      { label: "Norm/besteluur", field: "manual_norm_per_hour", width: 13 },
+      { label: "Periode", field: "start_date", width: 12 },
     ];
 
-    const headerH = 7;
-    const rowH = 6;
-    let tableY = yPos;
-    const tableX = leftMargin;
+    const headerH = 8;
+    const rowH = 7;
+    const tableStartX = margin;
+    let tableY = y;
 
-    // Draw header
-    pdf.setFillColor(34, 47, 102);
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont(undefined, "bold");
-    pdf.setFontSize(9);
+    // Header row
+    doc.setFillColor(47, 67, 132);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont(undefined, "bold");
+    doc.setFontSize(9);
 
-    let xOffset = tableX;
-    tableColumns.forEach(col => {
-      pdf.rect(xOffset, tableY, col.width, headerH, "F");
-      pdf.setTextColor(255, 255, 255);
-      pdf.text(col.header, xOffset + 1, tableY + 4.5);
-      xOffset += col.width;
+    let x = tableStartX;
+    cols.forEach(col => {
+      doc.rect(x, tableY, col.width, headerH, "F");
+      doc.text(col.label, x + 0.5, tableY + 4, { maxWidth: col.width - 1 });
+      x += col.width;
     });
     tableY += headerH;
 
-    // Draw rows
-    pdf.setFont(undefined, "normal");
-    pdf.setFontSize(9);
-    pdf.setTextColor(0, 0, 0);
+    // Data rows
+    doc.setFont(undefined, "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
 
     routes.forEach((route, idx) => {
-      // Check if need new page
-      if (tableY + rowH > pageHeight - 10) {
-        pdf.addPage();
-        tableY = 15;
+      if (tableY + rowH > pageHeight - 15) {
+        doc.addPage();
+        tableY = 20;
         
         // Redraw header
-        pdf.setFillColor(34, 47, 102);
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFont(undefined, "bold");
-        pdf.setFontSize(9);
-        xOffset = tableX;
-        tableColumns.forEach(col => {
-          pdf.rect(xOffset, tableY, col.width, headerH, "F");
-          pdf.text(col.header, xOffset + 1, tableY + 4.5);
-          xOffset += col.width;
+        doc.setFillColor(47, 67, 132);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont(undefined, "bold");
+        doc.setFontSize(9);
+        x = tableStartX;
+        cols.forEach(col => {
+          doc.rect(x, tableY, col.width, headerH, "F");
+          doc.text(col.label, x + 0.5, tableY + 4, { maxWidth: col.width - 1 });
+          x += col.width;
         });
         tableY += headerH;
-        pdf.setFont(undefined, "normal");
-        pdf.setTextColor(0, 0, 0);
+        doc.setFont(undefined, "normal");
+        doc.setTextColor(0, 0, 0);
       }
 
-      // Draw row background (alternating)
-      if (idx % 2 === 1) {
-        pdf.setFillColor(240, 243, 248);
-        xOffset = tableX;
-        tableColumns.forEach(col => {
-          pdf.rect(xOffset, tableY, col.width, rowH, "F");
-          xOffset += col.width;
+      // Alternating row backgrounds
+      if (idx % 2 === 0) {
+        doc.setFillColor(245, 245, 245);
+        x = tableStartX;
+        cols.forEach(col => {
+          doc.rect(x, tableY, col.width, rowH, "F");
+          x += col.width;
         });
       }
 
-      // Draw row borders
-      pdf.setDrawColor(200, 200, 200);
-      xOffset = tableX;
-      tableColumns.forEach(col => {
-        pdf.rect(xOffset, tableY, col.width, rowH);
-        xOffset += col.width;
+      // Row borders
+      doc.setDrawColor(200, 200, 200);
+      x = tableStartX;
+      cols.forEach(col => {
+        doc.rect(x, tableY, col.width, rowH);
+        x += col.width;
       });
 
-      // Draw row data
-      pdf.setTextColor(0, 0, 0);
-      xOffset = tableX;
-      tableColumns.forEach(col => {
-        let val = route[col.key] || "";
+      // Row data
+      doc.setTextColor(0, 0, 0);
+      x = tableStartX;
+      cols.forEach(col => {
+        let val = route[col.field] || "";
         if (typeof val === "number") val = val.toFixed(2);
-        pdf.text(String(val), xOffset + 0.8, tableY + 4);
-        xOffset += col.width;
+        doc.text(String(val), x + 1, tableY + 4.5);
+        x += col.width;
       });
       tableY += rowH;
     });
 
-    pdf.save("ti-model-ritten.pdf");
+    doc.save("ti-model-ritten.pdf");
   };
 
   const avgNorm = avgNormValue.toFixed(2);
