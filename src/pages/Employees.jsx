@@ -21,7 +21,10 @@ import {
   AlertCircle,
   MapPin,
   FileText,
-  Clock
+  Clock,
+  Heart,
+  IdCard,
+  User
 } from "lucide-react";
 import { format, addMonths, isBefore } from 'date-fns';
 
@@ -138,11 +141,19 @@ export default function Employees() {
                 {selectedEmployee ? 'Medewerker Bewerken' : 'Nieuwe Medewerker'}
               </DialogTitle>
             </DialogHeader>
-            <Tabs defaultValue="algemeen" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs defaultValue={selectedEmployee ? "profiel" : "algemeen"} className="w-full">
+              <TabsList className={`grid w-full ${selectedEmployee ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                {selectedEmployee && (
+                  <TabsTrigger value="profiel">Profiel</TabsTrigger>
+                )}
                 <TabsTrigger value="algemeen">Algemene Gegevens</TabsTrigger>
                 <TabsTrigger value="weekrooster">Weekrooster en contracten</TabsTrigger>
               </TabsList>
+              {selectedEmployee && (
+                <TabsContent value="profiel">
+                  <ProfielTab employee={selectedEmployee} />
+                </TabsContent>
+              )}
               <TabsContent value="algemeen">
                 <EmployeeForm
                   employee={selectedEmployee}
@@ -298,6 +309,162 @@ export default function Employees() {
   );
 }
 
+function ProfielTab({ employee }) {
+  return (
+    <div className="space-y-6 py-4">
+      {/* Header met foto en status */}
+      <div className="flex items-start justify-between p-6 bg-slate-50 rounded-xl">
+        <div className="flex items-center gap-4">
+          {employee.photo_url ? (
+            <img 
+              src={employee.photo_url} 
+              alt={`${employee.first_name} ${employee.last_name}`}
+              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-blue-900 flex items-center justify-center text-white text-2xl font-bold">
+              {employee.first_name?.[0]}{employee.last_name?.[0]}
+            </div>
+          )}
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">
+              {employee.first_name} {employee.last_name}
+            </h2>
+            <p className="text-lg text-slate-600">{employee.function || 'Geen functie'}</p>
+            <p className="text-sm text-slate-500">{employee.department}</p>
+          </div>
+        </div>
+        <Badge className={
+          employee.status === 'Actief' ? 'bg-emerald-100 text-emerald-700' :
+          employee.status === 'Inactief' ? 'bg-slate-100 text-slate-700' :
+          'bg-red-100 text-red-700'
+        }>
+          {employee.status}
+        </Badge>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        {/* Contactgegevens */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Phone className="w-5 h-5" />
+              Contactgegevens
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-xs text-slate-500">Email</p>
+              <a href={`mailto:${employee.email}`} className="text-blue-600 hover:underline">
+                {employee.email || '-'}
+              </a>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Telefoon</p>
+              <a href={`tel:${employee.phone}`} className="text-blue-600 hover:underline">
+                {employee.phone || '-'}
+              </a>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Adres</p>
+              <p className="text-slate-900">
+                {employee.address || '-'}
+                {employee.address && <br />}
+                {employee.postal_code && employee.city && `${employee.postal_code} ${employee.city}`}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Geboortedatum</p>
+              <p className="text-slate-900">
+                {employee.date_of_birth ? format(new Date(employee.date_of_birth), 'dd MMMM yyyy') : '-'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">In dienst sinds</p>
+              <p className="text-slate-900">
+                {employee.contract_start_date ? format(new Date(employee.contract_start_date), 'dd MMMM yyyy') : '-'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Rijbewijs & Certificaten */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <IdCard className="w-5 h-5" />
+              Rijbewijs & Certificaten
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-xs text-slate-500">Rijbewijsnummer</p>
+              <p className="text-slate-900">{employee.drivers_license_number || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Categorieën</p>
+              <p className="text-slate-900">
+                {employee.drivers_license_categories?.join(', ') || '-'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Rijbewijs verloopt</p>
+              <p className="text-slate-900">
+                {employee.drivers_license_expiry 
+                  ? format(new Date(employee.drivers_license_expiry), 'dd-MM-yyyy')
+                  : '-'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Code 95 verloopt</p>
+              <p className="text-slate-900">
+                {employee.code95_expiry 
+                  ? format(new Date(employee.code95_expiry), 'dd-MM-yyyy')
+                  : '-'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Noodcontact */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Heart className="w-5 h-5" />
+              Noodcontact
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-xs text-slate-500">Naam</p>
+              <p className="text-slate-900">{employee.emergency_contact_name || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Telefoon</p>
+              <p className="text-slate-900">{employee.emergency_contact_phone || '-'}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Supervisor Notities */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Supervisor Notities
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-600 italic">
+              {employee.supervisor_notities || 'Geen notities beschikbaar'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 function EmployeeForm({ employee, onSubmit, isSubmitting }) {
   const [formData, setFormData] = useState(employee || {
     employee_number: '',
@@ -323,7 +490,9 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
     status: 'Actief',
     emergency_contact_name: '',
     emergency_contact_phone: '',
-    emergency_contact_relation: ''
+    emergency_contact_relation: '',
+    photo_url: '',
+    supervisor_notities: ''
   });
 
   const handleSubmit = (e) => {
@@ -479,6 +648,19 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
             type="date"
             value={formData.code95_expiry}
             onChange={(e) => setFormData({ ...formData, code95_expiry: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="font-medium mb-3">Supervisor Notities</h3>
+        <div className="space-y-2">
+          <Label>Notities (alleen voor managers)</Label>
+          <Textarea
+            value={formData.supervisor_notities}
+            onChange={(e) => setFormData({ ...formData, supervisor_notities: e.target.value })}
+            rows={3}
+            placeholder="Interne notities..."
           />
         </div>
       </div>
