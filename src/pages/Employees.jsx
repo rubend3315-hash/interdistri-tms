@@ -1142,8 +1142,8 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                 Reiskostenregel
               </Button>
             )}
-            </div>
-            </CardHeader>
+          </div>
+        </CardHeader>
         <CardContent>
           {reiskostenregels.length === 0 ? (
             <p className="text-center text-slate-500 py-4">Nog geen reiskostenregels</p>
