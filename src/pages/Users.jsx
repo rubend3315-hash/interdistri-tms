@@ -592,7 +592,7 @@ function RoleMatrixDialog() {
       </div>
 
       {/* Legend */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-3 border-t">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-emerald-100 rounded-md border border-emerald-300 flex items-center justify-center flex-shrink-0">
             <span className="text-emerald-700 text-xs font-bold">✓</span>
