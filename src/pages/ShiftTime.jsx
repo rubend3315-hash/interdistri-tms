@@ -64,7 +64,8 @@ export default function ShiftTime() {
   const [formData, setFormData] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     department: "PakketDistributie",
-    start_time: "06:00",
+    service_start_time: "06:00",
+    start_time: "",
     end_time: "",
     message: ""
   });
@@ -73,7 +74,8 @@ export default function ShiftTime() {
     setFormData({
       date: format(new Date(), 'yyyy-MM-dd'),
       department: "PakketDistributie",
-      start_time: "06:00",
+      service_start_time: "06:00",
+      start_time: "",
       end_time: "",
       message: ""
     });
@@ -84,7 +86,8 @@ export default function ShiftTime() {
     setFormData({
       date: shift.date,
       department: shift.department,
-      start_time: shift.start_time,
+      service_start_time: shift.service_start_time || "",
+      start_time: shift.start_time || "",
       end_time: shift.end_time || "",
       message: shift.message || ""
     });
@@ -151,10 +154,14 @@ export default function ShiftTime() {
                     <div className="flex items-center gap-3 mt-2">
                       <Clock className="w-8 h-8" />
                       <span className="text-4xl font-bold">
-                        {shift.start_time}
-                        {shift.end_time && ` - ${shift.end_time}`}
+                        {shift.service_start_time}
                       </span>
                     </div>
+                    {(shift.start_time || shift.end_time) && (
+                      <p className="text-sm text-blue-100 mt-2">
+                        Shifttijd: {shift.start_time || '--:--'} - {shift.end_time || '--:--'}
+                      </p>
+                    )}
                     {shift.message && (
                       <p className="mt-4 text-blue-100 bg-blue-500/30 p-3 rounded-lg">
                         {shift.message}
@@ -216,8 +223,7 @@ export default function ShiftTime() {
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-2xl text-slate-900">
-                                  {shift.start_time}
-                                  {shift.end_time && ` - ${shift.end_time}`}
+                                  {shift.service_start_time}
                                 </span>
                                 {shift.date === todayStr && (
                                   <Badge className="bg-blue-600">Vandaag</Badge>
@@ -227,6 +233,11 @@ export default function ShiftTime() {
                                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
                                 {format(new Date(shift.date), "EEEE d MMMM yyyy", { locale: nl })}
                               </p>
+                              {(shift.start_time || shift.end_time) && (
+                                <p className="text-xs text-slate-500 mt-1">
+                                  Shift: {shift.start_time || '--:--'} - {shift.end_time || '--:--'}
+                                </p>
+                              )}
                             </div>
                           </div>
                           
@@ -315,18 +326,27 @@ export default function ShiftTime() {
               </Select>
             </div>
 
+            <div className="space-y-2">
+              <Label>Start Dienst (HH:MM) *</Label>
+              <Input
+                type="time"
+                value={formData.service_start_time}
+                onChange={(e) => setFormData({ ...formData, service_start_time: e.target.value })}
+                required
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Shifttijd van</Label>
+                <Label>Shifttijd van (HH:MM)</Label>
                 <Input
                   type="time"
                   value={formData.start_time}
                   onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label>Shifttijd tot</Label>
+                <Label>tot (HH:MM)</Label>
                 <Input
                   type="time"
                   value={formData.end_time}
