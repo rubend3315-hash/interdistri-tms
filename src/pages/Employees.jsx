@@ -1289,14 +1289,6 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
           </div>
 
           <div className="flex gap-2">
-            {contract?.index !== undefined && onDelete && (
-              <Button 
-                variant="destructive" 
-                onClick={() => onDelete(contract.index)}
-              >
-                Inactiveren
-              </Button>
-            )}
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Annuleren
             </Button>
