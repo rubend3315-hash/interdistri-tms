@@ -112,7 +112,15 @@ export default function ShiftTime() {
   };
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
-  const todayShift = shiftTimes.find(s => s.date === todayStr);
+  const todayShifts = shiftTimes.filter(s => s.date === todayStr);
+  
+  // Groepeer shifttimes per afdeling
+  const shiftsByDepartment = shiftTimes.reduce((acc, shift) => {
+    const dept = shift.department || 'Onbekend';
+    if (!acc[dept]) acc[dept] = [];
+    acc[dept].push(shift);
+    return acc;
+  }, {});
 
   return (
     <div className="space-y-6">
@@ -128,38 +136,42 @@ export default function ShiftTime() {
         </Button>
       </div>
 
-      {/* Today's Shift */}
-      {todayShift && (
-        <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm">Vandaag - {format(new Date(), "EEEE d MMMM", { locale: nl })}</p>
-                <div className="flex items-center gap-3 mt-2">
-                  <Clock className="w-8 h-8" />
-                  <span className="text-4xl font-bold">
-                    {todayShift.start_time}
-                    {todayShift.end_time && ` - ${todayShift.end_time}`}
-                  </span>
+      {/* Today's Shifts */}
+      {todayShifts.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-slate-700">Vandaag - {format(new Date(), "EEEE d MMMM", { locale: nl })}</h2>
+          {todayShifts.map((shift) => (
+            <Card key={shift.id} className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Badge className="bg-white/20 text-white text-sm px-3 py-1 mb-2">
+                      {shift.department}
+                    </Badge>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Clock className="w-8 h-8" />
+                      <span className="text-4xl font-bold">
+                        {shift.start_time}
+                        {shift.end_time && ` - ${shift.end_time}`}
+                      </span>
+                    </div>
+                    {shift.message && (
+                      <p className="mt-4 text-blue-100 bg-blue-500/30 p-3 rounded-lg">
+                        {shift.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                {todayShift.message && (
-                  <p className="mt-4 text-blue-100 bg-blue-500/30 p-3 rounded-lg">
-                    {todayShift.message}
-                  </p>
-                )}
-              </div>
-              <Badge className="bg-white/20 text-white text-lg px-4 py-2">
-                {todayShift.department}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
 
-      {/* Shift List */}
+      {/* Shift List - Grouped by Department */}
       <Card>
         <CardHeader>
-          <CardTitle>Shifttijden Overzicht</CardTitle>
+          <CardTitle>Shifttijden per Afdeling</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -173,79 +185,91 @@ export default function ShiftTime() {
               <p className="text-slate-500 mt-1">Voeg een shifttijd toe om te beginnen.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {shiftTimes.map(shift => (
-                <div 
-                  key={shift.id}
-                  className={`p-4 rounded-xl border transition-colors ${
-                    shift.date === todayStr 
-                      ? 'bg-blue-50 border-blue-200' 
-                      : 'bg-white border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        shift.date === todayStr ? 'bg-blue-100' : 'bg-slate-100'
-                      }`}>
-                        <Clock className={`w-6 h-6 ${
-                          shift.date === todayStr ? 'text-blue-600' : 'text-slate-600'
-                        }`} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-2xl text-slate-900">
-                            {shift.start_time}
-                            {shift.end_time && ` - ${shift.end_time}`}
-                          </span>
-                          {shift.date === todayStr && (
-                            <Badge className="bg-blue-600">Vandaag</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-slate-500">
-                          <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                          {format(new Date(shift.date), "EEEE d MMMM yyyy", { locale: nl })}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4">
-                      {shift.message && (
-                        <div className="hidden md:block max-w-xs">
-                          <p className="text-sm text-slate-600 truncate">
-                            <MessageSquare className="w-3.5 h-3.5 inline mr-1" />
-                            {shift.message}
-                          </p>
-                        </div>
-                      )}
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => openEditDialog(shift)}
-                        >
-                          <Edit className="w-4 h-4 text-slate-500" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => {
-                            if (confirm('Weet je zeker dat je deze shifttijd wilt verwijderen?')) {
-                              deleteMutation.mutate(shift.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
+            <div className="space-y-6">
+              {Object.entries(shiftsByDepartment).map(([department, shifts]) => (
+                <div key={department}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge variant="outline" className="text-sm font-semibold">
+                      {department}
+                    </Badge>
+                    <span className="text-xs text-slate-500">({shifts.length} shifttijden)</span>
                   </div>
-                  
-                  {shift.message && (
-                    <div className="md:hidden mt-3 p-2 bg-slate-50 rounded-lg">
-                      <p className="text-sm text-slate-600">{shift.message}</p>
-                    </div>
-                  )}
+                  <div className="space-y-3 pl-4 border-l-2 border-slate-200">
+                    {shifts.map(shift => (
+                      <div 
+                        key={shift.id}
+                        className={`p-4 rounded-xl border transition-colors ${
+                          shift.date === todayStr 
+                            ? 'bg-blue-50 border-blue-200' 
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                              shift.date === todayStr ? 'bg-blue-100' : 'bg-slate-100'
+                            }`}>
+                              <Clock className={`w-6 h-6 ${
+                                shift.date === todayStr ? 'text-blue-600' : 'text-slate-600'
+                              }`} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-2xl text-slate-900">
+                                  {shift.start_time}
+                                  {shift.end_time && ` - ${shift.end_time}`}
+                                </span>
+                                {shift.date === todayStr && (
+                                  <Badge className="bg-blue-600">Vandaag</Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-slate-500">
+                                <Calendar className="w-3.5 h-3.5 inline mr-1" />
+                                {format(new Date(shift.date), "EEEE d MMMM yyyy", { locale: nl })}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-4">
+                            {shift.message && (
+                              <div className="hidden md:block max-w-xs">
+                                <p className="text-sm text-slate-600 truncate">
+                                  <MessageSquare className="w-3.5 h-3.5 inline mr-1" />
+                                  {shift.message}
+                                </p>
+                              </div>
+                            )}
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => openEditDialog(shift)}
+                              >
+                                <Edit className="w-4 h-4 text-slate-500" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => {
+                                  if (confirm('Weet je zeker dat je deze shifttijd wilt verwijderen?')) {
+                                    deleteMutation.mutate(shift.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {shift.message && (
+                          <div className="md:hidden mt-3 p-2 bg-slate-50 rounded-lg">
+                            <p className="text-sm text-slate-600">{shift.message}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
