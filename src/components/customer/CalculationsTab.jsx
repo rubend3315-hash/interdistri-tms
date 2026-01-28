@@ -92,11 +92,12 @@ export default function CalculationsTab({ imports, customerArticles }) {
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-blue-900">Hoeveelheid kolom</label>
-                <Select value={quantityColumn} onValueChange={setQuantityColumn}>
+                <Select value={quantityColumn || "none"} onValueChange={(v) => setQuantityColumn(v === "none" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecteer" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">Selecteer kolom</SelectItem>
                     {columns.map(col => (
                       <SelectItem key={col} value={col}>{col}</SelectItem>
                     ))}
@@ -105,11 +106,12 @@ export default function CalculationsTab({ imports, customerArticles }) {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-blue-900">Prijs kolom</label>
-                <Select value={priceColumn} onValueChange={setPriceColumn}>
+                <Select value={priceColumn || "none"} onValueChange={(v) => setPriceColumn(v === "none" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecteer" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">Selecteer kolom</SelectItem>
                     {columns.map(col => (
                       <SelectItem key={col} value={col}>{col}</SelectItem>
                     ))}
