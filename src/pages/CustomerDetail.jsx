@@ -16,6 +16,7 @@ import ImportExcelModal from "@/components/customer/ImportExcelModal";
 import ImportDataTable from "@/components/customer/ImportDataTable";
 import CalculationsTab from "@/components/customer/CalculationsTab";
 import ImportHistory from "@/components/customer/ImportHistory";
+import ArticleList from "@/components/customer/ArticleList";
 import {
   ArrowLeft,
   Save,
