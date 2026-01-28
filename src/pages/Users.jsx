@@ -487,9 +487,8 @@ export default function UsersPage() {
                           {selectedUser?.permissions?.includes(permission.id) && '✓'}
                         </div>
                         <span className="text-sm">{permission.label}</span>
-                        </div>
-                        ))}
-                        </div>
+                       </div>
+                     ))}
                 </div>
               ))}
             </div>
