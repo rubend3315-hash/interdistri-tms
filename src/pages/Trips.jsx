@@ -288,10 +288,10 @@ export default function Trips() {
                           </Badge>
                         </div>
                         <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-slate-400" />
-                            {trip.date && format(new Date(trip.date), "d MMM yyyy", { locale: nl })}
-                          </span>
+                           <span className="flex items-center gap-1">
+                             <Calendar className="w-4 h-4 text-slate-400" />
+                             {trip.date && formatExcelDate(trip.date)}
+                           </span>
                           {employee && (
                             <span className="flex items-center gap-1">
                               <User className="w-4 h-4 text-slate-400" />
