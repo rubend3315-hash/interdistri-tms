@@ -787,26 +787,21 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
 function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
   const [contractregels, setContractregels] = useState(employee?.contractregels || []);
   const [reiskostenregels, setReiskostenregels] = useState(employee?.reiskostenregels || []);
-  const [weekroosters, setWeekrewkoosters] = useState(employee?.weekroosters || []);
   const [showContractDialog, setShowContractDialog] = useState(false);
   const [showReiskostenDialog, setShowReiskostenDialog] = useState(false);
-  const [showWeekroosterDialog, setShowWeekroosterDialog] = useState(false);
   const [editingContract, setEditingContract] = useState(null);
   const [editingReiskosten, setEditingReiskosten] = useState(null);
-  const [editingWeekrooster, setEditingWeekrooster] = useState(null);
 
   useEffect(() => {
     setContractregels(employee?.contractregels || []);
     setReiskostenregels(employee?.reiskostenregels || []);
-    setWeekrewkoosters(employee?.weekroosters || []);
   }, [employee]);
 
   const handleSaveAll = () => {
     onSubmit({
       ...employee,
       contractregels,
-      reiskostenregels,
-      weekroosters
+      reiskostenregels
     });
   };
 
@@ -960,90 +955,6 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
         </CardContent>
       </Card>
 
-      {/* Weekroosters per Periode */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Weekroosters per Periode
-            </CardTitle>
-            <Button 
-              size="sm"
-              className="bg-blue-900"
-              onClick={() => {
-                setEditingWeekrooster(null);
-                setShowWeekroosterDialog(true);
-              }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nieuw Weekrooster
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {weekroosters.length === 0 ? (
-            <div>
-              <p className="text-center text-slate-500 py-4">Nog geen weekroosters ingesteld</p>
-              <div className="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg">
-                Weekroosters per periode: Voeg periodes toe om aan te geven welke dagen je beschikbaar bent. Elk weekrooster heeft een startdatum en optioneel een einddatum.
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {weekroosters.filter(w => w.status !== 'Inactief').map((rooster, index) => (
-                <div key={index} className="p-3 border rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">
-                          {rooster.startdatum && format(new Date(rooster.startdatum), 'dd-MM-yyyy')}
-                          {rooster.einddatum && ` - ${format(new Date(rooster.einddatum), 'dd-MM-yyyy')}`}
-                          {!rooster.einddatum && ' - doorlopend'}
-                        </p>
-                        {rooster.status === 'Inactief' && (
-                          <Badge className="bg-slate-100 text-slate-700">Inactief</Badge>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-                        <div>
-                          <p className="text-slate-600 font-medium">Week 1 (Oneven):</p>
-                          <p className="text-slate-700">
-                            {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
-                              .filter(d => rooster.week1?.[d])
-                              .map(d => d.substring(0, 2))
-                              .join(', ')}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-slate-600 font-medium">Week 2 (Even):</p>
-                          <p className="text-slate-700">
-                            {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
-                              .filter(d => rooster.week2?.[d])
-                              .map(d => d.substring(0, 2))
-                              .join(', ')}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => {
-                        setEditingWeekrooster({ ...rooster, index: weekroosters.indexOf(rooster) });
-                        setShowWeekroosterDialog(true);
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       <Button 
         className="w-full bg-blue-900" 
         onClick={handleSaveAll}
@@ -1095,28 +1006,6 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
           newRegels[index] = { ...newRegels[index], status: 'Inactief' };
           setReiskostenregels(newRegels);
           setShowReiskostenDialog(false);
-        }}
-      />
-
-      <WeekroosterDialog
-        open={showWeekroosterDialog}
-        onOpenChange={setShowWeekroosterDialog}
-        weekrooster={editingWeekrooster}
-        onSave={(rooster) => {
-          if (editingWeekrooster?.index !== undefined) {
-            const newRoosters = [...weekroosters];
-            newRoosters[editingWeekrooster.index] = rooster;
-            setWeekrewkoosters(newRoosters);
-          } else {
-            setWeekrewkoosters([...weekroosters, rooster]);
-          }
-          setShowWeekroosterDialog(false);
-        }}
-        onDelete={(index) => {
-          const newRoosters = [...weekroosters];
-          newRoosters[index] = { ...newRoosters[index], status: 'Inactief' };
-          setWeekrewkoosters(newRoosters);
-          setShowWeekroosterDialog(false);
         }}
       />
     </div>
