@@ -794,25 +794,40 @@ function EmployeeForm({ employee, onSubmit, isSubmitting }) {
 }
 
 function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
-  const [contractregels, setContractregels] = useState(employee?.contractregels || []);
-  const [reiskostenregels, setReiskostenregels] = useState(employee?.reiskostenregels || []);
-  const [showContractDialog, setShowContractDialog] = useState(false);
-  const [showReiskostenDialog, setShowReiskostenDialog] = useState(false);
-  const [editingContract, setEditingContract] = useState(null);
-  const [editingReiskosten, setEditingReiskosten] = useState(null);
-
-  useEffect(() => {
-    setContractregels(employee?.contractregels || []);
-    setReiskostenregels(employee?.reiskostenregels || []);
-  }, [employee]);
-
-  const handleSaveAll = () => {
-    onSubmit({
-      ...employee,
-      contractregels,
-      reiskostenregels
+    const [contractregels, setContractregels] = useState(employee?.contractregels || []);
+    const [reiskostenregels, setReiskostenregels] = useState(employee?.reiskostenregels || []);
+    const [showContractDialog, setShowContractDialog] = useState(false);
+    const [showReiskostenDialog, setShowReiskostenDialog] = useState(false);
+    const [editingContract, setEditingContract] = useState(null);
+    const [editingReiskosten, setEditingReiskosten] = useState(null);
+    const queryClient = useQueryClient();
+    const updateMutation = useMutation({
+      mutationFn: ({ id, data }) => base44.entities.Employee.update(id, data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+      }
     });
-  };
+
+    useEffect(() => {
+      setContractregels(employee?.contractregels || []);
+      setReiskostenregels(employee?.reiskostenregels || []);
+    }, [employee]);
+
+    const handleSaveContract = (newContractregels) => {
+      setContractregels(newContractregels);
+      updateMutation.mutate({
+        id: employee.id,
+        data: { contractregels: newContractregels, reiskostenregels }
+      });
+    };
+
+    const handleSaveReiskosten = (newReiskostenregels) => {
+      setReiskostenregels(newReiskostenregels);
+      updateMutation.mutate({
+        id: employee.id,
+        data: { contractregels, reiskostenregels: newReiskostenregels }
+      });
+    };
 
   return (
     <div className="space-y-6 py-4">
