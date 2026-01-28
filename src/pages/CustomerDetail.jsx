@@ -33,8 +33,75 @@ import {
   Calculator,
   History,
   X,
-  Edit2
+  Edit2,
+  Search
 } from "lucide-react";
+
+// Imports Tab Component with unified search and filter
+function ImportsTabContent({ imports, onImportModalOpen, onDelete }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [columnFilters, setColumnFilters] = useState({});
+
+  if (imports.length === 0) {
+    return (
+      <div className="space-y-4">
+        <Button 
+          onClick={onImportModalOpen}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Excel bestand importeren
+        </Button>
+        <Card className="p-12 text-center">
+          <Upload className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-slate-900">Geen imports</h3>
+          <p className="text-slate-500 mt-1">Importeer een Excel bestand om data te beheren.</p>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Button 
+        onClick={onImportModalOpen}
+        className="bg-blue-600 hover:bg-blue-700"
+      >
+        <Upload className="w-4 h-4 mr-2" />
+        Excel bestand importeren
+      </Button>
+
+      {/* Unified Search and Filter */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Zoeken en filteren</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+            <Input
+              placeholder="Zoeken in alle kolommen..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Import Tables */}
+      {imports.map(importData => (
+        <ImportDataTable 
+          key={importData.id}
+          importData={importData}
+          onDelete={onDelete}
+          searchTerm={searchTerm}
+          columnFilters={columnFilters}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function CustomerDetail() {
   const navigate = useNavigate();
