@@ -70,68 +70,117 @@ export default function TIModelRoutesTab({ customerId }) {
     const pageHeight = pdf.internal.pageSize.getHeight();
     let yPosition = 15;
 
-    // Titel
-    pdf.setFontSize(16);
-    pdf.text("TI Model Ritten Rapport", 15, yPosition);
-    yPosition += 10;
+    // Header met titel en datum
+    pdf.setFontSize(20);
+    pdf.setFont(undefined, "bold");
+    pdf.text("TI Model Ritten Rapportage", 15, yPosition);
+    yPosition += 8;
 
-    // Statistieken
     pdf.setFontSize(10);
-    pdf.text(`Totaal ritten: ${routes.length}`, 15, yPosition);
-    yPosition += 5;
-    pdf.text(`Totaal stops: ${totalStops}`, 15, yPosition);
-    yPosition += 5;
-    pdf.text(`Totaal stuks: ${totalParcels}`, 15, yPosition);
-    yPosition += 5;
-    pdf.text(`Gemiddelde norm/uur: ${avgNorm}`, 15, yPosition);
+    pdf.setFont(undefined, "normal");
+    const generatedDate = new Date().toLocaleDateString('nl-NL');
+    pdf.text(`Gegenereerd: ${generatedDate}`, 15, yPosition);
     yPosition += 10;
 
-    // Tabel headers
-    const columns = [
-      { header: "Code", dataKey: "route_code", width: 15 },
-      { header: "Naam", dataKey: "route_name", width: 25 },
-      { header: "Uren", dataKey: "total_time_hours", width: 15 },
-      { header: "HH:MM", dataKey: "total_time_hhmm", width: 15 },
-      { header: "Stops", dataKey: "number_of_stops", width: 12 },
-      { header: "Stuks", dataKey: "number_of_parcels", width: 12 },
-      { header: "Berekende norm", dataKey: "calculated_norm_per_hour", width: 18 },
-      { header: "Norm/besteluur", dataKey: "manual_norm_per_hour", width: 18 },
-    ];
-
-    // Tabel inhoud
-    const tableStartY = yPosition;
-    const rowHeight = 6;
-    const headerHeight = 7;
+    // Samenvattingsection
+    pdf.setFontSize(11);
+    pdf.setFont(undefined, "bold");
+    pdf.text("Samenvatthing", 15, yPosition);
+    yPosition += 6;
 
     pdf.setFontSize(9);
+    pdf.setFont(undefined, "normal");
+    
+    // Twee kolommen voor statistieken
+    const stats = [
+      `Totaal ritten: ${routes.length}`,
+      `Totaal stops: ${totalStops}`,
+      `Totaal stuks: ${totalParcels}`,
+    ];
+    
+    const stats2 = [
+      `Gemiddelde norm/uur: ${avgNorm.toFixed(2)}`,
+      `Gemiddelde norm/besteluur: ${(totalStops / routes.length).toFixed(2)}`,
+    ];
+
+    stats.forEach((stat, i) => {
+      pdf.text(stat, 15, yPosition);
+      yPosition += 5;
+    });
+
+    yPosition -= 15;
+    stats2.forEach((stat, i) => {
+      pdf.text(stat, 100, yPosition);
+      yPosition += 5;
+    });
+
+    yPosition += 10;
+
+    // Tabel
+    const columns = [
+      { header: "Ritcode", dataKey: "route_code", width: 12 },
+      { header: "Ritnaam", dataKey: "route_name", width: 28 },
+      { header: "Ritijd (u)", dataKey: "total_time_hours", width: 12 },
+      { header: "Ritijd (HH:MM)", dataKey: "total_time_hhmm", width: 14 },
+      { header: "Stops", dataKey: "number_of_stops", width: 10 },
+      { header: "Stuks", dataKey: "number_of_parcels", width: 10 },
+      { header: "Normuur", dataKey: "calculated_norm_per_hour", width: 12 },
+      { header: "Norm/besteluur", dataKey: "manual_norm_per_hour", width: 14 },
+      { header: "Periode", dataKey: "start_date", width: 14 },
+    ];
+
+    const headerHeight = 7;
+    const rowHeight = 6;
+    let currentY = yPosition;
+
+    // Headers met achtergrond
+    pdf.setFillColor(18, 54, 125); // Donkerblauw
+    pdf.setTextColor(255, 255, 255); // Wit
     pdf.setFont(undefined, "bold");
+    pdf.setFontSize(8);
 
-    let currentY = tableStartY;
-
-    // Headers
     let xPos = 15;
     columns.forEach((col) => {
-      pdf.text(col.header, xPos, currentY);
+      pdf.rect(xPos - 1, currentY - 5, col.width, headerHeight, "F");
+      pdf.text(col.header, xPos + 1, currentY);
       xPos += col.width;
     });
     currentY += headerHeight;
 
     // Data rows
+    pdf.setTextColor(0, 0, 0); // Zwart
     pdf.setFont(undefined, "normal");
+    pdf.setFontSize(8);
+
     routes.forEach((route, index) => {
       if (currentY + rowHeight > pageHeight - 10) {
+        // Nieuwe pagina
         pdf.addPage();
         currentY = 15;
 
-        // Repeat headers
+        // Headers herhalen
+        pdf.setFillColor(18, 54, 125);
+        pdf.setTextColor(255, 255, 255);
         pdf.setFont(undefined, "bold");
         xPos = 15;
         columns.forEach((col) => {
-          pdf.text(col.header, xPos, currentY);
+          pdf.rect(xPos - 1, currentY - 5, col.width, headerHeight, "F");
+          pdf.text(col.header, xPos + 1, currentY);
           xPos += col.width;
         });
         currentY += headerHeight;
+        pdf.setTextColor(0, 0, 0);
         pdf.setFont(undefined, "normal");
+      }
+
+      // Alternerende rij kleuren
+      if (index % 2 === 0) {
+        pdf.setFillColor(240, 244, 248); // Lichtblauw
+        xPos = 15;
+        columns.forEach((col) => {
+          pdf.rect(xPos - 1, currentY - 5, col.width, rowHeight, "F");
+          xPos += col.width;
+        });
       }
 
       xPos = 15;
@@ -140,7 +189,7 @@ export default function TIModelRoutesTab({ customerId }) {
         if (typeof value === "number") {
           value = value.toFixed(2);
         }
-        pdf.text(String(value), xPos, currentY);
+        pdf.text(String(value), xPos + 1, currentY);
         xPos += col.width;
       });
       currentY += rowHeight;
