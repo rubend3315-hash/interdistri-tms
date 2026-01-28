@@ -70,7 +70,7 @@ export default function UsersPage() {
   const [showRoleMatrix, setShowRoleMatrix] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'table'
+  const [viewMode, setViewMode] = useState('cards');
   const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
@@ -151,19 +151,6 @@ export default function UsersPage() {
     setSelectedUser({ ...selectedUser, permissions });
   };
 
-  const applyRolePermissions = (role) => {
-    if (!selectedUser) return;
-    const permissions = ROLE_PERMISSIONS[role] || [];
-    setSelectedUser({ ...selectedUser, permissions });
-  };
-
-  const handleToggleStatus = (user, newStatus) => {
-    const newRole = newStatus ? user.role : 'inactive';
-    base44.entities.User.update(user.id, { role: newRole }).then(() => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    });
-  };
-
   const togglePermission = (permissionId) => {
     if (!selectedUser) return;
     const currentPermissions = selectedUser.permissions || [];
@@ -218,66 +205,69 @@ export default function UsersPage() {
             </DialogContent>
           </Dialog>
           <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-900 hover:bg-blue-800">
-              <Plus className="w-4 h-4 mr-2" />
-              Gebruiker Uitnodigen
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nieuwe Gebruiker Uitnodigen</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Email *</Label>
-                <Input
-                  type="email"
-                  placeholder="gebruiker@voorbeeld.nl"
-                  value={inviteData.email}
-                  onChange={(e) => setInviteData({ ...inviteData, email: e.target.value })}
-                />
-              </div>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-900 hover:bg-blue-800">
+                <Plus className="w-4 h-4 mr-2" />
+                Gebruiker Uitnodigen
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nieuwe Gebruiker Uitnodigen</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Email *</Label>
+                  <Input
+                    type="email"
+                    placeholder="gebruiker@voorbeeld.nl"
+                    value={inviteData.email}
+                    onChange={(e) => setInviteData({ ...inviteData, email: e.target.value })}
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label>Rol *</Label>
-                <Select 
-                  value={inviteData.role}
-                  onValueChange={(v) => setInviteData({ ...inviteData, role: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">Gebruiker</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-slate-500">
-                  Administrators hebben volledige toegang tot alle functies
-                </p>
-              </div>
+                <div className="space-y-2">
+                  <Label>Rol *</Label>
+                  <Select 
+                    value={inviteData.role}
+                    onValueChange={(v) => setInviteData({ ...inviteData, role: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Administrator</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="editor">Editor</SelectItem>
+                      <SelectItem value="user">Medewerker</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500">
+                    Kies de standaard rol voor deze gebruiker
+                  </p>
+                </div>
 
-              <div className="flex gap-2 pt-4">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => setShowInviteDialog(false)}
-                >
-                  Annuleren
-                </Button>
-                <Button 
-                  className="flex-1 bg-blue-900"
-                  onClick={handleInvite}
-                  disabled={inviteUserMutation.isPending}
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  {inviteUserMutation.isPending ? 'Versturen...' : 'Uitnodigen'}
-                </Button>
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setShowInviteDialog(false)}
+                  >
+                    Annuleren
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-blue-900"
+                    onClick={handleInvite}
+                    disabled={inviteUserMutation.isPending}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    {inviteUserMutation.isPending ? 'Versturen...' : 'Uitnodigen'}
+                  </Button>
+                </div>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Info Card */}
@@ -288,9 +278,7 @@ export default function UsersPage() {
             <div className="text-sm text-blue-900">
               <p className="font-medium mb-1">Over gebruikersbeheer</p>
               <p className="text-blue-700">
-                Uitgenodigde gebruikers ontvangen een email met een link om hun account te activeren.
-                Je kunt hier alleen nieuwe gebruikers uitnodigen. Om gebruikersgegevens te bewerken,
-                ga naar de Medewerkers pagina.
+                Beheer gebruikers met rollen en granulaire permissies. Klik op "Rol Matrix" om alle rollen en hun permissies in te zien.
               </p>
             </div>
           </div>
