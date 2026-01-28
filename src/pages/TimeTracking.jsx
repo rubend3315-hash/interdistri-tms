@@ -440,7 +440,7 @@ export default function TimeTracking() {
                      onValueChange={(v) => setFormData({ ...formData, travel_allowance_multiplier: Number(v) })}
                    >
                      <SelectTrigger>
-                       <SelectValue />
+                       <SelectValue placeholder="Selecteer vergoeding" />
                      </SelectTrigger>
                      <SelectContent>
                        <SelectItem value="0">0x</SelectItem>
