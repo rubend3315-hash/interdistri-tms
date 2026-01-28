@@ -75,11 +75,12 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
   };
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      parseMutation.mutate(selectedFile);
-    }
+   const selectedFile = e.target.files?.[0];
+   if (selectedFile) {
+     setFile(selectedFile);
+     setImportName(selectedFile.name);
+     parseMutation.mutate(selectedFile);
+   }
   };
 
   const toggleColumn = (column) => {
