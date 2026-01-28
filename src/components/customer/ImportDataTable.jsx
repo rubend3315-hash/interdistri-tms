@@ -95,8 +95,6 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
       return true;
     })
     .sort((a, b) => {
-      // Find the Datum column (case-insensitive)
-      const datumCol = columns.find(col => col.toLowerCase() === 'datum');
       if (datumCol && a[datumCol] && b[datumCol]) {
         const dateA = new Date(a[datumCol]);
         const dateB = new Date(b[datumCol]);
