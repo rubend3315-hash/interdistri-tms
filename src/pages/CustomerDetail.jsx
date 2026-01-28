@@ -498,31 +498,11 @@ export default function CustomerDetail() {
 
         {/* Imports Tab */}
         <TabsContent value="imports">
-          <div className="space-y-4">
-            <Button 
-              onClick={() => setIsImportModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Excel bestand importeren
-            </Button>
-
-            {imports.length === 0 ? (
-              <Card className="p-12 text-center">
-                <Upload className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900">Geen imports</h3>
-                <p className="text-slate-500 mt-1">Importeer een Excel bestand om data te beheren.</p>
-              </Card>
-            ) : (
-              imports.map(importData => (
-                <ImportDataTable 
-                  key={importData.id}
-                  importData={importData}
-                  onDelete={deleteImportMutation.mutate}
-                />
-              ))
-            )}
-          </div>
+          <ImportsTabContent 
+            imports={imports}
+            onImportModalOpen={() => setIsImportModalOpen(true)}
+            onDelete={deleteImportMutation.mutate}
+          />
         </TabsContent>
 
         {/* Geschiedenis Tab */}
