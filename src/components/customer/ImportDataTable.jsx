@@ -50,7 +50,7 @@ export default function ImportDataTable({ imports, onDelete, periodType = "all",
     : [];
 
   // Filter data based on period selection
-  const filteredData = allData.filter(row => {
+  const filteredData = uniqueData.filter(row => {
     if (periodType === "all") return true;
 
     const importDate = convertExcelDate(row._importDate);
