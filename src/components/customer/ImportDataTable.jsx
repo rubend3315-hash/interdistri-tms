@@ -1,42 +1,34 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Download, Search } from "lucide-react";
+import { Trash2, Download } from "lucide-react";
 
-export default function ImportDataTable({ importData, onDelete, searchTerm = "", columnFilters = {} }) {
+export default function ImportDataTable({ imports, onDelete, searchTerm = "" }) {
+  // Collect all data from all imports
+  const allData = imports.flatMap(importData => 
+    importData.data.map(row => ({
+      ...row,
+      _importId: importData.id,
+      _importName: importData.import_name
+    }))
+  );
 
-  const columns = importData.data && importData.data.length > 0
-    ? Object.keys(importData.data[0])
+  const columns = allData.length > 0
+    ? Object.keys(allData[0]).filter(col => !col.startsWith('_'))
     : [];
 
-  // Get unique values for each column
-  const getUniqueValues = (col) => {
-    return [...new Set(importData.data.map(row => row[col]))].sort();
-  };
-
-  // Filter data based on search and column filters
-  const filteredData = importData.data.filter(row => {
-    // Search term filter - search across all columns
+  // Filter data based on search
+  const filteredData = allData.filter(row => {
     const matchesSearch = searchTerm === "" || columns.some(col =>
       String(row[col]).toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    // Column filters
-    const matchesFilters = Object.keys(columnFilters).every(col => {
-      const filterValue = columnFilters[col];
-      if (!filterValue) return true;
-      return String(row[col]) === filterValue;
-    });
-
-    return matchesSearch && matchesFilters;
+    return matchesSearch;
   });
 
   const exportToCSV = () => {
-    const headers = columns.join(',');
+    const headers = [...columns, 'Import'].join(',');
     const rows = filteredData.map(row =>
-      columns.map(col => `"${row[col]}"`).join(',')
+      [...columns.map(col => `"${row[col]}"`), `"${row._importName}"`].join(',')
     );
     const csv = [headers, ...rows].join('\n');
 
@@ -44,7 +36,7 @@ export default function ImportDataTable({ importData, onDelete, searchTerm = "",
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${importData.import_name}.csv`;
+    a.download = `exports.csv`;
     a.click();
   };
 
