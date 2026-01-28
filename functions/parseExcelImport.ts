@@ -23,47 +23,56 @@ Deno.serve(async (req) => {
       file: new File([fileBuffer], file.name, { type: file.type })
     });
 
-    // Parse Excel met XLSX library
+    // Parse Excel met XLSX library - lees als raw arrays
     const XLSX = await import('npm:xlsx@0.18.5');
-    const workbook = XLSX.read(new Uint8Array(fileBuffer), { type: 'array' });
+    const workbook = XLSX.read(new Uint8Array(fileBuffer), { type: 'array', header: 1 });
     const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const rawData = XLSX.utils.sheet_to_json(sheet);
-
-    // Zoek naar "Depot" rij (kolomnamen)
-    let dataStartIndex = 0;
-    let headerRow = null;
+    const rawRows = workbook.Sheets[sheetName];
     
-    for (let i = 0; i < rawData.length; i++) {
-      const row = rawData[i];
-      const firstColumnValue = Object.values(row)[0];
-      
-      if (typeof firstColumnValue === 'string' && firstColumnValue.includes('Depot')) {
+    // Converteer raw rows naar array format
+    const allRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
+    // Zoek naar "Depot" rij (header)
+    let headerRowIndex = -1;
+    let headerRow = [];
+    
+    for (let i = 0; i < allRows.length; i++) {
+      const row = allRows[i];
+      if (row[0] && row[0].toString().includes('Depot')) {
         headerRow = row;
-        dataStartIndex = i + 1;
+        headerRowIndex = i;
         break;
       }
     }
 
-    // Sla lege rijen over na Depot rij
-    while (dataStartIndex < rawData.length) {
-      const row = rawData[dataStartIndex];
-      const hasAnyValue = Object.values(row).some(val => val && val.toString().trim() !== '');
+    // Start data na header, skip lege rijen
+    let dataStartIndex = headerRowIndex + 1;
+    while (dataStartIndex < allRows.length) {
+      const row = allRows[dataStartIndex];
+      const hasAnyValue = row.some(val => val && val.toString().trim() !== '');
       if (hasAnyValue) break;
       dataStartIndex++;
     }
 
-    // Filter data: negeer "Totaal" rijen
-    let data = rawData.slice(dataStartIndex).filter(row => {
-      const firstColumnValue = Object.values(row)[0];
-      return !(typeof firstColumnValue === 'string' && firstColumnValue.includes('Totaal'));
-    });
+    // Converteer data rijen naar objecten met header kolommen
+    const data = [];
+    for (let i = dataStartIndex; i < allRows.length; i++) {
+      const row = allRows[i];
+      const hasAnyValue = row.some(val => val && val.toString().trim() !== '');
+      if (!hasAnyValue) break; // Stop bij lege rij
+      
+      const firstCol = row[0] ? row[0].toString().trim() : '';
+      if (firstCol && !firstCol.includes('Totaal')) {
+        const rowObj = {};
+        headerRow.forEach((col, idx) => {
+          rowObj[col || `__EMPTY_${idx}`] = row[idx] || '';
+        });
+        data.push(rowObj);
+      }
+    }
 
-    // Detecteer kolommen en filter lege kolommen
-    let columns = headerRow ? Object.keys(headerRow) : Object.keys(data[0] || {});
-    
-    // Filter kolommen die volledig leeg zijn (alleen lege waarden in alle data rijen)
-    columns = columns.filter(col => {
+    // Filter kolommen die volledig leeg zijn
+    let columns = headerRow.filter(col => {
       return data.some(row => {
         const value = row[col];
         return value && value.toString().trim() !== '';
