@@ -50,32 +50,6 @@ export default function ImportDataTable({ importData, onDelete, searchTerm = "",
 
   return (
     <div className="space-y-4">
-      {/* Zoek- en Filter Sectie */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Zoeken en filteren</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Zoekbalk */}
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
-            <Input
-              placeholder="Zoeken in alle kolommen..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-
-
-          {/* Filter Status */}
-          <div className="text-sm text-slate-600">
-            <strong>{filteredData.length}</strong> van <strong>{importData.total_rows}</strong> rijen
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Data Tabel */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
