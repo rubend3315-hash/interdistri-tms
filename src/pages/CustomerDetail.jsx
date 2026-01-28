@@ -194,6 +194,10 @@ export default function CustomerDetail() {
             <Upload className="w-4 h-4" />
             Imports ({imports.length})
           </TabsTrigger>
+          <TabsTrigger value="history" className="gap-2">
+            <History className="w-4 h-4" />
+            Geschiedenis
+          </TabsTrigger>
           <TabsTrigger value="calculations" className="gap-2">
             <Calculator className="w-4 h-4" />
             Berekeningen
