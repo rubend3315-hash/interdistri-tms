@@ -71,7 +71,7 @@ const menuItems = [
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState(["Kernsystemen", "HR & Beheer", "Klanten", "Beheer", "Loon & Rapportage"]);
+  const [expandedGroups, setExpandedGroups] = useState(["Kernsystemen", "HR & Beheer", "Klanten", "Beheer"]);
   const navigate = useNavigate();
 
   const { data: user } = useQuery({
