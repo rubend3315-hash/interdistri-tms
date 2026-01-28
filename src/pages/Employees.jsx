@@ -819,8 +819,16 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
               size="sm"
               className="bg-blue-900"
               onClick={() => {
+                const lastActiveContract = contractregels
+                  .filter(c => c.status !== 'Inactief')
+                  .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+
                 setEditingContract(null);
                 setShowContractDialog(true);
+                // Pass the last contract info to pre-fill dates
+                if (lastActiveContract?.einddatum) {
+                  setShowContractDialog({ startdatum: lastActiveContract.einddatum, prevContract: lastActiveContract });
+                }
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
