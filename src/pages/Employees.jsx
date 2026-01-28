@@ -98,7 +98,9 @@ export default function Employees() {
     salary_scale: "",
     travel_allowance_per_km: 0.23,
     travel_distance_km: "",
-    week_schedule: {}
+    week_schedule: {},
+    supervisor_notes: "",
+    notes: ""
   });
 
   const resetForm = () => {
@@ -126,7 +128,9 @@ export default function Employees() {
       salary_scale: "",
       travel_allowance_per_km: 0.23,
       travel_distance_km: "",
-      week_schedule: {}
+      week_schedule: {},
+      supervisor_notes: "",
+      notes: ""
     });
   };
 
@@ -136,7 +140,9 @@ export default function Employees() {
       ...employee,
       drivers_license_categories: employee.drivers_license_categories?.join(", ") || "",
       travel_allowance_per_km: employee.travel_allowance_per_km || 0.23,
-      week_schedule: employee.week_schedule || {}
+      week_schedule: employee.week_schedule || {},
+      supervisor_notes: employee.supervisor_notes || "",
+      notes: employee.notes || ""
     });
     setActiveTab("profile");
     setIsDialogOpen(true);
@@ -151,8 +157,15 @@ export default function Employees() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Convert drivers_license_categories from string to array
+    const categoriesArray = formData.drivers_license_categories
+      ? formData.drivers_license_categories.split(',').map(c => c.trim()).filter(c => c)
+      : [];
+    
     const submitData = {
       ...formData,
+      drivers_license_categories: categoriesArray,
       contract_hours: formData.contract_hours ? Number(formData.contract_hours) : null,
       travel_allowance_per_km: formData.travel_allowance_per_km ? Number(formData.travel_allowance_per_km) : null,
       travel_distance_km: formData.travel_distance_km ? Number(formData.travel_distance_km) : null
@@ -393,7 +406,11 @@ export default function Employees() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-slate-500 italic">Geen notities beschikbaar</p>
+                      {formData.supervisor_notes ? (
+                        <p className="text-sm text-slate-700 whitespace-pre-line">{formData.supervisor_notes}</p>
+                      ) : (
+                        <p className="text-sm text-slate-500 italic">Geen notities beschikbaar</p>
+                      )}
                     </CardContent>
                   </Card>
 
@@ -610,6 +627,8 @@ export default function Employees() {
                     <p className="text-xs text-slate-500 mb-2">Notities (alleen voor managers)</p>
                     <Textarea
                       rows={3}
+                      value={formData.supervisor_notes}
+                      onChange={(e) => setFormData({ ...formData, supervisor_notes: e.target.value })}
                       placeholder="Interne notities..."
                     />
                   </div>
@@ -618,6 +637,8 @@ export default function Employees() {
                     <Label>Opmerkingen</Label>
                     <Textarea
                       rows={3}
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       placeholder="Algemene opmerkingen..."
                     />
                   </div>
