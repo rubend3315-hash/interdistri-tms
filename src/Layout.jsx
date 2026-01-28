@@ -44,6 +44,7 @@ const menuItems = [
     label: "HR & Beheer",
     items: [
       { name: "Medewerkers", icon: Users, page: "Employees" },
+      { name: "Rollen", icon: Shield, page: "Roles" },
       { name: "Gebruikers", icon: Settings, page: "Users" },
       { name: "Voertuigen", icon: Car, page: "Vehicles" },
       { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
