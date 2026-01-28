@@ -1121,7 +1121,10 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                               </div>
                             </div>
                           </td>
-                        </tr>
+                            </tr>
+                            </>
+                          );
+                        })()}
                       </React.Fragment>
                     );
                   })}
