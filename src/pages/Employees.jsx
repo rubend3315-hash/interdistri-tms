@@ -141,7 +141,7 @@ export default function Employees() {
           <DialogTrigger asChild>
             <Button className="bg-blue-900 hover:bg-blue-800" onClick={openNewDialog}>
               <Plus className="w-4 h-4 mr-2" />
-              Nieuwe Medewerker
+              {selectedEmployee?.viewOnly ? 'Bewerken' : 'Nieuwe Medewerker'}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
