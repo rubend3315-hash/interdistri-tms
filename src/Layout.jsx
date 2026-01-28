@@ -10,6 +10,7 @@ import {
   CalendarDays,
   CheckSquare,
   Users,
+  Shield,
   Car,
   FileText,
   Building2,
