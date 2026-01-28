@@ -28,10 +28,31 @@ Deno.serve(async (req) => {
     const workbook = XLSX.read(new Uint8Array(fileBuffer), { type: 'array' });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
-    const data = XLSX.utils.sheet_to_json(sheet);
+    const rawData = XLSX.utils.sheet_to_json(sheet);
+
+    // Zoek naar "Depot" rij (kolomnamen) en negeer "Totaal" rij
+    let dataStartIndex = 0;
+    let headerRow = null;
+    
+    for (let i = 0; i < rawData.length; i++) {
+      const row = rawData[i];
+      const firstColumnValue = Object.values(row)[0];
+      
+      if (typeof firstColumnValue === 'string' && firstColumnValue.includes('Depot')) {
+        headerRow = row;
+        dataStartIndex = i + 1;
+        break;
+      }
+    }
+
+    // Filter data: start na Depot rij en negeer Totaal rijen
+    let data = rawData.slice(dataStartIndex).filter(row => {
+      const firstColumnValue = Object.values(row)[0];
+      return !(typeof firstColumnValue === 'string' && firstColumnValue.includes('Totaal'));
+    });
 
     // Detecteer kolommen
-    const columns = Object.keys(data[0] || {});
+    const columns = headerRow ? Object.keys(headerRow) : Object.keys(data[0] || {});
 
     return Response.json({
       success: true,
