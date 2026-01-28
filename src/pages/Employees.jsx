@@ -1034,8 +1034,20 @@ function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
   useEffect(() => {
     if (contract) {
       setFormData(contract);
+    } else if (open) {
+      // Voor nieuw contract: zet startdatum op einddatum van vorig contract
+      const lastActiveContract = contract?.relatedContracts?.reduce((latest, c) => {
+        if (!latest || (c.einddatum && new Date(c.einddatum) > new Date(latest.einddatum || 0))) {
+          return c;
+        }
+        return latest;
+      }, null);
+      
+      if (lastActiveContract?.einddatum) {
+        setFormData(prev => ({ ...prev, startdatum: lastActiveContract.einddatum }));
+      }
     }
-  }, [contract]);
+  }, [contract, open]);
 
   // Get unique salary scales grouped by type
   const uniqueScales = salaryTables
