@@ -1,62 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, differenceInDays } from "date-fns";
-import { nl } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Users,
   Plus,
-  Search,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  CreditCard,
-  Car,
-  AlertTriangle,
   Edit,
-  Trash2,
+  Search,
+  Mail,
+  Phone,
+  Calendar,
+  AlertCircle,
+  MapPin,
   FileText,
-  Clock,
-  Euro,
-  X
+  Clock
 } from "lucide-react";
+import { format, addMonths, isBefore } from 'date-fns';
 
-const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
-const contractTypes = ["Vast", "Tijdelijk", "Oproep", "Uitzend"];
-const statuses = ["Actief", "Inactief", "Uit dienst"];
-const licenseCategories = ["AM", "A1", "A2", "A", "B", "BE", "C1", "C1E", "C", "CE", "D1", "D1E", "D", "DE"];
+const departments = ['Management', 'Transport', 'PakketDistributie', 'Charters'];
+const contractTypes = ['Vast', 'Tijdelijk', 'Oproep', 'Uitzend'];
+const statuses = ['Actief', 'Inactief', 'Uit dienst'];
+const licenseCategories = ['B', 'C', 'CE', 'D', 'DE'];
 
 export default function Employees() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterDepartment, setFilterDepartment] = useState("all");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [activeTab, setActiveTab] = useState("personal");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   const queryClient = useQueryClient();
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryFn: () => base44.entities.Employee.list('-created_date')
   });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Employee.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      setIsDialogOpen(false);
+      setShowDialog(false);
       setSelectedEmployee(null);
     }
   });
@@ -65,7 +56,7 @@ export default function Employees() {
     mutationFn: ({ id, data }) => base44.entities.Employee.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      setIsDialogOpen(false);
+      setShowDialog(false);
       setSelectedEmployee(null);
     }
   });
@@ -77,167 +68,132 @@ export default function Employees() {
     }
   });
 
-  const [formData, setFormData] = useState({
-    employee_number: "",
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone: "",
-    date_of_birth: "",
-    address: "",
-    postal_code: "",
-    city: "",
-    emergency_contact_name: "",
-    emergency_contact_phone: "",
-    emergency_contact_relation: "",
-    department: "",
-    function: "",
-    drivers_license_number: "",
-    drivers_license_categories: [],
-    drivers_license_expiry: "",
-    code95_expiry: "",
-    contract_type: "",
-    contract_start_date: "",
-    contract_end_date: "",
-    contract_hours: "",
-    hourly_rate: "",
-    salary_scale: "",
-    travel_allowance_per_km: 0.23,
-    travel_distance_km: "",
-    travel_allowance_start_date: "",
-    travel_allowance_end_date: "",
-    status: "Actief",
-    bsn: "",
-    bank_account: ""
-  });
-
-  const resetForm = () => {
-    setFormData({
-      employee_number: "",
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone: "",
-      date_of_birth: "",
-      address: "",
-      postal_code: "",
-      city: "",
-      emergency_contact_name: "",
-      emergency_contact_phone: "",
-      emergency_contact_relation: "",
-      department: "",
-      function: "",
-      drivers_license_number: "",
-      drivers_license_categories: [],
-      drivers_license_expiry: "",
-      code95_expiry: "",
-      contract_type: "",
-      contract_start_date: "",
-      contract_end_date: "",
-      contract_hours: "",
-      hourly_rate: "",
-      salary_scale: "",
-      travel_allowance_per_km: 0.23,
-      travel_distance_km: "",
-      travel_allowance_start_date: "",
-      travel_allowance_end_date: "",
-      status: "Actief",
-      bsn: "",
-      bank_account: ""
-    });
-  };
-
-  const openEditDialog = (employee) => {
-    setSelectedEmployee(employee);
-    setFormData({
-      ...employee,
-      drivers_license_categories: employee.drivers_license_categories || [],
-      contract_hours: employee.contract_hours || "",
-      hourly_rate: employee.hourly_rate || "",
-      travel_allowance_per_km: employee.travel_allowance_per_km || 0.23,
-      travel_distance_km: employee.travel_distance_km || ""
-    });
-    setActiveTab("personal");
-    setIsDialogOpen(true);
+  const handleSubmit = (formData) => {
+    if (selectedEmployee) {
+      updateMutation.mutate({ id: selectedEmployee.id, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
   };
 
   const openNewDialog = () => {
     setSelectedEmployee(null);
-    resetForm();
-    setActiveTab("personal");
-    setIsDialogOpen(true);
+    setShowDialog(true);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const submitData = {
-      ...formData,
-      contract_hours: formData.contract_hours ? Number(formData.contract_hours) : null,
-      hourly_rate: formData.hourly_rate ? Number(formData.hourly_rate) : null,
-      travel_allowance_per_km: formData.travel_allowance_per_km ? Number(formData.travel_allowance_per_km) : null,
-      travel_distance_km: formData.travel_distance_km ? Number(formData.travel_distance_km) : null
-    };
-
-    if (selectedEmployee) {
-      updateMutation.mutate({ id: selectedEmployee.id, data: submitData });
-    } else {
-      createMutation.mutate(submitData);
-    }
+  const openEditDialog = (employee) => {
+    setSelectedEmployee(employee);
+    setShowDialog(true);
   };
 
   const filteredEmployees = employees.filter(emp => {
     const matchesSearch = 
       emp.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.employee_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = filterDepartment === "all" || emp.department === filterDepartment;
-    return matchesSearch && matchesDepartment;
+    const matchesDepartment = filterDepartment === 'all' || emp.department === filterDepartment;
+    const matchesStatus = filterStatus === 'all' || emp.status === filterStatus;
+    return matchesSearch && matchesDepartment && matchesStatus;
   });
 
-  const getExpiryBadge = (date) => {
+  const getStatusBadge = (status) => {
+    const colors = {
+      'Actief': 'bg-emerald-100 text-emerald-700',
+      'Inactief': 'bg-slate-100 text-slate-700',
+      'Uit dienst': 'bg-red-100 text-red-700'
+    };
+    return colors[status] || colors['Actief'];
+  };
+
+  const checkExpiry = (date) => {
     if (!date) return null;
-    const daysUntil = differenceInDays(new Date(date), new Date());
-    if (daysUntil < 0) return <Badge variant="destructive">Verlopen</Badge>;
-    if (daysUntil <= 30) return <Badge className="bg-amber-500">Verloopt binnenkort</Badge>;
-    return <Badge variant="outline" className="text-emerald-600 border-emerald-200">{format(new Date(date), "d MMM yyyy", { locale: nl })}</Badge>;
+    const expiryDate = new Date(date);
+    const warningDate = addMonths(new Date(), 1);
+    
+    if (isBefore(expiryDate, new Date())) {
+      return 'expired';
+    } else if (isBefore(expiryDate, warningDate)) {
+      return 'warning';
+    }
+    return 'valid';
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Medewerkers</h1>
-          <p className="text-slate-500 mt-1">{employees.length} medewerkers in het systeem</p>
+          <p className="text-slate-500">Beheer medewerkergegevens en contracten</p>
         </div>
-        <Button onClick={openNewDialog} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Nieuwe Medewerker
-        </Button>
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-900 hover:bg-blue-800" onClick={openNewDialog}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe Medewerker
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedEmployee ? 'Medewerker Bewerken' : 'Nieuwe Medewerker'}
+              </DialogTitle>
+            </DialogHeader>
+            <Tabs defaultValue="algemeen" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="algemeen">Algemene Gegevens</TabsTrigger>
+                <TabsTrigger value="weekrooster">Weekrooster en contracten</TabsTrigger>
+              </TabsList>
+              <TabsContent value="algemeen">
+                <EmployeeForm
+                  employee={selectedEmployee}
+                  onSubmit={handleSubmit}
+                  isSubmitting={createMutation.isPending || updateMutation.isPending}
+                />
+              </TabsContent>
+              <TabsContent value="weekrooster">
+                <WeekroosterTab
+                  employee={selectedEmployee}
+                  onSubmit={handleSubmit}
+                  isSubmitting={createMutation.isPending || updateMutation.isPending}
+                />
+              </TabsContent>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
+        <CardContent className="pt-6">
+          <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
-                placeholder="Zoek op naam, nummer of email..."
+                placeholder="Zoek op naam of email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
             <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Alle afdelingen" />
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Afdeling" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alle afdelingen</SelectItem>
                 {departments.map(dept => (
                   <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle statussen</SelectItem>
+                {statuses.map(status => (
+                  <SelectItem key={status} value={status}>{status}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -247,463 +203,1008 @@ export default function Employees() {
 
       {/* Employee List */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Skeleton key={i} className="h-48 rounded-xl" />
-          ))}
-        </div>
+        <div className="text-center py-12 text-slate-500">Laden...</div>
       ) : filteredEmployees.length === 0 ? (
-        <Card className="p-12 text-center">
-          <User className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900">Geen medewerkers gevonden</h3>
-          <p className="text-slate-500 mt-1">Pas je zoekcriteria aan of voeg een nieuwe medewerker toe.</p>
+        <Card className="text-center py-12">
+          <Users className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+          <p className="text-slate-500">Geen medewerkers gevonden</p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredEmployees.map(employee => (
-            <Card 
-              key={employee.id} 
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => openEditDialog(employee)}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-start gap-4">
-                  <Avatar className="w-14 h-14">
-                    <AvatarImage src={employee.photo_url} />
-                    <AvatarFallback className="bg-slate-100 text-slate-600 text-lg">
-                      {employee.first_name?.charAt(0)}{employee.last_name?.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-slate-900">
-                          {employee.first_name} {employee.last_name}
-                        </h3>
-                        <p className="text-sm text-slate-500">{employee.function || employee.department}</p>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredEmployees.map((employee) => {
+            const driverLicenseStatus = checkExpiry(employee.drivers_license_expiry);
+            const code95Status = checkExpiry(employee.code95_expiry);
+
+            return (
+              <Card key={employee.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-blue-900/10 p-2 rounded-lg">
+                        <Users className="w-5 h-5 text-blue-900" />
                       </div>
-                      <Badge variant={employee.status === 'Actief' ? 'success' : 'secondary'}>
+                      <div>
+                        <CardTitle className="text-lg">
+                          {employee.first_name} {employee.last_name}
+                        </CardTitle>
+                        <p className="text-sm text-slate-500">{employee.function}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Badge className={getStatusBadge(employee.status)}>
                         {employee.status}
                       </Badge>
+                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
                     </div>
-                    
-                    <div className="mt-3 space-y-1.5">
-                      {employee.employee_number && (
-                        <p className="text-xs text-slate-500 flex items-center gap-2">
-                          <FileText className="w-3.5 h-3.5" />
-                          {employee.employee_number}
-                        </p>
-                      )}
-                      {employee.department && (
-                        <p className="text-xs text-slate-500 flex items-center gap-2">
-                          <User className="w-3.5 h-3.5" />
-                          {employee.department}
-                        </p>
-                      )}
-                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    {employee.email && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-3 h-3 text-slate-400" />
+                        <span className="text-slate-700">{employee.email}</span>
+                      </div>
+                    )}
+                    {employee.phone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <span className="text-slate-700">{employee.phone}</span>
+                      </div>
+                    )}
+                  </div>
 
-                    <div className="mt-3 flex flex-wrap gap-2">
+                  {employee.department === 'Transport' && (
+                    <div className="space-y-2 pt-2 border-t">
                       {employee.drivers_license_expiry && (
-                        <div className="text-xs">
-                          {getExpiryBadge(employee.drivers_license_expiry)}
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-500 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> Rijbewijs:
+                          </span>
+                          <span className={`flex items-center gap-1 ${
+                            driverLicenseStatus === 'expired' ? 'text-red-600 font-medium' :
+                            driverLicenseStatus === 'warning' ? 'text-yellow-600 font-medium' :
+                            'text-slate-700'
+                          }`}>
+                            {driverLicenseStatus === 'expired' && <AlertCircle className="w-3 h-3" />}
+                            {format(new Date(employee.drivers_license_expiry), 'dd-MM-yyyy')}
+                          </span>
+                        </div>
+                      )}
+                      {employee.code95_expiry && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-500">Code 95:</span>
+                          <span className={`flex items-center gap-1 ${
+                            code95Status === 'expired' ? 'text-red-600 font-medium' :
+                            code95Status === 'warning' ? 'text-yellow-600 font-medium' :
+                            'text-slate-700'
+                          }`}>
+                            {code95Status === 'expired' && <AlertCircle className="w-3 h-3" />}
+                            {format(new Date(employee.code95_expiry), 'dd-MM-yyyy')}
+                          </span>
                         </div>
                       )}
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden p-0">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="flex items-center justify-between">
-              <span>{selectedEmployee ? 'Medewerker Bewerken' : 'Nieuwe Medewerker'}</span>
-              {selectedEmployee && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => {
-                    if (confirm('Weet je zeker dat je deze medewerker wilt verwijderen?')) {
-                      deleteMutation.mutate(selectedEmployee.id);
-                      setIsDialogOpen(false);
-                    }
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit}>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="px-6">
-                <TabsList className="w-full grid grid-cols-5">
-                  <TabsTrigger value="personal">Persoonlijk</TabsTrigger>
-                  <TabsTrigger value="contact">Contact</TabsTrigger>
-                  <TabsTrigger value="license">Rijbewijs</TabsTrigger>
-                  <TabsTrigger value="contract">Contract</TabsTrigger>
-                  <TabsTrigger value="salary">Loon</TabsTrigger>
-                </TabsList>
+function EmployeeForm({ employee, onSubmit, isSubmitting }) {
+  const [formData, setFormData] = useState(employee || {
+    employee_number: '',
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    date_of_birth: '',
+    address: '',
+    postal_code: '',
+    city: '',
+    department: 'Transport',
+    function: '',
+    drivers_license_number: '',
+    drivers_license_categories: [],
+    drivers_license_expiry: '',
+    code95_expiry: '',
+    contract_type: 'Vast',
+    contract_start_date: '',
+    contract_end_date: '',
+    contract_hours: 40,
+    hourly_rate: '',
+    status: 'Actief',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    emergency_contact_relation: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Voornaam *</Label>
+          <Input
+            value={formData.first_name}
+            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Achternaam *</Label>
+          <Input
+            value={formData.last_name}
+            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Personeelsnummer</Label>
+          <Input
+            value={formData.employee_number}
+            onChange={(e) => setFormData({ ...formData, employee_number: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Email *</Label>
+          <Input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Telefoon</Label>
+          <Input
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Geboortedatum</Label>
+          <Input
+            type="date"
+            value={formData.date_of_birth}
+            onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Adres</Label>
+        <Input
+          value={formData.address}
+          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Postcode</Label>
+          <Input
+            value={formData.postal_code}
+            onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Plaats</Label>
+          <Input
+            value={formData.city}
+            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Afdeling *</Label>
+          <Select 
+            value={formData.department} 
+            onValueChange={(v) => setFormData({ ...formData, department: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {departments.map(dept => (
+                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Functie</Label>
+          <Input
+            value={formData.function}
+            onChange={(e) => setFormData({ ...formData, function: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Status</Label>
+          <Select 
+            value={formData.status} 
+            onValueChange={(v) => setFormData({ ...formData, status: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statuses.map(status => (
+                <SelectItem key={status} value={status}>{status}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="font-medium mb-3">Rijbewijs & Certificaten</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Rijbewijsnummer</Label>
+            <Input
+              value={formData.drivers_license_number}
+              onChange={(e) => setFormData({ ...formData, drivers_license_number: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Rijbewijs vervaldatum</Label>
+            <Input
+              type="date"
+              value={formData.drivers_license_expiry}
+              onChange={(e) => setFormData({ ...formData, drivers_license_expiry: e.target.value })}
+            />
+          </div>
+        </div>
+        <div className="space-y-2 mt-4">
+          <Label>Code 95 vervaldatum</Label>
+          <Input
+            type="date"
+            value={formData.code95_expiry}
+            onChange={(e) => setFormData({ ...formData, code95_expiry: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="font-medium mb-3">Noodcontact</h3>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Naam</Label>
+            <Input
+              value={formData.emergency_contact_name}
+              onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Telefoon</Label>
+            <Input
+              type="tel"
+              value={formData.emergency_contact_phone}
+              onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Relatie</Label>
+            <Input
+              value={formData.emergency_contact_relation}
+              onChange={(e) => setFormData({ ...formData, emergency_contact_relation: e.target.value })}
+            />
+          </div>
+        </div>
+      </div>
+
+      <Button type="submit" className="w-full bg-blue-900" disabled={isSubmitting}>
+        {isSubmitting ? 'Opslaan...' : 'Opslaan'}
+      </Button>
+    </form>
+  );
+}
+
+function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
+  const [contractregels, setContractregels] = useState(employee?.contractregels || []);
+  const [reiskostenregels, setReiskostenregels] = useState(employee?.reiskostenregels || []);
+  const [weekroosters, setWeekrewkoosters] = useState(employee?.weekroosters || []);
+  const [showContractDialog, setShowContractDialog] = useState(false);
+  const [showReiskostenDialog, setShowReiskostenDialog] = useState(false);
+  const [showWeekroosterDialog, setShowWeekroosterDialog] = useState(false);
+  const [editingContract, setEditingContract] = useState(null);
+  const [editingReiskosten, setEditingReiskosten] = useState(null);
+  const [editingWeekrooster, setEditingWeekrooster] = useState(null);
+
+  const handleSaveAll = () => {
+    onSubmit({
+      ...employee,
+      contractregels,
+      reiskostenregels,
+      weekroosters
+    });
+  };
+
+  return (
+    <div className="space-y-6 py-4">
+      {/* Contractregels */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Contractregels
+            </CardTitle>
+            <Button 
+              size="sm"
+              className="bg-blue-900"
+              onClick={() => {
+                setEditingContract(null);
+                setShowContractDialog(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe Contractregel
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {contractregels.length === 0 ? (
+            <p className="text-center text-slate-500 py-4">Nog geen contractregels toegevoegd</p>
+          ) : (
+            <div className="space-y-2">
+              {contractregels.map((contract, index) => (
+                <div key={index} className="p-3 border rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium">{contract.type_contract}</p>
+                      <p className="text-sm text-slate-600">
+                        {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
+                        {contract.einddatum && ` - ${format(new Date(contract.einddatum), 'dd-MM-yyyy')}`}
+                      </p>
+                      <p className="text-sm text-slate-600">{contract.uren_per_week} uur/week</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => {
+                        setEditingContract({ ...contract, index });
+                        setShowContractDialog(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Reiskostenvergoeding */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MapPin className="w-5 h-5" />
+              Reiskostenvergoeding
+            </CardTitle>
+            <Button 
+              size="sm"
+              className="bg-blue-900"
+              onClick={() => {
+                setEditingReiskosten(null);
+                setShowReiskostenDialog(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Reiskostenregel
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {reiskostenregels.length === 0 ? (
+            <p className="text-center text-slate-500 py-4">Nog geen reiskostenregels</p>
+          ) : (
+            <div className="space-y-2">
+              {reiskostenregels.map((regel, index) => (
+                <div key={index} className="p-3 border rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium">{regel.afstand_km} km enkele reis</p>
+                      <p className="text-sm text-slate-600">
+                        {regel.startdatum && format(new Date(regel.startdatum), 'dd-MM-yyyy')}
+                        {regel.einddatum && ` - ${format(new Date(regel.einddatum), 'dd-MM-yyyy')}`}
+                      </p>
+                      <p className="text-sm text-slate-600">€{regel.vergoeding_per_dag}/dag</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => {
+                        setEditingReiskosten({ ...regel, index });
+                        setShowReiskostenDialog(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Weekroosters per Periode */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Weekroosters per Periode
+            </CardTitle>
+            <Button 
+              size="sm"
+              className="bg-blue-900"
+              onClick={() => {
+                setEditingWeekrooster(null);
+                setShowWeekroosterDialog(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuw Weekrooster
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {weekroosters.length === 0 ? (
+            <div>
+              <p className="text-center text-slate-500 py-4">Nog geen weekroosters ingesteld</p>
+              <div className="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg">
+                Weekroosters per periode: Voeg periodes toe om aan te geven welke dagen je beschikbaar bent. Elk weekrooster heeft een startdatum en optioneel een einddatum.
               </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {weekroosters.map((rooster, index) => (
+                <div key={index} className="p-3 border rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {rooster.startdatum && format(new Date(rooster.startdatum), 'dd-MM-yyyy')}
+                        {rooster.einddatum && ` - ${format(new Date(rooster.einddatum), 'dd-MM-yyyy')}`}
+                        {!rooster.einddatum && ' - doorlopend'}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                        <div>
+                          <p className="text-slate-600 font-medium">Week 1 (Oneven):</p>
+                          <p className="text-slate-700">
+                            {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
+                              .filter(d => rooster.week1?.[d])
+                              .map(d => d.substring(0, 2))
+                              .join(', ')}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-slate-600 font-medium">Week 2 (Even):</p>
+                          <p className="text-slate-700">
+                            {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
+                              .filter(d => rooster.week2?.[d])
+                              .map(d => d.substring(0, 2))
+                              .join(', ')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => {
+                        setEditingWeekrooster({ ...rooster, index });
+                        setShowWeekroosterDialog(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-              <ScrollArea className="h-[50vh] px-6 py-4">
-                <TabsContent value="personal" className="space-y-4 mt-0">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Personeelsnummer</Label>
-                      <Input
-                        value={formData.employee_number}
-                        onChange={(e) => setFormData({ ...formData, employee_number: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Status</Label>
-                      <Select 
-                        value={formData.status} 
-                        onValueChange={(v) => setFormData({ ...formData, status: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {statuses.map(s => (
-                            <SelectItem key={s} value={s}>{s}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Voornaam *</Label>
-                      <Input
-                        value={formData.first_name}
-                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Achternaam *</Label>
-                      <Input
-                        value={formData.last_name}
-                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Geboortedatum</Label>
-                      <Input
-                        type="date"
-                        value={formData.date_of_birth}
-                        onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>BSN</Label>
-                      <Input
-                        value={formData.bsn}
-                        onChange={(e) => setFormData({ ...formData, bsn: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Afdeling *</Label>
-                      <Select 
-                        value={formData.department} 
-                        onValueChange={(v) => setFormData({ ...formData, department: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecteer afdeling" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {departments.map(d => (
-                            <SelectItem key={d} value={d}>{d}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Functie</Label>
-                      <Input
-                        value={formData.function}
-                        onChange={(e) => setFormData({ ...formData, function: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
+      <Button 
+        className="w-full bg-blue-900" 
+        onClick={handleSaveAll}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Opslaan...' : 'Beschikbaarheid Opslaan'}
+      </Button>
 
-                <TabsContent value="contact" className="space-y-4 mt-0">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>E-mailadres</Label>
-                      <Input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Telefoonnummer</Label>
-                      <Input
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Adres</Label>
-                    <Input
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Postcode</Label>
-                      <Input
-                        value={formData.postal_code}
-                        onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Woonplaats</Label>
-                      <Input
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <h4 className="font-medium text-slate-900 mb-4">Noodcontact</h4>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label>Naam</Label>
-                        <Input
-                          value={formData.emergency_contact_name}
-                          onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Telefoon</Label>
-                        <Input
-                          value={formData.emergency_contact_phone}
-                          onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Relatie</Label>
-                        <Input
-                          value={formData.emergency_contact_relation}
-                          onChange={(e) => setFormData({ ...formData, emergency_contact_relation: e.target.value })}
-                          placeholder="bijv. Partner, Ouder"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
+      {/* Dialogs */}
+      <ContractDialog
+        open={showContractDialog}
+        onOpenChange={setShowContractDialog}
+        contract={editingContract}
+        onSave={(contract) => {
+          if (editingContract?.index !== undefined) {
+            const newContracts = [...contractregels];
+            newContracts[editingContract.index] = contract;
+            setContractregels(newContracts);
+          } else {
+            setContractregels([...contractregels, contract]);
+          }
+          setShowContractDialog(false);
+        }}
+      />
 
-                <TabsContent value="license" className="space-y-4 mt-0">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Rijbewijsnummer</Label>
-                      <Input
-                        value={formData.drivers_license_number}
-                        onChange={(e) => setFormData({ ...formData, drivers_license_number: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Rijbewijs vervaldatum</Label>
-                      <Input
-                        type="date"
-                        value={formData.drivers_license_expiry}
-                        onChange={(e) => setFormData({ ...formData, drivers_license_expiry: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Rijbewijscategorieën</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {licenseCategories.map(cat => (
-                        <Badge
-                          key={cat}
-                          variant={formData.drivers_license_categories?.includes(cat) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => {
-                            const current = formData.drivers_license_categories || [];
-                            if (current.includes(cat)) {
-                              setFormData({ 
-                                ...formData, 
-                                drivers_license_categories: current.filter(c => c !== cat) 
-                              });
-                            } else {
-                              setFormData({ 
-                                ...formData, 
-                                drivers_license_categories: [...current, cat] 
-                              });
-                            }
-                          }}
-                        >
-                          {cat}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Code 95 vervaldatum</Label>
-                    <Input
-                      type="date"
-                      value={formData.code95_expiry}
-                      onChange={(e) => setFormData({ ...formData, code95_expiry: e.target.value })}
-                    />
-                  </div>
-                </TabsContent>
+      <ReiskostenDialog
+        open={showReiskostenDialog}
+        onOpenChange={setShowReiskostenDialog}
+        reiskosten={editingReiskosten}
+        employee={employee}
+        onSave={(regel) => {
+          if (editingReiskosten?.index !== undefined) {
+            const newRegels = [...reiskostenregels];
+            newRegels[editingReiskosten.index] = regel;
+            setReiskostenregels(newRegels);
+          } else {
+            setReiskostenregels([...reiskostenregels, regel]);
+          }
+          setShowReiskostenDialog(false);
+        }}
+      />
 
-                <TabsContent value="contract" className="space-y-4 mt-0">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Contracttype</Label>
-                      <Select 
-                        value={formData.contract_type} 
-                        onValueChange={(v) => setFormData({ ...formData, contract_type: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecteer type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {contractTypes.map(t => (
-                            <SelectItem key={t} value={t}>{t}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Contract uren per week</Label>
-                      <Input
-                        type="number"
-                        value={formData.contract_hours}
-                        onChange={(e) => setFormData({ ...formData, contract_hours: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Startdatum contract</Label>
-                      <Input
-                        type="date"
-                        value={formData.contract_start_date}
-                        onChange={(e) => setFormData({ ...formData, contract_start_date: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Einddatum contract</Label>
-                      <Input
-                        type="date"
-                        value={formData.contract_end_date}
-                        onChange={(e) => setFormData({ ...formData, contract_end_date: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
+      <WeekroosterDialog
+        open={showWeekroosterDialog}
+        onOpenChange={setShowWeekroosterDialog}
+        weekrooster={editingWeekrooster}
+        onSave={(rooster) => {
+          if (editingWeekrooster?.index !== undefined) {
+            const newRoosters = [...weekroosters];
+            newRoosters[editingWeekrooster.index] = rooster;
+            setWeekrewkoosters(newRoosters);
+          } else {
+            setWeekrewkoosters([...weekroosters, rooster]);
+          }
+          setShowWeekroosterDialog(false);
+        }}
+      />
+    </div>
+  );
+}
 
-                <TabsContent value="salary" className="space-y-4 mt-0">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Loonschaal</Label>
-                      <Input
-                        value={formData.salary_scale}
-                        onChange={(e) => setFormData({ ...formData, salary_scale: e.target.value })}
-                        placeholder="bijv. A1, B2"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Uurloon (€)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={formData.hourly_rate}
-                        onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>IBAN</Label>
-                    <Input
-                      value={formData.bank_account}
-                      onChange={(e) => setFormData({ ...formData, bank_account: e.target.value })}
-                      placeholder="NL00 BANK 0000 0000 00"
-                    />
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <h4 className="font-medium text-slate-900 mb-4">Reiskosten</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Vergoeding per km (€)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={formData.travel_allowance_per_km}
-                          onChange={(e) => setFormData({ ...formData, travel_allowance_per_km: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Reisafstand enkele reis (km)</Label>
-                        <Input
-                          type="number"
-                          value={formData.travel_distance_km}
-                          onChange={(e) => setFormData({ ...formData, travel_distance_km: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="space-y-2">
-                        <Label>Startdatum reiskosten</Label>
-                        <Input
-                          type="date"
-                          value={formData.travel_allowance_start_date}
-                          onChange={(e) => setFormData({ ...formData, travel_allowance_start_date: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Einddatum reiskosten</Label>
-                        <Input
-                          type="date"
-                          value={formData.travel_allowance_end_date}
-                          onChange={(e) => setFormData({ ...formData, travel_allowance_end_date: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </ScrollArea>
-            </Tabs>
+function ContractDialog({ open, onOpenChange, contract, onSave }) {
+  const [formData, setFormData] = useState(contract || {
+    startdatum: '',
+    einddatum: '',
+    type_contract: 'Vast Contract',
+    loonschaal: '',
+    uren_per_week: 40,
+    week1: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
+    week2: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
+    reiskostenvergoeding: 'Woon-werkverkeer'
+  });
 
-            <div className="flex justify-end gap-3 p-6 border-t bg-slate-50">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Annuleren
-              </Button>
-              <Button 
-                type="submit" 
-                className="bg-blue-600 hover:bg-blue-700"
-                disabled={createMutation.isPending || updateMutation.isPending}
+  useEffect(() => {
+    if (contract) {
+      setFormData(contract);
+    }
+  }, [contract]);
+
+  const calculateWeekTotal = (week) => {
+    const daysChecked = Object.values(week).filter(Boolean).length;
+    return daysChecked > 0 ? Math.floor(formData.uren_per_week / 2) : 0;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Nieuwe Contractregel</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Startdatum *</Label>
+              <Input
+                type="date"
+                value={formData.startdatum}
+                onChange={(e) => setFormData({ ...formData, startdatum: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Einddatum</Label>
+              <Input
+                type="date"
+                value={formData.einddatum}
+                onChange={(e) => setFormData({ ...formData, einddatum: e.target.value })}
+              />
+              <p className="text-xs text-slate-500">Leeg laten voor doorlopend contract</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Type Contract *</Label>
+              <Select 
+                value={formData.type_contract}
+                onValueChange={(v) => setFormData({ ...formData, type_contract: v })}
               >
-                {createMutation.isPending || updateMutation.isPending ? 'Opslaan...' : 'Opslaan'}
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Vast Contract">Vast Contract</SelectItem>
+                  <SelectItem value="Tijdelijk Contract">Tijdelijk Contract</SelectItem>
+                  <SelectItem value="Oproepcontract">Oproepcontract</SelectItem>
+                  <SelectItem value="Uitzendcontract">Uitzendcontract</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Loonschaal CAO *</Label>
+              <Input
+                value={formData.loonschaal}
+                onChange={(e) => setFormData({ ...formData, loonschaal: e.target.value })}
+                placeholder="Selecteer loonschaal"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Contractuele Uren per Week</Label>
+            <Input
+              type="number"
+              value={formData.uren_per_week}
+              onChange={(e) => setFormData({ ...formData, uren_per_week: Number(e.target.value) })}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <Label>Weekrooster (verdeling van uren)</Label>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Week 1 (Oneven weken)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-7 gap-2">
+                  {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map((day, i) => {
+                    const key = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'][i];
+                    return (
+                      <div key={i} className="space-y-1">
+                        <Label className="text-xs">{day}</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-center"
+                          value={formData.week1[key] ? 8 : 0}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setFormData({
+                              ...formData,
+                              week1: { ...formData.week1, [key]: val > 0 }
+                            });
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-sm text-slate-600 mt-2">
+                  Totaal week 1: <strong>{calculateWeekTotal(formData.week1)}u</strong>
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Week 2 (Even weken)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-7 gap-2">
+                  {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map((day, i) => {
+                    const key = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'][i];
+                    return (
+                      <div key={i} className="space-y-1">
+                        <Label className="text-xs">{day}</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-center"
+                          value={formData.week2[key] ? 8 : 0}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setFormData({
+                              ...formData,
+                              week2: { ...formData.week2, [key]: val > 0 }
+                            });
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-sm text-slate-600 mt-2">
+                  Totaal week 2: <strong>{calculateWeekTotal(formData.week2)}u</strong>
+                </p>
+              </CardContent>
+            </Card>
+
+            <p className="text-sm text-slate-600">
+              Gemiddelde per week: <strong>{formData.uren_per_week}.0u</strong>
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Reiskostenvergoeding</Label>
+            <Select 
+              value={formData.reiskostenvergoeding}
+              onValueChange={(v) => setFormData({ ...formData, reiskostenvergoeding: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Woon-werkverkeer">Woon-werkverkeer</SelectItem>
+                <SelectItem value="Geen">Geen</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Annuleren
+            </Button>
+            <Button 
+              className="flex-1 bg-blue-900" 
+              onClick={() => onSave(formData)}
+              disabled={!formData.startdatum || !formData.type_contract}
+            >
+              Opslaan
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) {
+  const [formData, setFormData] = useState(reiskosten || {
+    startdatum: '',
+    einddatum: '',
+    afstand_km: 0,
+    vergoeding_per_dag: 0
+  });
+
+  useEffect(() => {
+    if (reiskosten) {
+      setFormData(reiskosten);
+    }
+  }, [reiskosten]);
+
+  const berekenVergoeding = () => {
+    const afstand = Number(formData.afstand_km) || 0;
+    const tarief = 0.23; // €0.23 per km
+    const berekend = afstand * 2 * tarief; // Enkele reis x 2
+    setFormData({ ...formData, vergoeding_per_dag: Number(berekend.toFixed(2)) });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nieuwe Reiskostenregel</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="bg-slate-50 p-3 rounded-lg space-y-1">
+            <p className="text-sm font-medium">Standplaats</p>
+            <p className="text-sm text-slate-600">Fleerbosseweg 19, 4421 RR Kapelle</p>
+          </div>
+
+          <div className="bg-slate-50 p-3 rounded-lg space-y-1">
+            <p className="text-sm font-medium">Woonadres medewerker</p>
+            <p className="text-sm text-slate-600">
+              {employee?.address && employee?.postal_code && employee?.city
+                ? `${employee.address}, ${employee.postal_code} ${employee.city}`
+                : 'Geen adres ingevuld'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Startdatum *</Label>
+              <Input
+                type="date"
+                value={formData.startdatum}
+                onChange={(e) => setFormData({ ...formData, startdatum: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Einddatum</Label>
+              <Input
+                type="date"
+                value={formData.einddatum}
+                onChange={(e) => setFormData({ ...formData, einddatum: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>Afstand enkele reis (km)</Label>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={berekenVergoeding}
+              >
+                Bereken
               </Button>
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+            <Input
+              type="number"
+              step="0.1"
+              value={formData.afstand_km}
+              onChange={(e) => setFormData({ ...formData, afstand_km: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Berekende vergoeding (afstand × €0,23)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.vergoeding_per_dag}
+              readOnly
+              className="bg-slate-50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Vergoeding enkele reis (handmatig aanpasbaar)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.vergoeding_per_dag}
+              onChange={(e) => setFormData({ ...formData, vergoeding_per_dag: e.target.value })}
+            />
+            <p className="text-xs text-slate-500">Dit is de eindvergoeding die gebruikt wordt voor berekeningen</p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Annuleren
+            </Button>
+            <Button 
+              className="flex-1 bg-blue-900" 
+              onClick={() => onSave(formData)}
+              disabled={!formData.startdatum}
+            >
+              Opslaan
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function WeekroosterDialog({ open, onOpenChange, weekrooster, onSave }) {
+  const [formData, setFormData] = useState(weekrooster || {
+    startdatum: '',
+    einddatum: '',
+    week1: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
+    week2: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false }
+  });
+
+  useEffect(() => {
+    if (weekrooster) {
+      setFormData(weekrooster);
+    }
+  }, [weekrooster]);
+
+  const toggleDay = (week, day) => {
+    setFormData({
+      ...formData,
+      [week]: { ...formData[week], [day]: !formData[week][day] }
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Nieuw Weekrooster</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Startdatum *</Label>
+              <Input
+                type="date"
+                value={formData.startdatum}
+                onChange={(e) => setFormData({ ...formData, startdatum: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Einddatum</Label>
+              <Input
+                type="date"
+                value={formData.einddatum}
+                onChange={(e) => setFormData({ ...formData, einddatum: e.target.value })}
+              />
+              <p className="text-xs text-slate-500">Leeg laten voor doorlopend</p>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-blue-600">Week 1 (Oneven weken)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map(day => (
+                <label key={day} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.week1[day]}
+                    onChange={() => toggleDay('week1', day)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm capitalize">{day}</span>
+                </label>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-blue-600">Week 2 (Even weken)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map(day => (
+                <label key={day} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.week2[day]}
+                    onChange={() => toggleDay('week2', day)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm capitalize">{day}</span>
+                </label>
+              ))}
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Annuleren
+            </Button>
+            <Button 
+              className="flex-1 bg-blue-900" 
+              onClick={() => onSave(formData)}
+              disabled={!formData.startdatum}
+            >
+              Opslaan
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
