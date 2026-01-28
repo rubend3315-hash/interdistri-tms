@@ -464,12 +464,21 @@ export default function CustomerDetail() {
               </CardContent>
             </Card>
 
-            <div className="flex justify-end gap-3">
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={updateMutation.isPending}>
-                <Save className="w-4 h-4 mr-2" />
-                Opslaan
-              </Button>
-            </div>
+            {isEditMode && (
+              <div className="flex justify-end gap-3">
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditMode(false)}
+                >
+                  Annuleren
+                </Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={updateMutation.isPending}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Opslaan
+                </Button>
+              </div>
+            )}
           </form>
         </TabsContent>
 
