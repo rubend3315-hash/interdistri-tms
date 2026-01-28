@@ -61,6 +61,96 @@ export default function TIModelRoutesTab({ customerId }) {
     toggleStatusMutation.mutate({ id: route.id, is_active: !route.is_active });
   };
 
+  const exportToPDF = async () => {
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    let yPosition = 15;
+
+    // Titel
+    pdf.setFontSize(16);
+    pdf.text("TI Model Ritten Rapport", 15, yPosition);
+    yPosition += 10;
+
+    // Statistieken
+    pdf.setFontSize(10);
+    pdf.text(`Totaal ritten: ${routes.length}`, 15, yPosition);
+    yPosition += 5;
+    pdf.text(`Totaal stops: ${totalStops}`, 15, yPosition);
+    yPosition += 5;
+    pdf.text(`Totaal stuks: ${totalParcels}`, 15, yPosition);
+    yPosition += 5;
+    pdf.text(`Gemiddelde norm/uur: ${avgNorm}`, 15, yPosition);
+    yPosition += 10;
+
+    // Tabel headers
+    const columns = [
+      { header: "Code", dataKey: "route_code", width: 15 },
+      { header: "Naam", dataKey: "route_name", width: 25 },
+      { header: "Uren", dataKey: "total_time_hours", width: 15 },
+      { header: "HH:MM", dataKey: "total_time_hhmm", width: 15 },
+      { header: "Stops", dataKey: "number_of_stops", width: 12 },
+      { header: "Stuks", dataKey: "number_of_parcels", width: 12 },
+      { header: "Berekende norm", dataKey: "calculated_norm_per_hour", width: 18 },
+      { header: "Norm/besteluur", dataKey: "manual_norm_per_hour", width: 18 },
+    ];
+
+    // Tabel inhoud
+    const tableStartY = yPosition;
+    const rowHeight = 6;
+    const headerHeight = 7;
+
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, "bold");
+
+    let currentY = tableStartY;
+
+    // Headers
+    let xPos = 15;
+    columns.forEach((col) => {
+      pdf.text(col.header, xPos, currentY);
+      xPos += col.width;
+    });
+    currentY += headerHeight;
+
+    // Data rows
+    pdf.setFont(undefined, "normal");
+    routes.forEach((route, index) => {
+      if (currentY + rowHeight > pageHeight - 10) {
+        pdf.addPage();
+        currentY = 15;
+
+        // Repeat headers
+        pdf.setFont(undefined, "bold");
+        xPos = 15;
+        columns.forEach((col) => {
+          pdf.text(col.header, xPos, currentY);
+          xPos += col.width;
+        });
+        currentY += headerHeight;
+        pdf.setFont(undefined, "normal");
+      }
+
+      xPos = 15;
+      columns.forEach((col) => {
+        let value = route[col.dataKey] || "";
+        if (typeof value === "number") {
+          value = value.toFixed(2);
+        }
+        pdf.text(String(value), xPos, currentY);
+        xPos += col.width;
+      });
+      currentY += rowHeight;
+    });
+
+    pdf.save("ti-model-ritten.pdf");
+  };
+
   const activeRoutes = routes.filter(r => r.is_active);
   const totalStops = routes.reduce((sum, r) => sum + (r.number_of_stops || 0), 0);
   const totalParcels = routes.reduce((sum, r) => sum + (r.number_of_parcels || 0), 0);
