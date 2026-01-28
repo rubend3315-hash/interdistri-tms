@@ -895,68 +895,45 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
                           </td>
                         </tr>
                         <tr className="bg-slate-50/50 border-b">
-                          <td colSpan="6" className="py-3 px-3">
-                            <div className="space-y-4">
-                              <div>
-                                <p className="text-slate-500 text-xs font-medium mb-2">Week 1 (oneven weken)</p>
-                                <div className="grid grid-cols-7 gap-2">
-                                  {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map((day, dayIdx) => {
+                          <td colSpan="6" className="py-2 px-3">
+                            <div className="inline-flex gap-6 text-xs">
+                              <div className="flex items-center gap-2">
+                                <span className="text-slate-500 font-medium">Week 1:</span>
+                                <div className="flex gap-1">
+                                  {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map((day, idx) => {
                                     const isWorking = contract.week1?.[day];
+                                    const dayLabel = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'][idx];
                                     const hoursPerDay = contract.uren_per_week && contract.week1 
                                       ? (contract.uren_per_week / Object.values(contract.week1).filter(Boolean).length).toFixed(1)
                                       : 0;
-                                    const dayLabel = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'][dayIdx];
                                     return (
-                                      <div key={dayIdx} className="flex flex-col items-center gap-1">
-                                        <div className={`w-12 h-10 flex items-center justify-center rounded border-2 text-sm font-medium ${
-                                          isWorking 
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                                            : 'bg-white border-slate-200 text-slate-300'
-                                        }`}>
-                                          {isWorking ? hoursPerDay : '-'}
-                                        </div>
-                                        <label className="flex items-center justify-center gap-1 cursor-pointer">
-                                          <input
-                                            type="checkbox"
-                                            checked={isWorking || false}
-                                            disabled
-                                            className="w-3 h-3"
-                                          />
-                                        </label>
-                                        <span className="text-xs text-slate-500">{dayLabel}</span>
+                                      <div key={idx} className={`px-2 py-1 rounded text-xs font-medium ${
+                                        isWorking 
+                                          ? 'bg-blue-100 text-blue-700' 
+                                          : 'bg-slate-100 text-slate-400'
+                                      }`}>
+                                        {dayLabel} {isWorking ? hoursPerDay : '-'}
                                       </div>
                                     );
                                   })}
                                 </div>
                               </div>
-                              
-                              <div>
-                                <p className="text-slate-500 text-xs font-medium mb-2">Week 2 (even weken)</p>
-                                <div className="grid grid-cols-7 gap-2">
-                                  {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map((day, dayIdx) => {
+                              <div className="flex items-center gap-2">
+                                <span className="text-slate-500 font-medium">Week 2:</span>
+                                <div className="flex gap-1">
+                                  {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map((day, idx) => {
                                     const isWorking = contract.week2?.[day];
+                                    const dayLabel = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'][idx];
                                     const hoursPerDay = contract.uren_per_week && contract.week2 
                                       ? (contract.uren_per_week / Object.values(contract.week2).filter(Boolean).length).toFixed(1)
                                       : 0;
-                                    const dayLabel = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'][dayIdx];
                                     return (
-                                      <div key={dayIdx} className="flex flex-col items-center gap-1">
-                                        <div className={`w-12 h-10 flex items-center justify-center rounded border-2 text-sm font-medium ${
-                                          isWorking 
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                                            : 'bg-white border-slate-200 text-slate-300'
-                                        }`}>
-                                          {isWorking ? hoursPerDay : '-'}
-                                        </div>
-                                        <label className="flex items-center justify-center gap-1 cursor-pointer">
-                                          <input
-                                            type="checkbox"
-                                            checked={isWorking || false}
-                                            disabled
-                                            className="w-3 h-3"
-                                          />
-                                        </label>
-                                        <span className="text-xs text-slate-500">{dayLabel}</span>
+                                      <div key={idx} className={`px-2 py-1 rounded text-xs font-medium ${
+                                        isWorking 
+                                          ? 'bg-blue-100 text-blue-700' 
+                                          : 'bg-slate-100 text-slate-400'
+                                      }`}>
+                                        {dayLabel} {isWorking ? hoursPerDay : '-'}
                                       </div>
                                     );
                                   })}
