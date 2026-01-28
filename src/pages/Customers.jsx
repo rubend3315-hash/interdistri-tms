@@ -21,7 +21,9 @@ import {
   Mail,
   MapPin,
   Edit,
-  Package
+  Package,
+  ChevronRight,
+  Trash2
 } from "lucide-react";
 
 export default function Customers() {
