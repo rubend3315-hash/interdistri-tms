@@ -1,16 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Download } from "lucide-react";
+import { Trash2, Download, X } from "lucide-react";
 
 export default function ImportDataTable({ importData, customerArticles, onDelete }) {
   const [quantityColumn, setQuantityColumn] = useState("");
   const [priceColumn, setPriceColumn] = useState("");
   const [articleColumn, setArticleColumn] = useState("");
   const [calculations, setCalculations] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [columnFilters, setColumnFilters] = useState({});
 
   const columns = importData.data && importData.data.length > 0 
     ? Object.keys(importData.data[0]) 
