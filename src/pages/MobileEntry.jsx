@@ -390,7 +390,7 @@ export default function MobileEntry() {
             </p>
           ) : (
             <p className="text-sm text-slate-600">
-              Welkom op je werkdag, {currentEmployee?.first_name || user?.full_name?.split(' ')[0]}! 
+              Welkom op je werkdag, {currentEmployee ? `${currentEmployee.first_name} ${currentEmployee.last_name}` : user?.full_name}! 
               Werk met plezier en aandacht, en rijd veilig.
               Samen zorgen we dat alles op tijd op de juiste plek komt.
               Succes vandaag! 🚛
