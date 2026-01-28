@@ -1039,10 +1039,12 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                       .filter(([, checked]) => checked)
                       .map(([day]) => day.charAt(0).toUpperCase())
                       .join('') : '-';
-                    
+                    const colors = ['bg-blue-50', 'bg-emerald-50', 'bg-purple-50', 'bg-amber-50'];
+                    const bgColor = colors[index % colors.length];
+
                     return (
                       <React.Fragment key={index}>
-                        <tr className="border-b hover:bg-slate-50">
+                        <tr className={`border-b ${bgColor} hover:opacity-75`}>
                           <td className="py-2 px-3 text-slate-900">
                             {contract.startdatum && format(new Date(contract.startdatum), 'dd-MM-yyyy')}
                           </td>
