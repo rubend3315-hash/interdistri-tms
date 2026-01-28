@@ -198,6 +198,7 @@ export default function TIModelRoutesTab({ customerId }) {
   };
 
   const avgNorm = avgNormValue.toFixed(2);
+  const activeRoutes = routes.filter(r => r.is_active);
 
   return (
     <div className="space-y-4">
