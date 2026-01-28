@@ -1090,6 +1090,12 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting }) {
 }
 
 function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
+  const { data: salaryTables = [] } = useQuery({
+    queryKey: ['salaryTables'],
+    queryFn: () => base44.entities.SalaryTable.list(),
+    enabled: open
+  });
+
   const [formData, setFormData] = useState(contract || {
     startdatum: '',
     einddatum: '',
@@ -1107,6 +1113,27 @@ function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
       setFormData(contract);
     }
   }, [contract]);
+
+  // Get unique salary scales grouped by type
+  const uniqueScales = salaryTables
+    .filter(t => t.status === 'Actief')
+    .reduce((acc, table) => {
+      const key = `${table.scale}${table.step != null ? ` Trede ${table.step}` : ''}`;
+      if (!acc.find(item => item.key === key)) {
+        acc.push({
+          key,
+          scale: table.scale,
+          step: table.step,
+          table_type: table.table_type
+        });
+      }
+      return acc;
+    }, [])
+    .sort((a, b) => {
+      // Sort by scale, then by step
+      if (a.scale !== b.scale) return a.scale.localeCompare(b.scale);
+      return (a.step || 0) - (b.step || 0);
+    });
 
   const calculateWeekTotal = (week) => {
     const daysChecked = Object.values(week).filter(Boolean).length;
@@ -1160,11 +1187,26 @@ function ContractDialog({ open, onOpenChange, contract, onSave, onDelete }) {
             </div>
             <div className="space-y-2">
               <Label>Loonschaal CAO *</Label>
-              <Input
+              <Select 
                 value={formData.loonschaal}
-                onChange={(e) => setFormData({ ...formData, loonschaal: e.target.value })}
-                placeholder="Selecteer loonschaal"
-              />
+                onValueChange={(v) => setFormData({ ...formData, loonschaal: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer loonschaal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueScales.length === 0 ? (
+                    <SelectItem value={null} disabled>Geen loonschalen beschikbaar</SelectItem>
+                  ) : (
+                    uniqueScales.map((item) => (
+                      <SelectItem key={item.key} value={item.key}>
+                        {item.table_type === 'Bijzondere loontabel' && '⭐ '}
+                        {item.key}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
