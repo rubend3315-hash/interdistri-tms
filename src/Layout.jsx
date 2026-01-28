@@ -50,13 +50,18 @@ const menuItems = [
     ]
   },
   {
+    label: "Klanten",
+    items: [
+      { name: "Klanten", icon: Building2, page: "Customers" },
+      { name: "Projecten", icon: FolderKanban, page: "Projects" },
+    ]
+  },
+  {
     label: "Beheer",
     items: [
       { name: "Gebruikers", icon: Settings, page: "Users" },
       { name: "Voertuigen", icon: Car, page: "Vehicles" },
       { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
-      { name: "Klanten", icon: Building2, page: "Customers" },
-      { name: "Projecten", icon: FolderKanban, page: "Projects" },
       { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
     ]
   },
