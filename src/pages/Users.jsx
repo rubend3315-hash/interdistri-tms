@@ -212,17 +212,6 @@ export default function UsersPage() {
           <p className="text-slate-500">Beheer gebruikers, rollen en permissies</p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={showRoleMatrix} onOpenChange={setShowRoleMatrix}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Shield className="w-4 h-4" />
-                Rol Matrix
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-6xl">
-              <RoleMatrixDialog />
-            </DialogContent>
-          </Dialog>
           <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
             <DialogTrigger asChild>
               <Button className="bg-blue-900 hover:bg-blue-800">
