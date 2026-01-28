@@ -117,10 +117,6 @@ export default function ArticleList({ customerId }) {
                       <div className="text-xs text-slate-500">{article.unit}</div>
                     </div>
 
-                    <Badge variant={article.status === 'Actief' ? 'default' : 'secondary'}>
-                      {article.status}
-                    </Badge>
-
                     {(() => {
                       const priceStatus = getPriceStatus(article);
                       return (
