@@ -562,11 +562,11 @@ function RoleMatrixDialog() {
                 {category}
               </h3>
               <div className="overflow-x-auto -mx-6 px-6">
-                <table className="w-full text-xs border-collapse table-fixed">
+                <table className="w-full text-xs border-collapse">
                   <colgroup>
                     <col style={{width: '112px'}} />
                     {roleOrder.map(role => (
-                      <col key={role} style={{width: '1fr'}} />
+                      <col key={role} style={{width: '25%'}} />
                     ))}
                   </colgroup>
                   <tbody>
