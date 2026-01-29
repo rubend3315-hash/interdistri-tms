@@ -199,70 +199,70 @@ export default function CaoRules() {
           <TabsTrigger value="arbeidsongeschiktheid" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 16 Loon bij arbeidsongeschiktheid
           </TabsTrigger>
-          <TabsTrigger value="functie-indeling" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="functie-indeling" className="justify-start text-left break-words text-sm">
             Artikel 18 Functie-indeling
           </TabsTrigger>
           <TabsTrigger value="inschaling" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 19 Inschaling bij indiensttreding
           </TabsTrigger>
-          <TabsTrigger value="jonge-werknemers" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="jonge-werknemers" className="justify-start text-left break-words text-sm">
             Artikel 22 Mintrede-niet vakbekwaam
           </TabsTrigger>
           <TabsTrigger value="loonberekening" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 26a Loonberekening
           </TabsTrigger>
-          <TabsTrigger value="overuren" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="overuren" className="justify-start text-left break-words text-sm">
             Artikel 27 Definities overuren
           </TabsTrigger>
-          <TabsTrigger value="verplichting-overwerk" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="verplichting-overwerk" className="justify-start text-left break-words text-sm">
             Artikel 28a Verplichting overwerk jonger dan 55 jaar
           </TabsTrigger>
-          <TabsTrigger value="verplichting-overwerk-oudere" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="verplichting-overwerk-oudere" className="justify-start text-left break-words text-sm">
             Artikel 28b Verplichting overwerk oudere werknemers
           </TabsTrigger>
           <TabsTrigger value="vergoeding-overuren" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 29 Vergoeding overuren
           </TabsTrigger>
-          <TabsTrigger value="zon-feestdagen" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="zon-feestdagen" className="justify-start text-left break-words text-sm">
             Artikel 32 Zon- en feestdagen
           </TabsTrigger>
-          <TabsTrigger value="vergoeding-diensturen" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="vergoeding-diensturen" className="justify-start text-left break-words text-sm">
             Artikel 33 Vergoeding diensturen op zaterdag, zondag en feestdagen
           </TabsTrigger>
-          <TabsTrigger value="vrije-weekeinden" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="vrije-weekeinden" className="justify-start text-left break-words text-sm">
             Artikel 34 Vrije weekeinden
           </TabsTrigger>
-          <TabsTrigger value="dienstrooster" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="dienstrooster" className="justify-start text-left break-words text-sm">
             Artikel 35 Dienstrooster
           </TabsTrigger>
-          <TabsTrigger value="toeslag-nachtelijke-uren" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="toeslag-nachtelijke-uren" className="justify-start text-left break-words text-sm">
             Artikel 37 Toeslag nachtelijke uren
           </TabsTrigger>
-          <TabsTrigger value="reiskosten-woon-werk" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="reiskosten-woon-werk" className="justify-start text-left break-words text-sm">
             Artikel 39a Vergoeding reiskosten woon-werkverkeer
           </TabsTrigger>
           <TabsTrigger value="verblijfkosten" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 40 Vergoeding van verblijfkosten
           </TabsTrigger>
-          <TabsTrigger value="consignatievergoeding" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="consignatievergoeding" className="justify-start text-left break-words text-sm">
             Artikel 42 Consignatievergoeding
           </TabsTrigger>
-          <TabsTrigger value="scholing-algemeen" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="scholing-algemeen" className="justify-start text-left break-words text-sm">
             Artikel 43 Scholing algemeen
           </TabsTrigger>
-          <TabsTrigger value="vergoeding-certificaten" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="vergoeding-certificaten" className="justify-start text-left break-words text-sm">
             Artikel 44 Vergoeding certificaten
           </TabsTrigger>
-          <TabsTrigger value="studiekostenregeling" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="studiekostenregeling" className="justify-start text-left break-words text-sm">
             Artikel 45 Studiekostenregeling
           </TabsTrigger>
-          <TabsTrigger value="afwezigheid-met-loon" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="afwezigheid-met-loon" className="justify-start text-left break-words text-sm">
             Artikel 64 Afwezigheid met behoud van loon
           </TabsTrigger>
-          <TabsTrigger value="bijzonder-verlof" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="bijzonder-verlof" className="justify-start text-left break-words text-sm">
             Artikel 65 Bijzonder verlof
           </TabsTrigger>
-          <TabsTrigger value="bijzonder-verlof-zonder-loon" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="bijzonder-verlof-zonder-loon" className="justify-start text-left break-words text-sm">
             Artikel 66 Bijzonder verlof zonder behoud van loon
           </TabsTrigger>
           <TabsTrigger value="vakantie" className="justify-start font-bold text-red-600 break-words text-sm">
@@ -274,13 +274,13 @@ export default function CaoRules() {
           <TabsTrigger value="vakantiebijslag" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 69 Vakantiebijslag
           </TabsTrigger>
-          <TabsTrigger value="arbeidstijd-vervoer" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="arbeidstijd-vervoer" className="justify-start text-left break-words text-sm">
             Artikel 76 Arbeidstijdenbesluit Vervoer
           </TabsTrigger>
           <TabsTrigger value="naleving-cao" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 78 Naleving CAO
           </TabsTrigger>
-          <TabsTrigger value="bijlage-vi" className="justify-start break-words whitespace-normal">
+          <TabsTrigger value="bijlage-vi" className="justify-start text-left break-words text-sm">
             Bijlage VI Stappenplan arbeidsongeschiktheid
           </TabsTrigger>
         </TabsList>
