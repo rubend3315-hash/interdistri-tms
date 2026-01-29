@@ -220,6 +220,9 @@ export default function CaoRules() {
           <TabsTrigger value="vrije-weekeinden" className="justify-start">
             Artikel 34 Vrije weekeinden
           </TabsTrigger>
+          <TabsTrigger value="dienstrooster" className="justify-start">
+            Artikel 35 Dienstrooster
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1048,6 +1051,22 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   Per half kalenderjaar dient het rijdend personeel tenminste 13 vrije weekeinden te genieten. Dit betekent, dat zij in de regel 48 uur, echter minimaal 45 uur, aaneengesloten vrij dienen te zijn, gelegen tussen vrijdag 12.00 uur en maandag 12.00 uur.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Dienstrooster Tab */}
+        <TabsContent value="dienstrooster" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 35 Dienstrooster</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  Ten aanzien van het werken op feestdagen zal de werkgever jaarlijks een dienstrooster opstellen; daarbij zal dit werken zoveel mogelijk worden gespreid over de werknemers.
                 </p>
               </div>
             </CardContent>
