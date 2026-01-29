@@ -269,7 +269,7 @@ export default function Approvals() {
         <TabsContent value="pending" className="mt-6 space-y-4">
           {isLoading ? (
             <div className="space-y-4">
-              {[0, 1, 2].map(i => <Skeleton key={i} className="h-32" />)}
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}
             </div>
           ) : pendingEntries.length === 0 ? (
             <Card className="p-12 text-center">
