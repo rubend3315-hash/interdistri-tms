@@ -211,9 +211,6 @@ export default function CaoRules() {
           <TabsTrigger value="loonberekening" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 26a Loonberekening
           </TabsTrigger>
-          <TabsTrigger value="overwerk-130" className="justify-start text-left break-words text-sm">
-            Overwerk 130% berekening
-          </TabsTrigger>
           <TabsTrigger value="overuren" className="justify-start text-left break-words text-sm">
             Artikel 27 Definities overuren
           </TabsTrigger>
@@ -1167,40 +1164,6 @@ export default function CaoRules() {
                   <li>voor werknemers die op het moment van inwerkingtreding van de CAO 55 jaar en ouder zijn, blijft de oude regeling gehandhaafd en vindt er geen afbouw plaats;</li>
                   <li>de nieuwe regeling dient te worden gemeld bij CAO-partijen.</li>
                 </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Overwerk 130% berekening Tab */}
-        <TabsContent value="overwerk-130" className="m-0">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Overwerk 130% berekening</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-slate-700">
-                  <strong>1.</strong> Overuren zijn uren, liggend op maandag tot en met vrijdag, waarmee de diensttijd van 40 uur in de week, dan wel de individueel overeengekomen arbeidstijd als dit minder is dan 40 uur per week, wordt overschreden.
-                </p>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-slate-700">
-                  <strong>2.</strong> Overuren worden vergoed door het uurloon vermeerderd met een toeslag van 30% (130% van het uurloon).
-                </p>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-slate-700 font-semibold mb-3">
-                  <strong>3.</strong> Berekeningsvoorbeeld:
-                </p>
-                <div className="space-y-2 ml-4">
-                  <p className="text-slate-700">
-                    Uurloon: € 20,00<br />
-                    Overwerk 130% toeslag: € 20,00 × 1,30 = € 26,00 per uur
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
