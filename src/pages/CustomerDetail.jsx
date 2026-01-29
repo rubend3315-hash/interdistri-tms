@@ -18,6 +18,7 @@ import CalculationsTab from "@/components/customer/CalculationsTab";
 import ImportHistory from "@/components/customer/ImportHistory";
 import ArticleList from "@/components/customer/ArticleList";
 import TIModelRoutesTab from "@/components/customer/TIModelRoutesTab";
+import RoutesTab from "@/components/customer/RoutesTab";
 import ReportGenerator from "@/components/reports/ReportGenerator";
 import DataDashboard from "@/components/reports/DataDashboard";
 import {
@@ -38,7 +39,8 @@ import {
   Edit2,
   Calendar,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  Truck
 } from "lucide-react";
 
 // Imports Tab Component with period selection
@@ -270,6 +272,8 @@ export default function CustomerDetail() {
   };
 
   const isPostNL = customer?.company_name === 'PostNL';
+  const isSpotta = customer?.company_name === 'Spotta';
+  const isDPGMedia = customer?.company_name === 'DPG Media';
 
   if (isLoading) {
     return (
@@ -369,6 +373,18 @@ export default function CustomerDetail() {
            <TabsTrigger value="ti-model" className="gap-2">
              <Package className="w-4 h-4" />
              TI Model Ritten
+           </TabsTrigger>
+          )}
+          {isSpotta && (
+           <TabsTrigger value="spotta-routes" className="gap-2">
+             <Truck className="w-4 h-4" />
+             Spotta Ritten
+           </TabsTrigger>
+          )}
+          {isDPGMedia && (
+           <TabsTrigger value="dpg-routes" className="gap-2">
+             <Truck className="w-4 h-4" />
+             DPG Media Ritten
            </TabsTrigger>
           )}
         </TabsList>
@@ -704,6 +720,16 @@ export default function CustomerDetail() {
         {/* TI Model Ritten Tab */}
         <TabsContent value="ti-model">
           <TIModelRoutesTab customerId={customerId} />
+        </TabsContent>
+
+        {/* Spotta Ritten Tab */}
+        <TabsContent value="spotta-routes">
+          <RoutesTab customerId={customerId} />
+        </TabsContent>
+
+        {/* DPG Media Ritten Tab */}
+        <TabsContent value="dpg-routes">
+          <RoutesTab customerId={customerId} />
         </TabsContent>
       </Tabs>
 
