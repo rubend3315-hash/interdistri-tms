@@ -226,6 +226,9 @@ export default function CaoRules() {
           <TabsTrigger value="toeslag-nachtelijke-uren" className="justify-start">
             Artikel 37 Toeslag nachtelijke uren
           </TabsTrigger>
+          <TabsTrigger value="reiskosten-woon-werk" className="justify-start">
+            Artikel 39a Vergoeding reiskosten woon-werkverkeer
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1104,6 +1107,55 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>4.</strong> Dit artikel kan ook worden toegepast op diensturen van niet-rijdend personeel op de in lid 1 genoemde tijdstippen. Leden 2 en 3 zijn dan van overeenkomstige toepassing.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Reiskosten woon-werkverkeer Tab */}
+        <TabsContent value="reiskosten-woon-werk" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 39a Vergoeding reiskosten woon-werkverkeer</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-2">
+                  <strong>1.</strong> Werknemers hebben recht op de geldende fiscale maximum netto kilometervergoeding met een maximum van 35 km (enkele reisafstand) onder vermindering van de eerste 10 km. Dit betekent voor 2026 een reiskostenvergoeding van € 0,23 per kilometer.
+                </p>
+                <p className="text-slate-700">
+                  De maximale vergoeding per enkele reisafstand is dan 25 x € 0,23 = € 5,75.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> De woon-werkafstand wordt bepaald aan de hand van de routeplanner van de ANWB, van huisadres naar standplaats op basis van de optie "kortste route". De afstand enkele reis wordt afgerond op hele kilometers (0,5 en hoger naar boven, lager dan 0,5 naar beneden).
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> De werknemer heeft geen recht op reiskostenvergoeding indien de werkgever vervoer ter beschikking stelt.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.</strong> De reiskostenvergoeding wordt alleen betaald voor de dagen dat er daadwerkelijk woon-werkverkeer heeft plaatsgevonden.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>5.</strong> Als de reisafstand voor het woon-werkverkeer door verhuizing van de werknemer groter wordt, is de werkgever niet verplicht het meerdere aan reiskosten te vergoeden.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>6.</strong> Van deze regeling mag in positieve zin, ten gunste van de werknemer, worden afgeweken.
                 </p>
               </div>
             </CardContent>
