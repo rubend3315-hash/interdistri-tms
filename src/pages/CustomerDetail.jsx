@@ -365,10 +365,12 @@ export default function CustomerDetail() {
              AI Rapporten
            </TabsTrigger>
           )}
-          <TabsTrigger value="ti-model" className="gap-2">
-            <Package className="w-4 h-4" />
-            TI Model Ritten
-          </TabsTrigger>
+          {isPostNL && (
+           <TabsTrigger value="ti-model" className="gap-2">
+             <Package className="w-4 h-4" />
+             TI Model Ritten
+           </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Informatie Tab */}
