@@ -184,6 +184,10 @@ export default function CaoRules() {
             <Calculator className="w-4 h-4" />
             Artikel 12 Berekening dag- en uurloon
           </TabsTrigger>
+          <TabsTrigger value="loonbetaling" className="gap-2">
+            <Euro className="w-4 h-4" />
+            Artikel 13 Loonbetaling
+          </TabsTrigger>
         </TabsList>
 
         {/* CAO Regels Tab */}
@@ -394,6 +398,34 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-6 rounded-lg">
                 <p className="text-slate-700 leading-relaxed">
                   Het dag- en uurloon wordt berekend door het functieloon per 4 weken te delen door 20 respectievelijk 160 en het functieloon per maand te delen door 21,75 respectievelijk 173,92.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Loonbetaling Tab */}
+        <TabsContent value="loonbetaling">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 13 Loonbetaling</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> De in artikel 25 genoemde functielonen worden per 4 weken of per maand betaald.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Het omrekeningsgetal voor de herleiding van vierweken- naar maandloon is 1,087.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> De uitbetaling van de overuren dient uiterlijk in de betalingsperiode volgend op de betalingsperiode waarin de overuren zijn ontstaan te geschieden.
                 </p>
               </div>
             </CardContent>
