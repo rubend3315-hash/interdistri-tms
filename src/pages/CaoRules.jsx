@@ -172,6 +172,9 @@ export default function CaoRules() {
             <BookOpen className="w-4 h-4" />
             CAO Regels
           </TabsTrigger>
+          <TabsTrigger value="artikel-6" className="justify-start">
+            Artikel 6 Verplichtingen van de werkgever
+          </TabsTrigger>
           <TabsTrigger value="deeltijd" className="justify-start">
             Artikel 8 Deeltijdwerknemers
           </TabsTrigger>
@@ -368,6 +371,72 @@ export default function CaoRules() {
           )}
         </div>
       )}
+        </TabsContent>
+
+        {/* Artikel 6 Tab */}
+        <TabsContent value="artikel-6" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 6 Verplichtingen van de werkgever</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <p className="text-slate-700 font-medium">
+                  <strong>1.</strong> Het is de werkgever niet toegestaan personeel in dienst te nemen, dat reeds elders een volledige dienstbetrekking heeft.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-3">
+                  <strong>2.a.</strong> In het kader van de Arbozorg kan de werkgever de werknemer bij het aangaan van de dienstbetrekking alleen medisch laten keuren indien het gaat om een functie waarvan voor de vervulling ervan een bijzondere eisen op het punt van medische geschiktheid zijn gesteld. Daarbij dient het bepaalde bij en krachtens de Wet op de medische keuringen te worden nageleefed. Deze bepaling geldt in ieder geval niet voor administratief- en leidinggevend personeel. De verplichting om een aanstellingskeuring te ondergaan vervalt indien uit een schriftelijk keuringsbewijs van de werknemer blijkt dat de werknemer recentelijk een soortgelijke medische keuring heeft ondergaan. De datum van het keuringsbewijs mag maximaal een jaar voor het aangaan van het dienstverband liggen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.b.</strong> De kosten van de rijbewijskeuring zijn voor rekening van de werkgever, tenzij daarin wettelijk op andere wijze wordt voorzien. Ten aanzien van de loonbetaling wordt dit in dit verband verwezen naar artikel 65 lid 1 sub I.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> De werkgever verstrekt aan de werknemer kosteloos tegen ontvangstsbewijs een exemplaar van de CAO en wijzigingen daarop.
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-700 font-medium mb-3">
+                  <strong>4.</strong> Bij elke loonbetaling (per 4 weken, per maand) is de werkgever verplicht aan de werknemer een specificatie te verstrekken. Deze specificatie dient tenminste de navolgende gegevens te bevatten:
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4 text-slate-700">
+                  <li>naam werknemer en naam werkgever;</li>
+                  <li>vast-, tijdelijk- of oproepcontract;</li>
+                  <li>overeengekomen arbeidsduur;</li>
+                  <li>periode waarover loon wordt betaald;</li>
+                  <li>het loon over deze periode waarop werknemer op grond van zijn leeftijd recht heeft ingevolge het bepaalde bij of krachtens de Wet minimumloon en minimumvakantiebijslag;</li>
+                  <li>functieloon;</li>
+                  <li>uurloon;</li>
+                  <li>toeslagen;</li>
+                  <li>overuren;</li>
+                  <li>bruto loon;</li>
+                  <li>inhoudinegen;</li>
+                  <li>netto loon;</li>
+                  <li>verblijfkostenvergoeding;</li>
+                  <li>vakantiedagen;</li>
+                  <li>ATV dagen;</li>
+                  <li>saldo tijd voor tijduren;</li>
+                  <li>saldo Persoonlijk Keuze Budget indien van toepassing;</li>
+                  <li>de waarde van een vakantiedag overeenkomstig art. 67a lid 10.</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>5.</strong> De kosten van de aanschaf door werknemer van de bestuurderskaart ten behoeve van de digitale tachograaf (1 x per 5 jaar) komen voor rekening van de werkgever.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Deeltijdwerknemers Tab */}
