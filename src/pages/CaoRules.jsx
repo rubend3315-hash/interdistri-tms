@@ -256,6 +256,9 @@ export default function CaoRules() {
           <TabsTrigger value="vakantie" className="justify-start">
             Artikel 67a Vakantie
           </TabsTrigger>
+          <TabsTrigger value="atv-dagen" className="justify-start">
+            Artikel 68 ATV-dagen
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1454,6 +1457,34 @@ export default function CaoRules() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ATV-dagen Tab */}
+        <TabsContent value="atv-dagen" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 68 ATV-dagen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> De werknemer heeft op jaarbasis recht op 3,5 ATV-dagen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Het toekennen van de ATV-dagen moet door de werkgever na overleg met de werknemer in een schriftelijke regeling worden vastgelegd welke uiterlijk 3 maanden vóór de eerste vrije dag van betrokken werknemer aan hem is uitgereikt. Indien niet uiterlijk vóór 1 oktober van enig jaar deze dagen zijn ingeroosterd, worden deze dagen na die datum opgenomen op de wijze voorzien in artikel 67a lid 7a.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> De overeenkomstig lid 2 toegekende atv-dagen komen in geval van arbeidsongeschiktheid op de ingeroosterde dag(en), te vervallen.
+                </p>
               </div>
             </CardContent>
           </Card>
