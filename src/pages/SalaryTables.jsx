@@ -902,21 +902,7 @@ function UurcodeForm({ uurcode, urensoorten, onSubmit, isSubmitting, onCancel })
           placeholder="bijv. Normale uren"
         />
       </div>
-      <div className="space-y-2">
-        <Label>Urensoort</Label>
-        <Select value={formData.urensoort_id} onValueChange={(v) => setFormData({ ...formData, urensoort_id: v })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecteer urensoort" />
-          </SelectTrigger>
-          <SelectContent>
-            {urensoorten.map((item) => (
-              <SelectItem key={item.id} value={item.id}>
-                {item.code} - {item.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+
       <div className="space-y-2">
         <Label>Omschrijving</Label>
         <Input
