@@ -214,6 +214,9 @@ export default function CaoRules() {
           <TabsTrigger value="zon-feestdagen" className="justify-start">
             Artikel 32 Zon- en feestdagen
           </TabsTrigger>
+          <TabsTrigger value="vergoeding-diensturen" className="justify-start">
+            Artikel 33 Vergoeding diensturen op zaterdag, zondag en feestdagen
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -977,6 +980,56 @@ export default function CaoRules() {
                 <p className="text-slate-700">
                   Als Koningsdag wordt beschouwd de dag waarop, conform Koninklijk Besluit, het feest wordt gevierd.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Vergoeding diensturen op zaterdag, zondag en feestdagen Tab */}
+        <TabsContent value="vergoeding-diensturen" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 33 Vergoeding diensturen op zaterdag, zondag en feestdagen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> Alle diensturen op zaterdag worden vergoed door betaling van het uurloon vermeerderd met een toeslag van 50%.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> In afwijking van lid 1 worden voor rijdend personeel op dubbelbemande voertuigen alle diensturen op zaterdag na 07.00 uur vergoed door betaling van het uurloon vermeerderd met een toeslag van 50%.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> Indien een feestdag als bedoeld in artikel 32 op een zaterdag valt, worden de diensturen in afwijking van lid 1 vergoed overeenkomstig lid 6 van dit artikel.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.</strong> In geval Koningsdag op een zaterdag wordt gevierd, zal in afwijking van het bepaalde in de leden 1 en 2 van dit artikel, het werken op deze dag worden vergoed door betaling van een toeslag van 100%.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>5.</strong> Alle diensturen op zondag worden vergoed door betaling van een toeslag van 100% op het uurloon.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-3">
+                  <strong>6.</strong> Aan de werknemer, die op een feestdag als bedoeld in artikel 32 – niet vallend op een zondag – arbeid verricht, worden de diensturen vergoed. Als extra vergoeding kan de werknemer kiezen tussen:
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4 text-slate-700">
+                  <li>een rustdag op een, na overleg met de werknemer door de werkgever te bepalen dag. Deze rustdag zal worden genoteerd binnen een periode van 8 weken. Voor deze compenserende rustdag worden 8 diensturen in de loonberekening betrok-ken;</li>
+                  <li>een toeslag van 100% op het uurloon.</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
