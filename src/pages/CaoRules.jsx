@@ -187,6 +187,9 @@ export default function CaoRules() {
           <TabsTrigger value="arbeidsongeschiktheid" className="justify-start">
             Artikel 16 Loon bij arbeidsongeschiktheid
           </TabsTrigger>
+          <TabsTrigger value="functie-indeling" className="justify-start">
+            Artikel 18 Functie-indeling
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -521,6 +524,41 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>7.</strong> In het geval de werknemer een uitkering toekomt krachtens de ziektewet, WAO/WIA of krachtens een verzekering of enig fonds, waarin de deelneming is bedongen bij of voortvloeit uit de arbeidsovereenkomst, wordt de loonbetaling met deze uitkering verminderd.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Functie-indeling Tab */}
+        <TabsContent value="functie-indeling" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 18 Functie-indeling</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> Aan de hand van het tussen partijen overeengekomen systeem van functiewaardering vindt functie-indeling plaats. De FUWA heeft in opdracht van partijen de taak om referentiefuncties te beheren en te publiceren. Deze set van referentiefuncties (Functiehandboek) is gepubliceerd op de website van STL:{' '}
+                  <a href="https://www.stl.nl/werknemers/salaris-en-waardering/boek-functietyperingen/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    https://www.stl.nl/werknemers/salaris-en-waardering/boek-functietyperingen/
+                  </a>
+                  {' '}en{' '}
+                  <a href="https://www.stl.nl/werkgevers/cao-en-functiewaardering/functietypering/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    https://www.stl.nl/werkgevers/cao-en-functiewaardering/functietypering/
+                  </a>
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Voor werknemers, die geplaatst zijn in een hogere functie dan genoemd in loonschaal H dient door de werkgever de functie en het loon schriftelijk vastgesteld te worden.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> Er is een Sectorinstituut Transport en Logistiek, Postbus 308, 2800 AH Gouda, tel.nr. 088-2596111. Dit sectorinstituut heeft onder meer als taak het bevorderen van de indeling van functies in het Beroepsgoederenvervoer over de weg en de verhuur van mobiele kranen overeenkomstig het afgesproken systeem van functiewaardering.
                 </p>
               </div>
             </CardContent>
