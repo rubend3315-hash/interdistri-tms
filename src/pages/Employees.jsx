@@ -160,12 +160,14 @@ export default function Employees() {
                 )}
               </DialogHeader>
             <Tabs defaultValue={selectedEmployee?.viewOnly ? "profiel" : selectedEmployee ? "profiel" : "algemeen"} className="w-full">
-              <TabsList className={`grid w-full ${selectedEmployee ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              <TabsList className={`grid w-full ${selectedEmployee ? 'grid-cols-5' : 'grid-cols-3'}`}>
                 {selectedEmployee && (
                   <TabsTrigger value="profiel">Profiel</TabsTrigger>
                 )}
                 <TabsTrigger value="algemeen">Algemene Gegevens</TabsTrigger>
                 <TabsTrigger value="weekrooster">Weekrooster en contracten</TabsTrigger>
+                <TabsTrigger value="urensoort">Urensoort</TabsTrigger>
+                <TabsTrigger value="uurcode">Uurcode</TabsTrigger>
               </TabsList>
               {selectedEmployee && (
                 <TabsContent value="profiel">
@@ -187,6 +189,12 @@ export default function Employees() {
                   isSubmitting={createMutation.isPending || updateMutation.isPending}
                   viewOnly={selectedEmployee?.viewOnly}
                 />
+              </TabsContent>
+              <TabsContent value="urensoort">
+                <UrensoortTab />
+              </TabsContent>
+              <TabsContent value="uurcode">
+                <UurcodeTab />
               </TabsContent>
             </Tabs>
           </DialogContent>
