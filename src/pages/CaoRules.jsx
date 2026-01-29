@@ -211,6 +211,9 @@ export default function CaoRules() {
           <TabsTrigger value="vergoeding-overuren" className="justify-start">
             Artikel 29 Vergoeding overuren
           </TabsTrigger>
+          <TabsTrigger value="zon-feestdagen" className="justify-start">
+            Artikel 32 Zon- en feestdagen
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -939,6 +942,40 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>4.</strong> In afwijking van het bepaalde in lid 3 geldt voor administratief en technisch personeel voor de vergoeding van overuren op roostervrije dagen een toeslag van 100% en voor uren op zondag waarop volgens dienstrooster arbeid wordt verricht 30%.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Zon- en feestdagen Tab */}
+        <TabsContent value="zon-feestdagen" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 32 Zon- en feestdagen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  Op zondagen alsmede op algemeen erkende christelijke en nationale feestdagen wordt geen arbeid verricht, tenzij de aard of het belang van de onderneming zulks vordert.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  Algemeen erkende christelijke feestdagen zijn: Nieuwjaarsdag, 2e Paasdag, Hemelvaartsdag, 2e Pinksterdag en beide Kerstdagen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  Nationale feestdagen zijn: Koningsdag en de dagen, waarop krachtens aanwijzing van de overheid extra vrijaf met behoud van loon mag worden verleend. 5 Mei wordt om de vijf jaar aangewezen als nationale feestdag (indien de jaartelling eindigt op een 0 of een 5).
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  Als Koningsdag wordt beschouwd de dag waarop, conform Koninklijk Besluit, het feest wordt gevierd.
                 </p>
               </div>
             </CardContent>
