@@ -773,6 +773,69 @@ export default function CaoRules() {
                   <strong>2.h.</strong> Bij het gebruik van elektronische tijdregistratiesystemen zijn werkgever en werknemer vrijgesteld van de verplichtingen zoals vermeld onder 2b t/m 2g. Na afloop van elke rit dient de werknemer de beschikking te krijgen over een ongeschoonde uitdraai van de in 2c. genoemde gegevens. De werkgever is tevens verplicht de werknemer éénmaal per betalingsperiode, elektronisch of op andere wijze, een geschoonde uitdraai van de boordcomputer te verstrekken waarop de gegevens staan vermeld overeenkomstig de in lid 2c. genoemde gegevens.
                 </p>
               </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.i.</strong> Indien de werknemer daarom verzoekt, verstrekt de werkgever een schriftelijke toelichting op de correcties van zijn diensturen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.a.</strong> De werkgever kan de normale duur van de werkzaamheden normeren op basis van sociaal en economisch verantwoorde praktijkervaringen en de loonberekeningen daarop baseren. De werkgever dient daarvoor echter eerst de instemming van de werknemers- en werkgeversorganisaties na voorafgaand overleg met de ondernemingsraad of personeelsvertegenwoordiging te verkrijgen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.b.</strong> Het bepaalde onder 3.a. is onverkort van kracht ingeval in de onderneming de diensturen worden betaald met behulp van elektronische tijdregistratiesystemen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.c.</strong> Indien de omstandigheden die aan een normeringsregeling ten grondslag liggen zich wijzigen, dan dient de regeling opnieuw beoordeeld en zodanig aangepast te worden.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.d.</strong> Een normeringsregeling ontheft de werknemer niet van de invulling en indiening van de urenverantwoordingsstaat.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.e.</strong> In alle gevallen zal de normeringsregeling schriftelijk worden vastgelegd en binnen 2 weken na dagtekening, ter registratie worden gemeld bij het secretariaat van CAO-partijen, Postbus 3008, 2700 KS Zoetermeer.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.a.</strong> Op werkzaamheden als rijden, laden, lossen en wachttijd kan, in geval van dubbele bemanning, normering plaatsvinden, met dien verstande dat de totale beloning van alle gemaakte diensturen tussen de 85% en de 100% bedraagt. Er is sprake van dubbele bemanning bij internationale ritten als een rit wordt verricht door tenminste 2 chauffeurs met gelijkwaardige werkzaamheden, zowel qua functie-inhoud als qua tijdsbesteding.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.b.</strong> Om van bovenstaande regeling gebruik te kunnen maken, dienen de ondernemingen hun bestaande beloningsbeleid voor dubbelbemande ritten voor 1 mei 2006, bij CAO-partijen te hebben gemeld. Ondernemingen die hun bestaande beloningsbeleid voor de dubbelbemande ritten niet voor 1 mei 2006 hebben gemeld, worden geacht geen normering toe te passen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-3">
+                  <strong>4.c.</strong> Ondernemingen die na 1 mei 2006 een nieuw beloningsbeleid voor dubbelbemande ritten willen invoeren, dienen dat met de vakbonden overeen te komen.
+                </p>
+                <p className="text-slate-700 font-medium mb-2">
+                  Daarbij dient het volgende in acht te worden genomen:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700">
+                  <li>de totale beloning van alle gemaakte diensturen zal uiterlijk na verloop van twee jaar 85% bedragen tenzij de onderneming een hogere beloning overeenkomt met vakbonden;</li>
+                  <li>er dient met de vakbonden overleg te worden gevoerd over een afbouwregeling voor het verschil tussen de oude en de nieuwe regeling voor het reeds in dienst zijnde personeel. Deze afbouwregeling komt na 2 jaar te vervallen;</li>
+                  <li>voor werknemers die op het moment van inwerkingtreding van de CAO 55 jaar en ouder zijn, blijft de oude regeling gehandhaafd en vindt er geen afbouw plaats;</li>
+                  <li>de nieuwe regeling dient te worden gemeld bij CAO-partijen.</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
