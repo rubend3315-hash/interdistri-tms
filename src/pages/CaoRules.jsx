@@ -172,20 +172,16 @@ export default function CaoRules() {
             <BookOpen className="w-4 h-4" />
             CAO Regels
           </TabsTrigger>
-          <TabsTrigger value="deeltijd" className="gap-2 justify-start">
-            <Users className="w-4 h-4" />
+          <TabsTrigger value="deeltijd" className="justify-start">
             Artikel 8 Deeltijdwerknemers
           </TabsTrigger>
-          <TabsTrigger value="oproep" className="gap-2 justify-start">
-            <Users className="w-4 h-4" />
+          <TabsTrigger value="oproep" className="justify-start">
             Artikel 10 Oproepkrachten
           </TabsTrigger>
-          <TabsTrigger value="berekening" className="gap-2 justify-start">
-            <Calculator className="w-4 h-4" />
+          <TabsTrigger value="berekening" className="justify-start">
             Artikel 12 Berekening dag- en uurloon
           </TabsTrigger>
-          <TabsTrigger value="loonbetaling" className="gap-2 justify-start">
-            <Euro className="w-4 h-4" />
+          <TabsTrigger value="loonbetaling" className="justify-start">
             Artikel 13 Loonbetaling
           </TabsTrigger>
         </TabsList>
