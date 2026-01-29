@@ -262,6 +262,9 @@ export default function CaoRules() {
           <TabsTrigger value="vakantiebijslag" className="justify-start">
             Artikel 69 Vakantiebijslag
           </TabsTrigger>
+          <TabsTrigger value="arbeidstijd-vervoer" className="justify-start">
+            Artikel 76 Arbeidstijdenbesluit Vervoer
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1460,6 +1463,50 @@ export default function CaoRules() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Arbeidstijdenbesluit Vervoer Tab */}
+        <TabsContent value="arbeidstijd-vervoer" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 76 Arbeidstijdenbesluit Vervoer</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> CAO-partijen hebben met elkaar afspraken gemaakt met betrekking tot de implementatie van richtlijn 2002/15 (48-urige werkweek). In overleg met het ministerie van Infrastructuur en Milieu zal deze afspraak in het Arbeidstijdenbesluit Vervoer worden geïmplementeerd.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  CAO-partijen zijn overeengekoming artikel 2.5:8 van het Arbeidstijdenbesluit Vervoer overeengekomen om de gemiddelde arbeidstijd te bezien over een periode van 26 achtereenvolgende weken.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-3">
+                  <strong>2.</strong> Overeenkomstig de regeling vrijstelling nachtarbeid wegvervoer zijn CAO-partijen overeengekomen dat de volgende categorieën van vervoer zijn vrijgesteld van het bepaalde in artikel 2.5:4, tweede lid, van het Arbeidstijdenbesluit vervoer:
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4 text-slate-700">
+                  <li><strong>a.</strong> vervoer van levende dieren;</li>
+                  <li><strong>b.</strong> vervoer van achtendkranten;</li>
+                  <li><strong>c.</strong> vervoer van postzendingen en- pakketten;</li>
+                  <li><strong>d.</strong> collectief binnenlands vervoer van bloembollen, bloemen, planten en boomkwekerijproducten.</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-3">
+                  <strong>4.</strong> In afwijking van artikel 8 lid 4 jo. artikel 4 onder g van Verordening (EG) nr. 561/2006 krijgen werknemers, nadat zij zijn teruggekeerd op standplaats, recht op de volgende uren dagelijkse rust:
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4 text-slate-700">
+                  <li><strong>a)</strong> Maximaal 3 x tussen 2 wekelijkse rustperioden; een periode van rust van minimaal 10 uur</li>
+                  <li><strong>b)</strong> De overige dagelijkse rusten tussen 2 wekelijkse rustperioden in: een periode van rust van minimaal 11 uur</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
