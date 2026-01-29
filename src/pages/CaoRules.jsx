@@ -175,6 +175,10 @@ export default function CaoRules() {
             <Users className="w-4 h-4" />
             Artikel 8 Deeltijdwerknemers
           </TabsTrigger>
+          <TabsTrigger value="oproep" className="gap-2">
+            <Users className="w-4 h-4" />
+            Artikel 10 Oproepkrachten
+          </TabsTrigger>
         </TabsList>
 
         {/* CAO Regels Tab */}
@@ -312,6 +316,63 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700 mb-2">
                   <strong>3.c.</strong> Voor het berekenen van de vakantie-aanspraken en vakantiebijslag in een bepaald jaar, dient het totaal aantal verrichte diensturen, met een minimum van het aantal overeengekomen uren, in het voorafgaande kalenderjaar te worden genomen.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Oproepkrachten Tab */}
+        <TabsContent value="oproep">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 10 Oproepkrachten</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <p className="text-slate-700 font-medium mb-3">
+                  <strong>1.</strong> Voor oproepkrachten gelden in beginsel alle artikelen van deze CAO, met uitzondering van:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700">
+                  <li>artikel 4</li>
+                  <li>artikel 6 lid 2</li>
+                  <li>artikel 13</li>
+                  <li>artikel 14</li>
+                  <li>artikel 26b en c</li>
+                  <li>artikel 30</li>
+                  <li>artikel 31</li>
+                  <li>artikel 36</li>
+                  <li>artikel 64 t/m 69</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Voor de berekening van het dag- en uurloon moet voor de oproepkracht worden uitgegaan van het functieloon vermeerderd met 8% vakantiebijslag.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> De oproepkracht verwerft wettelijke vakantiedagen overeenkomstig artikel 7:634 BW over de uren die worden gewerkt.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.</strong> De oproepkracht wordt per uur beloond.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>5.</strong> Overuren zijn de uren, waarmee de diensttijd van gemiddeld 8 uur per dag wordt overschreden.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>6.</strong> In afwijking van artikel 6 lid 3 wordt door de werkgever aan de oproepkracht een exemplaar van de CAO verstrekt indien hij dit aan de werkgever verzoekt.
                 </p>
               </div>
             </CardContent>
