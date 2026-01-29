@@ -181,6 +181,9 @@ export default function CaoRules() {
           <TabsTrigger value="jeugdlonen" className="justify-start">
             Artikel 20 Jeugdlonen
           </TabsTrigger>
+          <TabsTrigger value="tredeverhogingen" className="justify-start">
+            Artikel 21 Toekenning tredeverhogingen
+          </TabsTrigger>
           <TabsTrigger value="oproep" className="justify-start">
             Artikel 10 Oproepkrachten
           </TabsTrigger>
@@ -466,6 +469,52 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>b.</strong> De hogere belong conform lid a. gaat in bij het bereiken van een hogere leeftijd.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tredeverhogingen Tab */}
+        <TabsContent value="tredeverhogingen" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 21 Toekenning tredeverhogingen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> De werkgever kan de werknemer een loon toekennen behorende bij een hogere trede in dezelfde loonschaal dan waarop hij krachtens zijn ervaringsjaren aanspraak heeft.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-3">
+                  <strong>2.a.</strong> De werknemer zal bij normale uitvoering van zijn werkzaamheden na verloop van elk vol functiejaar, een salarisverhoping worden toegekend, die gelijk is aan één loontrede van de loonschaal waarin hij is ingedeeld, tot hij het maximum van die loonschaal heeft bereikt.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.b.</strong> Indien de werkgever aan kan tonen dat er sprake is van onvoldoende uitvoering van de werkzaamheden en op grond daarvan geen tredeverhogting wenst toe te kennen, doet hij hiervan schriftelijk onder opgave van redenen mededeling aan de werknemer. De mededeling wordt gedaan uiterlijk 1 maand voordat de tredeverhogting zou ingaan.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.a.</strong> Bij indienstreding kan aan de werknemer van 21 jaar en ouder door de werkgever een loon, behorende bij een hogere trede uit dezelfde loonschaal worden toegekend dan waarop hij krachtens zijn ervaringsjaren aanspraak heeft.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.b.</strong> Bij indienstreding van een werknemer die de leeftijd van 21 jaar nog niet heeft bereikt, kan worden bepaald, dat voor de vaststelling en de verhoging van het loon wordt uitgegaan van een hogere leeftijd dan zijn daadwerkelijke leeftijd.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.</strong> Indien de werkgever toepassing heeft gegeven aan het gestelde in de leden 1, 3a of 3b., blijft lid 2 onverminderd van toepassing.
                 </p>
               </div>
             </CardContent>
