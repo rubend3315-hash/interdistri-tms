@@ -235,6 +235,9 @@ export default function CaoRules() {
           <TabsTrigger value="consignatievergoeding" className="justify-start">
             Artikel 42 Consignatievergoeding
           </TabsTrigger>
+          <TabsTrigger value="scholing-algemeen" className="justify-start">
+            Artikel 43 Scholing algemeen
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1279,6 +1282,22 @@ export default function CaoRules() {
                     <strong>d.</strong> er kan geen samenloop plaatsvinden van loon en/of andere toeslagen met deze consignatievergoeding.
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Scholing algemeen Tab */}
+        <TabsContent value="scholing-algemeen" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 43 Scholing algemeen</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  Ingeval scholing anders dan bedoeld in artikel 44 wordt gevolgd in opdracht van de werkgever of die wordt gevolgd voor het behouden van code 95 en het TCVT-certificaat en/of op grond van een aan de functie verbonden wettelijke verplichting, dienen aan de werknemer de cursuskosten, het examengeld en de reiskosten (volgens de in dat jaar geldende fiscale maximum netto kilometervergoeding) te worden vergoed. Voorts zal de werkgever de cursustijd a 100% vergoeden. Deze uren tellen niet mee bij de bepaling van het aantal overuren en worden niet als zaterdag-of zondaguren vergoed.
+                </p>
               </div>
             </CardContent>
           </Card>
