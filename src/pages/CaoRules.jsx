@@ -229,6 +229,9 @@ export default function CaoRules() {
           <TabsTrigger value="reiskosten-woon-werk" className="justify-start">
             Artikel 39a Vergoeding reiskosten woon-werkverkeer
           </TabsTrigger>
+          <TabsTrigger value="verblijfkosten" className="justify-start">
+            Artikel 40 Vergoeding van verblijfkosten
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1156,6 +1159,86 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>6.</strong> Van deze regeling mag in positieve zin, ten gunste van de werknemer, worden afgeweken.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Verblijfkosten Tab */}
+        <TabsContent value="verblijfkosten" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 40 Vergoeding van verblijfkosten</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> Aan de werknemer worden volgens het in lid 3 van dit artikel opgenomen schema de onderweg gemaakte kosten vergoed bestaande uit maaltijden, overige consumpties en sanitaire voorzieningen. Hieronder vallen niet de kosten van logies, inrichting van de cabine, koersverschillen, uitbetaalde fooien, telefoonkosten en overige kosten.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Van lid 1 kan worden afgeweken indien een afzonderlijke detacheringsregeling is getroffen of de werkgever een regeling heeft getroffen waardoor de werknemer gratis gebruik kan maken van bedrijfskantinefaciliteiten. Deze bedrijfskantinefaciliteiten dienen qua niveau in overeenstemming te zijn met de rechten die normaal gesproken ontleend kunnen worden aan onderstaand schema.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-3">
+                  <strong>3.</strong> De netto verblijfkostenvergoeding bedraagt per 1 januari 2026:
+                </p>
+
+                <div className="ml-4 space-y-4">
+                  <div>
+                    <p className="text-slate-700 font-medium mb-2">
+                      <strong>3.a.</strong> Bij ééndaagse ritten, zijnde ritten waarbij het vertrek en de aankomst binnen 24 uur plaatsvinden:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700">
+                      <li>korter dan 4 uur afwezig van standplaats geen onbelaste vergoeding</li>
+                      <li>langer dan 4 uur afwezig van standplaats € 0,83 per uur</li>
+                      <li>tussen 18.00 en 24.00 uur:</li>
+                      <ul className="list-none ml-6 space-y-1">
+                        <li>indien vertrek voor 14.00 uur € 3,77 per uur</li>
+                        <li>indien vertrek na 14.00 uur en er sprake is van een afwezigheidsduur van tenminste 12 uur een extra toeslag van € 15,73</li>
+                      </ul>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="text-slate-700 font-medium mb-2">
+                      <strong>3.b.</strong> Bij meerdaagse ritten:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700">
+                      <li>Eerste dag € 1,65 per uur</li>
+                      <li>tussen 17.00 en 24.00 uur indien vertrek voor 17.00 uur € 3,77 per uur</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="text-slate-700 font-medium mb-2">
+                      <strong>3.c.</strong> Tussentijdse dagen (12 x 1,65 + 12 x 3,77) € 65,04 per dag
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-slate-700 font-medium mb-2">Laatste dag € 1,65 per uur</p>
+                    <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700">
+                      <li>tussen 18.00 en 24.00 uur € 3,77 per uur</li>
+                      <li>tussen 24.00 en 06.00 uur € 1,65 per uur</li>
+                      <li>tussen 24.00 en 06.00 uur</li>
+                      <li>indien aankomst na 12.00 uur € 3,77 per uur</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-2">
+                  <strong>4.</strong> Vergoeding overstaan
+                </p>
+                <p className="text-slate-700">
+                  Ten aanzien van de werknemer die in het kader van zijn dienstuitvoering gedurende een weekend of een (buitenlandse) feestdag niet op zijn standplaats verblijft terwijl aan hem voor die dag geen werkzaamheden zijn of kunnen worden opgedragen, wordt aan hem terzake van de extra kosten van het niet-vrijwillig verblijf een extra vergoeding van € 15,73 netto en € 28,20 bruto per dag toegekend
                 </p>
               </div>
             </CardContent>
