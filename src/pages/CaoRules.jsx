@@ -178,6 +178,9 @@ export default function CaoRules() {
           <TabsTrigger value="deeltijd" className="justify-start">
             Artikel 8 Deeltijdwerknemers
           </TabsTrigger>
+          <TabsTrigger value="jeugdlonen" className="justify-start">
+            Artikel 20 Jeugdlonen
+          </TabsTrigger>
           <TabsTrigger value="oproep" className="justify-start">
             Artikel 10 Oproepkrachten
           </TabsTrigger>
@@ -433,6 +436,36 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>5.</strong> De kosten van de aanschaf door werknemer van de bestuurderskaart ten behoeve van de digitale tachograaf (1 x per 5 jaar) komen voor rekening van de werkgever.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Jeugdlonen Tab */}
+        <TabsContent value="jeugdlonen" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 20 Jeugdlonen voor niet-vakbekwame chauffeurs en kraanmachinisten en overige werknemers tot 21 jaar</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-slate-700 mb-3">
+                  <strong>a.</strong> Voor werknemers van 20 jaar en jonger, die niet in het bezit zijn van een geldig getuigschrift van vakbekwaamheid voor het besturen van een vrachtauto(code 95), het wettelijk verplicht TCVT- RA-registratie van vakbekwaamheid voor het bedienen van een mobiele kraan gelden de volgende percentages van het wettelijk minimum-loon:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700 font-medium">
+                  <li>15 jaar 45%</li>
+                  <li>16 jaar 50%</li>
+                  <li>17 jaar 56%</li>
+                  <li>18 jaar 63%</li>
+                  <li>19 jaar 72%</li>
+                  <li>20 jaar 83%</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>b.</strong> De hogere belong conform lid a. gaat in bij het bereiken van een hogere leeftijd.
                 </p>
               </div>
             </CardContent>
