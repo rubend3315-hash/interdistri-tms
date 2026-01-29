@@ -17,18 +17,18 @@ export default function HRMSettings() {
         <p className="text-slate-500 mt-1">Beheer urensoorten en uurcodes</p>
       </div>
 
-      <Tabs defaultValue="urensoort" className="w-full">
+      <Tabs defaultValue="uurcode" className="w-full">
         <TabsList>
-          <TabsTrigger value="urensoort">Urensoort</TabsTrigger>
           <TabsTrigger value="uurcode">Uurcode</TabsTrigger>
+          <TabsTrigger value="urensoort">Urensoort</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="urensoort" className="mt-6">
-          <UrensoortTab />
-        </TabsContent>
 
         <TabsContent value="uurcode" className="mt-6">
           <UurcodeTab />
+        </TabsContent>
+
+        <TabsContent value="urensoort" className="mt-6">
+          <UrensoortTab />
         </TabsContent>
       </Tabs>
     </div>
