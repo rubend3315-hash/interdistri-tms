@@ -75,6 +75,7 @@ const menuItems = [
       { name: "Voertuigen", icon: Car, page: "Vehicles" },
       { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
       { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
+      { name: "Back-ups", icon: Shield, page: "Backups" },
     ]
   },
 
