@@ -238,6 +238,9 @@ export default function CaoRules() {
           <TabsTrigger value="scholing-algemeen" className="justify-start">
             Artikel 43 Scholing algemeen
           </TabsTrigger>
+          <TabsTrigger value="vergoeding-certificaten" className="justify-start">
+            Artikel 44 Vergoeding certificaten
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1298,6 +1301,34 @@ export default function CaoRules() {
                 <p className="text-slate-700">
                   Ingeval scholing anders dan bedoeld in artikel 44 wordt gevolgd in opdracht van de werkgever of die wordt gevolgd voor het behouden van code 95 en het TCVT-certificaat en/of op grond van een aan de functie verbonden wettelijke verplichting, dienen aan de werknemer de cursuskosten, het examengeld en de reiskosten (volgens de in dat jaar geldende fiscale maximum netto kilometervergoeding) te worden vergoed. Voorts zal de werkgever de cursustijd a 100% vergoeden. Deze uren tellen niet mee bij de bepaling van het aantal overuren en worden niet als zaterdag-of zondaguren vergoed.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Vergoeding certificaten Tab */}
+        <TabsContent value="vergoeding-certificaten" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 44 Vergoeding certificaten</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">A) Vergoeding ADR-certificaat</h3>
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <p className="text-slate-700">
+                    Voor het behalen en periodiek in stand houden van het ADR-certificaat in opdracht van de werkgever, zal de werkgever de cursuskosten, het examengeld en de reiskosten (volgens de in dat jaar geldende fiscale maximum netto kilometervergoeding) vergoeden. Voorts zal de werkgever de terzake bestede cursustijd met een maximum van 40 loonuren (à 100%) vergoeden. Deze uren tellen niet mee bij de bepaling van het aantal overuren.
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">B) Vergoeding certificaat vorkheftruck</h3>
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <p className="text-slate-700">
+                    Voor het behalen en periodiek in stand houden van het certificaat vorkheftruck in opdracht van de werkgever en/of het periodiek in stand houden van het vorkheftruckcertificaat op verzoek van de werknemer, zal de werkgever de cursuskosten, het examengeld en de reiskosten (volgens de in dat jaar geldende fiscale maximum netto kilometervergoeding) vergoeden. Voorts zal de werkgever de terzake bestede cursustijd met een maximum van 40 loonuren (à 100%) vergoeden. Deze uren tellen niet mee bij de bepaling van het aantal overuren.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
