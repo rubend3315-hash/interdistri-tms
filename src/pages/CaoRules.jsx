@@ -1187,32 +1187,6 @@ export default function CaoRules() {
                   <strong>2.</strong> Voor rijdend personeel op dubbelbemande voertuigen geldt lid 1 voor de uren liggend op maandag tot en met zaterdag 7.00 uur.
                 </p>
               </div>
-
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Berekening Overwerk 130%</h3>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                  <div>
-                    <p className="text-slate-700 font-medium mb-2">Toepassingsveld:</p>
-                    <ul className="list-disc list-inside space-y-1 ml-2 text-slate-700">
-                      <li>Geldig op: maandag t/m vrijdag</li>
-                      <li>Toeslag: 130% van het uurloon</li>
-                    </ul>
-                  </div>
-                  <div className="border-t border-blue-200 pt-3">
-                    <p className="text-slate-700 font-medium mb-2">Criteria:</p>
-                    <ul className="list-disc list-inside space-y-1 ml-2 text-slate-700">
-                      <li>Uren boven de 40 uur per week (fulltimers)</li>
-                      <li>Uren boven de individuele contracturen (parttimers)</li>
-                    </ul>
-                  </div>
-                  <div className="border-t border-blue-200 pt-3">
-                    <p className="text-slate-700 font-medium mb-2">Berekening:</p>
-                    <p className="text-slate-700">
-                      Uurloon × 1,30 voor alle overuren die boven de 40 uur per week liggen (of boven de individueel overeengekomen arbeidstijd voor parttimers).
-                    </p>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
