@@ -199,6 +199,9 @@ export default function CaoRules() {
           <TabsTrigger value="loonberekening" className="justify-start">
             Artikel 26a Loonberekening
           </TabsTrigger>
+          <TabsTrigger value="overuren" className="justify-start">
+            Artikel 27 Definities overuren
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -835,6 +838,28 @@ export default function CaoRules() {
                   <li>voor werknemers die op het moment van inwerkingtreding van de CAO 55 jaar en ouder zijn, blijft de oude regeling gehandhaafd en vindt er geen afbouw plaats;</li>
                   <li>de nieuwe regeling dient te worden gemeld bij CAO-partijen.</li>
                 </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Definities overuren Tab */}
+        <TabsContent value="overuren" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 27 Definities overuren</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> Overuren zijn uren, liggend op maandag tot en met vrijdag, waarmee de diensttijd van 40 uur in de week, dan wel de individueel overeengekomen arbeidstijd als dit minder is dan 40 uur per week, wordt overschreden.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Voor rijdend personeel op dubbelbemande voertuigen geldt lid 1 voor de uren liggend op maandag tot en met zaterdag 7.00 uur.
+                </p>
               </div>
             </CardContent>
           </Card>
