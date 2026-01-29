@@ -253,6 +253,9 @@ export default function CaoRules() {
           <TabsTrigger value="bijzonder-verlof-zonder-loon" className="justify-start">
             Artikel 66 Bijzonder verlof zonder behoud van loon
           </TabsTrigger>
+          <TabsTrigger value="vakantie" className="justify-start">
+            Artikel 67a Vakantie
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1451,6 +1454,192 @@ export default function CaoRules() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Vakantie Tab */}
+        <TabsContent value="vakantie" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 67a Vakantie</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> Ten aanzien van de vakantie gelden -met inachtneming van de leden 2 tot en met 9 van dit artikel- de wettelijke bepalingen, geregeld in artikel 7:634 BW en verder.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Het vakantiejaar loopt van 1 januari tot en met 31 december.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-3">
+                  <strong>3a.</strong> De normale vakantie per jaar bedraagt:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700">
+                  <li>voor werknemers van 16 jaar en jonger 28 dagen</li>
+                  <li>voor werknemers van 17 en 18 jaar 26 dagen</li>
+                  <li>voor werknemers van 19 t/m 39 jaar 24 dagen</li>
+                  <li>voor werknemers van 40 t/m 44 jaar 24 dagen</li>
+                  <li>voor werknemers van 45 t/m 49 jaar 25 dagen</li>
+                  <li>voor werknemers van 50 t/m 54 jaar 26 dagen</li>
+                  <li>voor werknemers van 55 t/m 59 jaar 27 dagen</li>
+                  <li>voor werknemers van 60 jaar en ouder 28 dagen</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-3">
+                  <strong>3b.</strong> In afwijking van het gestelde onder a. bedraagt de vakantie per jaar:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700">
+                  <li>voor werknemers met 10 dienstjaren 25 dagen</li>
+                  <li>voor werknemers met 15 dienstjaren 26 dagen</li>
+                  <li>voor werknemers met 20 dienstjaren 27 dagen</li>
+                  <li>voor werknemers met 25 dienstjaren 28 dagen</li>
+                  <li>voor werknemers met 30 dienstjaren 29 dagen</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>c.</strong> Het toekennen van vakantiedagen vindt plaats of op grond van de lengte van het dienstverband dan wel op grond van leeftijd; het hoogste aantal dagen prevaleert.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>d.</strong> De werknemer heeft recht op het onder a. respectievelijk b. van lid 3 genoemde aantal vakantiedagen, indien hij op 1 juli de daarbij genoemde leeftijd heeft bereikt, respectievelijk het daarbij genoemde aantal dienstjaren zonder onderbreking in de onderneming heeft vervuld. Als onderbreking wordt niet beschouwd enige vorm van verlof of afwezigheid met instandhouding van de arbeidsovereenkomst.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.</strong> Werknemer heeft de mogelijkheid om per kalenderjaar 4 bovenwettelijke vakantiedagen aan te kopen of te verkopen. De waarde van een vakantiedag wordt bepaald overeenkomstig het bepaalde in lid 10 van dit artikel.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>5.</strong> De werknemer heeft geen aanspraak op vakantie over de tijd, gedurende welke hij wegens het niet verrichten van de bedongen arbeid geen aanspraak op in geld vastgesteld loon heeft, tenzij uit artikel 7:635 BW anders voortvloeit.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>6.</strong> De totale aanspraak op vakantie wordt bij het einde van het vakantiejaar, of bij het einde van de dienstbetrekking naar boven afgerond op halve dagen indien het dienstverband van de werknemer tenminste 2 maanden onafgebroken heeft geduurd.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>7.a.</strong> De werkgever bevordert, dat de werknemer zijn vakantiedagen in het lopende vakantiejaar opneemt. Daartoe zal de werkgever tijdig in overleg met de werknemers jaarlijks een goede vakantieplanning maken.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>7.b.</strong> Desgewenst geniet de werknemer -voor zover de aanspraak in het betreffende vakantiejaar toereikend zal zijn- drie weken aaneengesloten vakantie.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>7.c.</strong> De werknemer ouder dan 50 jaar geniet desgewenst – voor zover de aanspraak in het betreffende vakantiejaar toereikend zal zijn – 4 weken aaneengesloten vakantie in een door werkgever na overleg met de werknemer te bepalen periode.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>7.d.</strong> De werkgever stelt de tijdstippen van aanvang en einde van de vakantie vast na overleg met de werknemer, waarbij de aanvang van de aaneengesloten vakantie zoveel mogelijk zal zijn gelegen in de periode van 1 mei tot en met 30 september.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>7.e.</strong> De werkgever mag niet bepalen, dat oponthoud tijdens een meerdaagse buitenlandse rit als vakantie zal worden aangemerkt, tenzij met de werknemer op diens verzoek anders is overeengekomen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>7.f.</strong> De werkgever heeft de bevoegdheid jaarlijks drie verplichte snipperdagen aan te wijzen. Deze snipperdagen moeten direct voorafgaan aan of volgen op een der in artikel 32 genoemde feestdagen. Indien de werkgever van deze mogelijkheid gebruik maakt dient dat tenminste twee maanden van tevoren schriftelijk bekend gemaakt te worden.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>8.</strong> Vakantiedagen worden aan het begin van het kalenderjaar toegekend. De feitelijke opbouw vindt per betalingsperiode plaats. In geval van een negatief saldo aan vakantiedagen bij einde dienstverband, zullen deze bij de eindafrekening worden verrekend.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>9.</strong> De waarde van elke wettelijke en bovenwettelijke vakantiedag waarop de werknemer, bij beëindiging van het dienstverband aanspraak heeft en die niet alsnog wordt genoten, is gelijk aan de waarde op grond van lid 10 van dit artikel.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-3">
+                  <strong>10.</strong> Met ingang van 1 januari 2026 bestaat de waarde van de 20 wettelijke vakantiedagen en van de bovenwettelijke vakantiedagen, uit de volgende onderdelen (*):
+                </p>
+                <div className="space-y-3 ml-4">
+                  <div>
+                    <p className="text-slate-700">
+                      <strong>a.</strong> Het functieloon van 1 dag vermeerderd met de persoonlijke toeslag en de ploegentoeslag;
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-700">
+                      <strong>b.</strong> Het gemiddelde bedrag dat in het voorafgaande kalenderjaar per gewerkte dag is ontvangen aan vergoeding van de toeslagen voor de zaterdag- en zondagdienst (art. 33), de toeslag voor nachtelijke uren (art. 37) de vuilwerktoeslag (art. 38A), de koudetoeslag (art. 38B), de consignatievergoeding (art. 42), de reisuren voor de werknemers op mobiele kranen (art. 47) en de onregelmatigheidstoeslag (art. 4 Bijlage VII).
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-700">
+                      <strong>c.</strong> Het gemiddelde bedrag dat in het voorafgaande kalenderjaar per gewerkte dag is ontvangen aan vergoeding van overuren, zaterdag- en zondaguren, voor zover deze de individueel overeengekomen arbeidstijd per week overschrijden.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-700">
+                      <strong>d.</strong> Indien de in 10 lid b) en lid c) voorgeschreven referentieperiode van het voorafgaande kalender jaar niet passend is, wordt er een passende referntieperiode gekozen.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-700">
+                      <strong>e.</strong> Indien de werknemer in het lopende kalenderjaar in dienst is getreden is het voorafgaande kalenderjaar niet passend. De passende referentieperiode is dan de periode dat de werknemer in dienst is geweest in het lopende kalenderjaar tot de eerste vakantiedag. Deze waarde wordt de rest van het kalenderjaar gehanteerd. De werknemer kan om een nacalculatie vragen aan het einde van het kalenderjaar.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 italic">
+                  (*) Partijen bij de CAO spreken de intentie uit toekomstige ontwikkelingen in de rechtspraak te monitoren en nieuwe maatstaven te codificeren in volgende versies van deze CAO.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>11.a.</strong> De werkgever is verplicht aantekening te houden van de door de werknemer opgenomen, respectievelijk aan hem uitbetaalde vakantiedagen/-uren.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>11.b.</strong> Mutaties ten aanzien van het (resterend) aantal vakantiedagen/-uren dienen op de salarisspecificatie te worden vermeld.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>11.c.</strong> De werkgever verstrekt bij het einde van de dienstbetrekking aan de werknemer een verklaring waaruit het aantal bij de beëindiging uitbetaalde vakantiedagen/-uren blijkt.
+                </p>
               </div>
             </CardContent>
           </Card>
