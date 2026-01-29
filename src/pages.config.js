@@ -66,6 +66,7 @@ import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
 import Approvals from './pages/Approvals';
 import HRMSettings from './pages/HRMSettings';
+import Backups from './pages/Backups';
 import __Layout from './Layout.jsx';
 
 
@@ -89,6 +90,7 @@ export const PAGES = {
     "Vehicles": Vehicles,
     "Approvals": Approvals,
     "HRMSettings": HRMSettings,
+    "Backups": Backups,
 }
 
 export const pagesConfig = {
