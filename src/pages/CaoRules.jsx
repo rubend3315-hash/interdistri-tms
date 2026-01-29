@@ -193,6 +193,9 @@ export default function CaoRules() {
           <TabsTrigger value="inschaling" className="justify-start">
             Artikel 19 Inschaling bij indiensttreding
           </TabsTrigger>
+          <TabsTrigger value="jonge-werknemers" className="justify-start">
+            Artikel 22 21 jarigen en ouder/ vakbekwame chauffeurs
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -591,6 +594,100 @@ export default function CaoRules() {
                 <p className="text-slate-700">
                   <strong>3.</strong> Bij de indiensttreding kan de werkgever bepalen dat de werknemer tijdens de proeftijd op een lagere trede in de juiste loonschaal wordt ingedeeld. Met terugwerkende kracht tot de datum van indiensttreding wordt de werknemer na afloop van de proeftijd ingedeeld op de trede, die overeenkomt met het aantal ervaringsjaren, zoals vastgesteld overeenkomstig lid 1 van dit artikel.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 21 jarigen en ouder/ vakbekwame chauffeurs Tab */}
+        <TabsContent value="jonge-werknemers" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 22 21 jarigen en ouder/ vakbekwame chauffeurs en kraanmachinisten jonger dan 21 jaar</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.a.</strong> Indien een werknemer de leeftijd van 21 jaar bereikt, wordt hij ingeschaald op trede 1 van de geldende loonschaal.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.b.</strong> In afwijking van lid 1a. wordt de werknemer, jonger dan 21 jaar, zodra deze in het bezit is van een geldig getuigschrift van vakbekwaamheid voor het besturen van een vrachtauto (code 95) en/of het wettelijk verplicht TCVT- RA-registratie van vakbekwaamheid voor het bedienen van een mobiele kraan ingeschaald op trede 1 van de geldende loonschaal mits de werknemer in zijn dagelijkse werkzaamheden ook daadwerkelijk een vrachtauto moet besturen en/of een mobiele kraan moet bedienen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.c.</strong> In afwijking van lid 1a geldt dat de werknemer die de leeftijd van 21 jaar heeft bereikt, maar bij indiensttreding nog niet beschikt over de specifieke vak- en/of bedrijfskennis welke voor de vervulling van de functies vallende onder de loonschalen A, B en C is vereist, kan worden ingedeeld in de trede –1 behorende bij zijn loonschaal. De -1 trede wordt berekend op basis van het wettelijk minimumloon en trede 1 van de loonschaal en wordt bepaald op het gemiddelde van het uur- en weekloon van deze 2 niveaus. Bij een aanpassing van het wettelijk minimumloon en/of trede 1 van een loonschaal dient de -1 trede hierop ook te worden aangepast.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.d.</strong> De werkgever stelt de in lid c bedoelde werknemer in de gelegenheid de voor de functie noodzakelijke opleiding/training te volgen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.e.</strong> Zodra de in lid d bedoelde opleiding/training met goed gevolg is afgerond wordt de werknemer in de trede 1 van zijn loonschaal ingedeeld.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.f.</strong> Voor de toekenning van tredeverhogingen is overigens artikel 21 integraal van toepassing.
+                </p>
+              </div>
+
+              <div className="mt-6">
+                <p className="text-slate-700 font-semibold mb-4">De mintreden bedragen per 1 januari 2026:</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-slate-300">
+                    <thead>
+                      <tr className="bg-slate-100">
+                        <th className="border border-slate-300 px-4 py-2 text-left font-semibold text-slate-700">Loonschaal / trede</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Per week (€)</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">4 weken (€)</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Per maand (€)</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Uurloon 100% (€)</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Uurloon 130% (€)</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Uurloon 150% (€)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700">A-1</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">588,40</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2.353,60</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2.559,54</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">14,71</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">19,12</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">22,07</td>
+                      </tr>
+                      <tr className="bg-slate-50">
+                        <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700">B-1</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">593,76</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2.375,04</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2.581,67</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">14,84</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">19,29</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">22,26</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700">C-1</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">606,74</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2.426,96</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2.638,11</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">15,17</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">19,72</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">22,76</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </CardContent>
           </Card>
