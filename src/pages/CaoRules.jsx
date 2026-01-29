@@ -194,7 +194,7 @@ export default function CaoRules() {
             Artikel 19 Inschaling bij indiensttreding
           </TabsTrigger>
           <TabsTrigger value="jonge-werknemers" className="justify-start">
-            Mintrede-niet vakbekwaam
+            Artikel 22 Mintrede-niet vakbekwaam
           </TabsTrigger>
         </TabsList>
         
