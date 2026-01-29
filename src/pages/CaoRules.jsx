@@ -194,7 +194,7 @@ export default function CaoRules() {
             Artikel 19 Inschaling bij indiensttreding
           </TabsTrigger>
           <TabsTrigger value="jonge-werknemers" className="justify-start">
-            Artikel 22 21 jarigen en ouder/ vakbekwame chauffeurs
+            Mintrede-niet vakbekwaam
           </TabsTrigger>
         </TabsList>
         
