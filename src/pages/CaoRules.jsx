@@ -22,7 +22,8 @@ import {
   Calendar,
   Trash2,
   Edit,
-  Users
+  Users,
+  Calculator
 } from "lucide-react";
 
 const ruleTypes = ["Toeslag", "Vergoeding", "Werktijd", "Pauze", "Overig"];
@@ -178,6 +179,10 @@ export default function CaoRules() {
           <TabsTrigger value="oproep" className="gap-2">
             <Users className="w-4 h-4" />
             Artikel 10 Oproepkrachten
+          </TabsTrigger>
+          <TabsTrigger value="berekening" className="gap-2">
+            <Calculator className="w-4 h-4" />
+            Artikel 12 Berekening dag- en uurloon
           </TabsTrigger>
         </TabsList>
 
@@ -373,6 +378,22 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>6.</strong> In afwijking van artikel 6 lid 3 wordt door de werkgever aan de oproepkracht een exemplaar van de CAO verstrekt indien hij dit aan de werkgever verzoekt.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Berekening dag- en uurloon Tab */}
+        <TabsContent value="berekening">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 12 Berekening dag- en uurloon</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-slate-50 p-6 rounded-lg">
+                <p className="text-slate-700 leading-relaxed">
+                  Het dag- en uurloon wordt berekend door het functieloon per 4 weken te delen door 20 respectievelijk 160 en het functieloon per maand te delen door 21,75 respectievelijk 173,92.
                 </p>
               </div>
             </CardContent>
