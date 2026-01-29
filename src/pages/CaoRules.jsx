@@ -241,6 +241,9 @@ export default function CaoRules() {
           <TabsTrigger value="vergoeding-certificaten" className="justify-start">
             Artikel 44 Vergoeding certificaten
           </TabsTrigger>
+          <TabsTrigger value="studiekostenregeling" className="justify-start">
+            Artikel 45 Studiekostenregeling
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1329,6 +1332,33 @@ export default function CaoRules() {
                     Voor het behalen en periodiek in stand houden van het certificaat vorkheftruck in opdracht van de werkgever en/of het periodiek in stand houden van het vorkheftruckcertificaat op verzoek van de werknemer, zal de werkgever de cursuskosten, het examengeld en de reiskosten (volgens de in dat jaar geldende fiscale maximum netto kilometervergoeding) vergoeden. Voorts zal de werkgever de terzake bestede cursustijd met een maximum van 40 loonuren (à 100%) vergoeden. Deze uren tellen niet mee bij de bepaling van het aantal overuren.
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Studiekostenregeling Tab */}
+        <TabsContent value="studiekostenregeling" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 45 Studiekostenregeling</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  De werkgever heeft de mogelijkheid terzake van de in de artikelen 43 en 44 genoemde kosten voor aanvang van de opleiding een studiekostenregeling aan z'n werknemers voor te leggen indien deze opleidingen niet worden gevolgd in opdracht van de werkgever of op grond van een voor de werkgever wettelijke verplichting.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-3">
+                  Deze studiekostenregeling verplicht de werknemer:
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4 text-slate-700">
+                  <li>bij ontslagname van de werknemer binnen een jaar na het behalen van het diploma/certificaat: 75% van de kosten van de genoten opleiding terug te betalen;</li>
+                  <li>bij ontslagname van de werknemer binnen twee jaar na het behalen van het diploma/certificaat: 50% van de kosten van de genoten opleiding terug te betalen;</li>
+                  <li>bij ontslagname van de werknemer binnen drie jaar na het behalen van het diploma/certificaat: 25% van de kosten van de genoten opleiding terug te betalen.</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
