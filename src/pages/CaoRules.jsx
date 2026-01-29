@@ -175,7 +175,7 @@ export default function CaoRules() {
           <TabsTrigger value="artikel-6" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 6 Verplichtingen van de werkgever
           </TabsTrigger>
-          <TabsTrigger value="deeltijd" className="justify-start">
+          <TabsTrigger value="deeltijd" className="justify-start text-left break-words text-sm">
             Artikel 8 Deeltijdwerknemers
           </TabsTrigger>
           <TabsTrigger value="jeugdlonen" className="justify-start font-bold text-red-600 break-words text-sm">
@@ -190,10 +190,10 @@ export default function CaoRules() {
           <TabsTrigger value="oproep" className="justify-start font-bold text-red-600 break-words text-sm">
             Artikel 10 Oproepkrachten
           </TabsTrigger>
-          <TabsTrigger value="berekening" className="justify-start">
+          <TabsTrigger value="berekening" className="justify-start text-left break-words text-sm">
             Artikel 12 Berekening dag- en uurloon
           </TabsTrigger>
-          <TabsTrigger value="loonbetaling" className="justify-start">
+          <TabsTrigger value="loonbetaling" className="justify-start text-left break-words text-sm">
             Artikel 13 Loonbetaling
           </TabsTrigger>
           <TabsTrigger value="arbeidsongeschiktheid" className="justify-start font-bold text-red-600 break-words text-sm">
