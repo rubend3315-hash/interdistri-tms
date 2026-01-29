@@ -232,6 +232,9 @@ export default function CaoRules() {
           <TabsTrigger value="verblijfkosten" className="justify-start">
             Artikel 40 Vergoeding van verblijfkosten
           </TabsTrigger>
+          <TabsTrigger value="consignatievergoeding" className="justify-start">
+            Artikel 42 Consignatievergoeding
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1240,6 +1243,42 @@ export default function CaoRules() {
                 <p className="text-slate-700">
                   Ten aanzien van de werknemer die in het kader van zijn dienstuitvoering gedurende een weekend of een (buitenlandse) feestdag niet op zijn standplaats verblijft terwijl aan hem voor die dag geen werkzaamheden zijn of kunnen worden opgedragen, wordt aan hem terzake van de extra kosten van het niet-vrijwillig verblijf een extra vergoeding van € 15,73 netto en € 28,20 bruto per dag toegekend
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Consignatievergoeding Tab */}
+        <TabsContent value="consignatievergoeding" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 42 Consignatievergoeding</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  De werknemer, die opdracht heeft gekregen zich beschikbaar te houden voor te verrichten werkzaamheden, heeft recht op de navolgende vergoeding voor de uren waarvoor hij zich overeenkomstig de opdracht beschikbaar heeft gehouden. Deze vergoeding bedraagt minimaal € 3,40 bruto per uur met een maximum € 27,20 per etmaal. De werkgever kan hier in positieve zin van afwijken.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-3">
+                  Hierbij gelden de volgende voorwaarden:
+                </p>
+                <div className="space-y-3">
+                  <p className="text-slate-700">
+                    <strong>a.</strong> aan de werknemer dient vooraf te zijn medegedeeld, dat hij zich gedurende een bepaalde vooraf vastgestelde tijdsruimte beschikbaar moet houden voor het verrich-ten van werk en verplicht is gehoor te geven aan een oproep de dienst aan te vangen.
+                  </p>
+                  <p className="text-slate-700">
+                    <strong>b.</strong> de werknemer komt voor de consignatievergoeding niet in aanmerking indien er sprake is van diensttijd en hij zich in de bedrijfsruimte en/of op of rondom het voertuig bevindt.
+                  </p>
+                  <p className="text-slate-700">
+                    <strong>c.</strong> de werknemer komt evenmin voor de consignatievergoeding in aanmerking indien hij een eenmalige oproep per etmaal ontvangt om de dienst op een bepaald tijdstip aan te vangen.
+                  </p>
+                  <p className="text-slate-700">
+                    <strong>d.</strong> er kan geen samenloop plaatsvinden van loon en/of andere toeslagen met deze consignatievergoeding.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
