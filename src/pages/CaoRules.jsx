@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus,
   BookOpen,
@@ -20,7 +21,8 @@ import {
   Clock,
   Calendar,
   Trash2,
-  Edit
+  Edit,
+  Users
 } from "lucide-react";
 
 const ruleTypes = ["Toeslag", "Vergoeding", "Werktijd", "Pauze", "Overig"];
@@ -162,6 +164,22 @@ export default function CaoRules() {
         </Button>
       </div>
 
+      {/* Tabs */}
+      <Tabs defaultValue="regels" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="regels" className="gap-2">
+            <BookOpen className="w-4 h-4" />
+            CAO Regels
+          </TabsTrigger>
+          <TabsTrigger value="deeltijd" className="gap-2">
+            <Users className="w-4 h-4" />
+            Artikel 8 Deeltijdwerknemers
+          </TabsTrigger>
+        </TabsList>
+
+        {/* CAO Regels Tab */}
+        <TabsContent value="regels" className="space-y-6">
+
       {/* Rules by Type */}
       {isLoading ? (
         <div className="space-y-6">
@@ -252,6 +270,54 @@ export default function CaoRules() {
           )}
         </div>
       )}
+        </TabsContent>
+
+        {/* Deeltijdwerknemers Tab */}
+        <TabsContent value="deeltijd">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 8 Deeltijdwerknemers</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <p className="text-slate-700 font-medium mb-2">
+                  <strong>1.</strong> De bepalingen van de CAO zijn op deeltijdwerknemers van toepassing, met inachtneming van de volgende leden van dit artikel.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-2">
+                  <strong>2.a.</strong> Voor zover de bepalingen van de CAO zich daarvoor lenen, worden zij op de deeltijdwerker naar evenredigheid toegepast. Onafhankelijk van het arbeidspatroon dient voor ieder dienstuur minimaal het wettelijk minimum uurloon te worden betaald.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-2">
+                  <strong>2.b.</strong> Overuren zijn uren, liggend op maandag tot en met vrijdag, waarmee de diensttijd van 40 uur in de week, dan wel de individueel overeengekomen arbeidstijd als dit minder is dan 40 uur per week, wordt overschreden Voor rijdend personeel op dubbel bemande voertuigen geldt de vorige zin voor de uren liggend op maandag tot en met zaterdag 7.00 uur.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-2">
+                  <strong>3.a.</strong> De vakantie-aanspraken en vakantiebijslag ontstaan naar rato van het aantal verrichte diensturen, doch niet meer dan het voor betrokkenen geldende maximum genoemd in artikel 67a, artikel 68 resp. artikel 69.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-2">
+                  <strong>3.b.</strong> Voor het vaststellen van de onder 3a. genoemde vakantie-aanspraken en vakantiebijslag geldt als basis voor de berekening, het minimum aantal overeengekomen uren.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-2">
+                  <strong>3.c.</strong> Voor het berekenen van de vakantie-aanspraken en vakantiebijslag in een bepaald jaar, dient het totaal aantal verrichte diensturen, met een minimum van het aantal overeengekomen uren, in het voorafgaande kalenderjaar te worden genomen.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
