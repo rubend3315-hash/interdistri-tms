@@ -2230,22 +2230,10 @@ export default function CaoRules() {
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>{selectedRule ? 'Regel Bewerken' : 'Nieuwe Regel'}</span>
-              {selectedRule && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => {
-                    if (confirm('Weet je zeker dat je deze regel wilt verwijderen?')) {
-                      deleteMutation.mutate(selectedRule.id);
-                      setIsDialogOpen(false);
-                    }
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
             </DialogTitle>
+            {selectedRule && (
+              <p className="text-sm text-slate-500 mt-2">CAO-regels kunnen niet worden verwijderd. U kunt alleen het geldigheidperiode wijzigen.</p>
+            )}
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-4">
