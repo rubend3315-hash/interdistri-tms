@@ -190,6 +190,9 @@ export default function CaoRules() {
           <TabsTrigger value="functie-indeling" className="justify-start">
             Artikel 18 Functie-indeling
           </TabsTrigger>
+          <TabsTrigger value="inschaling" className="justify-start">
+            Artikel 19 Inschaling bij indiensttreding
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -559,6 +562,34 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>3.</strong> Er is een Sectorinstituut Transport en Logistiek, Postbus 308, 2800 AH Gouda, tel.nr. 088-2596111. Dit sectorinstituut heeft onder meer als taak het bevorderen van de indeling van functies in het Beroepsgoederenvervoer over de weg en de verhuur van mobiele kranen overeenkomstig het afgesproken systeem van functiewaardering.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Inschaling bij indiensttreding Tab */}
+        <TabsContent value="inschaling" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 19 Inschaling bij indiensttreding</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> Bij indiensttreding wordt de werknemer ingeschaald in de bij zijn functie behorende loonschaal op de trede die overeenkomt met het aantal onafgebroken ervaringsjaren in dezelfde of soortgelijke functie, zowel in deze als in andere bedrijfstakken, direct voorafgaande aan de indiensttreding. Bij de vaststelling van het aantal ervaringsjaren blijven onderbrekingen van minder dan twee jaar buiten beschouwing.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Indien de ervaring niet is verworven in eenzelfde, maar in een soortgelijke functie, kan de werknemer vanaf de indiensttreding gedurende maximaal 1 jaar in de juiste loonschaal een trede lager worden geplaatst dan overeenkomt met zijn ervaringsjaren in die soortgelijke functie. Na dat jaar wordt de werknemer geplaatst op die trede die overeenkomt met zijn ervaringsjaren.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> Bij de indiensttreding kan de werkgever bepalen dat de werknemer tijdens de proeftijd op een lagere trede in de juiste loonschaal wordt ingedeeld. Met terugwerkende kracht tot de datum van indiensttreding wordt de werknemer na afloop van de proeftijd ingedeeld op de trede, die overeenkomt met het aantal ervaringsjaren, zoals vastgesteld overeenkomstig lid 1 van dit artikel.
                 </p>
               </div>
             </CardContent>
