@@ -184,6 +184,9 @@ export default function CaoRules() {
           <TabsTrigger value="tredeverhogingen" className="justify-start">
             Artikel 21 Toekenning tredeverhogingen
           </TabsTrigger>
+          <TabsTrigger value="loonschalen" className="justify-start">
+            Artikel 25 Loonschalen
+          </TabsTrigger>
           <TabsTrigger value="oproep" className="justify-start">
             Artikel 10 Oproepkrachten
           </TabsTrigger>
@@ -517,6 +520,109 @@ export default function CaoRules() {
                   <strong>4.</strong> Indien de werkgever toepassing heeft gegeven aan het gestelde in de leden 1, 3a of 3b., blijft lid 2 onverminderd van toepassing.
                 </p>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Loonschalen Tab */}
+        <TabsContent value="loonschalen" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 25 Loonschalen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <p className="text-slate-700">
+                  Onderstaande tabel is van toepassing, tenzij de onderneming voorheen onder de CAO Goederenvervoer Nederland (voorheen ook KNV-CAO) genoemde) veel. Voor werknemers die bij deze laatste ondernemingen werken, geldt de loontabel van artikel 69D.
+                </p>
+                <p className="text-slate-700">
+                  Let wel: Indien het functieloon in onderstaande tabellen onder het wettelijk minimumloon komt dan dient als functieloon het wettelijk minimumloon te worden aangehouden.
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-700 font-semibold mb-4">
+                  TLN – Functieloonschalen per 1 januari 2026 (+4%) Loonschaal/ trede
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-slate-300">
+                    <thead>
+                      <tr className="bg-slate-100">
+                        <th className="border border-slate-300 px-4 py-2 text-left font-semibold text-slate-700">Schaal / Trede</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Weekloon</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">4 weken</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Maandloon</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Uurloon 100%</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Uurloon 130%</th>
+                        <th className="border border-slate-300 px-4 py-2 text-right font-semibold text-slate-700">Uurloon 150%</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan="7" className="border border-slate-300 px-4 py-2 bg-slate-50 font-semibold text-slate-700">Loonschaal C</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700">C 1</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">625,07</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2500,28</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2717,80</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">15,63</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">20,32</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">23,45</td>
+                      </tr>
+                      <tr className="bg-slate-50">
+                        <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700">C 2</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">650,07</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2600,28</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2826,50</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">16,25</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">21,13</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">24,38</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700">C 3</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">676,07</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2704,28</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2939,55</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">16,90</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">21,97</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">25,35</td>
+                      </tr>
+                      <tr className="bg-slate-50">
+                        <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700">C 4</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">703,11</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2812,44</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">3057,12</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">17,58</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">22,85</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">26,37</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700">C 5</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">731,23</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">2924,92</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">3179,39</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">18,28</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">23,76</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">27,42</td>
+                      </tr>
+                      <tr className="bg-slate-50">
+                        <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700">C 6</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">760,48</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">3041,92</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">3306,57</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">19,01</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">24,71</td>
+                        <td className="border border-slate-300 px-4 py-2 text-right text-slate-700">28,52</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-600 italic">
+                Bron: TLN functieloonschalen per 1 januari 2026 (CAO Beroepsgoederenvervoer).
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
