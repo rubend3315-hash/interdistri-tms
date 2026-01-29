@@ -259,6 +259,9 @@ export default function CaoRules() {
           <TabsTrigger value="atv-dagen" className="justify-start">
             Artikel 68 ATV-dagen
           </TabsTrigger>
+          <TabsTrigger value="vakantiebijslag" className="justify-start">
+            Artikel 69 Vakantiebijslag
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1457,6 +1460,58 @@ export default function CaoRules() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Vakantiebijslag Tab */}
+        <TabsContent value="vakantiebijslag" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 69 Vakantiebijslag</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> Per kalenderjaar heeft de werknemer recht op een vakantiebijslag die 8% bedraagt van het over de vierde betalingsperiode van het lopende kalenderjaar berekende loon maal dertien en bij loonbetaling per maand 8% van het loon over de maand april van het lopende kalenderjaar maal twaalf. Under het loon zoals genoemd in dit artikel wordt verstaan het van toepassing zijnde functieloon, vermeerdered met, indien van toepassing, de ploegediensttoeslag en de persoonlijke toeslag ex artikel 23 van deze CAO.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> De minimum vakantiebijslag bedraagt per kalenderjaar voor alle werknemers van 21 jaar en ouder en voor de vakbekwame chauffeurs en kraanmachinisten jonger dan 21 jaar tenminste 104% van het in de vierde betalingsperiode van het lopende kalenderjaar geldende loon, respectievelijk tenminste 96% van het loon over de maand april van het lopende kalenderjaar bij maandbetaling, behorende bij schaal D trede 1. Voor de jeugdige werknemer in de zin van artikel 20 bedraagt dit minimum het bij hun leeftijd passende percentage, genoemd in artikel 20, van het in dit lid aangegeven minimumbedrag.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> Indien de werknemer slechts een gedeelte van het kalenderjaar in dienst is van de werkgever, heeft hij recht op een evenredig deel.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.</strong> De vakantiebijslag dient in de maand mei over het lopende kalenderjaar te worden uitbetaald. In overleg tussen werknemers en werkgever kan op bedrijfsniveau worden overeengekomen om de vakantiebijslag per maand uit te kunnen betalen. Overeenstemming hierover met de individuele werknemer dient in het voorraande kalenderjaar te worden bereikt.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>5.</strong> In afwijking van het gestelde in lid 4 kan de werkgever aan de werknemer die minder dan 1 jaar in zijn dienst is, of op basis van een tijdelijk contract korter dan 3 jaar in zijn dienst is, de vakantiebijslag in twee termijnen betalen, en wel één in de maand mei en één in de maand november.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>6.</strong> Indien het dienstverband van de werknemer vóór de vierde betalingsperiode dan wel vóór april eindig, vormt – in afwijking van lid 1 – het laatst genoten loon de basis van de berekening van de vakantiebijslag.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>7.</strong> In geval van langdurige arbeidsongeschiktheid is de werkgever over een periode van 24 maanden van de arbeidsongeschiktheid verplicht de vakantiebijslag te betalen, met inachtneming van de bepalingen in artikel 16 van de Wet Minimumloon en Minimumvakantieslag. Voor de toepassing van dit artikellid worden perioden waarin de werknemer ten gevolge van ziekte verhinderd is geweest zijn arbeid te verrichten, bij elkaar opgeteld, indien zij elkaar met een onderbreking van minder dan 4 weken opvolgen.
+                </p>
               </div>
             </CardContent>
           </Card>
