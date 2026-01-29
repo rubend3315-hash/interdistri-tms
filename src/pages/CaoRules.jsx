@@ -172,22 +172,22 @@ export default function CaoRules() {
             <BookOpen className="w-4 h-4" />
             CAO Regels
           </TabsTrigger>
-          <TabsTrigger value="artikel-6" className="justify-start">
+          <TabsTrigger value="artikel-6" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 6 Verplichtingen van de werkgever
           </TabsTrigger>
           <TabsTrigger value="deeltijd" className="justify-start">
             Artikel 8 Deeltijdwerknemers
           </TabsTrigger>
-          <TabsTrigger value="jeugdlonen" className="justify-start">
+          <TabsTrigger value="jeugdlonen" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 20 Jeugdlonen
           </TabsTrigger>
-          <TabsTrigger value="tredeverhogingen" className="justify-start">
+          <TabsTrigger value="tredeverhogingen" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 21 Toekenning tredeverhogingen
           </TabsTrigger>
-          <TabsTrigger value="loonschalen" className="justify-start">
+          <TabsTrigger value="loonschalen" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 25 Loonschalen
           </TabsTrigger>
-          <TabsTrigger value="oproep" className="justify-start">
+          <TabsTrigger value="oproep" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 10 Oproepkrachten
           </TabsTrigger>
           <TabsTrigger value="berekening" className="justify-start">
@@ -196,19 +196,19 @@ export default function CaoRules() {
           <TabsTrigger value="loonbetaling" className="justify-start">
             Artikel 13 Loonbetaling
           </TabsTrigger>
-          <TabsTrigger value="arbeidsongeschiktheid" className="justify-start">
+          <TabsTrigger value="arbeidsongeschiktheid" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 16 Loon bij arbeidsongeschiktheid
           </TabsTrigger>
           <TabsTrigger value="functie-indeling" className="justify-start">
             Artikel 18 Functie-indeling
           </TabsTrigger>
-          <TabsTrigger value="inschaling" className="justify-start">
+          <TabsTrigger value="inschaling" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 19 Inschaling bij indiensttreding
           </TabsTrigger>
           <TabsTrigger value="jonge-werknemers" className="justify-start">
             Artikel 22 Mintrede-niet vakbekwaam
           </TabsTrigger>
-          <TabsTrigger value="loonberekening" className="justify-start">
+          <TabsTrigger value="loonberekening" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 26a Loonberekening
           </TabsTrigger>
           <TabsTrigger value="overuren" className="justify-start">
@@ -220,7 +220,7 @@ export default function CaoRules() {
           <TabsTrigger value="verplichting-overwerk-oudere" className="justify-start">
             Artikel 28b Verplichting overwerk oudere werknemers
           </TabsTrigger>
-          <TabsTrigger value="vergoeding-overuren" className="justify-start">
+          <TabsTrigger value="vergoeding-overuren" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 29 Vergoeding overuren
           </TabsTrigger>
           <TabsTrigger value="zon-feestdagen" className="justify-start">
@@ -241,7 +241,7 @@ export default function CaoRules() {
           <TabsTrigger value="reiskosten-woon-werk" className="justify-start">
             Artikel 39a Vergoeding reiskosten woon-werkverkeer
           </TabsTrigger>
-          <TabsTrigger value="verblijfkosten" className="justify-start">
+          <TabsTrigger value="verblijfkosten" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 40 Vergoeding van verblijfkosten
           </TabsTrigger>
           <TabsTrigger value="consignatievergoeding" className="justify-start">
@@ -265,19 +265,19 @@ export default function CaoRules() {
           <TabsTrigger value="bijzonder-verlof-zonder-loon" className="justify-start">
             Artikel 66 Bijzonder verlof zonder behoud van loon
           </TabsTrigger>
-          <TabsTrigger value="vakantie" className="justify-start">
+          <TabsTrigger value="vakantie" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 67a Vakantie
           </TabsTrigger>
-          <TabsTrigger value="atv-dagen" className="justify-start">
+          <TabsTrigger value="atv-dagen" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 68 ATV-dagen
           </TabsTrigger>
-          <TabsTrigger value="vakantiebijslag" className="justify-start">
+          <TabsTrigger value="vakantiebijslag" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 69 Vakantiebijslag
           </TabsTrigger>
           <TabsTrigger value="arbeidstijd-vervoer" className="justify-start">
             Artikel 76 Arbeidstijdenbesluit Vervoer
           </TabsTrigger>
-          <TabsTrigger value="naleving-cao" className="justify-start">
+          <TabsTrigger value="naleving-cao" className="justify-start font-bold text-red-600 break-words whitespace-normal">
             Artikel 78 Naleving CAO
           </TabsTrigger>
           <TabsTrigger value="bijlage-vi" className="justify-start">
