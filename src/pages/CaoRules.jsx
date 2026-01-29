@@ -250,6 +250,9 @@ export default function CaoRules() {
           <TabsTrigger value="bijzonder-verlof" className="justify-start">
             Artikel 65 Bijzonder verlof
           </TabsTrigger>
+          <TabsTrigger value="bijzonder-verlof-zonder-loon" className="justify-start">
+            Artikel 66 Bijzonder verlof zonder behoud van loon
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1407,162 +1410,47 @@ export default function CaoRules() {
               <CardTitle className="text-2xl">Artikel 65 Bijzonder verlof</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-slate-700">
-                  <strong>Algemene bepaling:</strong> Indien de werknemer werkzaamheden niet kan verrichten vanwege onderstaande gebeurtenissen, wordt aan hem bijzonder verlof toegestaan:
-                </p>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-slate-300">
-                  <thead>
-                    <tr className="bg-slate-100">
-                      <th className="border border-slate-300 px-4 py-2 text-left font-semibold text-slate-700 w-12">Art</th>
-                      <th className="border border-slate-300 px-4 py-2 text-left font-semibold text-slate-700">Gebeurtenis / Omschrijving</th>
-                      <th className="border border-slate-300 px-4 py-2 text-left font-semibold text-slate-700 w-64">Duur / Omvang</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">a.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">Bij een melding van een voorgenomen huwelijk van de werknemer</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">1 dag</td>
-                    </tr>
-                    <tr className="bg-slate-50">
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">b.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div className="space-y-2">
-                          <div>Bij huwelijk/geregistreerd partnerschap van de werknemer</div>
-                          <div>Van een kind, broer, zuster, zwager, schoonzus of een der ouders of schoonouders van de werknemer</div>
-                        </div>
-                      </td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div>2 dagen</div>
-                        <div className="mt-2">1 dag</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">c.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div className="space-y-2">
-                          <div>Bij bevalling van de echtgenote/geregistreerde partner, of degene van wie de werknemer het kind erkent</div>
-                          <div className="text-sm italic">Conform de wettelijke regeling geldt voor vrouwen een zwangerschaps- en bevallingsverlof</div>
-                        </div>
-                      </td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div>Eénmaal de individueel overeengekomen wekelijkse arbeidsduur</div>
-                        <div className="mt-2">16 weken</div>
-                      </td>
-                    </tr>
-                    <tr className="bg-slate-50">
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">d.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div className="space-y-2">
-                          <div>Bij overlijden van de echtgeno(o)t(e) of een inwonend tot het gezin behorend eigen-, stief- of pleegkind van de werknemer, te rekenen vanaf de dag van het overlijden</div>
-                          <div>Bij overlijden van een der ouders, schoonouders, pleegouders of niet-inwonende kinderen van de werknemer</div>
-                          <div>Bij overlijden van een broer, zuster, zwager, schoonzus, een der grootouders van de werknemer of diens echtgeno(o)t(e) of een kleinkind van de werknemer</div>
-                        </div>
-                      </td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div>4 dagen</div>
-                        <div className="mt-2">2 dagen</div>
-                        <div className="mt-2">1 dag</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">e.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">Bij priesterwijding van een kind of broer van de werknemer</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">1 dag</td>
-                    </tr>
-                    <tr className="bg-slate-50">
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">f.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">Bij een eeuwige kloostergelofte van een kind, broer of zuster van de werknemer</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">1 dag</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">g.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div className="space-y-2">
-                          <div>Bij een 25- of 40-jarig huwelijk van de werknemer</div>
-                          <div>Bij een 25-, 40-, 50- of 60-jarig huwelijk van de ouders of schoonouders van de werknemer</div>
-                        </div>
-                      </td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div>1 dag</div>
-                        <div className="mt-2">1 dag</div>
-                      </td>
-                    </tr>
-                    <tr className="bg-slate-50">
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">h.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div className="space-y-2">
-                          <div>Bij verhuizing, anders dan in geval van overplaatsing aan hen, die een eigen huishouding hebben</div>
-                          <div>Bij verhuizing in geval van overplaatsing</div>
-                          <div className="text-sm italic">Dient dit verzuim in onderling overleg geregeld te worden</div>
-                        </div>
-                      </td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div>Maximaal per kalenderjaar 2 dagen</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">i.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div>Na opzegging van de dienstbetrekking door de werkgever, voor het zoeken van een nieuwe werkgever</div>
-                        <div className="text-sm italic mt-2">Indien de werknemer tenminste gedurende 6 weken onmiddellijk aan de datum van opzegging voorafgaand, onafgebroken in dienst bij de werkgever is geweest</div>
-                      </td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">Ten hoogste 1 dag</td>
-                    </tr>
-                    <tr className="bg-slate-50">
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">j.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">Bij vervulling van een van overheidswege, zonder geldelijke vergoeding, opgelegde persoonlijke verplichting waarvan de vervulling niet in zijn vrije tijd kan plaatsvinden</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">De werkelijk benodigde tijd tot ten hoogste 12 uur</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">k.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">Voor het afleggen van een vakexamen, waaronder wordt verstaan een als zodanig door de werkgever aangemerkt examen</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">De daarvoor benodigde tijd</td>
-                    </tr>
-                    <tr className="bg-slate-50">
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">l.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div>Voor het consulteren van een huisarts, tandarts, specialist of andere geneeskundigen en het laten verrichten van medische controles en onderzoeken</div>
-                        <div className="text-sm italic mt-2">Daarbij dient de werknemer zich ervoor in te spannen, dat voorbedoelde afspraken op zodanige tijdstippen vallen, dat de uitoefening van de functie daardoor zo weinig mogelijk wordt belemmerd</div>
-                      </td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">De daarvoor benodigde tijd</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">m.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">De uitoefening van het kiesrecht</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">Benodigde tijd (impliciet)</td>
-                    </tr>
-                    <tr className="bg-slate-50">
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">n.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div className="space-y-3">
-                          <div>Voor het verrichten van werkzaamheden ten behoeve van een werknemersorganisatie.</div>
-                          <div>Het hoofdbestuur van een werknemersorganisatie kan per kalenderjaar bij een werkgever voor elk tiental bij deze werkgever in dienst zijnde leden, dat bij haar is aangesloten en waarop deze overeenkomst van toepassing is, een dag zogenaamd organisatieverlof aanvragen om die leden met genoemde werkzaamheden te belasten.</div>
-                          <div>Het aantal leden wordt per werknemersorganisatie naar boven afgerond op tientallen, met dien verstande dat een werknemersorganisatie geen recht op organisatieverlof kan doen gelden wanneer zij bij een werkgever, waarop deze overeenkomst van toepassing is, minder dan tien leden telt.</div>
-                          <div><strong>Let op:</strong> In geval de vakbondswerkzaamheden op een zaterdag plaatsvinden, krijgt de werknemer hiervoor 10 uren à 100% vergoed. Werkgevers kunnen voor het vergoeden van vakbondsverlof een vergoeding aanvragen bij SOOB.</div>
-                        </div>
-                      </td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">
-                        <div>Per aangewezen werknemer kunnen niet meer dan 20 dagen organisatieverlof per kalenderjaar worden genoteerd</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border border-slate-300 px-4 py-2 font-medium text-slate-700 align-top">o.</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">Voor het deelnemen aan een vormingscursus ter voorbereiding op het pensioen voor de werknemer van 60 jaar en ouder</td>
-                      <td className="border border-slate-300 px-4 py-2 text-slate-700">Gedurende de tijd dat de cursus duurt met een maximum van een week en maximaal éénmaal per jaar</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
+...
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>2.</strong> De werknemer krijgt een vrije dag met behoud van loon toegekend in geval van zijn 25-, 40- of 50-jarig dienstjubileum. Deze vrije dag is extra en kan worden opgenomen in overleg tussen werkgever en werknemer.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Bijzonder verlof zonder behoud van loon Tab */}
+        <TabsContent value="bijzonder-verlof-zonder-loon" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 66 Bijzonder verlof zonder behoud van loon</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-4">
+                  Bijzonder verlof zonder behoud van loon wordt toegestaan voor:
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-slate-700">
+                      <strong>a.</strong> het uitoefenen van het lidmaatschap van een openbaar lichaam, tenzij het bedrijfsbelang zich daartegen verzet;
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-slate-700">
+                      <strong>b.</strong> voor het verrichten van werkzaamheden ten behoeve van een werknemersorganisatie, die partij is bij het afsluiten van deze CAO tot ten hoogste 6 dagen per kalenderjaar, tenzij het bedrijfsbelang zich daartegen verzet;
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-slate-700">
+                      <strong>c.</strong> in afwijking van het gestelde in artikel 65 lid 1 sub n geldt voor leden van de werknemersorganisaties, die werkzaam zijn in ondernemingen waar minder dan 10 werknemers lid zijn van de betreffende werknemersorganisatie, dat zij recht hebben gedurende 1 dag per jaar werkzaamheden ten behoeve van een werknemersorganisatie te verrichten, tenzij het bedrijfsbelang zich daartegen verzet. De betrokken werknemersorganisatie kan ten behoeve van de werknemer diens functieloon declareren bij het Opleidings- en Ontwikkelingsfonds.
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
