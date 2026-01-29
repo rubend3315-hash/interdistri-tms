@@ -265,6 +265,9 @@ export default function CaoRules() {
           <TabsTrigger value="arbeidstijd-vervoer" className="justify-start">
             Artikel 76 Arbeidstijdenbesluit Vervoer
           </TabsTrigger>
+          <TabsTrigger value="naleving-cao" className="justify-start">
+            Artikel 78 Naleving CAO
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1463,6 +1466,52 @@ export default function CaoRules() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Naleving CAO Tab */}
+        <TabsContent value="naleving-cao" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 78 Naleving CAO</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-3">
+                  <strong>1.a.</strong> De werkgever is gehouden op schriftelijk verzoek van een werknemersorganisatie, binnen 4 weken schriftelijk aan te tonen dat de CAO correct is nageleefed. Het betreft de artikelen 6 sub 2b, 8 + 10, 16, 19, 20, 21, 25, 26a, 29 leden 3 en 4, 40, 67a, 68, 69, 69Bt/m 69D en 75 van de CAO over een periode van 1 jaar voorafgaand aan het verzoek.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.b.</strong> In afwijking van de in lid a gernoemde periode van 1 jaar, geldt voor de controle op de naleving van de artikelen 26a en 40, een periode van 3 maanden. Tevens geldt voor de controle op de artikelen 26 en 40, een maximering van het volume van op te vragen gegevens van 15% van de te controleren werknemers tot een maximum van 20 werknemers.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.c.</strong> Indien de werkgever niet aantoont dat deze CAO getrouweijk is nageleefed, is de werkgever ten opzichte van de werknemersorganisatie schadeplichtig overeenkomstig het bepaalde in artikel 15 van de Wet CAO. De betreffende werknemersorganisatie draagt de door hem ontvangen schadevergoeding af aan de Stichting Opleidings- en Ontwikkelingsfonds Beroepsgoederenvervoer over de weg en de verhuur van mobiele kranen.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.d.</strong> Indien het verzoek van de werknemersorganisatie aan de werkgever niet op redelijke grond is gedaan is de werknemersorganisatie gehouden aan de werkgever een schadevergoeding te betalen van € 11.344,50 voor de schade die de werkgever heeft geleden ten gevolge van het verzoek.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.e.</strong> In afwijking van het gestelde in lid d geldt voor het gp niet redelijke grond verzoeken van een controle op de naleving van de artikelen 26a en 40 een schadevergoeding van € 25.000,–
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.f.</strong> In afwijking van de leden 1a en 1b, zal geen controle van de artikelen 26a en 40 plaatsvinden indien de werkgever in de 12 maanden voorafgaand reeds door één van de werknemersorganisaties op CAO-naleving is gecontroleerd.
+                </p>
               </div>
             </CardContent>
           </Card>
