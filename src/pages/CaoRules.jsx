@@ -268,6 +268,9 @@ export default function CaoRules() {
           <TabsTrigger value="naleving-cao" className="justify-start">
             Artikel 78 Naleving CAO
           </TabsTrigger>
+          <TabsTrigger value="bijlage-vi" className="justify-start">
+            Bijlage VI Stappenplan arbeidsongeschiktheid
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1466,6 +1469,141 @@ export default function CaoRules() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Bijlage VI Tab */}
+        <TabsContent value="bijlage-vi" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Bijlage VI Stappenplan berekening loon bij arbeidsongeschiktheid</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Geen Bedrijfsongeval */}
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="bg-blue-600 text-white p-4">
+                    <h3 className="font-bold text-lg">GEEN BEDRIJFSONGEVAL</h3>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    <div>
+                      <p className="text-slate-700 font-semibold mb-2">STAP 1 (COMPONENT A)</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-700">Functieloon</span>
+                        <span className="font-semibold text-slate-900">100%</span>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <p className="text-slate-700 font-semibold mb-2">+ STAP 2 (COMPONENT B)</p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-700">Persoonlijke toeslag</span>
+                          <span className="font-semibold text-slate-900">100%</span>
+                        </div>
+                        <div className="text-sm text-slate-600">
+                          + Ploegen-, vuilwerk-, nacht-<br/>& onregelmatigheidstoslag
+                          <span className="block text-right text-slate-700 font-medium">Gem. voorafgaande 52 wkn</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <p className="text-slate-700 font-semibold mb-2">+ STAP 3 (COMPONENT C)</p>
+                      <div className="space-y-2">
+                        <p className="text-slate-700 text-sm">
+                          Overuren, Zaterdagen*, Zondagen*<br/>
+                          & Toeslag za/zo-uren
+                        </p>
+                        <p className="text-right text-slate-700 font-medium text-sm">Gem. voorafgaande 52 wkn</p>
+                        <p className="text-sm text-red-600 font-semibold">Maximum waarde C:<br/>Max. 48,75% v/h functieloon</p>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4 bg-slate-50 p-4 rounded">
+                      <p className="text-slate-700 font-semibold mb-2">STAP 4 (COMPONENT D)</p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-700">Berekening correctie:</span>
+                          <span className="font-semibold">Waarde C × 0.75</span>
+                        </div>
+                        <div className="flex justify-between text-red-600 font-semibold">
+                          <span>Maximum waarde D:</span>
+                          <span>Max. 22,75% v/h functieloon</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4 font-bold text-lg">
+                      <div className="flex justify-between">
+                        <span>TOTAAL:</span>
+                        <span>A + B + D</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Wel Bedrijfsongeval */}
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="bg-green-600 text-white p-4">
+                    <h3 className="font-bold text-lg">WEL BEDRIJFSONGEVAL</h3>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    <div>
+                      <p className="text-slate-700 font-semibold mb-2">STAP 1 (COMPONENT A)</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-700">Functieloon</span>
+                        <span className="font-semibold text-slate-900">100%</span>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <p className="text-slate-700 font-semibold mb-2">+ STAP 2 (COMPONENT B)</p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-700">Persoonlijke toeslag</span>
+                          <span className="font-semibold text-slate-900">100%</span>
+                        </div>
+                        <div className="text-sm text-slate-600">
+                          + Ploegen-, vuilwerk-, nacht-<br/>& onregelmatigheidstoslag
+                          <span className="block text-right text-slate-700 font-medium">Gem. voorafgaande 52 wkn</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <p className="text-slate-700 font-semibold mb-2">+ STAP 3 (COMPONENT C)</p>
+                      <div className="space-y-2">
+                        <p className="text-slate-700 text-sm">
+                          Overuren, Zaterdagen*, Zondagen*<br/>
+                          & Toeslag za/zo-uren
+                        </p>
+                        <p className="text-right text-slate-700 font-medium text-sm">Gem. voorafgaande 52 wkn</p>
+                        <p className="text-sm text-red-600 font-semibold">Maximum waarde C:<br/>Max. 48,75% v/h functieloon</p>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4 bg-green-50 p-4 rounded">
+                      <p className="text-slate-700 font-semibold mb-2">GEEN KORTING</p>
+                      <p className="text-slate-700 text-sm">
+                        Bij een bedrijfsongeval vindt er geen correctie plaats over component C.
+                      </p>
+                    </div>
+
+                    <div className="border-t pt-4 font-bold text-lg">
+                      <div className="flex justify-between">
+                        <span>TOTAAL:</span>
+                        <span>A + B + C</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 text-sm text-slate-600 italic text-center">
+                (*) Voor zover deze uren de individueel overeengekomen arbeidstijd per week overschrijden.
               </div>
             </CardContent>
           </Card>
