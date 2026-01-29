@@ -50,6 +50,12 @@ const menuItems = [
     ]
   },
   {
+    label: "HRM-instellingen",
+    items: [
+      { name: "Urensoort & Uurcode", icon: BookOpen, page: "HRMSettings" },
+    ]
+  },
+  {
     label: "Loon & Rapportage",
     items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
@@ -76,7 +82,7 @@ const menuItems = [
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState(["Kernsystemen", "HR & Beheer", "Loon & Rapportage", "Klanten", "Beheer"]);
+  const [expandedGroups, setExpandedGroups] = useState(["Kernsystemen", "HR & Beheer", "Loon & Rapportage", "Klanten", "Beheer", "HRM-instellingen"]);
   const navigate = useNavigate();
 
   const { data: user } = useQuery({
@@ -103,6 +109,7 @@ export default function Layout({ children, currentPageName }) {
       'Projects': 'projects',
       'CaoRules': 'cao',
       'SalaryTables': 'salary',
+      'HRMSettings': 'hrmsettings',
       'Holidays': 'holidays',
       'SalaryReports': 'reports',
       'MobileEntry': 'mobile'
