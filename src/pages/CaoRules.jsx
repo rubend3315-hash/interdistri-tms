@@ -196,6 +196,9 @@ export default function CaoRules() {
           <TabsTrigger value="jonge-werknemers" className="justify-start">
             Artikel 22 Mintrede-niet vakbekwaam
           </TabsTrigger>
+          <TabsTrigger value="loonberekening" className="justify-start">
+            Artikel 26a Loonberekening
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -688,6 +691,87 @@ export default function CaoRules() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Loonberekening Tab */}
+        <TabsContent value="loonberekening" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 26a Loonberekening</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.a.</strong> De functionlonen gelden voor 160 diensturen per periode van 4 weken, respectievelijk 173,92 diensturen per maand.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.b.</strong> Het bepaalde onder a. laat onverlet dat uitbetaling aan de werknemer van minimaal 40 uur per week gegarandeerd is.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-3">
+                  <strong>2.a.</strong> Alle diensturen worden uitbetaald onder aftrek van de pauzetijden conform de staffel welke is opgenomen in bijlage III en onder aftrek van de aaneengesloten rust, met als minimum de in de EG-Verordening 561/2006 voorgeschreven rusttijden (zie bijlage III).
+                </p>
+                <p className="text-slate-700">
+                  Bij boot- en treinuren gemaakt in een periode van 24 uur mag maximaal 11 uur aan aaneengesloten rust worden genoteerd met inachtneming van de staffel van de pauzetijden conform bijlage III.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.b.</strong> De diensturen moeten door de werknemer worden geregistreerd op een door de werkgever te verstrekken urenverantwoordingsstaat. Een registratieplicht geldt eveneens voor de uren besteed aan rust, pauzes en de correcties.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-3">
+                  <strong>2.c.</strong> De urenverantwoordingsstaat dient minimaal de navolgende gegevens te bevatten:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700">
+                  <li>de datum</li>
+                  <li>de begin- en eindtijd van de dienstitijd en de dag totalen daarvan</li>
+                  <li>de rusttijd</li>
+                  <li>de pauzes</li>
+                  <li>correcties</li>
+                  <li>de naam en handtekening van de chauffeur</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.d.</strong> De werknemer ontvangt na controle door de werkgever een voor akkoord getekend exemplaar van de urenverantwoordingsstaat terug.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.e.</strong> De werknemer dient binnen drie maanden na ontvangst van de urenverantwoordingsstaat als bedoeld onder schriftelijk aan de werkgever eventuele bezwaren kenbaar te maken. Wanneer de werknemer van dat recht geen gebruik maakt, geldt de urenverantwoordingsstaat vanaf dat moment als bewijs.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.f.</strong> De werkgever dient de ingevulde urenverantwoordingsstaat gedurende tenminste een jaar na de datum waarop de invulling betrekking had, te bewaren.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.g.</strong> Voor de controle van de urenverantwoordingsstaten dienen de daarbij behorende gegevens te worden overgelegd.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.h.</strong> Bij het gebruik van elektronische tijdregistratiesystemen zijn werkgever en werknemer vrijgesteld van de verplichtingen zoals vermeld onder 2b t/m 2g. Na afloop van elke rit dient de werknemer de beschikking te krijgen over een ongeschoonde uitdraai van de in 2c. genoemde gegevens. De werkgever is tevens verplicht de werknemer éénmaal per betalingsperiode, elektronisch of op andere wijze, een geschoonde uitdraai van de boordcomputer te verstrekken waarop de gegevens staan vermeld overeenkomstig de in lid 2c. genoemde gegevens.
+                </p>
               </div>
             </CardContent>
           </Card>
