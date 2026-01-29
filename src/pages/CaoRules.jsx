@@ -26,7 +26,7 @@ import {
   Calculator
 } from "lucide-react";
 
-const ruleTypes = ["Toeslag", "Vergoeding", "Werktijd", "Pauze", "Overig"];
+const ruleTypes = ["Overwerk", "Toeslag", "Vergoeding", "Werktijd", "Pauze", "Overig"];
 
 export default function CaoRules() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
