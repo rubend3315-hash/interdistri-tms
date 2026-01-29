@@ -223,6 +223,9 @@ export default function CaoRules() {
           <TabsTrigger value="dienstrooster" className="justify-start">
             Artikel 35 Dienstrooster
           </TabsTrigger>
+          <TabsTrigger value="toeslag-nachtelijke-uren" className="justify-start">
+            Artikel 37 Toeslag nachtelijke uren
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1067,6 +1070,40 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   Ten aanzien van het werken op feestdagen zal de werkgever jaarlijks een dienstrooster opstellen; daarbij zal dit werken zoveel mogelijk worden gespreid over de werknemers.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Toeslag nachtelijke uren Tab */}
+        <TabsContent value="toeslag-nachtelijke-uren" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 37 Toeslag nachtelijke uren</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> Voor eendaagse ritten is voor de diensturen op maandag tot en met zondag gelegen tussen 21.00 – 05.00 uur een toeslag van toepassing van 19% op het uurloon. Van dit percentage mag in positieve zin, ten gunste van de werknemer, worden afgeweken.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Bij samenloop van dit artikel met de ploegendiensttoeslag in de zin van artikel 36 komt enkel de ploegendiensttoeslag tot uitkering.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> De toeslagen op grond van dit artikel en eventuele toeslagen voor overuren, zijn los van elkaar staande toeslagen die gelijktijdig van toepassing kunnen zijn.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.</strong> Dit artikel kan ook worden toegepast op diensturen van niet-rijdend personeel op de in lid 1 genoemde tijdstippen. Leden 2 en 3 zijn dan van overeenkomstige toepassing.
                 </p>
               </div>
             </CardContent>
