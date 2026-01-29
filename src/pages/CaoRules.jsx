@@ -202,6 +202,9 @@ export default function CaoRules() {
           <TabsTrigger value="overuren" className="justify-start">
             Artikel 27 Definities overuren
           </TabsTrigger>
+          <TabsTrigger value="verplichting-overwerk" className="justify-start">
+            Artikel 28a Verplichting overwerk jonger dan 55 jaar
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -859,6 +862,22 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>2.</strong> Voor rijdend personeel op dubbelbemande voertuigen geldt lid 1 voor de uren liggend op maandag tot en met zaterdag 7.00 uur.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Verplichting overwerk jonger dan 55 jaar Tab */}
+        <TabsContent value="verplichting-overwerk" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 28a Verplichting overwerk jonger dan 55 jaar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  Werknemers krijgen het recht om overwerk boven gemiddeld 50 uur per week te weigeren. Dit gemiddelde wordt bezien over een periode van 4 weken. Als werknemer hiervan gebruik wenst te maken dient hij dit éénmalig uiterlijk 4 weken voorafgaand aan het ingaande kwartaal aan te geven.
                 </p>
               </div>
             </CardContent>
