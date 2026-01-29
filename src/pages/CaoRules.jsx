@@ -205,6 +205,9 @@ export default function CaoRules() {
           <TabsTrigger value="verplichting-overwerk" className="justify-start">
             Artikel 28a Verplichting overwerk jonger dan 55 jaar
           </TabsTrigger>
+          <TabsTrigger value="verplichting-overwerk-oudere" className="justify-start">
+            Artikel 28b Verplichting overwerk oudere werknemers
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -878,6 +881,22 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   Werknemers krijgen het recht om overwerk boven gemiddeld 50 uur per week te weigeren. Dit gemiddelde wordt bezien over een periode van 4 weken. Als werknemer hiervan gebruik wenst te maken dient hij dit éénmalig uiterlijk 4 weken voorafgaand aan het ingaande kwartaal aan te geven.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Verplichting overwerk oudere werknemers Tab */}
+        <TabsContent value="verplichting-overwerk-oudere" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 28b Verplichting overwerk oudere werknemers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  Werknemers van 55 jaar en ouder kunnen niet verplicht worden tot het maken van overuren. De werknemer dient aan het begin van elk kalenderjaar aan te geven indien hij gebruik wenst te maken van deze uitzonderingsregeling. Werkgever en werknemer zullen in onderling overleg bepalen of hieraan uitvoering kan worden gegeven. Bestaande afspraken gemaakt met werknemers die voorheen onder de CAO Goederenvervoer Nederland vielen, worden gerespecteerd.
                 </p>
               </div>
             </CardContent>
