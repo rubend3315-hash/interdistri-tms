@@ -244,6 +244,9 @@ export default function CaoRules() {
           <TabsTrigger value="studiekostenregeling" className="justify-start">
             Artikel 45 Studiekostenregeling
           </TabsTrigger>
+          <TabsTrigger value="afwezigheid-met-loon" className="justify-start">
+            Artikel 64 Afwezigheid met behoud van loon
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -1358,6 +1361,36 @@ export default function CaoRules() {
                   <li>bij ontslagname van de werknemer binnen een jaar na het behalen van het diploma/certificaat: 75% van de kosten van de genoten opleiding terug te betalen;</li>
                   <li>bij ontslagname van de werknemer binnen twee jaar na het behalen van het diploma/certificaat: 50% van de kosten van de genoten opleiding terug te betalen;</li>
                   <li>bij ontslagname van de werknemer binnen drie jaar na het behalen van het diploma/certificaat: 25% van de kosten van de genoten opleiding terug te betalen.</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Afwezigheid met behoud van loon Tab */}
+        <TabsContent value="afwezigheid-met-loon" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 64 Afwezigheid met behoud van loon</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  Wanneer op een of meer dagen, niet zijnde roostervrije dagen, niet wordt gewerkt op grond van een van de navolgende omstandigheden, wordt per dag 8 diensturen genoteerd.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 font-semibold mb-3">
+                  Deze omstandigheden zijn:
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4 text-slate-700">
+                  <li>wegens vakantie (artikel 67a en b);</li>
+                  <li>tijd-voor-tijd-regeling (artikelen 30 en 31);</li>
+                  <li>op algemeen erkende christelijke en nationale feestdagen, niet vallende op zaterdag en/of zondag (artikel 32);</li>
+                  <li>bijzonder verlof (artikel 65);</li>
+                  <li>wegens ziekte of ongeval buiten schuld of toedoen van de betrokken werknemer (art. 16)</li>
+                  <li>ATV-dagen (artikel 68).</li>
                 </ul>
               </div>
             </CardContent>
