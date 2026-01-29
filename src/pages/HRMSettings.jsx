@@ -273,7 +273,7 @@ function UurcodeTab() {
         <p className="text-slate-500">Geen uurcodes beschikbaar</p>
       ) : (
         <div className="grid gap-3">
-          {uuercodes.map((item) => {
+          {uuercodes.sort((a, b) => a.code.localeCompare(b.code)).map((item) => {
             const urensoort = urensoorten.find(u => u.id === item.urensoort_id);
             return (
               <div key={item.id} className="p-4 border rounded-lg hover:bg-slate-50">
