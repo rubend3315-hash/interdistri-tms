@@ -184,6 +184,9 @@ export default function CaoRules() {
           <TabsTrigger value="loonbetaling" className="justify-start">
             Artikel 13 Loonbetaling
           </TabsTrigger>
+          <TabsTrigger value="arbeidsongeschiktheid" className="justify-start">
+            Artikel 16 Loon bij arbeidsongeschiktheid
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -424,6 +427,100 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   <strong>3.</strong> De uitbetaling van de overuren dient uiterlijk in de betalingsperiode volgend op de betalingsperiode waarin de overuren zijn ontstaan te geschieden.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Loon bij arbeidsongeschiktheid Tab */}
+        <TabsContent value="arbeidsongeschiktheid" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 16 Loon bij arbeidsongeschiktheid</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-slate-700 mb-2">
+                  <strong>1.</strong> Het loon bij ziekte ingevolge artikel 7: 629 BW bestaat uit:
+                </p>
+                <div className="ml-4 space-y-2">
+                  <p className="text-slate-700">
+                    <strong>a)</strong> het functieloon;
+                  </p>
+                  <p className="text-slate-700">
+                    <strong>b)</strong> de persoonlijke toeslag als bedoeld in artikel 23;
+                  </p>
+                  <p className="text-slate-700">
+                    <strong>c)</strong> het bedrag dat de werknemer gemiddeld gedurende de periode van 52 weken voorafgaande aan de eerste dag van arbeidsongeschiktheid heeft ontvangen aan ploegendienst- en vuilwerktoeslag, de onregelmatigheidstoeslag van artikel 4 van Bijlage VII en de toeslag voor nachtelijke uren van artikel 37;
+                  </p>
+                  <p className="text-slate-700">
+                    <strong>D)</strong> het bedrag dat de werknemer gemiddeld gedurende de periode van 52 weken voorafgaande aan de eerste dag van arbeidsongeschiktheid heeft ontvangen(*) aan overuren, en aan zaterdag- en zondaguren voor zover deze de individueel overeengekomen arbeidstijd per week overschrijden en de toeslagen van 50% en 100% over deze uren. Het gemiddelde aantal overuren kan niet hoger zijn dan 37,5% (**) van de individueel overeengekomen arbeidstijd per week en het totale bedrag van dit onderdeel kan niet meer bedragen dan 48,75% van het functieloon. Indien er geen sprake is van een bedrijfsongeval, worden voorts de volgende verminderingen op dit bedrag toegepast: allereerst wordt er een kwart van het gemiddelde aantal overuren afgetrokken. Vervolgens kan het bedrag niet meer bedragen dan 22,75% van het functieloon (zijnde de waarde van 7 overuren à 130% bij een dienstverband van 40 uur per week).
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 italic">
+                  (*) Overgangsbepaling voor deeltijdwerknemers: indien de eerste dag van arbeidsongeschiktheid in 2026 valt, wordt bij het vaststellen van het gedeelte van het bedrag voor de voorafgaande 52 weken dat in 2025 ligt, gerekend met de nieuwe definitie van overwerk uit deze CAO.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 italic">
+                  (**)Toelichting: de 37,5% komt neer op maximaal 15 overuren voor een dienstverband van 40 uur per week. Voor een deeltijdwerknemer met een dienstverband van 20 uur per week komt dit neer op 7,5 overuren.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>2.</strong> Indien de werknemer arbeidsongeschikt is, ontvangt hij een aanvulling op de wettelijke loondoorbetalingsverplichting van artikel 7: 629 BW tot 100%, zoals hieronder beschreven. Deze aanvulling vindt plaats tot ten hoogste het maximum loon als bedoeld in artikel 17 Wfsv.
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-700 font-semibold mb-2">
+                  De aanvullingsverplichting geldt niet in de volgende gevallen:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-700">
+                  <li>indien er ingevolge de wet geen loondoorbetalingsverplichting is;</li>
+                  <li>indien de arbeidsongeschiktheid door de schuld of toedoen van de werknemer is veroorzaakt.</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> De aanvullingsverplichting vangt aan op de eerste dag van de arbeidsongeschiktheid. De maximale duur van de aanvulling is 52 weken, of, bij een dienstverband dat op de eerste dag van arbeidsongeschiktheid korter dan een jaar heeft geduurd, maximaal 13 weken. Indien de werknemer zich nog in de proeftijd bevindt op de eerste dag van arbeidsongeschiktheid, eindigt de aanvulling na 2 weken.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.</strong> De duur van de aanvulling wordt in geval van een dienstverband dat op de eerste dag van arbeidsongeschiktheid langer dan een jaar heeft geduurd, verlengd met een tweede periode van 52 weken, indien de werknemer meewerkt aan zijn reïntegratie en tevens een aanvullende zorgverzekering heeft afgesloten waarin in ieder geval is opgenomen een vergoeding voor fysiotherapie, psychologische hulp (tenzij deze in het basispakket is opgenomen) en de diëtist. De aanvulling wordt ook verlengd tot 104 weken indien de werknemer blijvend volledig arbeidsongeschikt is.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg italic">
+                <p className="text-slate-700">
+                  * Voor uitleg ten aanzien van de berekeningswijze zie Bijlage VI
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>5.</strong> Perioden van arbeidsongeschiktheid die geheel of gedeeltelijk binnen één kalenderjaar vallen, worden samengeteld voor de bepaling van de duur van de aanvullingsverplichting, voor zover de arbeidsongeschiktheid niet het gevolg is van een ongeval.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>6.</strong> Tussentijdse wijzigingen van het brutoloon, resp. dagloonbesluiten of andere wettelijke maatregelen dienen in deze loonbetaling bij arbeidsongeschiktheid te worden verwerkt.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>7.</strong> In het geval de werknemer een uitkering toekomt krachtens de ziektewet, WAO/WIA of krachtens een verzekering of enig fonds, waarin de deelneming is bedongen bij of voortvloeit uit de arbeidsovereenkomst, wordt de loonbetaling met deze uitkering verminderd.
                 </p>
               </div>
             </CardContent>
