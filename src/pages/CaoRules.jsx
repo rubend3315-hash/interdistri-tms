@@ -166,32 +166,34 @@ export default function CaoRules() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="regels" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="regels" className="gap-2">
+      <Tabs defaultValue="regels" className="flex gap-6">
+        <TabsList className="flex-col h-fit items-stretch w-64">
+          <TabsTrigger value="regels" className="gap-2 justify-start">
             <BookOpen className="w-4 h-4" />
             CAO Regels
           </TabsTrigger>
-          <TabsTrigger value="deeltijd" className="gap-2">
+          <TabsTrigger value="deeltijd" className="gap-2 justify-start">
             <Users className="w-4 h-4" />
             Artikel 8 Deeltijdwerknemers
           </TabsTrigger>
-          <TabsTrigger value="oproep" className="gap-2">
+          <TabsTrigger value="oproep" className="gap-2 justify-start">
             <Users className="w-4 h-4" />
             Artikel 10 Oproepkrachten
           </TabsTrigger>
-          <TabsTrigger value="berekening" className="gap-2">
+          <TabsTrigger value="berekening" className="gap-2 justify-start">
             <Calculator className="w-4 h-4" />
             Artikel 12 Berekening dag- en uurloon
           </TabsTrigger>
-          <TabsTrigger value="loonbetaling" className="gap-2">
+          <TabsTrigger value="loonbetaling" className="gap-2 justify-start">
             <Euro className="w-4 h-4" />
             Artikel 13 Loonbetaling
           </TabsTrigger>
         </TabsList>
+        
+        <div className="flex-1">
 
         {/* CAO Regels Tab */}
-        <TabsContent value="regels" className="space-y-6">
+        <TabsContent value="regels" className="space-y-6 m-0">
 
       {/* Rules by Type */}
       {isLoading ? (
@@ -286,7 +288,7 @@ export default function CaoRules() {
         </TabsContent>
 
         {/* Deeltijdwerknemers Tab */}
-        <TabsContent value="deeltijd">
+        <TabsContent value="deeltijd" className="m-0">
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Artikel 8 Deeltijdwerknemers</CardTitle>
@@ -332,7 +334,7 @@ export default function CaoRules() {
         </TabsContent>
 
         {/* Oproepkrachten Tab */}
-        <TabsContent value="oproep">
+        <TabsContent value="oproep" className="m-0">
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Artikel 10 Oproepkrachten</CardTitle>
@@ -389,7 +391,7 @@ export default function CaoRules() {
         </TabsContent>
 
         {/* Berekening dag- en uurloon Tab */}
-        <TabsContent value="berekening">
+        <TabsContent value="berekening" className="m-0">
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Artikel 12 Berekening dag- en uurloon</CardTitle>
@@ -405,7 +407,7 @@ export default function CaoRules() {
         </TabsContent>
 
         {/* Loonbetaling Tab */}
-        <TabsContent value="loonbetaling">
+        <TabsContent value="loonbetaling" className="m-0">
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Artikel 13 Loonbetaling</CardTitle>
@@ -431,6 +433,7 @@ export default function CaoRules() {
             </CardContent>
           </Card>
         </TabsContent>
+        </div>
       </Tabs>
 
       {/* Dialog */}
