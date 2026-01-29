@@ -208,6 +208,9 @@ export default function CaoRules() {
           <TabsTrigger value="verplichting-overwerk-oudere" className="justify-start">
             Artikel 28b Verplichting overwerk oudere werknemers
           </TabsTrigger>
+          <TabsTrigger value="vergoeding-overuren" className="justify-start">
+            Artikel 29 Vergoeding overuren
+          </TabsTrigger>
         </TabsList>
         
         <div className="flex-1">
@@ -897,6 +900,45 @@ export default function CaoRules() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <p className="text-slate-700">
                   Werknemers van 55 jaar en ouder kunnen niet verplicht worden tot het maken van overuren. De werknemer dient aan het begin van elk kalenderjaar aan te geven indien hij gebruik wenst te maken van deze uitzonderingsregeling. Werkgever en werknemer zullen in onderling overleg bepalen of hieraan uitvoering kan worden gegeven. Bestaande afspraken gemaakt met werknemers die voorheen onder de CAO Goederenvervoer Nederland vielen, worden gerespecteerd.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Vergoeding overuren Tab */}
+        <TabsContent value="vergoeding-overuren" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Artikel 29 Vergoeding overuren</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>1.</strong> Overuren worden afgerond op halve uren, waarbij overwerk van minder dan 15 minuten niet voor vergoeding in aanmerking komt. Bij gebruik van een boordcomputer worden overuren niet afgerond.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700 mb-3">
+                  <strong>2.</strong> De bepalingen inzake de vergoeding van overuren worden niet toegepast ten aanzien van:
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4 text-slate-700">
+                  <li>werknemers die volgens schriftelijke afspraak bevoegd zijn aan andere werknemers op te dragen overwerk te verrichten;</li>
+                  <li>de overuren, die een gevolg zijn van vertraging in het transport, tenzij deze vertraging ontstaan is buiten de schuld of toedoen van de werknemer en deze langer dan 15 minuten heeft geduurd;</li>
+                  <li>de overuren, die ontstaan zijn door eigen schuld of toedoen van de werknemer.</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>3.</strong> Overuren worden – met inachtneming van artikel 30 – vergoed door het uurloon vermeerderd met een toeslag van 30%.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-slate-700">
+                  <strong>4.</strong> In afwijking van het bepaalde in lid 3 geldt voor administratief en technisch personeel voor de vergoeding van overuren op roostervrije dagen een toeslag van 100% en voor uren op zondag waarop volgens dienstrooster arbeid wordt verricht 30%.
                 </p>
               </div>
             </CardContent>
