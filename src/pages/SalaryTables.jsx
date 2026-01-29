@@ -666,12 +666,23 @@ function UrensoortTab() {
 }
 
 function UrensoortForm({ urensoort, onSubmit, isSubmitting, onCancel }) {
-  const [formData, setFormData] = useState(urensoort || {
-    code: '',
-    name: '',
-    description: '',
-    toeslag_percentage: '',
-    status: 'Actief'
+  const { data: allUrensoorten = [] } = useQuery({
+    queryKey: ['urensoorten'],
+    queryFn: () => base44.entities.Urensoort.list()
+  });
+
+  const [formData, setFormData] = useState(() => {
+    if (urensoort) {
+      return urensoort;
+    }
+    const nextCode = `URS-${String(allUrensoorten.length + 1).padStart(3, '0')}`;
+    return {
+      code: nextCode,
+      name: '',
+      description: '',
+      toeslag_percentage: '',
+      status: 'Actief'
+    };
   });
 
   const handleSubmit = (e) => {
@@ -682,13 +693,13 @@ function UrensoortForm({ urensoort, onSubmit, isSubmitting, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Code *</Label>
+        <Label>Code</Label>
         <Input
           value={formData.code}
-          onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-          required
-          placeholder="bijv. REG"
+          disabled
+          className="bg-slate-100"
         />
+        <p className="text-xs text-slate-500">Automatisch gegenereerd</p>
       </div>
       <div className="space-y-2">
         <Label>Naam *</Label>
@@ -847,12 +858,23 @@ function UurcodeTab() {
 }
 
 function UurcodeForm({ uurcode, urensoorten, onSubmit, isSubmitting, onCancel }) {
-  const [formData, setFormData] = useState(uurcode || {
-    code: '',
-    name: '',
-    urensoort_id: '',
-    description: '',
-    status: 'Actief'
+  const { data: allUurcodes = [] } = useQuery({
+    queryKey: ['uuercodes'],
+    queryFn: () => base44.entities.Uurcode.list()
+  });
+
+  const [formData, setFormData] = useState(() => {
+    if (uurcode) {
+      return uurcode;
+    }
+    const nextCode = `URC-${String(allUurcodes.length + 1).padStart(3, '0')}`;
+    return {
+      code: nextCode,
+      name: '',
+      urensoort_id: '',
+      description: '',
+      status: 'Actief'
+    };
   });
 
   const handleSubmit = (e) => {
@@ -863,13 +885,13 @@ function UurcodeForm({ uurcode, urensoorten, onSubmit, isSubmitting, onCancel })
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Code *</Label>
+        <Label>Code</Label>
         <Input
           value={formData.code}
-          onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-          required
-          placeholder="bijv. NORM"
+          disabled
+          className="bg-slate-100"
         />
+        <p className="text-xs text-slate-500">Automatisch gegenereerd</p>
       </div>
       <div className="space-y-2">
         <Label>Naam *</Label>
