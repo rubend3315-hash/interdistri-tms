@@ -87,7 +87,7 @@ export default function CapacityOverview({ days, employees, schedules }) {
               const percentage = total > 0 ? (working / total) * 100 : 0;
               return (
                 <div key={day.toISOString()} className="flex items-center gap-3 text-xs">
-                  <div className="w-14 text-slate-600 flex-shrink-0">
+                  <div className="text-slate-600 flex-shrink-0 whitespace-nowrap">
                     {format(day, "EEE d MMM", { locale: nl })}
                   </div>
                   <div className="w-2 h-2 rounded-full flex-shrink-0 bg-green-500" />
