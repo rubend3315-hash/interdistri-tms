@@ -147,9 +147,13 @@ export default function PlanningTable({
                   const currentVehicleId = schedule?.[`${dayKey}_vehicle_id`] || "";
                   const currentNotes1 = schedule?.[`${dayKey}_notes_1`] || "";
                   const currentNotes2 = schedule?.[`${dayKey}_notes_2`] || "";
+                  const currentPlannedDepartment = schedule?.[`${dayKey}_planned_department`] || "";
                   const holiday = isHoliday(day);
                   const currentRoute = routes.find(r => r.id === currentRouteId);
                   const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
+
+                  // Check if planned department differs from employee department
+                  const isDifferentDepartment = currentPlannedDepartment && currentPlannedDepartment !== employee.department;
 
                   // Determine display text
                   const displayText = currentValue || "-";
