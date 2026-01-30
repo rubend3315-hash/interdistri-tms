@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Plus, Mail, Shield, User, Search, Edit, CheckSquare, Save, X } from "lucide-react";
+import { Users, Plus, Mail, Shield, User, Search, Edit, CheckSquare, Save, X, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 
 const ROLES = {
@@ -415,6 +415,17 @@ export default function UsersPage() {
                             <SelectItem value="user">Medewerker</SelectItem>
                           </SelectContent>
                         </Select>
+                        {user.role === 'admin' && user.email === 'rubend3315@gmail.com' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            asChild
+                          >
+                            <a href="https://tms.interdistri.nl/workspace" target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        )}
                         {user.role !== 'admin' && (
                           <Button
                             size="sm"
@@ -474,6 +485,21 @@ export default function UsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                {user.role === 'admin' && user.email === 'rubend3315@gmail.com' && (
+                  <div className="pt-2 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      asChild
+                    >
+                      <a href="https://tms.interdistri.nl/workspace" target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Base44 Workspace
+                      </a>
+                    </Button>
+                  </div>
+                )}
                 {user.role !== 'admin' && (
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-xs text-slate-500">
