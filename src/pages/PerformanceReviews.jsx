@@ -545,7 +545,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 </div>
               );
             })()}
-            </div>
 
             {formData.trede_verhoging && (
               <Textarea
