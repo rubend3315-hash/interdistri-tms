@@ -505,7 +505,7 @@ export default function Planning() {
       <AvailableResources
         employees={employees}
         vehicles={vehicles}
-        routes={routes}
+        customers={customers}
         schedules={schedules}
         currentWeek={weekNumber}
       />
