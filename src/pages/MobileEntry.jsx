@@ -244,7 +244,7 @@ export default function MobileEntry() {
     setShowSignatureDialog(false);
   };
 
-  const handleSubmitEntry = () => {
+  const handleSubmitEntry = async () => {
     // Validatie: er moet minimaal 1 rit zijn ingevoerd
     if (trips.length === 0) {
       alert('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen. Ga naar het Ritten tabblad om een rit toe te voegen.');
@@ -282,8 +282,7 @@ export default function MobileEntry() {
 
     const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
     
-    // Submit time entry
-    createTimeEntryMutation.mutate({
+    const timeEntryData = {
       employee_id: currentEmployee?.id,
       date: formData.date,
       week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
@@ -294,14 +293,21 @@ export default function MobileEntry() {
       total_hours: hours,
       shift_type: "Dag",
       notes: formData.notes,
-      status: "Ingediend",
+      status: isOnline ? "Ingediend" : "Concept",
       signature_url: signature
-    });
+    };
+
+    // If online, submit immediately; if offline, queue for sync
+    if (isOnline) {
+      createTimeEntryMutation.mutate(timeEntryData);
+    } else {
+      await addToQueue('createTimeEntry', timeEntryData);
+    }
 
     // Submit all trips
     if (trips.length > 0) {
-      trips.forEach(trip => {
-        createTripMutation.mutate({
+      trips.forEach(async trip => {
+        const tripData = {
           employee_id: currentEmployee?.id,
           date: formData.date,
           vehicle_id: trip.vehicle_id,
@@ -320,13 +326,23 @@ export default function MobileEntry() {
           departure_location: trip.departure_location,
           notes: trip.notes,
           status: "Voltooid"
-        });
+        };
+
+        if (isOnline) {
+          createTripMutation.mutate(tripData);
+        } else {
+          await addToQueue('createTrip', tripData);
+        }
       });
     }
 
     // Reset form
     setTrips([]);
     setSignature(null);
+    
+    if (!isOnline) {
+      alert('Offline modus: Uw gegevens zijn opgeslagen en worden automatisch gesynchroniseerd wanneer de verbinding hersteld is.');
+    }
   };
 
   const handleSaveDraft = () => {
