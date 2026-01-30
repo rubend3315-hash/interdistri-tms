@@ -508,6 +508,7 @@ export default function Planning() {
         customers={customers}
         schedules={schedules}
         currentWeek={weekNumber}
+        days={days}
       />
 
       <ShiftLegend />
