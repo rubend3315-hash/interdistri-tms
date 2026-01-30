@@ -126,17 +126,37 @@ export default function Planning() {
     return days[index % 7];
   };
 
-  const handleShiftChange = (employeeId, dayIndex, value, routeId = null) => {
+  const handleShiftChange = (employeeId, dayIndex, formData) => {
     const dayKey = getDayKey(dayIndex);
-    const routeKey = `${dayKey}_route_id`;
     const targetWeek = getWeek(days[dayIndex], { weekStartsOn: 1 });
     const targetYear = getYear(days[dayIndex]);
     const existingSchedule = schedules.find(s => s.employee_id === employeeId && s.week_number === targetWeek && s.year === targetYear);
 
-    const updateData = { [dayKey]: value };
-    if (routeId !== null) {
-      updateData[routeKey] = routeId;
+    // Build shift code from time blocks
+    let shiftCode = '';
+    const timeBlocks = [];
+    if (formData.time_block_day) timeBlocks.push('Dag');
+    if (formData.time_block_evening) timeBlocks.push('Avond');
+    if (formData.time_block_night) timeBlocks.push('Nacht');
+    
+    if (timeBlocks.length > 0) {
+      shiftCode = timeBlocks.join('+');
+    } else if (formData.is_standby) {
+      shiftCode = 'Stand-by';
+    } else if (formData.is_training) {
+      shiftCode = 'Opleiding';
+    } else {
+      shiftCode = '-';
     }
+
+    const updateData = {
+      [dayKey]: shiftCode,
+      [`${dayKey}_route_id`]: formData.route_id || '',
+      [`${dayKey}_vehicle_id`]: formData.vehicle_id || '',
+      [`${dayKey}_planned_department`]: formData.planned_department || '',
+      [`${dayKey}_notes_1`]: formData.notes_1 || '',
+      [`${dayKey}_notes_2`]: formData.notes_2 || ''
+    };
 
     if (existingSchedule) {
       updateMutation.mutate({

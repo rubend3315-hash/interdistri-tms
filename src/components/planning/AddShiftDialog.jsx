@@ -21,7 +21,7 @@ export default function AddShiftDialog({
   onSave 
 }) {
   const [formData, setFormData] = useState({
-    planned_department: employee?.department || "",
+    planned_department: "",
     is_standby: false,
     is_training: false,
     route_id: "",
@@ -34,8 +34,21 @@ export default function AddShiftDialog({
     copy_to_days: []
   });
 
+  React.useEffect(() => {
+    if (open && employee) {
+      setFormData(prev => ({
+        ...prev,
+        planned_department: employee.department || ""
+      }));
+    }
+  }, [open, employee]);
+
   const handleSave = () => {
     onSave(formData);
+    onOpenChange(false);
+  };
+
+  const handleClose = () => {
     setFormData({
       planned_department: employee?.department || "",
       is_standby: false,
@@ -252,7 +265,7 @@ export default function AddShiftDialog({
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={handleClose}>
               Annuleren
             </Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">

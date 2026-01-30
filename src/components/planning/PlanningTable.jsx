@@ -49,7 +49,17 @@ export default function PlanningTable({
 
   const handleSaveShift = (formData) => {
     if (selectedEmployee && selectedDayIndex !== null) {
-      onShiftChange(selectedEmployee.id, selectedDayIndex, formData.uurcode, formData.route_id);
+      // Save for the selected day
+      onShiftChange(selectedEmployee.id, selectedDayIndex, formData);
+      
+      // If copy_to_days is selected, save to those days as well
+      if (formData.copy_to_days && formData.copy_to_days.length > 0) {
+        formData.copy_to_days.forEach(dayIdx => {
+          if (dayIdx !== selectedDayIndex) {
+            onShiftChange(selectedEmployee.id, dayIdx, formData);
+          }
+        });
+      }
     }
   };
   const getShiftConfig = (value) => {
@@ -132,15 +142,13 @@ export default function PlanningTable({
                 </TableCell>
                 {days.map((day, dayIndex) => {
                   const dayKey = getDayKey(dayIndex);
-                  const routeKey = `${dayKey}_route_id`;
                   const currentValue = schedule?.[dayKey] || "";
-                  const currentRouteId = schedule?.[routeKey] || "";
+                  const currentRouteId = schedule?.[`${dayKey}_route_id`] || "";
                   const holiday = isHoliday(day);
-                  const currentUurcode = uurcodes.find(u => u.code === currentValue);
                   const currentRoute = routes.find(r => r.id === currentRouteId);
-                  
+
                   // Determine display text
-                  const displayText = currentUurcode?.name || currentValue || "-";
+                  const displayText = currentValue || "-";
                   const hasData = currentValue || currentRouteId;
 
                   return (
