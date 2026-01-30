@@ -234,14 +234,15 @@ export default function PlanningTable({
   return (
     <>
       <AddShiftDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        employee={selectedEmployee}
-        date={selectedDate}
-        routes={routes}
-        vehicles={vehicles}
-        onSave={handleSaveShift}
-      />
+         open={dialogOpen}
+         onOpenChange={setDialogOpen}
+         employee={selectedEmployee}
+         date={selectedDate}
+         routes={routes}
+         vehicles={vehicles}
+         onSave={handleSaveShift}
+         existingSchedules={schedules}
+       />
       <div className="overflow-x-auto">
         <Table>
         <TableHeader>
