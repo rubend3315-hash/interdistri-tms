@@ -2,14 +2,23 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Truck, MapPin } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 export default function AvailableResources({
   employees = [],
   vehicles = [],
-  routes = [],
+  customers = [],
   schedules = [],
   currentWeek = null
 }) {
+  // Fetch TI Model routes for all customers
+  const { data: tiModelRoutes = [] } = useQuery({
+    queryKey: ['tiModelRoutes'],
+    queryFn: () => base44.entities.TIModelRoute.list(),
+    enabled: customers.length > 0
+  });
+
   // Get all scheduled employees, vehicles, and routes for the current week
   const scheduledEmployeeIds = new Set();
   const scheduledVehicleIds = new Set();
@@ -34,7 +43,21 @@ export default function AvailableResources({
 
   const availableEmployees = employees.filter(e => !scheduledEmployeeIds.has(e.id) && e.status === 'Actief');
   const availableVehicles = vehicles.filter(v => !scheduledVehicleIds.has(v.id) && (v.status === 'Beschikbaar' || v.status === 'In onderhoud'));
-  const availableRoutes = routes.filter(r => !scheduledRouteIds.has(r.id) && r.is_active);
+  
+  // Group available routes by customer
+  const routesByCustomer = {};
+  tiModelRoutes
+    .filter(r => !scheduledRouteIds.has(r.id) && r.status === 'Actief')
+    .forEach(route => {
+      if (!routesByCustomer[route.customer_id]) {
+        routesByCustomer[route.customer_id] = [];
+      }
+      routesByCustomer[route.customer_id].push(route);
+    });
+
+  const getCustomerName = (customerId) => {
+    return customers.find(c => c.id === customerId)?.company_name || 'Onbekend';
+  };
 
   return (
     <Card className="border-l-4 border-l-emerald-500">
