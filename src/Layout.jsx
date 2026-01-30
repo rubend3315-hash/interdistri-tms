@@ -86,6 +86,20 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState(["Kernsystemen", "HR & Beheer", "Loon & Rapportage", "Klanten", "Beheer", "HRM-instellingen"]);
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    // Redirect mobile users to MobileEntry
+    if (isMobile && currentPageName !== "MobileEntry") {
+      navigate(createPageUrl("MobileEntry"));
+    }
+  }, [isMobile, currentPageName, navigate]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
