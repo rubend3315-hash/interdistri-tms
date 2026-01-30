@@ -154,10 +154,12 @@ export default function PlanningTable({
 
             // Check if employee is scheduled in a different department
             const isScheduledElsewhere = currentPlannedDepartment && currentPlannedDepartment !== employee.department;
+            // Only show shift if it's scheduled in this department, or no department is specified and this is the home department
+            const shouldShowShift = !currentPlannedDepartment && employee.department === currentDepartment || currentPlannedDepartment === currentDepartment;
             // Show details only if we're viewing the department where it's scheduled
-            const showDetails = !isScheduledElsewhere || currentPlannedDepartment === currentDepartment;
+            const showDetails = shouldShowShift;
             // Show shift code only if viewing the scheduled department
-            const displayText = (isScheduledElsewhere && currentDepartment !== currentPlannedDepartment) ? "-" : (currentValue || "-");
+            const displayText = shouldShowShift ? (currentValue || "-") : "-";
 
             return (
               <TableCell
