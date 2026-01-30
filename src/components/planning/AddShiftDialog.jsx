@@ -130,7 +130,14 @@ export default function AddShiftDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Datum */}
+           {/* Validatie Fout */}
+           {validationError && (
+             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+               <p className="text-sm text-red-700 font-medium">{validationError}</p>
+             </div>
+           )}
+
+           {/* Datum */}
           <div className="grid grid-cols-[120px_1fr] items-center gap-4">
             <Label>Datum:</Label>
             <Input 
