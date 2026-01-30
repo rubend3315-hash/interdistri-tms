@@ -28,7 +28,7 @@ import CopyDayDialog from "../components/planning/CopyDayDialog";
 import AIAssistant from "../components/planning/AIAssistant";
 import CapacityOverview from "../components/planning/CapacityOverview";
 
-const departments = ["Management", "Transport", "PostNL", "Charters"];
+const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
 
 export default function Planning() {
   const [currentDate, setCurrentDate] = useState(new Date());
