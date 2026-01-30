@@ -77,7 +77,7 @@ export default function AvailableResources({
               </h3>
             </div>
             {availableEmployees.length > 0 ? (
-              <div className="space-y-1 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+              <div className="space-y-1 max-h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
                 {availableEmployees.map(emp => (
                   <Badge
                     key={emp.id}
@@ -101,7 +101,7 @@ export default function AvailableResources({
               </h3>
             </div>
             {availableVehicles.length > 0 ? (
-              <div className="space-y-1 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+              <div className="space-y-1 max-h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
                 {availableVehicles.map(veh => (
                   <Badge
                     key={veh.id}
@@ -125,7 +125,7 @@ export default function AvailableResources({
               </h3>
             </div>
             {Object.keys(routesByCustomer).length > 0 ? (
-              <div className="space-y-2 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+              <div className="space-y-2 max-h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
                 {Object.entries(routesByCustomer).map(([customerId, customerRoutes]) => (
                   <div key={customerId} className="bg-slate-50 p-2 rounded-lg">
                     <p className="text-xs font-medium text-slate-600 mb-2">
