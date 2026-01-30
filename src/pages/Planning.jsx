@@ -88,6 +88,16 @@ export default function Planning() {
     queryFn: () => base44.entities.Route.filter({ is_active: true })
   });
 
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
+  });
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Schedule.create(data),
     onSuccess: () => {
@@ -340,6 +350,8 @@ export default function Planning() {
             onCopyDay={handleCopyDay}
             uurcodes={uurcodes}
             routes={routes}
+            vehicles={vehicles}
+            customers={customers}
           />
         </CardContent>
       </Card>
