@@ -77,11 +77,11 @@ export default function AvailableResources({
               </h3>
             </div>
             {availableEmployees.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
+              <div className="space-y-1 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
                 {availableEmployees.map(emp => (
                   <Badge
                     key={emp.id}
-                    className="bg-blue-100 text-blue-700 border-blue-200 text-xs cursor-default"
+                    className="bg-blue-100 text-blue-700 border-blue-200 text-xs cursor-default w-full justify-start"
                   >
                     {emp.first_name.substring(0, 1)}. {emp.last_name}
                   </Badge>
