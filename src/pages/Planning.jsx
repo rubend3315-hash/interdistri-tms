@@ -120,8 +120,10 @@ export default function Planning() {
     
     // Get the correct week schedule (week1 or week2)
     const weekSchedule = (weekNumber % 2 === 1) ? activeContract.week1 : activeContract.week2;
-    
-    console.log('Employee:', employee.first_name, employee.last_name, 'Week:', weekNumber, 'Schedule:', weekSchedule);
+
+    console.log('Employee:', employee.first_name, employee.last_name, 'Week:', weekNumber);
+    console.log('Week schedule data:', weekSchedule);
+    console.log('Active contract:', activeContract);
     
     if (!weekSchedule || typeof weekSchedule !== 'object') return null;
     
