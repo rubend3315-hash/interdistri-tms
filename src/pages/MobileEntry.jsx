@@ -175,19 +175,6 @@ export default function MobileEntry() {
   // Drawing on canvas
   const [isDrawing, setIsDrawing] = useState(false);
 
-  // Subscribe to schedule updates
-  useEffect(() => {
-    if (!currentEmployee?.id) return;
-    
-    const unsubscribe = base44.entities.Schedule.subscribe((event) => {
-      if (event.data?.employee_id === currentEmployee.id) {
-        queryClient.invalidateQueries({ queryKey: ['mySchedules'] });
-      }
-    });
-    
-    return unsubscribe;
-  }, [currentEmployee?.id, queryClient]);
-
   useEffect(() => {
     if (showSignatureDialog && canvasRef.current) {
       const canvas = canvasRef.current;
