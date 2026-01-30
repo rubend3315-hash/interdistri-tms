@@ -75,14 +75,15 @@ export default function AddShiftDialog({
             </div>
           </div>
 
-          {/* Starttijd en Eindtijd */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Starttijd, Eindtijd en Shift */}
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label>Starttijd</Label>
               <Input 
                 type="time"
                 value={formData.start_time}
                 onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                placeholder="--:--"
               />
             </div>
             <div>
@@ -91,80 +92,79 @@ export default function AddShiftDialog({
                 type="time"
                 value={formData.end_time}
                 onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                placeholder="--:--"
               />
+            </div>
+            <div>
+              <Label>Shift</Label>
+              <Select value={formData.uurcode} onValueChange={(v) => setFormData({ ...formData, uurcode: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer shift" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uurcodes.map(code => (
+                    <SelectItem key={code.id} value={code.code}>
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{code.code}</span>
+                        <span className="text-xs text-slate-500">{code.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          {/* Shift (Uurcode) */}
-          <div>
-            <Label>Shift</Label>
-            <Select value={formData.uurcode} onValueChange={(v) => setFormData({ ...formData, uurcode: v })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecteer shift" />
-              </SelectTrigger>
-              <SelectContent>
-                {uurcodes.map(code => (
-                  <SelectItem key={code.id} value={code.code}>
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">{code.code}</span>
-                      <span className="text-xs text-slate-500">{code.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Route en Voertuig */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Route</Label>
+              <Input 
+                placeholder="bijv. Route A1, Gebied Noord"
+                value={formData.route_id}
+                onChange={(e) => setFormData({ ...formData, route_id: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Voertuig</Label>
+              <Select value={formData.vehicle_id} onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer voertuig" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vehicles.map(vehicle => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.license_plate} - {vehicle.brand} {vehicle.model}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Route */}
-          <div>
-            <Label>Route</Label>
-            <Input 
-              placeholder="bijv. Route A1, Gebied Noord"
-              value={formData.route_id}
-              onChange={(e) => setFormData({ ...formData, route_id: e.target.value })}
-            />
-          </div>
-
-          {/* Voertuig */}
-          <div>
-            <Label>Voertuig</Label>
-            <Select value={formData.vehicle_id} onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecteer voertuig" />
-              </SelectTrigger>
-              <SelectContent>
-                {vehicles.map(vehicle => (
-                  <SelectItem key={vehicle.id} value={vehicle.id}>
-                    {vehicle.license_plate} - {vehicle.brand} {vehicle.model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Klant */}
-          <div>
-            <Label>Klant</Label>
-            <Input 
-              placeholder="bijv. PostNL, DPG Media"
-              value={formData.customer_id}
-              onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <Label>Status</Label>
-            <Select defaultValue="Gepland">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Gepland">Gepland</SelectItem>
-                <SelectItem value="Bevestigd">Bevestigd</SelectItem>
-                <SelectItem value="Geannuleerd">Geannuleerd</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Klant en Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Klant</Label>
+              <Input 
+                placeholder="bijv. PostNL, DPG Media"
+                value={formData.customer_id}
+                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select defaultValue="Gepland">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Gepland">Gepland</SelectItem>
+                  <SelectItem value="Bevestigd">Bevestigd</SelectItem>
+                  <SelectItem value="Geannuleerd">Geannuleerd</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Actions */}
