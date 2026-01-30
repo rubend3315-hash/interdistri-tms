@@ -76,20 +76,22 @@ export default function AvailableResources({
                 Medewerkers ({availableEmployees.length})
               </h3>
             </div>
-            {availableEmployees.length > 0 ? (
-              <div className="space-y-1 max-h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
-                {availableEmployees.map(emp => (
-                  <Badge
-                    key={emp.id}
-                    className="bg-blue-100 text-blue-700 border-blue-200 text-xs cursor-default w-full justify-start"
-                  >
-                    {emp.first_name.substring(0, 1)}. {emp.last_name}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-slate-500 italic">Geen beschikbare medewerkers</p>
-            )}
+            <div className="h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+              {availableEmployees.length > 0 ? (
+                <div className="space-y-1">
+                  {availableEmployees.map(emp => (
+                    <Badge
+                      key={emp.id}
+                      className="bg-blue-100 text-blue-700 border-blue-200 text-xs cursor-default w-full justify-start"
+                    >
+                      {emp.first_name.substring(0, 1)}. {emp.last_name}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic">Geen beschikbare medewerkers</p>
+              )}
+            </div>
           </div>
 
           {/* Beschikbare Voertuigen */}
@@ -100,20 +102,22 @@ export default function AvailableResources({
                 Voertuigen ({availableVehicles.length})
               </h3>
             </div>
-            {availableVehicles.length > 0 ? (
-              <div className="space-y-1 max-h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
-                {availableVehicles.map(veh => (
-                  <Badge
-                    key={veh.id}
-                    className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs cursor-default w-full justify-start"
-                  >
-                    {veh.license_plate}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-slate-500 italic">Geen beschikbare voertuigen</p>
-            )}
+            <div className="h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+              {availableVehicles.length > 0 ? (
+                <div className="space-y-1">
+                  {availableVehicles.map(veh => (
+                    <Badge
+                      key={veh.id}
+                      className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs cursor-default w-full justify-start"
+                    >
+                      {veh.license_plate}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic">Geen beschikbare voertuigen</p>
+              )}
+            </div>
           </div>
 
           {/* Beschikbare Routes per klant */}
@@ -124,29 +128,31 @@ export default function AvailableResources({
                 Routes per klant
               </h3>
             </div>
-            {Object.keys(routesByCustomer).length > 0 ? (
-              <div className="space-y-2 max-h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
-                {Object.entries(routesByCustomer).map(([customerId, customerRoutes]) => (
-                  <div key={customerId} className="bg-slate-50 p-2 rounded-lg">
-                    <p className="text-xs font-medium text-slate-600 mb-2">
-                      {getCustomerName(customerId)} ({customerRoutes.length})
-                    </p>
-                    <div className="space-y-1">
-                      {customerRoutes.map(route => (
-                        <Badge
-                          key={route.id}
-                          className="bg-orange-100 text-orange-700 border-orange-200 text-xs cursor-default w-full justify-start"
-                        >
-                          {route.route_code} - {route.route_name}
-                        </Badge>
-                      ))}
+            <div className="h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+              {Object.keys(routesByCustomer).length > 0 ? (
+                <div className="space-y-2">
+                  {Object.entries(routesByCustomer).map(([customerId, customerRoutes]) => (
+                    <div key={customerId} className="bg-slate-50 p-2 rounded-lg">
+                      <p className="text-xs font-medium text-slate-600 mb-2">
+                        {getCustomerName(customerId)} ({customerRoutes.length})
+                      </p>
+                      <div className="space-y-1">
+                        {customerRoutes.map(route => (
+                          <Badge
+                            key={route.id}
+                            className="bg-orange-100 text-orange-700 border-orange-200 text-xs cursor-default w-full justify-start"
+                          >
+                            {route.route_code} - {route.route_name}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-slate-500 italic">Geen beschikbare routes</p>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic">Geen beschikbare routes</p>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
