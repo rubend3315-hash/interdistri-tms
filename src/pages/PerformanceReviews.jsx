@@ -338,16 +338,17 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const avg = (
-        parseFloat(data.persoonlijke_inzet) +
+      const totalScore = parseFloat(data.persoonlijke_inzet) +
         parseFloat(data.kpi_postnl) +
         parseFloat(data.kpi_voertuig_onderhoud) +
-        parseFloat(data.rijstijl_analyse)
-      ) / 4;
+        parseFloat(data.rijstijl_analyse);
+      
+      const avg = totalScore / 4;
 
       const reviewData = {
         ...data,
         gemiddelde_score: avg,
+        trede_verhoging: totalScore >= 21 ? data.trede_verhoging : false,
         reviewer_id: user?.id
       };
 
@@ -514,12 +515,36 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
           </div>
 
           <div className="border-t pt-4 space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={formData.trede_verhoging}
-                onCheckedChange={(checked) => setFormData({...formData, trede_verhoging: checked})}
-              />
-              <Label>Komt in aanmerking voor trede verhoging</Label>
+            {(() => {
+              const totalScore = parseFloat(formData.persoonlijke_inzet || 0) +
+                parseFloat(formData.kpi_postnl || 0) +
+                parseFloat(formData.kpi_voertuig_onderhoud || 0) +
+                parseFloat(formData.rijstijl_analyse || 0);
+              const meetsRequirement = totalScore >= 21;
+
+              return (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={formData.trede_verhoging}
+                        onCheckedChange={(checked) => setFormData({...formData, trede_verhoging: checked})}
+                        disabled={!meetsRequirement}
+                      />
+                      <Label className={!meetsRequirement ? 'text-slate-400' : ''}>
+                        Komt in aanmerking voor trede verhoging
+                      </Label>
+                    </div>
+                    <Badge className={meetsRequirement ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                      Totaal: {totalScore}/40 punten
+                    </Badge>
+                  </div>
+                  {!meetsRequirement && (
+                    <p className="text-sm text-red-600">Minimaal 21 punten vereist voor trede verhoging</p>
+                  )}
+                </div>
+              );
+            })()}
             </div>
 
             {formData.trede_verhoging && (
