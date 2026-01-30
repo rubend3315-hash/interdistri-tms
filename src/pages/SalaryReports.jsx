@@ -451,14 +451,23 @@ export default function SalaryReports() {
         <CardContent>
           <div className="max-h-48 overflow-y-auto">
             <div className="flex flex-wrap gap-2">
-              {activeRules.map(rule => (
-                <Badge key={rule.id} variant="outline" className="text-xs whitespace-nowrap">
-                  {rule.calculation_type === 'Percentage (%)' && `${rule.name}: ${rule.percentage}%`}
-                  {rule.calculation_type === 'Vast bedrag (€)' && `${rule.name}: €${rule.fixed_amount}`}
-                  {rule.calculation_type === 'Per uur (€/uur)' && `${rule.name}: €${rule.value}/uur`}
-                  {rule.calculation_type === 'Per dag (€/dag)' && `${rule.name}: €${rule.value}/dag`}
-                </Badge>
-              ))}
+              {activeRules.map(rule => {
+                let displayText = rule.name;
+                if (rule.calculation_type === 'Percentage (%)' && rule.percentage) {
+                  displayText = `${rule.name}: ${rule.percentage}%`;
+                } else if (rule.calculation_type === 'Vast bedrag (€)' && rule.fixed_amount) {
+                  displayText = `${rule.name}: €${rule.fixed_amount}`;
+                } else if (rule.calculation_type === 'Per uur (€/uur)' && rule.value) {
+                  displayText = `${rule.name}: €${rule.value}/uur`;
+                } else if (rule.calculation_type === 'Per dag (€/dag)' && rule.value) {
+                  displayText = `${rule.name}: €${rule.value}/dag`;
+                }
+                return (
+                  <Badge key={rule.id} variant="outline" className="text-xs whitespace-nowrap">
+                    {displayText}
+                  </Badge>
+                );
+              })}
               {activeRules.length === 0 && (
                 <p className="text-sm text-slate-500">
                   Geen actieve CAO-regels gevonden. Voeg regels toe in het CAO-regels menu.
