@@ -91,7 +91,7 @@ export default function CapacityOverview({ days, employees, schedules }) {
                     {format(day, "EEE d MMM", { locale: nl })}
                   </div>
                   <div className="w-2 h-2 rounded-full flex-shrink-0 bg-green-500" />
-                  <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden flex justify-end">
                     <div
                       className={`h-full ${getOccupancyColor(percentage)} transition-all`}
                       style={{ width: `${percentage}%` }}
