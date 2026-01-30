@@ -126,20 +126,46 @@ export default function Planning() {
     console.log('Active contract:', activeContract);
     
     if (!weekSchedule || typeof weekSchedule !== 'object') return null;
-    
-    // Map Dutch abbreviated day names to English day keys
-    const dutchDays = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
-    const englishDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    
-    const hours = {};
-    englishDays.forEach((day, index) => {
-      const dutchDay = dutchDays[index];
-      const value = weekSchedule[dutchDay];
-      hours[day] = typeof value === 'number' ? value : (typeof value === 'string' && value !== '-' ? parseFloat(value) || 0 : 0);
-    });
-    
-    console.log('Hours result:', hours);
-    return hours;
+
+      // Map Dutch day names to English day keys
+      const dutchDayMap = {
+        'maandag': 'monday',
+        'dinsdag': 'tuesday',
+        'woensdag': 'wednesday',
+        'donderdag': 'thursday',
+        'vrijdag': 'friday',
+        'zaterdag': 'saturday',
+        'zondag': 'sunday'
+      };
+
+      const hours = {};
+
+      // Check if weekSchedule contains boolean values (working day indicators)
+      const hasBooleansOrStrings = Object.values(weekSchedule).some(v => typeof v === 'boolean' || (typeof v === 'string' && v !== '-'));
+
+      if (hasBooleansOrStrings) {
+        // Calculate hours per working day
+        const workingDays = Object.entries(weekSchedule).filter(([key, val]) => {
+          return (typeof val === 'boolean' && val) || (typeof val === 'string' && val === 'true');
+        }).length;
+
+        const hoursPerDay = workingDays > 0 ? activeContract.uren_per_week / workingDays : 0;
+
+        // Assign hours to working days
+        Object.entries(dutchDayMap).forEach(([dutchDay, englishDay]) => {
+          const isWorkingDay = weekSchedule[dutchDay];
+          hours[englishDay] = (isWorkingDay === true || isWorkingDay === 'true') ? hoursPerDay : 0;
+        });
+      } else {
+        // Assume numeric values
+        Object.entries(dutchDayMap).forEach(([dutchDay, englishDay]) => {
+          const value = weekSchedule[dutchDay];
+          hours[englishDay] = typeof value === 'number' ? value : (typeof value === 'string' && value !== '-' ? parseFloat(value) || 0 : 0);
+        });
+      }
+
+      console.log('Hours result:', hours);
+      return hours;
   };
 
   const createMutation = useMutation({
