@@ -121,6 +121,8 @@ export default function Planning() {
     // Get the correct week schedule (week1 or week2)
     const weekSchedule = (weekNumber % 2 === 1) ? activeContract.week1 : activeContract.week2;
     
+    console.log('Employee:', employee.first_name, employee.last_name, 'Week:', weekNumber, 'Schedule:', weekSchedule);
+    
     if (!weekSchedule || typeof weekSchedule !== 'object') return null;
     
     // Map Dutch abbreviated day names to English day keys
@@ -134,6 +136,7 @@ export default function Planning() {
       hours[day] = typeof value === 'number' ? value : (typeof value === 'string' && value !== '-' ? parseFloat(value) || 0 : 0);
     });
     
+    console.log('Hours result:', hours);
     return hours;
   };
 
