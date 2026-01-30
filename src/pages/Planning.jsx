@@ -359,55 +359,113 @@ export default function Planning() {
   };
 
   const handleExportPDF = () => {
-    const doc = new jsPDF('l', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+      const doc = new jsPDF('l', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
-    doc.setFontSize(18);
-    doc.text('Planning', 14, 15);
-    doc.setFontSize(10);
-    doc.text(`${periodLabel} - ${format(periodStart, "d MMM", { locale: nl })} t/m ${format(periodEnd, "d MMM yyyy", { locale: nl })}`, 14, 22);
+      doc.setFontSize(18);
+      doc.text('Planning', 14, 15);
+      doc.setFontSize(10);
+      doc.text(`${periodLabel} - ${format(periodStart, "d MMM", { locale: nl })} t/m ${format(periodEnd, "d MMM yyyy", { locale: nl })}`, 14, 22);
 
-    const cellWidth = (pageWidth - 60) / days.length;
-    let y = 35;
+      const cellWidth = (pageWidth - 60) / days.length;
+      const employeeNameWidth = 40;
+      let y = 35;
 
-    doc.setFontSize(8);
-    doc.setFillColor(240, 240, 240);
-    doc.rect(14, y, 40, 8, 'F');
-    doc.text('Medewerker', 16, y + 5);
+      // Helper function for department grouping in export
+      const groupedEmployeesForExport = (() => {
+        const groups = {};
+        activeEmployees.forEach(emp => {
+          const dept = emp.department;
+          if (!groups[dept]) groups[dept] = [];
+          groups[dept].push(emp);
+        });
+        return groups;
+      })();
 
-    days.forEach((day, i) => {
-      const x = 54 + i * cellWidth;
-      doc.rect(x, y, cellWidth, 8, 'F');
-      doc.text(format(day, "EEE d MMM", { locale: nl }), x + 2, y + 5);
-    });
+      // Iterate through each department
+      Object.entries(groupedEmployeesForExport).forEach(([dept, deptEmployees]) => {
+        // Check if we need a new page for department header
+        if (y > pageHeight - 40) {
+          doc.addPage();
+          y = 20;
+        }
 
-    y += 10;
+        // Department header
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Afdeling ${dept}`, 14, y);
+        y += 6;
 
-    activeEmployees.forEach((employee) => {
-      if (y > pageHeight - 20) {
-        doc.addPage();
-        y = 20;
-      }
+        // Column headers (Medewerker, weekdays, dates, hours)
+        doc.setFontSize(7);
+        doc.setFillColor(240, 240, 240);
+        doc.rect(14, y, employeeNameWidth, 6, 'F');
+        doc.text('Medewerker', 15, y + 4);
 
-      const schedule = getScheduleForEmployee(employee.id);
-      doc.setFontSize(7);
-      doc.text(`${employee.first_name} ${employee.last_name}`, 16, y + 4);
+        days.forEach((day, i) => {
+          const x = 14 + employeeNameWidth + i * cellWidth;
+          doc.rect(x, y, cellWidth, 6, 'F');
+          doc.text(format(day, "EEE", { locale: nl }), x + 1, y + 2.5);
+          doc.text(format(day, "d MMM", { locale: nl }), x + 1, y + 5);
+        });
 
-      days.forEach((day, dayIndex) => {
-        const dayKey = getDayKey(dayIndex);
-        const value = schedule?.[dayKey] || "-";
-        const x = 54 + dayIndex * cellWidth;
-        doc.rect(x, y, cellWidth, 7);
-        doc.text(value, x + 2, y + 4);
+        y += 7;
+
+        // Employee rows
+        deptEmployees.forEach((employee) => {
+          if (y > pageHeight - 15) {
+            doc.addPage();
+            y = 20;
+
+            // Re-add column headers on new page
+            doc.setFontSize(7);
+            doc.setFillColor(240, 240, 240);
+            doc.rect(14, y, employeeNameWidth, 6, 'F');
+            doc.text('Medewerker', 15, y + 4);
+
+            days.forEach((day, i) => {
+              const x = 14 + employeeNameWidth + i * cellWidth;
+              doc.rect(x, y, cellWidth, 6, 'F');
+              doc.text(format(day, "EEE", { locale: nl }), x + 1, y + 2.5);
+              doc.text(format(day, "d MMM", { locale: nl }), x + 1, y + 5);
+            });
+
+            y += 7;
+          }
+
+          const schedule = getScheduleForEmployee(employee.id);
+          const weekScheduleHours = getWeekScheduleHours ? getWeekScheduleHours(employee) : null;
+          const totalHours = weekScheduleHours ? Object.values(weekScheduleHours).reduce((a, b) => a + b, 0) : 0;
+
+          doc.setFontSize(7);
+          const nameText = `${employee.first_name} ${employee.last_name}`;
+          const hoursText = totalHours > 0 ? ` (${totalHours}h)` : '';
+          doc.text(nameText + hoursText, 15, y + 4);
+
+          days.forEach((day, dayIndex) => {
+            const dayKey = getDayKey(dayIndex);
+            const value = schedule?.[dayKey] || "-";
+            const dayHours = weekScheduleHours ? weekScheduleHours[dayKey] : null;
+            const x = 14 + employeeNameWidth + dayIndex * cellWidth;
+            doc.rect(x, y, cellWidth, 7);
+            doc.text(value, x + 1, y + 3);
+            if (dayHours !== null && dayHours !== undefined && dayHours > 0) {
+              doc.setTextColor(0, 120, 215);
+              doc.text(`${dayHours}h`, x + 1, y + 5.5);
+              doc.setTextColor(0, 0, 0);
+            }
+          });
+
+          y += 8;
+        });
+
+        y += 4; // Space between departments
       });
 
-      y += 8;
-    });
-
-    doc.save(`planning-${periodLabel.replace(/\s+/g, '-')}.pdf`);
-    toast.success('PDF geëxporteerd!');
-  };
+      doc.save(`planning-${periodLabel.replace(/\s+/g, '-')}.pdf`);
+      toast.success('PDF geëxporteerd!');
+    };
 
   const isLoading = loadingEmployees || loadingSchedules;
 
