@@ -30,7 +30,8 @@ import {
   MessageSquare,
   ClipboardCheck,
   Plus,
-  Trash2
+  Trash2,
+  CalendarDays
 } from "lucide-react";
 
 export default function MobileEntry() {
