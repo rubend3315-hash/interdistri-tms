@@ -156,11 +156,6 @@ export default function AvailableResources({
                     </div>
                   </div>
                 ))}
-                {Object.keys(routesByCustomer).length > 3 && (
-                  <p className="text-xs text-slate-500 italic">
-                    +{Object.keys(routesByCustomer).length - 3} klanten met routes
-                  </p>
-                )}
               </div>
             ) : (
               <p className="text-xs text-slate-500 italic">Geen beschikbare routes</p>
