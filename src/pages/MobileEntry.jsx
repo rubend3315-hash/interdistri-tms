@@ -333,8 +333,8 @@ export default function MobileEntry() {
     createTimeEntryMutation.mutate({
       employee_id: currentEmployee?.id,
       date: formData.date,
-      week_number: getWeekNumber(new Date(formData.date)),
-      year: new Date(formData.date).getFullYear(),
+      week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
+      year: getYear(new Date(formData.date)),
       start_time: formData.start_time,
       end_time: formData.end_time,
       break_minutes: Number(formData.break_minutes) || 0,
