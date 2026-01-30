@@ -135,7 +135,7 @@ export default function AvailableResources({
               </h3>
             </div>
             {Object.keys(routesByCustomer).length > 0 ? (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+              <div className="space-y-2 max-h-96 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
                 {Object.entries(routesByCustomer).map(([customerId, customerRoutes]) => (
                   <div key={customerId} className="bg-slate-50 p-2 rounded-lg">
                     <p className="text-xs font-medium text-slate-600 mb-2">
