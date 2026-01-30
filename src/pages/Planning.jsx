@@ -27,6 +27,7 @@ import CopyWeekDialog from "../components/planning/CopyWeekDialog";
 import CopyDayDialog from "../components/planning/CopyDayDialog";
 import AIAssistant from "../components/planning/AIAssistant";
 import CapacityOverview from "../components/planning/CapacityOverview";
+import AvailableResources from "../components/planning/AvailableResources";
 
 const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
 
