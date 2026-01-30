@@ -142,9 +142,19 @@ export default function SalaryReports() {
     const hourlyRate = employee.hourly_rate || 0;
     const baseSalary = totalHours * hourlyRate;
     
-    // Apply all CAO rules
+    // Apply all CAO rules with categorization
     const ruleBreakdown = {};
     let totalRuleAmount = 0;
+    
+    // Categorized amounts
+    let overwerk130 = 0;
+    let overwerk150 = 0;
+    let overwerkZondagFeestdag = 0;
+    let toeslag50 = 0;
+    let toeslag100 = 0;
+    let nachttoeslag = 0;
+    let verblijfEendaags = 0;
+    let verblijfMeerdaags = 0;
 
     activeRules.forEach(rule => {
       let ruleTotal = 0;
@@ -156,6 +166,26 @@ export default function SalaryReports() {
       if (ruleTotal > 0) {
         ruleBreakdown[rule.name] = ruleTotal;
         totalRuleAmount += ruleTotal;
+        
+        // Categorize by rule name
+        const ruleName = rule.name.toLowerCase();
+        if (ruleName.includes('overwerk 130')) {
+          overwerk130 += ruleTotal;
+        } else if (ruleName.includes('overwerk 150')) {
+          overwerk150 += ruleTotal;
+        } else if (ruleName.includes('overwerk 200')) {
+          overwerkZondagFeestdag += ruleTotal;
+        } else if (ruleName.includes('toeslag 50')) {
+          toeslag50 += ruleTotal;
+        } else if (ruleName.includes('toeslag 100')) {
+          toeslag100 += ruleTotal;
+        } else if (ruleName.includes('nachttoeslag')) {
+          nachttoeslag += ruleTotal;
+        } else if (ruleName.includes('ééndaagse') || ruleName.includes('eendaagse')) {
+          verblijfEendaags += ruleTotal;
+        } else if (ruleName.includes('meerdaagse')) {
+          verblijfMeerdaags += ruleTotal;
+        }
       }
     });
 
@@ -176,6 +206,14 @@ export default function SalaryReports() {
       baseSalary,
       ruleBreakdown,
       totalRuleAmount,
+      overwerk130,
+      overwerk150,
+      overwerkZondagFeestdag,
+      toeslag50,
+      toeslag100,
+      nachttoeslag,
+      verblijfEendaags,
+      verblijfMeerdaags,
       travelAllowance,
       totalSalary,
       workDays
@@ -200,7 +238,14 @@ export default function SalaryReports() {
       'Totaal uren',
       'Uurloon',
       'Basisloon',
-      'CAO toeslagen',
+      'Overwerk 130%',
+      'Overwerk 150%',
+      'Overwerk Zo/Feest',
+      'Toeslag 50%',
+      'Toeslag 100%',
+      'Nachttoeslag',
+      'Verblijf 1-daags',
+      'Verblijf meerdaags',
       'Reiskosten',
       'Totaal bruto'
     ];
@@ -212,7 +257,14 @@ export default function SalaryReports() {
       r.totalHours.toFixed(2),
       r.hourlyRate.toFixed(2),
       r.baseSalary.toFixed(2),
-      r.totalRuleAmount.toFixed(2),
+      r.overwerk130.toFixed(2),
+      r.overwerk150.toFixed(2),
+      r.overwerkZondagFeestdag.toFixed(2),
+      r.toeslag50.toFixed(2),
+      r.toeslag100.toFixed(2),
+      r.nachttoeslag.toFixed(2),
+      r.verblijfEendaags.toFixed(2),
+      r.verblijfMeerdaags.toFixed(2),
       r.travelAllowance.toFixed(2),
       r.totalSalary.toFixed(2)
     ]);
@@ -380,8 +432,15 @@ export default function SalaryReports() {
                     <TableHead className="text-right">Uren</TableHead>
                     <TableHead className="text-right">Uurloon</TableHead>
                     <TableHead className="text-right">Basisloon</TableHead>
-                    <TableHead className="text-right">CAO-regels</TableHead>
-                    <TableHead className="text-right">Reiskosten</TableHead>
+                    <TableHead className="text-right">OW 130%</TableHead>
+                    <TableHead className="text-right">OW 150%</TableHead>
+                    <TableHead className="text-right">OW Zo/F</TableHead>
+                    <TableHead className="text-right">Tsl 50%</TableHead>
+                    <TableHead className="text-right">Tsl 100%</TableHead>
+                    <TableHead className="text-right">Nacht</TableHead>
+                    <TableHead className="text-right">Verb 1d</TableHead>
+                    <TableHead className="text-right">Verb >1d</TableHead>
+                    <TableHead className="text-right">Reis</TableHead>
                     <TableHead className="text-right font-bold">Totaal</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -399,18 +458,14 @@ export default function SalaryReports() {
                       <TableCell className="text-right">{row.totalHours.toFixed(1)}</TableCell>
                       <TableCell className="text-right">€{row.hourlyRate.toFixed(2)}</TableCell>
                       <TableCell className="text-right">€{row.baseSalary.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="space-y-1">
-                          {Object.entries(row.ruleBreakdown).map(([ruleName, amount]) => (
-                            <div key={ruleName} className="text-xs">
-                              <span className="text-slate-500">{ruleName}:</span> €{amount.toFixed(2)}
-                            </div>
-                          ))}
-                          {Object.keys(row.ruleBreakdown).length === 0 && (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </div>
-                      </TableCell>
+                      <TableCell className="text-right">{row.overwerk130 > 0 ? `€${row.overwerk130.toFixed(2)}` : '-'}</TableCell>
+                      <TableCell className="text-right">{row.overwerk150 > 0 ? `€${row.overwerk150.toFixed(2)}` : '-'}</TableCell>
+                      <TableCell className="text-right">{row.overwerkZondagFeestdag > 0 ? `€${row.overwerkZondagFeestdag.toFixed(2)}` : '-'}</TableCell>
+                      <TableCell className="text-right">{row.toeslag50 > 0 ? `€${row.toeslag50.toFixed(2)}` : '-'}</TableCell>
+                      <TableCell className="text-right">{row.toeslag100 > 0 ? `€${row.toeslag100.toFixed(2)}` : '-'}</TableCell>
+                      <TableCell className="text-right">{row.nachttoeslag > 0 ? `€${row.nachttoeslag.toFixed(2)}` : '-'}</TableCell>
+                      <TableCell className="text-right">{row.verblijfEendaags > 0 ? `€${row.verblijfEendaags.toFixed(2)}` : '-'}</TableCell>
+                      <TableCell className="text-right">{row.verblijfMeerdaags > 0 ? `€${row.verblijfMeerdaags.toFixed(2)}` : '-'}</TableCell>
                       <TableCell className="text-right">€{row.travelAllowance.toFixed(2)}</TableCell>
                       <TableCell className="text-right font-bold text-emerald-600">
                         €{row.totalSalary.toFixed(2)}
@@ -427,7 +482,28 @@ export default function SalaryReports() {
                       €{filteredReportData.reduce((s, r) => s + r.baseSalary, 0).toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
-                      €{filteredReportData.reduce((s, r) => s + r.totalRuleAmount, 0).toFixed(2)}
+                      €{filteredReportData.reduce((s, r) => s + r.overwerk130, 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      €{filteredReportData.reduce((s, r) => s + r.overwerk150, 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      €{filteredReportData.reduce((s, r) => s + r.overwerkZondagFeestdag, 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      €{filteredReportData.reduce((s, r) => s + r.toeslag50, 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      €{filteredReportData.reduce((s, r) => s + r.toeslag100, 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      €{filteredReportData.reduce((s, r) => s + r.nachttoeslag, 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      €{filteredReportData.reduce((s, r) => s + r.verblijfEendaags, 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      €{filteredReportData.reduce((s, r) => s + r.verblijfMeerdaags, 0).toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
                       €{filteredReportData.reduce((s, r) => s + r.travelAllowance, 0).toFixed(2)}
