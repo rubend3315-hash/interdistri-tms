@@ -144,12 +144,16 @@ export default function PlanningTable({
                   const dayKey = getDayKey(dayIndex);
                   const currentValue = schedule?.[dayKey] || "";
                   const currentRouteId = schedule?.[`${dayKey}_route_id`] || "";
+                  const currentVehicleId = schedule?.[`${dayKey}_vehicle_id`] || "";
+                  const currentNotes1 = schedule?.[`${dayKey}_notes_1`] || "";
+                  const currentNotes2 = schedule?.[`${dayKey}_notes_2`] || "";
                   const holiday = isHoliday(day);
                   const currentRoute = routes.find(r => r.id === currentRouteId);
+                  const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
 
                   // Determine display text
                   const displayText = currentValue || "-";
-                  const hasData = currentValue || currentRouteId;
+                  const hasData = currentValue || currentRouteId || currentVehicleId || currentNotes1 || currentNotes2;
 
                   return (
                     <TableCell
@@ -157,15 +161,30 @@ export default function PlanningTable({
                       className={`text-center p-1 ${holiday ? 'bg-purple-50' : ''}`}
                     >
                       <div 
-                        className="w-full min-h-16 border border-slate-200 rounded-md px-2 py-2 text-xs flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="w-full min-h-20 border border-slate-200 rounded-md px-2 py-2 text-xs flex flex-col gap-0.5 cursor-pointer hover:bg-slate-50 transition-colors"
                         onClick={() => handleAddShift(employee, day, dayIndex)}
                       >
                         <div className="font-medium text-slate-900">
                           {displayText}
                         </div>
                         {currentRoute && (
-                          <div className="text-xs text-slate-500 truncate w-full text-center">
+                          <div className="text-xs text-slate-600 truncate w-full">
                             {currentRoute.route_code}
+                          </div>
+                        )}
+                        {currentVehicle && (
+                          <div className="text-xs text-slate-500 truncate w-full">
+                            {currentVehicle.license_plate}
+                          </div>
+                        )}
+                        {currentNotes1 && (
+                          <div className="text-xs text-slate-500 truncate w-full italic">
+                            {currentNotes1}
+                          </div>
+                        )}
+                        {currentNotes2 && (
+                          <div className="text-xs text-slate-500 truncate w-full italic">
+                            {currentNotes2}
                           </div>
                         )}
                       </div>
