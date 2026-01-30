@@ -1,49 +1,54 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval, getWeek, getYear, isSameDay } from "date-fns";
-import { nl } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Sun,
-  Moon,
-  Sunset,
-  Home,
-  Palmtree,
-  Thermometer,
-  Star,
-  User
-} from "lucide-react";
-
-const shiftTypes = [
-  { value: "Dag", label: "Dag", icon: Sun, color: "bg-amber-100 text-amber-700 border-amber-200" },
-  { value: "Avond", label: "Avond", icon: Sunset, color: "bg-orange-100 text-orange-700 border-orange-200" },
-  { value: "Nacht", label: "Nacht", icon: Moon, color: "bg-indigo-100 text-indigo-700 border-indigo-200" },
-  { value: "Vrij", label: "Vrij", icon: Home, color: "bg-slate-100 text-slate-600 border-slate-200" },
-  { value: "Verlof", label: "Verlof", icon: Palmtree, color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  { value: "Ziek", label: "Ziek", icon: Thermometer, color: "bg-red-100 text-red-700 border-red-200" },
-  { value: "Feestdag", label: "Feestdag", icon: Star, color: "bg-purple-100 text-purple-700 border-purple-200" },
-];
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  addWeeks,
+  subWeeks,
+  addMonths,
+  subMonths,
+  eachDayOfInterval,
+  getWeek,
+  getYear,
+  getMonth
+} from "date-fns";
+import { nl } from "date-fns/locale";
+import { Card, CardContent } from "@/components/ui/card";
+import { jsPDF } from "jspdf";
+import { toast } from "sonner";
+import PlanningHeader from "../components/planning/PlanningHeader";
+import ShiftLegend from "../components/planning/ShiftLegend";
+import PlanningTable from "../components/planning/PlanningTable";
+import CopyWeekDialog from "../components/planning/CopyWeekDialog";
 
 const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
 
 export default function Planning() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filterDepartment, setFilterDepartment] = useState("all");
+  const [viewMode, setViewMode] = useState("week");
+  const [colorMode, setColorMode] = useState("shift");
+  const [showCopyDialog, setShowCopyDialog] = useState(false);
   const queryClient = useQueryClient();
 
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  const periodStart = viewMode === "week"
+    ? startOfWeek(currentDate, { weekStartsOn: 1 })
+    : startOfMonth(currentDate);
+
+  const periodEnd = viewMode === "week"
+    ? endOfWeek(currentDate, { weekStartsOn: 1 })
+    : endOfMonth(currentDate);
+
+  const days = eachDayOfInterval({ start: periodStart, end: periodEnd });
   const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
+  const monthNumber = getMonth(currentDate) + 1;
   const year = getYear(currentDate);
+
+  const periodLabel = viewMode === "week" ? `Week ${weekNumber}` : format(currentDate, "MMMM yyyy", { locale: nl });
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
@@ -51,8 +56,16 @@ export default function Planning() {
   });
 
   const { data: schedules = [], isLoading: loadingSchedules } = useQuery({
-    queryKey: ['schedules', weekNumber, year],
-    queryFn: () => base44.entities.Schedule.filter({ week_number: weekNumber, year })
+    queryKey: ['schedules', viewMode === "week" ? weekNumber : monthNumber, year, viewMode],
+    queryFn: async () => {
+      if (viewMode === "week") {
+        return base44.entities.Schedule.filter({ week_number: weekNumber, year });
+      } else {
+        const allSchedules = await base44.entities.Schedule.filter({ year });
+        const monthWeeks = [...new Set(days.map(d => getWeek(d, { weekStartsOn: 1 })))];
+        return allSchedules.filter(s => monthWeeks.includes(s.week_number));
+      }
+    }
   });
 
   const { data: holidays = [] } = useQuery({
@@ -74,8 +87,8 @@ export default function Planning() {
     }
   });
 
-  const activeEmployees = employees.filter(e => 
-    e.status === 'Actief' && 
+  const activeEmployees = employees.filter(e =>
+    e.status === 'Actief' &&
     (filterDepartment === 'all' || e.department === filterDepartment)
   );
 
@@ -83,19 +96,16 @@ export default function Planning() {
     return schedules.find(s => s.employee_id === employeeId);
   };
 
-  const isHoliday = (date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return holidays.find(h => h.date === dateStr);
-  };
-
   const getDayKey = (index) => {
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    return days[index];
+    return days[index % 7];
   };
 
   const handleShiftChange = (employeeId, dayIndex, value) => {
     const dayKey = getDayKey(dayIndex);
-    const existingSchedule = getScheduleForEmployee(employeeId);
+    const targetWeek = getWeek(days[dayIndex], { weekStartsOn: 1 });
+    const targetYear = getYear(days[dayIndex]);
+    const existingSchedule = schedules.find(s => s.employee_id === employeeId && s.week_number === targetWeek && s.year === targetYear);
 
     if (existingSchedule) {
       updateMutation.mutate({
@@ -105,188 +115,159 @@ export default function Planning() {
     } else {
       const newSchedule = {
         employee_id: employeeId,
-        week_number: weekNumber,
-        year,
+        week_number: targetWeek,
+        year: targetYear,
         [dayKey]: value
       };
       createMutation.mutate(newSchedule);
     }
   };
 
-  const getShiftConfig = (value) => {
-    return shiftTypes.find(s => s.value === value) || shiftTypes[3]; // Default to Vrij
+  const handlePreviousPeriod = () => {
+    setCurrentDate(viewMode === "week" ? subWeeks(currentDate, 1) : subMonths(currentDate, 1));
+  };
+
+  const handleNextPeriod = () => {
+    setCurrentDate(viewMode === "week" ? addWeeks(currentDate, 1) : addMonths(currentDate, 1));
+  };
+
+  const handleCopyWeek = async (targetWeek, targetYear) => {
+    try {
+      const sourceSchedules = schedules.filter(s => s.week_number === weekNumber && s.year === year);
+      
+      for (const schedule of sourceSchedules) {
+        const existingTarget = await base44.entities.Schedule.filter({
+          employee_id: schedule.employee_id,
+          week_number: targetWeek,
+          year: targetYear
+        });
+
+        const scheduleData = {
+          employee_id: schedule.employee_id,
+          week_number: targetWeek,
+          year: targetYear,
+          monday: schedule.monday,
+          tuesday: schedule.tuesday,
+          wednesday: schedule.wednesday,
+          thursday: schedule.thursday,
+          friday: schedule.friday,
+          saturday: schedule.saturday,
+          sunday: schedule.sunday,
+          notes: schedule.notes
+        };
+
+        if (existingTarget.length > 0) {
+          await base44.entities.Schedule.update(existingTarget[0].id, scheduleData);
+        } else {
+          await base44.entities.Schedule.create(scheduleData);
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      toast.success(`Planning gekopieerd naar week ${targetWeek} (${targetYear})`);
+    } catch (error) {
+      toast.error('Fout bij kopiëren: ' + error.message);
+    }
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF('l', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    doc.setFontSize(18);
+    doc.text('Planning', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`${periodLabel} - ${format(periodStart, "d MMM", { locale: nl })} t/m ${format(periodEnd, "d MMM yyyy", { locale: nl })}`, 14, 22);
+
+    const cellWidth = (pageWidth - 60) / days.length;
+    let y = 35;
+
+    doc.setFontSize(8);
+    doc.setFillColor(240, 240, 240);
+    doc.rect(14, y, 40, 8, 'F');
+    doc.text('Medewerker', 16, y + 5);
+
+    days.forEach((day, i) => {
+      const x = 54 + i * cellWidth;
+      doc.rect(x, y, cellWidth, 8, 'F');
+      doc.text(format(day, "EEE d MMM", { locale: nl }), x + 2, y + 5);
+    });
+
+    y += 10;
+
+    activeEmployees.forEach((employee) => {
+      if (y > pageHeight - 20) {
+        doc.addPage();
+        y = 20;
+      }
+
+      const schedule = getScheduleForEmployee(employee.id);
+      doc.setFontSize(7);
+      doc.text(`${employee.first_name} ${employee.last_name}`, 16, y + 4);
+
+      days.forEach((day, dayIndex) => {
+        const dayKey = getDayKey(dayIndex);
+        const value = schedule?.[dayKey] || "-";
+        const x = 54 + dayIndex * cellWidth;
+        doc.rect(x, y, cellWidth, 7);
+        doc.text(value, x + 2, y + 4);
+      });
+
+      y += 8;
+    });
+
+    doc.save(`planning-${periodLabel.replace(/\s+/g, '-')}.pdf`);
+    toast.success('PDF geëxporteerd!');
   };
 
   const isLoading = loadingEmployees || loadingSchedules;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Planning</h1>
-          <p className="text-slate-500 mt-1">Weekplanning en dienstroosters</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Alle afdelingen" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle afdelingen</SelectItem>
-              {departments.map(d => (
-                <SelectItem key={d} value={d}>{d}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <PlanningHeader
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        currentDate={currentDate}
+        onPreviousPeriod={handlePreviousPeriod}
+        onNextPeriod={handleNextPeriod}
+        periodStart={periodStart}
+        periodEnd={periodEnd}
+        periodLabel={periodLabel}
+        filterDepartment={filterDepartment}
+        setFilterDepartment={setFilterDepartment}
+        departments={departments}
+        colorMode={colorMode}
+        setColorMode={setColorMode}
+        onExportPDF={handleExportPDF}
+        onCopyWeek={() => setShowCopyDialog(true)}
+      />
 
-      {/* Legend */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-3">
-            {shiftTypes.map(shift => {
-              const Icon = shift.icon;
-              return (
-                <Badge key={shift.value} className={`${shift.color} border gap-1.5`}>
-                  <Icon className="w-3.5 h-3.5" />
-                  {shift.label}
-                </Badge>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      <ShiftLegend />
 
-      {/* Week Navigation */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentDate(subWeeks(currentDate, 1))}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Vorige week
-            </Button>
-            <div className="text-center">
-              <p className="font-semibold text-slate-900">
-                {format(weekStart, "d MMM", { locale: nl })} - {format(weekEnd, "d MMM yyyy", { locale: nl })}
-              </p>
-              <p className="text-sm text-slate-500">Week {weekNumber}</p>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentDate(addWeeks(currentDate, 1))}
-            >
-              Volgende week
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Planning Table */}
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-8">
-              <Skeleton className="h-96" />
-            </div>
-          ) : activeEmployees.length === 0 ? (
-            <div className="p-12 text-center">
-              <User className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900">Geen medewerkers gevonden</h3>
-              <p className="text-slate-500 mt-1">Selecteer een andere afdeling of voeg medewerkers toe.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="w-48 sticky left-0 bg-slate-50 z-10">Medewerker</TableHead>
-                    {weekDays.map((day, index) => {
-                      const holiday = isHoliday(day);
-                      return (
-                        <TableHead key={day.toISOString()} className="text-center min-w-28">
-                          <div className="text-xs text-slate-500">{format(day, "EEE", { locale: nl })}</div>
-                          <div className="font-semibold">{format(day, "d MMM", { locale: nl })}</div>
-                          {holiday && (
-                            <Badge className="bg-purple-100 text-purple-700 text-xs mt-1">
-                              {holiday.name}
-                            </Badge>
-                          )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeEmployees.map(employee => {
-                    const schedule = getScheduleForEmployee(employee.id);
-                    return (
-                      <TableRow key={employee.id}>
-                        <TableCell className="font-medium sticky left-0 bg-white z-10">
-                          <div>
-                            <p className="text-slate-900">{employee.first_name} {employee.last_name}</p>
-                            <p className="text-xs text-slate-500">{employee.department}</p>
-                          </div>
-                        </TableCell>
-                        {weekDays.map((day, dayIndex) => {
-                          const dayKey = getDayKey(dayIndex);
-                          const currentValue = schedule?.[dayKey] || "";
-                          const holiday = isHoliday(day);
-                          const config = currentValue ? getShiftConfig(currentValue) : null;
-                          
-                          return (
-                            <TableCell 
-                              key={day.toISOString()} 
-                              className={`text-center p-1 ${holiday ? 'bg-purple-50' : ''}`}
-                            >
-                              <Select 
-                                value={currentValue || "none"} 
-                                onValueChange={(v) => handleShiftChange(employee.id, dayIndex, v === "none" ? "" : v)}
-                              >
-                                <SelectTrigger className={`w-full h-12 border-dashed ${config ? config.color : 'border-slate-200'}`}>
-                                  {config ? (
-                                    <div className="flex items-center gap-1.5">
-                                      <config.icon className="w-4 h-4" />
-                                      <span className="text-sm">{config.label}</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-slate-400">-</span>
-                                  )}
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="none">
-                                    <span className="text-slate-400">Geen</span>
-                                  </SelectItem>
-                                  {shiftTypes.map(shift => {
-                                    const Icon = shift.icon;
-                                    return (
-                                      <SelectItem key={shift.value} value={shift.value}>
-                                        <div className="flex items-center gap-2">
-                                          <Icon className="w-4 h-4" />
-                                          {shift.label}
-                                        </div>
-                                      </SelectItem>
-                                    );
-                                  })}
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          <PlanningTable
+            isLoading={isLoading}
+            employees={activeEmployees}
+            days={days}
+            schedules={schedules}
+            holidays={holidays}
+            colorMode={colorMode}
+            onShiftChange={handleShiftChange}
+            getDayKey={getDayKey}
+            getScheduleForEmployee={getScheduleForEmployee}
+          />
         </CardContent>
       </Card>
+
+      <CopyWeekDialog
+        open={showCopyDialog}
+        onOpenChange={setShowCopyDialog}
+        currentWeek={weekNumber}
+        currentYear={year}
+        onCopy={handleCopyWeek}
+      />
     </div>
   );
 }
