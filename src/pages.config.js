@@ -47,11 +47,14 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Approvals from './pages/Approvals';
+import Backups from './pages/Backups';
 import CaoRules from './pages/CaoRules';
 import CustomerDetail from './pages/CustomerDetail';
 import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
+import HRMSettings from './pages/HRMSettings';
 import Holidays from './pages/Holidays';
 import MobileEntry from './pages/MobileEntry';
 import NiwoPermits from './pages/NiwoPermits';
@@ -64,18 +67,19 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Approvals from './pages/Approvals';
-import HRMSettings from './pages/HRMSettings';
-import Backups from './pages/Backups';
+import PerformanceReviews from './pages/PerformanceReviews';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "Approvals": Approvals,
+    "Backups": Backups,
     "CaoRules": CaoRules,
     "CustomerDetail": CustomerDetail,
     "Customers": Customers,
     "Dashboard": Dashboard,
     "Employees": Employees,
+    "HRMSettings": HRMSettings,
     "Holidays": Holidays,
     "MobileEntry": MobileEntry,
     "NiwoPermits": NiwoPermits,
@@ -88,9 +92,7 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Approvals": Approvals,
-    "HRMSettings": HRMSettings,
-    "Backups": Backups,
+    "PerformanceReviews": PerformanceReviews,
 }
 
 export const pagesConfig = {
