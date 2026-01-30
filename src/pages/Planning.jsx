@@ -98,6 +98,36 @@ export default function Planning() {
     queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
   });
 
+  const getWeekScheduleHours = (employee) => {
+    if (!employee.contractregels || employee.contractregels.length === 0) return null;
+    
+    // Find the active contract rule
+    const today = new Date();
+    const activeContract = employee.contractregels.find(cr => {
+      const startDate = new Date(cr.startdatum);
+      const endDate = cr.einddatum ? new Date(cr.einddatum) : null;
+      return startDate <= today && (!endDate || endDate >= today);
+    });
+
+    if (!activeContract || !activeContract.week1) return null;
+    
+    // Week 1 pattern: count hours from week1 or week2 schedule
+    const weekSchedule = viewMode === "week" ? 
+      (weekNumber % 2 === 1 ? activeContract.week1 : activeContract.week2) :
+      activeContract.week1;
+    
+    if (!weekSchedule) return null;
+    
+    // Sum up hours for each day
+    const hours = {};
+    const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    dayKeys.forEach(day => {
+      hours[day] = weekSchedule[day] || 0;
+    });
+    
+    return hours;
+  };
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Schedule.create(data),
     onSuccess: () => {
