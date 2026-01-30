@@ -500,8 +500,76 @@ export default function MobileEntry() {
            </TabsTrigger>
           </TabsList>
 
+          {/* Planning Tab */}
+          <TabsContent value="planning" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CalendarDays className="w-5 h-5 text-blue-600" />
+                  Mijn planning deze week
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {!schedules || schedules.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-4">
+                    Geen planning ingesteld voor deze week
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, idx) => {
+                      const dayNames = ['Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag', 'Zondag'];
+                      const dayDate = new Date();
+                      dayDate.setDate(dayDate.getDate() - dayDate.getDay() + 1 + idx);
+                      const schedule = schedules[0];
+                      const shiftValue = schedule?.[day] || '-';
+                      const plannedDept = schedule?.[`${day}_planned_department`] || '';
+                      const routeId = schedule?.[`${day}_route_id`] || '';
+
+                      const isWeekend = idx > 4;
+                      const isToday = dayDate.toDateString() === new Date().toDateString();
+
+                      return (
+                        <div
+                          key={day}
+                          className={`p-3 rounded-lg border ${
+                            isToday 
+                              ? 'border-blue-300 bg-blue-50' 
+                              : isWeekend 
+                              ? 'border-slate-200 bg-slate-50' 
+                              : 'border-slate-200 bg-white'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="font-semibold text-slate-900 text-sm">{dayNames[idx]}</p>
+                              <p className="text-xs text-slate-500">{format(dayDate, 'd MMM', { locale: nl })}</p>
+                            </div>
+                            <div className="text-right">
+                              <Badge className={`text-xs ${
+                                shiftValue === '-' 
+                                  ? 'bg-slate-100 text-slate-600 border-slate-200' 
+                                  : shiftValue === 'Vrij'
+                                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                  : 'bg-blue-100 text-blue-700 border-blue-200'
+                              }`}>
+                                {shiftValue}
+                              </Badge>
+                              {plannedDept && shiftValue !== '-' && (
+                                <p className="text-xs text-slate-500 mt-1">Afd. {plannedDept}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Dienst Tab */}
-          <TabsContent value="dienst" className="space-y-4">
+           <TabsContent value="dienst" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
