@@ -112,10 +112,19 @@ export default function Planning() {
     }
   });
 
-  const activeEmployees = employees.filter(e =>
-    e.status === 'Actief' &&
-    (filterDepartment === 'all' || e.department === filterDepartment)
-  );
+  const activeEmployees = employees.filter(e => {
+    if (e.status !== 'Actief') return false;
+    if (filterDepartment === 'all') return true;
+    if (e.department === filterDepartment) return true;
+    
+    // Also include employees scheduled for this department from other departments
+    const isScheduledForDept = schedules.some(s => {
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      return days.some(day => s.employee_id === e.id && s[`${day}_planned_department`] === filterDepartment);
+    });
+    
+    return isScheduledForDept;
+  });
 
   const getScheduleForEmployee = (employeeId) => {
     return schedules.find(s => s.employee_id === employeeId);
