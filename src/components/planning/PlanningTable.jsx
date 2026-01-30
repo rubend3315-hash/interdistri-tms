@@ -132,6 +132,7 @@ export default function PlanningTable({
     return empsToRender.map((employee, idx) => {
       const schedule = getScheduleForEmployee(employee.id);
       const employeeColor = getEmployeeColor(startIndex + idx);
+      const weekScheduleHours = getWeekScheduleHours ? getWeekScheduleHours(employee) : null;
 
       return (
         <TableRow key={employee.id}>
