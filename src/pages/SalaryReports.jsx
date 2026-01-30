@@ -70,22 +70,37 @@ export default function SalaryReports() {
     
     const hourlyRate = employee.hourly_rate || 0;
     const totalHours = entry.total_hours || 0;
+    if (totalHours === 0) return 0;
 
     // Check date validity
-    if (rule.start_date && new Date(entryDate) < new Date(rule.start_date)) return 0;
-    if (rule.end_date && new Date(entryDate) > new Date(rule.end_date)) return 0;
+    const date = new Date(entryDate);
+    if (rule.start_date) {
+      const startDate = new Date(rule.start_date);
+      if (date < startDate) return 0;
+    }
+    if (rule.end_date) {
+      const endDate = new Date(rule.end_date);
+      if (date > endDate) return 0;
+    }
 
-    // Check days of week
+    // Check days of week (only if specified)
     if (rule.applies_to_days && rule.applies_to_days.length > 0) {
       const dayNames = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
-      const dayName = dayNames[getDay(new Date(entryDate))];
+      const dayName = dayNames[getDay(date)];
       if (!rule.applies_to_days.includes(dayName)) return 0;
     }
 
-    // Check time range (if applicable)
-    if (rule.start_time && rule.end_time && entry.start_time) {
-      const entryTime = entry.start_time.substring(0, 5);
-      if (entryTime < rule.start_time || entryTime > rule.end_time) return 0;
+    // Check time range (only if both start and end time are specified)
+    if (rule.start_time && rule.end_time) {
+      if (entry.start_time) {
+        const entryTime = entry.start_time.substring(0, 5);
+        // Handle overnight shifts (e.g., 22:00 to 06:00)
+        if (rule.start_time > rule.end_time) {
+          if (entryTime < rule.start_time && entryTime > rule.end_time) return 0;
+        } else {
+          if (entryTime < rule.start_time || entryTime > rule.end_time) return 0;
+        }
+      }
     }
 
     // Calculate based on calculation type
