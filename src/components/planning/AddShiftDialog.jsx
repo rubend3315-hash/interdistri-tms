@@ -45,7 +45,53 @@ export default function AddShiftDialog({
     }
   }, [open, employee]);
 
+  const validateShift = () => {
+    const dayIndex = new Date(date).getDay();
+    const dayKey = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][dayIndex];
+    const scheduleForDay = existingSchedules[0];
+    
+    if (!scheduleForDay) return true;
+
+    // Controleer dubbele medewerker op dezelfde afdeling
+    if (scheduleForDay[dayKey] && scheduleForDay[dayKey] !== '-' && scheduleForDay[`${dayKey}_planned_department`] === formData.planned_department) {
+      setValidationError(`Deze medewerker is al ingepland op afdeling "${formData.planned_department}" op deze dag.`);
+      return false;
+    }
+
+    // Controleer dubbele voertuig op dezelfde afdeling
+    if (formData.vehicle_id) {
+      const vehicleAlreadyScheduled = existingSchedules.some(schedule => {
+        const existingVehicleId = schedule[`${dayKey}_vehicle_id`];
+        const existingDept = schedule[`${dayKey}_planned_department`];
+        return existingVehicleId === formData.vehicle_id && existingDept === formData.planned_department;
+      });
+      if (vehicleAlreadyScheduled) {
+        setValidationError(`Dit voertuig is al ingepland op afdeling "${formData.planned_department}" op deze dag.`);
+        return false;
+      }
+    }
+
+    // Controleer dubbele route op dezelfde afdeling
+    if (formData.route_id) {
+      const routeAlreadyScheduled = existingSchedules.some(schedule => {
+        const existingRouteId = schedule[`${dayKey}_route_id`];
+        const existingDept = schedule[`${dayKey}_planned_department`];
+        return existingRouteId === formData.route_id && existingDept === formData.planned_department;
+      });
+      if (routeAlreadyScheduled) {
+        setValidationError(`Deze route is al ingepland op afdeling "${formData.planned_department}" op deze dag.`);
+        return false;
+      }
+    }
+
+    setValidationError("");
+    return true;
+  };
+
   const handleSave = () => {
+    if (!validateShift()) {
+      return;
+    }
     onSave(formData);
     onOpenChange(false);
   };
