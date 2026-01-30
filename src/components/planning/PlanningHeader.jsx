@@ -20,7 +20,8 @@ export default function PlanningHeader({
   colorMode,
   setColorMode,
   onExportPDF,
-  onCopyWeek
+  onCopyWeek,
+  onAddShift
 }) {
   return (
     <>

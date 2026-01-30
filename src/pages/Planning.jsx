@@ -27,6 +27,7 @@ import CopyWeekDialog from "../components/planning/CopyWeekDialog";
 import CopyDayDialog from "../components/planning/CopyDayDialog";
 import AIAssistant from "../components/planning/AIAssistant";
 import CapacityOverview from "../components/planning/CapacityOverview";
+import AddShiftDialog from "../components/planning/AddShiftDialog";
 
 const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
 
@@ -37,6 +38,7 @@ export default function Planning() {
   const [colorMode, setColorMode] = useState("shift");
   const [showCopyDialog, setShowCopyDialog] = useState(false);
   const [showCopyDayDialog, setShowCopyDayDialog] = useState(false);
+  const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
   const [sourceCopyDay, setSourceCopyDay] = useState(null);
   const queryClient = useQueryClient();
 
@@ -86,6 +88,16 @@ export default function Planning() {
   const { data: routes = [] } = useQuery({
     queryKey: ['routes'],
     queryFn: () => base44.entities.Route.filter({ is_active: true })
+  });
+
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
+  });
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
   });
 
   const createMutation = useMutation({
@@ -241,6 +253,44 @@ export default function Planning() {
     }
   };
 
+  const handleAddShift = async (formData) => {
+    try {
+      const selectedDate = new Date(formData.date);
+      const targetWeek = getWeek(selectedDate, { weekStartsOn: 1 });
+      const targetYear = getYear(selectedDate);
+      const dayIndex = selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1;
+      const dayKey = getDayKey(dayIndex);
+      const routeKey = `${dayKey}_route_id`;
+
+      const existingSchedule = await base44.entities.Schedule.filter({
+        employee_id: formData.employee_id,
+        week_number: targetWeek,
+        year: targetYear
+      });
+
+      const scheduleData = {
+        [dayKey]: formData.shift,
+        [routeKey]: formData.route_id
+      };
+
+      if (existingSchedule.length > 0) {
+        await base44.entities.Schedule.update(existingSchedule[0].id, scheduleData);
+      } else {
+        await base44.entities.Schedule.create({
+          employee_id: formData.employee_id,
+          week_number: targetWeek,
+          year: targetYear,
+          ...scheduleData
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      toast.success('Dienst toegevoegd aan planning');
+    } catch (error) {
+      toast.error('Fout bij opslaan: ' + error.message);
+    }
+  };
+
   const handleExportPDF = () => {
     const doc = new jsPDF('l', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -312,6 +362,7 @@ export default function Planning() {
         setColorMode={setColorMode}
         onExportPDF={handleExportPDF}
         onCopyWeek={() => setShowCopyDialog(true)}
+        onAddShift={() => setShowAddShiftDialog(true)}
       />
 
       <AIAssistant />
@@ -358,6 +409,17 @@ export default function Planning() {
         sourceDay={sourceCopyDay}
         availableDays={days}
         onCopy={handleCopyDayConfirm}
+      />
+
+      <AddShiftDialog
+        open={showAddShiftDialog}
+        onOpenChange={setShowAddShiftDialog}
+        employees={activeEmployees}
+        uurcodes={uurcodes}
+        routes={routes}
+        vehicles={vehicles}
+        customers={customers}
+        onSave={handleAddShift}
       />
     </div>
   );
