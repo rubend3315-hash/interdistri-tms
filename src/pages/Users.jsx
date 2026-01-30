@@ -125,6 +125,19 @@ export default function UsersPage() {
     }
   });
 
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }) => {
+      return base44.entities.User.update(userId, { role });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      alert('Rol bijgewerkt!');
+    },
+    onError: (error) => {
+      alert('Fout bij bijwerken rol: ' + error.message);
+    }
+  });
+
   const handleInvite = () => {
     if (!inviteData.email) {
       alert('Vul een email adres in');
@@ -144,6 +157,12 @@ export default function UsersPage() {
       userId: selectedUser.id,
       permissions: selectedUser.permissions || []
     });
+  };
+
+  const handleRoleChange = (userId, newRole) => {
+    if (confirm(`Wil je deze gebruiker de rol "${ROLES[newRole]?.label || newRole}" geven?`)) {
+      updateRoleMutation.mutate({ userId, role: newRole });
+    }
   };
 
   const applyRolePermissions = (role) => {
@@ -386,6 +405,20 @@ export default function UsersPage() {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-2">
+                        <Select
+                          value={user.role}
+                          onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
+                        >
+                          <SelectTrigger className="w-32 h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="supervisor">Supervisor</SelectItem>
+                            <SelectItem value="editor">Editor</SelectItem>
+                            <SelectItem value="user">Medewerker</SelectItem>
+                          </SelectContent>
+                        </Select>
                         {user.role !== 'admin' && (
                           <Button
                             size="sm"
@@ -429,6 +462,23 @@ export default function UsersPage() {
                 <div className="text-sm text-slate-600">
                   <span className="text-slate-500">Aangemaakt:</span>{' '}
                   {user.created_date ? format(new Date(user.created_date), 'dd-MM-yyyy') : '-'}
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="text-xs text-slate-500">Rol wijzigen:</span>
+                  <Select
+                    value={user.role}
+                    onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
+                  >
+                    <SelectTrigger className="w-32 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="editor">Editor</SelectItem>
+                      <SelectItem value="user">Medewerker</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 {user.role !== 'admin' && (
                   <div className="flex items-center justify-between pt-2 border-t">
