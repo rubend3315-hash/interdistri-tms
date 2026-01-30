@@ -458,24 +458,30 @@ export default function SalaryReports() {
               {/* Overwerk */}
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold text-slate-700">Overwerk</h4>
-                <div className="flex flex-wrap gap-1">
-                  {activeRules.filter(r => r.category === 'Overwerk').map(rule => {
-                    let displayText = rule.name;
-                    if (rule.calculation_type === 'Percentage (%)' && rule.percentage) {
-                      displayText = `${rule.name}: ${rule.percentage}%`;
-                    } else if (rule.calculation_type === 'Vast bedrag (€)' && rule.fixed_amount) {
-                      displayText = `${rule.name}: €${rule.fixed_amount}`;
-                    } else if (rule.calculation_type === 'Per uur (€/uur)' && rule.value) {
-                      displayText = `${rule.name}: €${rule.value}/uur`;
-                    } else if (rule.calculation_type === 'Per dag (€/dag)' && rule.value) {
-                      displayText = `${rule.name}: €${rule.value}/dag`;
-                    }
-                    return (
-                      <Badge key={rule.id} variant="outline" className="text-xs">
-                        {displayText}
-                      </Badge>
-                    );
-                  })}
+                <div className="flex flex-col gap-1">
+                  {activeRules
+                    .filter(r => r.category === 'Overwerk')
+                    .sort((a, b) => {
+                      const order = ['Overwerk 130%', 'Overwerk 150% zaterdag', 'Overwerk 200% zondag', 'Overwerk 200% Feestdag'];
+                      return order.indexOf(a.name) - order.indexOf(b.name);
+                    })
+                    .map(rule => {
+                      let displayText = rule.name;
+                      if (rule.calculation_type === 'Percentage (%)' && rule.percentage) {
+                        displayText = `${rule.name}: ${rule.percentage}%`;
+                      } else if (rule.calculation_type === 'Vast bedrag (€)' && rule.fixed_amount) {
+                        displayText = `${rule.name}: €${rule.fixed_amount}`;
+                      } else if (rule.calculation_type === 'Per uur (€/uur)' && rule.value) {
+                        displayText = `${rule.name}: €${rule.value}/uur`;
+                      } else if (rule.calculation_type === 'Per dag (€/dag)' && rule.value) {
+                        displayText = `${rule.name}: €${rule.value}/dag`;
+                      }
+                      return (
+                        <Badge key={rule.id} variant="outline" className="text-xs w-fit">
+                          {displayText}
+                        </Badge>
+                      );
+                    })}
                   {activeRules.filter(r => r.category === 'Overwerk').length === 0 && (
                     <span className="text-xs text-slate-400">Geen regels</span>
                   )}
