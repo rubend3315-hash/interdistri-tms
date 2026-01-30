@@ -1,17 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Truck, MapPin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { format } from "date-fns";
+import { nl } from "date-fns/locale";
 
 export default function AvailableResources({
   employees = [],
   vehicles = [],
   customers = [],
   schedules = [],
-  currentWeek = null
+  currentWeek = null,
+  days = []
 }) {
+  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   // Fetch TI Model routes for all customers
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutes'],
@@ -19,25 +23,26 @@ export default function AvailableResources({
     enabled: customers.length > 0
   });
 
-  // Get all scheduled employees, vehicles, and routes for the current week
+  // Get scheduled items for the selected day
+  const selectedDay = days[selectedDayIndex];
+  const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const selectedDayKey = dayKeys[selectedDayIndex % 7];
+  
   const scheduledEmployeeIds = new Set();
   const scheduledVehicleIds = new Set();
   const scheduledRouteIds = new Set();
 
   schedules.forEach(schedule => {
     if (schedule.week_number === currentWeek) {
-      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-      dayKeys.forEach(day => {
-        if (schedule[day] && schedule[day] !== '-' && schedule[day] !== 'Vrij') {
-          scheduledEmployeeIds.add(schedule.employee_id);
-          if (schedule[`${day}_vehicle_id`]) {
-            scheduledVehicleIds.add(schedule[`${day}_vehicle_id`]);
-          }
-          if (schedule[`${day}_route_id`]) {
-            scheduledRouteIds.add(schedule[`${day}_route_id`]);
-          }
+      if (schedule[selectedDayKey] && schedule[selectedDayKey] !== '-' && schedule[selectedDayKey] !== 'Vrij') {
+        scheduledEmployeeIds.add(schedule.employee_id);
+        if (schedule[`${selectedDayKey}_vehicle_id`]) {
+          scheduledVehicleIds.add(schedule[`${selectedDayKey}_vehicle_id`]);
         }
-      });
+        if (schedule[`${selectedDayKey}_route_id`]) {
+          scheduledRouteIds.add(schedule[`${selectedDayKey}_route_id`]);
+        }
+      }
     }
   });
 
@@ -62,9 +67,33 @@ export default function AvailableResources({
   return (
     <Card className="border-l-4 border-l-emerald-500">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <span className="text-emerald-600">✓</span> Beschikbare resources
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <span className="text-emerald-600">✓</span> Beschikbare resources
+          </CardTitle>
+          {selectedDay && (
+            <span className="text-sm text-slate-600">
+              {format(selectedDay, "EEEE d MMMM", { locale: nl })}
+            </span>
+          )}
+        </div>
+        {days.length > 0 && (
+          <div className="flex gap-1 mt-4 overflow-x-auto pb-2">
+            {days.map((day, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelectedDayIndex(idx)}
+                className={`px-3 py-1.5 text-xs rounded-lg font-medium whitespace-nowrap transition-colors ${
+                  selectedDayIndex === idx
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {format(day, "EEE d", { locale: nl })}
+              </button>
+            ))}
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
