@@ -90,7 +90,7 @@ export default function CapacityOverview({ days, employees, schedules }) {
                   <div className="w-14 text-slate-600 flex-shrink-0">
                     {format(day, "EEE d MMM", { locale: nl })}
                   </div>
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getOccupancyColor(percentage).replace('bg-', '') === 'green-500' ? '#22c55e' : getOccupancyColor(percentage).replace('bg-', '') === 'yellow-500' ? '#eab308' : '#ef4444' }} />
+                  <div className="w-2 h-2 rounded-full flex-shrink-0 bg-green-500" />
                   <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${getOccupancyColor(percentage)} transition-all`}
