@@ -105,7 +105,7 @@ export default function AvailableResources({
                 Medewerkers ({availableEmployees.length})
               </h3>
             </div>
-            <div className="h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+            <div className="h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
               {availableEmployees.length > 0 ? (
                 <div className="space-y-1">
                   {availableEmployees.map(emp => (
@@ -131,7 +131,7 @@ export default function AvailableResources({
                 Voertuigen ({availableVehicles.length})
               </h3>
             </div>
-            <div className="h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+            <div className="h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
               {availableVehicles.length > 0 ? (
                 <div className="space-y-1">
                   {availableVehicles.map(veh => (
@@ -157,7 +157,7 @@ export default function AvailableResources({
                 Routes per klant
               </h3>
             </div>
-            <div className="h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+            <div className="h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
               {Object.keys(routesByCustomer).length > 0 ? (
                 <div className="space-y-2">
                   {Object.entries(routesByCustomer).map(([customerId, customerRoutes]) => (
