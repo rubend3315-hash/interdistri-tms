@@ -502,6 +502,14 @@ export default function Planning() {
         schedules={schedules}
       />
 
+      <AvailableResources
+        employees={employees}
+        vehicles={vehicles}
+        routes={routes}
+        schedules={schedules}
+        currentWeek={weekNumber}
+      />
+
       <ShiftLegend />
 
       <Card>
