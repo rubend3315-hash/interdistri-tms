@@ -128,6 +128,19 @@ export default function MobileEntry() {
   const currentEmployee = employees.find(e => e.email === user?.email);
   const todayShift = shiftTimes[0];
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  // Subscribe to schedule updates
+  useEffect(() => {
+    if (!currentEmployee?.id) return;
+    
+    const unsubscribe = base44.entities.Schedule.subscribe((event) => {
+      if (event.data?.employee_id === currentEmployee.id) {
+        queryClient.invalidateQueries({ queryKey: ['mySchedules'] });
+      }
+    });
+    
+    return unsubscribe;
+  }, [currentEmployee?.id, queryClient]);
   
   // Get relevant supervisor message
   const welcomeMessage = supervisorMessages.find(m => 
