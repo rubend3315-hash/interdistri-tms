@@ -56,27 +56,27 @@ export default function CapacityOverview({ days, employees, schedules }) {
           <h3 className="font-medium text-sm text-slate-900">Capaciteit & Werkdruk</h3>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-blue-600 text-xs mb-1">
-              <Users className="w-3.5 h-3.5" />
-              <span className="text-slate-600">Gemiddelde Bezetting</span>
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-2">
+            <div className="flex items-center gap-1.5 text-blue-600 text-xs mb-0.5">
+              <Users className="w-3 h-3" />
+              <span className="text-slate-600 text-xs">Gemiddelde Bezetting</span>
             </div>
-            <div className="text-2xl font-bold text-blue-900">{getAverageOccupancy()}%</div>
+            <div className="text-xl font-bold text-blue-900">{getAverageOccupancy()}%</div>
           </div>
-          <div className="bg-green-50 border border-green-100 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-green-600 text-xs mb-1">
-              <Users className="w-3.5 h-3.5" />
-              <span className="text-slate-600">Actieve Chauffeurs</span>
+          <div className="bg-green-50 border border-green-100 rounded-lg p-2">
+            <div className="flex items-center gap-1.5 text-green-600 text-xs mb-0.5">
+              <Users className="w-3 h-3" />
+              <span className="text-slate-600 text-xs">Actieve Chauffeurs</span>
             </div>
-            <div className="text-2xl font-bold text-green-900">{getTotalActiveDrivers()}</div>
+            <div className="text-xl font-bold text-green-900">{getTotalActiveDrivers()}</div>
           </div>
-          <div className="bg-purple-50 border border-purple-100 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-purple-600 text-xs mb-1">
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span className="text-slate-600">Totaal Diensten</span>
+          <div className="bg-purple-50 border border-purple-100 rounded-lg p-2">
+            <div className="flex items-center gap-1.5 text-purple-600 text-xs mb-0.5">
+              <CalendarDays className="w-3 h-3" />
+              <span className="text-slate-600 text-xs">Totaal Diensten</span>
             </div>
-            <div className="text-2xl font-bold text-purple-900">{getTotalShifts()}</div>
+            <div className="text-xl font-bold text-purple-900">{getTotalShifts()}</div>
           </div>
         </div>
 
