@@ -152,8 +152,10 @@ export default function PlanningTable({
             const currentRoute = routes.find(r => r.id === currentRouteId);
             const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
 
-            // Show "planned on department" only if it differs from employee's home dept AND current viewing dept
-            const isDifferentDepartment = currentPlannedDepartment && currentPlannedDepartment !== employee.department && currentPlannedDepartment !== currentDepartment;
+            // Check if employee is scheduled in a different department
+            const isScheduledElsewhere = currentPlannedDepartment && currentPlannedDepartment !== employee.department;
+            // Show details only if we're viewing the department where it's scheduled
+            const showDetails = !isScheduledElsewhere || currentPlannedDepartment === currentDepartment;
             const displayText = currentValue || "-";
 
             return (
@@ -168,27 +170,27 @@ export default function PlanningTable({
                   <div className="font-medium text-slate-900">
                     {displayText}
                   </div>
-                  {isDifferentDepartment && (
+                  {isScheduledElsewhere && (
                     <div className="text-xs text-blue-600 font-semibold truncate w-full">
                       gepland op afd. {currentPlannedDepartment}
                     </div>
                   )}
-                  {currentRoute && (
+                  {showDetails && currentRoute && (
                     <div className="text-xs text-slate-600 truncate w-full">
                       {currentRoute.route_code}
                     </div>
                   )}
-                  {currentVehicle && (
+                  {showDetails && currentVehicle && (
                     <div className="text-xs text-slate-500 truncate w-full">
                       {currentVehicle.license_plate}
                     </div>
                   )}
-                  {currentNotes1 && (
+                  {showDetails && currentNotes1 && (
                     <div className="text-xs text-slate-500 truncate w-full italic">
                       {currentNotes1}
                     </div>
                   )}
-                  {currentNotes2 && (
+                  {showDetails && currentNotes2 && (
                     <div className="text-xs text-slate-500 truncate w-full italic">
                       {currentNotes2}
                     </div>
