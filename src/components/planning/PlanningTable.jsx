@@ -34,7 +34,8 @@ export default function PlanningTable({
   routes = [],
   vehicles = [],
   customers = [],
-  filterDepartment = 'all'
+  filterDepartment = 'all',
+  getWeekScheduleHours
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
