@@ -423,8 +423,10 @@ export default function Planning() {
 
             // Re-add column headers on new page
             doc.setFontSize(7);
-            doc.setDrawColor(200, 200, 200);
-            doc.setFillColor(245, 245, 245);
+            doc.setDrawColor(220, 220, 220);
+            doc.setFillColor(250, 250, 250);
+            doc.setTextColor(0, 0, 0);
+
             doc.rect(14, y, employeeNameWidth, 6, 'FD');
             doc.text('Medewerker', 15, y + 4);
 
