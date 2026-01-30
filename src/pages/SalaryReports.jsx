@@ -533,9 +533,25 @@ export default function SalaryReports() {
                   {activeRules
                     .filter(r => r.category === 'Verblijfkosten')
                     .sort((a, b) => {
-                      if (a.name.toLowerCase().includes('eendaagse')) return -1;
-                      if (b.name.toLowerCase().includes('eendaagse')) return 1;
-                      return 0;
+                      const order = [
+                        'Verblijfskosten ééndaagse ritten - basis (>4 uur)',
+                        'Verblijfskosten ééndaagse ritten - avond (18:00-24:00)',
+                        'Verblijfskosten ééndaagse ritten - lange dag toeslag',
+                        'Verblijfskosten meerdaagse ritten - eerste dag',
+                        'Verblijfskosten meerdaagse ritten - eerste dag avond',
+                        'Verblijfskosten meerdaagse ritten - tussentijdse dag',
+                        'Verblijfskosten meerdaagse ritten - laatste dag laat',
+                        'Verblijfskosten meerdaagse ritten - laatste dag avond',
+                        'Verblijfskosten meerdaagse ritten - laatste dag nacht',
+                        'Verblijfskosten meerdaagse ritten - laatste dag',
+                        'Verblijfskosten overstaan weekend/feestdag'
+                      ];
+                      const indexA = order.indexOf(a.name);
+                      const indexB = order.indexOf(b.name);
+                      if (indexA === -1 && indexB === -1) return 0;
+                      if (indexA === -1) return 1;
+                      if (indexB === -1) return -1;
+                      return indexA - indexB;
                     })
                     .map(rule => {
                       let displayText = rule.name;
