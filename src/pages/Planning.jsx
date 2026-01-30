@@ -118,11 +118,24 @@ export default function Planning() {
     
     if (!weekSchedule || typeof weekSchedule !== 'object') return null;
     
-    // Map the schedule object to day keys with numeric values
+    // Map Dutch abbreviated day names to English day keys
+    // Week schedule uses Ma, Di, Wo, Do, Vr, Za, Zo format
+    const dutchToDayKey = {
+      'Ma': 'monday',
+      'Di': 'tuesday',
+      'Wo': 'wednesday',
+      'Do': 'thursday',
+      'Vr': 'friday',
+      'Za': 'saturday',
+      'Zo': 'sunday'
+    };
+    
     const hours = {};
     const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    dayKeys.forEach(day => {
-      const value = weekSchedule[day];
+    
+    dayKeys.forEach((day, index) => {
+      const dutchDay = Object.keys(dutchToDayKey).find(key => dutchToDayKey[key] === day);
+      const value = weekSchedule[dutchDay];
       hours[day] = typeof value === 'number' ? value : (typeof value === 'string' ? parseFloat(value) || 0 : 0);
     });
     
