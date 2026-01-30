@@ -18,7 +18,8 @@ export default function AddShiftDialog({
   vehicles = [],
   customers = [],
   departments = [],
-  onSave 
+  onSave,
+  existingSchedules = []
 }) {
   const [formData, setFormData] = useState({
     planned_department: "",
@@ -33,6 +34,7 @@ export default function AddShiftDialog({
     notes_2: "",
     copy_to_days: []
   });
+  const [validationError, setValidationError] = useState("");
 
   React.useEffect(() => {
     if (open && employee) {
