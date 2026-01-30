@@ -141,21 +141,24 @@ export default function Planning() {
     const targetYear = getYear(days[dayIndex]);
     const existingSchedule = schedules.find(s => s.employee_id === employeeId && s.week_number === targetWeek && s.year === targetYear);
 
-    // Build shift code from time blocks
+    // Build shift code from time blocks and special types
     let shiftCode = '';
-    const timeBlocks = [];
-    if (formData.time_block_day) timeBlocks.push('Dag');
-    if (formData.time_block_evening) timeBlocks.push('Avond');
-    if (formData.time_block_night) timeBlocks.push('Nacht');
     
-    if (timeBlocks.length > 0) {
-      shiftCode = timeBlocks.join('+');
+    if (formData.is_training) {
+      shiftCode = 'Opleiding';
     } else if (formData.is_standby) {
       shiftCode = 'Stand-by';
-    } else if (formData.is_training) {
-      shiftCode = 'Opleiding';
     } else {
-      shiftCode = '-';
+      const timeBlocks = [];
+      if (formData.time_block_day) timeBlocks.push('Dag');
+      if (formData.time_block_evening) timeBlocks.push('Avond');
+      if (formData.time_block_night) timeBlocks.push('Nacht');
+      
+      if (timeBlocks.length > 0) {
+        shiftCode = timeBlocks.join('+');
+      } else {
+        shiftCode = '-';
+      }
     }
 
     const updateData = {
