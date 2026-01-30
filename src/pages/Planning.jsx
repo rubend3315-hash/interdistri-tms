@@ -330,7 +330,6 @@ export default function Planning() {
         days={days}
         employees={activeEmployees}
         schedules={schedules}
-        onCopyDay={handleCopyDay}
       />
 
       <ShiftLegend />
@@ -347,7 +346,6 @@ export default function Planning() {
             onShiftChange={handleShiftChange}
             getDayKey={getDayKey}
             getScheduleForEmployee={getScheduleForEmployee}
-            onCopyDay={handleCopyDay}
             uurcodes={uurcodes}
             routes={routes}
             vehicles={vehicles}

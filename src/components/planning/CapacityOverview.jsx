@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { TrendingUp, Users, CalendarDays, Copy } from "lucide-react";
 
-export default function CapacityOverview({ days, employees, schedules, onCopyDay }) {
+export default function CapacityOverview({ days, employees, schedules }) {
   const getOccupancyForDay = (day, dayIndex) => {
     const dayKey = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][dayIndex % 7];
     let working = 0;

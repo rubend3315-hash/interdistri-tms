@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Copy } from "lucide-react";
+import { User } from "lucide-react";
 import { shiftTypes } from "./ShiftLegend";
 import AddShiftDialog from "./AddShiftDialog";
 
@@ -30,7 +30,6 @@ export default function PlanningTable({
   onShiftChange,
   getDayKey,
   getScheduleForEmployee,
-  onCopyDay,
   uurcodes = [],
   routes = [],
   vehicles = [],
@@ -105,17 +104,7 @@ export default function PlanningTable({
               return (
                 <TableHead key={day.toISOString()} className="text-center min-w-28">
                   <div className="flex flex-col items-center gap-1">
-                    <div className="flex items-center gap-1">
-                      <div className="text-xs text-slate-500">{format(day, "EEE", { locale: nl })}</div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 w-5 p-0"
-                        onClick={() => onCopyDay?.(day)}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
+                    <div className="text-xs text-slate-500">{format(day, "EEE", { locale: nl })}</div>
                     <div className="font-semibold">{format(day, "d MMM", { locale: nl })}</div>
                     {holiday && (
                       <Badge className="bg-purple-100 text-purple-700 text-xs mt-1">
