@@ -184,7 +184,7 @@ export default function PlanningTable({
                   onClick={() => handleAddShift(employee, day, dayIndex)}
                 >
                   {displayText !== "-" ? (
-                    <div className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-medium ${getShiftColor(displayText)} w-fit line-through`}>
+                    <div className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-medium ${getShiftColor(displayText)} w-fit`}>
                       {displayText}
                     </div>
                   ) : (
