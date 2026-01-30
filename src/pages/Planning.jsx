@@ -109,20 +109,21 @@ export default function Planning() {
       return startDate <= today && (!endDate || endDate >= today);
     });
 
-    if (!activeContract || !activeContract.week1) return null;
+    if (!activeContract) return null;
     
-    // Week 1 pattern: count hours from week1 or week2 schedule
+    // Get the correct week schedule (week1 or week2)
     const weekSchedule = viewMode === "week" ? 
       (weekNumber % 2 === 1 ? activeContract.week1 : activeContract.week2) :
       activeContract.week1;
     
-    if (!weekSchedule) return null;
+    if (!weekSchedule || typeof weekSchedule !== 'object') return null;
     
-    // Sum up hours for each day
+    // Map the schedule object to day keys with numeric values
     const hours = {};
     const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     dayKeys.forEach(day => {
-      hours[day] = weekSchedule[day] || 0;
+      const value = weekSchedule[day];
+      hours[day] = typeof value === 'number' ? value : (typeof value === 'string' ? parseFloat(value) || 0 : 0);
     });
     
     return hours;
