@@ -43,6 +43,7 @@ export default function MobileEntry() {
   const [trips, setTrips] = useState([]);
   const canvasRef = useRef(null);
   const queryClient = useQueryClient();
+  const { isOnline, syncStatus, addToQueue } = useOfflineSync();
 
   const { data: user, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
