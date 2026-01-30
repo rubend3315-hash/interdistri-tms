@@ -245,11 +245,11 @@ export default function PlanningTable({
                     Afdeling {dept}
                   </TableCell>
                 </TableRow>
-                {renderEmployeeRows(deptEmployees)}
+                {renderEmployeeRows(deptEmployees, 0, dept)}
               </React.Fragment>
             ))
           ) : (
-            renderEmployeeRows(employees)
+            renderEmployeeRows(employees, 0, filterDepartment)
           )}
         </TableBody>
       </Table>
