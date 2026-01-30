@@ -28,7 +28,7 @@ import CopyDayDialog from "../components/planning/CopyDayDialog";
 import AIAssistant from "../components/planning/AIAssistant";
 import CapacityOverview from "../components/planning/CapacityOverview";
 
-const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
+const departments = ["Management", "Transport", "PostNL", "Charters"];
 
 export default function Planning() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -78,6 +78,16 @@ export default function Planning() {
     queryFn: () => base44.entities.Holiday.filter({ year })
   });
 
+  const { data: uurcodes = [] } = useQuery({
+    queryKey: ['uurcodes'],
+    queryFn: () => base44.entities.Uurcode.filter({ status: 'Actief' })
+  });
+
+  const { data: routes = [] } = useQuery({
+    queryKey: ['routes'],
+    queryFn: () => base44.entities.Route.filter({ is_active: true })
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Schedule.create(data),
     onSuccess: () => {
@@ -106,23 +116,29 @@ export default function Planning() {
     return days[index % 7];
   };
 
-  const handleShiftChange = (employeeId, dayIndex, value) => {
+  const handleShiftChange = (employeeId, dayIndex, value, routeId = null) => {
     const dayKey = getDayKey(dayIndex);
+    const routeKey = `${dayKey}_route_id`;
     const targetWeek = getWeek(days[dayIndex], { weekStartsOn: 1 });
     const targetYear = getYear(days[dayIndex]);
     const existingSchedule = schedules.find(s => s.employee_id === employeeId && s.week_number === targetWeek && s.year === targetYear);
 
+    const updateData = { [dayKey]: value };
+    if (routeId !== null) {
+      updateData[routeKey] = routeId;
+    }
+
     if (existingSchedule) {
       updateMutation.mutate({
         id: existingSchedule.id,
-        data: { [dayKey]: value }
+        data: updateData
       });
     } else {
       const newSchedule = {
         employee_id: employeeId,
         week_number: targetWeek,
         year: targetYear,
-        [dayKey]: value
+        ...updateData
       };
       createMutation.mutate(newSchedule);
     }
@@ -322,6 +338,8 @@ export default function Planning() {
             getDayKey={getDayKey}
             getScheduleForEmployee={getScheduleForEmployee}
             onCopyDay={handleCopyDay}
+            uurcodes={uurcodes}
+            routes={routes}
           />
         </CardContent>
       </Card>

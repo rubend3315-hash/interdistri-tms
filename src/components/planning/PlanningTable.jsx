@@ -30,7 +30,9 @@ export default function PlanningTable({
   onShiftChange,
   getDayKey,
   getScheduleForEmployee,
-  onCopyDay
+  onCopyDay,
+  uurcodes = [],
+  routes = []
 }) {
   const getShiftConfig = (value) => {
     return shiftTypes.find(s => s.value === value) || shiftTypes[3];
@@ -112,47 +114,71 @@ export default function PlanningTable({
                 </TableCell>
                 {days.map((day, dayIndex) => {
                   const dayKey = getDayKey(dayIndex);
+                  const routeKey = `${dayKey}_route_id`;
                   const currentValue = schedule?.[dayKey] || "";
+                  const currentRouteId = schedule?.[routeKey] || "";
                   const holiday = isHoliday(day);
                   const config = currentValue ? getShiftConfig(currentValue) : null;
                   const cellColor = colorMode === "employee" && config ? employeeColor : (config?.color || "");
+                  const currentRoute = routes.find(r => r.id === currentRouteId);
 
                   return (
                     <TableCell
                       key={day.toISOString()}
                       className={`text-center p-1 ${holiday ? 'bg-purple-50' : ''}`}
                     >
-                      <Select
-                        value={currentValue || "none"}
-                        onValueChange={(v) => onShiftChange(employee.id, dayIndex, v === "none" ? "" : v)}
-                      >
-                        <SelectTrigger className={`w-full h-12 border-dashed ${cellColor}`}>
-                          {config ? (
-                            <div className="flex items-center gap-1.5">
-                              <config.icon className="w-4 h-4" />
-                              <span className="text-sm">{config.label}</span>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">
-                            <span className="text-slate-400">Geen</span>
-                          </SelectItem>
-                          {shiftTypes.map(shift => {
-                            const Icon = shift.icon;
-                            return (
-                              <SelectItem key={shift.value} value={shift.value}>
-                                <div className="flex items-center gap-2">
-                                  <Icon className="w-4 h-4" />
-                                  {shift.label}
+                      <div className="space-y-1">
+                        <Select
+                          value={currentValue || "none"}
+                          onValueChange={(v) => onShiftChange(employee.id, dayIndex, v === "none" ? "" : v)}
+                        >
+                          <SelectTrigger className={`w-full h-10 border-dashed text-xs ${cellColor}`}>
+                            {currentValue ? (
+                              <span className="truncate">{currentValue}</span>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">
+                              <span className="text-slate-400">Geen</span>
+                            </SelectItem>
+                            {uurcodes.map(code => (
+                              <SelectItem key={code.id} value={code.code}>
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">{code.code}</span>
+                                  <span className="text-xs text-slate-500">{code.name}</span>
                                 </div>
                               </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={currentRouteId || "none"}
+                          onValueChange={(v) => onShiftChange(employee.id, dayIndex, currentValue, v === "none" ? "" : v)}
+                        >
+                          <SelectTrigger className="w-full h-8 border-dashed text-xs">
+                            {currentRoute ? (
+                              <span className="truncate">{currentRoute.route_code}</span>
+                            ) : (
+                              <span className="text-slate-400">Route</span>
+                            )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">
+                              <span className="text-slate-400">Geen route</span>
+                            </SelectItem>
+                            {routes.map(route => (
+                              <SelectItem key={route.id} value={route.id}>
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">{route.route_code}</span>
+                                  <span className="text-xs text-slate-500">{route.route_name}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </TableCell>
                   );
                 })}
