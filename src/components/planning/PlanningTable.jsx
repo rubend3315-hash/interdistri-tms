@@ -279,7 +279,10 @@ export default function PlanningTable({
                   {days.map((day) => {
                     return (
                       <TableHead key={day.toISOString()} className="text-center min-w-28 py-1">
-                        <div className="text-xs font-medium text-slate-700">{format(day, "EEE", { locale: nl })}</div>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div className="text-xs text-slate-500">{format(day, "EEE", { locale: nl })}</div>
+                          <div className="text-xs font-medium text-slate-700">{format(day, "d MMM", { locale: nl })}</div>
+                        </div>
                       </TableHead>
                     );
                   })}
