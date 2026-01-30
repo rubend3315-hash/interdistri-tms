@@ -180,6 +180,11 @@ export default function PlanningTable({
                   <div className="font-medium text-slate-900">
                     {displayText}
                   </div>
+                  {weekScheduleHours && weekScheduleHours[dayKey] > 0 && (
+                    <div className="text-xs text-cyan-600 font-semibold">
+                      {weekScheduleHours[dayKey]}h
+                    </div>
+                  )}
                   {isScheduledElsewhere && currentDepartment === employee.department && (
                     <div className="text-xs text-blue-600 font-semibold truncate w-full">
                       gepland op afd. {currentPlannedDepartment}
