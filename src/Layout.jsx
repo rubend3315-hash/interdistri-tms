@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "./utils";
@@ -28,6 +29,15 @@ import {
   CircleDot
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Register service worker on mount
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => console.log('Service Worker registered'))
+      .catch(err => console.log('Service Worker registration failed:', err));
+  });
+}
 
 const menuItems = [
   { 
@@ -132,7 +142,7 @@ export default function Layout({ children, currentPageName }) {
     };
     
     const requiredPermission = pagePermissionMap[page];
-    if (!requiredPermission) return true;
+    if (!requiredPermission) return true; // If a page has no defined permission, assume accessible
     
     return user.permissions?.includes(requiredPermission) || false;
   };
