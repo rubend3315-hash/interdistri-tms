@@ -164,6 +164,11 @@ export default function Planning() {
         });
       }
 
+      // Round all hours to 2 decimals
+      Object.keys(hours).forEach(day => {
+        hours[day] = Math.round(hours[day] * 100) / 100;
+      });
+
       console.log('Hours result:', hours);
       return hours;
   };
