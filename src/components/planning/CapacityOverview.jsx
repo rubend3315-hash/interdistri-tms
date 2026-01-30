@@ -80,7 +80,7 @@ export default function CapacityOverview({ days, employees, schedules }) {
           </div>
         </div>
 
-        <div>
+        <div className="space-y-2 mt-2">
           <div className="space-y-1">
             {days.map((day, idx) => {
               const { working, total } = getOccupancyForDay(day, idx);
