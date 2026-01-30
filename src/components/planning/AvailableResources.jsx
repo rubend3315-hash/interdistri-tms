@@ -67,7 +67,7 @@ export default function AvailableResources({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-4">
           {/* Beschikbare Medewerkers */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-2">
