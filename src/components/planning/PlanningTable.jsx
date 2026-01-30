@@ -181,9 +181,9 @@ export default function PlanningTable({
                   <div className="font-medium text-slate-900">
                     {displayText}
                   </div>
-                  {weekScheduleHours && weekScheduleHours[dayKey] > 0 && (
+                  {dayHours !== null && dayHours !== undefined && dayHours > 0 && (
                     <div className="text-xs text-cyan-600 font-semibold">
-                      {weekScheduleHours[dayKey]}h
+                      {dayHours}h
                     </div>
                   )}
                   {isScheduledElsewhere && currentDepartment === employee.department && (
