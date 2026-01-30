@@ -28,13 +28,13 @@ const shiftTypes = [
 export default function ShiftLegend() {
   return (
     <Card>
-      <CardContent className="p-4">
-        <div className="flex flex-wrap gap-3">
+      <CardContent className="p-2">
+        <div className="flex flex-wrap gap-2">
           {shiftTypes.map(shift => {
             const Icon = shift.icon;
             return (
-              <Badge key={shift.value} className={`${shift.color} border gap-1.5`}>
-                <Icon className="w-3.5 h-3.5" />
+              <Badge key={shift.value} className={`${shift.color} border gap-1 text-xs py-1`}>
+                <Icon className="w-3 h-3" />
                 {shift.label}
               </Badge>
             );
