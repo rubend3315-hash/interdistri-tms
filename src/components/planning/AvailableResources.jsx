@@ -101,11 +101,11 @@ export default function AvailableResources({
               </h3>
             </div>
             {availableVehicles.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
+              <div className="space-y-1 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
                 {availableVehicles.map(veh => (
                   <Badge
                     key={veh.id}
-                    className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs cursor-default"
+                    className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs cursor-default w-full justify-start"
                   >
                     {veh.license_plate}
                   </Badge>
