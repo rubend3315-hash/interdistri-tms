@@ -379,6 +379,7 @@ export default function Planning() {
             routes={routes}
             vehicles={vehicles}
             customers={customers}
+            filterDepartment={filterDepartment}
           />
         </CardContent>
       </Card>
