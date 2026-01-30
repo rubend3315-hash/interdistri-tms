@@ -78,7 +78,7 @@ export default function AvailableResources({
             </div>
             {availableEmployees.length > 0 ? (
               <div className="flex flex-wrap gap-1">
-                {availableEmployees.slice(0, 6).map(emp => (
+                {availableEmployees.map(emp => (
                   <Badge
                     key={emp.id}
                     className="bg-blue-100 text-blue-700 border-blue-200 text-xs cursor-default"
@@ -86,11 +86,6 @@ export default function AvailableResources({
                     {emp.first_name.substring(0, 1)}. {emp.last_name}
                   </Badge>
                 ))}
-                {availableEmployees.length > 6 && (
-                  <Badge className="bg-slate-100 text-slate-600 text-xs">
-                    +{availableEmployees.length - 6}
-                  </Badge>
-                )}
               </div>
             ) : (
               <p className="text-xs text-slate-500 italic">Geen beschikbare medewerkers</p>
@@ -107,7 +102,7 @@ export default function AvailableResources({
             </div>
             {availableVehicles.length > 0 ? (
               <div className="flex flex-wrap gap-1">
-                {availableVehicles.slice(0, 6).map(veh => (
+                {availableVehicles.map(veh => (
                   <Badge
                     key={veh.id}
                     className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs cursor-default"
@@ -115,11 +110,6 @@ export default function AvailableResources({
                     {veh.license_plate}
                   </Badge>
                 ))}
-                {availableVehicles.length > 6 && (
-                  <Badge className="bg-slate-100 text-slate-600 text-xs">
-                    +{availableVehicles.length - 6}
-                  </Badge>
-                )}
               </div>
             ) : (
               <p className="text-xs text-slate-500 italic">Geen beschikbare voertuigen</p>
