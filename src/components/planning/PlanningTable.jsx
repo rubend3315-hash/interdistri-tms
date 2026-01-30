@@ -127,7 +127,7 @@ export default function PlanningTable({
       })()
     : null;
 
-  const renderEmployeeRows = (empsToRender, startIndex = 0) => {
+  const renderEmployeeRows = (empsToRender, startIndex = 0, currentDepartment = null) => {
     return empsToRender.map((employee, idx) => {
       const schedule = getScheduleForEmployee(employee.id);
       const employeeColor = getEmployeeColor(startIndex + idx);
@@ -152,7 +152,8 @@ export default function PlanningTable({
             const currentRoute = routes.find(r => r.id === currentRouteId);
             const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
 
-            const isDifferentDepartment = currentPlannedDepartment && currentPlannedDepartment !== employee.department;
+            // Show "planned on department" only if it differs from employee's home dept AND current viewing dept
+            const isDifferentDepartment = currentPlannedDepartment && currentPlannedDepartment !== employee.department && currentPlannedDepartment !== currentDepartment;
             const displayText = currentValue || "-";
 
             return (
