@@ -67,23 +67,6 @@ export default function MobileEntry() {
     queryFn: () => base44.entities.SupervisorMessage.filter({ is_active: true })
   });
 
-  const { data: schedules = [] } = useQuery({
-    queryKey: ['mySchedules', currentEmployee?.id],
-    queryFn: async () => {
-      if (!currentEmployee?.id) return [];
-      const today = new Date();
-      const currentWeek = getWeekNumber(today);
-      const currentYear = today.getFullYear();
-      const result = await base44.entities.Schedule.filter({
-        employee_id: currentEmployee.id,
-        week_number: currentWeek,
-        year: currentYear
-      });
-      return result;
-    },
-    enabled: !!currentEmployee?.id
-  });
-
   const { data: myTimeEntries = [], isLoading: loadingEntries } = useQuery({
     queryKey: ['myTimeEntries', user?.email],
     queryFn: () => base44.entities.TimeEntry.filter({ created_by: user?.email }),
