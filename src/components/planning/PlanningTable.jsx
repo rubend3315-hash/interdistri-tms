@@ -274,6 +274,16 @@ export default function PlanningTable({
                     Afdeling {dept}
                   </TableCell>
                 </TableRow>
+                <TableRow className="bg-slate-50 border-b">
+                  <TableHead className="w-48 sticky left-0 bg-slate-50 z-10 py-1">Medewerker</TableHead>
+                  {days.map((day) => {
+                    return (
+                      <TableHead key={day.toISOString()} className="text-center min-w-28 py-1">
+                        <div className="text-xs font-medium text-slate-700">{format(day, "EEE", { locale: nl })}</div>
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
                 {renderEmployeeRows(deptEmployees, 0, dept)}
               </React.Fragment>
             ))
