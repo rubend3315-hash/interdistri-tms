@@ -314,23 +314,20 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     period_start: '',
     period_end: '',
     persoonlijke_inzet: 5,
-    persoonlijke_inzet_toelichting: '',
     inzetbaarheid: 5,
-    inzetbaarheid_toelichting: '',
     omgang_veranderingen: 5,
-    omgang_veranderingen_toelichting: '',
     ziekteverzuim: 5,
-    ziekteverzuim_toelichting: '',
     loyaliteit: 5,
-    loyaliteit_toelichting: '',
     omgang_collega: 5,
-    omgang_collega_toelichting: '',
     kpi_postnl: 5,
-    kpi_postnl_toelichting: '',
     kpi_voertuig_onderhoud: 5,
-    kpi_voertuig_toelichting: '',
     rijstijl_analyse: 5,
-    rijstijl_analyse_toelichting: '',
+    scholingsbehoeften: '',
+    ambitie: '',
+    werk_prive_balans: '',
+    terugblik_vorige_periode: '',
+    nieuwe_doelen: '',
+    feedback_medewerker: '',
     trede_verhoging: false,
     trede_verhoging_toelichting: '',
     algemene_conclusie: '',
@@ -437,8 +434,67 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             </div>
           </div>
 
+          {/* Categorie 1: Operationele Resultaten (KPI's) */}
           <div className="border-t pt-4">
-            <h3 className="font-semibold text-slate-900 mb-3">KPI Scores (1-10)</h3>
+            <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
+              <span className="text-blue-600">1.</span> Operationele Resultaten (KPI's)
+            </h3>
+            <p className="text-xs text-slate-500 mb-3">Harde cijfers en efficiëntie van het transportproces</p>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">KPI PostNL</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_postnl}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.kpi_postnl}
+                  onChange={(e) => setFormData({...formData, kpi_postnl: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Voertuig & schade</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_voertuig_onderhoud}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.kpi_voertuig_onderhoud}
+                  onChange={(e) => setFormData({...formData, kpi_voertuig_onderhoud: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Rijstijl analyse</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.rijstijl_analyse}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.rijstijl_analyse}
+                  onChange={(e) => setFormData({...formData, rijstijl_analyse: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Categorie 2: Functie-inhoud en Competenties */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
+              <span className="text-blue-600">2.</span> Functie-inhoud en Competenties
+            </h3>
+            <p className="text-xs text-slate-500 mb-3">Vaardigheden en gedrag specifiek voor de rol</p>
             
             <div className="grid grid-cols-3 gap-4">
               <div>
@@ -530,49 +586,44 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   className="w-full h-1"
                 />
               </div>
+            </div>
+          </div>
 
+          {/* Categorie 3: Persoonlijke Ontwikkeling (POP) */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
+              <span className="text-blue-600">3.</span> Persoonlijke Ontwikkeling (POP)
+            </h3>
+            <p className="text-xs text-slate-500 mb-3">Toekomst en groei van de medewerker</p>
+            
+            <div className="space-y-3">
               <div>
-                <div className="flex justify-between mb-1">
-                  <Label className="text-xs">KPI PostNL</Label>
-                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_postnl}/10</span>
-                </div>
-                <Input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.kpi_postnl}
-                  onChange={(e) => setFormData({...formData, kpi_postnl: e.target.value})}
-                  className="w-full h-1"
+                <Label>Scholingsbehoeften (Code 95, ADR, etc.)</Label>
+                <Textarea
+                  value={formData.scholingsbehoeften}
+                  onChange={(e) => setFormData({...formData, scholingsbehoeften: e.target.value})}
+                  rows={2}
+                  placeholder="Vereiste verlengingen en aanvullende certificaten..."
                 />
               </div>
 
               <div>
-                <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Voertuig & schade</Label>
-                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_voertuig_onderhoud}/10</span>
-                </div>
-                <Input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.kpi_voertuig_onderhoud}
-                  onChange={(e) => setFormData({...formData, kpi_voertuig_onderhoud: e.target.value})}
-                  className="w-full h-1"
+                <Label>Ambitie en doorgroeimogelijkheden</Label>
+                <Textarea
+                  value={formData.ambitie}
+                  onChange={(e) => setFormData({...formData, ambitie: e.target.value})}
+                  rows={2}
+                  placeholder="Wens om door te groeien naar andere rol..."
                 />
               </div>
 
               <div>
-                <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Rijstijl analyse</Label>
-                  <span className="text-xs font-semibold text-blue-600">{formData.rijstijl_analyse}/10</span>
-                </div>
-                <Input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={formData.rijstijl_analyse}
-                  onChange={(e) => setFormData({...formData, rijstijl_analyse: e.target.value})}
-                  className="w-full h-1"
+                <Label>Werk-privé balans en duurzame inzetbaarheid</Label>
+                <Textarea
+                  value={formData.werk_prive_balans}
+                  onChange={(e) => setFormData({...formData, werk_prive_balans: e.target.value})}
+                  rows={2}
+                  placeholder="Fysieke gesteldheid, werkdruk, balans..."
                 />
               </div>
             </div>
@@ -623,37 +674,77 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 rows={2}
               />
             )}
+          </div>
 
-            <div>
-              <Label>Algemene conclusie</Label>
-              <Textarea
-                value={formData.algemene_conclusie}
-                onChange={(e) => setFormData({...formData, algemene_conclusie: e.target.value})}
-                rows={3}
-              />
-            </div>
+          {/* Categorie 4: Evaluatie en Afspraken */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
+              <span className="text-blue-600">4.</span> Evaluatie en Afspraken
+            </h3>
+            <p className="text-xs text-slate-500 mb-3">Concrete samenvatting en doelen</p>
+            
+            <div className="space-y-3">
+              <div>
+                <Label>Terugblik op doelen vorige periode</Label>
+                <Textarea
+                  value={formData.terugblik_vorige_periode}
+                  onChange={(e) => setFormData({...formData, terugblik_vorige_periode: e.target.value})}
+                  rows={3}
+                  placeholder="Evaluatie van de doelen uit de vorige periode..."
+                />
+              </div>
 
-            <div>
-              <Label>Ontwikkelpunten</Label>
-              <Textarea
-                value={formData.ontwikkelpunten}
-                onChange={(e) => setFormData({...formData, ontwikkelpunten: e.target.value})}
-                rows={3}
-              />
-            </div>
+              <div>
+                <Label>Nieuwe doelen (SMART geformuleerd)</Label>
+                <Textarea
+                  value={formData.nieuwe_doelen}
+                  onChange={(e) => setFormData({...formData, nieuwe_doelen: e.target.value})}
+                  rows={3}
+                  placeholder="SMART doelen voor de komende periode..."
+                />
+              </div>
 
-            <div>
-              <Label>Status</Label>
-              <Select value={formData.status} onValueChange={(val) => setFormData({...formData, status: val})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Concept">Concept</SelectItem>
-                  <SelectItem value="Definitief">Definitief</SelectItem>
-                  <SelectItem value="Besproken">Besproken</SelectItem>
-                </SelectContent>
-              </Select>
+              <div>
+                <Label>Feedback medewerker op organisatie en planning</Label>
+                <Textarea
+                  value={formData.feedback_medewerker}
+                  onChange={(e) => setFormData({...formData, feedback_medewerker: e.target.value})}
+                  rows={3}
+                  placeholder="Ruimte voor feedback van medewerker..."
+                />
+              </div>
+
+              <div>
+                <Label>Algemene conclusie</Label>
+                <Textarea
+                  value={formData.algemene_conclusie}
+                  onChange={(e) => setFormData({...formData, algemene_conclusie: e.target.value})}
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Ontwikkelpunten</Label>
+                <Textarea
+                  value={formData.ontwikkelpunten}
+                  onChange={(e) => setFormData({...formData, ontwikkelpunten: e.target.value})}
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Status</Label>
+                <Select value={formData.status} onValueChange={(val) => setFormData({...formData, status: val})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Concept">Concept</SelectItem>
+                    <SelectItem value="Definitief">Definitief</SelectItem>
+                    <SelectItem value="Besproken">Besproken</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
