@@ -112,6 +112,33 @@ export default function MobileEntry() {
   const todayShift = shiftTimes[0];
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
+  // Get week number helper - must be defined before it's used
+  const getWeekNumber = (date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  };
+
+  // Get schedules after currentEmployee is defined
+  const { data: schedules = [] } = useQuery({
+    queryKey: ['mySchedules', currentEmployee?.id],
+    queryFn: async () => {
+      if (!currentEmployee?.id) return [];
+      const today = new Date();
+      const currentWeek = getWeekNumber(today);
+      const currentYear = today.getFullYear();
+      const result = await base44.entities.Schedule.filter({
+        employee_id: currentEmployee.id,
+        week_number: currentWeek,
+        year: currentYear
+      });
+      return result;
+    },
+    enabled: !!currentEmployee?.id
+  });
+
   // Subscribe to schedule updates
   useEffect(() => {
     if (!currentEmployee?.id) return;
