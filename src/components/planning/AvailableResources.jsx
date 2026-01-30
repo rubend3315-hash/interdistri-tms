@@ -126,28 +126,42 @@ export default function AvailableResources({
             )}
           </div>
 
-          {/* Beschikbare Routes */}
+          {/* Beschikbare Routes per klant */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <MapPin className="w-4 h-4 text-orange-600" />
               <h3 className="font-semibold text-sm text-slate-900">
-                Routes ({availableRoutes.length})
+                Routes per klant
               </h3>
             </div>
-            {availableRoutes.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
-                {availableRoutes.slice(0, 6).map(route => (
-                  <Badge
-                    key={route.id}
-                    className="bg-orange-100 text-orange-700 border-orange-200 text-xs cursor-default"
-                  >
-                    {route.route_code}
-                  </Badge>
+            {Object.keys(routesByCustomer).length > 0 ? (
+              <div className="space-y-2">
+                {Object.entries(routesByCustomer).slice(0, 3).map(([customerId, customerRoutes]) => (
+                  <div key={customerId} className="bg-slate-50 p-2 rounded-lg">
+                    <p className="text-xs font-medium text-slate-600 mb-1">
+                      {getCustomerName(customerId)} ({customerRoutes.length})
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {customerRoutes.slice(0, 4).map(route => (
+                        <Badge
+                          key={route.id}
+                          className="bg-orange-100 text-orange-700 border-orange-200 text-xs cursor-default"
+                        >
+                          {route.route_code}
+                        </Badge>
+                      ))}
+                      {customerRoutes.length > 4 && (
+                        <Badge className="bg-slate-200 text-slate-600 text-xs">
+                          +{customerRoutes.length - 4}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                 ))}
-                {availableRoutes.length > 6 && (
-                  <Badge className="bg-slate-100 text-slate-600 text-xs">
-                    +{availableRoutes.length - 6}
-                  </Badge>
+                {Object.keys(routesByCustomer).length > 3 && (
+                  <p className="text-xs text-slate-500 italic">
+                    +{Object.keys(routesByCustomer).length - 3} klanten met routes
+                  </p>
                 )}
               </div>
             ) : (
