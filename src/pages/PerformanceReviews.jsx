@@ -314,6 +314,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     period_start: '',
     period_end: '',
     persoonlijke_inzet: 5,
+    piek_ziektebezetting: 5,
     inzetbaarheid: 5,
     omgang_veranderingen: 5,
     ziekteverzuim: 5,
@@ -346,6 +347,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const totalScore = parseFloat(data.persoonlijke_inzet) +
+        parseFloat(data.piek_ziektebezetting) +
         parseFloat(data.inzetbaarheid) +
         parseFloat(data.omgang_veranderingen) +
         parseFloat(data.ziekteverzuim) +
@@ -355,7 +357,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
         parseFloat(data.kpi_voertuig_onderhoud) +
         parseFloat(data.rijstijl_analyse);
       
-      const avg = totalScore / 9;
+      const avg = totalScore / 10;
 
       const reviewData = {
         ...data,
@@ -514,6 +516,21 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
               <div>
                 <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Piek- en ziektebezetting</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.piek_ziektebezetting}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.piek_ziektebezetting}
+                  onChange={(e) => setFormData({...formData, piek_ziektebezetting: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
                   <Label className="text-xs">Inzetbaarheid</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.inzetbaarheid}/10</span>
                 </div>
@@ -632,6 +649,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
           <div className="border-t pt-4 space-y-4">
             {(() => {
               const totalScore = parseFloat(formData.persoonlijke_inzet || 0) +
+                parseFloat(formData.piek_ziektebezetting || 0) +
                 parseFloat(formData.inzetbaarheid || 0) +
                 parseFloat(formData.omgang_veranderingen || 0) +
                 parseFloat(formData.ziekteverzuim || 0) +
@@ -656,7 +674,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                       </Label>
                     </div>
                     <Badge className={meetsRequirement ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                      Totaal: {totalScore}/90 punten
+                      Totaal: {totalScore}/100 punten
                     </Badge>
                   </div>
                   {!meetsRequirement && (
