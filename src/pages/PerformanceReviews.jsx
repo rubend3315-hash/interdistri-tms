@@ -453,13 +453,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 onChange={(e) => setFormData({...formData, persoonlijke_inzet: e.target.value})}
                 className="w-full"
               />
-              <Textarea
-                placeholder="Toelichting..."
-                value={formData.persoonlijke_inzet_toelichting}
-                onChange={(e) => setFormData({...formData, persoonlijke_inzet_toelichting: e.target.value})}
-                className="mt-2"
-                rows={2}
-              />
             </div>
 
             <div>
@@ -474,13 +467,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 value={formData.inzetbaarheid}
                 onChange={(e) => setFormData({...formData, inzetbaarheid: e.target.value})}
                 className="w-full"
-              />
-              <Textarea
-                placeholder="Toelichting..."
-                value={formData.inzetbaarheid_toelichting}
-                onChange={(e) => setFormData({...formData, inzetbaarheid_toelichting: e.target.value})}
-                className="mt-2"
-                rows={2}
               />
             </div>
 
@@ -497,13 +483,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 onChange={(e) => setFormData({...formData, omgang_veranderingen: e.target.value})}
                 className="w-full"
               />
-              <Textarea
-                placeholder="Toelichting..."
-                value={formData.omgang_veranderingen_toelichting}
-                onChange={(e) => setFormData({...formData, omgang_veranderingen_toelichting: e.target.value})}
-                className="mt-2"
-                rows={2}
-              />
             </div>
 
             <div>
@@ -518,13 +497,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 value={formData.ziekteverzuim}
                 onChange={(e) => setFormData({...formData, ziekteverzuim: e.target.value})}
                 className="w-full"
-              />
-              <Textarea
-                placeholder="Toelichting..."
-                value={formData.ziekteverzuim_toelichting}
-                onChange={(e) => setFormData({...formData, ziekteverzuim_toelichting: e.target.value})}
-                className="mt-2"
-                rows={2}
               />
             </div>
 
@@ -541,13 +513,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 onChange={(e) => setFormData({...formData, loyaliteit: e.target.value})}
                 className="w-full"
               />
-              <Textarea
-                placeholder="Toelichting..."
-                value={formData.loyaliteit_toelichting}
-                onChange={(e) => setFormData({...formData, loyaliteit_toelichting: e.target.value})}
-                className="mt-2"
-                rows={2}
-              />
             </div>
 
             <div>
@@ -562,13 +527,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 value={formData.omgang_collega}
                 onChange={(e) => setFormData({...formData, omgang_collega: e.target.value})}
                 className="w-full"
-              />
-              <Textarea
-                placeholder="Toelichting..."
-                value={formData.omgang_collega_toelichting}
-                onChange={(e) => setFormData({...formData, omgang_collega_toelichting: e.target.value})}
-                className="mt-2"
-                rows={2}
               />
             </div>
 
@@ -585,13 +543,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 onChange={(e) => setFormData({...formData, kpi_postnl: e.target.value})}
                 className="w-full"
               />
-              <Textarea
-                placeholder="Toelichting..."
-                value={formData.kpi_postnl_toelichting}
-                onChange={(e) => setFormData({...formData, kpi_postnl_toelichting: e.target.value})}
-                className="mt-2"
-                rows={2}
-              />
             </div>
 
             <div>
@@ -607,13 +558,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 onChange={(e) => setFormData({...formData, kpi_voertuig_onderhoud: e.target.value})}
                 className="w-full"
               />
-              <Textarea
-                placeholder="Toelichting..."
-                value={formData.kpi_voertuig_toelichting}
-                onChange={(e) => setFormData({...formData, kpi_voertuig_toelichting: e.target.value})}
-                className="mt-2"
-                rows={2}
-              />
             </div>
 
             <div>
@@ -628,13 +572,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 value={formData.rijstijl_analyse}
                 onChange={(e) => setFormData({...formData, rijstijl_analyse: e.target.value})}
                 className="w-full"
-              />
-              <Textarea
-                placeholder="Toelichting..."
-                value={formData.rijstijl_analyse_toelichting}
-                onChange={(e) => setFormData({...formData, rijstijl_analyse_toelichting: e.target.value})}
-                className="mt-2"
-                rows={2}
               />
             </div>
           </div>
