@@ -216,81 +216,20 @@ export default function PlanningTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employees.map((employee, empIndex) => {
-            const schedule = getScheduleForEmployee(employee.id);
-            const employeeColor = getEmployeeColor(empIndex);
-
-            return (
-              <TableRow key={employee.id}>
-                <TableCell className="font-medium sticky left-0 bg-white z-10">
-                  <div>
-                    <p className="text-slate-900">{employee.first_name} {employee.last_name}</p>
-                    <p className="text-xs text-slate-500">{employee.department}</p>
-                  </div>
-                </TableCell>
-                {days.map((day, dayIndex) => {
-                  const dayKey = getDayKey(dayIndex);
-                  const currentValue = schedule?.[dayKey] || "";
-                  const currentRouteId = schedule?.[`${dayKey}_route_id`] || "";
-                  const currentVehicleId = schedule?.[`${dayKey}_vehicle_id`] || "";
-                  const currentNotes1 = schedule?.[`${dayKey}_notes_1`] || "";
-                  const currentNotes2 = schedule?.[`${dayKey}_notes_2`] || "";
-                  const currentPlannedDepartment = schedule?.[`${dayKey}_planned_department`] || "";
-                  const holiday = isHoliday(day);
-                  const currentRoute = routes.find(r => r.id === currentRouteId);
-                  const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
-
-                  // Check if planned department differs from employee department
-                  const isDifferentDepartment = currentPlannedDepartment && currentPlannedDepartment !== employee.department;
-
-                  // Determine display text
-                  const displayText = currentValue || "-";
-                  const hasData = currentValue || currentRouteId || currentVehicleId || currentNotes1 || currentNotes2;
-
-                  return (
-                    <TableCell
-                      key={day.toISOString()}
-                      className={`text-center p-1 ${holiday ? 'bg-purple-50' : ''}`}
-                    >
-                      <div 
-                        className="w-full min-h-20 border border-slate-200 rounded-md px-2 py-2 text-xs flex flex-col gap-0.5 cursor-pointer hover:bg-slate-50 transition-colors"
-                        onClick={() => handleAddShift(employee, day, dayIndex)}
-                      >
-                        <div className="font-medium text-slate-900">
-                          {displayText}
-                        </div>
-                        {isDifferentDepartment && (
-                          <div className="text-xs text-blue-600 font-semibold truncate w-full">
-                            gepland op afd. {currentPlannedDepartment}
-                          </div>
-                        )}
-                        {currentRoute && (
-                          <div className="text-xs text-slate-600 truncate w-full">
-                            {currentRoute.route_code}
-                          </div>
-                        )}
-                        {currentVehicle && (
-                          <div className="text-xs text-slate-500 truncate w-full">
-                            {currentVehicle.license_plate}
-                          </div>
-                        )}
-                        {currentNotes1 && (
-                          <div className="text-xs text-slate-500 truncate w-full italic">
-                            {currentNotes1}
-                          </div>
-                        )}
-                        {currentNotes2 && (
-                          <div className="text-xs text-slate-500 truncate w-full italic">
-                            {currentNotes2}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            );
-          })}
+          {groupedEmployees ? (
+            Object.entries(groupedEmployees).map(([dept, deptEmployees]) => (
+              <React.Fragment key={dept}>
+                <TableRow className="bg-slate-100">
+                  <TableCell colSpan={days.length + 1} className="font-bold text-slate-900 py-2">
+                    Afdeling {dept}
+                  </TableCell>
+                </TableRow>
+                {renderEmployeeRows(deptEmployees)}
+              </React.Fragment>
+            ))
+          ) : (
+            renderEmployeeRows(employees)
+          )}
         </TableBody>
       </Table>
     </div>
