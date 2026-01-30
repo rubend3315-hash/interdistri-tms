@@ -140,6 +140,11 @@ export default function PlanningTable({
             <div>
               <p className="text-slate-900">{employee.first_name} {employee.last_name}</p>
               <p className="text-xs text-slate-500">{employee.department}</p>
+              {weekScheduleHours && (
+                <p className="text-xs text-blue-600 font-semibold mt-1">
+                  {Object.values(weekScheduleHours).reduce((a, b) => a + b, 0)} uur/week
+                </p>
+              )}
             </div>
           </TableCell>
           {days.map((day, dayIndex) => {
