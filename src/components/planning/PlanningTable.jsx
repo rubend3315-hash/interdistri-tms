@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Copy, Plus } from "lucide-react";
+import { User, Copy } from "lucide-react";
 import { shiftTypes } from "./ShiftLegend";
 import AddShiftDialog from "./AddShiftDialog";
 
@@ -160,26 +159,18 @@ export default function PlanningTable({
                       key={day.toISOString()}
                       className={`text-center p-1 ${holiday ? 'bg-purple-50' : ''}`}
                     >
-                      <div className="space-y-1">
-                        <div className={`w-full min-h-10 border-2 border-dashed rounded-md px-2 py-1.5 text-xs flex flex-col items-center justify-center ${hasData ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
-                          <div className="font-medium text-slate-900">
-                            {displayText}
-                          </div>
-                          {currentRoute && (
-                            <div className="text-xs text-slate-500 truncate w-full text-center">
-                              {currentRoute.route_code}
-                            </div>
-                          )}
+                      <div 
+                        className="w-full min-h-16 border border-slate-200 rounded-md px-2 py-2 text-xs flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+                        onClick={() => handleAddShift(employee, day, dayIndex)}
+                      >
+                        <div className="font-medium text-slate-900">
+                          {displayText}
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full h-8 text-xs"
-                          onClick={() => handleAddShift(employee, day, dayIndex)}
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          Dienst
-                        </Button>
+                        {currentRoute && (
+                          <div className="text-xs text-slate-500 truncate w-full text-center">
+                            {currentRoute.route_code}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                   );
