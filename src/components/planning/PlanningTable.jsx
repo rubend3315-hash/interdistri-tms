@@ -171,6 +171,11 @@ export default function PlanningTable({
                         <div className="font-medium text-slate-900">
                           {displayText}
                         </div>
+                        {isDifferentDepartment && (
+                          <div className="text-xs text-blue-600 font-semibold truncate w-full">
+                            gepland op afd. {currentPlannedDepartment}
+                          </div>
+                        )}
                         {currentRoute && (
                           <div className="text-xs text-slate-600 truncate w-full">
                             {currentRoute.route_code}
