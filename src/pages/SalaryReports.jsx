@@ -454,7 +454,7 @@ export default function SalaryReports() {
               Geen actieve CAO-regels gevonden. Voeg regels toe in het CAO-regels menu.
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Overwerk */}
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold text-slate-700">Overwerk</h4>
@@ -553,32 +553,7 @@ export default function SalaryReports() {
                 </div>
               </div>
 
-              {/* Overig */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-slate-700">Overig</h4>
-                <div className="flex flex-wrap gap-1">
-                  {activeRules.filter(r => !['Overwerk', 'Bijzondere arbeid', 'Verblijfkosten'].includes(r.category)).map(rule => {
-                    let displayText = rule.name;
-                    if (rule.calculation_type === 'Percentage (%)' && rule.percentage) {
-                      displayText = `${rule.name}: ${rule.percentage}%`;
-                    } else if (rule.calculation_type === 'Vast bedrag (€)' && rule.fixed_amount) {
-                      displayText = `${rule.name}: €${rule.fixed_amount}`;
-                    } else if (rule.calculation_type === 'Per uur (€/uur)' && rule.value) {
-                      displayText = `${rule.name}: €${rule.value}/uur`;
-                    } else if (rule.calculation_type === 'Per dag (€/dag)' && rule.value) {
-                      displayText = `${rule.name}: €${rule.value}/dag`;
-                    }
-                    return (
-                      <Badge key={rule.id} variant="outline" className="text-xs">
-                        {displayText}
-                      </Badge>
-                    );
-                  })}
-                  {activeRules.filter(r => !['Overwerk', 'Bijzondere arbeid', 'Verblijfkosten'].includes(r.category)).length === 0 && (
-                    <span className="text-xs text-slate-400">Geen regels</span>
-                  )}
-                </div>
-              </div>
+
             </div>
           )}
         </CardContent>
