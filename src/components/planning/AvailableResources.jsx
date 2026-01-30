@@ -142,7 +142,7 @@ export default function AvailableResources({
                       {getCustomerName(customerId)} ({customerRoutes.length})
                     </p>
                     <div className="space-y-1">
-                      {customerRoutes.slice(0, 6).map(route => (
+                      {customerRoutes.map(route => (
                         <Badge
                           key={route.id}
                           className="bg-orange-100 text-orange-700 border-orange-200 text-xs cursor-default w-full justify-start"
@@ -150,9 +150,6 @@ export default function AvailableResources({
                           {route.route_code} - {route.route_name}
                         </Badge>
                       ))}
-                      {customerRoutes.length > 6 && (
-                        <p className="text-xs text-slate-500 italic px-2">+{customerRoutes.length - 6} routes</p>
-                      )}
                     </div>
                   </div>
                 ))}
