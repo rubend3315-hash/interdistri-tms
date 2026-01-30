@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, Download, Copy, Calendar, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Copy, Calendar } from "lucide-react";
 
 export default function PlanningHeader({
   viewMode,
@@ -20,8 +20,7 @@ export default function PlanningHeader({
   colorMode,
   setColorMode,
   onExportPDF,
-  onCopyWeek,
-  onAddShift
+  onCopyWeek
 }) {
   return (
     <>
@@ -75,10 +74,6 @@ export default function PlanningHeader({
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="default" size="sm" onClick={onAddShift}>
-            <Plus className="w-4 h-4 mr-1" />
-            Nieuwe Dienst
-          </Button>
           <Button variant="outline" size="sm" onClick={onCopyWeek}>
             <Copy className="w-4 h-4 mr-1" />
             Kopieer week
