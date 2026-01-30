@@ -479,22 +479,25 @@ export default function MobileEntry() {
       {/* Main Content */}
       <div className="p-4 -mt-2">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-5 mb-4">
-            <TabsTrigger value="dienst" className="text-xs px-2">
-              <Clock className="w-4 h-4" />
-            </TabsTrigger>
-            <TabsTrigger value="ritten" className="text-xs px-2">
-              <Truck className="w-4 h-4" />
-            </TabsTrigger>
-            <TabsTrigger value="inspectie" className="text-xs px-2">
-              <ClipboardCheck className="w-4 h-4" />
-            </TabsTrigger>
-            <TabsTrigger value="declaratie" className="text-xs px-2">
-              <FileText className="w-4 h-4" />
-            </TabsTrigger>
-            <TabsTrigger value="overzicht" className="text-xs px-2">
-              <CheckCircle className="w-4 h-4" />
-            </TabsTrigger>
+          <TabsList className="w-full grid grid-cols-6 mb-4">
+           <TabsTrigger value="planning" className="text-xs px-2">
+             <CalendarDays className="w-4 h-4" />
+           </TabsTrigger>
+           <TabsTrigger value="dienst" className="text-xs px-2">
+             <Clock className="w-4 h-4" />
+           </TabsTrigger>
+           <TabsTrigger value="ritten" className="text-xs px-2">
+             <Truck className="w-4 h-4" />
+           </TabsTrigger>
+           <TabsTrigger value="inspectie" className="text-xs px-2">
+             <ClipboardCheck className="w-4 h-4" />
+           </TabsTrigger>
+           <TabsTrigger value="declaratie" className="text-xs px-2">
+             <FileText className="w-4 h-4" />
+           </TabsTrigger>
+           <TabsTrigger value="overzicht" className="text-xs px-2">
+             <CheckCircle className="w-4 h-4" />
+           </TabsTrigger>
           </TabsList>
 
           {/* Dienst Tab */}
