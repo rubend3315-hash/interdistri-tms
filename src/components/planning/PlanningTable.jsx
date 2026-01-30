@@ -118,9 +118,12 @@ export default function PlanningTable({
                   const currentValue = schedule?.[dayKey] || "";
                   const currentRouteId = schedule?.[routeKey] || "";
                   const holiday = isHoliday(day);
-                  const config = currentValue ? getShiftConfig(currentValue) : null;
-                  const cellColor = colorMode === "employee" && config ? employeeColor : (config?.color || "");
+                  const currentUurcode = uurcodes.find(u => u.code === currentValue);
                   const currentRoute = routes.find(r => r.id === currentRouteId);
+                  
+                  // Determine display text
+                  const displayText = currentUurcode?.name || currentValue || "-";
+                  const hasData = currentValue || currentRouteId;
 
                   return (
                     <TableCell
@@ -128,56 +131,16 @@ export default function PlanningTable({
                       className={`text-center p-1 ${holiday ? 'bg-purple-50' : ''}`}
                     >
                       <div className="space-y-1">
-                        <Select
-                          value={currentValue || "none"}
-                          onValueChange={(v) => onShiftChange(employee.id, dayIndex, v === "none" ? "" : v)}
-                        >
-                          <SelectTrigger className={`w-full h-10 border-dashed text-xs ${cellColor}`}>
-                            {currentValue ? (
-                              <span className="truncate">{currentValue}</span>
-                            ) : (
-                              <span className="text-slate-400">-</span>
-                            )}
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">
-                              <span className="text-slate-400">Geen</span>
-                            </SelectItem>
-                            {uurcodes.map(code => (
-                              <SelectItem key={code.id} value={code.code}>
-                                <div className="flex flex-col items-start">
-                                  <span className="font-medium">{code.code}</span>
-                                  <span className="text-xs text-slate-500">{code.name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Select
-                          value={currentRouteId || "none"}
-                          onValueChange={(v) => onShiftChange(employee.id, dayIndex, currentValue, v === "none" ? "" : v)}
-                        >
-                          <SelectTrigger className="w-full h-8 border-dashed text-xs">
-                            {currentRoute ? (
-                              <span className="truncate">{currentRoute.route_code}</span>
-                            ) : (
-                              <span className="text-slate-400">Route</span>
-                            )}
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">
-                              <span className="text-slate-400">Geen route</span>
-                            </SelectItem>
-                            {routes.map(route => (
-                              <SelectItem key={route.id} value={route.id}>
-                                <div className="flex flex-col items-start">
-                                  <span className="font-medium">{route.route_code}</span>
-                                  <span className="text-xs text-slate-500">{route.route_name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className={`w-full min-h-10 border-2 border-dashed rounded-md px-2 py-1.5 text-xs flex flex-col items-center justify-center ${hasData ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
+                          <div className="font-medium text-slate-900">
+                            {displayText}
+                          </div>
+                          {currentRoute && (
+                            <div className="text-xs text-slate-500 truncate w-full text-center">
+                              {currentRoute.route_code}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                   );
