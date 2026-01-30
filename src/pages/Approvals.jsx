@@ -30,22 +30,50 @@ export default function Approvals() {
 
   const { data: timeEntries = [], isLoading } = useQuery({
     queryKey: ['timeEntries-all'],
-    queryFn: () => base44.entities.TimeEntry.list()
+    queryFn: async () => {
+      try {
+        return await base44.entities.TimeEntry.list();
+      } catch (error) {
+        console.error('Error loading time entries:', error);
+        return [];
+      }
+    }
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryFn: async () => {
+      try {
+        return await base44.entities.Employee.list();
+      } catch (error) {
+        console.error('Error loading employees:', error);
+        return [];
+      }
+    }
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
-    queryFn: () => base44.entities.Vehicle.list()
+    queryFn: async () => {
+      try {
+        return await base44.entities.Vehicle.list();
+      } catch (error) {
+        console.error('Error loading vehicles:', error);
+        return [];
+      }
+    }
   });
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me()
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch (error) {
+        console.error('Error loading user:', error);
+        return null;
+      }
+    }
   });
 
   const approveMutation = useMutation({
@@ -89,15 +117,36 @@ export default function Approvals() {
     }
   };
 
-  const getEmployee = (id) => employees.find(e => e.id === id);
-  const getVehicle = (id) => vehicles.find(v => v.id === id);
+  const getEmployee = (id) => {
+    if (!id || !Array.isArray(employees)) return null;
+    return employees.find(e => e?.id === id);
+  };
+  
+  const getVehicle = (id) => {
+    if (!id || !Array.isArray(vehicles)) return null;
+    return vehicles.find(v => v?.id === id);
+  };
 
-  const sortByDateDesc = (entries) => 
-    entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sortByDateDesc = (entries) => {
+    if (!Array.isArray(entries)) return [];
+    return [...entries].sort((a, b) => {
+      try {
+        return new Date(b.date) - new Date(a.date);
+      } catch (error) {
+        return 0;
+      }
+    });
+  };
 
-  const pendingEntries = sortByDateDesc(timeEntries.filter(e => e.status === 'Ingediend'));
-  const approvedEntries = sortByDateDesc(timeEntries.filter(e => e.status === 'Goedgekeurd'));
-  const rejectedEntries = sortByDateDesc(timeEntries.filter(e => e.status === 'Afgekeurd'));
+  const pendingEntries = sortByDateDesc(
+    Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Ingediend') : []
+  );
+  const approvedEntries = sortByDateDesc(
+    Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Goedgekeurd') : []
+  );
+  const rejectedEntries = sortByDateDesc(
+    Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Afgekeurd') : []
+  );
 
   const EntryCard = ({ entry, showActions = false }) => {
     const employee = getEmployee(entry.employee_id);
@@ -120,11 +169,19 @@ export default function Approvals() {
                 <div className="mt-3 space-y-1.5">
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <Calendar className="w-4 h-4 text-slate-400" />
-                    {entry.date && format(new Date(entry.date), "EEEE d MMMM yyyy", { locale: nl })}
+                    {entry.date ? (
+                      (() => {
+                        try {
+                          return format(new Date(entry.date), "EEEE d MMMM yyyy", { locale: nl });
+                        } catch (error) {
+                          return entry.date;
+                        }
+                      })()
+                    ) : 'Geen datum'}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <Clock className="w-4 h-4 text-slate-400" />
-                    {entry.start_time} - {entry.end_time} ({entry.total_hours} uur)
+                    {entry.start_time || '-'} - {entry.end_time || '-'} ({entry.total_hours || 0} uur)
                   </div>
                   {vehicle && (
                     <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -132,7 +189,7 @@ export default function Approvals() {
                       {vehicle.license_plate}
                     </div>
                   )}
-                  {entry.travel_allowance_multiplier > 0 && (
+                  {entry.travel_allowance_multiplier && entry.travel_allowance_multiplier > 0 && (
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <FileText className="w-4 h-4 text-slate-400" />
                       Reiskosten: {entry.travel_allowance_multiplier}x
@@ -157,14 +214,16 @@ export default function Approvals() {
             </div>
 
             <div className="flex flex-col items-end gap-2">
-              <Badge className={`${
-                entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
-                entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
-                entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
-                'bg-slate-100 text-slate-700'
-              }`}>
-                {entry.shift_type}
-              </Badge>
+              {entry.shift_type && (
+                <Badge className={`${
+                  entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
+                  entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
+                  entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
+                  'bg-slate-100 text-slate-700'
+                }`}>
+                  {entry.shift_type}
+                </Badge>
+              )}
 
               {showActions && (
                 <div className="flex gap-2 mt-2">
