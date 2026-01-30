@@ -437,142 +437,144 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             </div>
           </div>
 
-          <div className="space-y-4 border-t pt-4">
-            <h3 className="font-semibold text-slate-900">KPI Scores (1-10)</h3>
+          <div className="border-t pt-4">
+            <h3 className="font-semibold text-slate-900 mb-3">KPI Scores (1-10)</h3>
             
-            <div>
-              <div className="flex justify-between mb-2">
-                <Label>Persoonlijke inzet</Label>
-                <span className="text-sm font-semibold text-blue-600">{formData.persoonlijke_inzet}/10</span>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Persoonlijke inzet</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.persoonlijke_inzet}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.persoonlijke_inzet}
+                  onChange={(e) => setFormData({...formData, persoonlijke_inzet: e.target.value})}
+                  className="w-full h-1"
+                />
               </div>
-              <Input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.persoonlijke_inzet}
-                onChange={(e) => setFormData({...formData, persoonlijke_inzet: e.target.value})}
-                className="w-full"
-              />
-            </div>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <Label>Inzetbaarheid</Label>
-                <span className="text-sm font-semibold text-blue-600">{formData.inzetbaarheid}/10</span>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Inzetbaarheid</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.inzetbaarheid}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.inzetbaarheid}
+                  onChange={(e) => setFormData({...formData, inzetbaarheid: e.target.value})}
+                  className="w-full h-1"
+                />
               </div>
-              <Input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.inzetbaarheid}
-                onChange={(e) => setFormData({...formData, inzetbaarheid: e.target.value})}
-                className="w-full"
-              />
-            </div>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <Label>Omgang met veranderingen en tegenslag (stressbestendig)</Label>
-                <span className="text-sm font-semibold text-blue-600">{formData.omgang_veranderingen}/10</span>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Stressbestendig</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.omgang_veranderingen}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.omgang_veranderingen}
+                  onChange={(e) => setFormData({...formData, omgang_veranderingen: e.target.value})}
+                  className="w-full h-1"
+                />
               </div>
-              <Input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.omgang_veranderingen}
-                onChange={(e) => setFormData({...formData, omgang_veranderingen: e.target.value})}
-                className="w-full"
-              />
-            </div>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <Label>Ziekteverzuim</Label>
-                <span className="text-sm font-semibold text-blue-600">{formData.ziekteverzuim}/10</span>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Ziekteverzuim</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.ziekteverzuim}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.ziekteverzuim}
+                  onChange={(e) => setFormData({...formData, ziekteverzuim: e.target.value})}
+                  className="w-full h-1"
+                />
               </div>
-              <Input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.ziekteverzuim}
-                onChange={(e) => setFormData({...formData, ziekteverzuim: e.target.value})}
-                className="w-full"
-              />
-            </div>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <Label>Loyaliteit naar bedrijf</Label>
-                <span className="text-sm font-semibold text-blue-600">{formData.loyaliteit}/10</span>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Loyaliteit</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.loyaliteit}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.loyaliteit}
+                  onChange={(e) => setFormData({...formData, loyaliteit: e.target.value})}
+                  className="w-full h-1"
+                />
               </div>
-              <Input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.loyaliteit}
-                onChange={(e) => setFormData({...formData, loyaliteit: e.target.value})}
-                className="w-full"
-              />
-            </div>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <Label>Omgang met collega's</Label>
-                <span className="text-sm font-semibold text-blue-600">{formData.omgang_collega}/10</span>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Omgang collega's</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.omgang_collega}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.omgang_collega}
+                  onChange={(e) => setFormData({...formData, omgang_collega: e.target.value})}
+                  className="w-full h-1"
+                />
               </div>
-              <Input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.omgang_collega}
-                onChange={(e) => setFormData({...formData, omgang_collega: e.target.value})}
-                className="w-full"
-              />
-            </div>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <Label>KPI PostNL</Label>
-                <span className="text-sm font-semibold text-blue-600">{formData.kpi_postnl}/10</span>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">KPI PostNL</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_postnl}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.kpi_postnl}
+                  onChange={(e) => setFormData({...formData, kpi_postnl: e.target.value})}
+                  className="w-full h-1"
+                />
               </div>
-              <Input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.kpi_postnl}
-                onChange={(e) => setFormData({...formData, kpi_postnl: e.target.value})}
-                className="w-full"
-              />
-            </div>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <Label>KPI Voertuig, onderhoud en schade</Label>
-                <span className="text-sm font-semibold text-blue-600">{formData.kpi_voertuig_onderhoud}/10</span>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Voertuig & schade</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_voertuig_onderhoud}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.kpi_voertuig_onderhoud}
+                  onChange={(e) => setFormData({...formData, kpi_voertuig_onderhoud: e.target.value})}
+                  className="w-full h-1"
+                />
               </div>
-              <Input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.kpi_voertuig_onderhoud}
-                onChange={(e) => setFormData({...formData, kpi_voertuig_onderhoud: e.target.value})}
-                className="w-full"
-              />
-            </div>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <Label>Rijstijl analyse</Label>
-                <span className="text-sm font-semibold text-blue-600">{formData.rijstijl_analyse}/10</span>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Rijstijl analyse</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.rijstijl_analyse}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.rijstijl_analyse}
+                  onChange={(e) => setFormData({...formData, rijstijl_analyse: e.target.value})}
+                  className="w-full h-1"
+                />
               </div>
-              <Input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.rijstijl_analyse}
-                onChange={(e) => setFormData({...formData, rijstijl_analyse: e.target.value})}
-                className="w-full"
-              />
             </div>
           </div>
 
