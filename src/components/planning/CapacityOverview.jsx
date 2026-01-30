@@ -1,9 +1,9 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
-import { TrendingUp, Users, CalendarDays, Copy } from "lucide-react";
+import { TrendingUp, Users, CalendarDays } from "lucide-react";
 
 export default function CapacityOverview({ days, employees, schedules }) {
   const getOccupancyForDay = (day, dayIndex) => {
@@ -103,15 +103,6 @@ export default function CapacityOverview({ days, employees, schedules }) {
                   <div className="text-sm text-slate-600 w-20 text-right">
                     {working} diensten
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1"
-                    onClick={() => onCopyDay(day)}
-                  >
-                    <Copy className="w-3 h-3" />
-                    Kopieer dag
-                  </Button>
                 </div>
               );
             })}
