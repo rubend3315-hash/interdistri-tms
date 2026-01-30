@@ -59,12 +59,49 @@ export default function SalaryReports() {
     return entryDate >= monthStart && entryDate <= monthEnd && entry.status === 'Goedgekeurd';
   });
 
-  // Get active CAO rules
-  const activeRules = caoRules.filter(r => r.status === 'Actief');
-  const nightRule = activeRules.find(r => r.rule_type === 'Toeslag' && r.name?.toLowerCase().includes('nacht'));
-  const weekendRule = activeRules.find(r => r.rule_type === 'Toeslag' && (r.name?.toLowerCase().includes('weekend') || r.name?.toLowerCase().includes('zaterdag') || r.name?.toLowerCase().includes('zondag')));
-  const holidayRule = activeRules.find(r => r.rule_type === 'Toeslag' && r.name?.toLowerCase().includes('feestdag'));
-  const overtimeRule = activeRules.find(r => r.rule_type === 'Toeslag' && r.name?.toLowerCase().includes('overwerk'));
+  // Get active CAO rules - sorted by priority
+  const activeRules = caoRules
+    .filter(r => r.status === 'Actief')
+    .sort((a, b) => (a.priority || 50) - (b.priority || 50));
+
+  // Apply CAO rule to entry
+  const applyRule = (rule, entry, employee, entryDate) => {
+    if (!rule || rule.status !== 'Actief') return 0;
+    
+    const hourlyRate = employee.hourly_rate || 0;
+    const totalHours = entry.total_hours || 0;
+
+    // Check date validity
+    if (rule.start_date && new Date(entryDate) < new Date(rule.start_date)) return 0;
+    if (rule.end_date && new Date(entryDate) > new Date(rule.end_date)) return 0;
+
+    // Check days of week
+    if (rule.applies_to_days && rule.applies_to_days.length > 0) {
+      const dayNames = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
+      const dayName = dayNames[getDay(new Date(entryDate))];
+      if (!rule.applies_to_days.includes(dayName)) return 0;
+    }
+
+    // Check time range (if applicable)
+    if (rule.start_time && rule.end_time && entry.start_time) {
+      const entryTime = entry.start_time.substring(0, 5);
+      if (entryTime < rule.start_time || entryTime > rule.end_time) return 0;
+    }
+
+    // Calculate based on calculation type
+    switch (rule.calculation_type) {
+      case 'Percentage (%)':
+        return totalHours * hourlyRate * ((rule.percentage || 100) / 100 - 1);
+      case 'Vast bedrag (€)':
+        return rule.fixed_amount || 0;
+      case 'Per uur (€/uur)':
+        return totalHours * (rule.value || 0);
+      case 'Per dag (€/dag)':
+        return rule.value || 0;
+      default:
+        return 0;
+    }
+  };
 
   // Calculate salary for each employee
   const calculateEmployeeSalary = (employeeId) => {
@@ -90,16 +127,28 @@ export default function SalaryReports() {
     const hourlyRate = employee.hourly_rate || 0;
     const baseSalary = totalHours * hourlyRate;
     
-    const nightBonus = nightHours * hourlyRate * ((nightRule?.percentage || 125) / 100 - 1);
-    const weekendBonus = weekendHours * hourlyRate * ((weekendRule?.percentage || 150) / 100 - 1);
-    const holidayBonus = holidayHours * hourlyRate * ((holidayRule?.percentage || 200) / 100 - 1);
-    const overtimeBonus = overtimeHours * hourlyRate * ((overtimeRule?.percentage || 125) / 100 - 1);
+    // Apply all CAO rules
+    const ruleBreakdown = {};
+    let totalRuleAmount = 0;
+
+    activeRules.forEach(rule => {
+      let ruleTotal = 0;
+      entries.forEach(entry => {
+        const amount = applyRule(rule, entry, employee, entry.date);
+        ruleTotal += amount;
+      });
+      
+      if (ruleTotal > 0) {
+        ruleBreakdown[rule.name] = ruleTotal;
+        totalRuleAmount += ruleTotal;
+      }
+    });
 
     // Travel allowance
     const workDays = entries.length;
     const travelAllowance = workDays * (employee.travel_distance_km || 0) * 2 * (employee.travel_allowance_per_km || 0.23);
 
-    const totalSalary = baseSalary + nightBonus + weekendBonus + holidayBonus + overtimeBonus + travelAllowance;
+    const totalSalary = baseSalary + totalRuleAmount + travelAllowance;
 
     return {
       employee,
@@ -110,10 +159,8 @@ export default function SalaryReports() {
       overtimeHours,
       hourlyRate,
       baseSalary,
-      nightBonus,
-      weekendBonus,
-      holidayBonus,
-      overtimeBonus,
+      ruleBreakdown,
+      totalRuleAmount,
       travelAllowance,
       totalSalary,
       workDays
@@ -136,16 +183,9 @@ export default function SalaryReports() {
       'Naam',
       'Afdeling',
       'Totaal uren',
-      'Nachturen',
-      'Weekenduren',
-      'Feestdaguren',
-      'Overuren',
       'Uurloon',
       'Basisloon',
-      'Nachttoeslag',
-      'Weekendtoeslag',
-      'Feestdagtoeslag',
-      'Overwerktoeslag',
+      'CAO toeslagen',
       'Reiskosten',
       'Totaal bruto'
     ];
@@ -155,16 +195,9 @@ export default function SalaryReports() {
       `${r.employee.first_name} ${r.employee.last_name}`,
       r.employee.department || '',
       r.totalHours.toFixed(2),
-      r.nightHours.toFixed(2),
-      r.weekendHours.toFixed(2),
-      r.holidayHours.toFixed(2),
-      r.overtimeHours.toFixed(2),
       r.hourlyRate.toFixed(2),
       r.baseSalary.toFixed(2),
-      r.nightBonus.toFixed(2),
-      r.weekendBonus.toFixed(2),
-      r.holidayBonus.toFixed(2),
-      r.overtimeBonus.toFixed(2),
+      r.totalRuleAmount.toFixed(2),
       r.travelAllowance.toFixed(2),
       r.totalSalary.toFixed(2)
     ]);
@@ -330,12 +363,9 @@ export default function SalaryReports() {
                   <TableRow className="bg-slate-50">
                     <TableHead>Medewerker</TableHead>
                     <TableHead className="text-right">Uren</TableHead>
-                    <TableHead className="text-right">Nacht</TableHead>
-                    <TableHead className="text-right">Weekend</TableHead>
-                    <TableHead className="text-right">Feestdag</TableHead>
-                    <TableHead className="text-right">Over</TableHead>
+                    <TableHead className="text-right">Uurloon</TableHead>
                     <TableHead className="text-right">Basisloon</TableHead>
-                    <TableHead className="text-right">Toeslagen</TableHead>
+                    <TableHead className="text-right">CAO-regels</TableHead>
                     <TableHead className="text-right">Reiskosten</TableHead>
                     <TableHead className="text-right font-bold">Totaal</TableHead>
                   </TableRow>
@@ -352,13 +382,19 @@ export default function SalaryReports() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">{row.totalHours.toFixed(1)}</TableCell>
-                      <TableCell className="text-right">{row.nightHours.toFixed(1)}</TableCell>
-                      <TableCell className="text-right">{row.weekendHours.toFixed(1)}</TableCell>
-                      <TableCell className="text-right">{row.holidayHours.toFixed(1)}</TableCell>
-                      <TableCell className="text-right">{row.overtimeHours.toFixed(1)}</TableCell>
+                      <TableCell className="text-right">€{row.hourlyRate.toFixed(2)}</TableCell>
                       <TableCell className="text-right">€{row.baseSalary.toFixed(2)}</TableCell>
                       <TableCell className="text-right">
-                        €{(row.nightBonus + row.weekendBonus + row.holidayBonus + row.overtimeBonus).toFixed(2)}
+                        <div className="space-y-1">
+                          {Object.entries(row.ruleBreakdown).map(([ruleName, amount]) => (
+                            <div key={ruleName} className="text-xs">
+                              <span className="text-slate-500">{ruleName}:</span> €{amount.toFixed(2)}
+                            </div>
+                          ))}
+                          {Object.keys(row.ruleBreakdown).length === 0 && (
+                            <span className="text-slate-400">-</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">€{row.travelAllowance.toFixed(2)}</TableCell>
                       <TableCell className="text-right font-bold text-emerald-600">
@@ -371,23 +407,12 @@ export default function SalaryReports() {
                     <TableCell className="text-right">
                       {filteredReportData.reduce((s, r) => s + r.totalHours, 0).toFixed(1)}
                     </TableCell>
-                    <TableCell className="text-right">
-                      {filteredReportData.reduce((s, r) => s + r.nightHours, 0).toFixed(1)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {filteredReportData.reduce((s, r) => s + r.weekendHours, 0).toFixed(1)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {filteredReportData.reduce((s, r) => s + r.holidayHours, 0).toFixed(1)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {filteredReportData.reduce((s, r) => s + r.overtimeHours, 0).toFixed(1)}
-                    </TableCell>
+                    <TableCell className="text-right">-</TableCell>
                     <TableCell className="text-right">
                       €{filteredReportData.reduce((s, r) => s + r.baseSalary, 0).toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
-                      €{filteredReportData.reduce((s, r) => s + r.nightBonus + r.weekendBonus + r.holidayBonus + r.overtimeBonus, 0).toFixed(2)}
+                      €{filteredReportData.reduce((s, r) => s + r.totalRuleAmount, 0).toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
                       €{filteredReportData.reduce((s, r) => s + r.travelAllowance, 0).toFixed(2)}
@@ -406,34 +431,18 @@ export default function SalaryReports() {
       {/* CAO Rules Info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Toegepaste CAO-regels</CardTitle>
+          <CardTitle className="text-base">Toegepaste CAO-regels ({activeRules.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-3">
-            {nightRule && (
-              <Badge variant="outline" className="flex items-center gap-1">
-                <Moon className="w-3 h-3" />
-                Nacht: {nightRule.percentage}%
+          <div className="flex flex-wrap gap-2">
+            {activeRules.map(rule => (
+              <Badge key={rule.id} variant="outline" className="flex items-center gap-1">
+                {rule.calculation_type === 'Percentage (%)' && `${rule.name}: ${rule.percentage}%`}
+                {rule.calculation_type === 'Vast bedrag (€)' && `${rule.name}: €${rule.fixed_amount}`}
+                {rule.calculation_type === 'Per uur (€/uur)' && `${rule.name}: €${rule.value}/uur`}
+                {rule.calculation_type === 'Per dag (€/dag)' && `${rule.name}: €${rule.value}/dag`}
               </Badge>
-            )}
-            {weekendRule && (
-              <Badge variant="outline" className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                Weekend: {weekendRule.percentage}%
-              </Badge>
-            )}
-            {holidayRule && (
-              <Badge variant="outline" className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                Feestdag: {holidayRule.percentage}%
-              </Badge>
-            )}
-            {overtimeRule && (
-              <Badge variant="outline" className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                Overwerk: {overtimeRule.percentage}%
-              </Badge>
-            )}
+            ))}
             {activeRules.length === 0 && (
               <p className="text-sm text-slate-500">
                 Geen actieve CAO-regels gevonden. Voeg regels toe in het CAO-regels menu.
