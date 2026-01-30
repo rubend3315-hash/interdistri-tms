@@ -24,6 +24,7 @@ import PlanningHeader from "../components/planning/PlanningHeader";
 import ShiftLegend from "../components/planning/ShiftLegend";
 import PlanningTable from "../components/planning/PlanningTable";
 import CopyWeekDialog from "../components/planning/CopyWeekDialog";
+import CopyDayDialog from "../components/planning/CopyDayDialog";
 
 const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
 
@@ -33,6 +34,8 @@ export default function Planning() {
   const [viewMode, setViewMode] = useState("week");
   const [colorMode, setColorMode] = useState("shift");
   const [showCopyDialog, setShowCopyDialog] = useState(false);
+  const [showCopyDayDialog, setShowCopyDayDialog] = useState(false);
+  const [sourceCopyDay, setSourceCopyDay] = useState(null);
   const queryClient = useQueryClient();
 
   const periodStart = viewMode === "week"
@@ -170,6 +173,56 @@ export default function Planning() {
     }
   };
 
+  const handleCopyDay = (sourceDay) => {
+    setSourceCopyDay(sourceDay);
+    setShowCopyDayDialog(true);
+  };
+
+  const handleCopyDayConfirm = async (sourceDay, targetDays) => {
+    try {
+      const sourceDayIndex = days.findIndex(d => d.toISOString() === sourceDay.toISOString());
+      const sourceDayKey = getDayKey(sourceDayIndex);
+      const sourceWeek = getWeek(sourceDay, { weekStartsOn: 1 });
+      const sourceYear = getYear(sourceDay);
+
+      for (const targetDay of targetDays) {
+        const targetDayIndex = days.findIndex(d => d.toISOString() === targetDay.toISOString());
+        const targetDayKey = getDayKey(targetDayIndex);
+        const targetWeek = getWeek(targetDay, { weekStartsOn: 1 });
+        const targetYear = getYear(targetDay);
+
+        for (const employee of activeEmployees) {
+          const sourceSchedule = schedules.find(
+            s => s.employee_id === employee.id && s.week_number === sourceWeek && s.year === sourceYear
+          );
+          const sourceValue = sourceSchedule?.[sourceDayKey] || "";
+
+          const targetSchedule = schedules.find(
+            s => s.employee_id === employee.id && s.week_number === targetWeek && s.year === targetYear
+          );
+
+          if (targetSchedule) {
+            await base44.entities.Schedule.update(targetSchedule.id, {
+              [targetDayKey]: sourceValue
+            });
+          } else {
+            await base44.entities.Schedule.create({
+              employee_id: employee.id,
+              week_number: targetWeek,
+              year: targetYear,
+              [targetDayKey]: sourceValue
+            });
+          }
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      toast.success(`Dag gekopieerd naar ${targetDays.length} dag(en)`);
+    } catch (error) {
+      toast.error('Fout bij kopiëren: ' + error.message);
+    }
+  };
+
   const handleExportPDF = () => {
     const doc = new jsPDF('l', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -257,6 +310,7 @@ export default function Planning() {
             onShiftChange={handleShiftChange}
             getDayKey={getDayKey}
             getScheduleForEmployee={getScheduleForEmployee}
+            onCopyDay={handleCopyDay}
           />
         </CardContent>
       </Card>
@@ -267,6 +321,14 @@ export default function Planning() {
         currentWeek={weekNumber}
         currentYear={year}
         onCopy={handleCopyWeek}
+      />
+
+      <CopyDayDialog
+        open={showCopyDayDialog}
+        onOpenChange={setShowCopyDayDialog}
+        sourceDay={sourceCopyDay}
+        availableDays={days}
+        onCopy={handleCopyDayConfirm}
       />
     </div>
   );
