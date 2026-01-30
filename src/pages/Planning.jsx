@@ -422,16 +422,15 @@ export default function Planning() {
 
             // Re-add column headers on new page
             doc.setFontSize(7);
-            doc.setDrawColor(220, 220, 220);
-            doc.setFillColor(250, 250, 250);
+            doc.setFillColor(240, 240, 240);
             doc.setTextColor(0, 0, 0);
 
-            doc.rect(14, y, employeeNameWidth, 6, 'FD');
+            doc.rect(14, y, employeeNameWidth, 6, 'F');
             doc.text('Medewerker', 15, y + 4);
 
             days.forEach((day, i) => {
               const x = 14 + employeeNameWidth + i * cellWidth;
-              doc.rect(x, y, cellWidth, 6, 'FD');
+              doc.rect(x, y, cellWidth, 6, 'F');
               doc.text(format(day, "EEE", { locale: nl }), x + 1, y + 2.5);
               doc.text(format(day, "d MMM", { locale: nl }), x + 1, y + 5);
             });
