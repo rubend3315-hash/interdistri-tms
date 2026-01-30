@@ -99,9 +99,29 @@ export default function PlanningTable({
     ? (() => {
         const groups = {};
         employees.forEach(emp => {
+          // Add to home department
           const dept = emp.department;
           if (!groups[dept]) groups[dept] = [];
           groups[dept].push(emp);
+          
+          // Also add to scheduled departments if different
+          const schedule = getScheduleForEmployee(emp.id);
+          if (schedule) {
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const scheduledDepts = new Set();
+            days.forEach(day => {
+              const plannedDept = schedule[`${day}_planned_department`];
+              if (plannedDept && plannedDept !== emp.department) {
+                scheduledDepts.add(plannedDept);
+              }
+            });
+            scheduledDepts.forEach(scheduledDept => {
+              if (!groups[scheduledDept]) groups[scheduledDept] = [];
+              if (!groups[scheduledDept].find(e => e.id === emp.id)) {
+                groups[scheduledDept].push(emp);
+              }
+            });
+          }
         });
         return groups;
       })()
