@@ -25,6 +25,8 @@ import ShiftLegend from "../components/planning/ShiftLegend";
 import PlanningTable from "../components/planning/PlanningTable";
 import CopyWeekDialog from "../components/planning/CopyWeekDialog";
 import CopyDayDialog from "../components/planning/CopyDayDialog";
+import AIAssistant from "../components/planning/AIAssistant";
+import CapacityOverview from "../components/planning/CapacityOverview";
 
 const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
 
@@ -294,6 +296,15 @@ export default function Planning() {
         setColorMode={setColorMode}
         onExportPDF={handleExportPDF}
         onCopyWeek={() => setShowCopyDialog(true)}
+      />
+
+      <AIAssistant />
+
+      <CapacityOverview
+        days={days}
+        employees={activeEmployees}
+        schedules={schedules}
+        onCopyDay={handleCopyDay}
       />
 
       <ShiftLegend />
