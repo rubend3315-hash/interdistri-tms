@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,8 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Copy } from "lucide-react";
+import { User, Copy, Plus } from "lucide-react";
 import { shiftTypes } from "./ShiftLegend";
+import AddShiftDialog from "./AddShiftDialog";
 
 const employeeColors = [
   "bg-blue-100 text-blue-700 border-blue-200",
@@ -32,8 +33,27 @@ export default function PlanningTable({
   getScheduleForEmployee,
   onCopyDay,
   uurcodes = [],
-  routes = []
+  routes = [],
+  vehicles = [],
+  customers = []
 }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(null);
+
+  const handleAddShift = (employee, date, dayIndex) => {
+    setSelectedEmployee(employee);
+    setSelectedDate(date);
+    setSelectedDayIndex(dayIndex);
+    setDialogOpen(true);
+  };
+
+  const handleSaveShift = (formData) => {
+    if (selectedEmployee && selectedDayIndex !== null) {
+      onShiftChange(selectedEmployee.id, selectedDayIndex, formData.uurcode, formData.route_id);
+    }
+  };
   const getShiftConfig = (value) => {
     return shiftTypes.find(s => s.value === value) || shiftTypes[3];
   };
@@ -66,8 +86,20 @@ export default function PlanningTable({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
+    <>
+      <AddShiftDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        employee={selectedEmployee}
+        date={selectedDate}
+        uurcodes={uurcodes}
+        routes={routes}
+        vehicles={vehicles}
+        customers={customers}
+        onSave={handleSaveShift}
+      />
+      <div className="overflow-x-auto">
+        <Table>
         <TableHeader>
           <TableRow className="bg-slate-50">
             <TableHead className="w-48 sticky left-0 bg-slate-50 z-10">Medewerker</TableHead>
@@ -141,6 +173,15 @@ export default function PlanningTable({
                             </div>
                           )}
                         </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-8 text-xs"
+                          onClick={() => handleAddShift(employee, day, dayIndex)}
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Dienst
+                        </Button>
                       </div>
                     </TableCell>
                   );
@@ -151,5 +192,6 @@ export default function PlanningTable({
         </TableBody>
       </Table>
     </div>
+    </>
   );
 }
