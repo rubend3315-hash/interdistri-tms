@@ -183,9 +183,15 @@ export default function PlanningTable({
                   className="w-full min-h-20 border border-slate-200 rounded-md px-2 py-2 text-xs flex flex-col gap-0.5 cursor-pointer hover:bg-slate-50 transition-colors"
                   onClick={() => handleAddShift(employee, day, dayIndex)}
                 >
-                  <div className="font-medium text-slate-900">
-                    {displayText}
-                  </div>
+                  {displayText !== "-" ? (
+                    <div className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-medium ${getShiftColor(displayText)} w-fit`}>
+                      {displayText}
+                    </div>
+                  ) : (
+                    <div className="font-medium text-slate-900">
+                      {displayText}
+                    </div>
+                  )}
                   {dayHours !== null && dayHours !== undefined && dayHours > 0 && (
                     <div className="text-xs text-cyan-600 font-semibold">
                       {dayHours}h
