@@ -99,11 +99,10 @@ export default function PlanningTable({
     ? (() => {
         const groups = {};
         employees.forEach(emp => {
-          // Add to home department
           const dept = emp.department;
           if (!groups[dept]) groups[dept] = [];
           groups[dept].push(emp);
-          
+
           // Also add to scheduled departments if different
           const schedule = getScheduleForEmployee(emp.id);
           if (schedule) {
@@ -117,6 +116,9 @@ export default function PlanningTable({
             });
             scheduledDepts.forEach(scheduledDept => {
               if (!groups[scheduledDept]) groups[scheduledDept] = [];
+              // Remove from home department if scheduled elsewhere
+              groups[emp.department] = groups[emp.department].filter(e => e.id !== emp.id);
+              // Add to scheduled department
               if (!groups[scheduledDept].find(e => e.id === emp.id)) {
                 groups[scheduledDept].push(emp);
               }
