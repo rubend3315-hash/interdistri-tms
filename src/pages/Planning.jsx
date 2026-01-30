@@ -25,7 +25,7 @@ import ShiftLegend from "../components/planning/ShiftLegend";
 import PlanningTable from "../components/planning/PlanningTable";
 import CopyWeekDialog from "../components/planning/CopyWeekDialog";
 import CopyDayDialog from "../components/planning/CopyDayDialog";
-import AIAssistant from "../components/planning/AIAssistant";
+
 import CapacityOverview from "../components/planning/CapacityOverview";
 import AvailableResources from "../components/planning/AvailableResources";
 
@@ -493,8 +493,6 @@ export default function Planning() {
         onExportPDF={handleExportPDF}
         onCopyWeek={() => setShowCopyDialog(true)}
       />
-
-      <AIAssistant />
 
       <CapacityOverview
         days={days}
