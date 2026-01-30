@@ -171,7 +171,7 @@ export default function PlanningTable({
                   <div className="font-medium text-slate-900">
                     {displayText}
                   </div>
-                  {isScheduledElsewhere && (
+                  {isScheduledElsewhere && currentDepartment === employee.department && (
                     <div className="text-xs text-blue-600 font-semibold truncate w-full">
                       gepland op afd. {currentPlannedDepartment}
                     </div>
