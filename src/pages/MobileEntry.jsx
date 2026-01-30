@@ -416,6 +416,7 @@ export default function MobileEntry() {
 
   return (
     <div className="min-h-screen bg-slate-100">
+      <OfflineSyncIndicator isOnline={isOnline} syncStatus={syncStatus} />
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 pb-6">
         <div className="flex items-center justify-between mb-4">
