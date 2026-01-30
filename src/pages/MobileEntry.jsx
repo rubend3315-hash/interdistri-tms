@@ -1192,8 +1192,10 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
 
-            {/* Quick Links */}
+          {/* Links Tab */}
+          <TabsContent value="links" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Snelle links</CardTitle>
