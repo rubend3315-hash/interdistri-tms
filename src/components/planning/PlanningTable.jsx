@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User } from "lucide-react";
 import { shiftTypes } from "./ShiftLegend";
+
+const getShiftColor = (shiftValue) => {
+  const shiftType = shiftTypes.find(s => s.value === shiftValue);
+  return shiftType?.color || "bg-slate-100 text-slate-600 border-slate-200";
+};
 import AddShiftDialog from "./AddShiftDialog";
 
 const employeeColors = [
