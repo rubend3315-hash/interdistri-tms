@@ -434,20 +434,22 @@ export default function SalaryReports() {
           <CardTitle className="text-base">Toegepaste CAO-regels ({activeRules.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {activeRules.map(rule => (
-              <Badge key={rule.id} variant="outline" className="flex items-center gap-1">
-                {rule.calculation_type === 'Percentage (%)' && `${rule.name}: ${rule.percentage}%`}
-                {rule.calculation_type === 'Vast bedrag (€)' && `${rule.name}: €${rule.fixed_amount}`}
-                {rule.calculation_type === 'Per uur (€/uur)' && `${rule.name}: €${rule.value}/uur`}
-                {rule.calculation_type === 'Per dag (€/dag)' && `${rule.name}: €${rule.value}/dag`}
-              </Badge>
-            ))}
-            {activeRules.length === 0 && (
-              <p className="text-sm text-slate-500">
-                Geen actieve CAO-regels gevonden. Voeg regels toe in het CAO-regels menu.
-              </p>
-            )}
+          <div className="max-h-48 overflow-y-auto">
+            <div className="flex flex-wrap gap-2">
+              {activeRules.map(rule => (
+                <Badge key={rule.id} variant="outline" className="text-xs whitespace-nowrap">
+                  {rule.calculation_type === 'Percentage (%)' && `${rule.name}: ${rule.percentage}%`}
+                  {rule.calculation_type === 'Vast bedrag (€)' && `${rule.name}: €${rule.fixed_amount}`}
+                  {rule.calculation_type === 'Per uur (€/uur)' && `${rule.name}: €${rule.value}/uur`}
+                  {rule.calculation_type === 'Per dag (€/dag)' && `${rule.name}: €${rule.value}/dag`}
+                </Badge>
+              ))}
+              {activeRules.length === 0 && (
+                <p className="text-sm text-slate-500">
+                  Geen actieve CAO-regels gevonden. Voeg regels toe in het CAO-regels menu.
+                </p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
