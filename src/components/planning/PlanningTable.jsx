@@ -92,10 +92,8 @@ export default function PlanningTable({
         onOpenChange={setDialogOpen}
         employee={selectedEmployee}
         date={selectedDate}
-        uurcodes={uurcodes}
         routes={routes}
         vehicles={vehicles}
-        customers={customers}
         onSave={handleSaveShift}
       />
       <div className="overflow-x-auto">

@@ -17,34 +17,48 @@ export default function AddShiftDialog({
   routes = [],
   vehicles = [],
   customers = [],
+  departments = [],
   onSave 
 }) {
   const [formData, setFormData] = useState({
-    uurcode: "",
+    planned_department: employee?.department || "",
+    is_standby: false,
+    is_training: false,
     route_id: "",
-    start_time: "",
-    end_time: "",
+    time_block_day: false,
+    time_block_evening: false,
+    time_block_night: false,
     vehicle_id: "",
-    customer_id: "",
-    notes: "",
-    departure_location: "",
-    expected_return_time: ""
+    notes_1: "",
+    notes_2: "",
+    copy_to_days: []
   });
 
   const handleSave = () => {
     onSave(formData);
     setFormData({
-      uurcode: "",
+      planned_department: employee?.department || "",
+      is_standby: false,
+      is_training: false,
       route_id: "",
-      start_time: "",
-      end_time: "",
+      time_block_day: false,
+      time_block_evening: false,
+      time_block_night: false,
       vehicle_id: "",
-      customer_id: "",
-      notes: "",
-      departure_location: "",
-      expected_return_time: ""
+      notes_1: "",
+      notes_2: "",
+      copy_to_days: []
     });
     onOpenChange(false);
+  };
+
+  const toggleCopyDay = (day) => {
+    setFormData(prev => ({
+      ...prev,
+      copy_to_days: prev.copy_to_days.includes(day)
+        ? prev.copy_to_days.filter(d => d !== day)
+        : [...prev.copy_to_days, day]
+    }));
   };
 
   return (
@@ -55,120 +69,189 @@ export default function AddShiftDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Medewerker en Datum */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Medewerker *</Label>
-              <Input 
-                value={employee ? `${employee.first_name} ${employee.last_name}` : ""} 
-                disabled 
-                className="bg-slate-50"
-              />
-            </div>
-            <div>
-              <Label>Datum *</Label>
-              <Input 
-                value={date ? format(new Date(date), "dd-MM-yyyy", { locale: nl }) : ""} 
-                disabled 
-                className="bg-slate-50"
-              />
+          {/* Datum */}
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+            <Label>Datum:</Label>
+            <Input 
+              value={date ? format(new Date(date), "dd-MM-yyyy", { locale: nl }) : ""} 
+              disabled 
+              className="bg-slate-100"
+            />
+          </div>
+
+          {/* Medewerker */}
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+            <Label>Medewerker:</Label>
+            <Input 
+              value={employee ? `(${employee.employee_number || 'R.J.'}) ${employee.first_name} ${employee.last_name}` : ""} 
+              disabled 
+              className="bg-slate-100"
+            />
+          </div>
+
+          {/* Medewerker afdeling */}
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+            <Label>Medewerker afdeling:</Label>
+            <Input 
+              value={employee?.department || ""} 
+              disabled 
+              className="bg-slate-100"
+            />
+          </div>
+
+          {/* Geplande afdeling */}
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+            <Label>Geplande afdeling:</Label>
+            <Select value={formData.planned_department} onValueChange={(v) => setFormData({ ...formData, planned_department: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecteer afdeling" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Management">Management</SelectItem>
+                <SelectItem value="Transport">Transport</SelectItem>
+                <SelectItem value="PakketDistributie">PakketDistributie</SelectItem>
+                <SelectItem value="Charters">Charters</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Aangepaste dienst */}
+          <div className="grid grid-cols-[120px_1fr] items-start gap-4">
+            <Label className="pt-2">Aangepaste dienst:</Label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="standby"
+                  checked={formData.is_standby}
+                  onChange={(e) => setFormData({ ...formData, is_standby: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="standby" className="font-normal cursor-pointer">Stand-by</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="training"
+                  checked={formData.is_training}
+                  onChange={(e) => setFormData({ ...formData, is_training: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="training" className="font-normal cursor-pointer">Opleiding</Label>
+              </div>
             </div>
           </div>
 
-          {/* Starttijd, Eindtijd en Shift */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label>Starttijd</Label>
-              <Input 
-                type="time"
-                value={formData.start_time}
-                onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                placeholder="--:--"
-              />
-            </div>
-            <div>
-              <Label>Eindtijd</Label>
-              <Input 
-                type="time"
-                value={formData.end_time}
-                onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                placeholder="--:--"
-              />
-            </div>
-            <div>
-              <Label>Shift</Label>
-              <Select value={formData.uurcode} onValueChange={(v) => setFormData({ ...formData, uurcode: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer shift" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uurcodes.map(code => (
-                    <SelectItem key={code.id} value={code.code}>
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">{code.code}</span>
-                        <span className="text-xs text-slate-500">{code.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Route */}
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+            <Label>Route:</Label>
+            <Select value={formData.route_id} onValueChange={(v) => setFormData({ ...formData, route_id: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Maak een keuze ..." />
+              </SelectTrigger>
+              <SelectContent>
+                {routes.map(route => (
+                  <SelectItem key={route.id} value={route.id}>
+                    {route.route_code} - {route.route_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Tijdblokken */}
+          <div className="grid grid-cols-[120px_1fr] items-start gap-4">
+            <Label className="pt-2">Tijdblokken:</Label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="time_day"
+                  checked={formData.time_block_day}
+                  onChange={(e) => setFormData({ ...formData, time_block_day: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="time_day" className="font-normal cursor-pointer">Dag</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="time_evening"
+                  checked={formData.time_block_evening}
+                  onChange={(e) => setFormData({ ...formData, time_block_evening: e.target.checked })}
+                  className="w-4 h-4 accent-orange-500"
+                />
+                <Label htmlFor="time_evening" className="font-normal cursor-pointer">Avond</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="time_night"
+                  checked={formData.time_block_night}
+                  onChange={(e) => setFormData({ ...formData, time_block_night: e.target.checked })}
+                  className="w-4 h-4 accent-orange-500"
+                />
+                <Label htmlFor="time_night" className="font-normal cursor-pointer">Nacht</Label>
+              </div>
             </div>
           </div>
 
-          {/* Route en Voertuig */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Route</Label>
-              <Input 
-                placeholder="bijv. Route A1, Gebied Noord"
-                value={formData.route_id}
-                onChange={(e) => setFormData({ ...formData, route_id: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Voertuig</Label>
-              <Select value={formData.vehicle_id} onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer voertuig" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vehicles.map(vehicle => (
-                    <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.license_plate} - {vehicle.brand} {vehicle.model}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Voertuig */}
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+            <Label>Voertuig:</Label>
+            <Select value={formData.vehicle_id} onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Maak een keuze ..." />
+              </SelectTrigger>
+              <SelectContent>
+                {vehicles.map(vehicle => (
+                  <SelectItem key={vehicle.id} value={vehicle.id}>
+                    {vehicle.license_plate} - {vehicle.brand} {vehicle.model}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Klant en Status */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Klant</Label>
-              <Input 
-                placeholder="bijv. PostNL, DPG Media"
-                value={formData.customer_id}
-                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Status</Label>
-              <Select defaultValue="Gepland">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Gepland">Gepland</SelectItem>
-                  <SelectItem value="Bevestigd">Bevestigd</SelectItem>
-                  <SelectItem value="Geannuleerd">Geannuleerd</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Opmerking 1 */}
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+            <Label>Opmerking 1:</Label>
+            <Input 
+              value={formData.notes_1}
+              onChange={(e) => setFormData({ ...formData, notes_1: e.target.value })}
+            />
+          </div>
+
+          {/* Opmerking 2 */}
+          <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+            <Label>Opmerking 2:</Label>
+            <Input 
+              value={formData.notes_2}
+              onChange={(e) => setFormData({ ...formData, notes_2: e.target.value })}
+            />
+          </div>
+
+          {/* Kopieer naar */}
+          <div className="grid grid-cols-[120px_1fr] items-start gap-4">
+            <Label className="pt-2">Kopieer naar:</Label>
+            <div className="flex gap-3 flex-wrap">
+              {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map((day, idx) => (
+                <div key={day} className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    id={`copy_${day}`}
+                    checked={formData.copy_to_days.includes(idx)}
+                    onChange={() => toggleCopyDay(idx)}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor={`copy_${day}`} className="font-normal cursor-pointer">{day}</Label>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Annuleren
             </Button>
