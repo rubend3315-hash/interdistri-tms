@@ -413,6 +413,7 @@ export default function Planning() {
             vehicles={vehicles}
             customers={customers}
             filterDepartment={filterDepartment}
+            getWeekScheduleHours={getWeekScheduleHours}
           />
         </CardContent>
       </Card>
