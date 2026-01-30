@@ -138,22 +138,20 @@ export default function AvailableResources({
               <div className="space-y-2">
                 {Object.entries(routesByCustomer).slice(0, 3).map(([customerId, customerRoutes]) => (
                   <div key={customerId} className="bg-slate-50 p-2 rounded-lg">
-                    <p className="text-xs font-medium text-slate-600 mb-1">
+                    <p className="text-xs font-medium text-slate-600 mb-2">
                       {getCustomerName(customerId)} ({customerRoutes.length})
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      {customerRoutes.slice(0, 4).map(route => (
+                    <div className="space-y-1">
+                      {customerRoutes.slice(0, 6).map(route => (
                         <Badge
                           key={route.id}
-                          className="bg-orange-100 text-orange-700 border-orange-200 text-xs cursor-default"
+                          className="bg-orange-100 text-orange-700 border-orange-200 text-xs cursor-default w-full justify-start"
                         >
-                          {route.route_code}
+                          {route.route_code} - {route.route_name}
                         </Badge>
                       ))}
-                      {customerRoutes.length > 4 && (
-                        <Badge className="bg-slate-200 text-slate-600 text-xs">
-                          +{customerRoutes.length - 4}
-                        </Badge>
+                      {customerRoutes.length > 6 && (
+                        <p className="text-xs text-slate-500 italic px-2">+{customerRoutes.length - 6} routes</p>
                       )}
                     </div>
                   </div>
