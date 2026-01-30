@@ -101,42 +101,37 @@ export default function Planning() {
   const getWeekScheduleHours = (employee) => {
     if (!employee.contractregels || employee.contractregels.length === 0) return null;
     
-    // Find the active contract rule
+    // Find the active contract rule - use the most recent start date
     const today = new Date();
-    const activeContract = employee.contractregels.find(cr => {
-      const startDate = new Date(cr.startdatum);
-      const endDate = cr.einddatum ? new Date(cr.einddatum) : null;
-      return startDate <= today && (!endDate || endDate >= today);
-    });
+    let activeContract = employee.contractregels
+      .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))
+      .find(cr => {
+        const startDate = new Date(cr.startdatum);
+        const endDate = cr.einddatum ? new Date(cr.einddatum) : null;
+        return startDate <= today && (!endDate || endDate >= today);
+      });
+    
+    // If no active contract found, use the first one with week data
+    if (!activeContract) {
+      activeContract = employee.contractregels.find(cr => cr.week1 || cr.week2);
+    }
 
     if (!activeContract) return null;
     
     // Get the correct week schedule (week1 or week2)
-    const weekSchedule = viewMode === "week" ? 
-      (weekNumber % 2 === 1 ? activeContract.week1 : activeContract.week2) :
-      activeContract.week1;
+    const weekSchedule = (weekNumber % 2 === 1) ? activeContract.week1 : activeContract.week2;
     
     if (!weekSchedule || typeof weekSchedule !== 'object') return null;
     
     // Map Dutch abbreviated day names to English day keys
-    // Week schedule uses Ma, Di, Wo, Do, Vr, Za, Zo format
-    const dutchToDayKey = {
-      'Ma': 'monday',
-      'Di': 'tuesday',
-      'Wo': 'wednesday',
-      'Do': 'thursday',
-      'Vr': 'friday',
-      'Za': 'saturday',
-      'Zo': 'sunday'
-    };
+    const dutchDays = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
+    const englishDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     
     const hours = {};
-    const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    
-    dayKeys.forEach((day, index) => {
-      const dutchDay = Object.keys(dutchToDayKey).find(key => dutchToDayKey[key] === day);
+    englishDays.forEach((day, index) => {
+      const dutchDay = dutchDays[index];
       const value = weekSchedule[dutchDay];
-      hours[day] = typeof value === 'number' ? value : (typeof value === 'string' ? parseFloat(value) || 0 : 0);
+      hours[day] = typeof value === 'number' ? value : (typeof value === 'string' && value !== '-' ? parseFloat(value) || 0 : 0);
     });
     
     return hours;
