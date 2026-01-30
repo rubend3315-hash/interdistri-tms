@@ -315,6 +315,16 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     period_end: '',
     persoonlijke_inzet: 5,
     persoonlijke_inzet_toelichting: '',
+    inzetbaarheid: 5,
+    inzetbaarheid_toelichting: '',
+    omgang_veranderingen: 5,
+    omgang_veranderingen_toelichting: '',
+    ziekteverzuim: 5,
+    ziekteverzuim_toelichting: '',
+    loyaliteit: 5,
+    loyaliteit_toelichting: '',
+    omgang_collega: 5,
+    omgang_collega_toelichting: '',
     kpi_postnl: 5,
     kpi_postnl_toelichting: '',
     kpi_voertuig_onderhoud: 5,
@@ -339,11 +349,16 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const totalScore = parseFloat(data.persoonlijke_inzet) +
+        parseFloat(data.inzetbaarheid) +
+        parseFloat(data.omgang_veranderingen) +
+        parseFloat(data.ziekteverzuim) +
+        parseFloat(data.loyaliteit) +
+        parseFloat(data.omgang_collega) +
         parseFloat(data.kpi_postnl) +
         parseFloat(data.kpi_voertuig_onderhoud) +
         parseFloat(data.rijstijl_analyse);
       
-      const avg = totalScore / 4;
+      const avg = totalScore / 9;
 
       const reviewData = {
         ...data,
@@ -449,6 +464,116 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
             <div>
               <div className="flex justify-between mb-2">
+                <Label>Inzetbaarheid</Label>
+                <span className="text-sm font-semibold text-blue-600">{formData.inzetbaarheid}/10</span>
+              </div>
+              <Input
+                type="range"
+                min="1"
+                max="10"
+                value={formData.inzetbaarheid}
+                onChange={(e) => setFormData({...formData, inzetbaarheid: e.target.value})}
+                className="w-full"
+              />
+              <Textarea
+                placeholder="Toelichting..."
+                value={formData.inzetbaarheid_toelichting}
+                onChange={(e) => setFormData({...formData, inzetbaarheid_toelichting: e.target.value})}
+                className="mt-2"
+                rows={2}
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between mb-2">
+                <Label>Omgang met veranderingen en tegenslag (stressbestendig)</Label>
+                <span className="text-sm font-semibold text-blue-600">{formData.omgang_veranderingen}/10</span>
+              </div>
+              <Input
+                type="range"
+                min="1"
+                max="10"
+                value={formData.omgang_veranderingen}
+                onChange={(e) => setFormData({...formData, omgang_veranderingen: e.target.value})}
+                className="w-full"
+              />
+              <Textarea
+                placeholder="Toelichting..."
+                value={formData.omgang_veranderingen_toelichting}
+                onChange={(e) => setFormData({...formData, omgang_veranderingen_toelichting: e.target.value})}
+                className="mt-2"
+                rows={2}
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between mb-2">
+                <Label>Ziekteverzuim</Label>
+                <span className="text-sm font-semibold text-blue-600">{formData.ziekteverzuim}/10</span>
+              </div>
+              <Input
+                type="range"
+                min="1"
+                max="10"
+                value={formData.ziekteverzuim}
+                onChange={(e) => setFormData({...formData, ziekteverzuim: e.target.value})}
+                className="w-full"
+              />
+              <Textarea
+                placeholder="Toelichting..."
+                value={formData.ziekteverzuim_toelichting}
+                onChange={(e) => setFormData({...formData, ziekteverzuim_toelichting: e.target.value})}
+                className="mt-2"
+                rows={2}
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between mb-2">
+                <Label>Loyaliteit naar bedrijf</Label>
+                <span className="text-sm font-semibold text-blue-600">{formData.loyaliteit}/10</span>
+              </div>
+              <Input
+                type="range"
+                min="1"
+                max="10"
+                value={formData.loyaliteit}
+                onChange={(e) => setFormData({...formData, loyaliteit: e.target.value})}
+                className="w-full"
+              />
+              <Textarea
+                placeholder="Toelichting..."
+                value={formData.loyaliteit_toelichting}
+                onChange={(e) => setFormData({...formData, loyaliteit_toelichting: e.target.value})}
+                className="mt-2"
+                rows={2}
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between mb-2">
+                <Label>Omgang met collega's</Label>
+                <span className="text-sm font-semibold text-blue-600">{formData.omgang_collega}/10</span>
+              </div>
+              <Input
+                type="range"
+                min="1"
+                max="10"
+                value={formData.omgang_collega}
+                onChange={(e) => setFormData({...formData, omgang_collega: e.target.value})}
+                className="w-full"
+              />
+              <Textarea
+                placeholder="Toelichting..."
+                value={formData.omgang_collega_toelichting}
+                onChange={(e) => setFormData({...formData, omgang_collega_toelichting: e.target.value})}
+                className="mt-2"
+                rows={2}
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between mb-2">
                 <Label>KPI PostNL</Label>
                 <span className="text-sm font-semibold text-blue-600">{formData.kpi_postnl}/10</span>
               </div>
@@ -517,6 +642,11 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
           <div className="border-t pt-4 space-y-4">
             {(() => {
               const totalScore = parseFloat(formData.persoonlijke_inzet || 0) +
+                parseFloat(formData.inzetbaarheid || 0) +
+                parseFloat(formData.omgang_veranderingen || 0) +
+                parseFloat(formData.ziekteverzuim || 0) +
+                parseFloat(formData.loyaliteit || 0) +
+                parseFloat(formData.omgang_collega || 0) +
                 parseFloat(formData.kpi_postnl || 0) +
                 parseFloat(formData.kpi_voertuig_onderhoud || 0) +
                 parseFloat(formData.rijstijl_analyse || 0);
@@ -536,7 +666,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                       </Label>
                     </div>
                     <Badge className={meetsRequirement ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                      Totaal: {totalScore}/40 punten
+                      Totaal: {totalScore}/90 punten
                     </Badge>
                   </div>
                   {!meetsRequirement && (
