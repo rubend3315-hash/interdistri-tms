@@ -81,27 +81,27 @@ export default function CapacityOverview({ days, employees, schedules }) {
         </div>
 
         <div>
-          <h4 className="text-xs font-medium text-slate-700 mb-2">Dagelijkse Bezetting</h4>
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {days.map((day, idx) => {
               const { working, total } = getOccupancyForDay(day, idx);
               const percentage = total > 0 ? (working / total) * 100 : 0;
               return (
-                <div key={day.toISOString()} className="flex items-center gap-2">
-                  <div className="w-16 text-xs text-slate-600">
+                <div key={day.toISOString()} className="flex items-center gap-3 text-xs">
+                  <div className="w-14 text-slate-600 flex-shrink-0">
                     {format(day, "EEE d MMM", { locale: nl })}
                   </div>
-                  <div className="flex-1 h-5 bg-slate-100 rounded-full overflow-hidden relative">
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getOccupancyColor(percentage).replace('bg-', '') === 'green-500' ? '#22c55e' : getOccupancyColor(percentage).replace('bg-', '') === 'yellow-500' ? '#eab308' : '#ef4444' }} />
+                  <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${getOccupancyColor(percentage)} transition-all`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  <div className="text-xs text-slate-600 w-20 text-right">
-                    {working}/{total}
+                  <div className="text-slate-600 text-right">
+                    {working}/{total} chauffeurs
                   </div>
-                  <div className="text-xs text-slate-600 w-16 text-right">
-                    {working}
+                  <div className="text-slate-600 text-right w-14">
+                    {working} diensten
                   </div>
                 </div>
               );
