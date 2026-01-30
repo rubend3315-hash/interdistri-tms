@@ -472,7 +472,7 @@ export default function MobileEntry() {
       {/* Main Content */}
       <div className="p-4 -mt-2">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-6 mb-4">
+          <TabsList className="w-full grid grid-cols-7 mb-4">
            <TabsTrigger value="dienst" className="text-xs px-2">
              <Clock className="w-4 h-4" />
            </TabsTrigger>
@@ -490,6 +490,9 @@ export default function MobileEntry() {
            </TabsTrigger>
            <TabsTrigger value="planning" className="text-xs px-2">
              <CalendarDays className="w-4 h-4" />
+           </TabsTrigger>
+           <TabsTrigger value="links" className="text-xs px-2">
+             <ExternalLink className="w-4 h-4" />
            </TabsTrigger>
           </TabsList>
 
