@@ -148,25 +148,26 @@ export default function PlanningTable({
             </div>
           </TableCell>
           {days.map((day, dayIndex) => {
-            const dayKey = getDayKey(dayIndex);
-            const currentValue = schedule?.[dayKey] || "";
-            const currentRouteId = schedule?.[`${dayKey}_route_id`] || "";
-            const currentVehicleId = schedule?.[`${dayKey}_vehicle_id`] || "";
-            const currentNotes1 = schedule?.[`${dayKey}_notes_1`] || "";
-            const currentNotes2 = schedule?.[`${dayKey}_notes_2`] || "";
-            const currentPlannedDepartment = schedule?.[`${dayKey}_planned_department`] || "";
-            const holiday = isHoliday(day);
-            const currentRoute = routes.find(r => r.id === currentRouteId);
-            const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
+                    const dayKey = getDayKey(dayIndex);
+                    const currentValue = schedule?.[dayKey] || "";
+                    const currentRouteId = schedule?.[`${dayKey}_route_id`] || "";
+                    const currentVehicleId = schedule?.[`${dayKey}_vehicle_id`] || "";
+                    const currentNotes1 = schedule?.[`${dayKey}_notes_1`] || "";
+                    const currentNotes2 = schedule?.[`${dayKey}_notes_2`] || "";
+                    const currentPlannedDepartment = schedule?.[`${dayKey}_planned_department`] || "";
+                    const holiday = isHoliday(day);
+                    const currentRoute = routes.find(r => r.id === currentRouteId);
+                    const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
+                    const dayHours = weekScheduleHours ? weekScheduleHours[dayKey] : null;
 
-            // Check if employee is scheduled in a different department
-            const isScheduledElsewhere = currentPlannedDepartment && currentPlannedDepartment !== employee.department;
-            // Only show shift if it's scheduled in this department, or no department is specified and this is the home department
-            const shouldShowShift = !currentPlannedDepartment && employee.department === currentDepartment || currentPlannedDepartment === currentDepartment;
-            // Show details only if we're viewing the department where it's scheduled
-            const showDetails = shouldShowShift;
-            // Show shift code only if viewing the scheduled department
-            const displayText = shouldShowShift ? (currentValue || "-") : "-";
+                    // Check if employee is scheduled in a different department
+                    const isScheduledElsewhere = currentPlannedDepartment && currentPlannedDepartment !== employee.department;
+                    // Only show shift if it's scheduled in this department, or no department is specified and this is the home department
+                    const shouldShowShift = !currentPlannedDepartment && employee.department === currentDepartment || currentPlannedDepartment === currentDepartment;
+                    // Show details only if we're viewing the department where it's scheduled
+                    const showDetails = shouldShowShift;
+                    // Show shift code only if viewing the scheduled department
+                    const displayText = shouldShowShift ? (currentValue || "-") : "-";
 
             return (
               <TableCell
