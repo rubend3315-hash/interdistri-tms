@@ -151,7 +151,7 @@ export default function TimeTracking() {
 
   const getEntriesForEmployeeDay = (employeeId, date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return timeEntries.filter(e => e.employee_id === employeeId && e.date === dateStr);
+    return timeEntries.filter(e => e.employee_id === employeeId && e.date === dateStr && e.status === 'Goedgekeurd');
   };
 
   const getEntryForEmployeeDay = (employeeId, date) => {
