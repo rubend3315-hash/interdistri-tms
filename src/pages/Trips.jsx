@@ -210,7 +210,9 @@ export default function Trips() {
 
     // Eendaags: longer than 4 hours away from base location
     if (hoursWorked > 4) {
-      if (applicableRule.calculation_type === 'Per dag (€/dag)' || applicableRule.calculation_type === 'Vast bedrag (€)') {
+      if (applicableRule.calculation_type === 'Per uur (€/uur)') {
+        return hoursWorked * (applicableRule.value || 0);
+      } else if (applicableRule.calculation_type === 'Per dag (€/dag)' || applicableRule.calculation_type === 'Vast bedrag (€)') {
         return applicableRule.fixed_amount || 0;
       }
     }
