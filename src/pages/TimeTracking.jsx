@@ -83,7 +83,7 @@ export default function TimeTracking() {
     end_time: "",
     break_minutes: 30,
     shift_type: "Dag",
-    vehicle_id: "",
+    project_id: "",
     customer_id: "",
     travel_allowance_multiplier: 0,
     notes: ""
