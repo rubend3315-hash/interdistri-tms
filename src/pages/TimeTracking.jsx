@@ -349,7 +349,8 @@ export default function TimeTracking() {
                         </div>
                       </TableCell>
                       {weekDays.map(day => {
-                        const entry = getEntryForEmployeeDay(employee.id, day);
+                        const entries = getEntriesForEmployeeDay(employee.id, day);
+                        const dayTotal = entries.reduce((sum, e) => sum + (e.total_hours || 0), 0);
                         return (
                           <TableCell 
                             key={day.toISOString()} 
@@ -359,27 +360,23 @@ export default function TimeTracking() {
                               onClick={() => openEntryDialog(employee.id, day)}
                               className="w-full min-h-16 p-2 rounded-lg border border-dashed border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
                             >
-                              {entry ? (
+                              {entries.length > 0 ? (
                                 <div className="space-y-1">
-                                  <Badge className={`text-xs ${getShiftColor(entry.shift_type)}`}>
-                                    {entry.shift_type}
-                                  </Badge>
-                                  {entry.total_hours > 0 && (
-                                    <p className="text-sm font-semibold text-slate-900">
-                                      {entry.total_hours}u
-                                    </p>
-                                  )}
-                                  {entry.start_time && entry.end_time && (
-                                    <p className="text-xs text-slate-500">
-                                      {(() => {
-                                        const [depH, depM] = entry.start_time.split(':').map(Number);
-                                        const [endH, endM] = entry.end_time.split(':').map(Number);
-                                        let totalMinutes = (endH * 60 + endM) - (depH * 60 + depM);
-                                        const nextDay = totalMinutes < 0;
-                                        if (nextDay) totalMinutes += 24 * 60;
-                                        const arrivalDate = nextDay ? new Date(new Date(entry.date).getTime() + 24*60*60*1000) : new Date(entry.date);
-                                        return `${format(new Date(entry.date), "d MMM", { locale: nl })} ${entry.start_time} - ${format(arrivalDate, "d MMM", { locale: nl })} ${entry.end_time}`;
-                                      })()}
+                                  {entries.map((entry, idx) => (
+                                    <div key={idx}>
+                                      <Badge className={`text-xs ${getShiftColor(entry.shift_type)}`}>
+                                        {entry.shift_type}
+                                      </Badge>
+                                      {entry.total_hours > 0 && (
+                                        <p className="text-sm font-semibold text-slate-900">
+                                          {entry.total_hours}u {entry.status === 'Concept' && <span className="text-xs text-slate-500">({entry.status})</span>}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))}
+                                  {dayTotal > 0 && entries.length > 1 && (
+                                    <p className="text-xs font-semibold text-blue-600 border-t pt-1 mt-1">
+                                      Totaal: {dayTotal}u
                                     </p>
                                   )}
                                 </div>
