@@ -23,6 +23,7 @@ import {
   Eye,
   Edit
 } from "lucide-react";
+import { getBreakScheduleMinutes } from "@/components/utils/breakScheduleUtils";
 
 export default function Approvals() {
   const [selectedEntry, setSelectedEntry] = useState(null);
