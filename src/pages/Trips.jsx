@@ -198,6 +198,12 @@ export default function Trips() {
     // Only apply if longer than 4 hours
     if (tripHours <= 4) return 0;
 
+    // Check if departure is before 14:00
+    const depMinutes = depH * 60 + depM;
+    const departsBefore14 = depMinutes < 14 * 60;
+    
+    if (!departsBefore14) return 0; // No subsistence if departure after 14:00
+
     // Find applicable CAO rules
     const applicableRules = caoRules.filter(rule => {
       if (!rule || rule.status !== 'Actief') return false;
@@ -210,42 +216,45 @@ export default function Trips() {
 
     if (applicableRules.length === 0) return 0;
 
+    // Separate basis and time-specific rules
+    const basisRule = applicableRules.find(r => !r.start_time && !r.end_time);
+    const timeRules = applicableRules.filter(r => r.start_time && r.end_time);
+
+    if (!basisRule) return 0;
+
+    const basisRate = basisRule.value || 0;
+    const arrMinutes = arrH * 60 + arrM;
     let totalAllowance = 0;
 
-    // Helper to convert time to minutes since midnight
-    const timeToMinutes = (h, m) => h * 60 + m;
-    const depMinutes = timeToMinutes(depH, depM);
-    const arrMinutes = timeToMinutes(arrH, arrM);
-
-    // Process each rule
-    for (const rule of applicableRules) {
-      if (!rule.start_time && !rule.end_time) {
-        // Basis rule (no time window) - applies to all trip hours
-        if (rule.calculation_type === 'Per uur (€/uur)') {
-          const rate = rule.value || 0;
-          totalAllowance += tripHours * rate;
-        }
-      } else if (rule.start_time && rule.end_time) {
-        // Time-based rule (e.g., 18:00-24:00)
+    // Calculate for each hour of the trip
+    let currentMinutes = depMinutes;
+    
+    while (currentMinutes < arrMinutes) {
+      const nextMinutes = Math.min(currentMinutes + 60, arrMinutes);
+      const hours = (nextMinutes - currentMinutes) / 60;
+      
+      // Check if this hour falls in a time-specific rule
+      const currentHour = Math.floor(currentMinutes / 60);
+      const currentMin = currentMinutes % 60;
+      
+      let rateToUse = basisRate;
+      
+      // Check each time-specific rule
+      for (const rule of timeRules) {
         const [startH, startM] = rule.start_time.split(':').map(Number);
         const [endH, endM] = rule.end_time.split(':').map(Number);
-        const ruleStartMinutes = timeToMinutes(startH, startM);
-        const ruleEndMinutes = timeToMinutes(endH, endM);
-
-        // Calculate overlap between trip and rule time window
-        const overlapStart = Math.max(depMinutes, ruleStartMinutes);
-        const overlapEnd = Math.min(arrMinutes, ruleEndMinutes);
-
-        if (overlapEnd > overlapStart) {
-          const overlapMinutes = overlapEnd - overlapStart;
-          const overlapHours = overlapMinutes / 60;
-
-          if (rule.calculation_type === 'Per uur (€/uur)') {
-            const rate = rule.value || 0;
-            totalAllowance += overlapHours * rate;
-          }
+        const ruleStartMinutes = startH * 60 + startM;
+        const ruleEndMinutes = endH * 60 + endM;
+        
+        // If current time falls within this rule's window, use its rate instead
+        if (currentMinutes >= ruleStartMinutes && currentMinutes < ruleEndMinutes) {
+          rateToUse = rule.value || basisRate;
+          break; // Use first matching time rule
         }
       }
+      
+      totalAllowance += hours * rateToUse;
+      currentMinutes = nextMinutes;
     }
 
     return totalAllowance;
