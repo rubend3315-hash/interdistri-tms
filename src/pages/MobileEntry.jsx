@@ -729,7 +729,7 @@ export default function MobileEntry() {
                   />
                 </div>
 
-                {!formData.end_time ? (
+                {!formData.start_time ? (
                   <>
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-sm text-blue-700 font-medium">
