@@ -346,6 +346,12 @@ export default function Trips() {
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-sm">
+                      {trip.start_km && trip.end_km && (
+                        <div className="text-center">
+                          <p className="text-slate-500">Begin - Eind km</p>
+                          <p className="font-semibold text-slate-900">{trip.start_km} - {trip.end_km}</p>
+                        </div>
+                      )}
                       {trip.total_km && (
                         <div className="text-center">
                           <p className="text-slate-500">Kilometers</p>
