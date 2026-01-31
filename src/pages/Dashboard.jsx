@@ -125,9 +125,10 @@ export default function Dashboard() {
 
   expiringDocuments.sort((a, b) => a.daysUntil - b.daysUntil);
 
-  // Recent activities
+  // Recent activities - include all statuses (Concept, Ingediend, Goedgekeurd, etc)
   const recentTimeEntries = [...timeEntries]
     .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+    .filter(e => e.status !== 'Afgekeurd')
     .slice(0, 5);
 
   return (
