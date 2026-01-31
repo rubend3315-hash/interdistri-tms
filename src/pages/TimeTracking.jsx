@@ -394,32 +394,64 @@ export default function TimeTracking() {
             {!["Vrij", "Verlof", "Ziek"].includes(formData.shift_type) && (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Starttijd</Label>
-                    <Input
-                      type="time"
-                      value={formData.start_time}
-                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Eindtijd</Label>
-                    <Input
-                      type="time"
-                      value={formData.end_time}
-                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                    />
-                  </div>
-                </div>
+                   <div className="space-y-2">
+                     <Label>Starttijd</Label>
+                     <Input
+                       type="time"
+                       value={formData.start_time}
+                       onChange={(e) => {
+                         setFormData({ ...formData, start_time: e.target.value });
+                         handleTimeChange();
+                       }}
+                     />
+                   </div>
+                   <div className="space-y-2">
+                     <Label>Eindtijd</Label>
+                     <Input
+                       type="time"
+                       value={formData.end_time}
+                       onChange={(e) => {
+                         setFormData({ ...formData, end_time: e.target.value });
+                         handleTimeChange();
+                       }}
+                     />
+                   </div>
+                 </div>
 
-                <div className="space-y-2">
-                  <Label>Pauze (minuten)</Label>
-                  <Input
-                    type="number"
-                    value={formData.break_minutes}
-                    onChange={(e) => setFormData({ ...formData, break_minutes: e.target.value })}
-                  />
-                </div>
+                 <div className="space-y-2">
+                   <div className="flex items-center gap-2">
+                     <Label>Pauze (minuten)</Label>
+                     {autoBreak !== null && !manualBreak && (
+                       <span className="text-xs text-slate-500">Auto: {autoBreak}</span>
+                     )}
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <Input
+                       type="number"
+                       value={formData.break_minutes}
+                       onChange={(e) => setFormData({ ...formData, break_minutes: e.target.value })}
+                       disabled={!manualBreak && autoBreak !== null}
+                       className="flex-1"
+                     />
+                     <div className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded border border-slate-200">
+                       <input
+                         type="checkbox"
+                         id="manual-break"
+                         checked={manualBreak}
+                         onChange={(e) => {
+                           setManualBreak(e.target.checked);
+                           if (!e.target.checked && autoBreak !== null) {
+                             setFormData(prev => ({ ...prev, break_minutes: autoBreak }));
+                           }
+                         }}
+                         className="w-4 h-4 cursor-pointer"
+                       />
+                       <label htmlFor="manual-break" className="text-xs text-slate-600 cursor-pointer">
+                         Handmatig
+                       </label>
+                     </div>
+                   </div>
+                 </div>
 
                 {formData.start_time && formData.end_time && (
                   <div className="p-3 bg-blue-50 rounded-lg">
