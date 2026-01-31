@@ -156,9 +156,9 @@ export default function TimeTracking() {
     e.preventDefault();
     const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
     
-    // Auto-calculate break minutes based on BreakSchedule if not on special shift
+    // Use manual break if checked, otherwise use auto-calculated
     let breakMinutes = Number(formData.break_minutes) || 0;
-    if (!["Vrij", "Verlof", "Ziek"].includes(formData.shift_type)) {
+    if (!manualBreak && !["Vrij", "Verlof", "Ziek"].includes(formData.shift_type)) {
       const autoBreak = await getBreakMinutesForHours(hours);
       breakMinutes = autoBreak || breakMinutes;
     }
@@ -176,6 +176,17 @@ export default function TimeTracking() {
       updateMutation.mutate({ id: selectedEntry.id, data: submitData });
     } else {
       createMutation.mutate(submitData);
+    }
+  };
+
+  const handleTimeChange = async () => {
+    if (!["Vrij", "Verlof", "Ziek"].includes(formData.shift_type)) {
+      const hours = calculateHours(formData.start_time, formData.end_time, 0);
+      const auto = await getBreakMinutesForHours(hours);
+      setAutoBreak(auto);
+      if (!manualBreak) {
+        setFormData(prev => ({ ...prev, break_minutes: auto || 30 }));
+      }
     }
   };
 
