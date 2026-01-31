@@ -711,22 +711,24 @@ export default function MobileEntry() {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Start dienst</Label>
-                    <Input
-                      type="time"
-                      value={formData.start_time}
-                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                    />
-                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Start dienst</Label>
+                      <Input
+                        type="time"
+                        value={formData.start_time}
+                        onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                      />
+                    </div>
 
-                  <div className="space-y-1">
-                    <Label className="text-xs">Eind dienst</Label>
-                    <Input
-                      type="time"
-                      value={formData.end_time}
-                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                    />
+                    <div className="space-y-1">
+                      <Label className="text-xs">Eind dienst</Label>
+                      <Input
+                        type="time"
+                        value={formData.end_time}
+                        onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-1">
@@ -825,7 +827,7 @@ export default function MobileEntry() {
                     </Button>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <Label className="text-xs">Start Rit</Label>
                       <Input
