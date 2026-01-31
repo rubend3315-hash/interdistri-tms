@@ -534,7 +534,7 @@ export default function TimeTracking() {
                  )}
 
                  <div className="border-t pt-4">
-                 <h3 className="font-semibold text-slate-900 mb-4">Inhoudinnen & kosten</h3>
+                   <h3 className="font-semibold text-slate-900 mb-4">Inhoudingen & kosten</h3>
                  <div className="space-y-3">
                  <div className="space-y-2">
                  <Label>Voorgeschoten kosten</Label>
