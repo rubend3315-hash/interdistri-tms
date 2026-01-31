@@ -295,7 +295,15 @@ export default function TimeTracking() {
                                   )}
                                   {entry.start_time && entry.end_time && (
                                     <p className="text-xs text-slate-500">
-                                      {entry.start_time}-{entry.end_time}
+                                      {(() => {
+                                        const [depH, depM] = entry.start_time.split(':').map(Number);
+                                        const [endH, endM] = entry.end_time.split(':').map(Number);
+                                        let totalMinutes = (endH * 60 + endM) - (depH * 60 + depM);
+                                        const nextDay = totalMinutes < 0;
+                                        if (nextDay) totalMinutes += 24 * 60;
+                                        const arrivalDate = nextDay ? new Date(new Date(entry.date).getTime() + 24*60*60*1000) : new Date(entry.date);
+                                        return `${format(new Date(entry.date), "d MMM", { locale: nl })} ${entry.start_time} - ${format(arrivalDate, "d MMM", { locale: nl })} ${entry.end_time}`;
+                                      })()}
                                     </p>
                                   )}
                                 </div>
