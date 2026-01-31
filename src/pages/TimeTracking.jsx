@@ -50,9 +50,9 @@ export default function TimeTracking() {
     queryFn: () => base44.entities.TimeEntry.filter({ week_number: weekNumber, year })
   });
 
-  const { data: vehicles = [] } = useQuery({
-    queryKey: ['vehicles'],
-    queryFn: () => base44.entities.Vehicle.list()
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => base44.entities.Project.list()
   });
 
   const { data: customers = [] } = useQuery({
