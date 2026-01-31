@@ -185,7 +185,15 @@ export default function Trips() {
   const getCustomer = (id) => customers.find(c => c.id === id);
 
   const calculateSubsistenceAllowance = (departureTime, arrivalTime, tripDate) => {
-    if (!departureTime || !arrivalTime || !Array.isArray(caoRules) || caoRules.length === 0) return 0;
+    if (!departureTime || !arrivalTime) {
+      console.log('Missing departure or arrival time');
+      return 0;
+    }
+    
+    if (!Array.isArray(caoRules) || caoRules.length === 0) {
+      console.log('No CAO rules loaded');
+      return 0;
+    }
 
     // Calculate trip hours (not worked hours)
     const [depH, depM] = departureTime.split(':').map(Number);
@@ -194,8 +202,13 @@ export default function Trips() {
     if (totalMinutes < 0) totalMinutes += 24 * 60;
     const tripHours = totalMinutes / 60;
 
+    console.log('Trip hours calculated:', tripHours);
+
     // Only apply if longer than 4 hours
-    if (tripHours <= 4) return 0;
+    if (tripHours <= 4) {
+      console.log('Trip too short (<=4 hours)');
+      return 0;
+    }
 
     // Find applicable CAO rule for "Eendaags" or "ééndag"
     const applicableRule = caoRules.find(rule => {
@@ -210,11 +223,18 @@ export default function Trips() {
       return nameLower.includes('eendaags') || nameLower.includes('ééndag');
     });
 
-    if (!applicableRule) return 0;
+    console.log('CAO Rules available:', caoRules);
+    console.log('Applicable rule found:', applicableRule);
+
+    if (!applicableRule) {
+      console.log('No applicable rule found');
+      return 0;
+    }
 
     // Calculate based on calculation type
     if (applicableRule.calculation_type === 'Per uur (€/uur)') {
       const rate = applicableRule.value || 0;
+      console.log('Rate per hour:', rate, 'Total:', tripHours * rate);
       return tripHours * rate;
     } else if (applicableRule.calculation_type === 'Per dag (€/dag)' || applicableRule.calculation_type === 'Vast bedrag (€)') {
       return applicableRule.fixed_amount || 0;
