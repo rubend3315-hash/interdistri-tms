@@ -217,15 +217,16 @@ export default function TimeTracking() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const user = await base44.auth.me();
     const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
-    
+
     // Use manual break if checked, otherwise use auto-calculated
     let breakMinutes = Number(formData.break_minutes) || 0;
     if (!manualBreak && !["Vrij", "Verlof", "Ziek"].includes(formData.shift_type)) {
       const autoBreak = await getBreakMinutesForHours(hours);
       breakMinutes = autoBreak || breakMinutes;
     }
-    
+
     const submitData = {
       ...formData,
       week_number: weekNumber,
@@ -236,7 +237,9 @@ export default function TimeTracking() {
       weekend_hours: calculatedHours?.weekend_hours || 0,
       holiday_hours: calculatedHours?.holiday_hours || 0,
       break_minutes: breakMinutes,
-      status: 'Concept'
+      status: 'Goedgekeurd',
+      approved_by: user?.email,
+      approved_date: new Date().toISOString()
     };
 
     if (selectedEntry) {
