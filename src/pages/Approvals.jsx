@@ -571,11 +571,25 @@ export default function Approvals() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Pauze (minuten)</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Pauze (minuten)</Label>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="manual-break"
+                          checked={isManualBreak}
+                          onCheckedChange={setIsManualBreak}
+                        />
+                        <label htmlFor="manual-break" className="text-sm text-slate-600 cursor-pointer">
+                          Handmatig
+                        </label>
+                      </div>
+                    </div>
                     <Input
                       type="number"
                       value={editData.break_minutes}
                       onChange={(e) => setEditData({ ...editData, break_minutes: e.target.value })}
+                      disabled={!isManualBreak}
+                      className={!isManualBreak ? 'bg-slate-50 text-slate-500' : ''}
                     />
                   </div>
                   {editData.start_time && editData.end_time && (
