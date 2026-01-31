@@ -306,8 +306,7 @@ export default function MobileEntry() {
     submitAndReturn();
   };
 
-  const submitAndReturn = async () => {
-
+  const submitAndReturn = () => {
       // Check if any trip has damage
       const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
 
@@ -332,12 +331,12 @@ export default function MobileEntry() {
       if (isOnline) {
         createTimeEntryMutation.mutate(timeEntryData);
       } else {
-        await addToQueue('createTimeEntry', timeEntryData);
+        addToQueue('createTimeEntry', timeEntryData);
       }
 
       // Submit all trips
       if (trips.length > 0) {
-        trips.forEach(async trip => {
+        trips.forEach(trip => {
           const tripData = {
             employee_id: currentEmployee?.id,
             date: formData.date,
@@ -362,7 +361,7 @@ export default function MobileEntry() {
           if (isOnline) {
             createTripMutation.mutate(tripData);
           } else {
-            await addToQueue('createTrip', tripData);
+            addToQueue('createTrip', tripData);
           }
         });
       }
@@ -377,17 +376,22 @@ export default function MobileEntry() {
       // Reset form
       setTrips([]);
       setSignature(null);
+      setFormData({
+        date: format(new Date(), 'yyyy-MM-dd'),
+        start_time: "",
+        end_time: "",
+        break_minutes: 30,
+        notes: ""
+      });
 
       // Open Bumper link if damage occurred
       if (hasDamage) {
         window.open('https://www.mijn.bumper.nl', '_blank');
       }
 
-      // Go back to home after a short delay
-      setTimeout(() => {
-        setActiveTab("home");
-      }, 500);
-      };
+      // Go back to home
+      setActiveTab("home");
+  };
 
   const handleSaveDraft = async () => {
    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
