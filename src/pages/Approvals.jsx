@@ -226,7 +226,7 @@ export default function Approvals() {
   };
 
   const pendingEntries = sortByDateDesc(
-    Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Ingediend') : []
+    Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Ingediend' || e?.status === 'Concept') : []
   );
   const approvedEntries = sortByDateDesc(
     Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Goedgekeurd') : []
