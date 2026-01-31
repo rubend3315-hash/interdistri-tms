@@ -685,6 +685,7 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
+            </motion.div>
           </TabsContent>
 
           {/* Dienst Tab */}
@@ -1219,6 +1220,7 @@ export default function MobileEntry() {
                 </Button>
               </CardContent>
             </Card>
+            </motion.div>
           </TabsContent>
 
           {/* Declaratie Tab */}
@@ -1351,6 +1353,7 @@ export default function MobileEntry() {
                 </Button>
               </CardContent>
             </Card>
+            </motion.div>
           </TabsContent>
 
           {/* Overzicht Tab */}
@@ -1403,6 +1406,7 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
+            </motion.div>
           </TabsContent>
 
           {/* Links Tab */}
