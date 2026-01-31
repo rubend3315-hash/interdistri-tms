@@ -66,9 +66,9 @@ export default function MobileFrontpage({ onNavigate }) {
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <Card className="border-l-4 border-l-blue-600">
-        <CardContent className="p-3">
+        <CardContent className="p-2.5">
           <h2 className="font-bold text-base text-slate-900 mb-0.5">
             Wat wil je doen?
           </h2>
@@ -78,7 +78,7 @@ export default function MobileFrontpage({ onNavigate }) {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-1.5">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -89,7 +89,7 @@ export default function MobileFrontpage({ onNavigate }) {
             >
               <Card className="hover:shadow-lg transition-all duration-200 border hover:border-blue-300">
                 <CardContent className="p-0">
-                  <div className="flex items-center gap-3 p-3">
+                  <div className="flex items-center gap-3 p-2.5">
                     <div className={`w-11 h-11 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center flex-shrink-0`}>
                       <Icon className="w-5 h-5 text-white" />
                     </div>
