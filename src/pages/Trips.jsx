@@ -54,6 +54,14 @@ export default function Trips() {
     queryFn: () => base44.entities.Customer.list()
   });
 
+  const { data: caoRules = [] } = useQuery({
+    queryKey: ['caoRules'],
+    queryFn: () => base44.entities.CaoRule.filter({ 
+      category: 'Verblijfkosten',
+      status: 'Actief'
+    })
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Trip.create(data),
     onSuccess: () => {
@@ -144,6 +152,14 @@ export default function Trips() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Calculate subsistence allowance
+    const subsistenceAllowance = calculateSubsistenceAllowance(
+      formData.departure_time,
+      formData.arrival_time,
+      formData.date
+    );
+
     const submitData = {
       ...formData,
       planned_stops: formData.planned_stops ? Number(formData.planned_stops) : null,
@@ -153,7 +169,8 @@ export default function Trips() {
       total_km: formData.start_km && formData.end_km ? Number(formData.end_km) - Number(formData.start_km) : null,
       fuel_liters: formData.fuel_liters ? Number(formData.fuel_liters) : null,
       fuel_cost: formData.fuel_cost ? Number(formData.fuel_cost) : null,
-      cargo_weight: formData.cargo_weight ? Number(formData.cargo_weight) : null
+      cargo_weight: formData.cargo_weight ? Number(formData.cargo_weight) : null,
+      subsistence_allowance: subsistenceAllowance
     };
 
     if (selectedTrip) {
@@ -166,6 +183,39 @@ export default function Trips() {
   const getEmployee = (id) => employees.find(e => e.id === id);
   const getVehicle = (id) => vehicles.find(v => v.id === id);
   const getCustomer = (id) => customers.find(c => c.id === id);
+
+  const calculateSubsistenceAllowance = (departureTime, arrivalTime, tripDate) => {
+    if (!departureTime || !arrivalTime) return 0;
+
+    // Calculate hours worked
+    const [depH, depM] = departureTime.split(':').map(Number);
+    const [arrH, arrM] = arrivalTime.split(':').map(Number);
+    let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
+    if (totalMinutes < 0) totalMinutes += 24 * 60;
+    const hoursWorked = totalMinutes / 60;
+
+    // Find applicable CAO rule
+    const applicableRule = caoRules.find(rule => {
+      // Check if rule applies to this date
+      if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
+      if (rule.end_date && new Date(tripDate) > new Date(rule.end_date)) return false;
+      return true;
+    });
+
+    if (!applicableRule) return 0;
+
+    // Calculate allowance based on rule
+    if (applicableRule.calculation_type === 'Per dag (€/dag)') {
+      // If worked more than 10 hours, full day allowance
+      if (hoursWorked >= 10) {
+        return applicableRule.fixed_amount || 0;
+      }
+    } else if (applicableRule.calculation_type === 'Vast bedrag (€)') {
+      return applicableRule.fixed_amount || 0;
+    }
+
+    return 0;
+  };
 
   const filteredTrips = trips.filter(t => {
     const matchesDate = !filterDate || t.date === filterDate;
@@ -313,6 +363,12 @@ export default function Trips() {
                         <div className="text-center">
                           <p className="text-slate-500">Vertrek</p>
                           <p className="font-semibold text-slate-900">{trip.departure_time}</p>
+                        </div>
+                      )}
+                      {trip.subsistence_allowance > 0 && (
+                        <div className="text-center">
+                          <p className="text-slate-500">Verblijfskosten</p>
+                          <p className="font-semibold text-emerald-700">€{trip.subsistence_allowance.toFixed(2)}</p>
                         </div>
                       )}
                     </div>
@@ -547,6 +603,17 @@ export default function Trips() {
                 rows={2}
               />
             </div>
+
+            {formData.departure_time && formData.arrival_time && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <p className="text-sm font-medium text-emerald-900">
+                  <strong>Berekende verblijfskosten:</strong> €{calculateSubsistenceAllowance(formData.departure_time, formData.arrival_time, formData.date).toFixed(2)}
+                </p>
+                <p className="text-xs text-emerald-700 mt-1">
+                  Op basis van CAO-regels voor verblijfskosten
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
