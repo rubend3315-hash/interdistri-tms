@@ -613,7 +613,12 @@ export default function Approvals() {
                     </div>
                     <div>
                       <Label className="text-xs text-slate-500">Pauze</Label>
-                      <p className="font-medium">{selectedEntry.break_minutes || 0} min</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{selectedEntry.break_minutes || 0} min</p>
+                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                          Auto
+                        </span>
+                      </div>
                     </div>
                   </div>
                   {selectedEntry.notes && (
