@@ -974,6 +974,26 @@ export default function MobileEntry() {
                     </Select>
                   </div>
 
+                  <div className="space-y-1">
+                    <Label className="text-xs">Schade gereden?</Label>
+                    <Select 
+                      value={trip.damage_occurred || "Nee"} 
+                      onValueChange={(v) => {
+                        const newTrips = [...trips];
+                        newTrips[index] = { ...trip, damage_occurred: v };
+                        setTrips(newTrips);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Nee">Nee</SelectItem>
+                        <SelectItem value="Ja">Ja</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <Label className="text-xs">Begin km *</Label>
@@ -1144,6 +1164,7 @@ export default function MobileEntry() {
                 end_time: "",
                 departure_location: "Standplaats",
                 vehicle_id: "",
+                damage_occurred: "Nee",
                 start_km: "",
                 end_km: "",
                 fuel_liters: "",
