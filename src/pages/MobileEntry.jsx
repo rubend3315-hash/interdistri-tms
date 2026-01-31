@@ -1134,15 +1134,17 @@ export default function MobileEntry() {
               Regel Toevoegen
             </Button>
 
-            <Button 
-              variant="outline" 
-              className="w-full py-3 mt-4 border-blue-300"
-              onClick={handleSaveDraft}
-              disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Tussentijds Opslaan
-            </Button>
+            {trips.length > 0 && (
+              <Button 
+                variant="outline" 
+                className="w-full py-3 mt-4 border-emerald-300 bg-emerald-50"
+                onClick={handleSaveDraft}
+                disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Tussentijds Opslaan & Terug naar Home
+              </Button>
+            )}
               </TabsContent>
 
           {/* Inspectie Tab */}
