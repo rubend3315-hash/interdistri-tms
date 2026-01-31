@@ -787,20 +787,31 @@ export default function MobileEntry() {
                 )}
 
                 {signature && (
-                  <div className="p-2 bg-emerald-50 rounded-lg">
-                    <p className="text-xs text-emerald-700 mb-1">Handtekening toegevoegd ✓</p>
-                    <img src={signature} alt="Handtekening" className="h-12 border rounded" />
-                  </div>
-                )}
+                   <div className="p-2 bg-emerald-50 rounded-lg">
+                     <p className="text-xs text-emerald-700 mb-1">Handtekening toegevoegd ✓</p>
+                     <img src={signature} alt="Handtekening" className="h-12 border rounded" />
+                   </div>
+                 )}
 
-                <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  onClick={handleSubmitEntry}
-                  disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Met Handtekening Indienen
-                </Button>
+                 <div className="space-y-2">
+                   <Button 
+                     variant="outline"
+                     className="w-full py-3 border-blue-300"
+                     onClick={handleSaveDraft}
+                     disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                   >
+                     <Save className="w-4 h-4 mr-2" />
+                     Tussentijds Opslaan
+                   </Button>
+                   <Button 
+                     className="w-full bg-blue-600 hover:bg-blue-700"
+                     onClick={handleSubmitEntry}
+                     disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                   >
+                     <Send className="w-4 h-4 mr-2" />
+                     Met Handtekening Indienen
+                   </Button>
+                 </div>
                 </CardContent>
                 </Card>
                 </TabsContent>
