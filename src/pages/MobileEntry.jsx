@@ -713,68 +713,20 @@ export default function MobileEntry() {
                 <div className="space-y-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Start dienst</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="23"
-                        placeholder="UU"
-                        value={formData.start_time.split(':')[0] || ''}
-                        onChange={(e) => {
-                          const hour = e.target.value.padStart(2, '0');
-                          const minute = formData.start_time.split(':')[1] || '00';
-                          setFormData({ ...formData, start_time: `${hour}:${minute}` });
-                        }}
-                        className="flex-1"
-                      />
-                      <span className="flex items-center text-lg">:</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="59"
-                        placeholder="MM"
-                        value={formData.start_time.split(':')[1] || ''}
-                        onChange={(e) => {
-                          const hour = formData.start_time.split(':')[0] || '00';
-                          const minute = e.target.value.padStart(2, '0');
-                          setFormData({ ...formData, start_time: `${hour}:${minute}` });
-                        }}
-                        className="flex-1"
-                      />
-                    </div>
+                    <Input
+                      type="time"
+                      value={formData.start_time}
+                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                    />
                   </div>
 
                   <div className="space-y-1">
                     <Label className="text-xs">Eind dienst</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="23"
-                        placeholder="UU"
-                        value={formData.end_time.split(':')[0] || ''}
-                        onChange={(e) => {
-                          const hour = e.target.value.padStart(2, '0');
-                          const minute = formData.end_time.split(':')[1] || '00';
-                          setFormData({ ...formData, end_time: `${hour}:${minute}` });
-                        }}
-                        className="flex-1"
-                      />
-                      <span className="flex items-center text-lg">:</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="59"
-                        placeholder="MM"
-                        value={formData.end_time.split(':')[1] || ''}
-                        onChange={(e) => {
-                          const hour = formData.end_time.split(':')[0] || '00';
-                          const minute = e.target.value.padStart(2, '0');
-                          setFormData({ ...formData, end_time: `${hour}:${minute}` });
-                        }}
-                        className="flex-1"
-                      />
-                    </div>
+                    <Input
+                      type="time"
+                      value={formData.end_time}
+                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                    />
                   </div>
 
                   <div className="space-y-1">
@@ -876,76 +828,28 @@ export default function MobileEntry() {
                   <div className="space-y-3">
                     <div className="space-y-1">
                       <Label className="text-xs">Start Rit</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="23"
-                          placeholder="UU"
-                          value={trip.start_time.split(':')[0] || ''}
-                          onChange={(e) => {
-                            const hour = e.target.value.padStart(2, '0');
-                            const minute = trip.start_time.split(':')[1] || '00';
-                            const newTrips = [...trips];
-                            newTrips[index] = { ...trip, start_time: `${hour}:${minute}` };
-                            setTrips(newTrips);
-                          }}
-                          className="flex-1"
-                        />
-                        <span className="flex items-center text-lg">:</span>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="59"
-                          placeholder="MM"
-                          value={trip.start_time.split(':')[1] || ''}
-                          onChange={(e) => {
-                            const hour = trip.start_time.split(':')[0] || '00';
-                            const minute = e.target.value.padStart(2, '0');
-                            const newTrips = [...trips];
-                            newTrips[index] = { ...trip, start_time: `${hour}:${minute}` };
-                            setTrips(newTrips);
-                          }}
-                          className="flex-1"
-                        />
-                      </div>
+                      <Input
+                        type="time"
+                        value={trip.start_time}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, start_time: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                      />
                     </div>
 
                     <div className="space-y-1">
                       <Label className="text-xs">Einde Rit</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="23"
-                          placeholder="UU"
-                          value={trip.end_time.split(':')[0] || ''}
-                          onChange={(e) => {
-                            const hour = e.target.value.padStart(2, '0');
-                            const minute = trip.end_time.split(':')[1] || '00';
-                            const newTrips = [...trips];
-                            newTrips[index] = { ...trip, end_time: `${hour}:${minute}` };
-                            setTrips(newTrips);
-                          }}
-                          className="flex-1"
-                        />
-                        <span className="flex items-center text-lg">:</span>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="59"
-                          placeholder="MM"
-                          value={trip.end_time.split(':')[1] || ''}
-                          onChange={(e) => {
-                            const hour = trip.end_time.split(':')[0] || '00';
-                            const minute = e.target.value.padStart(2, '0');
-                            const newTrips = [...trips];
-                            newTrips[index] = { ...trip, end_time: `${hour}:${minute}` };
-                            setTrips(newTrips);
-                          }}
-                          className="flex-1"
-                        />
-                      </div>
+                      <Input
+                        type="time"
+                        value={trip.end_time}
+                        onChange={(e) => {
+                          const newTrips = [...trips];
+                          newTrips[index] = { ...trip, end_time: e.target.value };
+                          setTrips(newTrips);
+                        }}
+                      />
                     </div>
                   </div>
 
