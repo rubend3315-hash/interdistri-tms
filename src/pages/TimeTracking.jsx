@@ -148,6 +148,9 @@ export default function TimeTracking() {
         project_id: existing.project_id || "",
         customer_id: existing.customer_id || "",
         travel_allowance_multiplier: existing.travel_allowance_multiplier || 0,
+        advanced_costs: existing.advanced_costs || 0,
+        meals: existing.meals || 0,
+        wkr: existing.wkr || 0,
         notes: existing.notes || ""
       });
       setManualBreak(false);
