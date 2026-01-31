@@ -99,7 +99,7 @@ export default function TimeTracking() {
   const [showHourDetails, setShowHourDetails] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
 
-  // Auto-calculate break whenever times or shift type change
+  // Auto-calculate break and hours whenever times or shift type change
   useEffect(() => {
     const calculateAutoBreak = async () => {
       if (!["Vrij", "Verlof", "Ziek"].includes(formData.shift_type) && formData.start_time && formData.end_time) {
@@ -115,6 +115,26 @@ export default function TimeTracking() {
     };
     calculateAutoBreak();
   }, [formData.start_time, formData.end_time, formData.shift_type, manualBreak]);
+
+  // Auto-calculate hour types
+  useEffect(() => {
+    const calculateHourTypes = async () => {
+      if (formData.start_time && formData.end_time && formData.date) {
+        const hours = await calculateAllHours(
+          formData.start_time,
+          formData.end_time,
+          formData.break_minutes || 0,
+          formData.date,
+          formData.shift_type
+        );
+        setCalculatedHours(hours);
+        
+        const errors = validateHourCalculations(hours);
+        setValidationErrors(errors);
+      }
+    };
+    calculateHourTypes();
+  }, [formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.shift_type]);
 
   const activeEmployees = employees.filter(e => 
     e.status === 'Actief' && 
