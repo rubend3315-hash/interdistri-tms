@@ -375,49 +375,54 @@ export default function MobileEntry() {
       }
     };
 
-  const handleSaveDraft = () => {
-    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
-    
-    // Save time entry as draft
-    createTimeEntryMutation.mutate({
-      employee_id: currentEmployee?.id,
-      date: formData.date,
-      week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
-      year: getYear(new Date(formData.date)),
-      start_time: formData.start_time,
-      end_time: formData.end_time,
-      break_minutes: Number(formData.break_minutes) || 0,
-      total_hours: hours,
-      shift_type: "Dag",
-      notes: formData.notes,
-      status: "Concept"
-    });
+  const handleSaveDraft = async () => {
+   const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
 
-    // Save all trips as drafts
-    if (trips.length > 0) {
-      trips.forEach(trip => {
-        createTripMutation.mutate({
-          employee_id: currentEmployee?.id,
-          date: formData.date,
-          vehicle_id: trip.vehicle_id,
-          customer_id: trip.customer_id,
-          route_name: trip.route_name,
-          planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
-          start_km: trip.start_km ? Number(trip.start_km) : null,
-          end_km: trip.end_km ? Number(trip.end_km) : null,
-          total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
-          fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
-          adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
-          fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
-          charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
-          departure_time: trip.start_time,
-          arrival_time: trip.end_time,
-          departure_location: trip.departure_location,
-          notes: trip.notes,
-          status: "Gepland"
-        });
-      });
-    }
+   // Save time entry as draft
+   createTimeEntryMutation.mutate({
+     employee_id: currentEmployee?.id,
+     date: formData.date,
+     week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
+     year: getYear(new Date(formData.date)),
+     start_time: formData.start_time,
+     end_time: formData.end_time,
+     break_minutes: Number(formData.break_minutes) || 0,
+     total_hours: hours,
+     shift_type: "Dag",
+     notes: formData.notes,
+     status: "Concept"
+   });
+
+   // Save all trips as drafts
+   if (trips.length > 0) {
+     trips.forEach(trip => {
+       createTripMutation.mutate({
+         employee_id: currentEmployee?.id,
+         date: formData.date,
+         vehicle_id: trip.vehicle_id,
+         customer_id: trip.customer_id,
+         route_name: trip.route_name,
+         planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+         start_km: trip.start_km ? Number(trip.start_km) : null,
+         end_km: trip.end_km ? Number(trip.end_km) : null,
+         total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+         fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
+         adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
+         fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
+         charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
+         departure_time: trip.start_time,
+         arrival_time: trip.end_time,
+         departure_location: trip.departure_location,
+         notes: trip.notes,
+         status: "Gepland"
+       });
+     });
+   }
+
+   // Go back to home after saving
+   setTimeout(() => {
+     setActiveTab("home");
+   }, 300);
   };
 
   const calculateHours = (start, end, breakMinutes) => {
