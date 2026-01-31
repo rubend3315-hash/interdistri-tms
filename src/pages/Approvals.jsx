@@ -70,6 +70,14 @@ export default function Approvals() {
     }
   });
 
+  const { data: caoRules = [] } = useQuery({
+    queryKey: ['caoRules'],
+    queryFn: () => base44.entities.CaoRule.filter({ 
+      category: 'Verblijfkosten',
+      status: 'Actief'
+    })
+  });
+
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
@@ -188,6 +196,50 @@ export default function Approvals() {
     return Math.round(totalMinutes / 60 * 100) / 100;
   };
 
+  const calculateSubsistenceAllowance = (departureTime, arrivalTime, tripDate) => {
+    if (!departureTime || !arrivalTime) return { amount: 0, type: null };
+
+    const [depH, depM] = departureTime.split(':').map(Number);
+    const [arrH, arrM] = arrivalTime.split(':').map(Number);
+    let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
+    if (totalMinutes < 0) totalMinutes += 24 * 60;
+    const hoursWorked = totalMinutes / 60;
+
+    const applicableRules = caoRules.filter(rule => {
+      if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
+      if (rule.end_date && new Date(tripDate) > new Date(rule.end_date)) return false;
+      return true;
+    });
+
+    // Eendaags: > 4 uur
+    if (hoursWorked > 4) {
+      const eendaagsRule = applicableRules.find(rule => 
+        rule.name && rule.name.toLowerCase().includes('eendaags')
+      );
+      if (eendaagsRule) {
+        return { 
+          amount: eendaagsRule.fixed_amount || 0, 
+          type: 'Eendaags',
+          hours: hoursWorked.toFixed(2)
+        };
+      }
+    }
+
+    // Meerdaags: >= 10 uur
+    const meerdaagsRule = applicableRules.find(rule => 
+      rule.name && rule.name.toLowerCase().includes('meerdaags')
+    );
+    if (meerdaagsRule && hoursWorked >= 10) {
+      return { 
+        amount: meerdaagsRule.fixed_amount || 0, 
+        type: 'Meerdaags',
+        hours: hoursWorked.toFixed(2)
+      };
+    }
+
+    return { amount: 0, type: null, hours: hoursWorked.toFixed(2) };
+  };
+
   const getEmployee = (id) => {
     if (!id || !Array.isArray(employees)) return null;
     return employees.find(e => e?.id === id);
@@ -266,6 +318,18 @@ export default function Approvals() {
                       Reiskosten: {entry.travel_allowance_multiplier}x
                     </div>
                   )}
+                  {entry.start_time && entry.end_time && (() => {
+                    const subsistence = calculateSubsistenceAllowance(entry.start_time, entry.end_time, entry.date);
+                    if (subsistence.amount > 0) {
+                      return (
+                        <div className="flex items-center gap-2 text-sm text-emerald-700 font-medium">
+                          <FileText className="w-4 h-4" />
+                          Verblijfskosten ({subsistence.type}): €{subsistence.amount.toFixed(2)}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
 
                 {entry.notes && (
@@ -632,6 +696,25 @@ export default function Approvals() {
                       />
                     </div>
                   )}
+                  {selectedEntry.start_time && selectedEntry.end_time && (() => {
+                    const subsistence = calculateSubsistenceAllowance(selectedEntry.start_time, selectedEntry.end_time, selectedEntry.date);
+                    if (subsistence.amount > 0) {
+                      return (
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                          <Label className="text-xs text-slate-500">Verblijfskosten ({subsistence.type})</Label>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-sm text-emerald-900">
+                              Gewerkt: {subsistence.hours} uur
+                            </span>
+                            <span className="text-lg font-bold text-emerald-700">
+                              €{subsistence.amount.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                   {selectedEntry.rejection_reason && (
                     <div className="p-3 bg-red-50 rounded-lg">
                       <Label className="text-xs text-slate-500">Reden afkeuring</Label>
