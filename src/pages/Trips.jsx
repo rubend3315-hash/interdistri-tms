@@ -198,6 +198,7 @@ export default function Trips() {
     if (tripHours <= 4) return 0;
 
     const depMinutes = depH * 60 + depM;
+    const arrMinutes = arrH * 60 + arrM;
     const departsBefore14 = depMinutes < 14 * 60;
     
     const applicableRules = caoRules.filter(rule => {
