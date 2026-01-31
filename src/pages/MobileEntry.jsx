@@ -506,7 +506,7 @@ export default function MobileEntry() {
           {/* Home/Frontpage Tab */}
           <TabsContent value="home">
             {/* Welcome Message */}
-            <div className="bg-white rounded-xl p-4 text-slate-900 mb-4">
+            <div className="bg-white rounded-xl p-4 text-slate-900 mb-4 border-2 border-blue-200">
               <h2 className="font-bold text-lg mb-2">
                 Welkom in de Interdistri TMS app
               </h2>
