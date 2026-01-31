@@ -421,8 +421,25 @@ export default function Trips() {
                       {trip.departure_time && trip.arrival_time && (
                         <>
                           <div className="text-center">
-                            <p className="text-slate-500">Begin - Eind</p>
-                            <p className="font-semibold text-slate-900">{trip.departure_time} - {trip.arrival_time}</p>
+                            <p className="text-slate-500">Vertrek</p>
+                            <p className="font-semibold text-slate-900">
+                              {trip.date && format(new Date(trip.date), "d MMM HH:mm", { locale: nl })}
+                              {trip.departure_time && ` ${trip.departure_time}`}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-slate-500">Aankomst</p>
+                            <p className="font-semibold text-slate-900">
+                              {(() => {
+                                const [depH, depM] = trip.departure_time.split(':').map(Number);
+                                const [arrH, arrM] = trip.arrival_time.split(':').map(Number);
+                                let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
+                                const nextDay = totalMinutes < 0;
+                                if (nextDay) totalMinutes += 24 * 60;
+                                const arrivalDate = nextDay ? new Date(new Date(trip.date).getTime() + 24*60*60*1000) : new Date(trip.date);
+                                return format(arrivalDate, "d MMM HH:mm", { locale: nl }) + ` ${trip.arrival_time}`;
+                              })()}
+                            </p>
                           </div>
                           <div className="text-center">
                             <p className="text-slate-500">Uren</p>
