@@ -89,6 +89,9 @@ export default function TimeTracking() {
     notes: ""
   });
 
+  const [autoBreak, setAutoBreak] = useState(null);
+  const [manualBreak, setManualBreak] = useState(false);
+
   const activeEmployees = employees.filter(e => 
     e.status === 'Actief' && 
     (filterDepartment === 'all' || e.department === filterDepartment)
