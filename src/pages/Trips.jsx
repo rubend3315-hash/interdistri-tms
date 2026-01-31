@@ -29,7 +29,7 @@ const statuses = ["Gepland", "Onderweg", "Voltooid", "Geannuleerd"];
 
 export default function Trips() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterDate, setFilterDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [filterDate, setFilterDate] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const queryClient = useQueryClient();
