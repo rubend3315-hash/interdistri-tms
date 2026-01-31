@@ -198,13 +198,10 @@ export default function Trips() {
     // Only apply if longer than 4 hours
     if (tripHours <= 4) return 0;
 
-    // Check if departure is before 14:00
     const depMinutes = depH * 60 + depM;
     const departsBefore14 = depMinutes < 14 * 60;
     
-    if (!departsBefore14) return 0; // No subsistence if departure after 14:00
-
-    // Find applicable CAO rules
+    // Find all applicable CAO rules
     const applicableRules = caoRules.filter(rule => {
       if (!rule || rule.status !== 'Actief') return false;
       if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
@@ -216,44 +213,59 @@ export default function Trips() {
 
     if (applicableRules.length === 0) return 0;
 
-    // Separate basis and time-specific rules
-    const basisRule = applicableRules.find(r => !r.start_time && !r.end_time);
-    const timeRules = applicableRules.filter(r => r.start_time && r.end_time);
-
-    if (!basisRule) return 0;
-
-    const basisRate = basisRule.value || 0;
-    const arrMinutes = arrH * 60 + arrM;
     let totalAllowance = 0;
+    const arrMinutes = arrH * 60 + arrM;
+    const totalMinutes = arrMinutes - depMinutes;
+    const totalHours = totalMinutes / 60;
 
-    // First, apply basis rate to the entire trip
-    let remaining = arrMinutes - depMinutes;
+    // Check for basis rules (verblijfskosten voor vertrek voor 14:00)
+    if (departsBefore14) {
+      const basisRule = applicableRules.find(r => !r.start_time && !r.end_time);
+      
+      if (basisRule) {
+        const basisRate = basisRule.value || 0;
 
-    // Then, subtract time-specific rule periods and apply their rates instead
-    for (const rule of timeRules) {
-      const [startH, startM] = rule.start_time.split(':').map(Number);
-      const [endH, endM] = rule.end_time.split(':').map(Number);
-      const ruleStartMinutes = startH * 60 + startM;
-      const ruleEndMinutes = endH * 60 + endM;
+        // Apply basis rate to entire trip duration
+        totalAllowance += totalHours * basisRate;
 
-      // Calculate overlap between trip and rule time window
-      const overlapStart = Math.max(depMinutes, ruleStartMinutes);
-      const overlapEnd = Math.min(arrMinutes, ruleEndMinutes);
+        // Then, subtract time-specific rule periods and apply their rates instead
+        const timeRules = applicableRules.filter(r => r.start_time && r.end_time);
+        for (const rule of timeRules) {
+          const [startH, startM] = rule.start_time.split(':').map(Number);
+          const [endH, endM] = rule.end_time.split(':').map(Number);
+          const ruleStartMinutes = startH * 60 + startM;
+          const ruleEndMinutes = endH * 60 + endM;
 
-      if (overlapEnd > overlapStart) {
-        const overlapMinutes = overlapEnd - overlapStart;
-        const overlapHours = overlapMinutes / 60;
-        const ruleRate = rule.value || basisRate;
+          // Calculate overlap between trip and rule time window
+          const overlapStart = Math.max(depMinutes, ruleStartMinutes);
+          const overlapEnd = Math.min(arrMinutes, ruleEndMinutes);
 
-        // Subtract basis from this period and add the rule rate
-        totalAllowance -= overlapHours * basisRate; // Remove basis
-        totalAllowance += overlapHours * ruleRate;  // Add rule rate
+          if (overlapEnd > overlapStart) {
+            const overlapMinutes = overlapEnd - overlapStart;
+            const overlapHours = overlapMinutes / 60;
+            const ruleRate = rule.value || basisRate;
+
+            // Subtract basis from this period and add the rule rate
+            totalAllowance -= overlapHours * basisRate;
+            totalAllowance += overlapHours * ruleRate;
+          }
+        }
       }
     }
 
-    // Apply basis rate to entire trip duration
-    const totalHours = (arrMinutes - depMinutes) / 60;
-    totalAllowance += totalHours * basisRate;
+    // Check for extra toeslag rule (Article 40 lid 3.a): min 12 hours absence
+    if (totalHours >= 12) {
+      const toeslagRule = applicableRules.find(r => {
+        const nameLower = (r.name || '').toLowerCase();
+        const descLower = (r.description || '').toLowerCase();
+        return (nameLower.includes('toeslag') || descLower.includes('toeslag')) && 
+               (descLower.includes('12 uur') || descLower.includes('12uur'));
+      });
+
+      if (toeslagRule) {
+        totalAllowance += toeslagRule.value || toeslagRule.fixed_amount || 0;
+      }
+    }
 
     return totalAllowance;
   };
