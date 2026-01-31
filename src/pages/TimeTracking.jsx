@@ -492,13 +492,80 @@ export default function TimeTracking() {
                    </div>
                  </div>
 
-                {formData.start_time && formData.end_time && (
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-700">
-                      <strong>Berekende uren:</strong>{' '}
-                      {calculateHours(formData.start_time, formData.end_time, formData.break_minutes)} uur
-                    </p>
-                  </div>
+                {calculatedHours && (
+                  <>
+                    {validationErrors.length > 0 && (
+                      <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                        {validationErrors.map((error, idx) => (
+                          <p key={idx} className="text-sm text-red-700">⚠ {error}</p>
+                        ))}
+                      </div>
+                    )}
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setShowHourDetails(!showHourDetails)}
+                        className="text-sm text-blue-700 font-medium hover:underline"
+                      >
+                        <strong>Berekende uren:</strong> {calculatedHours.total_hours} uur
+                        {showHourDetails ? ' ▾' : ' ▸'}
+                      </button>
+                      {showHourDetails && (
+                        <div className="mt-3 space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Totaal werkuren:</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={calculatedHours.total_hours}
+                              onChange={(e) => setCalculatedHours({...calculatedHours, total_hours: Number(e.target.value)})}
+                              className="w-20 px-2 py-1 border rounded text-right"
+                            />
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Overuren:</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={calculatedHours.overtime_hours}
+                              onChange={(e) => setCalculatedHours({...calculatedHours, overtime_hours: Number(e.target.value)})}
+                              className="w-20 px-2 py-1 border rounded text-right"
+                            />
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Nachturen:</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={calculatedHours.night_hours}
+                              onChange={(e) => setCalculatedHours({...calculatedHours, night_hours: Number(e.target.value)})}
+                              className="w-20 px-2 py-1 border rounded text-right"
+                            />
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Weekenduren:</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={calculatedHours.weekend_hours}
+                              onChange={(e) => setCalculatedHours({...calculatedHours, weekend_hours: Number(e.target.value)})}
+                              className="w-20 px-2 py-1 border rounded text-right"
+                            />
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Feestdaguren:</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={calculatedHours.holiday_hours}
+                              onChange={(e) => setCalculatedHours({...calculatedHours, holiday_hours: Number(e.target.value)})}
+                              className="w-20 px-2 py-1 border rounded text-right"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
