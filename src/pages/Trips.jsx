@@ -194,27 +194,30 @@ export default function Trips() {
     if (totalMinutes < 0) totalMinutes += 24 * 60;
     const hoursWorked = totalMinutes / 60;
 
+    // Only apply if longer than 4 hours
+    if (hoursWorked <= 4) return 0;
+
     // Find applicable CAO rule for "Eendaags" (single day)
     const applicableRule = caoRules.find(rule => {
       // Check if rule applies to this date
       if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
       if (rule.end_date && new Date(tripDate) > new Date(rule.end_date)) return false;
       
-      // Look for "Eendaags" rule
-      if (rule.name && rule.name.toLowerCase().includes('eendaags')) return true;
+      // Look for rules with "eendaags" or "ééndag" in the name
+      const nameLower = (rule.name || '').toLowerCase();
+      if (nameLower.includes('eendaags') || nameLower.includes('ééndag')) return true;
       
       return false;
     });
 
     if (!applicableRule) return 0;
 
-    // Eendaags: longer than 4 hours away from base location
-    if (hoursWorked > 4) {
-      if (applicableRule.calculation_type === 'Per uur (€/uur)') {
-        return hoursWorked * (applicableRule.value || 0);
-      } else if (applicableRule.calculation_type === 'Per dag (€/dag)' || applicableRule.calculation_type === 'Vast bedrag (€)') {
-        return applicableRule.fixed_amount || 0;
-      }
+    // Calculate based on calculation type
+    if (applicableRule.calculation_type === 'Per uur (€/uur)') {
+      const rate = applicableRule.value || applicableRule.fixed_amount || 0;
+      return hoursWorked * rate;
+    } else if (applicableRule.calculation_type === 'Per dag (€/dag)' || applicableRule.calculation_type === 'Vast bedrag (€)') {
+      return applicableRule.fixed_amount || applicableRule.value || 0;
     }
 
     return 0;
