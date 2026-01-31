@@ -217,7 +217,11 @@ export default function TimeTracking() {
       ...formData,
       week_number: weekNumber,
       year,
-      total_hours: hours,
+      total_hours: calculatedHours?.total_hours || hours,
+      overtime_hours: calculatedHours?.overtime_hours || 0,
+      night_hours: calculatedHours?.night_hours || 0,
+      weekend_hours: calculatedHours?.weekend_hours || 0,
+      holiday_hours: calculatedHours?.holiday_hours || 0,
       break_minutes: breakMinutes,
       status: 'Concept'
     };
