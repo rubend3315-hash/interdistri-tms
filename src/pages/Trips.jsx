@@ -453,7 +453,7 @@ export default function Trips() {
                                 const nextDay = totalMinutes < 0;
                                 if (nextDay) totalMinutes += 24 * 60;
                                 const arrivalDate = nextDay ? new Date(new Date(trip.date).getTime() + 24*60*60*1000) : new Date(trip.date);
-                                return format(arrivalDate, "d MMM HH:mm", { locale: nl }) + ` ${trip.arrival_time}`;
+                                return format(arrivalDate, "d MMM", { locale: nl }) + ` ${trip.arrival_time}`;
                               })()}
                             </p>
                           </div>
