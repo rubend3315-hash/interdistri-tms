@@ -188,20 +188,18 @@ export default function Trips() {
     if (!departureTime || !arrivalTime) return 0;
     if (!Array.isArray(caoRules) || caoRules.length === 0) return 0;
 
-    // Calculate trip hours
     const [depH, depM] = departureTime.split(':').map(Number);
     const [arrH, arrM] = arrivalTime.split(':').map(Number);
     let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
-    if (totalMinutes < 0) totalMinutes += 24 * 60;
+    const spansNextDay = totalMinutes < 0;
+    if (spansNextDay) totalMinutes += 24 * 60;
     const tripHours = totalMinutes / 60;
 
-    // Only apply if longer than 4 hours
     if (tripHours <= 4) return 0;
 
     const depMinutes = depH * 60 + depM;
     const departsBefore14 = depMinutes < 14 * 60;
     
-    // Find all applicable CAO rules
     const applicableRules = caoRules.filter(rule => {
       if (!rule || rule.status !== 'Actief') return false;
       if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
@@ -214,46 +212,63 @@ export default function Trips() {
     if (applicableRules.length === 0) return 0;
 
     let totalAllowance = 0;
-    const arrMinutes = arrH * 60 + arrM;
-    const totalHours = tripHours;
 
-    // Check for basis rules (verblijfskosten voor vertrek voor 14:00)
     if (departsBefore14) {
       const basisRule = applicableRules.find(r => !r.start_time && !r.end_time);
       
       if (basisRule) {
         const basisRate = basisRule.value || 0;
+        
+        // Apply basis rate to entire trip, then override with time-specific rates
+        totalAllowance = tripHours * basisRate;
 
-        // Apply basis rate to entire trip duration
-        totalAllowance += totalHours * basisRate;
-
-        // Then, subtract time-specific rule periods and apply their rates instead
+        // Process time-specific rules (e.g., 18:00-24:00)
         const timeRules = applicableRules.filter(r => r.start_time && r.end_time);
         for (const rule of timeRules) {
           const [startH, startM] = rule.start_time.split(':').map(Number);
           const [endH, endM] = rule.end_time.split(':').map(Number);
           const ruleStartMinutes = startH * 60 + startM;
           const ruleEndMinutes = endH * 60 + endM;
+          const ruleRate = rule.value || 0;
 
-          // Calculate overlap between trip and rule time window
-          const overlapStart = Math.max(depMinutes, ruleStartMinutes);
-          const overlapEnd = Math.min(arrMinutes, ruleEndMinutes);
+          let ruleHours = 0;
 
-          if (overlapEnd > overlapStart) {
-            const overlapMinutes = overlapEnd - overlapStart;
-            const overlapHours = overlapMinutes / 60;
-            const ruleRate = rule.value || basisRate;
-
-            // Subtract basis from this period and add the rule rate
-            totalAllowance -= overlapHours * basisRate;
-            totalAllowance += overlapHours * ruleRate;
+          if (spansNextDay) {
+            // Trip goes from today to tomorrow
+            // First segment: from departure to midnight (24:00)
+            if (depMinutes < 24 * 60) {
+              const overlapStart = Math.max(depMinutes, ruleStartMinutes);
+              const overlapEnd = Math.min(24 * 60, ruleEndMinutes);
+              if (overlapEnd > overlapStart) {
+                ruleHours += (overlapEnd - overlapStart) / 60;
+              }
+            }
+            // Second segment: from midnight to arrival (next day)
+            if (arrMinutes > 0) {
+              const overlapStart = Math.max(0, ruleStartMinutes);
+              const overlapEnd = Math.min(arrMinutes, ruleEndMinutes);
+              if (overlapEnd > overlapStart) {
+                ruleHours += (overlapEnd - overlapStart) / 60;
+              }
+            }
+          } else {
+            // Trip stays within same day
+            const overlapStart = Math.max(depMinutes, ruleStartMinutes);
+            const overlapEnd = Math.min(depMinutes + totalMinutes, ruleEndMinutes);
+            if (overlapEnd > overlapStart) {
+              ruleHours = (overlapEnd - overlapStart) / 60;
+            }
           }
+
+          // Subtract basis rate for this period and add the rule rate
+          totalAllowance -= ruleHours * basisRate;
+          totalAllowance += ruleHours * ruleRate;
         }
       }
     }
 
-    // Check for extra toeslag rule (Article 40 lid 3.a): min 12 hours absence
-    if (totalHours >= 12) {
+    // Check for extra toeslag (12+ hours)
+    if (tripHours >= 12) {
       const toeslagRule = applicableRules.find(r => {
         const nameLower = (r.name || '').toLowerCase();
         const descLower = (r.description || '').toLowerCase();

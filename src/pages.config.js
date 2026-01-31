@@ -65,9 +65,9 @@ import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
 import ShiftTime from './pages/ShiftTime';
 import TimeTracking from './pages/TimeTracking';
-import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
+import Trips from './pages/Trips';
 import __Layout from './Layout.jsx';
 
 
@@ -90,9 +90,9 @@ export const PAGES = {
     "SalaryTables": SalaryTables,
     "ShiftTime": ShiftTime,
     "TimeTracking": TimeTracking,
-    "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
+    "Trips": Trips,
 }
 
 export const pagesConfig = {
