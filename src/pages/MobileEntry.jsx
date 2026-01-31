@@ -501,20 +501,20 @@ export default function MobileEntry() {
       </div>
       
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 pb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-2.5 pb-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setMenuOpen(true)}
-              className="p-2 hover:bg-white/20 rounded-lg"
+              className="p-1.5 hover:bg-white/20 rounded-lg"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
             </button>
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-              <Truck className="w-6 h-6" />
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+              <Truck className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-bold">Interdistri TMS</h1>
+              <h1 className="font-bold text-sm">Interdistri TMS</h1>
               <p className="text-xs text-blue-100">Mobiele App</p>
             </div>
           </div>
@@ -522,9 +522,9 @@ export default function MobileEntry() {
             variant="ghost" 
             size="icon"
             onClick={handleLogout}
-            className="text-white hover:bg-white/20"
+            className="text-white hover:bg-white/20 h-8 w-8"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
           </Button>
         </div>
 
