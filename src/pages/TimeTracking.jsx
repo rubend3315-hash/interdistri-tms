@@ -410,11 +410,7 @@ export default function TimeTracking() {
                      <Input
                        type="time"
                        value={formData.start_time}
-                       onChange={(e) => {
-                         const newStart = e.target.value;
-                         setFormData({ ...formData, start_time: newStart });
-                         handleTimeChange(newStart, formData.end_time, formData.shift_type);
-                       }}
+                       onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
                      />
                    </div>
                    <div className="space-y-2">
