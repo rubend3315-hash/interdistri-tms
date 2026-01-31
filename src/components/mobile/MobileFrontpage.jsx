@@ -66,19 +66,19 @@ export default function MobileFrontpage({ onNavigate }) {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <Card className="border-l-4 border-l-blue-600">
-        <CardContent className="p-4">
-          <h2 className="font-bold text-lg text-slate-900 mb-1">
+        <CardContent className="p-3">
+          <h2 className="font-bold text-base text-slate-900 mb-0.5">
             Wat wil je doen?
           </h2>
-          <p className="text-sm text-slate-600">
+          <p className="text-xs text-slate-600">
             Kies een optie om direct aan de slag te gaan
           </p>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -87,21 +87,21 @@ export default function MobileFrontpage({ onNavigate }) {
               onClick={() => onNavigate(item.id)}
               className="text-left"
             >
-              <Card className="hover:shadow-lg transition-all duration-200 border-2 hover:border-blue-300">
+              <Card className="hover:shadow-lg transition-all duration-200 border hover:border-blue-300">
                 <CardContent className="p-0">
-                  <div className="flex items-center gap-4 p-4">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center flex-shrink-0 shadow-md`}>
-                      <Icon className="w-7 h-7 text-white" />
+                  <div className="flex items-center gap-3 p-3">
+                    <div className={`w-11 h-11 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center flex-shrink-0`}>
+                      <Icon className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-slate-900 mb-0.5">
+                      <h3 className="font-semibold text-sm text-slate-900">
                         {item.title}
                       </h3>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-xs text-slate-600">
                         {item.description}
                       </p>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <ArrowRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
