@@ -237,7 +237,7 @@ export default function TimeTracking() {
 
   const getEmployeeWeekTotal = (employeeId) => {
     return timeEntries
-      .filter(e => e.employee_id === employeeId && (e.status === 'Goedgekeurd' || e.status === 'Ingediend'))
+      .filter(e => e.employee_id === employeeId)
       .reduce((sum, e) => sum + (e.total_hours || 0), 0);
   };
 
