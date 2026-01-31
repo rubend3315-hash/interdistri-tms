@@ -185,66 +185,70 @@ export default function Trips() {
   const getCustomer = (id) => customers.find(c => c.id === id);
 
   const calculateSubsistenceAllowance = (departureTime, arrivalTime, tripDate) => {
-    if (!departureTime || !arrivalTime) {
-      console.log('Missing departure or arrival time');
-      return 0;
-    }
-    
-    if (!Array.isArray(caoRules) || caoRules.length === 0) {
-      console.log('No CAO rules loaded');
-      return 0;
-    }
+    if (!departureTime || !arrivalTime) return 0;
+    if (!Array.isArray(caoRules) || caoRules.length === 0) return 0;
 
-    // Calculate trip hours (not worked hours)
+    // Calculate trip hours
     const [depH, depM] = departureTime.split(':').map(Number);
     const [arrH, arrM] = arrivalTime.split(':').map(Number);
     let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
     if (totalMinutes < 0) totalMinutes += 24 * 60;
     const tripHours = totalMinutes / 60;
 
-    console.log('Trip hours calculated:', tripHours);
-
     // Only apply if longer than 4 hours
-    if (tripHours <= 4) {
-      console.log('Trip too short (<=4 hours)');
-      return 0;
-    }
+    if (tripHours <= 4) return 0;
 
-    // Find applicable CAO rule for subsistence (verblijfskosten ééndaagse ritten basis)
-    const applicableRule = caoRules.find(rule => {
+    // Find applicable CAO rules
+    const applicableRules = caoRules.filter(rule => {
       if (!rule || rule.status !== 'Actief') return false;
-      
-      // Check if rule applies to this date
       if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
       if (rule.end_date && new Date(tripDate) > new Date(rule.end_date)) return false;
       
-      // Look for the specific subsistence rule with "basis" and ">4 uur"
       const nameLower = (rule.name || '').toLowerCase();
-      const descLower = (rule.description || '').toLowerCase();
-      
-      // Match: "verblijfskosten ééndaagse ritten - basis (>4 uur)" or similar patterns
-      return (nameLower.includes('verblijfskosten') && nameLower.includes('basis')) ||
-             (descLower.includes('ééndaagse ritten') && descLower.includes('4 uur') && descLower.includes('0,83'));
+      return nameLower.includes('verblijfskosten') && nameLower.includes('ééndaagse');
     });
 
-    console.log('CAO Rules available:', caoRules);
-    console.log('Applicable rule found:', applicableRule);
+    if (applicableRules.length === 0) return 0;
 
-    if (!applicableRule) {
-      console.log('No applicable rule found');
-      return 0;
+    let totalAllowance = 0;
+
+    // Helper to convert time to minutes since midnight
+    const timeToMinutes = (h, m) => h * 60 + m;
+    const depMinutes = timeToMinutes(depH, depM);
+    const arrMinutes = timeToMinutes(arrH, arrM);
+
+    // Process each rule
+    for (const rule of applicableRules) {
+      if (!rule.start_time && !rule.end_time) {
+        // Basis rule (no time window) - applies to all trip hours
+        if (rule.calculation_type === 'Per uur (€/uur)') {
+          const rate = rule.value || 0;
+          totalAllowance += tripHours * rate;
+        }
+      } else if (rule.start_time && rule.end_time) {
+        // Time-based rule (e.g., 18:00-24:00)
+        const [startH, startM] = rule.start_time.split(':').map(Number);
+        const [endH, endM] = rule.end_time.split(':').map(Number);
+        const ruleStartMinutes = timeToMinutes(startH, startM);
+        const ruleEndMinutes = timeToMinutes(endH, endM);
+
+        // Calculate overlap between trip and rule time window
+        const overlapStart = Math.max(depMinutes, ruleStartMinutes);
+        const overlapEnd = Math.min(arrMinutes, ruleEndMinutes);
+
+        if (overlapEnd > overlapStart) {
+          const overlapMinutes = overlapEnd - overlapStart;
+          const overlapHours = overlapMinutes / 60;
+
+          if (rule.calculation_type === 'Per uur (€/uur)') {
+            const rate = rule.value || 0;
+            totalAllowance += overlapHours * rate;
+          }
+        }
+      }
     }
 
-    // Calculate based on calculation type
-    if (applicableRule.calculation_type === 'Per uur (€/uur)') {
-      const rate = applicableRule.value || 0;
-      console.log('Rate per hour:', rate, 'Total:', tripHours * rate);
-      return tripHours * rate;
-    } else if (applicableRule.calculation_type === 'Per dag (€/dag)' || applicableRule.calculation_type === 'Vast bedrag (€)') {
-      return applicableRule.fixed_amount || 0;
-    }
-
-    return 0;
+    return totalAllowance;
   };
 
   const filteredTrips = trips.filter(t => {
