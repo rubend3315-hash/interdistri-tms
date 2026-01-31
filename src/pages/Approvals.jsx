@@ -135,11 +135,23 @@ export default function Approvals() {
 
   const openDetailDialog = (entry) => {
     setSelectedEntry(entry);
+    
+    // Calculate automatic break for submitted entries if not already set
+    let breakMinutes = entry.break_minutes;
+    if (entry.status === 'Ingediend' && entry.start_time && entry.end_time && !entry.break_minutes) {
+      const [startH, startM] = entry.start_time.split(':').map(Number);
+      const [endH, endM] = entry.end_time.split(':').map(Number);
+      let totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+      if (totalMinutes < 0) totalMinutes += 24 * 60;
+      const totalHours = totalMinutes / 60;
+      breakMinutes = getBreakScheduleMinutes(totalHours);
+    }
+    
     setEditData({
       date: entry.date,
       start_time: entry.start_time,
       end_time: entry.end_time,
-      break_minutes: entry.break_minutes,
+      break_minutes: breakMinutes,
       notes: entry.notes,
       correction_reason: ''
     });
