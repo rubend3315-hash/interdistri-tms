@@ -266,105 +266,113 @@ export default function MobileEntry() {
   };
 
   const handleSubmitEntry = async () => {
-    // Validatie: er moet minimaal 1 rit zijn ingevoerd
-    if (trips.length === 0) {
-      alert('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen. Ga naar het Ritten tabblad om een rit toe te voegen.');
-      setActiveTab("ritten");
-      return;
-    }
+      // Validatie: er moet minimaal 1 rit zijn ingevoerd
+      if (trips.length === 0) {
+        alert('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen. Ga naar het Ritten tabblad om een rit toe te voegen.');
+        setActiveTab("ritten");
+        return;
+      }
 
-    // Validatie: controleer of rit tijden binnen dienst tijden vallen
-    for (let i = 0; i < trips.length; i++) {
-      const trip = trips[i];
-      
-      // Check start rit niet voor start dienst
-      if (trip.start_time && formData.start_time) {
-        if (trip.start_time < formData.start_time) {
-          alert(`Rit ${i + 1}: Start rit (${trip.start_time}) kan niet voor start dienst (${formData.start_time}) liggen.`);
-          setActiveTab("ritten");
-          return;
+      // Validatie: controleer of rit tijden binnen dienst tijden vallen
+      for (let i = 0; i < trips.length; i++) {
+        const trip = trips[i];
+
+        // Check start rit niet voor start dienst
+        if (trip.start_time && formData.start_time) {
+          if (trip.start_time < formData.start_time) {
+            alert(`Rit ${i + 1}: Start rit (${trip.start_time}) kan niet voor start dienst (${formData.start_time}) liggen.`);
+            setActiveTab("ritten");
+            return;
+          }
+        }
+
+        // Check einde rit niet na einde dienst
+        if (trip.end_time && formData.end_time) {
+          if (trip.end_time > formData.end_time) {
+            alert(`Rit ${i + 1}: Einde rit (${trip.end_time}) kan niet na einde dienst (${formData.end_time}) liggen.`);
+            setActiveTab("ritten");
+            return;
+          }
         }
       }
-      
-      // Check einde rit niet na einde dienst
-      if (trip.end_time && formData.end_time) {
-        if (trip.end_time > formData.end_time) {
-          alert(`Rit ${i + 1}: Einde rit (${trip.end_time}) kan niet na einde dienst (${formData.end_time}) liggen.`);
-          setActiveTab("ritten");
-          return;
-        }
+
+      if (!signature) {
+        setShowSignatureDialog(true);
+        return;
       }
-    }
 
-    if (!signature) {
-      setShowSignatureDialog(true);
-      return;
-    }
+      // Check if any trip has damage
+      const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
 
-    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
-    
-    const timeEntryData = {
-      employee_id: currentEmployee?.id,
-      date: formData.date,
-      week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
-      year: getYear(new Date(formData.date)),
-      start_time: formData.start_time,
-      end_time: formData.end_time,
-      break_minutes: Number(formData.break_minutes) || 0,
-      total_hours: hours,
-      shift_type: "Dag",
-      notes: formData.notes,
-      status: isOnline ? "Ingediend" : "Concept",
-      signature_url: signature
+      const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
+
+      const timeEntryData = {
+        employee_id: currentEmployee?.id,
+        date: formData.date,
+        week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
+        year: getYear(new Date(formData.date)),
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        break_minutes: Number(formData.break_minutes) || 0,
+        total_hours: hours,
+        shift_type: "Dag",
+        notes: formData.notes,
+        status: isOnline ? "Ingediend" : "Concept",
+        signature_url: signature
+      };
+
+      // If online, submit immediately; if offline, queue for sync
+      if (isOnline) {
+        createTimeEntryMutation.mutate(timeEntryData);
+      } else {
+        await addToQueue('createTimeEntry', timeEntryData);
+      }
+
+      // Submit all trips
+      if (trips.length > 0) {
+        trips.forEach(async trip => {
+          const tripData = {
+            employee_id: currentEmployee?.id,
+            date: formData.date,
+            vehicle_id: trip.vehicle_id,
+            customer_id: trip.customer_id,
+            route_name: trip.route_name,
+            planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+            start_km: trip.start_km ? Number(trip.start_km) : null,
+            end_km: trip.end_km ? Number(trip.end_km) : null,
+            total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+            fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
+            adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
+            fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
+            charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
+            departure_time: trip.start_time,
+            arrival_time: trip.end_time,
+            departure_location: trip.departure_location,
+            notes: trip.notes,
+            status: "Voltooid"
+          };
+
+          if (isOnline) {
+            createTripMutation.mutate(tripData);
+          } else {
+            await addToQueue('createTrip', tripData);
+          }
+        });
+      }
+
+      // Reset form
+      setTrips([]);
+      setSignature(null);
+
+      if (!isOnline) {
+        alert('Offline modus: Uw gegevens zijn opgeslagen en worden automatisch gesynchroniseerd wanneer de verbinding hersteld is.');
+      }
+
+      // Open Bumper link if damage occurred
+      if (hasDamage) {
+        window.open('https://www.mijn.bumper.nl', '_blank');
+      }
     };
-
-    // If online, submit immediately; if offline, queue for sync
-    if (isOnline) {
-      createTimeEntryMutation.mutate(timeEntryData);
-    } else {
-      await addToQueue('createTimeEntry', timeEntryData);
-    }
-
-    // Submit all trips
-    if (trips.length > 0) {
-      trips.forEach(async trip => {
-        const tripData = {
-          employee_id: currentEmployee?.id,
-          date: formData.date,
-          vehicle_id: trip.vehicle_id,
-          customer_id: trip.customer_id,
-          route_name: trip.route_name,
-          planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
-          start_km: trip.start_km ? Number(trip.start_km) : null,
-          end_km: trip.end_km ? Number(trip.end_km) : null,
-          total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
-          fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
-          adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
-          fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
-          charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
-          departure_time: trip.start_time,
-          arrival_time: trip.end_time,
-          departure_location: trip.departure_location,
-          notes: trip.notes,
-          status: "Voltooid"
-        };
-
-        if (isOnline) {
-          createTripMutation.mutate(tripData);
-        } else {
-          await addToQueue('createTrip', tripData);
-        }
-      });
-    }
-
-    // Reset form
-    setTrips([]);
-    setSignature(null);
-    
-    if (!isOnline) {
-      alert('Offline modus: Uw gegevens zijn opgeslagen en worden automatisch gesynchroniseerd wanneer de verbinding hersteld is.');
-    }
-  };
 
   const handleSaveDraft = () => {
     const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
