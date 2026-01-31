@@ -198,7 +198,8 @@ export default function MobileEntry() {
     safety_vest: true,
     damage_present: false,
     damage_description: "",
-    notes: ""
+    notes: "",
+    damage_photos: []
   });
 
   const [expenseData, setExpenseData] = useState({
@@ -1283,15 +1284,75 @@ export default function MobileEntry() {
                 </div>
 
                 {inspectionData.damage_present && (
-                  <div className="space-y-1">
-                    <Label className="text-xs">Schade omschrijving</Label>
-                    <Textarea
-                      value={inspectionData.damage_description}
-                      onChange={(e) => setInspectionData({ ...inspectionData, damage_description: e.target.value })}
-                      rows={2}
-                      placeholder="Beschrijf de schade..."
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Schade omschrijving</Label>
+                      <Textarea
+                        value={inspectionData.damage_description}
+                        onChange={(e) => setInspectionData({ ...inspectionData, damage_description: e.target.value })}
+                        rows={2}
+                        placeholder="Beschrijf de schade..."
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">Foto's van schade</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              try {
+                                const uploadResult = await base44.integrations.Core.UploadFile({ file });
+                                setInspectionData({ 
+                                  ...inspectionData, 
+                                  damage_photos: [...inspectionData.damage_photos, uploadResult.file_url]
+                                });
+                              } catch (error) {
+                                alert('Fout bij uploaden foto: ' + error.message);
+                              }
+                            }
+                            e.target.value = '';
+                          }}
+                          className="text-xs"
+                        />
+                        <Camera className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                      </div>
+
+                      {inspectionData.damage_photos.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-emerald-600 font-medium">
+                            ✓ {inspectionData.damage_photos.length} foto('s) toegevoegd
+                          </p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {inspectionData.damage_photos.map((url, idx) => (
+                              <div key={idx} className="relative">
+                                <img 
+                                  src={url} 
+                                  alt={`Schade ${idx + 1}`}
+                                  className="w-full h-20 object-cover rounded-lg border-2 border-slate-200"
+                                />
+                                <button
+                                  onClick={() => {
+                                    setInspectionData({
+                                      ...inspectionData,
+                                      damage_photos: inspectionData.damage_photos.filter((_, i) => i !== idx)
+                                    });
+                                  }}
+                                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
 
                 <Button 
@@ -1303,6 +1364,7 @@ export default function MobileEntry() {
                       date: format(new Date(), 'yyyy-MM-dd'),
                       time: format(new Date(), 'HH:mm'),
                       mileage: inspectionData.mileage ? Number(inspectionData.mileage) : null,
+                      damage_photos: inspectionData.damage_photos,
                       status: inspectionData.damage_present ? 'Actie vereist' : 'Goedgekeurd'
                     });
                   }}
