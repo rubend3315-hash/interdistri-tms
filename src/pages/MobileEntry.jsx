@@ -6,6 +6,7 @@ import OfflineSyncIndicator from "@/components/OfflineSyncIndicator";
 import { format, getWeek, getYear } from "date-fns";
 import { nl } from "date-fns/locale";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { getBreakMinutesForHours } from "@/components/utils/breakScheduleUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
