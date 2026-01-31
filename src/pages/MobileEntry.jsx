@@ -793,25 +793,14 @@ export default function MobileEntry() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={handleSaveDraft}
-                    disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Tussentijds opslaan
-                  </Button>
-                  <Button 
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                    onClick={handleSubmitEntry}
-                    disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Indienen
-                  </Button>
-                </div>
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  onClick={handleSubmitEntry}
+                  disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Met Handtekening Indienen
+                </Button>
                 </CardContent>
                 </Card>
                 </TabsContent>
