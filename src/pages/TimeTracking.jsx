@@ -686,18 +686,35 @@ export default function TimeTracking() {
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Annuleren
-              </Button>
+            <div className="flex justify-between gap-3 pt-4">
               <Button 
-                type="submit" 
-                className="bg-blue-600 hover:bg-blue-700"
-                disabled={createMutation.isPending || updateMutation.isPending}
+                type="button" 
+                variant="destructive"
+                onClick={() => {
+                  if (selectedEntry && selectedEntry.status === 'Concept') {
+                    if (confirm('Weet je zeker dat je deze concept entry wilt verwijderen?')) {
+                      deleteMutation.mutate(selectedEntry.id);
+                    }
+                  }
+                }}
+                className={selectedEntry?.status === 'Concept' ? '' : 'hidden'}
+                disabled={deleteMutation.isPending}
               >
-                <Save className="w-4 h-4 mr-2" />
-                Opslaan
+                Verwijderen
               </Button>
+              <div className="flex gap-3">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Annuleren
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Opslaan
+                </Button>
+              </div>
             </div>
           </form>
         </DialogContent>
