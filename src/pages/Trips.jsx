@@ -331,6 +331,7 @@ export default function Trips() {
             const employee = getEmployee(trip.employee_id);
             const vehicle = getVehicle(trip.vehicle_id);
             const customer = getCustomer(trip.customer_id);
+            const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
             
             return (
               <Card 
@@ -415,10 +416,10 @@ export default function Trips() {
                           </div>
                         </>
                       )}
-                      {trip.subsistence_allowance > 0 && (
+                      {subsistence > 0 && (
                         <div className="text-center">
                           <p className="text-slate-500">Verblijfskosten</p>
-                          <p className="font-semibold text-emerald-700">€{trip.subsistence_allowance.toFixed(2)}</p>
+                          <p className="font-semibold text-emerald-700">€{subsistence.toFixed(2)}</p>
                         </div>
                       )}
                     </div>
