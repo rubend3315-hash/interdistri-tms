@@ -47,7 +47,6 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Approvals from './pages/Approvals';
 import Backups from './pages/Backups';
 import CaoRules from './pages/CaoRules';
 import CustomerDetail from './pages/CustomerDetail';
@@ -65,14 +64,14 @@ import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
 import ShiftTime from './pages/ShiftTime';
 import TimeTracking from './pages/TimeTracking';
-import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
+import Trips from './pages/Trips';
+import Approvals from './pages/Approvals';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Approvals": Approvals,
     "Backups": Backups,
     "CaoRules": CaoRules,
     "CustomerDetail": CustomerDetail,
@@ -90,9 +89,10 @@ export const PAGES = {
     "SalaryTables": SalaryTables,
     "ShiftTime": ShiftTime,
     "TimeTracking": TimeTracking,
-    "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
+    "Trips": Trips,
+    "Approvals": Approvals,
 }
 
 export const pagesConfig = {

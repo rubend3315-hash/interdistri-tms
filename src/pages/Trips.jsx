@@ -361,12 +361,6 @@ export default function Trips() {
                         </div>
                       )}
                       {trip.departure_time && trip.arrival_time && (
-                        <div className="text-center">
-                          <p className="text-slate-500">Vertrek</p>
-                          <p className="font-semibold text-slate-900">{trip.departure_time}</p>
-                        </div>
-                      )}
-                      {trip.departure_time && trip.arrival_time && (
                         <>
                           <div className="text-center">
                             <p className="text-slate-500">Begin - Eind</p>
