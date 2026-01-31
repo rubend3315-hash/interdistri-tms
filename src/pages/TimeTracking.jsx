@@ -95,6 +95,9 @@ export default function TimeTracking() {
 
   const [autoBreak, setAutoBreak] = useState(null);
   const [manualBreak, setManualBreak] = useState(false);
+  const [calculatedHours, setCalculatedHours] = useState(null);
+  const [showHourDetails, setShowHourDetails] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
 
   // Auto-calculate break whenever times or shift type change
   useEffect(() => {
