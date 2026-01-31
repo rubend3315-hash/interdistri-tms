@@ -194,24 +194,25 @@ export default function Trips() {
     if (totalMinutes < 0) totalMinutes += 24 * 60;
     const hoursWorked = totalMinutes / 60;
 
-    // Find applicable CAO rule
+    // Find applicable CAO rule for "Eendaags" (single day)
     const applicableRule = caoRules.find(rule => {
       // Check if rule applies to this date
       if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
       if (rule.end_date && new Date(tripDate) > new Date(rule.end_date)) return false;
-      return true;
+      
+      // Look for "Eendaags" rule
+      if (rule.name && rule.name.toLowerCase().includes('eendaags')) return true;
+      
+      return false;
     });
 
     if (!applicableRule) return 0;
 
-    // Calculate allowance based on rule
-    if (applicableRule.calculation_type === 'Per dag (€/dag)') {
-      // If worked more than 10 hours, full day allowance
-      if (hoursWorked >= 10) {
+    // Eendaags: longer than 4 hours away from base location
+    if (hoursWorked > 4) {
+      if (applicableRule.calculation_type === 'Per dag (€/dag)' || applicableRule.calculation_type === 'Vast bedrag (€)') {
         return applicableRule.fixed_amount || 0;
       }
-    } else if (applicableRule.calculation_type === 'Vast bedrag (€)') {
-      return applicableRule.fixed_amount || 0;
     }
 
     return 0;
