@@ -573,12 +573,8 @@ export default function MobileEntry() {
       </div>
 
       {/* Main Content */}
-      <div className="p-3 -mt-1">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-
-      {/* Home/Frontpage Tab */}
-      <TabsContent value="home" asChild>
-      <motion.div
+      <motion.div 
+        className="p-3 -mt-1"
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.2}
@@ -587,6 +583,10 @@ export default function MobileEntry() {
           if (info.offset.x > 50) handleSwipe("right");
         }}
       >
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+
+      {/* Home/Frontpage Tab */}
+      <TabsContent value="home">
             {/* Welcome Message */}
             <div className="bg-white rounded-lg p-2.5 text-slate-900 mb-2 border-2 border-blue-200">
               <h2 className="font-bold text-base mb-1">
@@ -607,20 +607,10 @@ export default function MobileEntry() {
             </div>
 
             <MobileFrontpage onNavigate={setActiveTab} />
-            </motion.div>
           </TabsContent>
 
           {/* Planning Tab */}
-          <TabsContent value="planning" className="space-y-4" asChild>
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -50) handleSwipe("left");
-                if (info.offset.x > 50) handleSwipe("right");
-              }}
-            >
+          <TabsContent value="planning" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -685,20 +675,10 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
-            </motion.div>
           </TabsContent>
 
           {/* Dienst Tab */}
-           <TabsContent value="dienst" className="space-y-4" asChild>
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -50) handleSwipe("left");
-                if (info.offset.x > 50) handleSwipe("right");
-              }}
-            >
+           <TabsContent value="dienst" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -797,20 +777,10 @@ export default function MobileEntry() {
                 </div>
                 </CardContent>
                 </Card>
-                </motion.div>
                 </TabsContent>
 
           {/* Ritten Tab */}
-          <TabsContent value="ritten" className="space-y-4" asChild>
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -50) handleSwipe("left");
-                if (info.offset.x > 50) handleSwipe("right");
-              }}
-            >
+          <TabsContent value="ritten" className="space-y-4">
             <Card className="bg-blue-900 text-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1085,20 +1055,10 @@ export default function MobileEntry() {
               <Plus className="w-5 h-5 mr-2" />
               Regel Toevoegen
               </Button>
-              </motion.div>
               </TabsContent>
 
           {/* Inspectie Tab */}
-          <TabsContent value="inspectie" className="space-y-4" asChild>
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -50) handleSwipe("left");
-                if (info.offset.x > 50) handleSwipe("right");
-              }}
-            >
+          <TabsContent value="inspectie" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1220,20 +1180,10 @@ export default function MobileEntry() {
                 </Button>
               </CardContent>
             </Card>
-            </motion.div>
           </TabsContent>
 
           {/* Declaratie Tab */}
-          <TabsContent value="declaratie" className="space-y-4" asChild>
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -50) handleSwipe("left");
-                if (info.offset.x > 50) handleSwipe("right");
-              }}
-            >
+          <TabsContent value="declaratie" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1353,20 +1303,10 @@ export default function MobileEntry() {
                 </Button>
               </CardContent>
             </Card>
-            </motion.div>
           </TabsContent>
 
           {/* Overzicht Tab */}
-          <TabsContent value="overzicht" className="space-y-4" asChild>
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -50) handleSwipe("left");
-                if (info.offset.x > 50) handleSwipe("right");
-              }}
-            >
+          <TabsContent value="overzicht" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1406,20 +1346,10 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
-            </motion.div>
           </TabsContent>
 
           {/* Links Tab */}
-          <TabsContent value="links" className="space-y-4" asChild>
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -50) handleSwipe("left");
-                if (info.offset.x > 50) handleSwipe("right");
-              }}
-            >
+          <TabsContent value="links" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Snelle links</CardTitle>
@@ -1451,10 +1381,9 @@ export default function MobileEntry() {
                 </a>
               </CardContent>
               </Card>
-              </motion.div>
               </TabsContent>
               </Tabs>
-      </div>
+      </motion.div>
 
       {/* Signature Dialog */}
       <Dialog open={showSignatureDialog} onOpenChange={setShowSignatureDialog}>
