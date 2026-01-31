@@ -210,7 +210,7 @@ export default function Trips() {
       return 0;
     }
 
-    // Find applicable CAO rule for "Eendaags" or "ééndag"
+    // Find applicable CAO rule for subsistence (verblijfskosten ééndaagse ritten basis)
     const applicableRule = caoRules.find(rule => {
       if (!rule || rule.status !== 'Actief') return false;
       
@@ -218,9 +218,13 @@ export default function Trips() {
       if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
       if (rule.end_date && new Date(tripDate) > new Date(rule.end_date)) return false;
       
-      // Look for rules with "eendaags" or "ééndag" in the name
+      // Look for the specific subsistence rule with "basis" and ">4 uur"
       const nameLower = (rule.name || '').toLowerCase();
-      return nameLower.includes('eendaags') || nameLower.includes('ééndag');
+      const descLower = (rule.description || '').toLowerCase();
+      
+      // Match: "verblijfskosten ééndaagse ritten - basis (>4 uur)" or similar patterns
+      return (nameLower.includes('verblijfskosten') && nameLower.includes('basis')) ||
+             (descLower.includes('ééndaagse ritten') && descLower.includes('4 uur') && descLower.includes('0,83'));
     });
 
     console.log('CAO Rules available:', caoRules);
