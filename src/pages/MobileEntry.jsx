@@ -187,7 +187,9 @@ export default function MobileEntry() {
     date: format(new Date(), 'yyyy-MM-dd'),
     category: "Brandstof",
     description: "",
-    amount: ""
+    amount: "",
+    receipt_file: null,
+    receipt_url: ""
   });
 
   // Drawing on canvas
@@ -1159,22 +1161,63 @@ export default function MobileEntry() {
                   />
                 </div>
 
+                <div className="space-y-1">
+                  <Label className="text-xs">Bon / Factuur (optioneel)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setExpenseData({ ...expenseData, receipt_file: file });
+                        }
+                      }}
+                      className="text-xs"
+                    />
+                    {expenseData.receipt_file && (
+                      <Camera className="w-5 h-5 text-emerald-600" />
+                    )}
+                  </div>
+                  {expenseData.receipt_file && (
+                    <p className="text-xs text-emerald-600">
+                      ✓ {expenseData.receipt_file.name}
+                    </p>
+                  )}
+                </div>
+
                 <Button 
                   className="w-full bg-blue-600 hover:bg-blue-700"
-                  onClick={() => {
+                  onClick={async () => {
+                    let receiptUrl = "";
+                    
+                    // Upload receipt if provided
+                    if (expenseData.receipt_file) {
+                      try {
+                        const uploadResult = await base44.integrations.Core.UploadFile({
+                          file: expenseData.receipt_file
+                        });
+                        receiptUrl = uploadResult.file_url;
+                      } catch (error) {
+                        alert('Fout bij uploaden bon: ' + error.message);
+                        return;
+                      }
+                    }
+
                     createExpenseMutation.mutate({
                       employee_id: currentEmployee?.id,
                       date: expenseData.date,
                       category: expenseData.category,
                       description: expenseData.description,
                       amount: Number(expenseData.amount),
+                      receipt_url: receiptUrl,
                       status: 'Ingediend'
                     });
                   }}
                   disabled={!expenseData.amount || createExpenseMutation.isPending}
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  Declaratie indienen
+                  {createExpenseMutation.isPending ? 'Bezig...' : 'Declaratie indienen'}
                 </Button>
               </CardContent>
             </Card>
