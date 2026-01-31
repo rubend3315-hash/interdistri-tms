@@ -287,36 +287,33 @@ export default function Dashboard() {
                 {recentTimeEntries.map(entry => {
                   const employee = employees.find(e => e.id === entry.employee_id);
                   return (
-                    <Link to={createPageUrl("TimeTracking")}>
-                      <div 
-                        key={entry.id} 
-                        className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 cursor-pointer transition-colors"
-                      >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                          <Clock className="w-5 h-5 text-slate-400" />
+                    <Link key={entry.id} to={createPageUrl("TimeTracking")}>
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 cursor-pointer transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                            <Clock className="w-5 h-5 text-slate-400" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900">
+                              {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
+                            </p>
+                            <p className="text-sm text-slate-500">
+                              {entry.date ? format(new Date(entry.date), "d MMM yyyy", { locale: nl }) : '-'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-slate-900">
-                            {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
+                        <div className="text-right">
+                          <p className="font-semibold text-slate-900">
+                            {entry.total_hours ? `${entry.total_hours}u` : '-'}
                           </p>
-                          <p className="text-sm text-slate-500">
-                            {entry.date ? format(new Date(entry.date), "d MMM yyyy", { locale: nl }) : '-'}
-                          </p>
+                          <Badge variant={
+                            entry.status === 'Goedgekeurd' ? 'success' :
+                            entry.status === 'Afgekeurd' ? 'destructive' :
+                            entry.status === 'Ingediend' ? 'warning' : 'secondary'
+                          } className="text-xs">
+                            {entry.status}
+                          </Badge>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-slate-900">
-                          {entry.total_hours ? `${entry.total_hours}u` : '-'}
-                        </p>
-                        <Badge variant={
-                          entry.status === 'Goedgekeurd' ? 'success' :
-                          entry.status === 'Afgekeurd' ? 'destructive' :
-                          entry.status === 'Ingediend' ? 'warning' : 'secondary'
-                        } className="text-xs">
-                          {entry.status}
-                        </Badge>
-                      </div>
                       </div>
                     </Link>
                   );
