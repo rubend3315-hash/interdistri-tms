@@ -548,15 +548,15 @@ export default function TimeTracking() {
                  />
                  </div>
                  <div className="space-y-2">
-                 <Label>Inhoudinnen</Label>
-                 <Input
-                   type="number"
-                   min="0"
-                   step="0.01"
-                   value={formData.meals || 0}
-                   onChange={(e) => setFormData({ ...formData, meals: Number(e.target.value) })}
-                   placeholder="0.00"
-                 />
+                   <Label>Inhoudingen</Label>
+                   <Input
+                     type="number"
+                     min="0"
+                     step="0.01"
+                     value={formData.meals || 0}
+                     onChange={(e) => setFormData({ ...formData, meals: Number(e.target.value) })}
+                     placeholder="0.00"
+                   />
                  </div>
                  <div className="space-y-2">
                  <Label>WKR</Label>
