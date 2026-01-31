@@ -77,6 +77,14 @@ export default function TimeTracking() {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.TimeEntry.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
+      setIsDialogOpen(false);
+    }
+  });
+
   const [formData, setFormData] = useState({
     employee_id: "",
     date: "",
