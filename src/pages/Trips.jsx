@@ -361,6 +361,12 @@ export default function Trips() {
                         </div>
                       )}
                       {trip.departure_time && trip.arrival_time && (
+                        <div className="text-center">
+                          <p className="text-slate-500">Vertrek</p>
+                          <p className="font-semibold text-slate-900">{trip.departure_time}</p>
+                        </div>
+                      )}
+                      {trip.departure_time && trip.arrival_time && (
                         <>
                           <div className="text-center">
                             <p className="text-slate-500">Begin - Eind</p>
@@ -384,7 +390,6 @@ export default function Trips() {
                         <div className="text-center">
                           <p className="text-slate-500">Verblijfskosten</p>
                           <p className="font-semibold text-emerald-700">€{trip.subsistence_allowance.toFixed(2)}</p>
-                          <p className="text-xs text-slate-500">Eendaags &gt; 4u</p>
                         </div>
                       )}
                     </div>
