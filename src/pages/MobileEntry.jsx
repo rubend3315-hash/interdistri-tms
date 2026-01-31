@@ -458,8 +458,8 @@ export default function MobileEntry() {
       )}
       
       {/* Slide-out Menu */}
-      <div className={`fixed top-0 left-0 h-full w-72 bg-white z-50 transform transition-transform duration-300 ${
-        menuOpen ? 'translate-x-0' : '-translate-x-full'
+      <div className={`fixed top-0 right-0 h-full w-72 bg-white z-50 transform transition-transform duration-300 ${
+        menuOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
         <div className="flex flex-col h-full">
           {/* Menu Header */}
