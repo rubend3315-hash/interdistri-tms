@@ -317,7 +317,8 @@ export default function Dashboard() {
                           {entry.status}
                         </Badge>
                       </div>
-                    </div>
+                      </div>
+                    </Link>
                   );
                 })}
               </div>
