@@ -92,6 +92,23 @@ export default function TimeTracking() {
   const [autoBreak, setAutoBreak] = useState(null);
   const [manualBreak, setManualBreak] = useState(false);
 
+  // Auto-calculate break whenever times or shift type change
+  useEffect(() => {
+    const calculateAutoBreak = async () => {
+      if (!["Vrij", "Verlof", "Ziek"].includes(formData.shift_type) && formData.start_time && formData.end_time) {
+        const hours = calculateHours(formData.start_time, formData.end_time, 0);
+        const auto = await getBreakMinutesForHours(hours);
+        setAutoBreak(auto || 30);
+        if (!manualBreak) {
+          setFormData(prev => ({ ...prev, break_minutes: auto || 30 }));
+        }
+      } else {
+        setAutoBreak(null);
+      }
+    };
+    calculateAutoBreak();
+  }, [formData.start_time, formData.end_time, formData.shift_type, manualBreak]);
+
   const activeEmployees = employees.filter(e => 
     e.status === 'Actief' && 
     (filterDepartment === 'all' || e.department === filterDepartment)
