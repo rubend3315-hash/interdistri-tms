@@ -145,16 +145,23 @@ export default function TimeTracking() {
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
+    
+    // Auto-calculate break minutes based on BreakSchedule if not on special shift
+    let breakMinutes = Number(formData.break_minutes) || 0;
+    if (!["Vrij", "Verlof", "Ziek"].includes(formData.shift_type)) {
+      const autoBreak = await getBreakMinutesForHours(hours);
+      breakMinutes = autoBreak || breakMinutes;
+    }
     
     const submitData = {
       ...formData,
       week_number: weekNumber,
       year,
       total_hours: hours,
-      break_minutes: Number(formData.break_minutes) || 0,
+      break_minutes: breakMinutes,
       status: 'Concept'
     };
 
