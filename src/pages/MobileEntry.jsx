@@ -33,7 +33,10 @@ import {
   ClipboardCheck,
   Plus,
   Trash2,
-  CalendarDays
+  CalendarDays,
+  Menu,
+  Home,
+  X
 } from "lucide-react";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 
@@ -42,6 +45,7 @@ export default function MobileEntry() {
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [signature, setSignature] = useState(null);
   const [trips, setTrips] = useState([]);
+  const [menuOpen, setMenuOpen] = useState(false);
   const canvasRef = useRef(null);
   const queryClient = useQueryClient();
   const { isOnline, syncStatus, addToQueue } = useOfflineSync();
@@ -417,13 +421,95 @@ export default function MobileEntry() {
     );
   }
 
+  const menuItems = [
+    { id: "home", label: "Home", icon: Home },
+    { id: "dienst", label: "Diensttijd", icon: Clock },
+    { id: "ritten", label: "Ritten", icon: Truck },
+    { id: "inspectie", label: "Voertuiginspectie", icon: ClipboardCheck },
+    { id: "declaratie", label: "Declaratie", icon: FileText },
+    { id: "overzicht", label: "Overzicht", icon: CheckCircle },
+    { id: "planning", label: "Planning", icon: CalendarDays },
+    { id: "links", label: "Links", icon: ExternalLink }
+  ];
+
   return (
     <div className="min-h-screen bg-slate-100">
       <OfflineSyncIndicator isOnline={isOnline} syncStatus={syncStatus} />
+      
+      {/* Menu Overlay */}
+      {menuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+      
+      {/* Slide-out Menu */}
+      <div className={`fixed top-0 left-0 h-full w-72 bg-white z-50 transform transition-transform duration-300 ${
+        menuOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="flex flex-col h-full">
+          {/* Menu Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Truck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="font-bold">Menu</h2>
+                  <p className="text-xs text-blue-100">Navigatie</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="p-2 hover:bg-white/20 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Menu Items */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-2">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-blue-50 text-blue-700 font-medium'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${
+                      activeTab === item.id ? 'text-blue-600' : 'text-slate-400'
+                    }`} />
+                    <span className="text-sm">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 pb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="p-2 hover:bg-white/20 rounded-lg"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
               <Truck className="w-6 h-6" />
             </div>
@@ -476,32 +562,6 @@ export default function MobileEntry() {
       {/* Main Content */}
       <div className="p-4 -mt-2">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-8 mb-4">
-           <TabsTrigger value="home" className="text-xs px-2">
-             <Truck className="w-4 h-4" />
-           </TabsTrigger>
-           <TabsTrigger value="dienst" className="text-xs px-2">
-             <Clock className="w-4 h-4" />
-           </TabsTrigger>
-           <TabsTrigger value="ritten" className="text-xs px-2">
-             <Truck className="w-4 h-4" />
-           </TabsTrigger>
-           <TabsTrigger value="inspectie" className="text-xs px-2">
-             <ClipboardCheck className="w-4 h-4" />
-           </TabsTrigger>
-           <TabsTrigger value="declaratie" className="text-xs px-2">
-             <FileText className="w-4 h-4" />
-           </TabsTrigger>
-           <TabsTrigger value="overzicht" className="text-xs px-2">
-             <CheckCircle className="w-4 h-4" />
-           </TabsTrigger>
-           <TabsTrigger value="planning" className="text-xs px-2">
-             <CalendarDays className="w-4 h-4" />
-           </TabsTrigger>
-           <TabsTrigger value="links" className="text-xs px-2">
-             <ExternalLink className="w-4 h-4" />
-           </TabsTrigger>
-          </TabsList>
 
           {/* Home/Frontpage Tab */}
           <TabsContent value="home">
