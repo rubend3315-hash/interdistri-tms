@@ -142,7 +142,7 @@ export default function TimeTracking() {
         end_time: existing.end_time || "",
         break_minutes: existing.break_minutes || 30,
         shift_type: existing.shift_type || "Dag",
-        vehicle_id: existing.vehicle_id || "",
+        project_id: existing.project_id || "",
         customer_id: existing.customer_id || "",
         travel_allowance_multiplier: existing.travel_allowance_multiplier || 0,
         notes: existing.notes || ""
