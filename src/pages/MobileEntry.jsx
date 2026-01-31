@@ -307,11 +307,16 @@ export default function MobileEntry() {
     submitAndReturn();
   };
 
-  const submitAndReturn = () => {
+  const submitAndReturn = async () => {
       // Check if any trip has damage
       const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
 
       const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
+
+      // Calculate automatic break
+      let breakMinutes = Number(formData.break_minutes) || 0;
+      const autoBreak = await getBreakMinutesForHours(hours);
+      breakMinutes = autoBreak || breakMinutes;
 
       const timeEntryData = {
         employee_id: currentEmployee?.id,
@@ -320,8 +325,8 @@ export default function MobileEntry() {
         year: getYear(new Date(formData.date)),
         start_time: formData.start_time,
         end_time: formData.end_time,
-        break_minutes: Number(formData.break_minutes) || 0,
-        total_hours: hours,
+        break_minutes: breakMinutes,
+        total_hours: calculateHours(formData.start_time, formData.end_time, breakMinutes),
         shift_type: "Dag",
         notes: formData.notes,
         status: isOnline ? "Ingediend" : "Concept",
