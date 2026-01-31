@@ -729,10 +729,16 @@ export default function MobileEntry() {
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+                {!formData.end_time ? (
+                  <>
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-700 font-medium">
+                        Stap 1: Voer starttijd in
+                      </p>
+                    </div>
+
                     <div className="space-y-1">
-                      <Label className="text-xs">Start dienst</Label>
+                      <Label className="text-xs">Start dienst *</Label>
                       <Input
                         type="time"
                         value={formData.start_time}
@@ -740,78 +746,91 @@ export default function MobileEntry() {
                       />
                     </div>
 
+                    <Button 
+                      className="w-full bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => setActiveTab("ritten")}
+                      disabled={!formData.start_time}
+                    >
+                      Volgende → Ritten invoeren
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                      <p className="text-sm text-emerald-700 font-medium">
+                        ✓ Starttijd: {formData.start_time}
+                      </p>
+                    </div>
+
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-700 font-medium">
+                        Stap 2: Voer eindtijd in
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Eind dienst *</Label>
+                        <Input
+                          type="time"
+                          value={formData.end_time}
+                          onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="text-xs">Pauze (minuten)</Label>
+                        <Input
+                          type="number"
+                          value={formData.break_minutes}
+                          onChange={(e) => setFormData({ ...formData, break_minutes: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    {formData.end_time && (
+                      <div className="p-3 bg-blue-50 rounded-lg text-center">
+                        <p className="text-sm text-blue-700">
+                          <strong>Totaal uren:</strong> {calculateHours(formData.start_time, formData.end_time, formData.break_minutes)} uur
+                        </p>
+                      </div>
+                    )}
+
                     <div className="space-y-1">
-                      <Label className="text-xs">Eind dienst</Label>
-                      <Input
-                        type="time"
-                        value={formData.end_time}
-                        onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                      <Label className="text-xs">Opmerkingen</Label>
+                      <Textarea
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        rows={2}
+                        placeholder="Extra informatie..."
                       />
                     </div>
-                  </div>
 
-                  <div className="space-y-1">
-                    <Label className="text-xs">Pauze (minuten)</Label>
-                    <Input
-                      type="number"
-                      value={formData.break_minutes}
-                      onChange={(e) => setFormData({ ...formData, break_minutes: e.target.value })}
-                    />
-                  </div>
-                </div>
+                    {trips.length > 0 && (
+                      <div className="p-3 bg-emerald-50 rounded-lg">
+                        <p className="text-xs text-emerald-700 font-medium">
+                          ✓ {trips.length} rit(ten) toegevoegd
+                        </p>
+                      </div>
+                    )}
 
-                {formData.start_time && formData.end_time && (
-                  <div className="p-3 bg-blue-50 rounded-lg text-center">
-                    <p className="text-sm text-blue-700">
-                      <strong>Totaal uren:</strong> {calculateHours(formData.start_time, formData.end_time, formData.break_minutes)} uur
-                    </p>
-                  </div>
+                    {signature && (
+                      <div className="p-2 bg-emerald-50 rounded-lg">
+                        <p className="text-xs text-emerald-700 mb-1">Handtekening toegevoegd ✓</p>
+                        <img src={signature} alt="Handtekening" className="h-12 border rounded" />
+                      </div>
+                    )}
+
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={handleSubmitEntry}
+                      disabled={createTimeEntryMutation.isPending || createTripMutation.isPending || trips.length === 0}
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Met Handtekening Indienen
+                    </Button>
+                  </>
                 )}
-
-                <div className="space-y-1">
-                  <Label className="text-xs">Opmerkingen</Label>
-                  <Textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows={2}
-                    placeholder="Extra informatie..."
-                  />
-                </div>
-
-                {trips.length > 0 && (
-                  <div className="p-3 bg-emerald-50 rounded-lg">
-                    <p className="text-xs text-emerald-700 font-medium">
-                      ✓ {trips.length} rit(ten) toegevoegd in Ritten tab
-                    </p>
-                  </div>
-                )}
-
-                {signature && (
-                   <div className="p-2 bg-emerald-50 rounded-lg">
-                     <p className="text-xs text-emerald-700 mb-1">Handtekening toegevoegd ✓</p>
-                     <img src={signature} alt="Handtekening" className="h-12 border rounded" />
-                   </div>
-                 )}
-
-                 <div className="space-y-2">
-                   <Button 
-                     variant="outline"
-                     className="w-full py-3 border-blue-300"
-                     onClick={handleSaveDraft}
-                     disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
-                   >
-                     <Save className="w-4 h-4 mr-2" />
-                     Tussentijds Opslaan
-                   </Button>
-                   <Button 
-                     className="w-full bg-blue-600 hover:bg-blue-700"
-                     onClick={handleSubmitEntry}
-                     disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
-                   >
-                     <Send className="w-4 h-4 mr-2" />
-                     Met Handtekening Indienen
-                   </Button>
-                 </div>
                 </CardContent>
                 </Card>
                 </TabsContent>
