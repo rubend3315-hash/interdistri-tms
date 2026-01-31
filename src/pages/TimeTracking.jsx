@@ -402,8 +402,9 @@ export default function TimeTracking() {
                        type="time"
                        value={formData.start_time}
                        onChange={(e) => {
-                         setFormData({ ...formData, start_time: e.target.value });
-                         handleTimeChange();
+                         const newStart = e.target.value;
+                         setFormData({ ...formData, start_time: newStart });
+                         handleTimeChange(newStart, formData.end_time, formData.shift_type);
                        }}
                      />
                    </div>
@@ -413,8 +414,9 @@ export default function TimeTracking() {
                        type="time"
                        value={formData.end_time}
                        onChange={(e) => {
-                         setFormData({ ...formData, end_time: e.target.value });
-                         handleTimeChange();
+                         const newEnd = e.target.value;
+                         setFormData({ ...formData, end_time: newEnd });
+                         handleTimeChange(formData.start_time, newEnd, formData.shift_type);
                        }}
                      />
                    </div>
@@ -430,9 +432,13 @@ export default function TimeTracking() {
                    <div className="flex items-center gap-2">
                      <Input
                        type="number"
-                       value={formData.break_minutes}
-                       onChange={(e) => setFormData({ ...formData, break_minutes: e.target.value })}
-                       disabled={!manualBreak && autoBreak !== null}
+                       value={manualBreak ? formData.break_minutes : (autoBreak !== null ? autoBreak : '')}
+                       onChange={(e) => {
+                         if (manualBreak) {
+                           setFormData({ ...formData, break_minutes: e.target.value || 0 });
+                         }
+                       }}
+                       disabled={!manualBreak}
                        className="flex-1"
                      />
                      <div className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded border border-slate-200">
