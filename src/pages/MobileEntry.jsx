@@ -1135,15 +1135,28 @@ export default function MobileEntry() {
             </Button>
 
             {trips.length > 0 && (
-              <Button 
-                variant="outline" 
-                className="w-full py-3 mt-4 border-emerald-300 bg-emerald-50"
-                onClick={handleSaveDraft}
-                disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Tussentijds Opslaan & Terug naar Home
-              </Button>
+              <div className="space-y-2 pt-4 border-t mt-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full py-3 border-emerald-300 bg-emerald-50"
+                  onClick={handleSaveDraft}
+                  disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Tussentijds Opslaan & Terug naar Home
+                </Button>
+                <Button 
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => {
+                    handleSaveDraft();
+                    setTimeout(() => setActiveTab("dienst"), 300);
+                  }}
+                  disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Volgende → Einde diensttijd invoeren
+                </Button>
+              </div>
             )}
               </TabsContent>
 
