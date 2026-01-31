@@ -456,25 +456,6 @@ export default function MobileEntry() {
           </div>
         </div>
 
-        {/* Welcome Message */}
-        <div className="bg-white rounded-xl p-4 text-slate-900">
-          <h2 className="font-bold text-lg mb-2">
-            Welkom in de Interdistri TMS app
-          </h2>
-          {welcomeMessage ? (
-            <p className="text-sm text-slate-600 whitespace-pre-line">
-              {welcomeMessage.message}
-            </p>
-          ) : (
-            <p className="text-sm text-slate-600">
-              Welkom op je werkdag, {currentEmployee ? `${currentEmployee.first_name} ${currentEmployee.last_name}` : user?.full_name}! 
-              Werk met plezier en aandacht, en rijd veilig.
-              Samen zorgen we dat alles op tijd op de juiste plek komt.
-              Succes vandaag! 🚛
-            </p>
-          )}
-        </div>
-
         {/* Today's Shift Time */}
         {todayShift && todayShift.date === todayStr && (
           <div className="mt-4 bg-amber-400 text-amber-900 rounded-xl p-3">
@@ -524,6 +505,25 @@ export default function MobileEntry() {
 
           {/* Home/Frontpage Tab */}
           <TabsContent value="home">
+            {/* Welcome Message */}
+            <div className="bg-white rounded-xl p-4 text-slate-900 mb-4">
+              <h2 className="font-bold text-lg mb-2">
+                Welkom in de Interdistri TMS app
+              </h2>
+              {welcomeMessage ? (
+                <p className="text-sm text-slate-600 whitespace-pre-line">
+                  {welcomeMessage.message}
+                </p>
+              ) : (
+                <p className="text-sm text-slate-600">
+                  Welkom op je werkdag, {currentEmployee ? `${currentEmployee.first_name} ${currentEmployee.last_name}` : user?.full_name}! 
+                  Werk met plezier en aandacht, en rijd veilig.
+                  Samen zorgen we dat alles op tijd op de juiste plek komt.
+                  Succes vandaag! 🚛
+                </p>
+              )}
+            </div>
+
             <MobileFrontpage onNavigate={setActiveTab} />
           </TabsContent>
 
