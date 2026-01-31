@@ -287,10 +287,11 @@ export default function Dashboard() {
                 {recentTimeEntries.map(entry => {
                   const employee = employees.find(e => e.id === entry.employee_id);
                   return (
-                    <div 
-                      key={entry.id} 
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
-                    >
+                    <Link to={createPageUrl("TimeTracking")}>
+                      <div 
+                        key={entry.id} 
+                        className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 cursor-pointer transition-colors"
+                      >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
                           <Clock className="w-5 h-5 text-slate-400" />
