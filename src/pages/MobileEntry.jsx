@@ -267,40 +267,46 @@ export default function MobileEntry() {
   };
 
   const handleSubmitEntry = async () => {
-      // Validatie: er moet minimaal 1 rit zijn ingevoerd
-      if (trips.length === 0) {
-        alert('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen. Ga naar het Ritten tabblad om een rit toe te voegen.');
-        setActiveTab("ritten");
-        return;
-      }
+   // Validatie: er moet minimaal 1 rit zijn ingevoerd
+   if (trips.length === 0) {
+     alert('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen. Ga naar het Ritten tabblad om een rit toe te voegen.');
+     setActiveTab("ritten");
+     return;
+   }
 
-      // Validatie: controleer of rit tijden binnen dienst tijden vallen
-      for (let i = 0; i < trips.length; i++) {
-        const trip = trips[i];
+   // Validatie: controleer of rit tijden binnen dienst tijden vallen
+   for (let i = 0; i < trips.length; i++) {
+     const trip = trips[i];
 
-        // Check start rit niet voor start dienst
-        if (trip.start_time && formData.start_time) {
-          if (trip.start_time < formData.start_time) {
-            alert(`Rit ${i + 1}: Start rit (${trip.start_time}) kan niet voor start dienst (${formData.start_time}) liggen.`);
-            setActiveTab("ritten");
-            return;
-          }
-        }
+     // Check start rit niet voor start dienst
+     if (trip.start_time && formData.start_time) {
+       if (trip.start_time < formData.start_time) {
+         alert(`Rit ${i + 1}: Start rit (${trip.start_time}) kan niet voor start dienst (${formData.start_time}) liggen.`);
+         setActiveTab("ritten");
+         return;
+       }
+     }
 
-        // Check einde rit niet na einde dienst
-        if (trip.end_time && formData.end_time) {
-          if (trip.end_time > formData.end_time) {
-            alert(`Rit ${i + 1}: Einde rit (${trip.end_time}) kan niet na einde dienst (${formData.end_time}) liggen.`);
-            setActiveTab("ritten");
-            return;
-          }
-        }
-      }
+     // Check einde rit niet na einde dienst
+     if (trip.end_time && formData.end_time) {
+       if (trip.end_time > formData.end_time) {
+         alert(`Rit ${i + 1}: Einde rit (${trip.end_time}) kan niet na einde dienst (${formData.end_time}) liggen.`);
+         setActiveTab("ritten");
+         return;
+       }
+     }
+   }
 
-      if (!signature) {
-        setShowSignatureDialog(true);
-        return;
-      }
+   if (!signature) {
+     setShowSignatureDialog(true);
+     return;
+   }
+
+   // If we reach here, proceed with submission
+   await submitAndReturn();
+  };
+
+  const submitAndReturn = async () => {
 
       // Check if any trip has damage
       const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
