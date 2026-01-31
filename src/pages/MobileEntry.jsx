@@ -529,45 +529,45 @@ export default function MobileEntry() {
         </div>
 
         {/* Date & Time Bar */}
-        <div className="bg-white/10 rounded-xl p-3 mb-4">
+        <div className="bg-white/10 rounded-lg p-2 mb-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-100">Vandaag</p>
-              <p className="font-semibold">{format(new Date(), "EEEE d MMMM yyyy", { locale: nl })}</p>
+              <p className="text-xs text-blue-100">Vandaag</p>
+              <p className="font-semibold text-sm">{format(new Date(), "EEEE d MMMM yyyy", { locale: nl })}</p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-blue-100">Tijd</p>
-              <p className="font-semibold text-xl">{format(new Date(), "HH:mm")}</p>
+              <p className="text-xs text-blue-100">Tijd</p>
+              <p className="font-semibold text-lg">{format(new Date(), "HH:mm")}</p>
             </div>
           </div>
         </div>
 
         {/* Today's Shift Time */}
         {todayShift && todayShift.date === todayStr && (
-          <div className="mt-4 bg-amber-400 text-amber-900 rounded-xl p-3">
+          <div className="mt-2 bg-amber-400 text-amber-900 rounded-lg p-2">
             <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
+              <Clock className="w-4 h-4" />
               <div>
                 <p className="text-xs font-medium">Dienst starttijd vandaag</p>
-                <p className="font-bold text-xl">{todayShift.start_time}</p>
+                <p className="font-bold text-lg">{todayShift.start_time}</p>
               </div>
             </div>
             {todayShift.message && (
-              <p className="mt-2 text-sm">{todayShift.message}</p>
+              <p className="mt-1 text-xs">{todayShift.message}</p>
             )}
           </div>
         )}
       </div>
 
       {/* Main Content */}
-      <div className="p-4 -mt-2">
+      <div className="p-3 -mt-1">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
 
           {/* Home/Frontpage Tab */}
           <TabsContent value="home">
             {/* Welcome Message */}
-            <div className="bg-white rounded-xl p-4 text-slate-900 mb-4 border-2 border-blue-200">
-              <h2 className="font-bold text-lg mb-2">
+            <div className="bg-white rounded-lg p-2.5 text-slate-900 mb-2 border-2 border-blue-200">
+              <h2 className="font-bold text-base mb-1">
                 Welkom in de Interdistri TMS app
               </h2>
               {welcomeMessage ? (
