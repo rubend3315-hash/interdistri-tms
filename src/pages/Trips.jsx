@@ -226,36 +226,34 @@ export default function Trips() {
     const arrMinutes = arrH * 60 + arrM;
     let totalAllowance = 0;
 
-    // Calculate for each hour of the trip
-    let currentMinutes = depMinutes;
-    
-    while (currentMinutes < arrMinutes) {
-      const nextMinutes = Math.min(currentMinutes + 60, arrMinutes);
-      const hours = (nextMinutes - currentMinutes) / 60;
-      
-      // Check if this hour falls in a time-specific rule
-      const currentHour = Math.floor(currentMinutes / 60);
-      const currentMin = currentMinutes % 60;
-      
-      let rateToUse = basisRate;
-      
-      // Check each time-specific rule
-      for (const rule of timeRules) {
-        const [startH, startM] = rule.start_time.split(':').map(Number);
-        const [endH, endM] = rule.end_time.split(':').map(Number);
-        const ruleStartMinutes = startH * 60 + startM;
-        const ruleEndMinutes = endH * 60 + endM;
-        
-        // If current time falls within this rule's window, use its rate instead
-        if (currentMinutes >= ruleStartMinutes && currentMinutes < ruleEndMinutes) {
-          rateToUse = rule.value || basisRate;
-          break; // Use first matching time rule
-        }
+    // First, apply basis rate to the entire trip
+    let remaining = arrMinutes - depMinutes;
+
+    // Then, subtract time-specific rule periods and apply their rates instead
+    for (const rule of timeRules) {
+      const [startH, startM] = rule.start_time.split(':').map(Number);
+      const [endH, endM] = rule.end_time.split(':').map(Number);
+      const ruleStartMinutes = startH * 60 + startM;
+      const ruleEndMinutes = endH * 60 + endM;
+
+      // Calculate overlap between trip and rule time window
+      const overlapStart = Math.max(depMinutes, ruleStartMinutes);
+      const overlapEnd = Math.min(arrMinutes, ruleEndMinutes);
+
+      if (overlapEnd > overlapStart) {
+        const overlapMinutes = overlapEnd - overlapStart;
+        const overlapHours = overlapMinutes / 60;
+        const ruleRate = rule.value || basisRate;
+
+        // Subtract basis from this period and add the rule rate
+        totalAllowance -= overlapHours * basisRate; // Remove basis
+        totalAllowance += overlapHours * ruleRate;  // Add rule rate
       }
-      
-      totalAllowance += hours * rateToUse;
-      currentMinutes = nextMinutes;
     }
+
+    // Apply basis rate to entire trip duration
+    const totalHours = (arrMinutes - depMinutes) / 60;
+    totalAllowance += totalHours * basisRate;
 
     return totalAllowance;
   };
