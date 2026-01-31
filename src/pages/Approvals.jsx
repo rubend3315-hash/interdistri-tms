@@ -266,12 +266,6 @@ export default function Approvals() {
                       Reiskosten: {entry.travel_allowance_multiplier}x
                     </div>
                   )}
-                  {entry.subsistence_allowance && entry.subsistence_allowance > 0 && (
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <FileText className="w-4 h-4 text-slate-400" />
-                      Verblijfskosten: €{entry.subsistence_allowance.toFixed(2)}
-                    </div>
-                  )}
                 </div>
 
                 {entry.notes && (
