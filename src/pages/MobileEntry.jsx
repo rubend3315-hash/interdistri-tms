@@ -402,6 +402,11 @@ export default function MobileEntry() {
   const handleSaveDraft = async () => {
    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
 
+   // Calculate automatic break
+   let breakMinutes = Number(formData.break_minutes) || 0;
+   const autoBreak = await getBreakMinutesForHours(hours);
+   breakMinutes = autoBreak || breakMinutes;
+
    // Save time entry as draft
    createTimeEntryMutation.mutate({
      employee_id: currentEmployee?.id,
@@ -410,8 +415,8 @@ export default function MobileEntry() {
      year: getYear(new Date(formData.date)),
      start_time: formData.start_time,
      end_time: formData.end_time,
-     break_minutes: Number(formData.break_minutes) || 0,
-     total_hours: hours,
+     break_minutes: breakMinutes,
+     total_hours: calculateHours(formData.start_time, formData.end_time, breakMinutes),
      shift_type: "Dag",
      notes: formData.notes,
      status: "Concept"
