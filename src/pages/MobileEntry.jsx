@@ -1113,7 +1113,17 @@ export default function MobileEntry() {
             >
               <Plus className="w-5 h-5 mr-2" />
               Regel Toevoegen
-              </Button>
+            </Button>
+
+            <Button 
+              variant="outline" 
+              className="w-full py-3 mt-4 border-blue-300"
+              onClick={handleSaveDraft}
+              disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Tussentijds Opslaan
+            </Button>
               </TabsContent>
 
           {/* Inspectie Tab */}
