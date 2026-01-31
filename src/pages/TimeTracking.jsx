@@ -373,7 +373,7 @@ export default function TimeTracking() {
 
       {/* Entry Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedEntry ? 'Uren Bewerken' : 'Uren Invoeren'}
