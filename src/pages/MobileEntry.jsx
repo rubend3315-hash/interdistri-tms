@@ -510,6 +510,17 @@ export default function MobileEntry() {
               })}
             </div>
           </div>
+
+          {/* Logout Button */}
+          <div className="p-4 border-t border-slate-200">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-sm font-medium">Afmelden</span>
+            </button>
+          </div>
         </div>
       </div>
       
@@ -517,12 +528,6 @@ export default function MobileEntry() {
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-2.5 pb-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="p-1.5 hover:bg-white/20 rounded-lg"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
               <Truck className="w-5 h-5" />
             </div>
@@ -531,14 +536,12 @@ export default function MobileEntry() {
               <p className="text-xs text-blue-100">Mobiele App</p>
             </div>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleLogout}
-            className="text-white hover:bg-white/20 h-8 w-8"
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="p-1.5 hover:bg-white/20 rounded-lg"
           >
-            <LogOut className="w-4 h-4" />
-          </Button>
+            <Menu className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Date & Time Bar */}
