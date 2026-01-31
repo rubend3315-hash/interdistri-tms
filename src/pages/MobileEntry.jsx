@@ -367,19 +367,27 @@ export default function MobileEntry() {
         });
       }
 
+      // Show success or offline message
+      if (isOnline) {
+        alert('✓ Dienst en ritten succesvol ingediend!');
+      } else {
+        alert('📱 Offline modus: Uw gegevens zijn opgeslagen en worden automatisch gesynchroniseerd wanneer de verbinding hersteld is.');
+      }
+
       // Reset form
       setTrips([]);
       setSignature(null);
-
-      if (!isOnline) {
-        alert('Offline modus: Uw gegevens zijn opgeslagen en worden automatisch gesynchroniseerd wanneer de verbinding hersteld is.');
-      }
 
       // Open Bumper link if damage occurred
       if (hasDamage) {
         window.open('https://www.mijn.bumper.nl', '_blank');
       }
-    };
+
+      // Go back to home after a short delay
+      setTimeout(() => {
+        setActiveTab("home");
+      }, 500);
+      };
 
   const handleSaveDraft = async () => {
    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
