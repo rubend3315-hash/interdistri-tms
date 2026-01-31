@@ -418,11 +418,7 @@ export default function TimeTracking() {
                      <Input
                        type="time"
                        value={formData.end_time}
-                       onChange={(e) => {
-                         const newEnd = e.target.value;
-                         setFormData({ ...formData, end_time: newEnd });
-                         handleTimeChange(formData.start_time, newEnd, formData.shift_type);
-                       }}
+                       onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
                      />
                    </div>
                  </div>
