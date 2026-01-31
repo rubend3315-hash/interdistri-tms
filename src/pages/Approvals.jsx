@@ -34,6 +34,7 @@ export default function Approvals() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editData, setEditData] = useState({});
   const [activeTab, setActiveTab] = useState("pending");
+  const [isManualBreak, setIsManualBreak] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: timeEntries = [], isLoading } = useQuery({
