@@ -360,11 +360,31 @@ export default function Trips() {
                           </p>
                         </div>
                       )}
-                      {trip.departure_time && (
+                      {trip.departure_time && trip.arrival_time && (
                         <div className="text-center">
                           <p className="text-slate-500">Vertrek</p>
                           <p className="font-semibold text-slate-900">{trip.departure_time}</p>
                         </div>
+                      )}
+                      {trip.departure_time && trip.arrival_time && (
+                        <>
+                          <div className="text-center">
+                            <p className="text-slate-500">Begin - Eind</p>
+                            <p className="font-semibold text-slate-900">{trip.departure_time} - {trip.arrival_time}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-slate-500">Uren</p>
+                            <p className="font-semibold text-blue-700">
+                              {(() => {
+                                const [depH, depM] = trip.departure_time.split(':').map(Number);
+                                const [arrH, arrM] = trip.arrival_time.split(':').map(Number);
+                                let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
+                                if (totalMinutes < 0) totalMinutes += 24 * 60;
+                                return (totalMinutes / 60).toFixed(2);
+                              })()}u
+                            </p>
+                          </div>
+                        </>
                       )}
                       {trip.subsistence_allowance > 0 && (
                         <div className="text-center">
