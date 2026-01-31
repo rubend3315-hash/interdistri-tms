@@ -386,10 +386,7 @@ export default function TimeTracking() {
               <Label>Diensttype</Label>
               <Select 
                 value={formData.shift_type || "Dag"} 
-                onValueChange={(v) => {
-                  setFormData({ ...formData, shift_type: v });
-                  handleTimeChange(formData.start_time, formData.end_time, v);
-                }}
+                onValueChange={(v) => setFormData({ ...formData, shift_type: v })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecteer diensttype" />
