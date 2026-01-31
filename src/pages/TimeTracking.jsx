@@ -196,18 +196,7 @@ export default function TimeTracking() {
     }
   };
 
-  const handleTimeChange = async (startTime, endTime, shiftType) => {
-    if (!["Vrij", "Verlof", "Ziek"].includes(shiftType)) {
-      const hours = calculateHours(startTime, endTime, 0);
-      const auto = await getBreakMinutesForHours(hours);
-      setAutoBreak(auto || 30);
-      if (!manualBreak) {
-        setFormData(prev => ({ ...prev, break_minutes: auto || 30 }));
-      }
-    } else {
-      setAutoBreak(null);
-    }
-  };
+
 
   const getEmployeeWeekTotal = (employeeId) => {
     return timeEntries
