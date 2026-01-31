@@ -35,9 +35,10 @@ import {
   Trash2,
   CalendarDays
 } from "lucide-react";
+import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 
 export default function MobileEntry() {
-  const [activeTab, setActiveTab] = useState("dienst");
+  const [activeTab, setActiveTab] = useState("home");
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [signature, setSignature] = useState(null);
   const [trips, setTrips] = useState([]);
@@ -492,7 +493,10 @@ export default function MobileEntry() {
       {/* Main Content */}
       <div className="p-4 -mt-2">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-7 mb-4">
+          <TabsList className="w-full grid grid-cols-8 mb-4">
+           <TabsTrigger value="home" className="text-xs px-2">
+             <Truck className="w-4 h-4" />
+           </TabsTrigger>
            <TabsTrigger value="dienst" className="text-xs px-2">
              <Clock className="w-4 h-4" />
            </TabsTrigger>
@@ -515,6 +519,11 @@ export default function MobileEntry() {
              <ExternalLink className="w-4 h-4" />
            </TabsTrigger>
           </TabsList>
+
+          {/* Home/Frontpage Tab */}
+          <TabsContent value="home">
+            <MobileFrontpage onNavigate={setActiveTab} />
+          </TabsContent>
 
           {/* Planning Tab */}
           <TabsContent value="planning" className="space-y-4">
