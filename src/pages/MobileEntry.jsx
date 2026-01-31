@@ -103,7 +103,8 @@ export default function MobileEntry() {
     mutationFn: (data) => base44.entities.TimeEntry.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
-      setActiveTab("overzicht");
+      alert('Dienst en ritten succesvol ingediend!');
+      setActiveTab("home");
     }
   });
 
