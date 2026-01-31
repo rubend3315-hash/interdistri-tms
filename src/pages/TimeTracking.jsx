@@ -470,40 +470,40 @@ export default function TimeTracking() {
 
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-2">
-                       <Label>Voertuig</Label>
-                       <Select 
-                         value={formData.vehicle_id || "none"} 
-                         onValueChange={(v) => setFormData({ ...formData, vehicle_id: v === "none" ? "" : v })}
-                       >
-                         <SelectTrigger>
-                           <SelectValue placeholder="Selecteer" />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="none">Geen</SelectItem>
-                           {vehicles.map(v => (
-                             <SelectItem key={v.id} value={v.id}>{v.license_plate}</SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
-                     </div>
-                     <div className="space-y-2">
-                       <Label>Klant</Label>
-                       <Select 
-                         value={formData.customer_id || "none"} 
-                         onValueChange={(v) => setFormData({ ...formData, customer_id: v === "none" ? "" : v })}
-                       >
-                         <SelectTrigger>
-                           <SelectValue placeholder="Selecteer" />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="none">Geen</SelectItem>
-                           {customers.map(c => (
-                             <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
-                     </div>
-                 </div>
+                        <Label>Project</Label>
+                        <Select 
+                          value={formData.project_id || "none"} 
+                          onValueChange={(v) => setFormData({ ...formData, project_id: v === "none" ? "" : v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecteer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Geen</SelectItem>
+                            {projects.map(p => (
+                              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Klant</Label>
+                        <Select 
+                          value={formData.customer_id || "none"} 
+                          onValueChange={(v) => setFormData({ ...formData, customer_id: v === "none" ? "" : v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecteer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Geen</SelectItem>
+                            {customers.map(c => (
+                              <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                  </div>
 
                  <div className="space-y-2">
                    <Label>Reiskostenvergoeding (enkele reis)</Label>
