@@ -185,39 +185,39 @@ export default function Trips() {
   const getCustomer = (id) => customers.find(c => c.id === id);
 
   const calculateSubsistenceAllowance = (departureTime, arrivalTime, tripDate) => {
-    if (!departureTime || !arrivalTime) return 0;
+    if (!departureTime || !arrivalTime || !Array.isArray(caoRules) || caoRules.length === 0) return 0;
 
-    // Calculate hours worked
+    // Calculate trip hours (not worked hours)
     const [depH, depM] = departureTime.split(':').map(Number);
     const [arrH, arrM] = arrivalTime.split(':').map(Number);
     let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
     if (totalMinutes < 0) totalMinutes += 24 * 60;
-    const hoursWorked = totalMinutes / 60;
+    const tripHours = totalMinutes / 60;
 
     // Only apply if longer than 4 hours
-    if (hoursWorked <= 4) return 0;
+    if (tripHours <= 4) return 0;
 
-    // Find applicable CAO rule for "Eendaags" (single day)
+    // Find applicable CAO rule for "Eendaags" or "ééndag"
     const applicableRule = caoRules.find(rule => {
+      if (!rule || rule.status !== 'Actief') return false;
+      
       // Check if rule applies to this date
       if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
       if (rule.end_date && new Date(tripDate) > new Date(rule.end_date)) return false;
       
       // Look for rules with "eendaags" or "ééndag" in the name
       const nameLower = (rule.name || '').toLowerCase();
-      if (nameLower.includes('eendaags') || nameLower.includes('ééndag')) return true;
-      
-      return false;
+      return nameLower.includes('eendaags') || nameLower.includes('ééndag');
     });
 
     if (!applicableRule) return 0;
 
     // Calculate based on calculation type
     if (applicableRule.calculation_type === 'Per uur (€/uur)') {
-      const rate = applicableRule.value || applicableRule.fixed_amount || 0;
-      return hoursWorked * rate;
+      const rate = applicableRule.value || 0;
+      return tripHours * rate;
     } else if (applicableRule.calculation_type === 'Per dag (€/dag)' || applicableRule.calculation_type === 'Vast bedrag (€)') {
-      return applicableRule.fixed_amount || applicableRule.value || 0;
+      return applicableRule.fixed_amount || 0;
     }
 
     return 0;
