@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,13 +19,18 @@ import {
   User,
   Calendar,
   Car,
-  FileText
+  FileText,
+  Eye,
+  Edit
 } from "lucide-react";
 
 export default function Approvals() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editData, setEditData] = useState({});
   const [activeTab, setActiveTab] = useState("pending");
   const queryClient = useQueryClient();
 
@@ -101,6 +107,15 @@ export default function Approvals() {
     }
   });
 
+  const updateMutation = useMutation({
+    mutationFn: (data) => base44.entities.TimeEntry.update(selectedEntry.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeEntries-all'] });
+      setIsDetailDialogOpen(false);
+      setIsEditMode(false);
+    }
+  });
+
   const handleApprove = (entry) => {
     approveMutation.mutate(entry);
   };
@@ -115,6 +130,37 @@ export default function Approvals() {
     if (selectedEntry) {
       rejectMutation.mutate({ entry: selectedEntry, reason: rejectionReason });
     }
+  };
+
+  const openDetailDialog = (entry) => {
+    setSelectedEntry(entry);
+    setEditData({
+      date: entry.date,
+      start_time: entry.start_time,
+      end_time: entry.end_time,
+      break_minutes: entry.break_minutes,
+      notes: entry.notes
+    });
+    setIsEditMode(false);
+    setIsDetailDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    const hours = calculateHours(editData.start_time, editData.end_time, editData.break_minutes);
+    updateMutation.mutate({
+      ...editData,
+      total_hours: hours
+    });
+  };
+
+  const calculateHours = (start, end, breakMinutes) => {
+    if (!start || !end) return 0;
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+    let totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+    if (totalMinutes < 0) totalMinutes += 24 * 60;
+    totalMinutes -= breakMinutes || 0;
+    return Math.round(totalMinutes / 60 * 100) / 100;
   };
 
   const getEmployee = (id) => {
@@ -225,28 +271,38 @@ export default function Approvals() {
                 </Badge>
               )}
 
-              {showActions && (
-                <div className="flex gap-2 mt-2">
-                  <Button
-                    size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700"
-                    onClick={() => handleApprove(entry)}
-                    disabled={approveMutation.isPending}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Goedkeuren
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 border-red-200 hover:bg-red-50"
-                    onClick={() => openRejectDialog(entry)}
-                  >
-                    <XCircle className="w-4 h-4 mr-1" />
-                    Afkeuren
-                  </Button>
-                </div>
-              )}
+              <div className="flex gap-2 mt-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openDetailDialog(entry)}
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  Bekijken
+                </Button>
+                {showActions && (
+                  <>
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => handleApprove(entry)}
+                      disabled={approveMutation.isPending}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Goedkeuren
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={() => openRejectDialog(entry)}
+                    >
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Afkeuren
+                    </Button>
+                  </>
+                )}
+              </div>
 
               {entry.approved_by && (
                 <p className="text-xs text-slate-500 mt-2">
@@ -399,6 +455,180 @@ export default function Approvals() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail/Edit Dialog */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={(open) => {
+        setIsDetailDialogOpen(open);
+        if (!open) setIsEditMode(false);
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Tijdregistratie Details</span>
+              {!isEditMode && selectedEntry?.status === 'Ingediend' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsEditMode(true)}
+                >
+                  <Edit className="w-4 h-4 mr-1" />
+                  Bewerken
+                </Button>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedEntry && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-slate-500">Medewerker</Label>
+                  <p className="font-medium">
+                    {getEmployee(selectedEntry.employee_id) ? 
+                      `${getEmployee(selectedEntry.employee_id).first_name} ${getEmployee(selectedEntry.employee_id).last_name}` : 
+                      'Onbekend'}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-500">Status</Label>
+                  <Badge className={
+                    selectedEntry.status === 'Goedgekeurd' ? 'bg-emerald-100 text-emerald-700' :
+                    selectedEntry.status === 'Afgekeurd' ? 'bg-red-100 text-red-700' :
+                    'bg-amber-100 text-amber-700'
+                  }>
+                    {selectedEntry.status}
+                  </Badge>
+                </div>
+              </div>
+
+              {isEditMode ? (
+                <>
+                  <div className="space-y-2">
+                    <Label>Datum</Label>
+                    <Input
+                      type="date"
+                      value={editData.date}
+                      onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Start tijd</Label>
+                      <Input
+                        type="time"
+                        value={editData.start_time}
+                        onChange={(e) => setEditData({ ...editData, start_time: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Eind tijd</Label>
+                      <Input
+                        type="time"
+                        value={editData.end_time}
+                        onChange={(e) => setEditData({ ...editData, end_time: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Pauze (minuten)</Label>
+                    <Input
+                      type="number"
+                      value={editData.break_minutes}
+                      onChange={(e) => setEditData({ ...editData, break_minutes: e.target.value })}
+                    />
+                  </div>
+                  {editData.start_time && editData.end_time && (
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-700">
+                        <strong>Totaal uren:</strong> {calculateHours(editData.start_time, editData.end_time, editData.break_minutes)} uur
+                      </p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label>Opmerkingen</Label>
+                    <Textarea
+                      value={editData.notes || ''}
+                      onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs text-slate-500">Datum</Label>
+                      <p className="font-medium">
+                        {selectedEntry.date ? format(new Date(selectedEntry.date), "EEEE d MMMM yyyy", { locale: nl }) : '-'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-500">Totaal uren</Label>
+                      <p className="font-medium">{selectedEntry.total_hours || 0} uur</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label className="text-xs text-slate-500">Start tijd</Label>
+                      <p className="font-medium">{selectedEntry.start_time || '-'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-500">Eind tijd</Label>
+                      <p className="font-medium">{selectedEntry.end_time || '-'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-500">Pauze</Label>
+                      <p className="font-medium">{selectedEntry.break_minutes || 0} min</p>
+                    </div>
+                  </div>
+                  {selectedEntry.notes && (
+                    <div>
+                      <Label className="text-xs text-slate-500">Opmerkingen</Label>
+                      <p className="text-sm bg-slate-50 p-3 rounded-lg mt-1">{selectedEntry.notes}</p>
+                    </div>
+                  )}
+                  {selectedEntry.signature_url && (
+                    <div>
+                      <Label className="text-xs text-slate-500">Handtekening</Label>
+                      <img 
+                        src={selectedEntry.signature_url} 
+                        alt="Handtekening" 
+                        className="h-20 border rounded mt-1"
+                      />
+                    </div>
+                  )}
+                  {selectedEntry.rejection_reason && (
+                    <div className="p-3 bg-red-50 rounded-lg">
+                      <Label className="text-xs text-slate-500">Reden afkeuring</Label>
+                      <p className="text-sm text-red-700 mt-1">{selectedEntry.rejection_reason}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsDetailDialogOpen(false);
+                    setIsEditMode(false);
+                  }}
+                >
+                  {isEditMode ? 'Annuleren' : 'Sluiten'}
+                </Button>
+                {isEditMode && (
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={handleSaveEdit}
+                    disabled={updateMutation.isPending}
+                  >
+                    Opslaan
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
