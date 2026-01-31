@@ -139,7 +139,8 @@ export default function Approvals() {
       start_time: entry.start_time,
       end_time: entry.end_time,
       break_minutes: entry.break_minutes,
-      notes: entry.notes
+      notes: entry.notes,
+      correction_reason: ''
     });
     setIsEditMode(false);
     setIsDetailDialogOpen(true);
@@ -147,9 +148,33 @@ export default function Approvals() {
 
   const handleSaveEdit = () => {
     const hours = calculateHours(editData.start_time, editData.end_time, editData.break_minutes);
+    
+    // Build edit history
+    const editHistory = selectedEntry.edit_history || [];
+    const editRecord = {
+      edited_at: new Date().toISOString(),
+      edited_by: user?.email,
+      reason: editData.correction_reason,
+      original_data: {
+        date: selectedEntry.date,
+        start_time: selectedEntry.start_time,
+        end_time: selectedEntry.end_time,
+        break_minutes: selectedEntry.break_minutes,
+        total_hours: selectedEntry.total_hours
+      },
+      new_data: {
+        date: editData.date,
+        start_time: editData.start_time,
+        end_time: editData.end_time,
+        break_minutes: editData.break_minutes,
+        total_hours: hours
+      }
+    };
+    
     updateMutation.mutate({
       ...editData,
-      total_hours: hours
+      total_hours: hours,
+      edit_history: [...editHistory, editRecord]
     });
   };
 
@@ -553,6 +578,15 @@ export default function Approvals() {
                       rows={3}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Reden correctie *</Label>
+                    <Textarea
+                      value={editData.correction_reason}
+                      onChange={(e) => setEditData({ ...editData, correction_reason: e.target.value })}
+                      placeholder="Leg uit waarom deze tijdregistratie wordt aangepast..."
+                      rows={2}
+                    />
+                  </div>
                 </>
               ) : (
                 <>
@@ -604,6 +638,44 @@ export default function Approvals() {
                       <p className="text-sm text-red-700 mt-1">{selectedEntry.rejection_reason}</p>
                     </div>
                   )}
+                  {selectedEntry.edit_history && selectedEntry.edit_history.length > 0 && (
+                    <div>
+                      <Label className="text-xs text-slate-500 mb-2 block">Correctie Geschiedenis</Label>
+                      <div className="space-y-2">
+                        {selectedEntry.edit_history.map((edit, idx) => (
+                          <div key={idx} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="flex items-start justify-between mb-2">
+                              <p className="text-xs text-amber-600 font-medium">
+                                Correctie {idx + 1} door {edit.edited_by}
+                              </p>
+                              <p className="text-xs text-amber-600">
+                                {format(new Date(edit.edited_at), "d MMM yyyy HH:mm", { locale: nl })}
+                              </p>
+                            </div>
+                            <p className="text-sm text-amber-900 mb-2">
+                              <strong>Reden:</strong> {edit.reason}
+                            </p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <p className="text-amber-600 font-medium">Voor:</p>
+                                <p className="text-amber-900">
+                                  {edit.original_data.start_time} - {edit.original_data.end_time} 
+                                  ({edit.original_data.total_hours}u)
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-amber-600 font-medium">Na:</p>
+                                <p className="text-amber-900">
+                                  {edit.new_data.start_time} - {edit.new_data.end_time} 
+                                  ({edit.new_data.total_hours}u)
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -621,7 +693,7 @@ export default function Approvals() {
                   <Button
                     className="bg-blue-600 hover:bg-blue-700"
                     onClick={handleSaveEdit}
-                    disabled={updateMutation.isPending}
+                    disabled={updateMutation.isPending || !editData.correction_reason}
                   >
                     Opslaan
                   </Button>
