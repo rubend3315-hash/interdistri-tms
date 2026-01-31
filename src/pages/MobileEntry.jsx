@@ -578,8 +578,8 @@ export default function MobileEntry() {
 
       {/* Main Content */}
       <motion.div 
-        className="p-3 pb-24 overflow-y-auto"
-        style={{ maxHeight: 'calc(100vh - 180px)' }}
+        className="p-3 pb-24"
+        style={{ minHeight: 'calc(100vh - 180px)', overflowY: 'visible' }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.2}
