@@ -133,7 +133,7 @@ export default function Approvals() {
     }
   };
 
-  const openDetailDialog = (entry) => {
+  const openDetailDialog = async (entry) => {
     setSelectedEntry(entry);
     
     // Calculate automatic break for submitted entries if not already set
@@ -144,7 +144,7 @@ export default function Approvals() {
       let totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
       if (totalMinutes < 0) totalMinutes += 24 * 60;
       const totalHours = totalMinutes / 60;
-      breakMinutes = getBreakScheduleMinutes(totalHours);
+      breakMinutes = await getBreakMinutesForHours(totalHours);
     }
     
     setEditData({
