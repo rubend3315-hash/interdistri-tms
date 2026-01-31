@@ -6,7 +6,6 @@ import OfflineSyncIndicator from "@/components/OfflineSyncIndicator";
 import { format, getWeek, getYear } from "date-fns";
 import { nl } from "date-fns/locale";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { getBreakMinutesForHours } from "@/components/utils/breakScheduleUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -307,16 +306,11 @@ export default function MobileEntry() {
     submitAndReturn();
   };
 
-  const submitAndReturn = async () => {
+  const submitAndReturn = () => {
       // Check if any trip has damage
       const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
 
       const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
-
-      // Calculate automatic break
-      let breakMinutes = Number(formData.break_minutes) || 0;
-      const autoBreak = await getBreakMinutesForHours(hours);
-      breakMinutes = autoBreak || breakMinutes;
 
       const timeEntryData = {
         employee_id: currentEmployee?.id,
@@ -325,8 +319,8 @@ export default function MobileEntry() {
         year: getYear(new Date(formData.date)),
         start_time: formData.start_time,
         end_time: formData.end_time,
-        break_minutes: breakMinutes,
-        total_hours: calculateHours(formData.start_time, formData.end_time, breakMinutes),
+        break_minutes: Number(formData.break_minutes) || 0,
+        total_hours: hours,
         shift_type: "Dag",
         notes: formData.notes,
         status: isOnline ? "Ingediend" : "Concept",
@@ -402,11 +396,6 @@ export default function MobileEntry() {
   const handleSaveDraft = async () => {
    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
 
-   // Calculate automatic break
-   let breakMinutes = Number(formData.break_minutes) || 0;
-   const autoBreak = await getBreakMinutesForHours(hours);
-   breakMinutes = autoBreak || breakMinutes;
-
    // Save time entry as draft
    createTimeEntryMutation.mutate({
      employee_id: currentEmployee?.id,
@@ -415,8 +404,8 @@ export default function MobileEntry() {
      year: getYear(new Date(formData.date)),
      start_time: formData.start_time,
      end_time: formData.end_time,
-     break_minutes: breakMinutes,
-     total_hours: calculateHours(formData.start_time, formData.end_time, breakMinutes),
+     break_minutes: Number(formData.break_minutes) || 0,
+     total_hours: hours,
      shift_type: "Dag",
      notes: formData.notes,
      status: "Concept"
