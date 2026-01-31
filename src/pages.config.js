@@ -68,6 +68,7 @@ import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
 import MobileEntry from './pages/MobileEntry';
+import HelpPage from './pages/HelpPage';
 import __Layout from './Layout.jsx';
 
 
@@ -93,6 +94,7 @@ export const PAGES = {
     "Users": Users,
     "Vehicles": Vehicles,
     "MobileEntry": MobileEntry,
+    "HelpPage": HelpPage,
 }
 
 export const pagesConfig = {
