@@ -157,6 +157,7 @@ export default function Approvals() {
       notes: entry.notes,
       correction_reason: ''
     });
+    setIsManualBreak(false);
     setIsEditMode(false);
     setIsDetailDialogOpen(true);
   };
