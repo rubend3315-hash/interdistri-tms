@@ -5,6 +5,7 @@ import { useOfflineSync } from "@/components/utils/useOfflineSync";
 import OfflineSyncIndicator from "@/components/OfflineSyncIndicator";
 import { format, getWeek, getYear } from "date-fns";
 import { nl } from "date-fns/locale";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,18 @@ export default function MobileEntry() {
   const canvasRef = useRef(null);
   const queryClient = useQueryClient();
   const { isOnline, syncStatus, addToQueue } = useOfflineSync();
+
+  // Tab order for swiping
+  const tabOrder = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "links"];
+  
+  const handleSwipe = (direction) => {
+    const currentIndex = tabOrder.indexOf(activeTab);
+    if (direction === "left" && currentIndex < tabOrder.length - 1) {
+      setActiveTab(tabOrder[currentIndex + 1]);
+    } else if (direction === "right" && currentIndex > 0) {
+      setActiveTab(tabOrder[currentIndex - 1]);
+    }
+  };
 
   const { data: user, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
@@ -561,10 +574,19 @@ export default function MobileEntry() {
 
       {/* Main Content */}
       <div className="p-3 -mt-1">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
 
-          {/* Home/Frontpage Tab */}
-          <TabsContent value="home">
+      {/* Home/Frontpage Tab */}
+      <TabsContent value="home" asChild>
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        onDragEnd={(e, info) => {
+          if (info.offset.x < -50) handleSwipe("left");
+          if (info.offset.x > 50) handleSwipe("right");
+        }}
+      >
             {/* Welcome Message */}
             <div className="bg-white rounded-lg p-2.5 text-slate-900 mb-2 border-2 border-blue-200">
               <h2 className="font-bold text-base mb-1">
@@ -585,10 +607,20 @@ export default function MobileEntry() {
             </div>
 
             <MobileFrontpage onNavigate={setActiveTab} />
+            </motion.div>
           </TabsContent>
 
           {/* Planning Tab */}
-          <TabsContent value="planning" className="space-y-4">
+          <TabsContent value="planning" className="space-y-4" asChild>
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50) handleSwipe("left");
+                if (info.offset.x > 50) handleSwipe("right");
+              }}
+            >
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -656,7 +688,16 @@ export default function MobileEntry() {
           </TabsContent>
 
           {/* Dienst Tab */}
-           <TabsContent value="dienst" className="space-y-4">
+           <TabsContent value="dienst" className="space-y-4" asChild>
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50) handleSwipe("left");
+                if (info.offset.x > 50) handleSwipe("right");
+              }}
+            >
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -753,12 +794,22 @@ export default function MobileEntry() {
                     Indienen
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </CardContent>
+                </Card>
+                </motion.div>
+                </TabsContent>
 
           {/* Ritten Tab */}
-          <TabsContent value="ritten" className="space-y-4">
+          <TabsContent value="ritten" className="space-y-4" asChild>
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50) handleSwipe("left");
+                if (info.offset.x > 50) handleSwipe("right");
+              }}
+            >
             <Card className="bg-blue-900 text-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1032,11 +1083,21 @@ export default function MobileEntry() {
             >
               <Plus className="w-5 h-5 mr-2" />
               Regel Toevoegen
-            </Button>
-          </TabsContent>
+              </Button>
+              </motion.div>
+              </TabsContent>
 
           {/* Inspectie Tab */}
-          <TabsContent value="inspectie" className="space-y-4">
+          <TabsContent value="inspectie" className="space-y-4" asChild>
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50) handleSwipe("left");
+                if (info.offset.x > 50) handleSwipe("right");
+              }}
+            >
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1161,7 +1222,16 @@ export default function MobileEntry() {
           </TabsContent>
 
           {/* Declaratie Tab */}
-          <TabsContent value="declaratie" className="space-y-4">
+          <TabsContent value="declaratie" className="space-y-4" asChild>
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50) handleSwipe("left");
+                if (info.offset.x > 50) handleSwipe("right");
+              }}
+            >
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1284,7 +1354,16 @@ export default function MobileEntry() {
           </TabsContent>
 
           {/* Overzicht Tab */}
-          <TabsContent value="overzicht" className="space-y-4">
+          <TabsContent value="overzicht" className="space-y-4" asChild>
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50) handleSwipe("left");
+                if (info.offset.x > 50) handleSwipe("right");
+              }}
+            >
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1327,7 +1406,16 @@ export default function MobileEntry() {
           </TabsContent>
 
           {/* Links Tab */}
-          <TabsContent value="links" className="space-y-4">
+          <TabsContent value="links" className="space-y-4" asChild>
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50) handleSwipe("left");
+                if (info.offset.x > 50) handleSwipe("right");
+              }}
+            >
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Snelle links</CardTitle>
@@ -1358,9 +1446,10 @@ export default function MobileEntry() {
                   <ExternalLink className="w-4 h-4 text-slate-400" />
                 </a>
               </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </Card>
+              </motion.div>
+              </TabsContent>
+              </Tabs>
       </div>
 
       {/* Signature Dialog */}
