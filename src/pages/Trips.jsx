@@ -215,8 +215,7 @@ export default function Trips() {
 
     let totalAllowance = 0;
     const arrMinutes = arrH * 60 + arrM;
-    const totalMinutes = arrMinutes - depMinutes;
-    const totalHours = totalMinutes / 60;
+    const totalHours = tripHours;
 
     // Check for basis rules (verblijfskosten voor vertrek voor 14:00)
     if (departsBefore14) {
