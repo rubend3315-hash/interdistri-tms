@@ -439,7 +439,7 @@ export default function Trips() {
                           <div className="text-center">
                             <p className="text-slate-500">Vertrek</p>
                             <p className="font-semibold text-slate-900">
-                              {trip.date && format(new Date(trip.date), "d MMM HH:mm", { locale: nl })}
+                              {trip.date && format(new Date(trip.date), "d MMM", { locale: nl })}
                               {trip.departure_time && ` ${trip.departure_time}`}
                             </p>
                           </div>
