@@ -112,7 +112,7 @@ export default function TimeTracking() {
     return Math.round(totalMinutes / 60 * 100) / 100;
   };
 
-  const openEntryDialog = (employeeId, date) => {
+  const openEntryDialog = async (employeeId, date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const existing = getEntryForEmployeeDay(employeeId, date);
     
@@ -130,6 +130,8 @@ export default function TimeTracking() {
         travel_allowance_multiplier: existing.travel_allowance_multiplier || 0,
         notes: existing.notes || ""
       });
+      setManualBreak(false);
+      setAutoBreak(null);
     } else {
       setSelectedEntry(null);
       setFormData({
@@ -144,6 +146,8 @@ export default function TimeTracking() {
         travel_allowance_multiplier: 0,
         notes: ""
       });
+      setManualBreak(false);
+      setAutoBreak(null);
     }
     setIsDialogOpen(true);
   };
