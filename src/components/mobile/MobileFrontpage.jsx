@@ -30,12 +30,16 @@ export default function MobileFrontpage({ onNavigate }) {
       const employee = await base44.entities.Employee.filter({ email: user.email });
       if (!employee || employee.length === 0) return [];
       
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const shifts = await base44.entities.ShiftTime.filter({ 
-        date: today,
+      const allShifts = await base44.entities.ShiftTime.filter({ 
         department: employee[0].department 
       });
-      return shifts;
+      
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const upcomingShifts = allShifts
+        .filter(shift => shift.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      
+      return upcomingShifts.slice(0, 1);
     },
     enabled: !!user
   });
