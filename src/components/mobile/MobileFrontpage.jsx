@@ -29,47 +29,26 @@ export default function MobileFrontpage({ onNavigate }) {
   });
 
   const currentEmployee = employees.find(e => e.email === user?.email);
-  
-  console.log('👤 User email:', user?.email);
-  console.log('👥 All employees:', employees.map(e => e.email));
-  console.log('✅ Current employee:', currentEmployee);
 
   const { data: shiftTimes = [] } = useQuery({
     queryKey: ['shiftTimes', currentEmployee?.id],
     queryFn: async () => {
-      console.log('🔍 ShiftTimes query starting...');
-      console.log('📍 Current employee department:', currentEmployee?.department);
-      
-      if (!currentEmployee?.department) {
-        console.log('❌ No department, returning []');
-        return [];
-      }
+      if (!currentEmployee?.department) return [];
       
       const allShifts = await base44.entities.ShiftTime.list();
-      console.log('📋 All shifts:', allShifts);
-      
       const today = format(new Date(), 'yyyy-MM-dd');
-      console.log('📅 Today:', today);
       
-      const filteredShifts = allShifts.filter(shift => {
-        const match = shift.department === currentEmployee.department && shift.date >= today;
-        console.log(`   Shift ${shift.date} (${shift.department}): ${match ? '✅' : '❌'}`);
-        return match;
-      });
-      
-      console.log('✅ Filtered shifts:', filteredShifts);
+      const filteredShifts = allShifts.filter(shift => 
+        shift.department === currentEmployee.department && shift.date >= today
+      );
       
       const sortedShifts = filteredShifts.sort((a, b) => a.date.localeCompare(b.date));
-      const result = sortedShifts.slice(0, 1);
-      console.log('🎯 Final result:', result);
-      
-      return result;
+      return sortedShifts.slice(0, 1);
     },
     enabled: !!currentEmployee?.department
   });
 
   const todayShift = shiftTimes.length > 0 ? shiftTimes[0] : null;
-  console.log('🎯 TodayShift to display:', todayShift);
 
   const menuItems = [
     {
