@@ -613,6 +613,11 @@ export default function MobileEntry() {
                   {todayShift.date === todayStr ? 'Dienst starttijd vandaag' : `Dienst ${format(new Date(todayShift.date), "EEEE d MMMM", { locale: nl })}`}
                 </p>
                 <p className="font-bold text-lg">{todayShift.service_start_time}</p>
+                {todayShift.start_time && todayShift.end_time && (
+                  <p className="text-xs mt-1">
+                    <strong>Shift:</strong> {todayShift.start_time} - {todayShift.end_time}
+                  </p>
+                )}
               </div>
             </div>
             {todayShift.message && (
