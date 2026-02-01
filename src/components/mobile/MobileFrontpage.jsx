@@ -107,6 +107,36 @@ export default function MobileFrontpage({ onNavigate }) {
         </CardContent>
       </Card>
 
+      {todayShift && (
+        <Card className="border-l-4 border-l-green-600 bg-green-50">
+          <CardContent className="p-2">
+            <div className="flex items-start gap-2">
+              <CircleDot className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 mb-0.5">
+                  Dienst-Shifttijd
+                </h3>
+                <div className="text-xs text-slate-700 space-y-0.5">
+                  <p>
+                    <strong>Start dienst:</strong> {todayShift.service_start_time}
+                  </p>
+                  {todayShift.start_time && todayShift.end_time && (
+                    <p>
+                      <strong>Shift:</strong> {todayShift.start_time} - {todayShift.end_time}
+                    </p>
+                  )}
+                  {todayShift.message && (
+                    <p className="mt-1 text-slate-600">
+                      💬 {todayShift.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 gap-1.5">
         {menuItems.map((item) => {
           const Icon = item.icon;
