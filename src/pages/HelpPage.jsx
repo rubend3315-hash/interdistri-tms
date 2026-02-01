@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Zap, Layers, Users, Clock, CheckSquare, Truck, CalendarDays, Shield } from 'lucide-react';
+import { BookOpen, Zap, Layers, Users, Clock, CheckSquare, Truck, CalendarDays, Shield, Smartphone } from 'lucide-react';
 
 export default function HelpPage() {
   const [activeTab, setActiveTab] = useState('functions');
@@ -170,6 +170,30 @@ export default function HelpPage() {
                   <li>✓ CAO-regels en toeslagen</li>
                   <li>✓ Loontabellen</li>
                   <li>✓ Gebruikers en permissies</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Mobile Entry */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-blue-600" />
+                  Mobiele Invoer
+                </CardTitle>
+                <CardDescription>Onderweg uren en ritten registreren</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Complete mobiele app voor chauffeurs:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Diensttijd en ritten invoeren</li>
+                  <li>✓ Voertuiginspectie met foto's</li>
+                  <li>✓ Declaraties indienen</li>
+                  <li>✓ Planning bekijken</li>
+                  <li>✓ Offline synchronisatie</li>
+                  <li>✓ Handtekening functionaliteit</li>
                 </ul>
               </CardContent>
             </Card>
@@ -551,6 +575,82 @@ export default function HelpPage() {
                   <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
                     <p className="text-sm text-orange-700">
                       💡 <strong>Tip:</strong> Bijhouden van APK en verzekering is wettelijk verplicht. Het systeem herinnert je wanneer deze vervallen.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Mobile Entry Handleiding */}
+            <AccordionItem value="mobile-entry-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Smartphone className="w-4 h-4 mr-2" />
+                Hoe gebruik ik de Mobiele App?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">1. Toegang tot de mobiele app</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      De mobiele app opent automatisch wanneer je de app bezoekt op je smartphone. Op desktop zie je een link "Mobiele Invoer" in het menu.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">2. Diensttijd registreren</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Stap 1:</strong> Voer je starttijd in bij "Diensttijd"</li>
+                      <li>• <strong>Stap 2:</strong> Ga naar "Ritten" en voeg minimaal één rit toe</li>
+                      <li>• <strong>Stap 3:</strong> Terug naar "Diensttijd" en voer eindtijd in</li>
+                      <li>• <strong>Stap 4:</strong> Plaats je handtekening en dien in</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">3. Ritten invoeren</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Voeg een rit toe met "Regel Toevoegen"</li>
+                      <li>• Vul starttijd en eindtijd van de rit in</li>
+                      <li>• Selecteer kenteken en klant</li>
+                      <li>• Voer begin- en eind kilometerstand in</li>
+                      <li>• Optioneel: brandstof, AdBlue, laadgegevens</li>
+                      <li>• Voeg route details en opmerkingen toe</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">4. Validaties</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      De app controleert automatisch:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Minimaal één rit moet zijn ingevoerd</li>
+                      <li>• Elke rit moet een start- én eindtijd hebben</li>
+                      <li>• Rit tijden moeten binnen dienst tijden vallen</li>
+                      <li>• Handtekening is verplicht bij indienen</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">5. Overige functies</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Voertuiginspectie:</strong> Controleer je voertuig en maak foto's van schade</li>
+                      <li>• <strong>Declaratie:</strong> Dien kosten in met bon/foto</li>
+                      <li>• <strong>Overzicht:</strong> Bekijk goedgekeurde diensten</li>
+                      <li>• <strong>Planning:</strong> Zie je rooster voor deze week</li>
+                      <li>• <strong>Links:</strong> Snelle toegang tot Bumper en Werknemersloket</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">6. Offline werken</h4>
+                    <p className="text-sm text-slate-600">
+                      De app werkt ook offline. Je gegevens worden automatisch gesynchroniseerd zodra je weer online bent. Een indicator toont je verbindingsstatus.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>Tip:</strong> Gebruik "Tussentijds Opslaan" bij het invoeren van ritten om je gegevens veilig op te slaan voordat je verder gaat.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> Als je schade rijdt, wordt automatisch de Bumper-link geopend na het indienen.
                     </p>
                   </div>
                 </div>
