@@ -27,19 +27,30 @@ export default function MobileFrontpage({ onNavigate }) {
     queryKey: ['shiftTimes', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const employee = await base44.entities.Employee.filter({ email: user.email });
-      if (!employee || employee.length === 0) return [];
       
-      const allShifts = await base44.entities.ShiftTime.filter({ 
-        department: employee[0].department 
-      });
+      const employees = await base44.entities.Employee.filter({ email: user.email });
+      if (!employees || employees.length === 0) {
+        console.log('Geen employee gevonden voor email:', user.email);
+        return [];
+      }
+      
+      const employee = employees[0];
+      console.log('Employee department:', employee.department);
+      
+      const allShifts = await base44.entities.ShiftTime.list();
+      console.log('Alle shifts:', allShifts);
       
       const today = format(new Date(), 'yyyy-MM-dd');
-      const upcomingShifts = allShifts
-        .filter(shift => shift.date >= today)
-        .sort((a, b) => a.date.localeCompare(b.date));
+      console.log('Vandaag:', today);
       
-      return upcomingShifts.slice(0, 1);
+      const filteredShifts = allShifts.filter(shift => 
+        shift.department === employee.department && shift.date >= today
+      );
+      console.log('Gefilterde shifts:', filteredShifts);
+      
+      const sortedShifts = filteredShifts.sort((a, b) => a.date.localeCompare(b.date));
+      
+      return sortedShifts.slice(0, 1);
     },
     enabled: !!user
   });
