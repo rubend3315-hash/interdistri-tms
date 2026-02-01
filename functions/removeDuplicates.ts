@@ -22,7 +22,10 @@ Deno.serve(async (req) => {
                 contracts: 0,
                 time_entries: 0,
                 trips: 0,
-                schedules: 0
+                schedules: 0,
+                cao_rules: 0,
+                salary_tables: 0,
+                holidays: 0
             },
             errors: []
         };
@@ -220,6 +223,80 @@ Deno.serve(async (req) => {
                         results.removed.schedules++;
                     } catch (error) {
                         results.errors.push(`Schedule ${group[i].id}: ${error.message}`);
+                    }
+                }
+            }
+        }
+
+        // Remove duplicate CAO rules (by name)
+        console.log('Checking CAO rules for duplicates...');
+        const caoRules = await base44.asServiceRole.entities.CaoRule.list(undefined, undefined, dataEnv);
+        const caoGroups = {};
+        for (const rule of caoRules) {
+            if (!caoGroups[rule.name]) {
+                caoGroups[rule.name] = [];
+            }
+            caoGroups[rule.name].push(rule);
+        }
+        for (const group of Object.values(caoGroups)) {
+            if (group.length > 1) {
+                group.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                for (let i = 1; i < group.length; i++) {
+                    try {
+                        await base44.asServiceRole.entities.CaoRule.delete(group[i].id, dataEnv);
+                        results.removed.cao_rules++;
+                    } catch (error) {
+                        results.errors.push(`CaoRule ${group[i].id}: ${error.message}`);
+                    }
+                }
+            }
+        }
+
+        // Remove duplicate salary tables (by name + scale + step)
+        console.log('Checking salary tables for duplicates...');
+        const salaryTables = await base44.asServiceRole.entities.SalaryTable.list(undefined, undefined, dataEnv);
+        const salaryGroups = {};
+        for (const table of salaryTables) {
+            const key = `${table.name}_${table.scale}_${table.step}`;
+            if (!salaryGroups[key]) {
+                salaryGroups[key] = [];
+            }
+            salaryGroups[key].push(table);
+        }
+        for (const group of Object.values(salaryGroups)) {
+            if (group.length > 1) {
+                group.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                for (let i = 1; i < group.length; i++) {
+                    try {
+                        await base44.asServiceRole.entities.SalaryTable.delete(group[i].id, dataEnv);
+                        results.removed.salary_tables++;
+                    } catch (error) {
+                        results.errors.push(`SalaryTable ${group[i].id}: ${error.message}`);
+                    }
+                }
+            }
+        }
+
+        // Remove duplicate holidays (by name + date + year)
+        console.log('Checking holidays for duplicates...');
+        const holidays = await base44.asServiceRole.entities.Holiday.list(undefined, undefined, dataEnv);
+        const holidayGroups = {};
+        for (const holiday of holidays) {
+            const key = `${holiday.name}_${holiday.date}_${holiday.year}`;
+            if (!holidayGroups[key]) {
+                holidayGroups[key] = [];
+            }
+            holidayGroups[key].push(holiday);
+        }
+        for (const group of Object.values(holidayGroups)) {
+            if (group.length > 1) {
+                group.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                for (let i = 1; i < group.length; i++) {
+                    try {
+                        await base44.asServiceRole.entities.Holiday.delete(group[i].id, dataEnv);
+                        results.removed.holidays++;
+                    } catch (error) {
+                        results.errors.push(`Holiday ${group[i].id}: ${error.message}`);
                     }
                 }
             }
