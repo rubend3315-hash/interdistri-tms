@@ -79,8 +79,19 @@ export default function MobileEntry() {
   });
 
   const { data: shiftTimes = [] } = useQuery({
-    queryKey: ['shiftTimes'],
-    queryFn: () => base44.entities.ShiftTime.list('-date', 1)
+    queryKey: ['shiftTimes', currentEmployee?.id],
+    queryFn: async () => {
+      if (!currentEmployee?.department) return [];
+      const allShifts = await base44.entities.ShiftTime.filter({ 
+        department: currentEmployee.department 
+      });
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const upcomingShifts = allShifts
+        .filter(shift => shift.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      return upcomingShifts.slice(0, 1);
+    },
+    enabled: !!currentEmployee?.department
   });
 
   const { data: supervisorMessages = [] } = useQuery({
