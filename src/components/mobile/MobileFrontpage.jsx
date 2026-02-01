@@ -29,24 +29,15 @@ export default function MobileFrontpage({ onNavigate }) {
       if (!user) return [];
       
       const employees = await base44.entities.Employee.filter({ email: user.email });
-      if (!employees || employees.length === 0) {
-        console.log('Geen employee gevonden voor email:', user.email);
-        return [];
-      }
+      if (!employees || employees.length === 0) return [];
       
       const employee = employees[0];
-      console.log('Employee department:', employee.department);
-      
       const allShifts = await base44.entities.ShiftTime.list();
-      console.log('Alle shifts:', allShifts);
-      
       const today = format(new Date(), 'yyyy-MM-dd');
-      console.log('Vandaag:', today);
       
       const filteredShifts = allShifts.filter(shift => 
         shift.department === employee.department && shift.date >= today
       );
-      console.log('Gefilterde shifts:', filteredShifts);
       
       const sortedShifts = filteredShifts.sort((a, b) => a.date.localeCompare(b.date));
       
