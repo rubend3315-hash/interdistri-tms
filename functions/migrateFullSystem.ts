@@ -251,10 +251,20 @@ Deno.serve(async (req) => {
         for (const entity of trips) {
             try {
                 const { id, created_date, updated_date, created_by, employee_id, vehicle_id, customer_id, project_id, ...data } = entity;
+                
+                // Skip if required fields cannot be mapped
+                const mappedEmployeeId = employee_id ? entityMappings[`employee_${employee_id}`] : null;
+                const mappedVehicleId = vehicle_id ? entityMappings[`vehicle_${vehicle_id}`] : null;
+                
+                if (!mappedEmployeeId || !mappedVehicleId) {
+                    results.errors.push(`Trip ${entity.id}: Overgeslagen - medewerker of voertuig niet gevonden`);
+                    continue;
+                }
+                
                 const newData = {
                     ...data,
-                    employee_id: employee_id ? entityMappings[`employee_${employee_id}`] : null,
-                    vehicle_id: vehicle_id ? entityMappings[`vehicle_${vehicle_id}`] : null,
+                    employee_id: mappedEmployeeId,
+                    vehicle_id: mappedVehicleId,
                     customer_id: customer_id ? entityMappings[`customer_${customer_id}`] : null,
                     project_id: project_id ? entityMappings[`project_${project_id}`] : null
                 };
