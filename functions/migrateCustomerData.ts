@@ -5,8 +5,8 @@ Deno.serve(async (req) => {
         const base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
 
-        // Only admins can migrate data
-        if (user?.role !== 'admin') {
+        // Only admins or specific user can migrate data
+        if (user?.role !== 'admin' && user?.email !== 'rubend3315@gmail.com') {
             return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
         }
 
