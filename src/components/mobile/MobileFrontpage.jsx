@@ -122,6 +122,9 @@ export default function MobileFrontpage({ onNavigate }) {
                 </h3>
                 <div className="text-xs text-slate-700 space-y-0.5">
                   <p>
+                    <strong>{format(new Date(todayShift.date), "EEEE d MMMM", { locale: nl })}</strong>
+                  </p>
+                  <p>
                     <strong>Start dienst:</strong> {todayShift.service_start_time}
                   </p>
                   {todayShift.start_time && todayShift.end_time && (
