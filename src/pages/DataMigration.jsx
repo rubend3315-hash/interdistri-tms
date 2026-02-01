@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, Database, AlertTriangle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { ArrowRight, Database, AlertTriangle, CheckCircle2, Loader2, RefreshCw, Trash2 } from "lucide-react";
 
 export default function DataMigration() {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -39,6 +39,22 @@ export default function DataMigration() {
   const migrateFullSystemMutation = useMutation({
     mutationFn: async () => {
       const response = await base44.functions.invoke('migrateFullSystem', {});
+      return response.data;
+    },
+    onSuccess: (data) => {
+      setMigrationResult(data);
+    },
+    onError: (error) => {
+      setMigrationResult({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  const clearTestDbMutation = useMutation({
+    mutationFn: async () => {
+      const response = await base44.functions.invoke('clearTestDatabase', {});
       return response.data;
     },
     onSuccess: (data) => {
@@ -84,6 +100,25 @@ export default function DataMigration() {
 
     if (confirm) {
       migrateFullSystemMutation.mutate();
+    }
+  };
+
+  const handleClearTestDatabase = () => {
+    const confirm = window.confirm(
+      `⚠️ WAARSCHUWING: Dit zal ALLE data in de Test database PERMANENT verwijderen!\n\n` +
+      `Dit omvat ALLES:\n` +
+      `• Alle medewerkers\n` +
+      `• Alle voertuigen\n` +
+      `• Alle klanten\n` +
+      `• Alle tijdregistraties\n` +
+      `• Alle ritten\n` +
+      `• En alle andere data\n\n` +
+      `Deze actie kan NIET ongedaan worden gemaakt!\n\n` +
+      `Weet je het ABSOLUUT ZEKER?`
+    );
+
+    if (confirm) {
+      clearTestDbMutation.mutate();
     }
   };
 
@@ -296,6 +331,14 @@ export default function DataMigration() {
                 </AlertDescription>
               </Alert>
 
+              <Alert className="bg-blue-50 border-blue-200">
+                <Database className="w-4 h-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <strong>💡 Tip:</strong> Als de Test database niet leeg is, gebruik eerst de "Leeg Test Database" knop hieronder 
+                  om duplicaten te voorkomen.
+                </AlertDescription>
+              </Alert>
+
               <div className="bg-slate-50 rounded-lg p-4 space-y-2">
                 <p className="font-semibold text-slate-900">Wat wordt gemigreerd:</p>
                 <div className="grid grid-cols-2 gap-2 text-sm text-slate-700">
@@ -322,10 +365,31 @@ export default function DataMigration() {
                 </div>
               </div>
 
+              <div className="space-y-3">
+                <Button
+                  variant="destructive"
+                  className="w-full h-12"
+                  onClick={handleClearTestDatabase}
+                  disabled={clearTestDbMutation.isPending}
+                >
+                  {clearTestDbMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Bezig met legen...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Leeg Test Database eerst
+                    </>
+                  )}
+                </Button>
+              </div>
+
               <Button
-                className="w-full bg-red-600 hover:bg-red-700 h-14 text-base"
+                className="w-full bg-blue-600 hover:bg-blue-700 h-14 text-base"
                 onClick={handleFullSystemMigration}
-                disabled={migrateFullSystemMutation.isPending}
+                disabled={migrateFullSystemMutation.isPending || clearTestDbMutation.isPending}
               >
                 {migrateFullSystemMutation.isPending ? (
                   <>
