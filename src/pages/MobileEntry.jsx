@@ -78,22 +78,6 @@ export default function MobileEntry() {
     queryFn: () => base44.entities.Vehicle.list()
   });
 
-  const { data: shiftTimes = [] } = useQuery({
-    queryKey: ['shiftTimes', currentEmployee?.id],
-    queryFn: async () => {
-      if (!currentEmployee?.department) return [];
-      const allShifts = await base44.entities.ShiftTime.filter({ 
-        department: currentEmployee.department 
-      });
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const upcomingShifts = allShifts
-        .filter(shift => shift.date >= today)
-        .sort((a, b) => a.date.localeCompare(b.date));
-      return upcomingShifts.slice(0, 1);
-    },
-    enabled: !!currentEmployee?.department
-  });
-
   const { data: supervisorMessages = [] } = useQuery({
     queryKey: ['supervisorMessages'],
     queryFn: () => base44.entities.SupervisorMessage.filter({ is_active: true })
@@ -142,8 +126,25 @@ export default function MobileEntry() {
 
   // Find current employee
   const currentEmployee = employees.find(e => e.email === user?.email);
-  const todayShift = shiftTimes[0];
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  const { data: shiftTimes = [] } = useQuery({
+    queryKey: ['shiftTimes', currentEmployee?.id],
+    queryFn: async () => {
+      if (!currentEmployee?.department) return [];
+      const allShifts = await base44.entities.ShiftTime.filter({ 
+        department: currentEmployee.department 
+      });
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const upcomingShifts = allShifts
+        .filter(shift => shift.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      return upcomingShifts.slice(0, 1);
+    },
+    enabled: !!currentEmployee?.department
+  });
+
+  const todayShift = shiftTimes[0];
 
   // Get schedules after currentEmployee is defined
   const { data: schedules = [] } = useQuery({
