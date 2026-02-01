@@ -26,20 +26,37 @@ export default function MobileFrontpage({ onNavigate }) {
   const { data: shiftTimes = [] } = useQuery({
     queryKey: ['shiftTimes', user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) {
+        console.log('❌ Geen user');
+        return [];
+      }
       
       const employees = await base44.entities.Employee.filter({ email: user.email });
-      if (!employees || employees.length === 0) return [];
+      console.log('👤 Employees:', employees);
+      
+      if (!employees || employees.length === 0) {
+        console.log('❌ Geen employee gevonden');
+        return [];
+      }
       
       const employee = employees[0];
-      const allShifts = await base44.entities.ShiftTime.list();
-      const today = format(new Date(), 'yyyy-MM-dd');
+      console.log('✅ Employee department:', employee.department);
       
-      const filteredShifts = allShifts.filter(shift => 
-        shift.department === employee.department && shift.date >= today
-      );
+      const allShifts = await base44.entities.ShiftTime.list();
+      console.log('📋 Alle shifts:', allShifts);
+      
+      const today = format(new Date(), 'yyyy-MM-dd');
+      console.log('📅 Vandaag:', today);
+      
+      const filteredShifts = allShifts.filter(shift => {
+        console.log(`   Checking shift: ${shift.date} (${shift.department}) >= ${today}?`, shift.date >= today && shift.department === employee.department);
+        return shift.department === employee.department && shift.date >= today;
+      });
+      
+      console.log('✅ Gefilterde shifts:', filteredShifts);
       
       const sortedShifts = filteredShifts.sort((a, b) => a.date.localeCompare(b.date));
+      console.log('🔢 Gesorteerde shifts:', sortedShifts);
       
       return sortedShifts.slice(0, 1);
     },
