@@ -37,7 +37,9 @@ import {
   CalendarDays,
   Menu,
   Home,
-  X
+  X,
+  Bell,
+  Mail
 } from "lucide-react";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 
@@ -52,7 +54,7 @@ export default function MobileEntry() {
   const { isOnline, syncStatus, addToQueue } = useOfflineSync();
 
   // Tab order for swiping
-  const tabOrder = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "links"];
+  const tabOrder = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "berichten", "links"];
   
   const handleSwipe = (direction) => {
     const currentIndex = tabOrder.indexOf(activeTab);
@@ -88,6 +90,14 @@ export default function MobileEntry() {
     queryFn: () => base44.entities.TimeEntry.filter({ created_by: user?.email }),
     enabled: !!user?.email
   });
+
+  const { data: myMessages = [] } = useQuery({
+    queryKey: ['myMessages', currentEmployee?.id],
+    queryFn: () => base44.entities.Message.filter({ to_employee_id: currentEmployee?.id }),
+    enabled: !!currentEmployee?.id
+  });
+
+  const unreadCount = myMessages.filter(m => !m.is_read).length;
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -497,6 +507,7 @@ export default function MobileEntry() {
     { id: "declaratie", label: "Declaratie", icon: FileText },
     { id: "overzicht", label: "Overzicht", icon: CheckCircle },
     { id: "planning", label: "Planning", icon: CalendarDays },
+    { id: "berichten", label: "Berichten", icon: Mail, badge: unreadCount },
     { id: "links", label: "Links", icon: ExternalLink }
   ];
 
@@ -560,6 +571,11 @@ export default function MobileEntry() {
                       activeTab === item.id ? 'text-blue-600' : 'text-slate-400'
                     }`} />
                     <span className="text-sm">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -673,6 +689,74 @@ export default function MobileEntry() {
             </div>
 
             <MobileFrontpage onNavigate={setActiveTab} />
+          </TabsContent>
+
+          {/* Berichten Tab */}
+          <TabsContent value="berichten" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-blue-600" />
+                  Berichten & Notificaties
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {myMessages.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-4">
+                    Geen berichten
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {myMessages.slice(0, 20).map(message => {
+                      const messageDate = message.created_date ? new Date(message.created_date) : new Date();
+                      return (
+                        <div 
+                          key={message.id} 
+                          className={`p-3 rounded-lg border ${
+                            message.is_read 
+                              ? 'bg-white border-slate-200' 
+                              : 'bg-blue-50 border-blue-200'
+                          }`}
+                          onClick={async () => {
+                            if (!message.is_read) {
+                              await base44.entities.Message.update(message.id, { is_read: true });
+                              queryClient.invalidateQueries({ queryKey: ['myMessages'] });
+                            }
+                          }}
+                        >
+                          <div className="flex items-start justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              {!message.is_read && (
+                                <span className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></span>
+                              )}
+                              <p className="font-semibold text-slate-900 text-sm">
+                                {message.subject || 'Bericht'}
+                              </p>
+                            </div>
+                            {message.priority === 'Urgent' && (
+                              <Badge className="bg-red-100 text-red-700 text-xs">
+                                Urgent
+                              </Badge>
+                            )}
+                            {message.priority === 'Hoog' && (
+                              <Badge className="bg-amber-100 text-amber-700 text-xs">
+                                Hoog
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-600 mb-2 whitespace-pre-wrap">
+                            {message.content}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {format(messageDate, "d MMM yyyy, HH:mm", { locale: nl })}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Planning Tab */}

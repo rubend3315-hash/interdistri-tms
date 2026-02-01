@@ -25,7 +25,8 @@ import {
   ChevronDown,
   Settings,
   Bell,
-  CircleDot
+  CircleDot,
+  Mail
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -80,6 +81,12 @@ const menuItems = [
     ]
   },
   {
+    label: "Communicatie",
+    items: [
+      { name: "Berichten", icon: Mail, page: "Messages" },
+    ]
+  },
+  {
     label: "Beheer",
     items: [
       { name: "Gebruikers", icon: Settings, page: "Users" },
@@ -94,7 +101,7 @@ const menuItems = [
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState(["Kernsystemen", "HR & Beheer", "Loon & Rapportage", "Klanten", "Beheer", "HRM-instellingen"]);
+  const [expandedGroups, setExpandedGroups] = useState(["Kernsystemen", "HR & Beheer", "Loon & Rapportage", "Klanten", "Communicatie", "Beheer", "HRM-instellingen"]);
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
@@ -138,7 +145,8 @@ export default function Layout({ children, currentPageName }) {
       'HRMSettings': 'hrmsettings',
       'Holidays': 'holidays',
       'SalaryReports': 'reports',
-      'MobileEntry': 'mobile'
+      'MobileEntry': 'mobile',
+      'Messages': 'messages'
     };
     
     const requiredPermission = pagePermissionMap[page];
