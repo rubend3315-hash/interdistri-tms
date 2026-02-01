@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowRight, Database, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowRight, Database, AlertTriangle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 
 export default function DataMigration() {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [migrationResult, setMigrationResult] = useState(null);
+  const [activeTab, setActiveTab] = useState("customers");
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['customers-prod'],
@@ -34,6 +36,22 @@ export default function DataMigration() {
     }
   });
 
+  const migrateFullSystemMutation = useMutation({
+    mutationFn: async () => {
+      const response = await base44.functions.invoke('migrateFullSystem', {});
+      return response.data;
+    },
+    onSuccess: (data) => {
+      setMigrationResult(data);
+    },
+    onError: (error) => {
+      setMigrationResult({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
   const handleMigrate = () => {
     if (selectedCustomers.length === 0) {
       alert('Selecteer minimaal één klant om te migreren');
@@ -47,6 +65,25 @@ export default function DataMigration() {
 
     if (confirm) {
       migrateMutation.mutate(selectedCustomers);
+    }
+  };
+
+  const handleFullSystemMigration = () => {
+    const confirm = window.confirm(
+      `⚠️ WAARSCHUWING: Dit zal het VOLLEDIGE SYSTEEM migreren van Productie naar Test!\n\n` +
+      `Dit omvat:\n` +
+      `• Alle medewerkers\n` +
+      `• Alle voertuigen en NIWO vergunningen\n` +
+      `• Alle klanten en gerelateerde data\n` +
+      `• Alle contracten en tijdregistraties\n` +
+      `• Alle ritten en planningen\n` +
+      `• Alle CAO-regels en loontabellen\n` +
+      `• En nog veel meer...\n\n` +
+      `Dit kan enkele minuten duren. Weet je het zeker?`
+    );
+
+    if (confirm) {
+      migrateFullSystemMutation.mutate();
     }
   };
 
@@ -95,21 +132,42 @@ export default function DataMigration() {
             {migrationResult.success ? (
               <div>
                 <strong>Migratie succesvol!</strong>
-                <div className="mt-2 text-sm space-y-1">
-                  <p>• {migrationResult.details.customers} klant(en) gemigreerd</p>
-                  <p>• {migrationResult.details.articles} artikel(en) gemigreerd</p>
-                  <p>• {migrationResult.details.imports} import(s) gemigreerd</p>
-                  <p>• {migrationResult.details.timodel_routes} TI Model route(s) gemigreerd</p>
-                  <p>• {migrationResult.details.routes} route(s) gemigreerd</p>
-                  {migrationResult.details.errors.length > 0 && (
-                    <div className="mt-2">
-                      <p className="font-semibold">Fouten:</p>
-                      {migrationResult.details.errors.map((err, idx) => (
-                        <p key={idx} className="text-red-600">- {err}</p>
-                      ))}
-                    </div>
-                  )}
+                <div className="mt-2 text-sm grid grid-cols-2 gap-2">
+                  {migrationResult.details.employees !== undefined && <p>• {migrationResult.details.employees} medewerkers</p>}
+                  {migrationResult.details.vehicles !== undefined && <p>• {migrationResult.details.vehicles} voertuigen</p>}
+                  {migrationResult.details.niwo_permits !== undefined && <p>• {migrationResult.details.niwo_permits} NIWO vergunningen</p>}
+                  {migrationResult.details.customers !== undefined && <p>• {migrationResult.details.customers} klanten</p>}
+                  {migrationResult.details.articles !== undefined && <p>• {migrationResult.details.articles} artikelen</p>}
+                  {migrationResult.details.ti_model_routes !== undefined && <p>• {migrationResult.details.ti_model_routes} TI Model routes</p>}
+                  {migrationResult.details.routes !== undefined && <p>• {migrationResult.details.routes} routes</p>}
+                  {migrationResult.details.customer_imports !== undefined && <p>• {migrationResult.details.customer_imports} imports</p>}
+                  {migrationResult.details.projects !== undefined && <p>• {migrationResult.details.projects} projecten</p>}
+                  {migrationResult.details.cao_rules !== undefined && <p>• {migrationResult.details.cao_rules} CAO-regels</p>}
+                  {migrationResult.details.salary_tables !== undefined && <p>• {migrationResult.details.salary_tables} loontabellen</p>}
+                  {migrationResult.details.holidays !== undefined && <p>• {migrationResult.details.holidays} feestdagen</p>}
+                  {migrationResult.details.contracts !== undefined && <p>• {migrationResult.details.contracts} contracten</p>}
+                  {migrationResult.details.time_entries !== undefined && <p>• {migrationResult.details.time_entries} tijdregistraties</p>}
+                  {migrationResult.details.trips !== undefined && <p>• {migrationResult.details.trips} ritten</p>}
+                  {migrationResult.details.schedules !== undefined && <p>• {migrationResult.details.schedules} planningen</p>}
+                  {migrationResult.details.shift_times !== undefined && <p>• {migrationResult.details.shift_times} dienst-shifttijden</p>}
+                  {migrationResult.details.vehicle_inspections !== undefined && <p>• {migrationResult.details.vehicle_inspections} voertuiginspecties</p>}
+                  {migrationResult.details.expenses !== undefined && <p>• {migrationResult.details.expenses} declaraties</p>}
+                  {migrationResult.details.messages !== undefined && <p>• {migrationResult.details.messages} berichten</p>}
+                  {migrationResult.details.supervisor_messages !== undefined && <p>• {migrationResult.details.supervisor_messages} supervisor berichten</p>}
                 </div>
+                {migrationResult.details.errors?.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-emerald-200">
+                    <p className="font-semibold text-amber-700">Waarschuwingen ({migrationResult.details.errors.length}):</p>
+                    <div className="max-h-32 overflow-y-auto mt-1 space-y-0.5">
+                      {migrationResult.details.errors.slice(0, 10).map((err, idx) => (
+                        <p key={idx} className="text-xs text-amber-600">- {err}</p>
+                      ))}
+                      {migrationResult.details.errors.length > 10 && (
+                        <p className="text-xs text-amber-600 italic">...en nog {migrationResult.details.errors.length - 10} meer</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div>
@@ -121,16 +179,29 @@ export default function DataMigration() {
         </Alert>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="w-5 h-5 text-blue-600" />
-            Selecteer klanten om te migreren
-          </CardTitle>
-          <CardDescription>
-            Klanten uit Productie database
-          </CardDescription>
-        </CardHeader>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="customers">
+            <Database className="w-4 h-4 mr-2" />
+            Specifieke klanten
+          </TabsTrigger>
+          <TabsTrigger value="full">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Volledig systeem
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="customers">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-blue-600" />
+                Selecteer klanten om te migreren
+              </CardTitle>
+              <CardDescription>
+                Klanten uit Productie database
+              </CardDescription>
+            </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -202,6 +273,76 @@ export default function DataMigration() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="full">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCw className="w-5 h-5 text-blue-600" />
+                Volledige systeemmigratie
+              </CardTitle>
+              <CardDescription>
+                Migreer alle data van Productie naar Test
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert className="bg-red-50 border-red-200">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  <strong>⚠️ WAARSCHUWING:</strong> Deze actie migreert ALLE data van Productie naar Test. 
+                  Dit omvat alle medewerkers, voertuigen, klanten, contracten, tijdregistraties, ritten, planningen, en meer.
+                  Dit proces kan enkele minuten duren.
+                </AlertDescription>
+              </Alert>
+
+              <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+                <p className="font-semibold text-slate-900">Wat wordt gemigreerd:</p>
+                <div className="grid grid-cols-2 gap-2 text-sm text-slate-700">
+                  <div>• Medewerkers</div>
+                  <div>• Voertuigen</div>
+                  <div>• NIWO Vergunningen</div>
+                  <div>• Klanten</div>
+                  <div>• Artikelen</div>
+                  <div>• TI Model Routes</div>
+                  <div>• Routes</div>
+                  <div>• Customer Imports</div>
+                  <div>• Projecten</div>
+                  <div>• CAO-regels</div>
+                  <div>• Loontabellen</div>
+                  <div>• Feestdagen</div>
+                  <div>• Contracten</div>
+                  <div>• Tijdregistraties</div>
+                  <div>• Ritten</div>
+                  <div>• Planningen</div>
+                  <div>• Dienst-shifttijden</div>
+                  <div>• Voertuiginspecties</div>
+                  <div>• Declaraties</div>
+                  <div>• Berichten</div>
+                </div>
+              </div>
+
+              <Button
+                className="w-full bg-red-600 hover:bg-red-700 h-14 text-base"
+                onClick={handleFullSystemMigration}
+                disabled={migrateFullSystemMutation.isPending}
+              >
+                {migrateFullSystemMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Bezig met migreren... Dit kan enkele minuten duren
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-5 h-5 mr-2" />
+                    Start volledige systeemmigratie
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
