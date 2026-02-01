@@ -91,14 +91,6 @@ export default function MobileEntry() {
     enabled: !!user?.email
   });
 
-  const { data: myMessages = [] } = useQuery({
-    queryKey: ['myMessages', currentEmployee?.id],
-    queryFn: () => base44.entities.Message.filter({ to_employee_id: currentEmployee?.id }),
-    enabled: !!currentEmployee?.id
-  });
-
-  const unreadCount = myMessages.filter(m => !m.is_read).length;
-
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list()
@@ -137,6 +129,14 @@ export default function MobileEntry() {
   // Find current employee
   const currentEmployee = employees.find(e => e.email === user?.email);
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  const { data: myMessages = [] } = useQuery({
+    queryKey: ['myMessages', currentEmployee?.id],
+    queryFn: () => base44.entities.Message.filter({ to_employee_id: currentEmployee?.id }),
+    enabled: !!currentEmployee?.id
+  });
+
+  const unreadCount = myMessages.filter(m => !m.is_read).length;
 
   const { data: shiftTimes = [] } = useQuery({
     queryKey: ['shiftTimes', currentEmployee?.id],
