@@ -68,6 +68,22 @@ export default function DataMigration() {
     }
   });
 
+  const removeDuplicatesMutation = useMutation({
+    mutationFn: async (database) => {
+      const response = await base44.functions.invoke('removeDuplicates', { database });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      setMigrationResult(data);
+    },
+    onError: (error) => {
+      setMigrationResult({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
   const handleMigrate = () => {
     if (selectedCustomers.length === 0) {
       alert('Selecteer minimaal één klant om te migreren');
@@ -122,6 +138,22 @@ export default function DataMigration() {
     }
   };
 
+  const handleRemoveDuplicates = (database) => {
+    const dbName = database === 'dev' ? 'Test' : 'Productie';
+    const confirm = window.confirm(
+      `🔍 Duplicaten verwijderen uit ${dbName} database\n\n` +
+      `Dit zal:\n` +
+      `• Zoeken naar duplicaten op basis van unieke velden\n` +
+      `• Alleen de oudste versie van elke duplicaat behouden\n` +
+      `• Nieuwere duplicaten permanent verwijderen\n\n` +
+      `Weet je zeker dat je door wilt gaan?`
+    );
+
+    if (confirm) {
+      removeDuplicatesMutation.mutate(database);
+    }
+  };
+
   const toggleCustomer = (customerId) => {
     setSelectedCustomers(prev => 
       prev.includes(customerId)
@@ -153,6 +185,29 @@ export default function DataMigration() {
           <strong>Let op:</strong> Deze functie kopieert klanten en alle gerelateerde data (artikelen, imports, TI Model routes, routes) 
           van de <strong>Productie</strong> database naar de <strong>Test</strong> database. 
           Gebruik dit alleen voor testwerkzaamheden.
+        </AlertDescription>
+      </Alert>
+
+      <Alert className="bg-red-50 border-red-200">
+        <AlertTriangle className="w-4 h-4 text-red-600" />
+        <AlertDescription className="text-red-800">
+          <strong>⚠️ Duplicaten gevonden in Productie?</strong> Gebruik de knop hieronder om duplicaten te verwijderen:
+          <Button
+            variant="destructive"
+            size="sm"
+            className="mt-2"
+            onClick={() => handleRemoveDuplicates('prod')}
+            disabled={removeDuplicatesMutation.isPending}
+          >
+            {removeDuplicatesMutation.isPending ? (
+              <>
+                <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                Bezig...
+              </>
+            ) : (
+              'Verwijder duplicaten uit Productie'
+            )}
+          </Button>
         </AlertDescription>
       </Alert>
 
