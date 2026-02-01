@@ -28,6 +28,7 @@ import {
   CircleDot,
   Mail
 } from "lucide-react";
+import NotificationBell from "./components/NotificationBell";
 import { cn } from "@/lib/utils";
 
 // Register service worker on mount
@@ -189,7 +190,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
           <span className="font-bold text-slate-900">Interdistri</span>
         </div>
-        <div className="w-10" />
+        <NotificationBell />
       </div>
 
       {/* Sidebar Overlay */}
@@ -293,6 +294,7 @@ export default function Layout({ children, currentPageName }) {
                 <p className="text-sm font-medium text-slate-900 truncate">{user?.full_name || 'Gebruiker'}</p>
                 <p className="text-xs text-slate-500 truncate">{user?.email}</p>
               </div>
+              <NotificationBell />
               <button 
                 onClick={handleLogout}
                 className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600"
