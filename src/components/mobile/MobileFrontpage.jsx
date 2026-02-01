@@ -1,6 +1,10 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { format } from "date-fns";
+import { nl } from "date-fns/locale";
 import {
   Clock,
   Truck,
@@ -9,7 +13,8 @@ import {
   CheckCircle,
   CalendarDays,
   ExternalLink,
-  ArrowRight
+  ArrowRight,
+  CircleDot
 } from "lucide-react";
 
 export default function MobileFrontpage({ onNavigate }) {
