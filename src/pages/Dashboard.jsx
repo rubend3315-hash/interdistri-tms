@@ -21,7 +21,8 @@ import {
   Calendar,
   FileText,
   TrendingUp,
-  Car
+  Car,
+  Bell
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -52,6 +53,23 @@ export default function Dashboard() {
   const { data: niwoPermits = [], isLoading: loadingNiwo } = useQuery({
     queryKey: ['niwoPermits'],
     queryFn: () => base44.entities.NiwoPermit.list()
+  });
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const { data: notifications = [], isLoading: loadingNotifications } = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const allNotifications = await base44.entities.Notification.list('-created_date', 50);
+      return allNotifications.filter(n => 
+        n.user_ids && n.user_ids.includes(user.id)
+      );
+    },
+    enabled: !!user?.id,
   });
 
   const isLoading = loadingEmployees || loadingVehicles || loadingTimeEntries || loadingTrips || loadingNiwo;
@@ -220,7 +238,7 @@ export default function Dashboard() {
       )}
 
       {/* Quick Actions & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Quick Actions */}
         <Card>
           <CardHeader className="pb-4">
@@ -319,6 +337,79 @@ export default function Dashboard() {
                     </Link>
                   );
                 })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Notifications */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Bell className="w-5 h-5 text-blue-600" />
+                Meldingen
+              </CardTitle>
+              <Link to={createPageUrl("Messages")}>
+                <Button variant="ghost" size="sm" className="text-blue-600">
+                  Alles bekijken
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loadingNotifications ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-14" />
+                ))}
+              </div>
+            ) : notifications.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-8">
+                Geen meldingen
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {notifications.slice(0, 5).map(notification => (
+                  <div
+                    key={notification.id}
+                    className={`p-3 rounded-xl cursor-pointer transition-colors ${
+                      !notification.is_read 
+                        ? 'bg-blue-50 hover:bg-blue-100' 
+                        : 'bg-slate-50 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {!notification.is_read && (
+                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0"></div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-900 text-sm truncate">
+                          {notification.title}
+                        </p>
+                        {notification.description && (
+                          <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                            {notification.description}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-400 mt-1">
+                          {format(new Date(notification.created_date), "d MMM, HH:mm", { locale: nl })}
+                        </p>
+                      </div>
+                      {notification.priority === 'urgent' && (
+                        <Badge className="bg-red-100 text-red-700 text-xs flex-shrink-0">
+                          Urgent
+                        </Badge>
+                      )}
+                      {notification.priority === 'high' && (
+                        <Badge className="bg-amber-100 text-amber-700 text-xs flex-shrink-0">
+                          Hoog
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
