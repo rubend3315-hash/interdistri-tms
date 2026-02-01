@@ -286,6 +286,16 @@ export default function MobileEntry() {
       return;
     }
 
+    // Validatie: elke rit moet een begin- en eindtijd hebben
+    for (let i = 0; i < trips.length; i++) {
+      const trip = trips[i];
+      if (!trip.start_time || !trip.end_time) {
+        alert(`Rit ${i + 1}: Zowel de start- als de eindtijd moeten zijn ingevuld voor deze rit.`);
+        setActiveTab("ritten");
+        return;
+      }
+    }
+
     // Validatie: controleer of rit tijden binnen dienst tijden vallen
     for (let i = 0; i < trips.length; i++) {
       const trip = trips[i];
