@@ -18,6 +18,30 @@ import {
 } from "lucide-react";
 
 export default function MobileFrontpage({ onNavigate }) {
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const { data: shiftTimes = [] } = useQuery({
+    queryKey: ['shiftTimes', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const employee = await base44.entities.Employee.filter({ email: user.email });
+      if (!employee || employee.length === 0) return [];
+      
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const shifts = await base44.entities.ShiftTime.filter({ 
+        date: today,
+        department: employee[0].department 
+      });
+      return shifts;
+    },
+    enabled: !!user
+  });
+
+  const todayShift = shiftTimes.length > 0 ? shiftTimes[0] : null;
+
   const menuItems = [
     {
       id: "dienst",
