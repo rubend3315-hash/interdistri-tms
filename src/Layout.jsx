@@ -95,6 +95,7 @@ const menuItems = [
       { name: "Voertuigen", icon: Car, page: "Vehicles" },
       { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
       { name: "Back-ups", icon: Shield, page: "Backups" },
+      { name: "Datamigratie", icon: Shield, page: "DataMigration" },
       { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
     ]
   },
