@@ -603,13 +603,15 @@ export default function MobileEntry() {
         </div>
 
         {/* Today's Shift Time */}
-        {todayShift && todayShift.date === todayStr && (
+        {todayShift && (
           <div className="mt-2 bg-amber-400 text-amber-900 rounded-lg p-2">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
               <div>
-                <p className="text-xs font-medium">Dienst starttijd vandaag</p>
-                <p className="font-bold text-lg">{todayShift.start_time}</p>
+                <p className="text-xs font-medium">
+                  {todayShift.date === todayStr ? 'Dienst starttijd vandaag' : `Dienst ${format(new Date(todayShift.date), "EEEE d MMMM", { locale: nl })}`}
+                </p>
+                <p className="font-bold text-lg">{todayShift.service_start_time}</p>
               </div>
             </div>
             {todayShift.message && (
