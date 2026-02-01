@@ -56,6 +56,7 @@ const menuItems = [
     label: "HR & Beheer",
     items: [
       { name: "Medewerkers", icon: Users, page: "Employees" },
+      { name: "Contracten", icon: FileText, page: "Contracts" },
       { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
       { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
       { name: "Resultaat & Ontwikkeling", icon: FileText, page: "PerformanceReviews" },
