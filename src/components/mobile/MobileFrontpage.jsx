@@ -31,15 +31,21 @@ export default function MobileFrontpage({ onNavigate }) {
         return [];
       }
       
-      const employees = await base44.entities.Employee.filter({ email: user.email });
-      console.log('👤 Employees:', employees);
+      console.log('🔍 Zoeken naar employee met email:', user.email);
       
-      if (!employees || employees.length === 0) {
-        console.log('❌ Geen employee gevonden');
+      // Probeer eerst alle employees op te halen
+      const allEmployees = await base44.entities.Employee.list();
+      console.log('👥 Alle employees:', allEmployees.map(e => ({ email: e.email, name: `${e.first_name} ${e.last_name}` })));
+      
+      // Zoek de employee
+      const employee = allEmployees.find(e => e.email === user.email);
+      console.log('👤 Gevonden employee:', employee);
+      
+      if (!employee) {
+        console.log('❌ Geen employee gevonden voor', user.email);
         return [];
       }
       
-      const employee = employees[0];
       console.log('✅ Employee department:', employee.department);
       
       const allShifts = await base44.entities.ShiftTime.list();
