@@ -57,6 +57,7 @@ import Employees from './pages/Employees';
 import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
 import Holidays from './pages/Holidays';
+import Messages from './pages/Messages';
 import MobileEntry from './pages/MobileEntry';
 import NiwoPermits from './pages/NiwoPermits';
 import PerformanceReviews from './pages/PerformanceReviews';
@@ -69,7 +70,7 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Messages from './pages/Messages';
+import Contracts from './pages/Contracts';
 import __Layout from './Layout.jsx';
 
 
@@ -84,6 +85,7 @@ export const PAGES = {
     "HRMSettings": HRMSettings,
     "HelpPage": HelpPage,
     "Holidays": Holidays,
+    "Messages": Messages,
     "MobileEntry": MobileEntry,
     "NiwoPermits": NiwoPermits,
     "PerformanceReviews": PerformanceReviews,
@@ -96,7 +98,7 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Messages": Messages,
+    "Contracts": Contracts,
 }
 
 export const pagesConfig = {
