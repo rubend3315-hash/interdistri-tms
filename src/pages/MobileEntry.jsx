@@ -1011,11 +1011,21 @@ export default function MobileEntry() {
                         type="time"
                         value={trip.start_time}
                         onChange={(e) => {
+                          const newStartTime = e.target.value;
+                          
+                          // Valideer: start rit mag niet voor start dienst liggen
+                          if (newStartTime && formData.start_time && newStartTime < formData.start_time) {
+                            alert(`Start rit (${newStartTime}) kan niet voor start dienst (${formData.start_time}) liggen. Pas eerst de rit starttijd aan of ga terug naar Diensttijd om de dienst starttijd te wijzigen.`);
+                            return;
+                          }
+                          
                           const newTrips = [...trips];
-                          newTrips[index] = { ...trip, start_time: e.target.value };
+                          newTrips[index] = { ...trip, start_time: newStartTime };
                           setTrips(newTrips);
                         }}
+                        placeholder="00:00"
                       />
+                      <p className="text-xs text-slate-500">Typ handmatig of gebruik klok</p>
                     </div>
 
                     <div className="space-y-1">
@@ -1024,11 +1034,21 @@ export default function MobileEntry() {
                         type="time"
                         value={trip.end_time}
                         onChange={(e) => {
+                          const newEndTime = e.target.value;
+                          
+                          // Valideer: einde rit mag niet na einde dienst liggen
+                          if (newEndTime && formData.end_time && newEndTime > formData.end_time) {
+                            alert(`Einde rit (${newEndTime}) kan niet na einde dienst (${formData.end_time}) liggen. Pas eerst de rit eindtijd aan of ga terug naar Diensttijd om de dienst eindtijd te wijzigen.`);
+                            return;
+                          }
+                          
                           const newTrips = [...trips];
-                          newTrips[index] = { ...trip, end_time: e.target.value };
+                          newTrips[index] = { ...trip, end_time: newEndTime };
                           setTrips(newTrips);
                         }}
+                        placeholder="00:00"
                       />
+                      <p className="text-xs text-slate-500">Typ handmatig of gebruik klok</p>
                     </div>
                   </div>
 
