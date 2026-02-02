@@ -134,6 +134,7 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
   const resetModal = () => {
     setFile(null);
     setImportName("");
+    setStarttijdShift("");
     setParseResult(null);
     setValidationErrors([]);
     setShowValidation(false);
