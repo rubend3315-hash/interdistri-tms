@@ -33,10 +33,11 @@ export default function EditTimeEntry() {
   });
 
   // Fetch TimeEntry details
-  const { data: timeEntry, isLoading } = useQuery({
+  const { data: timeEntry, isLoading, error: timeEntryError } = useQuery({
     queryKey: ['timeEntry', timeEntryId],
     queryFn: () => base44.entities.TimeEntry.get(timeEntryId),
-    enabled: !!timeEntryId
+    enabled: !!timeEntryId,
+    retry: 1
   });
 
   // Fetch Employee details
