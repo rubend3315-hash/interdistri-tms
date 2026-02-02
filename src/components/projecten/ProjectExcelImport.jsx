@@ -196,13 +196,13 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
         project_id: selectedProject,
         project_naam: 'PakketDistributie',
         klant_naam: 'PostNL',
-          ritnaam: filteredData['Ritnaam'] || '',
-          datum: filteredData['Datum'] || '',
-          starttijd_shift: starttijdShift,
-          import_datum: today,
-          bestandsnaam: file.name,
-          data: filteredData
-          }));
+        ritnaam: filteredData['Ritnaam'] || '',
+        datum: filteredData['Datum'] || '',
+        starttijd_shift: starttijdShift,
+        import_datum: today,
+        bestandsnaam: file.name,
+        data: filteredData
+      }));
 
       setExtractedData({ rows: recordsToAdd });
       saveDataMutation.mutate(recordsToAdd);
