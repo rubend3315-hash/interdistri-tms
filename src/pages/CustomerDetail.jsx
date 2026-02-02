@@ -12,8 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import ImportExcelModal from "@/components/customer/ImportExcelModal";
-import ImportDataTable from "@/components/customer/ImportDataTable";
 import CalculationsTab from "@/components/customer/CalculationsTab";
 import ImportHistory from "@/components/customer/ImportHistory";
 import ArticleList from "@/components/customer/ArticleList";
@@ -21,6 +19,7 @@ import TIModelRoutesTab from "@/components/customer/TIModelRoutesTab";
 import RoutesTab from "@/components/customer/RoutesTab";
 import ReportGenerator from "@/components/reports/ReportGenerator";
 import DataDashboard from "@/components/reports/DataDashboard";
+import ProjectExcelImport from "@/components/projecten/ProjectExcelImport";
 import {
   ArrowLeft,
   Save,
