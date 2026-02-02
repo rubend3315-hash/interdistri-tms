@@ -169,6 +169,7 @@ export default function ProjectExcelImport({ projectFilter }) {
         data: filteredData
       }));
 
+      setExtractedData({ rows: recordsToAdd });
       saveDataMutation.mutate(recordsToAdd);
     } catch (error) {
       toast.error('Fout: ' + error.message);
