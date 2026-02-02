@@ -25,20 +25,11 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
   const [validatieResultaten, setValidatieResultaten] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: projecten = [] } = useQuery({
-    queryKey: ['projecten'],
-    queryFn: async () => {
-      const data = await base44.entities.Project.list();
-      const pakketProject = data.find(p => p.code === 'PRJ-01');
-      return pakketProject ? [pakketProject] : [];
-    }
-  });
-
   useEffect(() => {
-    if (projecten.length > 0 && !selectedProject) {
-      setSelectedProject(projecten[0].id);
+    if (!selectedProject) {
+      setSelectedProject('PakketDistributie');
     }
-  }, [projecten]);
+  }, []);
 
   const { data: existingImports = [] } = useQuery({
     queryKey: ['postNLImportResults', projectFilter],
