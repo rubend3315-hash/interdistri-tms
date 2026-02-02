@@ -25,19 +25,27 @@ export default function PostNLDashboard({ customerId }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showColumnSelector, setShowColumnSelector] = useState(false);
 
-  const { data: rapportageRitten = [] } = useQuery({
-    queryKey: ['rapportageRitten', customerId],
+  const { data: importResults = [] } = useQuery({
+    queryKey: ['postNLImports', customerId],
     queryFn: async () => {
-      if (!customerId) return [];
       try {
-        const result = await base44.entities.RapportageRit.filter({ klant_id: customerId });
-        return Array.isArray(result) ? result : [];
+        const allImports = await base44.entities.PostNLImportResult.list();
+        // Map the nested data structure to flat records
+        return allImports.flatMap(imp => {
+          if (!imp.data || typeof imp.data !== 'object') return [];
+          // Create records with all data properties plus metadata
+          return Object.keys(imp.data).length > 0 ? [{
+            ...imp.data,
+            import_id: imp.id,
+            import_date: imp.import_datum,
+            project_id: imp.project_id
+          }] : [];
+        });
       } catch (error) {
-        console.error('Failed to fetch RapportageRit:', error);
+        console.error('Failed to fetch imports:', error);
         return [];
       }
     },
-    enabled: !!customerId,
     staleTime: 0
   });
 
