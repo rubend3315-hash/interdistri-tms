@@ -602,7 +602,7 @@ export default function CustomerDetail() {
 
         {/* Import Rapportage Tab */}
         <TabsContent value="import-reports">
-          <DataDashboard imports={imports} />
+          <PostNLDashboard customerId={customerId} />
         </TabsContent>
 
         {/* TI Model Ritten Tab */}
