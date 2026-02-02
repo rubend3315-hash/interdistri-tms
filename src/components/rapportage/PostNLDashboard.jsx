@@ -250,7 +250,7 @@ export default function PostNLDashboard({ customerId }) {
                   <tr>
                     {selectedColumns.map(col => (
                       <th key={col} className="text-left py-2 px-3 font-medium text-slate-700">
-                        {ALL_COLUMNS.find(c => c.key === col)?.label || col}
+                        {allColumns.find(c => c.key === col)?.label || col}
                       </th>
                     ))}
                   </tr>
