@@ -139,11 +139,11 @@ export default function PostNLDashboard({ customerId }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">PostNL Rapportage</h2>
-          <p className="text-sm text-slate-500">Ritten en bezorgdata voor PostNL</p>
+          <p className="text-xs text-slate-500">Ritten en bezorgdata voor PostNL</p>
         </div>
         <Button 
           onClick={handleExportPDF}
