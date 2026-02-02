@@ -30,14 +30,15 @@ export default function PostNLDashboard({ customerId }) {
     queryFn: async () => {
       if (!customerId) return [];
       try {
-        const result = await base44.entities.PostNLImportResult.filter({ klant_naam: 'PostNL' });
+        const result = await base44.entities.PostNLImportResult.list();
         if (!Array.isArray(result)) return [];
         
         const flattened = [];
         result.forEach(item => {
           if (item.data && typeof item.data === 'object') {
-            if (item.data.data && typeof item.data.data === 'object') {
-              flattened.push(item.data.data);
+            const innerData = item.data.data || item.data;
+            if (innerData && typeof innerData === 'object') {
+              flattened.push(innerData);
             }
           }
         });
