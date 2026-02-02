@@ -56,28 +56,16 @@ export default function PostNLDashboard({ customerId }) {
   });
 
   const allColumns = useMemo(() => {
-    const columnsSet = new Set();
-
-    // Voeg Excel kolommen toe
-    if (excelColumnsData.columns && Array.isArray(excelColumnsData.columns)) {
-      excelColumnsData.columns.forEach(key => columnsSet.add(key));
+    if (!excelColumnsData.columns || !Array.isArray(excelColumnsData.columns)) {
+      return [];
     }
 
-    // Voeg RapportageRit basis velden toe
-    rapportageRitten.forEach(rit => {
-      Object.keys(rit).forEach(key => {
-        if (key !== 'data' && key !== 'artikelen' && key !== 'id' && key !== 'created_date' && key !== 'updated_date' && key !== 'created_by') {
-          columnsSet.add(key);
-        }
-      });
-    });
-
-    return Array.from(columnsSet).map(key => ({
+    return excelColumnsData.columns.map(key => ({
       key,
       label: key.replace(/_/g, ' '),
       category: 'Gegevens'
     }));
-  }, [excelColumnsData, rapportageRitten]);
+  }, [excelColumnsData]);
 
   const filteredColumns = useMemo(() => {
     if (!searchTerm) return allColumns;
