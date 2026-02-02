@@ -60,7 +60,7 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
       // Also create CustomerImport record for history
       const customerImportRecord = {
         customer_id: customerId,
-        import_name: `PostNL ${records[0]?.ritnaam || 'Import'} - ${new Date().toLocaleDateString('nl-NL')}`,
+        import_name: file.name,
         file_name: file.name,
         column_mapping: {},
         data: records.map(r => r.data),
