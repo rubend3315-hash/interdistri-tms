@@ -117,8 +117,9 @@ export default function ShiftTime() {
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const todayShifts = shiftTimes.filter(s => s.date === todayStr);
   
-  // Groepeer shifttimes per afdeling
-  const shiftsByDepartment = shiftTimes.reduce((acc, shift) => {
+  // Groepeer shifttimes per afdeling (zonder vandaag)
+  const futureShifts = shiftTimes.filter(s => s.date !== todayStr);
+  const shiftsByDepartment = futureShifts.reduce((acc, shift) => {
     const dept = shift.department || 'Onbekend';
     if (!acc[dept]) acc[dept] = [];
     acc[dept].push(shift);
