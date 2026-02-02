@@ -104,7 +104,7 @@ const menuItems = [
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState(["Kernsystemen", "HR & Beheer", "Loon & Rapportage", "Klanten", "Communicatie", "Beheer", "HRM-instellingen"]);
+  const [expandedGroups, setExpandedGroups] = useState([]);
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
