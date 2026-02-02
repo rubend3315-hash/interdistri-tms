@@ -102,7 +102,7 @@ export default function PostNLDashboard({ customerId }) {
         return colDef?.label || col;
       });
 
-      const rows = importResults.map(item => 
+      const rows = rapportageRitten.map(item => 
         selectedColumns.map(col => item[col] || '-')
       );
 
