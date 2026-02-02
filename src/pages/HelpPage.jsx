@@ -329,7 +329,15 @@ export default function HelpPage() {
                       </p>
                     </AccordionContent>
                   </AccordionItem>
-                </Accordion>
+                  <AccordionItem value="shifttime">
+                    <AccordionTrigger>🚨 ShiftTime - Dienst-Shifttijd</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Officiële starttijden per afdeling, geldige shifttijden, en berichten voor medewerkers per werkdag.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  </Accordion>
               </div>
 
               <div className="border-t pt-6">
