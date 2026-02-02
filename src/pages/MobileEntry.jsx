@@ -855,12 +855,14 @@ export default function MobileEntry() {
                 <div className="space-y-1">
                   <Label className="text-xs">Start dienst *</Label>
                   <Input
-                    type="time"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]{2}:[0-9]{2}"
                     value={formData.start_time}
                     onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                    placeholder="00:00"
+                    placeholder="08:30"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Typ handmatig (bijv. 08:30) of gebruik de klok</p>
+                  <p className="text-xs text-slate-500 mt-1">Typ tijd in formaat UU:MM (bijv. 08:30)</p>
                 </div>
 
                 {formData.start_time && (
@@ -899,7 +901,9 @@ export default function MobileEntry() {
                       <div className="space-y-1">
                         <Label className="text-xs">Eind dienst *</Label>
                         <Input
-                          type="time"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]{2}:[0-9]{2}"
                           value={formData.end_time}
                           onChange={(e) => {
                             const newEndTime = e.target.value;
@@ -922,7 +926,9 @@ export default function MobileEntry() {
                               }
                             }
                           }}
+                          placeholder="16:30"
                         />
+                        <p className="text-xs text-slate-500 mt-1">Typ tijd in formaat UU:MM (bijv. 16:30)</p>
                       </div>
 
                       <div className="space-y-1">
@@ -1008,7 +1014,9 @@ export default function MobileEntry() {
                     <div className="space-y-1">
                       <Label className="text-xs">Start Rit</Label>
                       <Input
-                        type="time"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]{2}:[0-9]{2}"
                         value={trip.start_time}
                         onChange={(e) => {
                           const newStartTime = e.target.value;
@@ -1023,15 +1031,17 @@ export default function MobileEntry() {
                           newTrips[index] = { ...trip, start_time: newStartTime };
                           setTrips(newTrips);
                         }}
-                        placeholder="00:00"
+                        placeholder="09:00"
                       />
-                      <p className="text-xs text-slate-500">Typ handmatig of gebruik klok</p>
+                      <p className="text-xs text-slate-500">Typ tijd UU:MM (bijv. 09:00)</p>
                     </div>
 
                     <div className="space-y-1">
                       <Label className="text-xs">Einde Rit</Label>
                       <Input
-                        type="time"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]{2}:[0-9]{2}"
                         value={trip.end_time}
                         onChange={(e) => {
                           const newEndTime = e.target.value;
@@ -1046,9 +1056,9 @@ export default function MobileEntry() {
                           newTrips[index] = { ...trip, end_time: newEndTime };
                           setTrips(newTrips);
                         }}
-                        placeholder="00:00"
+                        placeholder="15:00"
                       />
-                      <p className="text-xs text-slate-500">Typ handmatig of gebruik klok</p>
+                      <p className="text-xs text-slate-500">Typ tijd UU:MM (bijv. 15:00)</p>
                     </div>
                   </div>
 
