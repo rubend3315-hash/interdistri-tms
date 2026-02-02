@@ -20,10 +20,9 @@ export default function PostNLDashboard({ customerId }) {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [selectedColumns, setSelectedColumns] = useState(['ritNaam', 'datum', 'aantal_stops', 'totaal_omzet']);
 
-  const { data: postNLData = [] } = useQuery({
-    queryKey: ['postnl-import-data', customerId],
-    queryFn: () => customerId ? base44.entities.PostNLImportResult.filter({ customer_id: customerId }) : [],
-    enabled: !!customerId
+  const { data: rapportageRitten = [] } = useQuery({
+    queryKey: ['rapportageRitten'],
+    queryFn: () => base44.entities.RapportageRit.list()
   });
 
   const handleExportPDF = () => {
