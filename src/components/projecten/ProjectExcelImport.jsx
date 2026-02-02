@@ -254,11 +254,11 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-2 mb-4">
-            <Label>Project</Label>
-            <div className="p-2 bg-gray-50 rounded border border-gray-200">
-              <p className="text-sm font-medium">{projecten[0]?.code || 'PRJ-01'} - {projecten[0]?.naam || 'PakketDistributie'}</p>
-            </div>
-          </div>
+             <Label>Project</Label>
+             <div className="p-2 bg-gray-50 rounded border border-gray-200">
+               <p className="text-sm font-medium">PakketDistributie</p>
+             </div>
+           </div>
           <div className="space-y-2">
             <Label>Starttijd Shift *</Label>
             <Input
