@@ -176,21 +176,27 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
             />
           ) : showValidation ? (
             <>
-              <Card className="bg-red-50 border-red-200">
+              <Card className="bg-amber-50 border-amber-200">
                 <CardContent className="pt-6">
                   <div className="flex gap-2 items-start">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-semibold text-red-900 mb-3">
-                        {validationErrors.length} rij(en) met validatiefouten
+                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-amber-900 mb-2">
+                        ⚠️ {validationErrors.length} rij(en) bevat/bevatten fouten
                       </p>
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                      <p className="text-xs text-amber-800 mb-3">
+                        Controleer de volgende problemen voordat u doorgaat:
+                      </p>
+                      <div className="space-y-2 max-h-72 overflow-y-auto">
                         {validationErrors.map((error, idx) => (
-                          <div key={idx} className="text-xs text-red-800 bg-white rounded p-2">
-                            <p className="font-semibold">Rij {error.row}:</p>
-                            <ul className="list-disc list-inside ml-1">
+                          <div key={idx} className="text-xs text-amber-800 bg-white rounded p-3 border border-amber-100">
+                            <p className="font-semibold text-amber-900 mb-1">📍 Rij {error.row}:</p>
+                            <ul className="space-y-1">
                               {error.errors.map((err, errIdx) => (
-                                <li key={errIdx}>{err}</li>
+                                <li key={errIdx} className="flex gap-2">
+                                  <span className="text-amber-600">•</span>
+                                  <span>{err}</span>
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -200,6 +206,16 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
                   </div>
                 </CardContent>
               </Card>
+
+              <div className="space-y-2 text-xs text-slate-600 bg-slate-50 rounded p-3">
+                <p><strong>💡 Tips:</strong></p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Datums moeten in het formaat DD-MM-YYYY zijn</li>
+                  <li>Tijden moeten in het formaat HH:MM zijn (bijv: 08:30)</li>
+                  <li>Aantallen en afstanden moeten getallen zijn</li>
+                  <li>Vereiste velden (Datum, Depot) mogen niet leeg zijn</li>
+                </ul>
+              </div>
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button 
