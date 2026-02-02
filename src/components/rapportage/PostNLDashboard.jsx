@@ -21,22 +21,22 @@ const PERIOD_OPTIONS = {
 const getAvailableColumns = (rapportageRitten) => {
   if (rapportageRitten.length === 0) return [];
   
-  const firstRit = rapportageRitten[0];
   const columnsSet = new Set();
   
-  // Basis velden van RapportageRit
-  const baseFields = ['ritnaam', 'datum', 'chauffeur', 'project_naam', 'project_id', 'week', 'status', 
-                      'totaal_rit', 'besteltijd_norm', 'besteltijd_bruto', 'besteltijd_netto',
-                      'geen_scan_15min', 'aantal_vrijgave_stops', 'aantal_vrijgave_stuks',
-                      'aantal_afgeleverd_stops', 'aantal_afgeleverd_stuks', 'aantal_pba_bezorgd',
-                      'aantal_afgehaald_collecteerd', 'klant_id', 'import_datum'];
-  
-  baseFields.forEach(f => columnsSet.add(f));
-  
-  // Kolommen uit de geïmporteerde data
-  if (firstRit.data && typeof firstRit.data === 'object') {
-    Object.keys(firstRit.data).forEach(key => columnsSet.add(key));
-  }
+  // Alle kolommen uit alle records verzamelen
+  rapportageRitten.forEach(rit => {
+    // Basis velden van RapportageRit
+    Object.keys(rit).forEach(key => {
+      if (key !== 'data' && key !== 'artikelen' && key !== 'id' && key !== 'created_date' && key !== 'updated_date' && key !== 'created_by') {
+        columnsSet.add(key);
+      }
+    });
+    
+    // Kolommen uit de geïmporteerde Excel data
+    if (rit.data && typeof rit.data === 'object') {
+      Object.keys(rit.data).forEach(key => columnsSet.add(key));
+    }
+  });
   
   return Array.from(columnsSet).map(key => ({
     key,
