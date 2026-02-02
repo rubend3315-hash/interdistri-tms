@@ -27,8 +27,8 @@ Deno.serve(async (req) => {
       }
       
       return {
-        project_id: record.project_id || '',
-        project_naam: record.project_naam,
+        project_id: record.project_id || 'postnl-default',
+        project_naam: record.project_naam || 'PostNL',
         klant_id: customerId,
         import_datum: record.import_datum,
         week,
