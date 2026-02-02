@@ -30,10 +30,20 @@ export default function PostNLDashboard({ customerId }) {
     queryFn: async () => {
       if (!customerId) return [];
       try {
-        const result = await base44.entities.RapportageRit.filter({ klant_id: customerId });
-        return Array.isArray(result) ? result : [];
+        const result = await base44.entities.PostNLImportResult.filter({ project_id: customerId });
+        if (!Array.isArray(result)) return [];
+        
+        const flattened = [];
+        result.forEach(item => {
+          if (item.data && typeof item.data === 'object' && Array.isArray(item.data)) {
+            item.data.forEach(dataRow => {
+              flattened.push(dataRow);
+            });
+          }
+        });
+        return flattened;
       } catch (error) {
-        console.error('Failed to fetch RapportageRit:', error);
+        console.error('Failed to fetch PostNLImportResult:', error);
         return [];
       }
     },
