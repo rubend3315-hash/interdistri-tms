@@ -537,11 +537,7 @@ export default function CustomerDetail() {
 
         {/* Imports Tab */}
         <TabsContent value="imports">
-          <ImportsTabContent 
-            imports={imports}
-            onImportModalOpen={() => setIsImportModalOpen(true)}
-            onDelete={deleteImportMutation.mutate}
-          />
+          <ProjectExcelImport projectFilter={true} />
         </TabsContent>
 
         {/* Geschiedenis Tab */}
