@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Download, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 
 const PERIOD_OPTIONS = {
   week: 'Deze week',
