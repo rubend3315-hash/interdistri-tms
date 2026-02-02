@@ -202,8 +202,7 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
           import_datum: today,
           bestandsnaam: file.name,
           data: filteredData
-        };
-      });
+          }));
 
       setExtractedData({ rows: recordsToAdd });
       saveDataMutation.mutate(recordsToAdd);
