@@ -23,6 +23,11 @@ Deno.serve(async (req) => {
       }
     });
     
+    // Voeg Starttijd shift toe als deze nog niet aanwezig is
+    if (!columnsSet.has('Starttijd shift')) {
+      columnsArray.push('Starttijd shift');
+    }
+    
     const columns = columnsArray;
     
     return Response.json({
