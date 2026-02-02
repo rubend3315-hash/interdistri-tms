@@ -6,22 +6,12 @@ Deno.serve(async (req) => {
     
     const columnsSet = new Set();
     
-    // Kolommen uit PostNLImportResult
+    // ALLEEN kolommen uit PostNLImportResult.data
     const imports = await base44.asServiceRole.entities.PostNLImportResult.list();
     imports.forEach(imp => {
       if (imp.data && typeof imp.data === 'object') {
         Object.keys(imp.data).forEach(key => columnsSet.add(key));
       }
-    });
-    
-    // Basis velden uit RapportageRit
-    const rapportageRitten = await base44.asServiceRole.entities.RapportageRit.list();
-    rapportageRitten.forEach(rit => {
-      Object.keys(rit).forEach(key => {
-        if (!['data', 'artikelen', 'id', 'created_date', 'updated_date', 'created_by'].includes(key)) {
-          columnsSet.add(key);
-        }
-      });
     });
     
     const columns = Array.from(columnsSet).sort();
