@@ -157,11 +157,6 @@ export default function ShiftTime() {
                         {shift.service_start_time}
                       </span>
                     </div>
-                    {shift.message && (
-                      <p className="mt-4 text-blue-100 bg-blue-500/30 p-3 rounded-lg">
-                        {shift.message}
-                      </p>
-                    )}
                   </div>
                 </div>
               </CardContent>
