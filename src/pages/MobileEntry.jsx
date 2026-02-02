@@ -100,8 +100,6 @@ export default function MobileEntry() {
     mutationFn: (data) => base44.entities.TimeEntry.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
-      alert('Dienst en ritten succesvol ingediend!');
-      setActiveTab("home");
     }
   });
 
@@ -468,6 +466,8 @@ export default function MobileEntry() {
        });
      });
    }
+
+   alert('✓ Concept opgeslagen');
 
    // Go back to home after saving
    setTimeout(() => {
