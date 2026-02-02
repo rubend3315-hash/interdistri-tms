@@ -61,18 +61,18 @@ import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
 import Holidays from './pages/Holidays';
 import Messages from './pages/Messages';
+import MobileEntry from './pages/MobileEntry';
 import NiwoPermits from './pages/NiwoPermits';
 import PerformanceReviews from './pages/PerformanceReviews';
 import Planning from './pages/Planning';
 import Projects from './pages/Projects';
 import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
+import ShiftTime from './pages/ShiftTime';
 import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import ShiftTime from './pages/ShiftTime';
-import MobileEntry from './pages/MobileEntry';
 import __Layout from './Layout.jsx';
 
 
@@ -91,18 +91,18 @@ export const PAGES = {
     "HelpPage": HelpPage,
     "Holidays": Holidays,
     "Messages": Messages,
+    "MobileEntry": MobileEntry,
     "NiwoPermits": NiwoPermits,
     "PerformanceReviews": PerformanceReviews,
     "Planning": Planning,
     "Projects": Projects,
     "SalaryReports": SalaryReports,
     "SalaryTables": SalaryTables,
+    "ShiftTime": ShiftTime,
     "TimeTracking": TimeTracking,
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "ShiftTime": ShiftTime,
-    "MobileEntry": MobileEntry,
 }
 
 export const pagesConfig = {

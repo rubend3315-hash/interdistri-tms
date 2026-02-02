@@ -137,7 +137,7 @@ export default function MobileEntry() {
   const unreadCount = myMessages.filter(m => !m.is_read).length;
 
   const { data: shiftTimes = [] } = useQuery({
-    queryKey: ['shiftTimes', currentEmployee?.id],
+    queryKey: ['shiftTimes', currentEmployee?.id, format(new Date(), 'yyyy-MM-dd-HH')],
     queryFn: async () => {
       if (!currentEmployee?.department) return [];
       
@@ -164,7 +164,9 @@ export default function MobileEntry() {
       shifts.sort((a, b) => a.service_start_time.localeCompare(b.service_start_time));
       return shifts.slice(0, 1);
     },
-    enabled: !!currentEmployee?.department
+    enabled: !!currentEmployee?.department,
+    staleTime: 0,
+    gcTime: 0
   });
 
   const todayShift = shiftTimes[0];
