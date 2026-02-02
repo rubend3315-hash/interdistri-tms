@@ -30,7 +30,7 @@ export default function PostNLDashboard({ customerId }) {
     queryFn: async () => {
       if (!customerId) return [];
       try {
-        const result = await base44.entities.PostNLImportResult.filter({ project_id: customerId });
+        const result = await base44.entities.PostNLImportResult.list();
         if (!Array.isArray(result)) return [];
         
         const flattened = [];
