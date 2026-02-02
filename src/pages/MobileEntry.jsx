@@ -136,24 +136,26 @@ export default function MobileEntry() {
 
   const unreadCount = myMessages.filter(m => !m.is_read).length;
 
+  const [targetDate, setTargetDate] = useState(() => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    if (currentHour >= 12) {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return format(tomorrow, 'yyyy-MM-dd');
+    }
+    return format(now, 'yyyy-MM-dd');
+  });
+
   const { data: shiftTimes = [] } = useQuery({
-    queryKey: ['shiftTimes', currentEmployee?.id],
+    queryKey: ['shiftTimes', currentEmployee?.id, targetDate],
     queryFn: async () => {
       if (!currentEmployee?.department) return [];
       const allShifts = await base44.entities.ShiftTime.filter({ 
-        department: currentEmployee.department 
+        department: currentEmployee.department,
+        date: targetDate
       });
-      const now = new Date();
-      const currentHour = now.getHours();
-      const today = format(now, 'yyyy-MM-dd');
-      const tomorrow = format(new Date(now.getTime() + 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
-      
-      // Na 12:00 uur: toon shifttijd van morgen
-      // Voor 12:00 uur: toon shifttijd van vandaag
-      const targetDate = currentHour >= 12 ? tomorrow : today;
-      
-      const targetShift = allShifts.find(shift => shift.date === targetDate);
-      return targetShift ? [targetShift] : [];
+      return allShifts;
     },
     enabled: !!currentEmployee?.department
   });
