@@ -20,6 +20,7 @@ import RoutesTab from "@/components/customer/RoutesTab";
 import ReportGenerator from "@/components/reports/ReportGenerator";
 import DataDashboard from "@/components/reports/DataDashboard";
 import ProjectExcelImport from "@/components/projecten/ProjectExcelImport";
+import PostNLDashboard from "@/components/rapportage/PostNLDashboard";
 import {
   ArrowLeft,
   Save,
