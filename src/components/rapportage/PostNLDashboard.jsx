@@ -18,10 +18,10 @@ const PERIOD_OPTIONS = {
 
 export default function PostNLDashboard({ customerId }) {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
-  const [selectedColumns, setSelectedColumns] = useState(['ritNaam', 'datum', 'aantal_stops', 'totaal_omzet']);
+  const [selectedColumns, setSelectedColumns] = useState(['ritnaam', 'datum', 'aantal_vrijgave_stops', 'aantal_pba_bezorgd']);
 
   const { data: rapportageRitten = [] } = useQuery({
-    queryKey: ['rapportageRitten'],
+    queryKey: ['rapportageRitten', customerId],
     queryFn: () => base44.entities.RapportageRit.list()
   });
 
@@ -39,26 +39,17 @@ export default function PostNLDashboard({ customerId }) {
       // Table
       const startY = 50;
       const columns = selectedColumns.map(col => {
-        const labels = {
-          ritNaam: 'Ritnaam',
-          datum: 'Datum',
-          aantal_stops: 'Stops',
-          totaal_omzet: 'Omzet (€)',
-          starttijd: 'Starttijd'
-        };
-        return labels[col] || col;
-      });
+         const labels = {
+           ritnaam: 'Ritnaam',
+           datum: 'Datum',
+           aantal_vrijgave_stops: 'Vrijgave Stops',
+           aantal_pba_bezorgd: 'PBA Bezorgd'
+         };
+         return labels[col] || col;
+       });
 
       const rows = rapportageRitten.map(item => 
-        selectedColumns.map(col => {
-          const fieldMap = {
-            ritNaam: 'ritnaam',
-            aantal_stops: 'aantal_vrijgave_stops',
-            totaal_omzet: 'aantal_pba_bezorgd'
-          };
-          const fieldName = fieldMap[col] || col;
-          return item[fieldName] || '-';
-        })
+        selectedColumns.map(col => item[col] || '-')
       );
 
       doc.autoTable({
@@ -78,11 +69,11 @@ export default function PostNLDashboard({ customerId }) {
   };
 
   const availableColumns = [
-    { key: 'ritNaam', label: 'Ritnaam' },
+    { key: 'ritnaam', label: 'Ritnaam' },
     { key: 'datum', label: 'Datum' },
-    { key: 'aantal_stops', label: 'Aantal Stops' },
-    { key: 'totaal_omzet', label: 'Totaal Omzet' },
-    { key: 'starttijd', label: 'Starttijd' }
+    { key: 'aantal_vrijgave_stops', label: 'Vrijgave Stops' },
+    { key: 'aantal_pba_bezorgd', label: 'PBA Bezorgd' },
+    { key: 'chauffeur', label: 'Chauffeur' }
   ];
 
   return (
@@ -180,25 +171,15 @@ export default function PostNLDashboard({ customerId }) {
                    </tr>
                  </thead>
                  <tbody>
-                   {rapportageRitten.map((item, idx) => {
-                     const fieldMap = {
-                       ritNaam: 'ritnaam',
-                       aantal_stops: 'aantal_vrijgave_stops',
-                       totaal_omzet: 'aantal_pba_bezorgd'
-                     };
-                     return (
-                       <tr key={idx} className="border-b hover:bg-slate-50">
-                         {selectedColumns.map(col => {
-                           const fieldName = fieldMap[col] || col;
-                           return (
-                             <td key={col} className="py-2 px-3 text-slate-600">
-                               {item[fieldName] || '-'}
-                             </td>
-                           );
-                         })}
-                       </tr>
-                     );
-                   })}
+                   {rapportageRitten.map((item, idx) => (
+                     <tr key={idx} className="border-b hover:bg-slate-50">
+                       {selectedColumns.map(col => (
+                         <td key={col} className="py-2 px-3 text-slate-600">
+                           {item[col] || '-'}
+                         </td>
+                       ))}
+                     </tr>
+                   ))}
                  </tbody>
                </table>
              </div>
