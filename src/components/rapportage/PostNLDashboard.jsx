@@ -35,10 +35,10 @@ export default function PostNLDashboard({ customerId }) {
         
         const flattened = [];
         result.forEach(item => {
-          if (item.data && typeof item.data === 'object' && Array.isArray(item.data)) {
-            item.data.forEach(dataRow => {
-              flattened.push(dataRow);
-            });
+          if (item.data && typeof item.data === 'object') {
+            if (item.data.data && typeof item.data.data === 'object') {
+              flattened.push(item.data.data);
+            }
           }
         });
         return flattened;
