@@ -76,6 +76,7 @@ Interdistri
 
     // Send email
     await base44.asServiceRole.integrations.Core.SendEmail({
+      from_name: 'noreply@tms.interdistri.nl',
       to: employee.email,
       subject: subject,
       body: emailBody
