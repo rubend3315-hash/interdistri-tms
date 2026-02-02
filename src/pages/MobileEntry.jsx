@@ -857,9 +857,15 @@ export default function MobileEntry() {
                   <Input
                     type="text"
                     inputMode="numeric"
-                    pattern="[0-9]{2}:[0-9]{2}"
+                    maxLength="5"
                     value={formData.start_time}
-                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^0-9]/g, '');
+                      if (value.length >= 3) {
+                        value = value.slice(0, 2) + ':' + value.slice(2, 4);
+                      }
+                      setFormData({ ...formData, start_time: value });
+                    }}
                     placeholder="08:30"
                   />
                   <p className="text-xs text-slate-500 mt-1">Typ tijd in formaat UU:MM (bijv. 08:30)</p>
@@ -903,20 +909,25 @@ export default function MobileEntry() {
                         <Input
                           type="text"
                           inputMode="numeric"
-                          pattern="[0-9]{2}:[0-9]{2}"
+                          maxLength="5"
                           value={formData.end_time}
                           onChange={(e) => {
+                            let value = e.target.value.replace(/[^0-9]/g, '');
+                            if (value.length >= 3) {
+                              value = value.slice(0, 2) + ':' + value.slice(2, 4);
+                            }
+                            setFormData({ ...formData, end_time: value });
+                          }}
+                          onBlur={(e) => {
                             const newEndTime = e.target.value;
-                            setFormData({ ...formData, end_time: newEndTime });
-                            
-                            // Valideer direct bij invoeren
-                            if (newEndTime && trips.length > 0) {
+                            // Valideer bij onBlur als tijd compleet is
+                            if (newEndTime && newEndTime.length === 5 && trips.length > 0) {
                               const invalidTrips = [];
                               trips.forEach((trip, idx) => {
-                                if (trip.end_time && trip.end_time > newEndTime) {
+                                if (trip.end_time && trip.end_time.length === 5 && trip.end_time > newEndTime) {
                                   invalidTrips.push(`Rit ${idx + 1}: Eindtijd rit (${trip.end_time}) ligt na eindtijd dienst (${newEndTime})`);
                                 }
-                                if (trip.start_time && formData.start_time && trip.start_time < formData.start_time) {
+                                if (trip.start_time && trip.start_time.length === 5 && formData.start_time && trip.start_time < formData.start_time) {
                                   invalidTrips.push(`Rit ${idx + 1}: Starttijd rit (${trip.start_time}) ligt voor starttijd dienst (${formData.start_time})`);
                                 }
                               });
@@ -1016,21 +1027,22 @@ export default function MobileEntry() {
                       <Input
                         type="text"
                         inputMode="numeric"
-                        pattern="[0-9]{2}:[0-9]{2}"
+                        maxLength="5"
                         value={trip.start_time}
                         onChange={(e) => {
-                          const newStartTime = e.target.value;
+                          let value = e.target.value.replace(/[^0-9]/g, '');
+                          if (value.length >= 3) {
+                            value = value.slice(0, 2) + ':' + value.slice(2, 4);
+                          }
                           
-                          // Update eerst altijd de waarde
                           const newTrips = [...trips];
-                          newTrips[index] = { ...trip, start_time: newStartTime };
+                          newTrips[index] = { ...trip, start_time: value };
                           setTrips(newTrips);
                         }}
                         onBlur={(e) => {
                           const newStartTime = e.target.value;
                           
-                          // Valideer alleen bij onBlur en als tijd compleet is (format UU:MM)
-                          if (newStartTime && newStartTime.length === 5 && formData.start_time && newStartTime < formData.start_time) {
+                          if (newStartTime && newStartTime.length === 5 && formData.start_time && formData.start_time.length === 5 && newStartTime < formData.start_time) {
                             alert(`Start rit (${newStartTime}) kan niet voor start dienst (${formData.start_time}) liggen.`);
                           }
                         }}
@@ -1044,21 +1056,22 @@ export default function MobileEntry() {
                       <Input
                         type="text"
                         inputMode="numeric"
-                        pattern="[0-9]{2}:[0-9]{2}"
+                        maxLength="5"
                         value={trip.end_time}
                         onChange={(e) => {
-                          const newEndTime = e.target.value;
+                          let value = e.target.value.replace(/[^0-9]/g, '');
+                          if (value.length >= 3) {
+                            value = value.slice(0, 2) + ':' + value.slice(2, 4);
+                          }
                           
-                          // Update eerst altijd de waarde
                           const newTrips = [...trips];
-                          newTrips[index] = { ...trip, end_time: newEndTime };
+                          newTrips[index] = { ...trip, end_time: value };
                           setTrips(newTrips);
                         }}
                         onBlur={(e) => {
                           const newEndTime = e.target.value;
                           
-                          // Valideer alleen bij onBlur en als tijd compleet is (format UU:MM)
-                          if (newEndTime && newEndTime.length === 5 && formData.end_time && newEndTime > formData.end_time) {
+                          if (newEndTime && newEndTime.length === 5 && formData.end_time && formData.end_time.length === 5 && newEndTime > formData.end_time) {
                             alert(`Einde rit (${newEndTime}) kan niet na einde dienst (${formData.end_time}) liggen.`);
                           }
                         }}
