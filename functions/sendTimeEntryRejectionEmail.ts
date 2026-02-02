@@ -45,17 +45,16 @@ Deno.serve(async (req) => {
     const subject = `Je ingediende dienst (${formattedDate}) is afgekeurd`;
 
     // Build email body
-    const emailBody = `
-Beste medewerker,
+    const emailBody = `Beste medewerker,
 
 Een door u ingediende tijdregistratie is afgekeurd.
 
-Reden van afkeuring:
-${timeEntry.rejection_reason || 'Geen reden opgegeven'}
+Reden van afkeuring: ${timeEntry.rejection_reason || 'niet de juiste eindtijd ingevoerd'}
 
 Wij verzoeken u de tijdregistratie aan te passen en opnieuw in te dienen.
 
 Details van de afgekeurde dienst:
+
 - Naam Medewerker: ${employee.first_name} ${employee.last_name}
 - Datum: ${formattedDate}
 - Starttijd: ${timeEntry.start_time || '-'}
@@ -64,15 +63,26 @@ Details van de afgekeurde dienst:
 - Totaal uren: ${timeEntry.total_hours || 0} uur
 - Opmerkingen: ${timeEntry.notes || 'Geen opmerkingen'}
 
-Klik hier om je dienst aan te passen:
-${Deno.env.get('BASE44_APP_URL') || 'https://app.base44.com'}/edit-time-entry?id=${timeEntryId}
+Klik hier om je dienst aan te passen: ${Deno.env.get('BASE44_APP_URL') || 'https://app.base44.com'}/edit-time-entry?id=${timeEntryId}
 
 Alvast bedankt voor uw medewerking.
 
 Met vriendelijke groet,
+
 ${adminName}
 Interdistri
-    `.trim();
+
+---
+
+Interdistri
+Fleertsosweg 19
+4421 RR Kapelle
+https://www.interdistri.nl
+
+Telefoon: 088-4006400
+Algemeen: info@interdistri.nl
+Nachtplanning: planning@interdistri.nl
+Administratie: administratie@interdistri.nl`.trim();
 
     // Send email
     await base44.asServiceRole.integrations.Core.SendEmail({
