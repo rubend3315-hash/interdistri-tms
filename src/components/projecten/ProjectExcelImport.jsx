@@ -79,10 +79,10 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
         try {
           // Need to refetch to get full data since bulkCreate may not return everything
           const refreshedImports = await base44.entities.PostNLImportResult.list();
-          const todayRecords = refreshedImports.filter(r => 
-            r.bestandsnaam === file?.name &&
-            r.import_datum === new Date().toISOString().split('T')[0]
-          );
+          const today = new Date().toISOString().split('T')[0];
+          const todayRecords = refreshedImports.filter(r => {
+            return r.bestandsnaam === file?.name && r.import_datum === today;
+          });
 
           const result = await base44.functions.invoke('createRapportageRitsFromImports', {
             records: todayRecords,
