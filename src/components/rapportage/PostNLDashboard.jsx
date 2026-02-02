@@ -133,7 +133,7 @@ export default function PostNLDashboard({ customerId }) {
   };
 
   const selectAll = () => {
-    setSelectedColumns(ALL_COLUMNS.map(c => c.key));
+    setSelectedColumns(allColumns.map(c => c.key));
   };
 
   const clearAll = () => {
