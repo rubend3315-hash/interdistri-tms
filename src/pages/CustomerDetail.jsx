@@ -224,6 +224,12 @@ export default function CustomerDetail() {
               Imports
             </TabsTrigger>
           )}
+          {isPostNL && (
+           <TabsTrigger value="import-reports" className="gap-2">
+             <BarChart3 className="w-4 h-4" />
+             Import Rapportage
+           </TabsTrigger>
+          )}
           <TabsTrigger value="history" className="gap-2">
             <History className="w-4 h-4" />
             Geschiedenis
@@ -248,12 +254,6 @@ export default function CustomerDetail() {
            <TabsTrigger value="reports" className="gap-2">
              <TrendingUp className="w-4 h-4" />
              AI Rapporten
-           </TabsTrigger>
-          )}
-          {isPostNL && (
-           <TabsTrigger value="import-reports" className="gap-2">
-             <BarChart3 className="w-4 h-4" />
-             Import Rapportage
            </TabsTrigger>
           )}
           {isPostNL && (
