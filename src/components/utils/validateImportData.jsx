@@ -2,7 +2,7 @@
 export const validationRules = {
   'Ritnummer': { type: 'string', required: false },
   'Ritje': { type: 'string', required: false },
-  'Datum': { type: 'date', required: false },
+  'Datum': { type: 'date', required: true },
   'Depot': { type: 'string', required: true },
   'Ritmaam': { type: 'string', required: false },
   'Ondernemer': { type: 'string', required: false },
@@ -12,6 +12,9 @@ export const validationRules = {
   'Aangekomen': { type: 'time', required: false },
   'Eerste stop': { type: 'time', required: false },
   'Laatste stop': { type: 'time', required: false },
+  'Aantal colli': { type: 'number', required: false, min: 0 },
+  'Aantal stops': { type: 'number', required: false, min: 0 },
+  'Afstand': { type: 'number', required: false, min: 0 },
 };
 
 export function validateImportData(data, columns) {
