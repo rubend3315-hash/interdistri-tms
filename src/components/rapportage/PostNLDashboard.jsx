@@ -21,7 +21,7 @@ const PERIOD_OPTIONS = {
 
 export default function PostNLDashboard({ customerId }) {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
-  const [selectedColumns, setSelectedColumns] = useState(['ritnaam', 'datum', 'aantal_vrijgave_stops', 'aantal_pba_bezorgd']);
+  const [selectedColumns, setSelectedColumns] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showColumnSelector, setShowColumnSelector] = useState(false);
 
