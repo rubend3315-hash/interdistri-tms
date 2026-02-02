@@ -177,7 +177,6 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
         return;
       }
 
-      const project = projecten.find(p => p.id === selectedProject);
       const today = new Date().toISOString().split('T')[0];
 
       const duplicates = jsonData.filter(newRecord =>
@@ -193,12 +192,10 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
         return;
       }
 
-      const recordsToAdd = jsonData.map(filteredData => {
-        console.log('selectedProject:', selectedProject, 'project:', project);
-        return {
-          project_id: selectedProject,
-          project_naam: project?.naam,
-          klant_naam: 'PostNL',
+      const recordsToAdd = jsonData.map(filteredData => ({
+        project_id: selectedProject,
+        project_naam: 'PakketDistributie',
+        klant_naam: 'PostNL',
           ritnaam: filteredData['Ritnaam'] || '',
           datum: filteredData['Datum'] || '',
           starttijd_shift: starttijdShift,
