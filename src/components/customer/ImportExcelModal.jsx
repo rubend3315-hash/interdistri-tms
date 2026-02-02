@@ -225,18 +225,28 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
               </div>
             </>
           ) : !parseResult ? (
-            <>
-              <div className="space-y-2">
-                <Label>Import naam</Label>
-                <Input
-                  placeholder="Bijv: Januariverkoop, Q1 Rapport"
-                  value={importName}
-                  onChange={(e) => setImportName(e.target.value)}
-                />
-              </div>
+           <>
+             <div className="space-y-2">
+               <Label>Import naam</Label>
+               <Input
+                 placeholder="Bijv: Januariverkoop, Q1 Rapport"
+                 value={importName}
+                 onChange={(e) => setImportName(e.target.value)}
+               />
+             </div>
 
-              <div className="space-y-2">
-                <Label>Excel bestand</Label>
+             <div className="space-y-2">
+               <Label>Starttijd shift *</Label>
+               <Input
+                 type="time"
+                 value={starttijdShift}
+                 onChange={(e) => setStarttijdShift(e.target.value)}
+                 placeholder="bijv: 08:10"
+               />
+             </div>
+
+             <div className="space-y-2">
+               <Label>Excel bestand</Label>
                 <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
                   <input
                     type="file"
