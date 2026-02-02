@@ -143,9 +143,22 @@ export default function MobileEntry() {
       const allShifts = await base44.entities.ShiftTime.filter({ 
         department: currentEmployee.department 
       });
-      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      const now = new Date();
+      const currentHour = now.getHours();
+      
+      // Na 12:00 uur tonen we de shifttijd van morgen, anders van vandaag
+      let targetDate;
+      if (currentHour >= 12) {
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        targetDate = format(tomorrow, 'yyyy-MM-dd');
+      } else {
+        targetDate = format(now, 'yyyy-MM-dd');
+      }
+      
       const upcomingShifts = allShifts
-        .filter(shift => shift.date >= today)
+        .filter(shift => shift.date >= targetDate)
         .sort((a, b) => a.date.localeCompare(b.date));
       return upcomingShifts.slice(0, 1);
     },
