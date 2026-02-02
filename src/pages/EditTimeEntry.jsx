@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Clock, Save, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "./utils";
+import { createPageUrl } from "../utils";
 
 export default function EditTimeEntry() {
   const navigate = useNavigate();
