@@ -37,7 +37,10 @@ export default function PostNLDashboard({ customerId }) {
           if (item.data && typeof item.data === 'object') {
             const innerData = item.data.data || item.data;
             if (innerData && typeof innerData === 'object') {
-              flattened.push(innerData);
+              flattened.push({
+                ...innerData,
+                'Starttijd shift': item.starttijd_shift || ''
+              });
             }
           }
         });
