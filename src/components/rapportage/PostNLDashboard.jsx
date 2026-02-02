@@ -67,6 +67,22 @@ export default function PostNLDashboard({ customerId }) {
     staleTime: 0
   });
 
+  const { data: postNLImports = [] } = useQuery({
+    queryKey: ['postNLImportResults', customerId],
+    queryFn: async () => {
+      if (!customerId) return [];
+      try {
+        const result = await base44.entities.PostNLImportResult.list();
+        return Array.isArray(result) ? result : [];
+      } catch (error) {
+        console.error('Failed to fetch PostNLImportResult:', error);
+        return [];
+      }
+    },
+    enabled: !!customerId,
+    staleTime: 0
+  });
+
   const allColumns = useMemo(() => getAvailableColumns(rapportageRitten), [rapportageRitten]);
 
   const filteredColumns = useMemo(() => {
