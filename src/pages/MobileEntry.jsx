@@ -136,26 +136,18 @@ export default function MobileEntry() {
 
   const unreadCount = myMessages.filter(m => !m.is_read).length;
 
-  const [targetDate, setTargetDate] = useState(() => {
-    const now = new Date();
-    const currentHour = now.getHours();
-    if (currentHour >= 12) {
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      return format(tomorrow, 'yyyy-MM-dd');
-    }
-    return format(now, 'yyyy-MM-dd');
-  });
-
   const { data: shiftTimes = [] } = useQuery({
-    queryKey: ['shiftTimes', currentEmployee?.id, targetDate],
+    queryKey: ['shiftTimes', currentEmployee?.id],
     queryFn: async () => {
       if (!currentEmployee?.department) return [];
       const allShifts = await base44.entities.ShiftTime.filter({ 
-        department: currentEmployee.department,
-        date: targetDate
+        department: currentEmployee.department 
       });
-      return allShifts;
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const upcomingShifts = allShifts
+        .filter(shift => shift.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      return upcomingShifts.slice(0, 1);
     },
     enabled: !!currentEmployee?.department
   });
@@ -638,7 +630,7 @@ export default function MobileEntry() {
         </div>
 
         {/* Today's Shift Time */}
-        {todayShift ? (
+        {todayShift && (
           <div className="mt-2 bg-amber-400 text-amber-900 rounded-lg p-2">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
@@ -657,18 +649,6 @@ export default function MobileEntry() {
             {todayShift.message && (
               <p className="mt-1 text-xs">{todayShift.message}</p>
             )}
-          </div>
-        ) : (
-          <div className="mt-2 bg-amber-400 text-amber-900 rounded-lg p-2">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <div>
-                <p className="text-xs font-medium">
-                  {new Date().getHours() >= 12 ? 'Dienst morgen' : 'Dienst vandaag'}
-                </p>
-                <p className="font-bold text-sm">Nog geen shifttijd bekend</p>
-              </div>
-            </div>
           </div>
         )}
       </div>
