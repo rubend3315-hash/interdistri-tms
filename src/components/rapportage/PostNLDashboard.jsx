@@ -162,41 +162,48 @@ export default function PostNLDashboard({ customerId }) {
           <CardTitle className="text-base">Rapportagegegevens</CardTitle>
         </CardHeader>
         <CardContent>
-          {postNLData.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-slate-500">Geen rapportages beschikbaar</p>
-              <p className="text-xs text-slate-400 mt-1">Klant: PostNL | Totaal records: 0 | Gefilterd: 0</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b">
-                  <tr>
-                    {selectedColumns.map(col => (
-                      <th key={col} className="text-left py-2 px-3 font-medium text-slate-700">
-                        {availableColumns.find(c => c.key === col)?.label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {postNLData.map((item, idx) => (
-                    <tr key={idx} className="border-b hover:bg-slate-50">
-                      {selectedColumns.map(col => (
-                        <td key={col} className="py-2 px-3 text-slate-600">
-                          {col === 'totaal_omzet' && typeof item.data?.totaal_omzet === 'number'
-                            ? '€ ' + item.data.totaal_omzet.toFixed(2)
-                            : item.data?.[col] || item[col] || '-'
-                          }
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
+           {rapportageRitten.length === 0 ? (
+             <div className="text-center py-8">
+               <p className="text-slate-500">Geen rapportages beschikbaar</p>
+               <p className="text-xs text-slate-400 mt-1">Klant: PostNL | Totaal records: {rapportageRitten.length} | Gefilterd: {rapportageRitten.length}</p>
+             </div>
+           ) : (
+             <div className="overflow-x-auto">
+               <table className="w-full text-sm">
+                 <thead className="border-b">
+                   <tr>
+                     {selectedColumns.map(col => (
+                       <th key={col} className="text-left py-2 px-3 font-medium text-slate-700">
+                         {availableColumns.find(c => c.key === col)?.label}
+                       </th>
+                     ))}
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {rapportageRitten.map((item, idx) => {
+                     const fieldMap = {
+                       ritNaam: 'ritnaam',
+                       aantal_stops: 'aantal_vrijgave_stops',
+                       totaal_omzet: 'aantal_pba_bezorgd'
+                     };
+                     return (
+                       <tr key={idx} className="border-b hover:bg-slate-50">
+                         {selectedColumns.map(col => {
+                           const fieldName = fieldMap[col] || col;
+                           return (
+                             <td key={col} className="py-2 px-3 text-slate-600">
+                               {item[fieldName] || '-'}
+                             </td>
+                           );
+                         })}
+                       </tr>
+                     );
+                   })}
+                 </tbody>
+               </table>
+             </div>
+           )}
+         </CardContent>
       </Card>
     </div>
   );
