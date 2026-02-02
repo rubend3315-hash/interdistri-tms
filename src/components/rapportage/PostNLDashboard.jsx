@@ -67,13 +67,15 @@ export default function PostNLDashboard({ customerId }) {
     staleTime: 0
   });
 
+  const allColumns = useMemo(() => getAvailableColumns(rapportageRitten), [rapportageRitten]);
+
   const filteredColumns = useMemo(() => {
-    if (!searchTerm) return ALL_COLUMNS;
-    return ALL_COLUMNS.filter(col => 
+    if (!searchTerm) return allColumns;
+    return allColumns.filter(col => 
       col.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
       col.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm]);
+  }, [searchTerm, allColumns]);
 
   const columnsByCategory = useMemo(() => {
     const grouped = {};
