@@ -55,10 +55,25 @@ export default function ProjectExcelImport({ projectFilter }) {
 
   const saveDataMutation = useMutation({
     mutationFn: async (records) => {
-      return base44.entities.PostNLImportResult.bulkCreate(records);
+      const postNLRecords = await base44.entities.PostNLImportResult.bulkCreate(records);
+      
+      // Also create CustomerImport record for history
+      const customerImportRecord = {
+        customer_id: selectedProject,
+        import_name: `PostNL ${records[0]?.ritnaam || 'Import'} - ${new Date().toLocaleDateString('nl-NL')}`,
+        file_name: file.name,
+        column_mapping: {},
+        data: records.map(r => r.data),
+        total_rows: records.length,
+        status: 'Verwerkt'
+      };
+      
+      await base44.entities.CustomerImport.create(customerImportRecord);
+      return postNLRecords;
     },
     onSuccess: async (createdRecords) => {
       queryClient.invalidateQueries({ queryKey: ['postNLImportResults'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-imports'] });
       
       // Auto-trigger conversion to RapportageRit
       try {
@@ -66,14 +81,14 @@ export default function ProjectExcelImport({ projectFilter }) {
         const convertResult = await base44.functions.invoke('convertImportToRapportageRit', {
           project_id: selectedProject,
           project_naam: project?.naam,
-          klant_id: '',
+          klant_id: selectedProject,
           import_data: createdRecords.map(r => r.data)
         });
         
         toast.success(`Data opgeslagen en ${convertResult.data.count} ritten geconverteerd`);
         queryClient.invalidateQueries({ queryKey: ['rapportageRitten'] });
       } catch (error) {
-        toast.success('Data opgeslagen (conversie volgt handmatig)');
+        toast.success('Data opgeslagen');
       }
       
       setExtractedData(null);
