@@ -186,8 +186,8 @@ export default function PostNLDashboard({ customerId }) {
           </div>
         </CardHeader>
         {showColumnSelector && (
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+          <CardContent className="space-y-2 py-3">
+            <div className="space-y-1">
               <Input
                 placeholder="Zoeken in kolommen..."
                 value={searchTerm}
