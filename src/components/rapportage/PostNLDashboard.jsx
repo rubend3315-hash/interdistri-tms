@@ -62,21 +62,41 @@ export default function PostNLDashboard({ customerId }) {
   };
 
   const { data: rapportageRitten = [] } = useQuery({
-    queryKey: ['rapportageRitten'],
+    queryKey: ['rapportageRitten', selectedPeriod, customStartDate, customEndDate],
     queryFn: async () => {
       try {
         const result = await base44.entities.PostNLImportResult.list();
         if (!Array.isArray(result)) return [];
+        
+        const periodDates = getPeriodDates();
         
         const flattened = [];
         result.forEach(item => {
           if (item.data && typeof item.data === 'object') {
             const innerData = item.data.data || item.data;
             if (innerData && typeof innerData === 'object') {
-              flattened.push({
-                ...innerData,
-                'Starttijd shift': item.starttijd_shift || ''
-              });
+              let shouldInclude = true;
+              
+              // Filter op datum als periode is ingesteld
+              if (periodDates && innerData['Datum']) {
+                try {
+                  const rowDate = new Date(innerData['Datum']);
+                  if (isNaN(rowDate.getTime())) {
+                    shouldInclude = true;
+                  } else {
+                    shouldInclude = rowDate >= periodDates.startDate && rowDate <= periodDates.endDate;
+                  }
+                } catch {
+                  shouldInclude = true;
+                }
+              }
+              
+              if (shouldInclude) {
+                flattened.push({
+                  ...innerData,
+                  'Starttijd shift': item.starttijd_shift || ''
+                });
+              }
             }
           }
         });
