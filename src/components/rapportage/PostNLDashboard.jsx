@@ -100,7 +100,7 @@ export default function PostNLDashboard({ customerId }) {
 
       const startY = 50;
       const columns = selectedColumns.map(col => {
-        const colDef = ALL_COLUMNS.find(c => c.key === col);
+        const colDef = allColumns.find(c => c.key === col);
         return colDef?.label || col;
       });
 
