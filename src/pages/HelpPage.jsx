@@ -174,6 +174,29 @@ export default function HelpPage() {
               </CardContent>
             </Card>
 
+            {/* Dienst-Shifttijd */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CircleDot className="w-5 h-5 text-red-600" />
+                  Dienst-Shifttijd
+                </CardTitle>
+                <CardDescription>Starttijden per afdeling beheren</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Beheer de officiële starttijden per afdeling:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Starttijd per afdeling instellen</li>
+                  <li>✓ Geldige shifttijden (van-tot)</li>
+                  <li>✓ Berichten voor medewerkers</li>
+                  <li>✓ Per datum configureren</li>
+                  <li>✓ Zichtbaar in mobiele app</li>
+                </ul>
+              </CardContent>
+            </Card>
+
             {/* Mobile Entry */}
             <Card>
               <CardHeader>
@@ -192,8 +215,10 @@ export default function HelpPage() {
                   <li>✓ Voertuiginspectie met foto's</li>
                   <li>✓ Declaraties indienen</li>
                   <li>✓ Planning bekijken</li>
+                  <li>✓ Shifttijd weergave</li>
                   <li>✓ Offline synchronisatie</li>
                   <li>✓ Handtekening functionaliteit</li>
+                  <li>✓ Berichten en notificaties</li>
                 </ul>
               </CardContent>
             </Card>
