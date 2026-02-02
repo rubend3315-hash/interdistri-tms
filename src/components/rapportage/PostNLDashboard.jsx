@@ -49,12 +49,15 @@ export default function PostNLDashboard({ customerId }) {
         return labels[col] || col;
       });
 
-      const rows = postNLData.map(item => 
+      const rows = rapportageRitten.map(item => 
         selectedColumns.map(col => {
-          if (col === 'totaal_omzet' && typeof item.data?.totaal_omzet === 'number') {
-            return item.data.totaal_omzet.toFixed(2);
-          }
-          return item.data?.[col] || item[col] || '-';
+          const fieldMap = {
+            ritNaam: 'ritnaam',
+            aantal_stops: 'aantal_vrijgave_stops',
+            totaal_omzet: 'aantal_pba_bezorgd'
+          };
+          const fieldName = fieldMap[col] || col;
+          return item[fieldName] || '-';
         })
       );
 
