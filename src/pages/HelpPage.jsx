@@ -614,6 +614,68 @@ export default function HelpPage() {
               </AccordionContent>
             </AccordionItem>
 
+            {/* Dienst-Shifttijd Handleiding */}
+            <AccordionItem value="shifttime-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <CircleDot className="w-4 h-4 mr-2" />
+                Hoe gebruik ik Dienst-Shifttijd?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">1. Dienst-Shifttijd instellen</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Ga naar "Dienst-Shifttijd" om de officiële starttijden per afdeling in te stellen.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">2. Shifttijd toevoegen</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Klik "Shifttijd toevoegen" knop</li>
+                      <li>• Selecteer de datum</li>
+                      <li>• Kies de afdeling (Management, Transport, PakketDistributie, Charters)</li>
+                      <li>• Voer de service starttijd in</li>
+                      <li>• Optioneel: voeg geldige shifttijden toe (van-tot)</li>
+                      <li>• Optioneel: voeg een bericht toe voor medewerkers</li>
+                      <li>• Sla op</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">3. Shifttijd bewerken</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Zoek de shifttijd in de lijst</li>
+                      <li>• Klik erop om details te openen</li>
+                      <li>• Wijzig de gegevens</li>
+                      <li>• Sla op</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">4. Shifttijd verwijderen</h4>
+                    <p className="text-sm text-slate-600">
+                      Klik op de shifttijd en kies "Verwijderen". Dit kan altijd ongedaan gemaakt worden.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">5. In de mobiele app</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Medewerkers zien de shifttijd op hun mobiele app:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Automatisch weergegeven in geel/amber blok in header</li>
+                      <li>• Toont service starttijd voor vandaag of volgende werkdag (na 12:00 uur)</li>
+                      <li>• Eventueel bericht wordt weergegeven</li>
+                      <li>• Helpt medewerkers op tijd aan de slag te gaan</li>
+                    </ul>
+                  </div>
+                  <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <p className="text-sm text-red-700">
+                      💡 <strong>Tip:</strong> Stel de shifttijd in voordat medewerkers hun dienst starten. Dit zorgt ervoor dat ze direct kunnen zien wanneer hun dienst start.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Mobile Entry Handleiding */}
             <AccordionItem value="mobile-entry-guide">
               <AccordionTrigger className="text-base font-semibold">
@@ -629,7 +691,18 @@ export default function HelpPage() {
                     </p>
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">2. Diensttijd registreren</h4>
+                    <h4 className="font-medium text-slate-900 mb-2">2. Starttijd van dienst checken</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      De app toont je automatisch:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• De officiële service starttijd (geel/amber blok)</li>
+                      <li>• Dit is ingesteld per afdeling door je manager</li>
+                      <li>• Het bericht van vandaag (indien ingesteld)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">3. Diensttijd registreren</h4>
                     <ul className="text-sm text-slate-600 space-y-2">
                       <li>• <strong>Stap 1:</strong> Voer je starttijd in bij "Diensttijd"</li>
                       <li>• <strong>Stap 2:</strong> Ga naar "Ritten" en voeg minimaal één rit toe</li>
@@ -638,7 +711,7 @@ export default function HelpPage() {
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">3. Ritten invoeren</h4>
+                    <h4 className="font-medium text-slate-900 mb-2">4. Ritten invoeren</h4>
                     <ul className="text-sm text-slate-600 space-y-2">
                       <li>• Voeg een rit toe met "Regel Toevoegen"</li>
                       <li>• Vul starttijd en eindtijd van de rit in</li>
@@ -649,7 +722,7 @@ export default function HelpPage() {
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">4. Validaties</h4>
+                    <h4 className="font-medium text-slate-900 mb-2">5. Validaties</h4>
                     <p className="text-sm text-slate-600 mb-2">
                       De app controleert automatisch:
                     </p>
@@ -661,17 +734,18 @@ export default function HelpPage() {
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">5. Overige functies</h4>
+                    <h4 className="font-medium text-slate-900 mb-2">6. Overige functies</h4>
                     <ul className="text-sm text-slate-600 space-y-2">
                       <li>• <strong>Voertuiginspectie:</strong> Controleer je voertuig en maak foto's van schade</li>
                       <li>• <strong>Declaratie:</strong> Dien kosten in met bon/foto</li>
                       <li>• <strong>Overzicht:</strong> Bekijk goedgekeurde diensten</li>
                       <li>• <strong>Planning:</strong> Zie je rooster voor deze week</li>
+                      <li>• <strong>Berichten:</strong> Ontvang berichten van je manager</li>
                       <li>• <strong>Links:</strong> Snelle toegang tot Bumper en Werknemersloket</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">6. Offline werken</h4>
+                    <h4 className="font-medium text-slate-900 mb-2">7. Offline werken</h4>
                     <p className="text-sm text-slate-600">
                       De app werkt ook offline. Je gegevens worden automatisch gesynchroniseerd zodra je weer online bent. Een indicator toont je verbindingsstatus.
                     </p>
