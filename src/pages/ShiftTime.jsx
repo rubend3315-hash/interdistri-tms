@@ -162,11 +162,6 @@ export default function ShiftTime() {
                         {shift.service_start_time}
                       </span>
                     </div>
-                    {(shift.start_time || shift.end_time) && (
-                      <p className="text-sm text-blue-100 mt-2">
-                        Shifttijd: {shift.start_time || '--:--'} - {shift.end_time || '--:--'}
-                      </p>
-                    )}
                     {shift.message && (
                       <p className="mt-4 text-blue-100 bg-blue-500/30 p-3 rounded-lg">
                         {shift.message}
