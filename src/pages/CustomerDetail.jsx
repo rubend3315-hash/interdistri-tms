@@ -91,6 +91,11 @@ export default function CustomerDetail() {
     notes: ""
   });
 
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => base44.entities.Project.list()
+  });
+
   React.useEffect(() => {
     if (customer) {
       setFormData({
