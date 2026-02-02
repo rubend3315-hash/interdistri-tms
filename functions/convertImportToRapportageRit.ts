@@ -68,19 +68,6 @@ Deno.serve(async (req) => {
 
     const skippedCount = import_data.length - uniqueRits.length;
     
-    // Stuur notificatie naar de gebruiker
-    try {
-      await base44.asServiceRole.functions.invoke('notifyImportSuccess', {
-        ontvanger_email: user.email,
-        count: created.length,
-        type: 'rapportage',
-        project_naam,
-        skipped: skippedCount
-      });
-    } catch (notifyError) {
-      console.error('Failed to send notification:', notifyError);
-    }
-    
     return Response.json({ 
       success: true, 
       count: created.length,
