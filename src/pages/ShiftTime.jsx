@@ -28,12 +28,7 @@ export default function ShiftTime() {
 
   const { data: shiftTimes = [], isLoading } = useQuery({
     queryKey: ['shiftTimes'],
-    queryFn: async () => {
-      const allShifts = await base44.entities.ShiftTime.list('-date', 100);
-      const today = format(new Date(), 'yyyy-MM-dd');
-      // Alleen shifts vanaf vandaag tonen
-      return allShifts.filter(shift => shift.date >= today);
-    }
+    queryFn: () => base44.entities.ShiftTime.list('-date', 100)
   });
 
   const { data: user } = useQuery({
@@ -233,11 +228,6 @@ export default function ShiftTime() {
                                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
                                 {format(new Date(shift.date), "EEEE d MMMM yyyy", { locale: nl })}
                               </p>
-                              {(shift.start_time || shift.end_time) && (
-                                <p className="text-xs text-slate-500 mt-1">
-                                  Shift: {shift.start_time || '--:--'} - {shift.end_time || '--:--'}
-                                </p>
-                              )}
                             </div>
                           </div>
                           
