@@ -859,15 +859,17 @@ export default function MobileEntry() {
                       <Input
                         type="time"
                         value={formData.start_time}
-                        onChange={(e) => {
-                          setFormData({ ...formData, start_time: e.target.value });
-                          // Navigeer automatisch naar ritten als starttijd is ingevuld
-                          if (e.target.value) {
-                            setTimeout(() => setActiveTab("ritten"), 300);
-                          }
-                        }}
+                        onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
                       />
                     </div>
+
+                    <Button 
+                      className="w-full bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => setActiveTab("ritten")}
+                      disabled={!formData.start_time}
+                    >
+                      Volgende → Ritten invoeren
+                    </Button>
                   </>
                 ) : (
                   <>
