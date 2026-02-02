@@ -264,7 +264,7 @@ export default function ProjectExcelImport({ projectFilter }) {
           )}
           <Button
             onClick={handleExtract}
-            disabled={!file || isExtracting || !selectedProject || !starttijdShift}
+            disabled={!file || isExtracting}
             className="bg-[#1a237e]"
           >
             {isExtracting ? 'Bezig...' : 'Extraheren & Opslaan'}
