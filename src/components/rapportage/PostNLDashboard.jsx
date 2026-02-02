@@ -18,25 +18,32 @@ const PERIOD_OPTIONS = {
   custom: 'Aangepast'
 };
 
-const ALL_COLUMNS = [
-  { key: 'ritnaam', label: 'Ritnaam', category: 'Basis' },
-  { key: 'datum', label: 'Datum', category: 'Basis' },
-  { key: 'chauffeur', label: 'Chauffeur', category: 'Basis' },
-  { key: 'project_naam', label: 'Project', category: 'Basis' },
-  { key: 'week', label: 'Week', category: 'Basis' },
-  { key: 'status', label: 'Status', category: 'Basis' },
-  { key: 'totaal_rit', label: 'Totaal Rit Tijd', category: 'Tijden' },
-  { key: 'besteltijd_norm', label: 'Besteltijd Norm', category: 'Tijden' },
-  { key: 'besteltijd_bruto', label: 'Besteltijd Bruto', category: 'Tijden' },
-  { key: 'besteltijd_netto', label: 'Besteltijd Netto', category: 'Tijden' },
-  { key: 'geen_scan_15min', label: 'Geen Scan >15min', category: 'Kwaliteit' },
-  { key: 'aantal_vrijgave_stops', label: 'Vrijgave Stops', category: 'Stops' },
-  { key: 'aantal_vrijgave_stuks', label: 'Vrijgave Stuks', category: 'Stops' },
-  { key: 'aantal_afgeleverd_stops', label: 'Afgeleverd Stops', category: 'Bezorging' },
-  { key: 'aantal_afgeleverd_stuks', label: 'Afgeleverd Stuks', category: 'Bezorging' },
-  { key: 'aantal_pba_bezorgd', label: 'PBA Bezorgd', category: 'Bezorging' },
-  { key: 'aantal_afgehaald_collecteerd', label: 'Afgehaald/Collecteerd', category: 'Bezorging' },
-];
+const getAvailableColumns = (rapportageRitten) => {
+  if (rapportageRitten.length === 0) return [];
+  
+  const firstRit = rapportageRitten[0];
+  const columnsSet = new Set();
+  
+  // Basis velden van RapportageRit
+  const baseFields = ['ritnaam', 'datum', 'chauffeur', 'project_naam', 'project_id', 'week', 'status', 
+                      'totaal_rit', 'besteltijd_norm', 'besteltijd_bruto', 'besteltijd_netto',
+                      'geen_scan_15min', 'aantal_vrijgave_stops', 'aantal_vrijgave_stuks',
+                      'aantal_afgeleverd_stops', 'aantal_afgeleverd_stuks', 'aantal_pba_bezorgd',
+                      'aantal_afgehaald_collecteerd', 'klant_id', 'import_datum'];
+  
+  baseFields.forEach(f => columnsSet.add(f));
+  
+  // Kolommen uit de geïmporteerde data
+  if (firstRit.data && typeof firstRit.data === 'object') {
+    Object.keys(firstRit.data).forEach(key => columnsSet.add(key));
+  }
+  
+  return Array.from(columnsSet).map(key => ({
+    key,
+    label: key.replace(/_/g, ' '),
+    category: 'Gegevens'
+  }));
+};
 
 export default function PostNLDashboard({ customerId }) {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
