@@ -103,14 +103,20 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
         throw new Error('Validatiefouten gevonden');
       }
 
+      // Add Starttijd shift to all data rows
+      const dataWithStarttijd = parseResult.rawData.map(row => ({
+        ...row,
+        'Starttijd shift': starttijdShift
+      }));
+
       return base44.entities.CustomerImport.create({
         customer_id: customerId,
         import_name: importName,
         import_date: new Date().toISOString(),
         file_name: file.name,
         column_mapping: {},
-        data: parseResult.rawData,
-        total_rows: parseResult.rawData.length,
+        data: dataWithStarttijd,
+        total_rows: dataWithStarttijd.length,
         calculated_data: [],
         status: 'Concept'
       });
