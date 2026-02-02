@@ -218,12 +218,31 @@ export default function EditTimeEntry() {
         <Card className="max-w-md w-full">
           <CardContent className="p-6 text-center">
             <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-slate-900 mb-2">TimeEntry niet gevonden</h2>
-            <p className="text-slate-600 mb-4">De gevraagde tijdregistratie kon niet worden gevonden.</p>
-            <Button onClick={() => navigate(createPageUrl("MobileEntry"))}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Terug naar Mobile Entry
-            </Button>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Dienst niet gevonden</h2>
+            <p className="text-slate-600 mb-2">De gevraagde dienst kon niet worden gevonden.</p>
+            {timeEntryError && (
+              <p className="text-xs text-slate-500 mb-4 bg-slate-50 p-2 rounded">
+                {timeEntryError?.message || 'Mogelijk geen toestemming of ongeldig ID'}
+              </p>
+            )}
+            <p className="text-sm text-slate-600 mb-4">
+              Dit kan gebeuren als je al ingelogd bent met een ander account. Log uit en in met het juiste account.
+            </p>
+            <div className="space-y-2">
+              <Button onClick={() => navigate(createPageUrl("MobileEntry"))} className="w-full">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Terug naar Mobile Entry
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => {
+                  base44.auth.logout();
+                }}
+              >
+                Afmelden
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
