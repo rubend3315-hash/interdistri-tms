@@ -204,11 +204,11 @@ export default function PostNLDashboard({ customerId }) {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               {Object.entries(columnsByCategory).map(([category, cols]) => (
                 <div key={category}>
-                  <h4 className="text-sm font-semibold text-slate-700 mb-2">{category}</h4>
-                  <div className="grid grid-cols-2 gap-3">
+                  <h4 className="text-xs font-semibold text-slate-700 mb-1">{category}</h4>
+                  <div className="grid grid-cols-2 gap-2">
                     {cols.map(col => (
                       <div key={col.key} className="flex items-center gap-2">
                         <Checkbox
