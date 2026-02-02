@@ -18,31 +18,6 @@ const PERIOD_OPTIONS = {
   custom: 'Aangepast'
 };
 
-const getAvailableColumns = (rapportageRitten, postNLImports) => {
-  const columnsSet = new Set();
-  
-  // Kolommen uit PostNLImportResult (bevat de originele Excel data)
-  postNLImports.forEach(imp => {
-    if (imp.data && typeof imp.data === 'object') {
-      Object.keys(imp.data).forEach(key => columnsSet.add(key));
-    }
-  });
-  
-  // Basis velden van RapportageRit
-  rapportageRitten.forEach(rit => {
-    Object.keys(rit).forEach(key => {
-      if (key !== 'data' && key !== 'artikelen' && key !== 'id' && key !== 'created_date' && key !== 'updated_date' && key !== 'created_by') {
-        columnsSet.add(key);
-      }
-    });
-  });
-  
-  return Array.from(columnsSet).map(key => ({
-    key,
-    label: key.replace(/_/g, ' '),
-    category: 'Gegevens'
-  }));
-};
 
 export default function PostNLDashboard({ customerId }) {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
