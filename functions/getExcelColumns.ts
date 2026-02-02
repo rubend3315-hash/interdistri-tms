@@ -7,16 +7,19 @@ Deno.serve(async (req) => {
     const columnsArray = [];
     const columnsSet = new Set();
     
-    // ALLEEN kolommen uit PostNLImportResult.data (behoud volgorde)
+    // ALLEEN kolommen uit PostNLImportResult.data.data (behoud volgorde)
     const imports = await base44.asServiceRole.entities.PostNLImportResult.list();
     imports.forEach(imp => {
       if (imp.data && typeof imp.data === 'object') {
-        Object.keys(imp.data).forEach(key => {
-          if (!columnsSet.has(key)) {
-            columnsSet.add(key);
-            columnsArray.push(key);
-          }
-        });
+        const innerData = imp.data.data || imp.data;
+        if (innerData && typeof innerData === 'object') {
+          Object.keys(innerData).forEach(key => {
+            if (!columnsSet.has(key)) {
+              columnsSet.add(key);
+              columnsArray.push(key);
+            }
+          });
+        }
       }
     });
     
