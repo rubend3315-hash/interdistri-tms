@@ -243,29 +243,29 @@ export default function PostNLDashboard({ customerId }) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b bg-slate-50">
-                  <tr>
-                    {selectedColumns.map(col => (
-                      <th key={col} className="text-left py-1 px-2 font-medium text-slate-700 text-xs">
-                        {allColumns.find(c => c.key === col)?.label || col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rapportageRitten.map((item, idx) => (
-                    <tr key={idx} className="border-b hover:bg-slate-50">
-                      {selectedColumns.map(col => (
-                        <td key={col} className="py-1 px-2 text-slate-600 text-xs">
-                          {item[col] || '-'}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    <table className="w-full text-sm">
+                      <thead className="border-b bg-slate-50">
+                        <tr>
+                          {selectedColumns.map(col => (
+                            <th key={col} className="text-left py-2 px-3 font-medium text-slate-700 text-sm">
+                              {allColumns.find(c => c.key === col)?.label || col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rapportageRitten.map((item, idx) => (
+                          <tr key={idx} className="border-b hover:bg-slate-50">
+                            {selectedColumns.map(col => (
+                              <td key={col} className="py-2 px-3 text-slate-600 text-sm">
+                                {item[col] || '-'}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
           )}
         </CardContent>
       </Card>
