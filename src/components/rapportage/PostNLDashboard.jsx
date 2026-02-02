@@ -66,21 +66,43 @@ export default function PostNLDashboard({ customerId }) {
     staleTime: 0
   });
 
-  const { data: postNLImports = [] } = useQuery({
-   queryKey: ['postNLImportResults'],
-   queryFn: async () => {
-     try {
-       const result = await base44.entities.PostNLImportResult.list();
-       return Array.isArray(result) ? result : [];
-     } catch (error) {
-       console.error('Failed to fetch PostNLImportResult:', error);
-       return [];
-     }
-   },
-   staleTime: 0
+  const { data: excelColumnsData = {} } = useQuery({
+    queryKey: ['excelColumns'],
+    queryFn: async () => {
+      try {
+        const response = await base44.functions.invoke('getExcelColumns', {});
+        return response.data;
+      } catch (error) {
+        console.error('Failed to fetch columns:', error);
+        return {};
+      }
+    },
+    staleTime: 0
   });
 
-  const allColumns = useMemo(() => getAvailableColumns(rapportageRitten, postNLImports), [rapportageRitten, postNLImports]);
+  const allColumns = useMemo(() => {
+    const columnsSet = new Set();
+
+    // Voeg Excel kolommen toe
+    if (excelColumnsData.columns && Array.isArray(excelColumnsData.columns)) {
+      excelColumnsData.columns.forEach(key => columnsSet.add(key));
+    }
+
+    // Voeg RapportageRit basis velden toe
+    rapportageRitten.forEach(rit => {
+      Object.keys(rit).forEach(key => {
+        if (key !== 'data' && key !== 'artikelen' && key !== 'id' && key !== 'created_date' && key !== 'updated_date' && key !== 'created_by') {
+          columnsSet.add(key);
+        }
+      });
+    });
+
+    return Array.from(columnsSet).sort().map(key => ({
+      key,
+      label: key.replace(/_/g, ' '),
+      category: 'Gegevens'
+    }));
+  }, [excelColumnsData, rapportageRitten]);
 
   const filteredColumns = useMemo(() => {
     if (!searchTerm) return allColumns;
