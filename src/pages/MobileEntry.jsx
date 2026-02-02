@@ -143,11 +143,17 @@ export default function MobileEntry() {
       const allShifts = await base44.entities.ShiftTime.filter({ 
         department: currentEmployee.department 
       });
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const upcomingShifts = allShifts
-        .filter(shift => shift.date >= today)
-        .sort((a, b) => a.date.localeCompare(b.date));
-      return upcomingShifts.slice(0, 1);
+      const now = new Date();
+      const currentHour = now.getHours();
+      const today = format(now, 'yyyy-MM-dd');
+      const tomorrow = format(new Date(now.getTime() + 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
+      
+      // Na 12:00 uur: toon shifttijd van morgen
+      // Voor 12:00 uur: toon shifttijd van vandaag
+      const targetDate = currentHour >= 12 ? tomorrow : today;
+      
+      const targetShift = allShifts.find(shift => shift.date === targetDate);
+      return targetShift ? [targetShift] : [];
     },
     enabled: !!currentEmployee?.department
   });
@@ -630,7 +636,7 @@ export default function MobileEntry() {
         </div>
 
         {/* Today's Shift Time */}
-        {todayShift && (
+        {todayShift ? (
           <div className="mt-2 bg-amber-400 text-amber-900 rounded-lg p-2">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
@@ -649,6 +655,18 @@ export default function MobileEntry() {
             {todayShift.message && (
               <p className="mt-1 text-xs">{todayShift.message}</p>
             )}
+          </div>
+        ) : (
+          <div className="mt-2 bg-amber-400 text-amber-900 rounded-lg p-2">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              <div>
+                <p className="text-xs font-medium">
+                  {new Date().getHours() >= 12 ? 'Dienst morgen' : 'Dienst vandaag'}
+                </p>
+                <p className="font-bold text-sm">Nog geen shifttijd bekend</p>
+              </div>
+            </div>
           </div>
         )}
       </div>
