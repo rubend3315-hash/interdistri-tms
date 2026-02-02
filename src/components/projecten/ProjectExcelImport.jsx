@@ -72,26 +72,34 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
       return postNLRecords;
     },
     onSuccess: async (createdRecords) => {
-      queryClient.invalidateQueries({ queryKey: ['postNLImportResults'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-imports', customerId] });
-      
-      // Auto-trigger conversion to RapportageRit
-       try {
-         const result = await base44.functions.invoke('createRapportageRitsFromImports', {
-           records: createdRecords,
-           customerId
-         });
+       queryClient.invalidateQueries({ queryKey: ['postNLImportResults'] });
+       queryClient.invalidateQueries({ queryKey: ['customer-imports', customerId] });
 
-         toast.success(`Data opgeslagen en ${result.data.count} ritten geconverteerd`);
-         queryClient.invalidateQueries({ queryKey: ['rapportageRitten'] });
-       } catch (error) {
-         toast.success('Data opgeslagen (conversie volgt automatisch)');
-       }
-      
-      setExtractedData(null);
-      setFile(null);
-      setStarttijdShift('');
-    },
+       // Auto-trigger conversion to RapportageRit
+        try {
+          // Need to refetch to get full data since bulkCreate may not return everything
+          const refreshedImports = await base44.entities.PostNLImportResult.list();
+          const todayRecords = refreshedImports.filter(r => 
+            r.bestandsnaam === file?.name &&
+            r.import_datum === new Date().toISOString().split('T')[0]
+          );
+
+          const result = await base44.functions.invoke('createRapportageRitsFromImports', {
+            records: todayRecords,
+            customerId
+          });
+
+          toast.success(`Data opgeslagen en ${result.data.count} ritten geconverteerd`);
+          queryClient.invalidateQueries({ queryKey: ['rapportageRitten'] });
+        } catch (error) {
+          console.error('Conversion error:', error);
+          toast.success('Data opgeslagen (conversie volgt automatisch)');
+        }
+
+       setExtractedData(null);
+       setFile(null);
+       setStarttijdShift('');
+     },
     onError: (error) => {
       toast.error('Fout bij opslaan: ' + error.message);
     }
