@@ -4,17 +4,23 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
+    const columnsArray = [];
     const columnsSet = new Set();
     
-    // ALLEEN kolommen uit PostNLImportResult.data
+    // ALLEEN kolommen uit PostNLImportResult.data (behoud volgorde)
     const imports = await base44.asServiceRole.entities.PostNLImportResult.list();
     imports.forEach(imp => {
       if (imp.data && typeof imp.data === 'object') {
-        Object.keys(imp.data).forEach(key => columnsSet.add(key));
+        Object.keys(imp.data).forEach(key => {
+          if (!columnsSet.has(key)) {
+            columnsSet.add(key);
+            columnsArray.push(key);
+          }
+        });
       }
     });
     
-    const columns = Array.from(columnsSet).sort();
+    const columns = columnsArray;
     
     return Response.json({
       total_columns: columns.length,
