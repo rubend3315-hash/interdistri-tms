@@ -181,7 +181,7 @@ export default function PostNLDashboard({ customerId }) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Kolommen Selectie ({selectedColumns.length}/{ALL_COLUMNS.length})</CardTitle>
+            <CardTitle className="text-base">Kolommen Selectie ({selectedColumns.length}/{allColumns.length})</CardTitle>
             <Button variant="outline" size="sm" onClick={() => setShowColumnSelector(!showColumnSelector)}>
               {showColumnSelector ? 'Verbergen' : 'Weergeven'}
             </Button>
