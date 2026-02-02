@@ -610,13 +610,7 @@ export default function CustomerDetail() {
         </TabsContent>
       </Tabs>
 
-      {/* Import Modal */}
-      <ImportExcelModal 
-        open={isImportModalOpen}
-        onOpenChange={setIsImportModalOpen}
-        customerId={customerId}
-        customerArticles={formData.articles}
-      />
+
     </div>
   );
 }
