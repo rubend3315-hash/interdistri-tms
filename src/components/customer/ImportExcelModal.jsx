@@ -358,7 +358,7 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
                <Button 
                  className="bg-blue-600 hover:bg-blue-700"
                  onClick={() => saveMutation.mutate()}
-                 disabled={saveMutation.isPending || !importName}
+                 disabled={saveMutation.isPending || !importName || !starttijdShift}
                >
                  {saveMutation.isPending ? (
                    <>
