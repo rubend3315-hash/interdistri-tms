@@ -139,42 +139,6 @@ export default function ShiftTime() {
         </Button>
       </div>
 
-      {/* Today's Shifts */}
-      {todayShifts.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-slate-700">Vandaag - {format(new Date(), "EEEE d MMMM", { locale: nl })}</h2>
-          {todayShifts.map((shift) => (
-            <Card key={shift.id} className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Badge className="bg-white/20 text-white text-sm px-3 py-1 mb-2">
-                      {shift.department}
-                    </Badge>
-                    <div className="flex items-center gap-3 mt-2">
-                      <Clock className="w-8 h-8" />
-                      <span className="text-4xl font-bold">
-                        {shift.service_start_time}
-                      </span>
-                    </div>
-                    {(shift.start_time || shift.end_time) && (
-                      <p className="text-sm text-blue-100 mt-2">
-                        Shifttijd: {shift.start_time || '--:--'} - {shift.end_time || '--:--'}
-                      </p>
-                    )}
-                    {shift.message && (
-                      <p className="mt-4 text-blue-100 bg-blue-500/30 p-3 rounded-lg">
-                        {shift.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
       {/* Shift List - Grouped by Department */}
       <Card>
         <CardHeader>
