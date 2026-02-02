@@ -140,9 +140,6 @@ export default function MobileEntry() {
     queryKey: ['shiftTimes', currentEmployee?.id],
     queryFn: async () => {
       if (!currentEmployee?.department) return [];
-      const allShifts = await base44.entities.ShiftTime.filter({ 
-        department: currentEmployee.department 
-      });
       
       const now = new Date();
       const currentHour = now.getHours();
@@ -157,10 +154,15 @@ export default function MobileEntry() {
         targetDate = format(now, 'yyyy-MM-dd');
       }
       
-      const upcomingShifts = allShifts
-        .filter(shift => shift.date >= targetDate)
-        .sort((a, b) => a.date.localeCompare(b.date));
-      return upcomingShifts.slice(0, 1);
+      // Fetch only the specific target date
+      const shifts = await base44.entities.ShiftTime.filter({ 
+        department: currentEmployee.department,
+        date: targetDate
+      });
+      
+      // Sort by service_start_time and return the earliest
+      shifts.sort((a, b) => a.service_start_time.localeCompare(b.service_start_time));
+      return shifts.slice(0, 1);
     },
     enabled: !!currentEmployee?.department
   });
