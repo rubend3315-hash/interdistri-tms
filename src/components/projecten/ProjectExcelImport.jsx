@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import ValidatieRulesManager from './ValidatieRulesManager';
 import { DataValidator } from './DataValidation';
 
-export default function ProjectExcelImport({ projectFilter }) {
+export default function ProjectExcelImport({ projectFilter, customerId }) {
   const [file, setFile] = useState(null);
   const [extractedData, setExtractedData] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -59,7 +59,7 @@ export default function ProjectExcelImport({ projectFilter }) {
       
       // Also create CustomerImport record for history
       const customerImportRecord = {
-        customer_id: selectedProject,
+        customer_id: customerId,
         import_name: `PostNL ${records[0]?.ritnaam || 'Import'} - ${new Date().toLocaleDateString('nl-NL')}`,
         file_name: file.name,
         column_mapping: {},
@@ -73,7 +73,7 @@ export default function ProjectExcelImport({ projectFilter }) {
     },
     onSuccess: async (createdRecords) => {
       queryClient.invalidateQueries({ queryKey: ['postNLImportResults'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-imports'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-imports', customerId] });
       
       // Auto-trigger conversion to RapportageRit
       try {
@@ -81,7 +81,7 @@ export default function ProjectExcelImport({ projectFilter }) {
         const convertResult = await base44.functions.invoke('convertImportToRapportageRit', {
           project_id: selectedProject,
           project_naam: project?.naam,
-          klant_id: selectedProject,
+          klant_id: customerId,
           import_data: createdRecords.map(r => r.data)
         });
         

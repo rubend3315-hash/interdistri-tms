@@ -543,7 +543,7 @@ export default function CustomerDetail() {
 
         {/* Imports Tab */}
         <TabsContent value="imports">
-          <ProjectExcelImport projectFilter={true} />
+          <ProjectExcelImport projectFilter={true} customerId={customerId} />
         </TabsContent>
 
         {/* Geschiedenis Tab */}
