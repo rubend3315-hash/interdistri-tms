@@ -94,10 +94,10 @@ export default function PostNLDashboard({ customerId }) {
           <p className="text-sm text-slate-500">Ritten en bezorgdata voor PostNL</p>
         </div>
         <Button 
-          onClick={handleExportPDF}
-          disabled={postNLData.length === 0}
-          className="gap-2 bg-blue-600 hover:bg-blue-700"
-        >
+             onClick={handleExportPDF}
+             disabled={rapportageRitten.length === 0}
+             className="gap-2 bg-blue-600 hover:bg-blue-700"
+           >
           <Download className="w-4 h-4" />
           Export PDF
         </Button>
