@@ -22,8 +22,18 @@ export default function PostNLDashboard({ customerId }) {
 
   const { data: rapportageRitten = [] } = useQuery({
     queryKey: ['rapportageRitten', customerId],
-    queryFn: () => customerId ? base44.entities.RapportageRit.filter({ klant_id: customerId }) : [],
-    enabled: !!customerId
+    queryFn: async () => {
+      if (!customerId) return [];
+      try {
+        const result = await base44.entities.RapportageRit.filter({ klant_id: customerId });
+        return Array.isArray(result) ? result : [];
+      } catch (error) {
+        console.error('Failed to fetch RapportageRit:', error);
+        return [];
+      }
+    },
+    enabled: !!customerId,
+    staleTime: 0
   });
 
   const handleExportPDF = () => {
