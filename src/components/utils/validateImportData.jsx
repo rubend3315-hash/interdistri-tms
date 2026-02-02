@@ -20,9 +20,20 @@ export const validationRules = {
 export function validateImportData(data, columns) {
   const errors = [];
   const MAX_ERRORS_PER_ROW = 3; // Beperken aantal foutmeldingen per rij voor duidelijkheid
+  const seenRows = new Map(); // Track unique rows by key fields
   
   data.forEach((row, rowIndex) => {
     const rowErrors = [];
+    
+    // Check for duplicate rows using key fields
+    const dupeKey = `${row['Datum']}_${row['Ritnummer']}_${row['Depot']}`;
+    if (dupeKey && dupeKey !== '__' && dupeKey !== '___') { // Only check if we have identifying values
+      if (seenRows.has(dupeKey)) {
+        rowErrors.push(`Dubbele rij: identiek aan rij ${seenRows.get(dupeKey)}`);
+      } else {
+        seenRows.set(dupeKey, rowIndex + 1);
+      }
+    }
     
     Object.keys(validationRules).forEach(field => {
       const rule = validationRules[field];
