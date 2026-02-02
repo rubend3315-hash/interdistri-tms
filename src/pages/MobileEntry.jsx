@@ -846,50 +846,50 @@ export default function MobileEntry() {
                   />
                 </div>
 
-                {!formData.start_time ? (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-700 font-medium">
+                    Stap 1: Voer starttijd in
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs">Start dienst *</Label>
+                  <Input
+                    type="time"
+                    value={formData.start_time}
+                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                  />
+                </div>
+
+                {formData.start_time && (
+                  <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <p className="text-sm text-emerald-700 font-medium">
+                      ✓ Starttijd: {formData.start_time}
+                    </p>
+                  </div>
+                )}
+
+                <Button 
+                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  onClick={() => setActiveTab("ritten")}
+                  disabled={!formData.start_time}
+                >
+                  Volgende → Ritten invoeren
+                </Button>
+
+                {trips.length > 0 && (
                   <>
-                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-sm text-blue-700 font-medium">
-                        Stap 1: Voer starttijd in
-                      </p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs">Start dienst *</Label>
-                      <Input
-                        type="time"
-                        value={formData.start_time}
-                        onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                      />
-                    </div>
-
-                    <Button 
-                      className="w-full bg-emerald-600 hover:bg-emerald-700"
-                      onClick={() => setActiveTab("ritten")}
-                      disabled={!formData.start_time}
-                    >
-                      Volgende → Ritten invoeren
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                      <p className="text-sm text-emerald-700 font-medium">
-                        ✓ Starttijd: {formData.start_time}
-                      </p>
-                    </div>
-
-                    {trips.length === 0 && (
-                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                        <p className="text-sm text-amber-700 font-medium">
-                          ⚠ Voer eerst je ritten in voordat je de eindtijd invult
-                        </p>
-                      </div>
-                    )}
+                    <div className="border-t my-4"></div>
 
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-sm text-blue-700 font-medium">
                         Stap 2: Voer eindtijd in
+                      </p>
+                    </div>
+
+                    <div className="p-3 bg-emerald-50 rounded-lg">
+                      <p className="text-xs text-emerald-700 font-medium">
+                        ✓ {trips.length} rit(ten) toegevoegd
                       </p>
                     </div>
 
@@ -931,14 +931,6 @@ export default function MobileEntry() {
                       />
                     </div>
 
-                    {trips.length > 0 && (
-                      <div className="p-3 bg-emerald-50 rounded-lg">
-                        <p className="text-xs text-emerald-700 font-medium">
-                          ✓ {trips.length} rit(ten) toegevoegd
-                        </p>
-                      </div>
-                    )}
-
                     {signature && (
                       <div className="p-2 bg-emerald-50 rounded-lg">
                         <p className="text-xs text-emerald-700 mb-1">Handtekening toegevoegd ✓</p>
@@ -949,7 +941,7 @@ export default function MobileEntry() {
                     <Button 
                       className="w-full bg-blue-600 hover:bg-blue-700"
                       onClick={handleSubmitEntry}
-                      disabled={createTimeEntryMutation.isPending || createTripMutation.isPending || trips.length === 0}
+                      disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Met Handtekening Indienen
