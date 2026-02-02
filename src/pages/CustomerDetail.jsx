@@ -599,6 +599,11 @@ export default function CustomerDetail() {
           <ReportGenerator imports={imports} articles={formData.articles} />
         </TabsContent>
 
+        {/* Import Rapportage Tab */}
+        <TabsContent value="import-reports">
+          <DataDashboard imports={imports} />
+        </TabsContent>
+
         {/* TI Model Ritten Tab */}
         <TabsContent value="ti-model">
           <TIModelRoutesTab customerId={customerId} />
