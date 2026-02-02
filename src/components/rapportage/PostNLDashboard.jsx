@@ -22,7 +22,8 @@ export default function PostNLDashboard({ customerId }) {
 
   const { data: rapportageRitten = [] } = useQuery({
     queryKey: ['rapportageRitten', customerId],
-    queryFn: () => base44.entities.RapportageRit.list()
+    queryFn: () => customerId ? base44.entities.RapportageRit.filter({ klant_id: customerId }) : [],
+    enabled: !!customerId
   });
 
   const handleExportPDF = () => {
