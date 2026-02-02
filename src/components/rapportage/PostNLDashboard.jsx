@@ -232,10 +232,10 @@ export default function PostNLDashboard({ customerId }) {
           <CardTitle className="text-base">Rapportagegegevens</CardTitle>
         </CardHeader>
         <CardContent>
-          {importResults.length === 0 ? (
+          {rapportageRitten.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-slate-500">Geen rapportages beschikbaar</p>
-              <p className="text-xs text-slate-400 mt-1">Klant: PostNL | Totaal records: {importResults.length}</p>
+              <p className="text-xs text-slate-400 mt-1">Klant: PostNL | Totaal records: {rapportageRitten.length}</p>
             </div>
           ) : selectedColumns.length === 0 ? (
             <div className="text-center py-8">
@@ -254,7 +254,7 @@ export default function PostNLDashboard({ customerId }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {importResults.map((item, idx) => (
+                  {rapportageRitten.map((item, idx) => (
                     <tr key={idx} className="border-b hover:bg-slate-50">
                       {selectedColumns.map(col => (
                         <td key={col} className="py-1 px-2 text-slate-600 text-xs">
