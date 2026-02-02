@@ -228,7 +228,7 @@ export default function PostNLDashboard({ customerId }) {
         <CardHeader>
           <CardTitle className="text-base">Periode Filter</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 py-3">
+        <CardContent className="space-y-3 py-3">
           <div className="space-y-1">
             <label className="text-xs font-medium">Periode</label>
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
@@ -242,6 +242,27 @@ export default function PostNLDashboard({ customerId }) {
               </SelectContent>
             </Select>
           </div>
+          
+          {selectedPeriod === 'custom' && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Van</label>
+                <Input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Tot</label>
+                <Input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
