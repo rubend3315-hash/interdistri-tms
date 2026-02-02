@@ -82,7 +82,7 @@ export default function PostNLDashboard({ customerId }) {
     staleTime: 0
   });
 
-  const allColumns = useMemo(() => getAvailableColumns(rapportageRitten), [rapportageRitten]);
+  const allColumns = useMemo(() => getAvailableColumns(rapportageRitten, postNLImports), [rapportageRitten, postNLImports]);
 
   const filteredColumns = useMemo(() => {
     if (!searchTerm) return allColumns;
