@@ -193,17 +193,20 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
         return;
       }
 
-      const recordsToAdd = jsonData.map(filteredData => ({
-        project_id: selectedProject,
-        project_naam: project?.naam,
-        klant_naam: 'PostNL',
-        ritnaam: filteredData['Ritnaam'] || '',
-        datum: filteredData['Datum'] || '',
-        starttijd_shift: starttijdShift,
-        import_datum: today,
-        bestandsnaam: file.name,
-        data: filteredData
-      }));
+      const recordsToAdd = jsonData.map(filteredData => {
+        console.log('selectedProject:', selectedProject, 'project:', project);
+        return {
+          project_id: selectedProject,
+          project_naam: project?.naam,
+          klant_naam: 'PostNL',
+          ritnaam: filteredData['Ritnaam'] || '',
+          datum: filteredData['Datum'] || '',
+          starttijd_shift: starttijdShift,
+          import_datum: today,
+          bestandsnaam: file.name,
+          data: filteredData
+        };
+      });
 
       setExtractedData({ rows: recordsToAdd });
       saveDataMutation.mutate(recordsToAdd);
