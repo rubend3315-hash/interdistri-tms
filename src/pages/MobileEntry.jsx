@@ -846,39 +846,40 @@ export default function MobileEntry() {
                   />
                 </div>
 
-                {!formData.start_time ? (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-700 font-medium">
+                    Stap 1: Voer starttijd in
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs">Start dienst *</Label>
+                  <Input
+                    type="time"
+                    value={formData.start_time}
+                    onChange={(e) => {
+                      setFormData({ ...formData, start_time: e.target.value });
+                      // Navigeer automatisch naar ritten als starttijd is ingevuld
+                      if (e.target.value) {
+                        setTimeout(() => setActiveTab("ritten"), 300);
+                      }
+                    }}
+                  />
+                </div>
+
+                {formData.start_time && (
+                  <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <p className="text-sm text-emerald-700 font-medium">
+                      ✓ Starttijd: {formData.start_time}
+                    </p>
+                    <p className="text-xs text-emerald-600 mt-1">
+                      Ga nu naar Ritten om je ritten in te voeren →
+                    </p>
+                  </div>
+                )}
+
+                {formData.end_time && (
                   <>
-                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-sm text-blue-700 font-medium">
-                        Stap 1: Voer starttijd in
-                      </p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs">Start dienst *</Label>
-                      <Input
-                        type="time"
-                        value={formData.start_time}
-                        onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                      />
-                    </div>
-
-                    <Button 
-                      className="w-full bg-emerald-600 hover:bg-emerald-700"
-                      onClick={() => setActiveTab("ritten")}
-                      disabled={!formData.start_time}
-                    >
-                      Volgende → Ritten invoeren
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                      <p className="text-sm text-emerald-700 font-medium">
-                        ✓ Starttijd: {formData.start_time}
-                      </p>
-                    </div>
-
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-sm text-blue-700 font-medium">
                         Stap 2: Voer eindtijd in
@@ -905,13 +906,11 @@ export default function MobileEntry() {
                       </div>
                     </div>
 
-                    {formData.end_time && (
-                      <div className="p-3 bg-blue-50 rounded-lg text-center">
-                        <p className="text-sm text-blue-700">
-                          <strong>Totaal uren:</strong> {calculateHours(formData.start_time, formData.end_time, formData.break_minutes)} uur
-                        </p>
-                      </div>
-                    )}
+                    <div className="p-3 bg-blue-50 rounded-lg text-center">
+                      <p className="text-sm text-blue-700">
+                        <strong>Totaal uren:</strong> {calculateHours(formData.start_time, formData.end_time, formData.break_minutes)} uur
+                      </p>
+                    </div>
 
                     <div className="space-y-1">
                       <Label className="text-xs">Opmerkingen</Label>

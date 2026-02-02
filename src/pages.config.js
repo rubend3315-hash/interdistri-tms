@@ -54,6 +54,7 @@ import Contracts from './pages/Contracts';
 import CustomerDetail from './pages/CustomerDetail';
 import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
+import DataMigration from './pages/DataMigration';
 import Employees from './pages/Employees';
 import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
@@ -71,7 +72,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import DataMigration from './pages/DataMigration';
 import __Layout from './Layout.jsx';
 
 
@@ -83,6 +83,7 @@ export const PAGES = {
     "CustomerDetail": CustomerDetail,
     "Customers": Customers,
     "Dashboard": Dashboard,
+    "DataMigration": DataMigration,
     "Employees": Employees,
     "HRMSettings": HRMSettings,
     "HelpPage": HelpPage,
@@ -100,7 +101,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "DataMigration": DataMigration,
 }
 
 export const pagesConfig = {
