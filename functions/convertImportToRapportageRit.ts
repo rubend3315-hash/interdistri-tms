@@ -31,17 +31,17 @@ Deno.serve(async (req) => {
         datum: datum,
         chauffeur: row['Chauffeur'] || row['Driver'] || 'Onbekend',
         ritnaam: row['Ritnaam'] || row['Route'] || 'N/A',
-        totaal_rit: parseFloat(row['Totaal rit'] || 0),
-        geen_scan_15min: parseInt(row['>15 min geen scan'] || 0),
-        besteltijd_norm: parseFloat(row['Besteltijd Norm'] || 0),
-        besteltijd_bruto: parseFloat(row['Besteltijd Bruto'] || 0),
-        besteltijd_netto: parseFloat(row['Besteltijd Netto'] || 0),
-        aantal_vrijgave_stops: parseInt(row['Aantal bij vrijgave - stops'] || 0),
-        aantal_vrijgave_stuks: parseInt(row['Aantal bij vrijgave - stuks'] || 0),
-        aantal_afgeleverd_stuks: parseInt(row['Aantal afgeleverd - stuks'] || 0),
-        aantal_afgeleverd_stops: parseInt(row['Aantal afgeleverd - stops'] || 0),
-        aantal_afgehaald_collecteerd: parseInt(row['Aantal stuks afgehaald/gecollecteerd'] || 0),
-        aantal_pba_bezorgd: parseInt(row['Aantal PBA-pakketten bezorgd'] || 0)
+        totaal_rit: (parseFloat(row['Totaal rit'] || 0) || 0).toString(),
+        geen_scan_15min: parseInt(row['>15 min geen scan'] || 0) || 0,
+        besteltijd_norm: parseFloat(row['Besteltijd Norm'] || 0) || 0,
+        besteltijd_bruto: parseFloat(row['Besteltijd Bruto'] || 0) || 0,
+        besteltijd_netto: parseFloat(row['Besteltijd Netto'] || 0) || 0,
+        aantal_vrijgave_stops: parseInt(row['Aantal bij vrijgave - stops'] || 0) || 0,
+        aantal_vrijgave_stuks: parseInt(row['Aantal bij vrijgave - stuks'] || 0) || 0,
+        aantal_afgeleverd_stuks: parseInt(row['Aantal afgeleverd - stuks'] || 0) || 0,
+        aantal_afgeleverd_stops: parseInt(row['Aantal afgeleverd - stops'] || 0) || 0,
+        aantal_afgehaald_collecteerd: parseInt(row['Aantal stuks afgehaald/gecollecteerd'] || 0) || 0,
+        aantal_pba_bezorgd: parseInt(row['Aantal PBA-pakketten bezorgd'] || 0) || 0
       };
     });
 
