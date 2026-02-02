@@ -130,30 +130,26 @@ export default function PostNLDashboard({ customerId }) {
 
       {/* Kolommen Selectie */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Kolommen</CardTitle>
-          <Button variant="outline" size="sm">
-            Selecteren
-          </Button>
+        <CardHeader>
+          <CardTitle className="text-base">Kolommen Selectie</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {availableColumns.map(col => (
-              <label key={col.key} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+              <div key={col.key} className="flex items-center gap-2">
+                <Checkbox
+                  id={col.key}
                   checked={selectedColumns.includes(col.key)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
+                  onCheckedChange={(checked) => {
+                    if (checked) {
                       setSelectedColumns([...selectedColumns, col.key]);
                     } else {
                       setSelectedColumns(selectedColumns.filter(c => c !== col.key));
                     }
                   }}
-                  className="rounded"
                 />
-                <span className="text-sm">{col.label}</span>
-              </label>
+                <label htmlFor={col.key} className="text-sm cursor-pointer">{col.label}</label>
+              </div>
             ))}
           </div>
         </CardContent>
