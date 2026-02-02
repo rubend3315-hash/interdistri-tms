@@ -19,8 +19,7 @@ Deno.serve(async (req) => {
     return Response.json({
       total_columns: columns.length,
       columns: columns,
-      import_records: imports.length,
-      rapportage_records: rapportageRitten.length
+      total_records: imports.length
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
