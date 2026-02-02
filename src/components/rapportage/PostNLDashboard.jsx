@@ -147,7 +147,7 @@ export default function PostNLDashboard({ customerId }) {
         </div>
         <Button 
           onClick={handleExportPDF}
-          disabled={importResults.length === 0 || selectedColumns.length === 0}
+          disabled={rapportageRitten.length === 0 || selectedColumns.length === 0}
           className="gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Download className="w-4 h-4" />
