@@ -25,6 +25,41 @@ export default function PostNLDashboard({ customerId }) {
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+
+  const getPeriodDates = () => {
+    const now = new Date();
+    let startDate, endDate;
+
+    switch (selectedPeriod) {
+      case 'week':
+        startDate = startOfWeek(now, { weekStartsOn: 1 });
+        endDate = endOfWeek(now, { weekStartsOn: 1 });
+        break;
+      case 'month':
+        startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
+        break;
+      case 'quarter':
+        startDate = startOfQuarter(now);
+        endDate = endOfQuarter(now);
+        break;
+      case 'year':
+        startDate = startOfYear(now);
+        endDate = endOfYear(now);
+        break;
+      case 'custom':
+        if (!customStartDate || !customEndDate) return null;
+        startDate = new Date(customStartDate);
+        endDate = new Date(customEndDate);
+        break;
+      default:
+        return null;
+    }
+
+    return { startDate, endDate };
+  };
 
   const { data: rapportageRitten = [] } = useQuery({
     queryKey: ['rapportageRitten'],
