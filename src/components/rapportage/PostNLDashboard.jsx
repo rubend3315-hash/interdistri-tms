@@ -37,7 +37,7 @@ const getAvailableColumns = (rapportageRitten, postNLImports) => {
     });
   });
   
-  return Array.from(columnsSet).sort().map(key => ({
+  return Array.from(columnsSet).map(key => ({
     key,
     label: key.replace(/_/g, ' '),
     category: 'Gegevens'
