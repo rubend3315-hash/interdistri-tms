@@ -858,7 +858,9 @@ export default function MobileEntry() {
                     type="time"
                     value={formData.start_time}
                     onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                    placeholder="00:00"
                   />
+                  <p className="text-xs text-slate-500 mt-1">Typ handmatig (bijv. 08:30) of gebruik de klok</p>
                 </div>
 
                 {formData.start_time && (
@@ -899,7 +901,27 @@ export default function MobileEntry() {
                         <Input
                           type="time"
                           value={formData.end_time}
-                          onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                          onChange={(e) => {
+                            const newEndTime = e.target.value;
+                            setFormData({ ...formData, end_time: newEndTime });
+                            
+                            // Valideer direct bij invoeren
+                            if (newEndTime && trips.length > 0) {
+                              const invalidTrips = [];
+                              trips.forEach((trip, idx) => {
+                                if (trip.end_time && trip.end_time > newEndTime) {
+                                  invalidTrips.push(`Rit ${idx + 1}: Eindtijd rit (${trip.end_time}) ligt na eindtijd dienst (${newEndTime})`);
+                                }
+                                if (trip.start_time && formData.start_time && trip.start_time < formData.start_time) {
+                                  invalidTrips.push(`Rit ${idx + 1}: Starttijd rit (${trip.start_time}) ligt voor starttijd dienst (${formData.start_time})`);
+                                }
+                              });
+                              
+                              if (invalidTrips.length > 0) {
+                                alert('Let op! Er zijn ritten die buiten de diensttijd vallen:\n\n' + invalidTrips.join('\n\n') + '\n\nPas de rit tijden aan in het Ritten tabblad.');
+                              }
+                            }
+                          }}
                         />
                       </div>
 
