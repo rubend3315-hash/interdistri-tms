@@ -42,7 +42,7 @@ export default function Dashboard() {
 
   const { data: timeEntries = [], isLoading: loadingTimeEntries } = useQuery({
     queryKey: ['timeEntries'],
-    queryFn: () => base44.entities.TimeEntry.list()
+    queryFn: () => base44.entities.TimeEntry.list('-created_date', 100)
   });
 
   const { data: trips = [], isLoading: loadingTrips } = useQuery({
