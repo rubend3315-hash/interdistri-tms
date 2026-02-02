@@ -250,6 +250,12 @@ export default function CustomerDetail() {
            </TabsTrigger>
           )}
           {isPostNL && (
+           <TabsTrigger value="import-reports" className="gap-2">
+             <BarChart3 className="w-4 h-4" />
+             Import Rapportage
+           </TabsTrigger>
+          )}
+          {isPostNL && (
            <TabsTrigger value="ti-model" className="gap-2">
              <Package className="w-4 h-4" />
              TI Model Ritten
