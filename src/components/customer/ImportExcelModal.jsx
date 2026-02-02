@@ -45,6 +45,7 @@ const formatExcelDate = (value) => {
 export default function ImportExcelModal({ open, onOpenChange, customerId, customerArticles }) {
   const [file, setFile] = useState(null);
   const [importName, setImportName] = useState("");
+  const [starttijdShift, setStarttijdShift] = useState("");
   const [parseResult, setParseResult] = useState(null);
   const [validationErrors, setValidationErrors] = useState([]);
   const [showValidation, setShowValidation] = useState(false);
