@@ -57,9 +57,25 @@ export default function ProjectExcelImport({ projectFilter }) {
     mutationFn: async (records) => {
       return base44.entities.PostNLImportResult.bulkCreate(records);
     },
-    onSuccess: () => {
+    onSuccess: async (createdRecords) => {
       queryClient.invalidateQueries({ queryKey: ['postNLImportResults'] });
-      toast.success('Data succesvol opgeslagen');
+      
+      // Auto-trigger conversion to RapportageRit
+      try {
+        const project = projecten.find(p => p.id === selectedProject);
+        const convertResult = await base44.functions.invoke('convertImportToRapportageRit', {
+          project_id: selectedProject,
+          project_naam: project?.naam,
+          klant_id: '',
+          import_data: createdRecords.map(r => r.data)
+        });
+        
+        toast.success(`Data opgeslagen en ${convertResult.data.count} ritten geconverteerd`);
+        queryClient.invalidateQueries({ queryKey: ['rapportageRitten'] });
+      } catch (error) {
+        toast.success('Data opgeslagen (conversie volgt handmatig)');
+      }
+      
       setExtractedData(null);
       setFile(null);
       setStarttijdShift('');
