@@ -26,9 +26,8 @@ export default function PostNLDashboard({ customerId }) {
   const [showColumnSelector, setShowColumnSelector] = useState(false);
 
   const { data: rapportageRitten = [] } = useQuery({
-    queryKey: ['rapportageRitten', customerId],
+    queryKey: ['rapportageRitten'],
     queryFn: async () => {
-      if (!customerId) return [];
       try {
         const result = await base44.entities.PostNLImportResult.list();
         if (!Array.isArray(result)) return [];
@@ -42,13 +41,13 @@ export default function PostNLDashboard({ customerId }) {
             }
           }
         });
+        console.log('Fetched rapportageRitten:', flattened.length);
         return flattened;
       } catch (error) {
         console.error('Failed to fetch PostNLImportResult:', error);
         return [];
       }
     },
-    enabled: !!customerId,
     staleTime: 0
   });
 
