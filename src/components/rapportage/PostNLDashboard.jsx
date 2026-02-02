@@ -247,7 +247,7 @@ export default function PostNLDashboard({ customerId }) {
                 <thead className="border-b bg-slate-50">
                   <tr>
                     {selectedColumns.map(col => (
-                      <th key={col} className="text-left py-2 px-3 font-medium text-slate-700">
+                      <th key={col} className="text-left py-1 px-2 font-medium text-slate-700 text-xs">
                         {allColumns.find(c => c.key === col)?.label || col}
                       </th>
                     ))}
@@ -257,7 +257,7 @@ export default function PostNLDashboard({ customerId }) {
                   {rapportageRitten.map((item, idx) => (
                     <tr key={idx} className="border-b hover:bg-slate-50">
                       {selectedColumns.map(col => (
-                        <td key={col} className="py-2 px-3 text-slate-600">
+                        <td key={col} className="py-1 px-2 text-slate-600 text-xs">
                           {item[col] || '-'}
                         </td>
                       ))}
