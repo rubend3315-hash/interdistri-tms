@@ -1021,15 +1021,18 @@ export default function MobileEntry() {
                         onChange={(e) => {
                           const newStartTime = e.target.value;
                           
-                          // Valideer: start rit mag niet voor start dienst liggen
-                          if (newStartTime && formData.start_time && newStartTime < formData.start_time) {
-                            alert(`Start rit (${newStartTime}) kan niet voor start dienst (${formData.start_time}) liggen. Pas eerst de rit starttijd aan of ga terug naar Diensttijd om de dienst starttijd te wijzigen.`);
-                            return;
-                          }
-                          
+                          // Update eerst altijd de waarde
                           const newTrips = [...trips];
                           newTrips[index] = { ...trip, start_time: newStartTime };
                           setTrips(newTrips);
+                        }}
+                        onBlur={(e) => {
+                          const newStartTime = e.target.value;
+                          
+                          // Valideer alleen bij onBlur en als tijd compleet is (format UU:MM)
+                          if (newStartTime && newStartTime.length === 5 && formData.start_time && newStartTime < formData.start_time) {
+                            alert(`Start rit (${newStartTime}) kan niet voor start dienst (${formData.start_time}) liggen.`);
+                          }
                         }}
                         placeholder="09:00"
                       />
@@ -1046,15 +1049,18 @@ export default function MobileEntry() {
                         onChange={(e) => {
                           const newEndTime = e.target.value;
                           
-                          // Valideer: einde rit mag niet na einde dienst liggen
-                          if (newEndTime && formData.end_time && newEndTime > formData.end_time) {
-                            alert(`Einde rit (${newEndTime}) kan niet na einde dienst (${formData.end_time}) liggen. Pas eerst de rit eindtijd aan of ga terug naar Diensttijd om de dienst eindtijd te wijzigen.`);
-                            return;
-                          }
-                          
+                          // Update eerst altijd de waarde
                           const newTrips = [...trips];
                           newTrips[index] = { ...trip, end_time: newEndTime };
                           setTrips(newTrips);
+                        }}
+                        onBlur={(e) => {
+                          const newEndTime = e.target.value;
+                          
+                          // Valideer alleen bij onBlur en als tijd compleet is (format UU:MM)
+                          if (newEndTime && newEndTime.length === 5 && formData.end_time && newEndTime > formData.end_time) {
+                            alert(`Einde rit (${newEndTime}) kan niet na einde dienst (${formData.end_time}) liggen.`);
+                          }
                         }}
                         placeholder="15:00"
                       />
