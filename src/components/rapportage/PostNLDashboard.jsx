@@ -27,6 +27,33 @@ export default function PostNLDashboard({ customerId }) {
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  // Load saved default columns on mount
+  React.useEffect(() => {
+    if (currentUser?.postnl_default_columns && selectedColumns.length === 0) {
+      setSelectedColumns(currentUser.postnl_default_columns);
+    }
+  }, [currentUser]);
+
+  const handleSaveDefaultColumns = async () => {
+    try {
+      setIsSaving(true);
+      await base44.auth.updateMe({
+        postnl_default_columns: selectedColumns
+      });
+      toast.success('Standaard kolommen opgeslagen');
+    } catch (error) {
+      toast.error('Fout bij opslaan: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const getPeriodDates = () => {
     const now = new Date();
@@ -270,9 +297,19 @@ export default function PostNLDashboard({ customerId }) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Kolommen Selectie ({selectedColumns.length}/{allColumns.length})</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setShowColumnSelector(!showColumnSelector)}>
-              {showColumnSelector ? 'Verbergen' : 'Weergeven'}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSaveDefaultColumns}
+                disabled={selectedColumns.length === 0 || isSaving}
+              >
+                {isSaving ? 'Opslaan...' : 'Opslaan als standaard'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setShowColumnSelector(!showColumnSelector)}>
+                {showColumnSelector ? 'Verbergen' : 'Weergeven'}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         {showColumnSelector && (
