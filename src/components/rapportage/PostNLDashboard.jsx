@@ -197,7 +197,7 @@ export default function PostNLDashboard({ customerId }) {
       doc.text(`Totaal records: ${rapportageRitten.length}`, 14, 32);
 
       // Calculate column widths
-      const margin = 14;
+      const margin = 8;
       const availableWidth = pageWidth - (margin * 2);
       const columnWidth = availableWidth / selectedColumns.length;
       const minLineHeight = 8;
