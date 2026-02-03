@@ -107,11 +107,18 @@ export default function PostNLDashboard({ customerId }) {
               // Filter op datum als periode is ingesteld
               if (periodDates && innerData['Datum']) {
                 try {
-                  const rowDate = new Date(innerData['Datum']);
-                  if (isNaN(rowDate.getTime())) {
-                    shouldInclude = true;
+                  // Parse DD-MM-YYYY format
+                  const datumStr = String(innerData['Datum']);
+                  const parts = datumStr.split('-');
+                  if (parts.length === 3) {
+                    const rowDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                    if (isNaN(rowDate.getTime())) {
+                      shouldInclude = true;
+                    } else {
+                      shouldInclude = rowDate >= periodDates.startDate && rowDate <= periodDates.endDate;
+                    }
                   } else {
-                    shouldInclude = rowDate >= periodDates.startDate && rowDate <= periodDates.endDate;
+                    shouldInclude = true;
                   }
                 } catch {
                   shouldInclude = true;
