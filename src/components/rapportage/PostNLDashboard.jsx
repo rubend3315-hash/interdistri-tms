@@ -267,9 +267,11 @@ export default function PostNLDashboard({ customerId }) {
         // Draw cells with wrapped text
         selectedColumns.forEach((col, idx) => {
           const x = margin + (idx * columnWidth);
-          doc.setDrawColor(220, 220, 220);
-          doc.rect(x, y, columnWidth, rowHeight);
-          
+          if (idx > 0) {
+            doc.setDrawColor(220, 220, 220);
+            doc.line(x, y, x, y + rowHeight);
+          }
+
           doc.text(cellTexts[idx], x + 2, y + 4);
         });
 
