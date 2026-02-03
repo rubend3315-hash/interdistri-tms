@@ -185,6 +185,8 @@ export default function PostNLDashboard({ customerId }) {
   const handleExportPDF = () => {
     try {
       const doc = new jsPDF('landscape');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
       
       // Header
       doc.setFontSize(16);
@@ -194,32 +196,40 @@ export default function PostNLDashboard({ customerId }) {
       doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL')}`, 14, 27);
       doc.text(`Totaal records: ${rapportageRitten.length}`, 14, 32);
 
-      // Table header and data
+      // Calculate column widths
+      const margin = 14;
+      const availableWidth = pageWidth - (margin * 2);
+      const columnWidth = availableWidth / selectedColumns.length;
+      const lineHeight = 8;
+      
       const columns = selectedColumns.map(col => {
         const colDef = allColumns.find(c => c.key === col);
         return colDef?.label || col;
       });
 
       let y = 40;
-      const lineHeight = 6;
-      const columnWidth = (297 - 28) / columns.length; // A4 landscape width minus margins
 
       // Draw header
       doc.setFillColor(37, 99, 235);
-      doc.rect(14, y, 297 - 28, lineHeight, 'F');
+      doc.rect(margin, y, availableWidth, lineHeight, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(8);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      
       columns.forEach((col, idx) => {
-        doc.text(col.substring(0, 20), 14 + (idx * columnWidth) + 2, y + 4);
+        const x = margin + (idx * columnWidth) + 2;
+        const truncatedText = col.length > 18 ? col.substring(0, 15) + '...' : col;
+        doc.text(truncatedText, x, y + 5);
       });
 
       y += lineHeight;
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(7);
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'normal');
 
-      // Draw rows
+      // Draw rows with borders
       rapportageRitten.forEach((item, rowIdx) => {
-        if (y > 200) { // New page if needed
+        if (y > pageHeight - 20) {
           doc.addPage();
           y = 14;
         }
@@ -227,13 +237,21 @@ export default function PostNLDashboard({ customerId }) {
         // Alternate row colors
         if (rowIdx % 2 === 0) {
           doc.setFillColor(248, 250, 252);
-          doc.rect(14, y, 297 - 28, lineHeight, 'F');
+          doc.rect(margin, y, availableWidth, lineHeight, 'F');
         }
 
+        // Draw cell borders
         selectedColumns.forEach((col, idx) => {
+          const x = margin + (idx * columnWidth);
+          doc.setDrawColor(220, 220, 220);
+          doc.rect(x, y, columnWidth, lineHeight);
+          
           const value = item[col];
-          const text = value !== null && value !== undefined ? String(value).substring(0, 25) : '-';
-          doc.text(text, 14 + (idx * columnWidth) + 2, y + 4);
+          const text = value !== null && value !== undefined ? String(value) : '-';
+          const maxLength = Math.floor(columnWidth / 1.5);
+          const truncatedText = text.length > maxLength ? text.substring(0, maxLength - 2) + '..' : text;
+          
+          doc.text(truncatedText, x + 2, y + 5);
         });
 
         y += lineHeight;
