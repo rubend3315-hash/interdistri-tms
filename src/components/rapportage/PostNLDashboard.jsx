@@ -121,14 +121,27 @@ export default function PostNLDashboard({ customerId }) {
               if (shouldInclude) {
                 flattened.push({
                   ...innerData,
-                  'Starttijd shift': item.starttijd_shift || ''
+                  'Starttijd shift': item.starttijd_shift || '',
+                  _importId: item.id
                 });
               }
             }
-          }
-        });
-        console.log('Fetched rapportageRitten:', flattened.length);
-        return flattened;
+            }
+            });
+
+            // Remove duplicates based on key fields
+            const seen = new Set();
+            const unique = flattened.filter(row => {
+            const key = `${row['Datum']}_${row['Chauffeur']}_${row['Ritnaam']}_${row['Starttijd shift']}_${row['Vrijgegeven']}`;
+            if (seen.has(key)) {
+            return false;
+            }
+            seen.add(key);
+            return true;
+            });
+
+            console.log('Fetched rapportageRitten:', unique.length, '(removed', flattened.length - unique.length, 'duplicates)');
+            return unique;
       } catch (error) {
         console.error('Failed to fetch PostNLImportResult:', error);
         return [];
