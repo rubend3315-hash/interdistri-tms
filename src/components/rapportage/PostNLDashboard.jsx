@@ -184,36 +184,58 @@ export default function PostNLDashboard({ customerId }) {
 
   const handleExportPDF = () => {
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF('landscape');
       
+      // Header
       doc.setFontSize(16);
-      doc.text('PostNL Rapportage', 20, 20);
-      doc.setFontSize(10);
-      doc.text(`Periode: ${PERIOD_OPTIONS[selectedPeriod]}`, 20, 30);
-      doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL')}`, 20, 38);
+      doc.text('PostNL Rapportage', 14, 15);
+      doc.setFontSize(9);
+      doc.text(`Periode: ${PERIOD_OPTIONS[selectedPeriod]}`, 14, 22);
+      doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL')}`, 14, 27);
+      doc.text(`Totaal records: ${rapportageRitten.length}`, 14, 32);
 
-      const startY = 50;
+      // Table data
       const columns = selectedColumns.map(col => {
         const colDef = allColumns.find(c => c.key === col);
         return colDef?.label || col;
       });
 
       const rows = rapportageRitten.map(item => 
-        selectedColumns.map(col => item[col] || '-')
+        selectedColumns.map(col => {
+          const value = item[col];
+          return value !== null && value !== undefined ? String(value) : '-';
+        })
       );
 
+      // Generate table
       doc.autoTable({
         head: [columns],
         body: rows,
-        startY: startY,
+        startY: 38,
         theme: 'grid',
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [26, 35, 126], textColor: 255 }
+        styles: { 
+          fontSize: 7,
+          cellPadding: 2,
+          overflow: 'linebreak',
+          cellWidth: 'wrap'
+        },
+        headStyles: { 
+          fillColor: [37, 99, 235],
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        columnStyles: columns.reduce((acc, _, idx) => {
+          acc[idx] = { cellWidth: 'auto' };
+          return acc;
+        }, {}),
+        margin: { top: 38, left: 14, right: 14 }
       });
 
-      doc.save('PostNL_Rapportage.pdf');
+      doc.save(`PostNL_Rapportage_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('PDF geëxporteerd');
     } catch (error) {
+      console.error('PDF export error:', error);
       toast.error('Fout bij exporteren: ' + error.message);
     }
   };
