@@ -197,10 +197,10 @@ export default function PostNLDashboard({ customerId }) {
       doc.text(`Totaal records: ${rapportageRitten.length}`, 14, 32);
 
       // Calculate column widths
-      const margin = 8;
+      const margin = 6;
       const availableWidth = pageWidth - (margin * 2);
-      const columnWidth = availableWidth / selectedColumns.length;
-      const minLineHeight = 8;
+      const columnWidth = Math.max(availableWidth / selectedColumns.length, 18);
+      const minLineHeight = 10;
       
       const columns = selectedColumns.map(col => {
         const colDef = allColumns.find(c => c.key === col);
@@ -222,7 +222,7 @@ export default function PostNLDashboard({ customerId }) {
       doc.setFillColor(37, 99, 235);
       doc.rect(margin, y, availableWidth, headerHeight, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(7);
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
       
       columns.forEach((col, idx) => {
@@ -236,7 +236,7 @@ export default function PostNLDashboard({ customerId }) {
 
       y += headerHeight;
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(6);
+      doc.setFontSize(7);
       doc.setFont('helvetica', 'normal');
 
       // Draw rows with text wrapping
@@ -251,7 +251,7 @@ export default function PostNLDashboard({ customerId }) {
           return wrapped;
         });
 
-        const rowHeight = Math.max(minLineHeight, maxLines * 4 + 2);
+        const rowHeight = Math.max(minLineHeight, maxLines * 4.5 + 3);
 
         if (y + rowHeight > pageHeight - 20) {
           doc.addPage();
