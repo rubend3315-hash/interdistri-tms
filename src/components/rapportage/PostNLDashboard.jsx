@@ -209,20 +209,28 @@ export default function PostNLDashboard({ customerId }) {
 
       let y = 40;
 
-      // Draw header
+      // Draw header with auto height
+      let maxHeaderLines = 1;
+      const headerTexts = columns.map(col => {
+        const wrapped = doc.splitTextToSize(col, columnWidth - 4);
+        maxHeaderLines = Math.max(maxHeaderLines, wrapped.length);
+        return wrapped;
+      });
+
+      const headerHeight = Math.max(12, maxHeaderLines * 4 + 4);
+
       doc.setFillColor(37, 99, 235);
-      doc.rect(margin, y, availableWidth, minLineHeight, 'F');
+      doc.rect(margin, y, availableWidth, headerHeight, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(7);
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
       
       columns.forEach((col, idx) => {
         const x = margin + (idx * columnWidth) + 2;
-        const wrappedText = doc.splitTextToSize(col, columnWidth - 4);
-        doc.text(wrappedText, x, y + 5);
+        doc.text(headerTexts[idx], x, y + 5);
       });
 
-      y += minLineHeight;
+      y += headerHeight;
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(6);
       doc.setFont('helvetica', 'normal');
