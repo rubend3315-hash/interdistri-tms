@@ -200,7 +200,7 @@ export default function PostNLDashboard({ customerId }) {
       const margin = 14;
       const availableWidth = pageWidth - (margin * 2);
       const columnWidth = availableWidth / selectedColumns.length;
-      const lineHeight = 8;
+      const minLineHeight = 8;
       
       const columns = selectedColumns.map(col => {
         const colDef = allColumns.find(c => c.key === col);
@@ -211,25 +211,37 @@ export default function PostNLDashboard({ customerId }) {
 
       // Draw header
       doc.setFillColor(37, 99, 235);
-      doc.rect(margin, y, availableWidth, lineHeight, 'F');
+      doc.rect(margin, y, availableWidth, minLineHeight, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
       
       columns.forEach((col, idx) => {
         const x = margin + (idx * columnWidth) + 2;
-        const truncatedText = col.length > 18 ? col.substring(0, 15) + '...' : col;
-        doc.text(truncatedText, x, y + 5);
+        const wrappedText = doc.splitTextToSize(col, columnWidth - 4);
+        doc.text(wrappedText, x, y + 5);
       });
 
-      y += lineHeight;
+      y += minLineHeight;
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(6);
       doc.setFont('helvetica', 'normal');
 
-      // Draw rows with borders
+      // Draw rows with text wrapping
       rapportageRitten.forEach((item, rowIdx) => {
-        if (y > pageHeight - 20) {
+        // Calculate row height based on wrapped text
+        let maxLines = 1;
+        const cellTexts = selectedColumns.map(col => {
+          const value = item[col];
+          const text = value !== null && value !== undefined ? String(value) : '-';
+          const wrapped = doc.splitTextToSize(text, columnWidth - 4);
+          maxLines = Math.max(maxLines, wrapped.length);
+          return wrapped;
+        });
+
+        const rowHeight = Math.max(minLineHeight, maxLines * 4 + 2);
+
+        if (y + rowHeight > pageHeight - 20) {
           doc.addPage();
           y = 14;
         }
@@ -237,24 +249,19 @@ export default function PostNLDashboard({ customerId }) {
         // Alternate row colors
         if (rowIdx % 2 === 0) {
           doc.setFillColor(248, 250, 252);
-          doc.rect(margin, y, availableWidth, lineHeight, 'F');
+          doc.rect(margin, y, availableWidth, rowHeight, 'F');
         }
 
-        // Draw cell borders
+        // Draw cells with wrapped text
         selectedColumns.forEach((col, idx) => {
           const x = margin + (idx * columnWidth);
           doc.setDrawColor(220, 220, 220);
-          doc.rect(x, y, columnWidth, lineHeight);
+          doc.rect(x, y, columnWidth, rowHeight);
           
-          const value = item[col];
-          const text = value !== null && value !== undefined ? String(value) : '-';
-          const maxLength = Math.floor(columnWidth / 1.5);
-          const truncatedText = text.length > maxLength ? text.substring(0, maxLength - 2) + '..' : text;
-          
-          doc.text(truncatedText, x + 2, y + 5);
+          doc.text(cellTexts[idx], x + 2, y + 4);
         });
 
-        y += lineHeight;
+        y += rowHeight;
       });
 
       doc.save(`PostNL_Rapportage_${new Date().toISOString().split('T')[0]}.pdf`);
