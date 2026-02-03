@@ -217,17 +217,21 @@ export default function PostNLDashboard({ customerId }) {
         return wrapped;
       });
 
-      const headerHeight = Math.max(12, maxHeaderLines * 4 + 4);
+      const headerHeight = Math.max(16, maxHeaderLines * 3.5 + 6);
 
       doc.setFillColor(37, 99, 235);
       doc.rect(margin, y, availableWidth, headerHeight, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(8);
+      doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
       
       columns.forEach((col, idx) => {
         const x = margin + (idx * columnWidth) + 2;
-        doc.text(headerTexts[idx], x, y + 5);
+        const wrapped = doc.splitTextToSize(col, columnWidth - 4);
+        const startY = y + 4;
+        wrapped.forEach((line, lineIdx) => {
+          doc.text(line, x, startY + (lineIdx * 3.5));
+        });
       });
 
       y += headerHeight;
