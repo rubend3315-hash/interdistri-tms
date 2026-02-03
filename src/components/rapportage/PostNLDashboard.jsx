@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Download, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { jsPDF } from 'jspdf';
+import * as XLSX from 'xlsx';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 
 const PERIOD_OPTIONS = {
@@ -202,106 +202,38 @@ export default function PostNLDashboard({ customerId }) {
     return grouped;
   }, [filteredColumns]);
 
-  const handleExportPDF = () => {
+  const handleExportExcel = () => {
     try {
-      const doc = new jsPDF('landscape');
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      
-      // Header
-      doc.setFontSize(16);
-      doc.text('PostNL Rapportage', 14, 15);
-      doc.setFontSize(9);
-      doc.text(`Periode: ${PERIOD_OPTIONS[selectedPeriod]}`, 14, 22);
-      doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL')}`, 14, 27);
-      doc.text(`Totaal records: ${rapportageRitten.length}`, 14, 32);
-
-      // Calculate column widths
-      const margin = 6;
-      const availableWidth = pageWidth - (margin * 2);
-      const columnWidth = Math.max(availableWidth / selectedColumns.length, 18);
-      const minLineHeight = 10;
-      
-      const columns = selectedColumns.map(col => {
-        const colDef = allColumns.find(c => c.key === col);
-        return colDef?.label || col;
-      });
-
-      let y = 40;
-
-      // Draw header with auto height
-      let maxHeaderLines = 1;
-      const headerTexts = columns.map(col => {
-        const wrapped = doc.splitTextToSize(col, columnWidth - 4);
-        maxHeaderLines = Math.max(maxHeaderLines, wrapped.length);
-        return wrapped;
-      });
-
-      const headerHeight = Math.max(16, maxHeaderLines * 3.5 + 6);
-
-      doc.setFillColor(37, 99, 235);
-      doc.rect(margin, y, availableWidth, headerHeight, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      
-      columns.forEach((col, idx) => {
-        const x = margin + (idx * columnWidth) + 2;
-        const wrapped = doc.splitTextToSize(col, columnWidth - 4);
-        const startY = y + 4;
-        wrapped.forEach((line, lineIdx) => {
-          doc.text(line, x, startY + (lineIdx * 3.5));
+      // Prepare data for Excel
+      const excelData = rapportageRitten.map(item => {
+        const row = {};
+        selectedColumns.forEach(col => {
+          const colDef = allColumns.find(c => c.key === col);
+          const label = colDef?.label || col;
+          row[label] = item[col] !== null && item[col] !== undefined ? item[col] : '';
         });
+        return row;
       });
 
-      y += headerHeight;
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelData);
 
-      // Draw rows with text wrapping
-      rapportageRitten.forEach((item, rowIdx) => {
-        // Calculate row height based on wrapped text
-        let maxLines = 1;
-        const cellTexts = selectedColumns.map(col => {
-          const value = item[col];
-          const text = value !== null && value !== undefined ? String(value) : '-';
-          const wrapped = doc.splitTextToSize(text, columnWidth - 4);
-          maxLines = Math.max(maxLines, wrapped.length);
-          return wrapped;
-        });
+      // Set column widths
+      const colWidths = selectedColumns.map(() => ({ wch: 15 }));
+      ws['!cols'] = colWidths;
 
-        const rowHeight = Math.max(minLineHeight, maxLines * 4.5 + 3);
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'PostNL Rapportage');
 
-        if (y + rowHeight > pageHeight - 20) {
-          doc.addPage();
-          y = 14;
-        }
+      // Generate filename
+      const filename = `PostNL_Rapportage_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-        // Alternate row colors
-        if (rowIdx % 2 === 0) {
-          doc.setFillColor(248, 250, 252);
-          doc.rect(margin, y, availableWidth, rowHeight, 'F');
-        }
-
-        // Draw cells with wrapped text
-        selectedColumns.forEach((col, idx) => {
-          const x = margin + (idx * columnWidth);
-          if (idx > 0) {
-            doc.setDrawColor(220, 220, 220);
-            doc.line(x, y, x, y + rowHeight);
-          }
-
-          doc.text(cellTexts[idx], x + 2, y + 4);
-        });
-
-        y += rowHeight;
-      });
-
-      doc.save(`PostNL_Rapportage_${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success('PDF geëxporteerd');
+      // Save file
+      XLSX.writeFile(wb, filename);
+      toast.success('Excel bestand geëxporteerd');
     } catch (error) {
-      console.error('PDF export error:', error);
+      console.error('Excel export error:', error);
       toast.error('Fout bij exporteren: ' + error.message);
     }
   };
@@ -330,12 +262,12 @@ export default function PostNLDashboard({ customerId }) {
           <p className="text-xs text-slate-500">Ritten en bezorgdata voor PostNL</p>
         </div>
         <Button 
-          onClick={handleExportPDF}
+          onClick={handleExportExcel}
           disabled={rapportageRitten.length === 0 || selectedColumns.length === 0}
           className="gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Download className="w-4 h-4" />
-          Export PDF
+          Export Excel
         </Button>
       </div>
 
