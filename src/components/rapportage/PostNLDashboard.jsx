@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Download, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 
 const PERIOD_OPTIONS = {
@@ -194,42 +194,49 @@ export default function PostNLDashboard({ customerId }) {
       doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL')}`, 14, 27);
       doc.text(`Totaal records: ${rapportageRitten.length}`, 14, 32);
 
-      // Table data
+      // Table header and data
       const columns = selectedColumns.map(col => {
         const colDef = allColumns.find(c => c.key === col);
         return colDef?.label || col;
       });
 
-      const rows = rapportageRitten.map(item => 
-        selectedColumns.map(col => {
-          const value = item[col];
-          return value !== null && value !== undefined ? String(value) : '-';
-        })
-      );
+      let y = 40;
+      const lineHeight = 6;
+      const columnWidth = (297 - 28) / columns.length; // A4 landscape width minus margins
 
-      // Generate table
-      doc.autoTable({
-        head: [columns],
-        body: rows,
-        startY: 38,
-        theme: 'grid',
-        styles: { 
-          fontSize: 7,
-          cellPadding: 2,
-          overflow: 'linebreak',
-          cellWidth: 'wrap'
-        },
-        headStyles: { 
-          fillColor: [37, 99, 235],
-          textColor: 255,
-          fontStyle: 'bold',
-          halign: 'center'
-        },
-        columnStyles: columns.reduce((acc, _, idx) => {
-          acc[idx] = { cellWidth: 'auto' };
-          return acc;
-        }, {}),
-        margin: { top: 38, left: 14, right: 14 }
+      // Draw header
+      doc.setFillColor(37, 99, 235);
+      doc.rect(14, y, 297 - 28, lineHeight, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      columns.forEach((col, idx) => {
+        doc.text(col.substring(0, 20), 14 + (idx * columnWidth) + 2, y + 4);
+      });
+
+      y += lineHeight;
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(7);
+
+      // Draw rows
+      rapportageRitten.forEach((item, rowIdx) => {
+        if (y > 200) { // New page if needed
+          doc.addPage();
+          y = 14;
+        }
+
+        // Alternate row colors
+        if (rowIdx % 2 === 0) {
+          doc.setFillColor(248, 250, 252);
+          doc.rect(14, y, 297 - 28, lineHeight, 'F');
+        }
+
+        selectedColumns.forEach((col, idx) => {
+          const value = item[col];
+          const text = value !== null && value !== undefined ? String(value).substring(0, 25) : '-';
+          doc.text(text, 14 + (idx * columnWidth) + 2, y + 4);
+        });
+
+        y += lineHeight;
       });
 
       doc.save(`PostNL_Rapportage_${new Date().toISOString().split('T')[0]}.pdf`);
