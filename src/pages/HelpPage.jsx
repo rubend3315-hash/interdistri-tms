@@ -476,54 +476,151 @@ export default function HelpPage() {
             <AccordionItem value="approvals-guide">
               <AccordionTrigger className="text-base font-semibold">
                 <CheckSquare className="w-4 h-4 mr-2" />
-                Hoe keur ik uren goed?
+                Hoe keur ik uren goed of af?
               </AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">1. Ingediende uren zien</h4>
+                    <h4 className="font-medium text-slate-900 mb-2">Overzicht</h4>
                     <p className="text-sm text-slate-600 mb-3">
-                      Ga naar "Goedkeuringen" en bekijk het tabblad "Ter goedkeuring". Alle ingediende uren staan hier.
+                      Het goedkeuringsproces bevat drie stappen: bekijken, goedkeuren/afkeuren, en eventueel corrigeren. 
+                      Alle wijzigingen worden gelogd in een audit trail voor controle en naleving.
                     </p>
                   </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">2. Details bekijken</h4>
-                    <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• Klik op "Bekijken" om alle details te zien</li>
-                      <li>• Controleer start-/eindtijd, pauze en totaal uren</li>
-                      <li>• Kijk naar opmerkingen en gekoppelde projecten</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">3. Goedkeuren</h4>
-                    <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• Klik "Goedkeuren" knop</li>
-                      <li>• Bevestig</li>
-                      <li>• Status verandert naar "Goedgekeurd"</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">4. Afkeuren</h4>
-                    <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• Klik "Afkeuren" knop</li>
-                      <li>• Vul een reden in (verplicht)</li>
-                      <li>• Status verandert naar "Afgekeurd"</li>
-                      <li>• Medewerker kan het corrigeren</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">5. Uren corrigeren</h4>
-                    <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• Klik "Bekijken" en dan "Bewerken"</li>
-                      <li>• Wijzig start-/eindtijd of pauze</li>
-                      <li>• <strong>Voer een reden in</strong> (audit trail)</li>
-                      <li>• Sla op - wijziging is gelogd</li>
-                    </ul>
-                  </div>
-                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <p className="text-sm text-amber-700">
-                      💡 <strong>Belangrijk:</strong> Alle wijzigingen worden vastgelegd met datum, auteur en reden. Afgewezen uren gaan terug naar "Concept" zodat de medewerker kan corrigeren.
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">1. Ingediende uren bekijken</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Ga naar <strong>"Goedkeuringen"</strong> en bekijk het tabblad <strong>"Ter goedkeuring"</strong>. Hier staan alle ingediende tijdregistraties die wachten op goedkeuring.
                     </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• De tabel toont medewerker, datum, uren, project en klant</li>
+                      <li>• Klik op <strong>"Bekijken"</strong> om alle details te zien</li>
+                      <li>• Controleer start-/eindtijd, pauze, totaal uren en berekeningen</li>
+                      <li>• Bekijk opmerkingen, gekoppelde projecten en eventuele kosten</li>
+                      <li>• Check ritten en verblijfskosten indien van toepassing</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">2. Uren goedkeuren</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Als alle gegevens correct zijn, keur je de tijdregistratie goed:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Klik op de knop <strong>"Goedkeuren"</strong></li>
+                      <li>• Bevestig de actie in de dialoog</li>
+                      <li>• De status verandert automatisch naar <strong>"Goedgekeurd"</strong></li>
+                      <li>• De tijdregistratie verdwijnt uit het "Ter goedkeuring" tabblad</li>
+                      <li>• Je vindt het terug in het tabblad <strong>"Goedgekeurd"</strong></li>
+                      <li>• De medewerker ziet de goedkeuring in zijn overzicht</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">3. Uren afkeuren</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Als de tijdregistratie onjuist is of aanpassing nodig heeft, keur je deze af:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Klik op de knop <strong>"Afkeuren"</strong></li>
+                      <li>• Een dialoog verschijnt waar je een <strong>reden moet opgeven</strong> (verplicht veld)</li>
+                      <li>• Wees duidelijk in je reden, bijvoorbeeld:
+                        <ul className="ml-4 mt-1 space-y-1">
+                          <li>→ "Eindtijd klopt niet, je was eerder klaar"</li>
+                          <li>→ "Pauze niet correct ingevoerd"</li>
+                          <li>→ "Verkeerd project gekoppeld"</li>
+                          <li>→ "Overwerk niet vooraf goedgekeurd"</li>
+                        </ul>
+                      </li>
+                      <li>• Na bevestiging verandert de status naar <strong>"Afgekeurd"</strong></li>
+                      <li>• De tijdregistratie gaat automatisch terug naar <strong>"Concept"</strong> status</li>
+                      <li>• De medewerker ontvangt automatisch een <strong>e-mail</strong> met:
+                        <ul className="ml-4 mt-1 space-y-1">
+                          <li>→ Melding dat de uren zijn afgekeurd</li>
+                          <li>→ De reden die jij hebt opgegeven</li>
+                          <li>→ Details van de afgekeurde tijdregistratie</li>
+                          <li>→ Instructie om de uren te corrigeren en opnieuw in te dienen</li>
+                        </ul>
+                      </li>
+                      <li>• De medewerker kan nu de tijdregistratie corrigeren en opnieuw indienen</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">4. Uren corrigeren (met audit trail)</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Als manager kun je ook zelf tijdregistraties aanpassen. Alle wijzigingen worden automatisch gelogd:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Klik op <strong>"Bekijken"</strong> en dan op <strong>"Bewerken"</strong></li>
+                      <li>• Wijzig de benodigde velden (start-/eindtijd, pauze, project, etc.)</li>
+                      <li>• Scroll naar beneden en vul het veld <strong>"Reden voor correctie"</strong> in (verplicht)</li>
+                      <li>• Bijvoorbeeld: "Eindtijd gecorrigeerd op basis van werkbon"</li>
+                      <li>• Klik op <strong>"Opslaan"</strong></li>
+                      <li>• De wijziging wordt automatisch opgeslagen in de <strong>edit_history</strong>:
+                        <ul className="ml-4 mt-1 space-y-1">
+                          <li>→ Wie de wijziging heeft gemaakt</li>
+                          <li>→ Wanneer de wijziging is gemaakt</li>
+                          <li>→ De opgegeven reden</li>
+                          <li>→ Originele waarden (voor vergelijking)</li>
+                          <li>→ Nieuwe waarden</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">5. Correctie geschiedenis bekijken</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Je kunt alle wijzigingen aan een tijdregistratie terugzien:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Open de tijdregistratie via "Bekijken"</li>
+                      <li>• Scroll naar beneden naar het gedeelte <strong>"Correctie Geschiedenis"</strong></li>
+                      <li>• Hier zie je alle wijzigingen chronologisch geordend</li>
+                      <li>• Per wijziging zie je: datum, wie, reden en wat er is gewijzigd</li>
+                      <li>• Dit zorgt voor volledige transparantie en traceerbaarheid</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">6. Goedgekeurde uren beheren</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Ga naar het tabblad <strong>"Goedgekeurd"</strong> om alle goedgekeurde tijdregistraties te zien:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Filter op week, maand of medewerker</li>
+                      <li>• Bekijk totalen en overzichten</li>
+                      <li>• Exporteer naar Excel voor loonverwerking</li>
+                      <li>• Goedgekeurde uren kunnen indien nodig nog steeds aangepast worden (met audit trail)</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700 font-medium mb-2">
+                      💡 Belangrijk om te onthouden:
+                    </p>
+                    <ul className="text-sm text-amber-700 space-y-1">
+                      <li>• <strong>Afkeuren</strong> stuurt automatisch een e-mail naar de medewerker met jouw reden</li>
+                      <li>• Afgekeurde uren gaan terug naar <strong>"Concept"</strong> zodat de medewerker kan corrigeren</li>
+                      <li>• Alle wijzigingen door managers worden <strong>gelogd in de audit trail</strong></li>
+                      <li>• Een reden opgeven bij afkeuren of corrigeren is <strong>verplicht</strong></li>
+                      <li>• De correctie geschiedenis is <strong>altijd zichtbaar</strong> voor controle en naleving</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mt-4">
+                    <p className="text-sm text-blue-700 font-medium mb-2">
+                      ✅ Werkwijze tips:
+                    </p>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• Keur uren tijdig goed om vertraging in de loonverwerking te voorkomen</li>
+                      <li>• Wees specifiek in je afkeuringsreden zodat de medewerker weet wat te corrigeren</li>
+                      <li>• Gebruik de audit trail om patronen of terugkerende fouten te signaleren</li>
+                      <li>• Check bij twijfel altijd de ritten en werkbonnen voordat je goedkeurt</li>
+                      <li>• Communiceer met medewerkers bij onduidelijkheden voordat je afkeurt</li>
+                    </ul>
                   </div>
                 </div>
               </AccordionContent>
