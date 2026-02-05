@@ -97,6 +97,37 @@ const menuItems = [
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const printStyles = `
+    @media print {
+      body, html {
+        margin: 0;
+        padding: 0;
+      }
+      [role="dialog"] {
+        position: static !important;
+        inset: 0 !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+      }
+      [role="dialog"] > div {
+        margin: 0 !important;
+        padding: 20px !important;
+      }
+      .print-hidden {
+        display: none !important;
+      }
+      main, nav, aside, [role="dialog"] + div {
+        display: none !important;
+      }
+      [role="dialog"] {
+        display: block !important;
+      }
+    }
+  `;
   const [expandedGroups, setExpandedGroups] = useState([]);
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
@@ -171,6 +202,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <style>{printStyles}</style>
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-50 flex items-center justify-between px-4">
         <button 
