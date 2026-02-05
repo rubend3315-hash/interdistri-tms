@@ -1267,15 +1267,17 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
            <Button type="button" variant="outline" onClick={onClose}>
              Annuleren
            </Button>
-           <Button 
-             type="button" 
-             variant="outline" 
-             onClick={() => window.print()}
-             className="text-slate-600"
-           >
-             <Printer className="w-4 h-4 mr-2" />
-             Afdrukken
-           </Button>
+           {review && (
+             <Button 
+               type="button" 
+               variant="outline" 
+               onClick={() => downloadPDF(review)}
+               className="text-slate-600"
+             >
+               <Printer className="w-4 h-4 mr-2" />
+               Download PDF
+             </Button>
+           )}
            <Button type="submit" disabled={createMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
              {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
              Opslaan
