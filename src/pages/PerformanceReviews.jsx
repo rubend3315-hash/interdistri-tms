@@ -224,18 +224,6 @@ export default function PerformanceReviewsPage() {
                                 <p className="text-xs text-slate-500">Persoonlijke inzet</p>
                                 <p className="text-lg font-semibold text-slate-900">{review.persoonlijke_inzet}/10</p>
                               </div>
-                              <div>
-                                <p className="text-xs text-slate-500">Op tijd te laat Depot</p>
-                                <p className="text-lg font-semibold text-slate-900">{review.kpi_postnl}/10</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-slate-500">Voertuig & onderhoud</p>
-                                <p className="text-lg font-semibold text-slate-900">{review.kpi_voertuig_onderhoud}/10</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-slate-500">Rijstijl</p>
-                                <p className="text-lg font-semibold text-slate-900">{review.rijstijl_analyse}/10</p>
-                              </div>
                             </div>
                           </div>
 
@@ -372,9 +360,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     omgang_veranderingen: 5,
     ziekteverzuim: 5,
     omgang_collega: 5,
-    kpi_postnl: 5,
-    kpi_voertuig_onderhoud: 5,
-    rijstijl_analyse: 5,
     scholingsbehoeften: '',
     ambitie: '',
     werk_prive_balans: '',
@@ -593,53 +578,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 </div>
               </div>
 
-              {/* Bestaande KPI's met sliders */}
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <Label className="text-xs">Op tijd te laat Depot</Label>
-                    <span className="text-xs font-semibold text-blue-600">{formData.kpi_postnl}/10</span>
-                  </div>
-                  <Input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={formData.kpi_postnl}
-                    onChange={(e) => setFormData({...formData, kpi_postnl: e.target.value})}
-                    className="w-full h-1"
-                  />
-                </div>
 
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <Label className="text-xs">Voertuig & schade</Label>
-                    <span className="text-xs font-semibold text-blue-600">{formData.kpi_voertuig_onderhoud}/10</span>
-                  </div>
-                  <Input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={formData.kpi_voertuig_onderhoud}
-                    onChange={(e) => setFormData({...formData, kpi_voertuig_onderhoud: e.target.value})}
-                    className="w-full h-1"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <Label className="text-xs">Rijstijl analyse</Label>
-                    <span className="text-xs font-semibold text-blue-600">{formData.rijstijl_analyse}/10</span>
-                  </div>
-                  <Input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={formData.rijstijl_analyse}
-                    onChange={(e) => setFormData({...formData, rijstijl_analyse: e.target.value})}
-                    className="w-full h-1"
-                  />
-                </div>
-              </div>
             </div>
           </div>
 
@@ -774,10 +713,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 parseFloat(formData.piek_ziektebezetting || 0) +
                 parseFloat(formData.omgang_veranderingen || 0) +
                 parseFloat(formData.ziekteverzuim || 0) +
-                parseFloat(formData.omgang_collega || 0) +
-                parseFloat(formData.kpi_postnl || 0) +
-                parseFloat(formData.kpi_voertuig_onderhoud || 0) +
-                parseFloat(formData.rijstijl_analyse || 0);
+                parseFloat(formData.omgang_collega || 0);
               const meetsRequirement = totalScore >= 21;
 
               return (
@@ -794,7 +730,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                       </Label>
                     </div>
                     <Badge className={meetsRequirement ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                      Totaal: {totalScore}/80 punten
+                      Totaal: {totalScore}/50 punten
                     </Badge>
                   </div>
                   {!meetsRequirement && (
