@@ -400,7 +400,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     betwiste_klachten_punten: 5,
     onbetwiste_klachten: 5,
     onbetwiste_klachten_punten: 5,
-    contract_ratio: null,
+    contract_ratio: 22.8,
     contract_ratio_punten: 5,
     veilig_defensief_rijgedrag: 5,
     veilig_defensief_rijgedrag_punten: 4,
@@ -458,7 +458,8 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
         procesverstoring_cat1: 3,
         procesverstoring_cat2: 1,
         betwiste_klachten: 10,
-        onbetwiste_klachten: 5
+        onbetwiste_klachten: 5,
+        contract_ratio: 22.8
         }));
     }
   }, [review, employeeId]);
@@ -819,7 +820,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Contract Ratio</Label>
+                  <Label className="text-xs">Contact ratio (target: 22,8%)</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
