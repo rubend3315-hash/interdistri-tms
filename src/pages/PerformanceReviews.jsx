@@ -220,10 +220,30 @@ export default function PerformanceReviewsPage() {
 
                             {/* Bestaande scores */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              <div>
-                                <p className="text-xs text-slate-500">Persoonlijke inzet</p>
-                                <p className="text-lg font-semibold text-slate-900">{review.persoonlijke_inzet}/10</p>
-                              </div>
+                              {review.kpi_postnl && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Op tijd te laat Depot</p>
+                                  <p className="text-lg font-semibold text-slate-900">{review.kpi_postnl}/10</p>
+                                </div>
+                              )}
+                              {review.kpi_voertuig_onderhoud && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Voertuig & schade</p>
+                                  <p className="text-lg font-semibold text-slate-900">{review.kpi_voertuig_onderhoud}/10</p>
+                                </div>
+                              )}
+                              {review.rijstijl_analyse && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Rijstijl</p>
+                                  <p className="text-lg font-semibold text-slate-900">{review.rijstijl_analyse}/10</p>
+                                </div>
+                              )}
+                              {review.persoonlijke_inzet && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Persoonlijke inzet</p>
+                                  <p className="text-lg font-semibold text-slate-900">{review.persoonlijke_inzet}/10</p>
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -355,6 +375,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     pba_bezorgen: null,
     hitrate: null,
     altijd_op_tijd_depot: null,
+    kpi_postnl: 5,
+    kpi_voertuig_onderhoud: 5,
+    rijstijl_analyse: 5,
     persoonlijke_inzet: 5,
     piek_ziektebezetting: 5,
     omgang_veranderingen: 5,
@@ -709,7 +732,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
           <div className="border-t pt-4 space-y-4">
             {(() => {
-              const totalScore = parseFloat(formData.persoonlijke_inzet || 0) +
+              const totalScore = parseFloat(formData.kpi_postnl || 0) +
+                parseFloat(formData.kpi_voertuig_onderhoud || 0) +
+                parseFloat(formData.rijstijl_analyse || 0) +
+                parseFloat(formData.persoonlijke_inzet || 0) +
                 parseFloat(formData.piek_ziektebezetting || 0) +
                 parseFloat(formData.omgang_veranderingen || 0) +
                 parseFloat(formData.ziekteverzuim || 0) +
@@ -730,7 +756,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                       </Label>
                     </div>
                     <Badge className={meetsRequirement ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                      Totaal: {totalScore}/50 punten
+                      Totaal: {totalScore}/80 punten
                     </Badge>
                   </div>
                   {!meetsRequirement && (
