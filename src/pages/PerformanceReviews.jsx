@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import { Plus, FileText, MessageSquare, Eye, Loader2, TrendingUp, Award } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -626,13 +625,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Veilig en defensief rijgedrag</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.veilig_defensief_rijgedrag}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.veilig_defensief_rijgedrag]}
-                  onValueChange={(val) => setFormData({...formData, veilig_defensief_rijgedrag: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.veilig_defensief_rijgedrag}
+                  onChange={(e) => setFormData({...formData, veilig_defensief_rijgedrag: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -641,13 +641,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Naleven verkeersregels en bedrijfsrichtlijnen</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.naleven_verkeersregels}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.naleven_verkeersregels]}
-                  onValueChange={(val) => setFormData({...formData, naleven_verkeersregels: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.naleven_verkeersregels}
+                  onChange={(e) => setFormData({...formData, naleven_verkeersregels: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -656,13 +657,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Schadevrij rijden / schadehistorie</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.schadevrij_rijden}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.schadevrij_rijden]}
-                  onValueChange={(val) => setFormData({...formData, schadevrij_rijden: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.schadevrij_rijden}
+                  onChange={(e) => setFormData({...formData, schadevrij_rijden: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -671,13 +673,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Correct en tijdig melden van schade en incidenten</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.melden_schade_incidenten}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.melden_schade_incidenten]}
-                  onValueChange={(val) => setFormData({...formData, melden_schade_incidenten: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.melden_schade_incidenten}
+                  onChange={(e) => setFormData({...formData, melden_schade_incidenten: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -686,13 +689,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Representatief gebruik van het voertuig</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.representatief_gebruik_voertuig}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.representatief_gebruik_voertuig]}
-                  onValueChange={(val) => setFormData({...formData, representatief_gebruik_voertuig: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.representatief_gebruik_voertuig}
+                  onChange={(e) => setFormData({...formData, representatief_gebruik_voertuig: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -701,13 +705,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Periodieke voertuig controle</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.periodieke_voertuig_controle}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.periodieke_voertuig_controle]}
-                  onValueChange={(val) => setFormData({...formData, periodieke_voertuig_controle: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.periodieke_voertuig_controle}
+                  onChange={(e) => setFormData({...formData, periodieke_voertuig_controle: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -716,13 +721,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Netheid en onderhoud van het voertuig</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.netheid_onderhoud_voertuig}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.netheid_onderhoud_voertuig]}
-                  onValueChange={(val) => setFormData({...formData, netheid_onderhoud_voertuig: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.netheid_onderhoud_voertuig}
+                  onChange={(e) => setFormData({...formData, netheid_onderhoud_voertuig: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -731,13 +737,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Zuinig en verantwoord rijgedrag</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.zuinig_verantwoord_rijgedrag}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.zuinig_verantwoord_rijgedrag]}
-                  onValueChange={(val) => setFormData({...formData, zuinig_verantwoord_rijgedrag: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.zuinig_verantwoord_rijgedrag}
+                  onChange={(e) => setFormData({...formData, zuinig_verantwoord_rijgedrag: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -746,13 +753,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Bandenslijtage</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.bandenslijtage}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.bandenslijtage]}
-                  onValueChange={(val) => setFormData({...formData, bandenslijtage: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.bandenslijtage}
+                  onChange={(e) => setFormData({...formData, bandenslijtage: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
             </div>
@@ -771,13 +779,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Persoonlijke inzet</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.persoonlijke_inzet}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.persoonlijke_inzet]}
-                  onValueChange={(val) => setFormData({...formData, persoonlijke_inzet: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.persoonlijke_inzet}
+                  onChange={(e) => setFormData({...formData, persoonlijke_inzet: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -786,13 +795,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Piek- en ziektebezetting</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.piek_ziektebezetting}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.piek_ziektebezetting]}
-                  onValueChange={(val) => setFormData({...formData, piek_ziektebezetting: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.piek_ziektebezetting}
+                  onChange={(e) => setFormData({...formData, piek_ziektebezetting: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -801,13 +811,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Stressbestendig</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.omgang_veranderingen}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.omgang_veranderingen]}
-                  onValueChange={(val) => setFormData({...formData, omgang_veranderingen: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.omgang_veranderingen}
+                  onChange={(e) => setFormData({...formData, omgang_veranderingen: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -816,13 +827,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Ziekteverzuim</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.ziekteverzuim}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.ziekteverzuim]}
-                  onValueChange={(val) => setFormData({...formData, ziekteverzuim: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.ziekteverzuim}
+                  onChange={(e) => setFormData({...formData, ziekteverzuim: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
 
@@ -831,13 +843,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Omgang collega's</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.omgang_collega}/10</span>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={[formData.omgang_collega]}
-                  onValueChange={(val) => setFormData({...formData, omgang_collega: val[0]})}
-                  className="w-full"
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={formData.omgang_collega}
+                  onChange={(e) => setFormData({...formData, omgang_collega: e.target.value})}
+                  className="w-full h-1"
                 />
               </div>
             </div>
