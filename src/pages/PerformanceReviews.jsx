@@ -816,7 +816,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Persoonlijke inzet</Label>
+                  <Label className="text-xs">Inzet & betrokkenheid</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.persoonlijke_inzet}/10</span>
                 </div>
                 <Slider
