@@ -806,10 +806,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             </div>
           </div>
 
-          {/* Categorie 3: Persoonlijke Inzet en Samenwerking */}
+          {/* Categorie 3: Persoonlijke Inzet, samenwerking en wederkerigheid */}
           <div className="border-t pt-4 mt-4">
             <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
-              <span className="text-blue-600">3.</span> Persoonlijke Inzet en Samenwerking
+              <span className="text-blue-600">3.</span> Persoonlijke Inzet, samenwerking en wederkerigheid
             </h3>
             <p className="text-xs text-slate-500 mb-3">Vaardigheden en gedrag specifiek voor de rol</p>
             
