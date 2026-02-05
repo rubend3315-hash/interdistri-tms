@@ -218,30 +218,36 @@ export default function PerformanceReviewsPage() {
                               </div>
                             )}
 
-                            {/* Bestaande scores */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              {review.kpi_postnl && (
+                            {/* Scores overzicht */}
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                              {review.veilig_defensief_rijgedrag && (
                                 <div>
-                                  <p className="text-xs text-slate-500">Op tijd te laat Depot</p>
-                                  <p className="text-lg font-semibold text-slate-900">{review.kpi_postnl}/10</p>
+                                  <p className="text-xs text-slate-500">Veilig rijgedrag</p>
+                                  <p className="text-sm font-semibold text-slate-900">{review.veilig_defensief_rijgedrag}/10</p>
                                 </div>
                               )}
-                              {review.kpi_voertuig_onderhoud && (
+                              {review.naleven_verkeersregels && (
                                 <div>
-                                  <p className="text-xs text-slate-500">Voertuig & schade</p>
-                                  <p className="text-lg font-semibold text-slate-900">{review.kpi_voertuig_onderhoud}/10</p>
+                                  <p className="text-xs text-slate-500">Verkeersregels</p>
+                                  <p className="text-sm font-semibold text-slate-900">{review.naleven_verkeersregels}/10</p>
                                 </div>
                               )}
-                              {review.rijstijl_analyse && (
+                              {review.schadevrij_rijden && (
                                 <div>
-                                  <p className="text-xs text-slate-500">Rijstijl</p>
-                                  <p className="text-lg font-semibold text-slate-900">{review.rijstijl_analyse}/10</p>
+                                  <p className="text-xs text-slate-500">Schadevrij</p>
+                                  <p className="text-sm font-semibold text-slate-900">{review.schadevrij_rijden}/10</p>
                                 </div>
                               )}
                               {review.persoonlijke_inzet && (
                                 <div>
-                                  <p className="text-xs text-slate-500">Persoonlijke inzet</p>
-                                  <p className="text-lg font-semibold text-slate-900">{review.persoonlijke_inzet}/10</p>
+                                  <p className="text-xs text-slate-500">Pers. inzet</p>
+                                  <p className="text-sm font-semibold text-slate-900">{review.persoonlijke_inzet}/10</p>
+                                </div>
+                              )}
+                              {review.omgang_collega && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Omgang collega's</p>
+                                  <p className="text-sm font-semibold text-slate-900">{review.omgang_collega}/10</p>
                                 </div>
                               )}
                             </div>
@@ -375,9 +381,15 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     pba_bezorgen: null,
     hitrate: null,
     altijd_op_tijd_depot: null,
-    kpi_postnl: 5,
-    kpi_voertuig_onderhoud: 5,
-    rijstijl_analyse: 5,
+    veilig_defensief_rijgedrag: 5,
+    naleven_verkeersregels: 5,
+    schadevrij_rijden: 5,
+    melden_schade_incidenten: 5,
+    representatief_gebruik_voertuig: 5,
+    periodieke_voertuig_controle: 5,
+    netheid_onderhoud_voertuig: 5,
+    zuinig_verantwoord_rijgedrag: 5,
+    bandenslijtage: 5,
     persoonlijke_inzet: 5,
     piek_ziektebezetting: 5,
     omgang_veranderingen: 5,
@@ -406,16 +418,22 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const totalScore = parseFloat(data.persoonlijke_inzet) +
-        parseFloat(data.piek_ziektebezetting) +
-        parseFloat(data.omgang_veranderingen) +
-        parseFloat(data.ziekteverzuim) +
-        parseFloat(data.omgang_collega) +
-        parseFloat(data.kpi_postnl) +
-        parseFloat(data.kpi_voertuig_onderhoud) +
-        parseFloat(data.rijstijl_analyse);
+      const totalScore = parseFloat(data.veilig_defensief_rijgedrag || 0) +
+        parseFloat(data.naleven_verkeersregels || 0) +
+        parseFloat(data.schadevrij_rijden || 0) +
+        parseFloat(data.melden_schade_incidenten || 0) +
+        parseFloat(data.representatief_gebruik_voertuig || 0) +
+        parseFloat(data.periodieke_voertuig_controle || 0) +
+        parseFloat(data.netheid_onderhoud_voertuig || 0) +
+        parseFloat(data.zuinig_verantwoord_rijgedrag || 0) +
+        parseFloat(data.bandenslijtage || 0) +
+        parseFloat(data.persoonlijke_inzet || 0) +
+        parseFloat(data.piek_ziektebezetting || 0) +
+        parseFloat(data.omgang_veranderingen || 0) +
+        parseFloat(data.ziekteverzuim || 0) +
+        parseFloat(data.omgang_collega || 0);
       
-      const avg = totalScore / 8;
+      const avg = totalScore / 14;
 
       const reviewData = {
         ...data,
@@ -613,45 +631,135 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Op tijd te laat Depot</Label>
-                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_postnl}/10</span>
+                  <Label className="text-xs">Veilig en defensief rijgedrag</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.veilig_defensief_rijgedrag}/10</span>
                 </div>
                 <Input
                   type="range"
                   min="1"
                   max="10"
-                  value={formData.kpi_postnl}
-                  onChange={(e) => setFormData({...formData, kpi_postnl: e.target.value})}
+                  value={formData.veilig_defensief_rijgedrag}
+                  onChange={(e) => setFormData({...formData, veilig_defensief_rijgedrag: e.target.value})}
                   className="w-full h-1"
                 />
               </div>
 
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Voertuig & schade</Label>
-                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_voertuig_onderhoud}/10</span>
+                  <Label className="text-xs">Naleven verkeersregels en bedrijfsrichtlijnen</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.naleven_verkeersregels}/10</span>
                 </div>
                 <Input
                   type="range"
                   min="1"
                   max="10"
-                  value={formData.kpi_voertuig_onderhoud}
-                  onChange={(e) => setFormData({...formData, kpi_voertuig_onderhoud: e.target.value})}
+                  value={formData.naleven_verkeersregels}
+                  onChange={(e) => setFormData({...formData, naleven_verkeersregels: e.target.value})}
                   className="w-full h-1"
                 />
               </div>
 
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Rijstijl analyse</Label>
-                  <span className="text-xs font-semibold text-blue-600">{formData.rijstijl_analyse}/10</span>
+                  <Label className="text-xs">Schadevrij rijden / schadehistorie</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.schadevrij_rijden}/10</span>
                 </div>
                 <Input
                   type="range"
                   min="1"
                   max="10"
-                  value={formData.rijstijl_analyse}
-                  onChange={(e) => setFormData({...formData, rijstijl_analyse: e.target.value})}
+                  value={formData.schadevrij_rijden}
+                  onChange={(e) => setFormData({...formData, schadevrij_rijden: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Correct en tijdig melden van schade en incidenten</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.melden_schade_incidenten}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.melden_schade_incidenten}
+                  onChange={(e) => setFormData({...formData, melden_schade_incidenten: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Representatief gebruik van het voertuig</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.representatief_gebruik_voertuig}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.representatief_gebruik_voertuig}
+                  onChange={(e) => setFormData({...formData, representatief_gebruik_voertuig: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Periodieke voertuig controle</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.periodieke_voertuig_controle}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.periodieke_voertuig_controle}
+                  onChange={(e) => setFormData({...formData, periodieke_voertuig_controle: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Netheid en onderhoud van het voertuig</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.netheid_onderhoud_voertuig}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.netheid_onderhoud_voertuig}
+                  onChange={(e) => setFormData({...formData, netheid_onderhoud_voertuig: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Zuinig en verantwoord rijgedrag</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.zuinig_verantwoord_rijgedrag}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.zuinig_verantwoord_rijgedrag}
+                  onChange={(e) => setFormData({...formData, zuinig_verantwoord_rijgedrag: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Bandenslijtage</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.bandenslijtage}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.bandenslijtage}
+                  onChange={(e) => setFormData({...formData, bandenslijtage: e.target.value})}
                   className="w-full h-1"
                 />
               </div>
@@ -785,9 +893,15 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
           <div className="border-t pt-4 space-y-4">
             {(() => {
-              const totalScore = parseFloat(formData.kpi_postnl || 0) +
-                parseFloat(formData.kpi_voertuig_onderhoud || 0) +
-                parseFloat(formData.rijstijl_analyse || 0) +
+              const totalScore = parseFloat(formData.veilig_defensief_rijgedrag || 0) +
+                parseFloat(formData.naleven_verkeersregels || 0) +
+                parseFloat(formData.schadevrij_rijden || 0) +
+                parseFloat(formData.melden_schade_incidenten || 0) +
+                parseFloat(formData.representatief_gebruik_voertuig || 0) +
+                parseFloat(formData.periodieke_voertuig_controle || 0) +
+                parseFloat(formData.netheid_onderhoud_voertuig || 0) +
+                parseFloat(formData.zuinig_verantwoord_rijgedrag || 0) +
+                parseFloat(formData.bandenslijtage || 0) +
                 parseFloat(formData.persoonlijke_inzet || 0) +
                 parseFloat(formData.piek_ziektebezetting || 0) +
                 parseFloat(formData.omgang_veranderingen || 0) +
@@ -809,7 +923,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                       </Label>
                     </div>
                     <Badge className={meetsRequirement ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                      Totaal: {totalScore}/80 punten
+                      Totaal: {totalScore}/140 punten
                     </Badge>
                   </div>
                   {!meetsRequirement && (
