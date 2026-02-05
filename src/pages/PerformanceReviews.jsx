@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Plus, FileText, MessageSquare, Eye, Loader2, TrendingUp, Award } from "lucide-react";
+import { Plus, FileText, MessageSquare, Eye, Loader2, TrendingUp, Award, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 import SignaturePad from "@/components/ui/signature-pad";
@@ -52,6 +52,13 @@ export default function PerformanceReviewsPage() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+  });
+
+  const deleteReviewMutation = useMutation({
+    mutationFn: (reviewId) => base44.entities.PerformanceReview.delete(reviewId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    }
   });
 
   const handleAddReview = (employeeId) => {
@@ -157,9 +164,9 @@ export default function PerformanceReviewsPage() {
             ) : filteredReviews && filteredReviews.length > 0 ? (
               <div className="grid gap-4">
                 {filteredReviews.map((review) => (
-                  <Card key={review.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleEditReview(review)}>
+                  <Card key={review.id} className="hover:shadow-lg transition-shadow">
                     <CardContent className="pt-6">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between cursor-pointer" onClick={() => handleEditReview(review)}>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
                             <h3 className="font-semibold text-lg text-slate-900">
@@ -173,6 +180,20 @@ export default function PerformanceReviewsPage() {
                               </Badge>
                             )}
                           </div>
+                          {review.status === 'Concept' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Weet je zeker dat je deze concept beoordeling wilt verwijderen?')) {
+                                  deleteReviewMutation.mutate(review.id);
+                                }
+                              }}
+                              className="p-2 hover:bg-red-50 rounded-lg text-red-500 hover:text-red-700"
+                              title="Verwijder concept"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                           
                           <div className="space-y-3 mb-3">
                             {/* Operationele percentages */}
