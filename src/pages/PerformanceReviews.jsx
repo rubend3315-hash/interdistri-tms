@@ -799,18 +799,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Veilig en defensief rijgedrag</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.veilig_defensief_rijgedrag_punten || 0}
-                      onChange={(e) => setFormData({...formData, veilig_defensief_rijgedrag_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.veilig_defensief_rijgedrag}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.veilig_defensief_rijgedrag}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -825,18 +814,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Naleven verkeersregels en bedrijfsrichtlijnen</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.naleven_verkeersregels_punten || 0}
-                      onChange={(e) => setFormData({...formData, naleven_verkeersregels_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.naleven_verkeersregels}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.naleven_verkeersregels}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -851,18 +829,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Schadevrij rijden / schadehistorie</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.schadevrij_rijden_punten || 0}
-                      onChange={(e) => setFormData({...formData, schadevrij_rijden_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.schadevrij_rijden}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.schadevrij_rijden}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -877,18 +844,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Correct en tijdig melden van schade en incidenten</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.melden_schade_incidenten_punten || 0}
-                      onChange={(e) => setFormData({...formData, melden_schade_incidenten_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.melden_schade_incidenten}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.melden_schade_incidenten}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -903,18 +859,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Representatief gebruik van het voertuig</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.representatief_gebruik_voertuig_punten || 0}
-                      onChange={(e) => setFormData({...formData, representatief_gebruik_voertuig_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.representatief_gebruik_voertuig}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.representatief_gebruik_voertuig}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -929,18 +874,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Periodieke voertuig controle</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.periodieke_voertuig_controle_punten || 0}
-                      onChange={(e) => setFormData({...formData, periodieke_voertuig_controle_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.periodieke_voertuig_controle}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.periodieke_voertuig_controle}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -955,18 +889,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Netheid en onderhoud van het voertuig</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.netheid_onderhoud_voertuig_punten || 0}
-                      onChange={(e) => setFormData({...formData, netheid_onderhoud_voertuig_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.netheid_onderhoud_voertuig}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.netheid_onderhoud_voertuig}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -981,18 +904,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Zuinig en verantwoord rijgedrag</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.zuinig_verantwoord_rijgedrag_punten || 0}
-                      onChange={(e) => setFormData({...formData, zuinig_verantwoord_rijgedrag_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.zuinig_verantwoord_rijgedrag}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.zuinig_verantwoord_rijgedrag}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -1007,18 +919,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Bandenslijtage</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.bandenslijtage_punten || 0}
-                      onChange={(e) => setFormData({...formData, bandenslijtage_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.bandenslijtage}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.bandenslijtage}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -1050,18 +951,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Inzet & betrokkenheid</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.persoonlijke_inzet_punten || 0}
-                      onChange={(e) => setFormData({...formData, persoonlijke_inzet_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.persoonlijke_inzet}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.persoonlijke_inzet}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -1076,18 +966,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Flexibiliteit piek- en ziektebezetting</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.piek_ziektebezetting_punten || 0}
-                      onChange={(e) => setFormData({...formData, piek_ziektebezetting_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.piek_ziektebezetting}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.piek_ziektebezetting}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -1102,18 +981,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Stressbestendig</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.omgang_veranderingen_punten || 0}
-                      onChange={(e) => setFormData({...formData, omgang_veranderingen_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.omgang_veranderingen}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.omgang_veranderingen}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -1128,18 +996,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Ziekteverzuim</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.ziekteverzuim_punten || 0}
-                      onChange={(e) => setFormData({...formData, ziekteverzuim_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.ziekteverzuim}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.ziekteverzuim}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -1154,18 +1011,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Samenwerking & houding</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.omgang_collega_punten || 0}
-                      onChange={(e) => setFormData({...formData, omgang_collega_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.omgang_collega}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.omgang_collega}/4</span>
                 </div>
                 <Slider
                   min={0}
@@ -1180,18 +1026,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Nakomen van afspraken</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.nakomen_afspraken_punten || 0}
-                      onChange={(e) => setFormData({...formData, nakomen_afspraken_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.nakomen_afspraken}/10</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.nakomen_afspraken}/4</span>
                 </div>
                 <Slider
                   min={0}
