@@ -955,7 +955,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 </div>
                 <Slider
                   min={0}
-                  max={10}
+                  max={7}
                   step={1}
                   value={[formData.persoonlijke_inzet || 7]}
                   onValueChange={(val) => setFormData({...formData, persoonlijke_inzet: val[0]})}
@@ -970,7 +970,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 </div>
                 <Slider
                   min={0}
-                  max={10}
+                  max={7}
                   step={1}
                   value={[formData.piek_ziektebezetting || 7]}
                   onValueChange={(val) => setFormData({...formData, piek_ziektebezetting: val[0]})}
@@ -1000,7 +1000,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 </div>
                 <Slider
                   min={0}
-                  max={10}
+                  max={5}
                   step={1}
                   value={[formData.ziekteverzuim || 5]}
                   onValueChange={(val) => setFormData({...formData, ziekteverzuim: val[0]})}
