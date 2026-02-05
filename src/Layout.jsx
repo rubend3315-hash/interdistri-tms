@@ -112,7 +112,7 @@ export default function Layout({ children, currentPageName }) {
       main {
         display: block !important;
         margin-left: 0 !important;
-        padding: 0 !important;
+        padding: 10px !important;
       }
       [role="dialog"] {
         position: relative !important;
@@ -120,7 +120,7 @@ export default function Layout({ children, currentPageName }) {
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 !important;
-        padding: 20px !important;
+        padding: 10px !important;
         border: none !important;
         box-shadow: none !important;
         overflow: visible !important;
@@ -130,8 +130,34 @@ export default function Layout({ children, currentPageName }) {
       [role="dialog"] + div {
         display: none !important;
       }
+      [role="dialog"] form {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
       button {
         display: none !important;
+      }
+      input, textarea, select {
+        border: 1px solid #333 !important;
+        background: white !important;
+        color: #000 !important;
+        padding: 4px !important;
+      }
+      [class*="slider"], [class*="range"], [role="slider"] {
+        display: none !important;
+      }
+      label {
+        margin-bottom: 2px !important;
+      }
+      div[class*="space-y"] {
+        margin-bottom: 8px !important;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        margin: 10px 0 5px 0 !important;
+        page-break-after: avoid !important;
+      }
+      .grid {
+        display: block !important;
       }
     }
   `;
