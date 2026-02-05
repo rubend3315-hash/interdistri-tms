@@ -1264,21 +1264,30 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
           </div>
 
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Annuleren
-            </Button>
-            <Button type="submit" disabled={createMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
-              {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Opslaan
-            </Button>
+           <Button type="button" variant="outline" onClick={onClose}>
+             Annuleren
+           </Button>
+           <Button 
+             type="button" 
+             variant="outline" 
+             onClick={() => window.print()}
+             className="text-slate-600"
+           >
+             <Printer className="w-4 h-4 mr-2" />
+             Afdrukken
+           </Button>
+           <Button type="submit" disabled={createMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
+             {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+             Opslaan
+           </Button>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+          </form>
+          </DialogContent>
+          </Dialog>
+          );
+          }
 
-function NoteDialog({ open, onClose, employeeId, employees, user }) {
+          function NoteDialog({ open, onClose, employeeId, employees, user }) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     employee_id: employeeId || '',
