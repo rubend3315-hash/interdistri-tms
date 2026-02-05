@@ -382,6 +382,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     pba_bezorgen: null,
     hitrate: null,
     altijd_op_tijd_depot: null,
+    betwiste_klachten: null,
+    onbetwiste_klachten: null,
+    contract_ratio: null,
     veilig_defensief_rijgedrag: 5,
     naleven_verkeersregels: 5,
     schadevrij_rijden: 5,
@@ -607,6 +610,51 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   step={0.1}
                   value={[formData.altijd_op_tijd_depot || 0]}
                   onValueChange={(val) => setFormData({...formData, altijd_op_tijd_depot: val[0]})}
+                  className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Betwiste klachten</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.betwiste_klachten || 0}%</span>
+                </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.betwiste_klachten || 0]}
+                  onValueChange={(val) => setFormData({...formData, betwiste_klachten: val[0]})}
+                  className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Onbetwiste klachten</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.onbetwiste_klachten || 0}%</span>
+                </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.onbetwiste_klachten || 0]}
+                  onValueChange={(val) => setFormData({...formData, onbetwiste_klachten: val[0]})}
+                  className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Contract Ratio</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.contract_ratio || 0}%</span>
+                </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.contract_ratio || 0]}
+                  onValueChange={(val) => setFormData({...formData, contract_ratio: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
               </div>
