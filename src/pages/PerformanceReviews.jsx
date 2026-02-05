@@ -490,88 +490,83 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               {/* Nieuwe operationele resultaten met percentages */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg">
                 <div>
-                  <Label className="text-xs">TVI Dag (target: 93%)</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      value={formData.tvi_dag || ''}
-                      onChange={(e) => setFormData({...formData, tvi_dag: e.target.value ? parseFloat(e.target.value) : null})}
-                      placeholder="0.0"
-                      className="h-8"
-                    />
-                    <span className="text-xs text-slate-500">%</span>
+                  <div className="flex justify-between mb-1">
+                    <Label className="text-xs">TVI Dag (target: 93%)</Label>
+                    <span className="text-xs font-semibold text-blue-600">{formData.tvi_dag || 0}%</span>
                   </div>
+                  <Input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={formData.tvi_dag || 0}
+                    onChange={(e) => setFormData({...formData, tvi_dag: parseFloat(e.target.value)})}
+                    className="w-full h-1"
+                  />
                 </div>
 
                 <div>
-                  <Label className="text-xs">Uitreik locatie (target: 98%)</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      value={formData.uitreik_locatie || ''}
-                      onChange={(e) => setFormData({...formData, uitreik_locatie: e.target.value ? parseFloat(e.target.value) : null})}
-                      placeholder="0.0"
-                      className="h-8"
-                    />
-                    <span className="text-xs text-slate-500">%</span>
+                  <div className="flex justify-between mb-1">
+                    <Label className="text-xs">Uitreik locatie (target: 98%)</Label>
+                    <span className="text-xs font-semibold text-blue-600">{formData.uitreik_locatie || 0}%</span>
                   </div>
+                  <Input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={formData.uitreik_locatie || 0}
+                    onChange={(e) => setFormData({...formData, uitreik_locatie: parseFloat(e.target.value)})}
+                    className="w-full h-1"
+                  />
                 </div>
 
                 <div>
-                  <Label className="text-xs">Scankwaliteit (target: 99,2%)</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      value={formData.scankwaliteit || ''}
-                      onChange={(e) => setFormData({...formData, scankwaliteit: e.target.value ? parseFloat(e.target.value) : null})}
-                      placeholder="0.0"
-                      className="h-8"
-                    />
-                    <span className="text-xs text-slate-500">%</span>
+                  <div className="flex justify-between mb-1">
+                    <Label className="text-xs">Scankwaliteit (target: 99,2%)</Label>
+                    <span className="text-xs font-semibold text-blue-600">{formData.scankwaliteit || 0}%</span>
                   </div>
+                  <Input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={formData.scankwaliteit || 0}
+                    onChange={(e) => setFormData({...formData, scankwaliteit: parseFloat(e.target.value)})}
+                    className="w-full h-1"
+                  />
                 </div>
 
                 <div>
-                  <Label className="text-xs">PBA-bezorgen (target: 93%)</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      value={formData.pba_bezorgen || ''}
-                      onChange={(e) => setFormData({...formData, pba_bezorgen: e.target.value ? parseFloat(e.target.value) : null})}
-                      placeholder="0.0"
-                      className="h-8"
-                    />
-                    <span className="text-xs text-slate-500">%</span>
+                  <div className="flex justify-between mb-1">
+                    <Label className="text-xs">PBA-bezorgen (target: 93%)</Label>
+                    <span className="text-xs font-semibold text-blue-600">{formData.pba_bezorgen || 0}%</span>
                   </div>
+                  <Input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={formData.pba_bezorgen || 0}
+                    onChange={(e) => setFormData({...formData, pba_bezorgen: parseFloat(e.target.value)})}
+                    className="w-full h-1"
+                  />
                 </div>
 
                 <div>
-                  <Label className="text-xs">Hitrate (target: 97,9%)</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      value={formData.hitrate || ''}
-                      onChange={(e) => setFormData({...formData, hitrate: e.target.value ? parseFloat(e.target.value) : null})}
-                      placeholder="0.0"
-                      className="h-8"
-                    />
-                    <span className="text-xs text-slate-500">%</span>
+                  <div className="flex justify-between mb-1">
+                    <Label className="text-xs">Hitrate (target: 97,9%)</Label>
+                    <span className="text-xs font-semibold text-blue-600">{formData.hitrate || 0}%</span>
                   </div>
+                  <Input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={formData.hitrate || 0}
+                    onChange={(e) => setFormData({...formData, hitrate: parseFloat(e.target.value)})}
+                    className="w-full h-1"
+                  />
                 </div>
               </div>
 
