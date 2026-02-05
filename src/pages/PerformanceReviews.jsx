@@ -876,7 +876,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Omgang collega's</Label>
+                  <Label className="text-xs">Samenwerking & houding</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.omgang_collega}/10</span>
                 </div>
                 <Slider
