@@ -439,7 +439,15 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     if (review) {
       setFormData(review);
     } else if (employeeId) {
-      setFormData(prev => ({ ...prev, employee_id: employeeId }));
+      setFormData(prev => ({ 
+        ...prev, 
+        employee_id: employeeId,
+        tvi_dag: 93,
+        uitreik_locatie: 98,
+        scankwaliteit: 99.2,
+        pba_bezorgen: 93,
+        hitrate: 97.9
+      }));
     }
   }, [review, employeeId]);
 
