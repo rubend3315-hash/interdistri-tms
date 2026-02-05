@@ -440,6 +440,8 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     trede_verhoging_toelichting: '',
     algemene_conclusie: '',
     ontwikkelpunten: '',
+    manager_signature_url: '',
+    employee_signature_url: '',
     status: 'Concept'
   });
 
