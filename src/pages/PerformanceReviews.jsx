@@ -1286,7 +1286,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                     </Badge>
                   </div>
                   {!meetsRequirement && (
-                    <p className="text-sm text-red-600">Minimaal 85% (85 punten) vereist voor trede verhoging</p>
+                    <p className="text-sm text-red-600">Minimaal 85 punten (85%) vereist voor trede verhoging</p>
                   )}
                 </div>
               );
