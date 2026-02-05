@@ -459,7 +459,8 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
         procesverstoring_cat2: 1,
         betwiste_klachten: 10,
         onbetwiste_klachten: 5,
-        contract_ratio: 22.8
+        contract_ratio: 22.8,
+        claims: 1.5
         }));
     }
   }, [review, employeeId]);
@@ -476,6 +477,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
         parseFloat(data.betwiste_klachten_punten || 0) +
         parseFloat(data.onbetwiste_klachten_punten || 0) +
         parseFloat(data.contract_ratio_punten || 0) +
+        parseFloat(data.claims_punten || 0) +
         parseFloat(data.veilig_defensief_rijgedrag_punten || 0) +
         parseFloat(data.naleven_verkeersregels_punten || 0) +
         parseFloat(data.schadevrij_rijden_punten || 0) +
@@ -579,7 +581,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <p className="text-xs text-slate-500">Harde cijfers en efficiëntie van het transportproces</p>
               </div>
               <Badge className="bg-blue-100 text-blue-600">
-                {(formData.tvi_dag_punten || 0) + (formData.uitreik_locatie_punten || 0) + (formData.scankwaliteit_punten || 0) + (formData.pba_bezorgen_punten || 0) + (formData.hitrate_punten || 0) + (formData.procesverstoring_cat1_punten || 0) + (formData.procesverstoring_cat2_punten || 0) + (formData.betwiste_klachten_punten || 0) + (formData.onbetwiste_klachten_punten || 0) + (formData.contract_ratio_punten || 0)} pnt
+                {(formData.tvi_dag_punten || 0) + (formData.uitreik_locatie_punten || 0) + (formData.scankwaliteit_punten || 0) + (formData.pba_bezorgen_punten || 0) + (formData.hitrate_punten || 0) + (formData.procesverstoring_cat1_punten || 0) + (formData.procesverstoring_cat2_punten || 0) + (formData.betwiste_klachten_punten || 0) + (formData.onbetwiste_klachten_punten || 0) + (formData.contract_ratio_punten || 0) + (formData.claims_punten || 0)} pnt
               </Badge>
             </div>
             
@@ -843,8 +845,34 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
               </div>
-            </div>
-          </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Claims (target: 1,5%)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={formData.claims_punten || 0}
+                      onChange={(e) => setFormData({...formData, claims_punten: parseFloat(e.target.value) || 0})}
+                      className="w-16 h-6 text-xs text-center"
+                    />
+                    <span className="text-xs text-slate-500">pnt</span>
+                    <span className="text-xs font-semibold text-blue-600">{formData.claims || 0}%</span>
+                  </div>
+                </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.claims || 0]}
+                  onValueChange={(val) => setFormData({...formData, claims: val[0]})}
+                  className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
+                />
+              </div>
+              </div>
+              </div>
 
           {/* Categorie 2: Vaardigheden en Verantwoord Gebruik van het Voertuig */}
           <div className="border-t pt-4 mt-4">
@@ -1300,6 +1328,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 parseFloat(formData.betwiste_klachten_punten || 0) +
                 parseFloat(formData.onbetwiste_klachten_punten || 0) +
                 parseFloat(formData.contract_ratio_punten || 0) +
+                parseFloat(formData.claims_punten || 0) +
                 parseFloat(formData.veilig_defensief_rijgedrag_punten || 0) +
                 parseFloat(formData.naleven_verkeersregels_punten || 0) +
                 parseFloat(formData.schadevrij_rijden_punten || 0) +
