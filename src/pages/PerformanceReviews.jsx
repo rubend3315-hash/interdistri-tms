@@ -419,13 +419,13 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     zuinig_verantwoord_rijgedrag_punten: 4,
     bandenslijtage: 2,
     bandenslijtage_punten: 4,
-    persoonlijke_inzet: 2,
+    persoonlijke_inzet: 7,
     persoonlijke_inzet_punten: 4,
-    piek_ziektebezetting: 2,
+    piek_ziektebezetting: 7,
     piek_ziektebezetting_punten: 4,
     omgang_veranderingen: 2,
     omgang_veranderingen_punten: 4,
-    ziekteverzuim: 2,
+    ziekteverzuim: 5,
     ziekteverzuim_punten: 4,
     omgang_collega: 2,
     omgang_collega_punten: 4,
@@ -955,9 +955,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 </div>
                 <Slider
                   min={0}
-                  max={4}
+                  max={10}
                   step={1}
-                  value={[formData.persoonlijke_inzet || 2]}
+                  value={[formData.persoonlijke_inzet || 7]}
                   onValueChange={(val) => setFormData({...formData, persoonlijke_inzet: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -970,9 +970,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 </div>
                 <Slider
                   min={0}
-                  max={4}
+                  max={10}
                   step={1}
-                  value={[formData.piek_ziektebezetting || 2]}
+                  value={[formData.piek_ziektebezetting || 7]}
                   onValueChange={(val) => setFormData({...formData, piek_ziektebezetting: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -1000,9 +1000,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 </div>
                 <Slider
                   min={0}
-                  max={4}
+                  max={10}
                   step={1}
-                  value={[formData.ziekteverzuim || 2]}
+                  value={[formData.ziekteverzuim || 5]}
                   onValueChange={(val) => setFormData({...formData, ziekteverzuim: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
