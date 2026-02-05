@@ -209,10 +209,10 @@ export default function PerformanceReviewsPage() {
                                       <p className="text-sm font-semibold text-slate-900">{review.hitrate}%</p>
                                     </div>
                                   )}
-                                  {review.procesverstoringen && (
+                                  {review.procesverstoring_cat1 && (
                                     <div>
-                                      <p className="text-xs text-slate-500">Procesverstoringen</p>
-                                      <p className="text-sm font-semibold text-slate-900">{review.procesverstoringen}%</p>
+                                      <p className="text-xs text-slate-500">Procesverstoring cat. 1</p>
+                                      <p className="text-sm font-semibold text-slate-900">{review.procesverstoring_cat1}%</p>
                                     </div>
                                   )}
                                 </div>
@@ -386,8 +386,8 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     pba_bezorgen_punten: 4,
     hitrate: 97.9,
     hitrate_punten: 4,
-    procesverstoringen: null,
-    procesverstoringen_punten: 5,
+    procesverstoring_cat1: null,
+    procesverstoring_cat1_punten: 5,
     betwiste_klachten: null,
     betwiste_klachten_punten: 5,
     onbetwiste_klachten: null,
@@ -458,7 +458,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
         parseFloat(data.scankwaliteit_punten || 0) +
         parseFloat(data.pba_bezorgen_punten || 0) +
         parseFloat(data.hitrate_punten || 0) +
-        parseFloat(data.procesverstoringen_punten || 0) +
+        parseFloat(data.procesverstoring_cat1_punten || 0) +
         parseFloat(data.betwiste_klachten_punten || 0) +
         parseFloat(data.onbetwiste_klachten_punten || 0) +
         parseFloat(data.contract_ratio_punten || 0) +
@@ -565,7 +565,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <p className="text-xs text-slate-500">Harde cijfers en efficiëntie van het transportproces</p>
               </div>
               <Badge className="bg-blue-100 text-blue-600">
-                {(formData.tvi_dag_punten || 0) + (formData.uitreik_locatie_punten || 0) + (formData.scankwaliteit_punten || 0) + (formData.pba_bezorgen_punten || 0) + (formData.hitrate_punten || 0) + (formData.procesverstoringen_punten || 0) + (formData.betwiste_klachten_punten || 0) + (formData.onbetwiste_klachten_punten || 0) + (formData.contract_ratio_punten || 0)} pnt
+                {(formData.tvi_dag_punten || 0) + (formData.uitreik_locatie_punten || 0) + (formData.scankwaliteit_punten || 0) + (formData.pba_bezorgen_punten || 0) + (formData.hitrate_punten || 0) + (formData.procesverstoring_cat1_punten || 0) + (formData.betwiste_klachten_punten || 0) + (formData.onbetwiste_klachten_punten || 0) + (formData.contract_ratio_punten || 0)} pnt
               </Badge>
             </div>
             
@@ -702,26 +702,26 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Procesverstoringen</Label>
+                  <Label className="text-xs">Procesverstoring cat. 1</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
                       min="0"
                       max="100"
-                      value={formData.procesverstoringen_punten || 0}
-                      onChange={(e) => setFormData({...formData, procesverstoringen_punten: parseFloat(e.target.value) || 0})}
+                      value={formData.procesverstoring_cat1_punten || 0}
+                      onChange={(e) => setFormData({...formData, procesverstoring_cat1_punten: parseFloat(e.target.value) || 0})}
                       className="w-16 h-6 text-xs text-center"
                     />
                     <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.procesverstoringen || 0}%</span>
+                    <span className="text-xs font-semibold text-blue-600">{formData.procesverstoring_cat1 || 0}%</span>
                   </div>
                 </div>
                 <Slider
                   min={0}
                   max={100}
                   step={0.1}
-                  value={[formData.procesverstoringen || 0]}
-                  onValueChange={(val) => setFormData({...formData, procesverstoringen: val[0]})}
+                  value={[formData.procesverstoring_cat1 || 0]}
+                  onValueChange={(val) => setFormData({...formData, procesverstoring_cat1: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
               </div>
@@ -1255,7 +1255,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 parseFloat(formData.scankwaliteit_punten || 0) +
                 parseFloat(formData.pba_bezorgen_punten || 0) +
                 parseFloat(formData.hitrate_punten || 0) +
-                parseFloat(formData.procesverstoringen_punten || 0) +
+                parseFloat(formData.procesverstoring_cat1_punten || 0) +
                 parseFloat(formData.betwiste_klachten_punten || 0) +
                 parseFloat(formData.onbetwiste_klachten_punten || 0) +
                 parseFloat(formData.contract_ratio_punten || 0) +
