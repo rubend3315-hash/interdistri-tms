@@ -219,7 +219,7 @@ export default function PerformanceReviewsPage() {
                                 <p className="text-lg font-semibold text-slate-900">{review.persoonlijke_inzet}/10</p>
                               </div>
                               <div>
-                                <p className="text-xs text-slate-500">KPI PostNL</p>
+                                <p className="text-xs text-slate-500">Op tijd te laat Depot</p>
                                 <p className="text-lg font-semibold text-slate-900">{review.kpi_postnl}/10</p>
                               </div>
                               <div>
@@ -574,7 +574,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <div className="flex justify-between mb-1">
-                    <Label className="text-xs">KPI PostNL</Label>
+                    <Label className="text-xs">Op tijd te laat Depot</Label>
                     <span className="text-xs font-semibold text-blue-600">{formData.kpi_postnl}/10</span>
                   </div>
                   <Input
