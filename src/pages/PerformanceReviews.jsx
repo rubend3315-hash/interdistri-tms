@@ -455,7 +455,22 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
       betwiste_klachten_punten: calculateKPIPunten(prev.betwiste_klachten, 10, false),
       onbetwiste_klachten_punten: calculateKPIPunten(prev.onbetwiste_klachten, 5, false),
       contract_ratio_punten: calculateKPIPunten(prev.contract_ratio, 22.8, true),
-      claims_punten: calculateKPIPunten(prev.claims, 1.5, false)
+      claims_punten: calculateKPIPunten(prev.claims, 1.5, false),
+      veilig_defensief_rijgedrag_punten: prev.veilig_defensief_rijgedrag || 0,
+      naleven_verkeersregels_punten: prev.naleven_verkeersregels || 0,
+      schadevrij_rijden_punten: prev.schadevrij_rijden || 0,
+      melden_schade_incidenten_punten: prev.melden_schade_incidenten || 0,
+      representatief_gebruik_voertuig_punten: prev.representatief_gebruik_voertuig || 0,
+      periodieke_voertuig_controle_punten: prev.periodieke_voertuig_controle || 0,
+      netheid_onderhoud_voertuig_punten: prev.netheid_onderhoud_voertuig || 0,
+      zuinig_verantwoord_rijgedrag_punten: prev.zuinig_verantwoord_rijgedrag || 0,
+      bandenslijtage_punten: prev.bandenslijtage || 0,
+      persoonlijke_inzet_punten: prev.persoonlijke_inzet || 0,
+      piek_ziektebezetting_punten: prev.piek_ziektebezetting || 0,
+      omgang_veranderingen_punten: prev.omgang_veranderingen || 0,
+      ziekteverzuim_punten: prev.ziekteverzuim || 0,
+      omgang_collega_punten: prev.omgang_collega || 0,
+      nakomen_afspraken_punten: prev.nakomen_afspraken || 0
     }));
   }, [
     formData.tvi_dag,
@@ -468,7 +483,22 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     formData.betwiste_klachten,
     formData.onbetwiste_klachten,
     formData.contract_ratio,
-    formData.claims
+    formData.claims,
+    formData.veilig_defensief_rijgedrag,
+    formData.naleven_verkeersregels,
+    formData.schadevrij_rijden,
+    formData.melden_schade_incidenten,
+    formData.representatief_gebruik_voertuig,
+    formData.periodieke_voertuig_controle,
+    formData.netheid_onderhoud_voertuig,
+    formData.zuinig_verantwoord_rijgedrag,
+    formData.bandenslijtage,
+    formData.persoonlijke_inzet,
+    formData.piek_ziektebezetting,
+    formData.omgang_veranderingen,
+    formData.ziekteverzuim,
+    formData.omgang_collega,
+    formData.nakomen_afspraken
   ]);
 
   React.useEffect(() => {
