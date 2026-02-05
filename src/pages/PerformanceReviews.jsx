@@ -401,7 +401,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     omgang_collega: 5,
     nakomen_afspraken: 5,
     scholingsbehoeften: '',
-    ambitie: '',
+    ambitie: 'Geen andere functie',
     werk_prive_balans: '',
     terugblik_vorige_periode: '',
     nieuwe_doelen: '',
@@ -927,12 +927,15 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
               <div>
                 <Label>Ambitie en doorgroeimogelijkheden</Label>
-                <Textarea
-                  value={formData.ambitie}
-                  onChange={(e) => setFormData({...formData, ambitie: e.target.value})}
-                  rows={2}
-                  placeholder="Wens om door te groeien naar andere rol..."
-                />
+                <Select value={formData.ambitie} onValueChange={(val) => setFormData({...formData, ambitie: val})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Andere functie">Andere functie</SelectItem>
+                    <SelectItem value="Geen andere functie">Geen andere functie</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
