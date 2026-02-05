@@ -154,13 +154,17 @@ Deno.serve(async (req) => {
 
     // Section 3: Persoonlijke inzet
     addSection('3. Persoonlijke Inzet, Samenwerking en Wederkerigheid');
-    if (review.persoonlijke_inzet) addLabelValue('Inzet & betrokkenheid', `${review.persoonlijke_inzet}/7`);
-    if (review.piek_ziektebezetting) addLabelValue('Flexibiliteit', `${review.piek_ziektebezetting}/7`);
-    if (review.omgang_veranderingen) addLabelValue('Omgang met veranderingen', `${review.omgang_veranderingen}/4`);
-    if (review.ziekteverzuim) addLabelValue('Ziekteverzuim', `${review.ziekteverzuim}/5`);
-    if (review.omgang_collega) addLabelValue('Samenwerking & houding', `${review.omgang_collega}/4`);
-    if (review.nakomen_afspraken) addLabelValue('Nakomen van afspraken', `${review.nakomen_afspraken}/4`);
-    yPosition += 2;
+    const personalItems = [
+      ...(review.persoonlijke_inzet ? [{ label: 'Inzet & betrokkenheid', value: `${review.persoonlijke_inzet}/7` }] : []),
+      ...(review.piek_ziektebezetting ? [{ label: 'Flexibiliteit', value: `${review.piek_ziektebezetting}/7` }] : []),
+      ...(review.omgang_veranderingen ? [{ label: 'Omgang veranderingen', value: `${review.omgang_veranderingen}/4` }] : []),
+      ...(review.ziekteverzuim ? [{ label: 'Ziekteverzuim', value: `${review.ziekteverzuim}/5` }] : []),
+      ...(review.omgang_collega ? [{ label: 'Samenwerking', value: `${review.omgang_collega}/4` }] : []),
+      ...(review.nakomen_afspraken ? [{ label: 'Nakomen afspraken', value: `${review.nakomen_afspraken}/4` }] : []),
+    ];
+    if (personalItems.length > 0) {
+      addGrid(personalItems, 2);
+    }
 
     // Gemiddelde score
     if (review.gemiddelde_score) {
