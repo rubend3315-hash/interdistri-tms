@@ -208,6 +208,12 @@ export default function PerformanceReviewsPage() {
                                       <p className="text-sm font-semibold text-slate-900">{review.hitrate}%</p>
                                     </div>
                                   )}
+                                  {review.altijd_op_tijd_depot && (
+                                    <div>
+                                      <p className="text-xs text-slate-500">Op tijd depot</p>
+                                      <p className="text-sm font-semibold text-slate-900">{review.altijd_op_tijd_depot}%</p>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             )}
@@ -360,6 +366,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     scankwaliteit: null,
     pba_bezorgen: null,
     hitrate: null,
+    altijd_op_tijd_depot: null,
     persoonlijke_inzet: 5,
     piek_ziektebezetting: 5,
     omgang_veranderingen: 5,
@@ -565,6 +572,22 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                     step="0.1"
                     value={formData.hitrate || 0}
                     onChange={(e) => setFormData({...formData, hitrate: parseFloat(e.target.value)})}
+                    className="w-full h-1"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <Label className="text-xs">Altijd op tijd op depot</Label>
+                    <span className="text-xs font-semibold text-blue-600">{formData.altijd_op_tijd_depot || 0}%</span>
+                  </div>
+                  <Input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={formData.altijd_op_tijd_depot || 0}
+                    onChange={(e) => setFormData({...formData, altijd_op_tijd_depot: parseFloat(e.target.value)})}
                     className="w-full h-1"
                   />
                 </div>
