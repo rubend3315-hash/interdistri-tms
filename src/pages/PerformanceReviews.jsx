@@ -848,7 +848,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Claims (target: 1,5%)</Label>
+                  <Label className="text-xs">Claims (target ratio: 1,5)</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -859,7 +859,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                       className="w-16 h-6 text-xs text-center"
                     />
                     <span className="text-xs text-slate-500">pnt</span>
-                    <span className="text-xs font-semibold text-blue-600">{formData.claims || 0}%</span>
+                    <span className="text-xs font-semibold text-blue-600">ratio {formData.claims || 0}</span>
                   </div>
                 </div>
                 <Slider
