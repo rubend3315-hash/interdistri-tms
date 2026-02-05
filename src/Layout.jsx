@@ -112,7 +112,8 @@ export default function Layout({ children, currentPageName }) {
       main {
         display: block !important;
         margin-left: 0 !important;
-        padding: 10px !important;
+        margin-top: -40px !important;
+        padding: 5px !important;
       }
       [role="dialog"] {
         position: relative !important;
@@ -120,12 +121,15 @@ export default function Layout({ children, currentPageName }) {
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 !important;
-        padding: 10px !important;
+        padding: 5px !important;
         border: none !important;
         box-shadow: none !important;
         overflow: visible !important;
         transform: none !important;
         background: white !important;
+      }
+      [role="dialog"] > div:first-child {
+        display: none !important;
       }
       [role="dialog"] + div {
         display: none !important;
@@ -141,23 +145,30 @@ export default function Layout({ children, currentPageName }) {
         border: 1px solid #333 !important;
         background: white !important;
         color: #000 !important;
-        padding: 4px !important;
+        padding: 3px !important;
+        font-size: 10pt !important;
       }
       [class*="slider"], [class*="range"], [role="slider"] {
         display: none !important;
       }
       label {
-        margin-bottom: 2px !important;
+        margin-bottom: 1px !important;
+        font-size: 9pt !important;
       }
       div[class*="space-y"] {
-        margin-bottom: 8px !important;
+        margin-bottom: 5px !important;
       }
       h1, h2, h3, h4, h5, h6 {
-        margin: 10px 0 5px 0 !important;
+        margin: 8px 0 3px 0 !important;
         page-break-after: avoid !important;
+        font-size: 11pt !important;
       }
       .grid {
         display: block !important;
+      }
+      p {
+        margin: 0 !important;
+        font-size: 9pt !important;
       }
     }
   `;
