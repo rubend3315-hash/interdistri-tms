@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Plus, FileText, MessageSquare, Eye, Loader2, TrendingUp, Award, Trash2 } from "lucide-react";
+import { Plus, FileText, MessageSquare, Eye, Loader2, TrendingUp, Award, Trash2, Printer } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 import SignaturePad from "@/components/ui/signature-pad";
