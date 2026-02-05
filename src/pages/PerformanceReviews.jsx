@@ -379,9 +379,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
   const queryClient = useQueryClient();
   const calculateKPIPunten = (value, target, higherIsBetter = true) => {
     if (higherIsBetter) {
-      return value >= target ? 2 : 0;
+      return value >= target ? 3 : 0;
     } else {
-      return value <= target ? 2 : 0;
+      return value <= target ? 3 : 0;
     }
   };
 
