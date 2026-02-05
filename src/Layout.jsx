@@ -100,43 +100,38 @@ export default function Layout({ children, currentPageName }) {
 
   const printStyles = `
     @media print {
-      * {
-        margin: 0;
-        padding: 0;
-      }
       body, html {
         margin: 0;
         padding: 0;
         width: 100%;
-        height: 100%;
+        height: auto;
       }
-      nav, aside, .lg\\:ml-72, .pt-16, button, [class*="justify-end"] button:first-child, [class*="justify-end"] button:nth-child(2) {
+      nav, aside, .lg\\:ml-72 {
         display: none !important;
-      }
-      [role="dialog"] {
-        position: static !important;
-        inset: auto !important;
-        max-width: 100% !important;
-        max-height: none !important;
-        border: none !important;
-        box-shadow: none !important;
-        overflow: visible !important;
-        display: block !important;
-      }
-      [role="dialog"] > div {
-        margin: 0 !important;
-        padding: 20px !important;
       }
       main {
         display: block !important;
         margin-left: 0 !important;
         padding: 0 !important;
       }
-      form {
-        page-break-inside: avoid;
+      [role="dialog"] {
+        position: relative !important;
+        inset: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 20px !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        transform: none !important;
+        background: white !important;
       }
-      h1, h2, h3, h4, h5, h6 {
-        page-break-after: avoid;
+      [role="dialog"] + div {
+        display: none !important;
+      }
+      button {
+        display: none !important;
       }
     }
   `;
