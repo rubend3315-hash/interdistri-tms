@@ -463,6 +463,53 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <style>{`
+          input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+          }
+          
+          input[type="range"]::-webkit-slider-track {
+            background: #e2e8f0;
+            height: 6px;
+            border-radius: 3px;
+          }
+          
+          input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -5px;
+            background-color: #2563eb;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          
+          input[type="range"]::-moz-range-track {
+            background: #e2e8f0;
+            height: 6px;
+            border-radius: 3px;
+          }
+          
+          input[type="range"]::-moz-range-thumb {
+            background-color: #2563eb;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          
+          input[type="range"]::-moz-range-progress {
+            background-color: #2563eb;
+            height: 6px;
+            border-radius: 3px;
+          }
+        `}</style>
         <DialogHeader>
           <DialogTitle>{review ? 'Beoordeling bewerken' : 'Nieuwe beoordeling'}</DialogTitle>
         </DialogHeader>
@@ -526,12 +573,13 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">TVI Dag (target: 93%)</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.tvi_dag || 0}%</span>
                 </div>
-                <Slider
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={[formData.tvi_dag || 0]}
-                  onValueChange={(val) => setFormData({...formData, tvi_dag: val[0]})}
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={formData.tvi_dag || 0}
+                  onChange={(e) => setFormData({...formData, tvi_dag: parseFloat(e.target.value)})}
                   className="w-full"
                 />
               </div>
@@ -541,12 +589,13 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Uitreik locatie (target: 98%)</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.uitreik_locatie || 0}%</span>
                 </div>
-                <Slider
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={[formData.uitreik_locatie || 0]}
-                  onValueChange={(val) => setFormData({...formData, uitreik_locatie: val[0]})}
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={formData.uitreik_locatie || 0}
+                  onChange={(e) => setFormData({...formData, uitreik_locatie: parseFloat(e.target.value)})}
                   className="w-full"
                 />
               </div>
@@ -556,12 +605,13 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Scankwaliteit (target: 99,2%)</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.scankwaliteit || 0}%</span>
                 </div>
-                <Slider
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={[formData.scankwaliteit || 0]}
-                  onValueChange={(val) => setFormData({...formData, scankwaliteit: val[0]})}
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={formData.scankwaliteit || 0}
+                  onChange={(e) => setFormData({...formData, scankwaliteit: parseFloat(e.target.value)})}
                   className="w-full"
                 />
               </div>
@@ -571,12 +621,13 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">PBA-bezorgen (target: 93%)</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.pba_bezorgen || 0}%</span>
                 </div>
-                <Slider
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={[formData.pba_bezorgen || 0]}
-                  onValueChange={(val) => setFormData({...formData, pba_bezorgen: val[0]})}
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={formData.pba_bezorgen || 0}
+                  onChange={(e) => setFormData({...formData, pba_bezorgen: parseFloat(e.target.value)})}
                   className="w-full"
                 />
               </div>
@@ -586,12 +637,13 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Hitrate (target: 97,9%)</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.hitrate || 0}%</span>
                 </div>
-                <Slider
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={[formData.hitrate || 0]}
-                  onValueChange={(val) => setFormData({...formData, hitrate: val[0]})}
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={formData.hitrate || 0}
+                  onChange={(e) => setFormData({...formData, hitrate: parseFloat(e.target.value)})}
                   className="w-full"
                 />
               </div>
@@ -601,12 +653,13 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Altijd op tijd op depot</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.altijd_op_tijd_depot || 0}%</span>
                 </div>
-                <Slider
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={[formData.altijd_op_tijd_depot || 0]}
-                  onValueChange={(val) => setFormData({...formData, altijd_op_tijd_depot: val[0]})}
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={formData.altijd_op_tijd_depot || 0}
+                  onChange={(e) => setFormData({...formData, altijd_op_tijd_depot: parseFloat(e.target.value)})}
                   className="w-full"
                 />
               </div>
@@ -626,14 +679,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Veilig en defensief rijgedrag</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.veilig_defensief_rijgedrag}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.veilig_defensief_rijgedrag}
-                  onChange={(e) => setFormData({...formData, veilig_defensief_rijgedrag: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, veilig_defensief_rijgedrag: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -642,14 +695,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Naleven verkeersregels en bedrijfsrichtlijnen</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.naleven_verkeersregels}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.naleven_verkeersregels}
-                  onChange={(e) => setFormData({...formData, naleven_verkeersregels: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, naleven_verkeersregels: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -658,14 +711,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Schadevrij rijden / schadehistorie</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.schadevrij_rijden}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.schadevrij_rijden}
-                  onChange={(e) => setFormData({...formData, schadevrij_rijden: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, schadevrij_rijden: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -674,14 +727,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Correct en tijdig melden van schade en incidenten</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.melden_schade_incidenten}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.melden_schade_incidenten}
-                  onChange={(e) => setFormData({...formData, melden_schade_incidenten: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, melden_schade_incidenten: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -690,14 +743,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Representatief gebruik van het voertuig</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.representatief_gebruik_voertuig}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.representatief_gebruik_voertuig}
-                  onChange={(e) => setFormData({...formData, representatief_gebruik_voertuig: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, representatief_gebruik_voertuig: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -706,14 +759,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Periodieke voertuig controle</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.periodieke_voertuig_controle}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.periodieke_voertuig_controle}
-                  onChange={(e) => setFormData({...formData, periodieke_voertuig_controle: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, periodieke_voertuig_controle: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -722,14 +775,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Netheid en onderhoud van het voertuig</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.netheid_onderhoud_voertuig}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.netheid_onderhoud_voertuig}
-                  onChange={(e) => setFormData({...formData, netheid_onderhoud_voertuig: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, netheid_onderhoud_voertuig: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -738,14 +791,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Zuinig en verantwoord rijgedrag</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.zuinig_verantwoord_rijgedrag}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.zuinig_verantwoord_rijgedrag}
-                  onChange={(e) => setFormData({...formData, zuinig_verantwoord_rijgedrag: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, zuinig_verantwoord_rijgedrag: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -754,14 +807,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Bandenslijtage</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.bandenslijtage}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.bandenslijtage}
-                  onChange={(e) => setFormData({...formData, bandenslijtage: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, bandenslijtage: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
             </div>
@@ -780,14 +833,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Persoonlijke inzet</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.persoonlijke_inzet}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.persoonlijke_inzet}
-                  onChange={(e) => setFormData({...formData, persoonlijke_inzet: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, persoonlijke_inzet: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -796,14 +849,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Piek- en ziektebezetting</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.piek_ziektebezetting}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.piek_ziektebezetting}
-                  onChange={(e) => setFormData({...formData, piek_ziektebezetting: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, piek_ziektebezetting: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -812,14 +865,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Stressbestendig</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.omgang_veranderingen}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.omgang_veranderingen}
-                  onChange={(e) => setFormData({...formData, omgang_veranderingen: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, omgang_veranderingen: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -828,14 +881,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Ziekteverzuim</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.ziekteverzuim}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.ziekteverzuim}
-                  onChange={(e) => setFormData({...formData, ziekteverzuim: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, ziekteverzuim: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
 
@@ -844,14 +897,14 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   <Label className="text-xs">Omgang collega's</Label>
                   <span className="text-xs font-semibold text-blue-600">{formData.omgang_collega}/10</span>
                 </div>
-                <Input
+                <input
                   type="range"
                   min="1"
                   max="10"
                   step="1"
                   value={formData.omgang_collega}
-                  onChange={(e) => setFormData({...formData, omgang_collega: e.target.value})}
-                  className="w-full h-1"
+                  onChange={(e) => setFormData({...formData, omgang_collega: parseFloat(e.target.value)})}
+                  className="w-full"
                 />
               </div>
             </div>
