@@ -96,6 +96,12 @@ Deno.serve(async (req) => {
     if (review.scankwaliteit) addLabelValue('Scankwaliteit (target: 99,2%)', `${review.scankwaliteit}%`);
     if (review.pba_bezorgen) addLabelValue('PBA-bezorgen (target: 93%)', `${review.pba_bezorgen}%`);
     if (review.hitrate) addLabelValue('Hitrate (target: 97,9%)', `${review.hitrate}%`);
+    if (review.procesverstoring_cat1) addLabelValue('Procesverstoring cat. 1 (target: 3)', `${review.procesverstoring_cat1}`);
+    if (review.procesverstoring_cat2) addLabelValue('Procesverstoring cat. 2 (target: 1)', `${review.procesverstoring_cat2}`);
+    if (review.betwiste_klachten) addLabelValue('Betwiste klachten (target: 10)', `${review.betwiste_klachten}`);
+    if (review.onbetwiste_klachten) addLabelValue('Onbetwiste klachten (target: 5)', `${review.onbetwiste_klachten}`);
+    if (review.contract_ratio) addLabelValue('Contact ratio (target: 22,8)', `${review.contract_ratio}`);
+    if (review.claims) addLabelValue('Claims (target: 1,5)', `${review.claims}`);
     yPosition += 2;
 
     // Section 2: Vaardigheden
@@ -103,15 +109,22 @@ Deno.serve(async (req) => {
     if (review.veilig_defensief_rijgedrag) addLabelValue('Veilig en defensief rijgedrag', `${review.veilig_defensief_rijgedrag}/4`);
     if (review.naleven_verkeersregels) addLabelValue('Naleven verkeersregels', `${review.naleven_verkeersregels}/4`);
     if (review.schadevrij_rijden) addLabelValue('Schadevrij rijden', `${review.schadevrij_rijden}/4`);
+    if (review.melden_schade_incidenten) addLabelValue('Melden schade en incidenten', `${review.melden_schade_incidenten}/4`);
+    if (review.representatief_gebruik_voertuig) addLabelValue('Representatief gebruik voertuig', `${review.representatief_gebruik_voertuig}/4`);
+    if (review.periodieke_voertuig_controle) addLabelValue('Periodieke voertuig controle', `${review.periodieke_voertuig_controle}/4`);
     if (review.netheid_onderhoud_voertuig) addLabelValue('Netheid en onderhoud voertuig', `${review.netheid_onderhoud_voertuig}/4`);
+    if (review.zuinig_verantwoord_rijgedrag) addLabelValue('Zuinig en verantwoord rijgedrag', `${review.zuinig_verantwoord_rijgedrag}/4`);
+    if (review.bandenslijtage) addLabelValue('Bandenslijtage', `${review.bandenslijtage}/4`);
     yPosition += 2;
 
     // Section 3: Persoonlijke inzet
     addSection('3. Persoonlijke Inzet, Samenwerking en Wederkerigheid');
     if (review.persoonlijke_inzet) addLabelValue('Inzet & betrokkenheid', `${review.persoonlijke_inzet}/7`);
     if (review.piek_ziektebezetting) addLabelValue('Flexibiliteit', `${review.piek_ziektebezetting}/7`);
-    if (review.omgang_collega) addLabelValue('Samenwerking & houding', `${review.omgang_collega}/4`);
+    if (review.omgang_veranderingen) addLabelValue('Omgang met veranderingen', `${review.omgang_veranderingen}/4`);
     if (review.ziekteverzuim) addLabelValue('Ziekteverzuim', `${review.ziekteverzuim}/5`);
+    if (review.omgang_collega) addLabelValue('Samenwerking & houding', `${review.omgang_collega}/4`);
+    if (review.nakomen_afspraken) addLabelValue('Nakomen van afspraken', `${review.nakomen_afspraken}/4`);
     yPosition += 2;
 
     // Gemiddelde score
