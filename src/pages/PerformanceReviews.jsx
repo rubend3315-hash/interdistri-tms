@@ -520,104 +520,95 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             </h3>
             <p className="text-xs text-slate-500 mb-3">Harde cijfers en efficiëntie van het transportproces</p>
             
-            <div className="space-y-4">
-              {/* Nieuwe operationele resultaten met percentages */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <Label className="text-xs">TVI Dag (target: 93%)</Label>
-                    <span className="text-xs font-semibold text-blue-600">{formData.tvi_dag || 0}%</span>
-                  </div>
-                  <Input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={formData.tvi_dag || 0}
-                    onChange={(e) => setFormData({...formData, tvi_dag: parseFloat(e.target.value)})}
-                    className="w-full h-1"
-                  />
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">TVI Dag (target: 93%)</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.tvi_dag || 0}%</span>
                 </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.tvi_dag || 0]}
+                  onValueChange={(val) => setFormData({...formData, tvi_dag: val[0]})}
+                  className="w-full"
+                />
+              </div>
 
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <Label className="text-xs">Uitreik locatie (target: 98%)</Label>
-                    <span className="text-xs font-semibold text-blue-600">{formData.uitreik_locatie || 0}%</span>
-                  </div>
-                  <Input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={formData.uitreik_locatie || 0}
-                    onChange={(e) => setFormData({...formData, uitreik_locatie: parseFloat(e.target.value)})}
-                    className="w-full h-1"
-                  />
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Uitreik locatie (target: 98%)</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.uitreik_locatie || 0}%</span>
                 </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.uitreik_locatie || 0]}
+                  onValueChange={(val) => setFormData({...formData, uitreik_locatie: val[0]})}
+                  className="w-full"
+                />
+              </div>
 
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <Label className="text-xs">Scankwaliteit (target: 99,2%)</Label>
-                    <span className="text-xs font-semibold text-blue-600">{formData.scankwaliteit || 0}%</span>
-                  </div>
-                  <Input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={formData.scankwaliteit || 0}
-                    onChange={(e) => setFormData({...formData, scankwaliteit: parseFloat(e.target.value)})}
-                    className="w-full h-1"
-                  />
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Scankwaliteit (target: 99,2%)</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.scankwaliteit || 0}%</span>
                 </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.scankwaliteit || 0]}
+                  onValueChange={(val) => setFormData({...formData, scankwaliteit: val[0]})}
+                  className="w-full"
+                />
+              </div>
 
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <Label className="text-xs">PBA-bezorgen (target: 93%)</Label>
-                    <span className="text-xs font-semibold text-blue-600">{formData.pba_bezorgen || 0}%</span>
-                  </div>
-                  <Input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={formData.pba_bezorgen || 0}
-                    onChange={(e) => setFormData({...formData, pba_bezorgen: parseFloat(e.target.value)})}
-                    className="w-full h-1"
-                  />
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">PBA-bezorgen (target: 93%)</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.pba_bezorgen || 0}%</span>
                 </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.pba_bezorgen || 0]}
+                  onValueChange={(val) => setFormData({...formData, pba_bezorgen: val[0]})}
+                  className="w-full"
+                />
+              </div>
 
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <Label className="text-xs">Hitrate (target: 97,9%)</Label>
-                    <span className="text-xs font-semibold text-blue-600">{formData.hitrate || 0}%</span>
-                  </div>
-                  <Input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={formData.hitrate || 0}
-                    onChange={(e) => setFormData({...formData, hitrate: parseFloat(e.target.value)})}
-                    className="w-full h-1"
-                  />
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Hitrate (target: 97,9%)</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.hitrate || 0}%</span>
                 </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.hitrate || 0]}
+                  onValueChange={(val) => setFormData({...formData, hitrate: val[0]})}
+                  className="w-full"
+                />
+              </div>
 
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <Label className="text-xs">Altijd op tijd op depot</Label>
-                    <span className="text-xs font-semibold text-blue-600">{formData.altijd_op_tijd_depot || 0}%</span>
-                  </div>
-                  <Input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={formData.altijd_op_tijd_depot || 0}
-                    onChange={(e) => setFormData({...formData, altijd_op_tijd_depot: parseFloat(e.target.value)})}
-                    className="w-full h-1"
-                  />
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Altijd op tijd op depot</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.altijd_op_tijd_depot || 0}%</span>
                 </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={[formData.altijd_op_tijd_depot || 0]}
+                  onValueChange={(val) => setFormData({...formData, altijd_op_tijd_depot: val[0]})}
+                  className="w-full"
+                />
               </div>
             </div>
           </div>
