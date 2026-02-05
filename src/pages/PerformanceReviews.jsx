@@ -396,7 +396,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     procesverstoring_cat1_punten: 5,
     procesverstoring_cat2: 1,
     procesverstoring_cat2_punten: 5,
-    betwiste_klachten: null,
+    betwiste_klachten: 10,
     betwiste_klachten_punten: 5,
     onbetwiste_klachten: null,
     onbetwiste_klachten_punten: 5,
@@ -456,7 +456,8 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
         pba_bezorgen: 93,
         hitrate: 97.9,
         procesverstoring_cat1: 3,
-        procesverstoring_cat2: 1
+        procesverstoring_cat2: 1,
+        betwiste_klachten: 10
         }));
     }
   }, [review, employeeId]);
@@ -765,7 +766,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Betwiste klachten</Label>
+                  <Label className="text-xs">Betwiste klachten (target: 10%)</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
