@@ -401,35 +401,35 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     onbetwiste_klachten: 5,
     contract_ratio: 22.8,
     claims: 1.5,
-    veilig_defensief_rijgedrag: 5,
+    veilig_defensief_rijgedrag: 2,
     veilig_defensief_rijgedrag_punten: 4,
-    naleven_verkeersregels: 5,
+    naleven_verkeersregels: 2,
     naleven_verkeersregels_punten: 4,
-    schadevrij_rijden: 5,
+    schadevrij_rijden: 2,
     schadevrij_rijden_punten: 4,
-    melden_schade_incidenten: 5,
+    melden_schade_incidenten: 2,
     melden_schade_incidenten_punten: 4,
-    representatief_gebruik_voertuig: 5,
+    representatief_gebruik_voertuig: 2,
     representatief_gebruik_voertuig_punten: 4,
-    periodieke_voertuig_controle: 5,
+    periodieke_voertuig_controle: 2,
     periodieke_voertuig_controle_punten: 4,
-    netheid_onderhoud_voertuig: 5,
+    netheid_onderhoud_voertuig: 2,
     netheid_onderhoud_voertuig_punten: 4,
-    zuinig_verantwoord_rijgedrag: 5,
+    zuinig_verantwoord_rijgedrag: 2,
     zuinig_verantwoord_rijgedrag_punten: 4,
-    bandenslijtage: 5,
+    bandenslijtage: 2,
     bandenslijtage_punten: 4,
-    persoonlijke_inzet: 5,
+    persoonlijke_inzet: 2,
     persoonlijke_inzet_punten: 4,
-    piek_ziektebezetting: 5,
+    piek_ziektebezetting: 2,
     piek_ziektebezetting_punten: 4,
-    omgang_veranderingen: 5,
+    omgang_veranderingen: 2,
     omgang_veranderingen_punten: 4,
-    ziekteverzuim: 5,
+    ziekteverzuim: 2,
     ziekteverzuim_punten: 4,
-    omgang_collega: 5,
+    omgang_collega: 2,
     omgang_collega_punten: 4,
-    nakomen_afspraken: 5,
+    nakomen_afspraken: 2,
     nakomen_afspraken_punten: 4,
     werk_prive_balans: '',
     terugblik_vorige_periode: '',
@@ -813,10 +813,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.veilig_defensief_rijgedrag || 5]}
+                  value={[formData.veilig_defensief_rijgedrag || 2]}
                   onValueChange={(val) => setFormData({...formData, veilig_defensief_rijgedrag: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -839,10 +839,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.naleven_verkeersregels || 5]}
+                  value={[formData.naleven_verkeersregels || 2]}
                   onValueChange={(val) => setFormData({...formData, naleven_verkeersregels: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -865,10 +865,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.schadevrij_rijden || 5]}
+                  value={[formData.schadevrij_rijden || 2]}
                   onValueChange={(val) => setFormData({...formData, schadevrij_rijden: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -891,10 +891,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.melden_schade_incidenten || 5]}
+                  value={[formData.melden_schade_incidenten || 2]}
                   onValueChange={(val) => setFormData({...formData, melden_schade_incidenten: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -917,10 +917,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.representatief_gebruik_voertuig || 5]}
+                  value={[formData.representatief_gebruik_voertuig || 2]}
                   onValueChange={(val) => setFormData({...formData, representatief_gebruik_voertuig: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -943,10 +943,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.periodieke_voertuig_controle || 5]}
+                  value={[formData.periodieke_voertuig_controle || 2]}
                   onValueChange={(val) => setFormData({...formData, periodieke_voertuig_controle: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -969,10 +969,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.netheid_onderhoud_voertuig || 5]}
+                  value={[formData.netheid_onderhoud_voertuig || 2]}
                   onValueChange={(val) => setFormData({...formData, netheid_onderhoud_voertuig: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -995,10 +995,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.zuinig_verantwoord_rijgedrag || 5]}
+                  value={[formData.zuinig_verantwoord_rijgedrag || 2]}
                   onValueChange={(val) => setFormData({...formData, zuinig_verantwoord_rijgedrag: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -1021,10 +1021,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.bandenslijtage || 5]}
+                  value={[formData.bandenslijtage || 2]}
                   onValueChange={(val) => setFormData({...formData, bandenslijtage: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -1064,10 +1064,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.persoonlijke_inzet || 5]}
+                  value={[formData.persoonlijke_inzet || 2]}
                   onValueChange={(val) => setFormData({...formData, persoonlijke_inzet: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -1090,10 +1090,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.piek_ziektebezetting || 5]}
+                  value={[formData.piek_ziektebezetting || 2]}
                   onValueChange={(val) => setFormData({...formData, piek_ziektebezetting: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -1116,10 +1116,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.omgang_veranderingen || 5]}
+                  value={[formData.omgang_veranderingen || 2]}
                   onValueChange={(val) => setFormData({...formData, omgang_veranderingen: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -1142,10 +1142,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.ziekteverzuim || 5]}
+                  value={[formData.ziekteverzuim || 2]}
                   onValueChange={(val) => setFormData({...formData, ziekteverzuim: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -1168,10 +1168,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.omgang_collega || 5]}
+                  value={[formData.omgang_collega || 2]}
                   onValueChange={(val) => setFormData({...formData, omgang_collega: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
@@ -1194,10 +1194,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   </div>
                 </div>
                 <Slider
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={4}
                   step={1}
-                  value={[formData.nakomen_afspraken || 5]}
+                  value={[formData.nakomen_afspraken || 2]}
                   onValueChange={(val) => setFormData({...formData, nakomen_afspraken: val[0]})}
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
