@@ -386,7 +386,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     pba_bezorgen_punten: 4,
     hitrate: 97.9,
     hitrate_punten: 4,
-    procesverstoring_cat1: null,
+    procesverstoring_cat1: 3,
     procesverstoring_cat1_punten: 5,
     betwiste_klachten: null,
     betwiste_klachten_punten: 5,
@@ -446,8 +446,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
         uitreik_locatie: 98,
         scankwaliteit: 99.2,
         pba_bezorgen: 93,
-        hitrate: 97.9
-      }));
+        hitrate: 97.9,
+        procesverstoring_cat1: 3
+        }));
     }
   }, [review, employeeId]);
 
@@ -702,7 +703,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
               <div>
                 <div className="flex justify-between mb-1">
-                  <Label className="text-xs">Procesverstoring cat. 1</Label>
+                  <Label className="text-xs">Procesverstoring cat. 1 (target: 3%)</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
