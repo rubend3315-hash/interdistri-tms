@@ -905,20 +905,18 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               </div>
               </div>
 
-          {/* Categorie 4: Persoonlijke Ontwikkeling (POP) */}
+          {/* Categorie 4: Werk-privé balans */}
           <div className="border-t pt-4 mt-4">
             <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
-              <span className="text-blue-600">4.</span> Persoonlijke Ontwikkeling (POP)
+              <span className="text-blue-600">4.</span> Werk-privé balans en duurzame inzetbaarheid
             </h3>
-            <p className="text-xs text-slate-500 mb-3">Toekomst en groei van de medewerker</p>
-            
+
             <div className="space-y-3">
               <div>
-                <Label>Werk-privé balans en duurzame inzetbaarheid</Label>
                 <Textarea
                   value={formData.werk_prive_balans}
                   onChange={(e) => setFormData({...formData, werk_prive_balans: e.target.value})}
-                  rows={2}
+                  rows={3}
                   placeholder="Fysieke gesteldheid, werkdruk, balans..."
                 />
               </div>
