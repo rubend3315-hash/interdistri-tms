@@ -951,7 +951,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Inzet & betrokkenheid</Label>
-                  <span className="text-xs font-semibold text-blue-600">{formData.persoonlijke_inzet}/4</span>
+                  <span className="text-xs font-semibold text-blue-600">{formData.persoonlijke_inzet}/7</span>
                 </div>
                 <Slider
                   min={0}
@@ -966,7 +966,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Flexibiliteit piek- en ziektebezetting</Label>
-                  <span className="text-xs font-semibold text-blue-600">{formData.piek_ziektebezetting}/4</span>
+                  <span className="text-xs font-semibold text-blue-600">{formData.piek_ziektebezetting}/7</span>
                 </div>
                 <Slider
                   min={0}
@@ -996,7 +996,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Ziekteverzuim</Label>
-                  <span className="text-xs font-semibold text-blue-600">{formData.ziekteverzuim}/4</span>
+                  <span className="text-xs font-semibold text-blue-600">{formData.ziekteverzuim}/5</span>
                 </div>
                 <Slider
                   min={0}
