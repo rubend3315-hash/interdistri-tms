@@ -617,12 +617,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">TVI Dag (target: 93%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.tvi_dag >= 93 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.tvi_dag_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">{formData.tvi_dag || 0}%</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.tvi_dag || 0}%</span>
                 </div>
                 <Slider
                   min={0}
@@ -637,12 +632,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Uitreik locatie (target: 98%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.uitreik_locatie >= 98 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.uitreik_locatie_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">{formData.uitreik_locatie || 0}%</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.uitreik_locatie || 0}%</span>
                 </div>
                 <Slider
                   min={0}
@@ -657,12 +647,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Scankwaliteit (target: 99,2%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.scankwaliteit >= 99.2 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.scankwaliteit_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">{formData.scankwaliteit || 0}%</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.scankwaliteit || 0}%</span>
                 </div>
                 <Slider
                   min={0}
@@ -677,12 +662,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">PBA-bezorgen (target: 93%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.pba_bezorgen >= 93 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.pba_bezorgen_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">{formData.pba_bezorgen || 0}%</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.pba_bezorgen || 0}%</span>
                 </div>
                 <Slider
                   min={0}
@@ -697,12 +677,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Hitrate (target: 97,9%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.hitrate >= 97.9 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.hitrate_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">{formData.hitrate || 0}%</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">{formData.hitrate || 0}%</span>
                 </div>
                 <Slider
                   min={0}
@@ -717,12 +692,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Procesverstoring cat. 1 (target ratio: 3)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.procesverstoring_cat1 <= 3 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.procesverstoring_cat1_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">ratio {formData.procesverstoring_cat1 || 0}</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">ratio {formData.procesverstoring_cat1 || 0}</span>
                 </div>
                 <Slider
                   min={0}
@@ -737,12 +707,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Procesverstoring cat. 2 (target ratio: 1)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.procesverstoring_cat2 <= 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.procesverstoring_cat2_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">ratio {formData.procesverstoring_cat2 || 0}</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">ratio {formData.procesverstoring_cat2 || 0}</span>
                 </div>
                 <Slider
                   min={0}
@@ -757,12 +722,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Betwiste klachten (target ratio: 10)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.betwiste_klachten <= 10 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.betwiste_klachten_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">ratio {formData.betwiste_klachten || 0}</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">ratio {formData.betwiste_klachten || 0}</span>
                 </div>
                 <Slider
                   min={0}
@@ -777,12 +737,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Onbetwiste klachten (target ratio: 5)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.onbetwiste_klachten <= 5 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.onbetwiste_klachten_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">ratio {formData.onbetwiste_klachten || 0}</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">ratio {formData.onbetwiste_klachten || 0}</span>
                 </div>
                 <Slider
                   min={0}
@@ -797,12 +752,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Contact ratio (target ratio: 22,8)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.contract_ratio >= 22.8 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.contract_ratio_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">ratio {formData.contract_ratio || 0}</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">ratio {formData.contract_ratio || 0}</span>
                 </div>
                 <Slider
                   min={0}
@@ -817,12 +767,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
               <div>
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Claims (target ratio: 1,5)</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={formData.claims <= 1.5 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                      {formData.claims_punten || 0} pnt
-                    </Badge>
-                    <span className="text-xs font-semibold text-blue-600">ratio {formData.claims || 0}</span>
-                  </div>
+                  <span className="text-xs font-semibold text-blue-600">ratio {formData.claims || 0}</span>
                 </div>
                 <Slider
                   min={0}
