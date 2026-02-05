@@ -398,8 +398,22 @@ export default function PerformanceReviewsPage() {
 }
 
 function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
-  const queryClient = useQueryClient();
-  const calculateKPIPunten = (value, target, higherIsBetter = true) => {
+        const queryClient = useQueryClient();
+
+        const downloadPDF = async (reviewData) => {
+          const response = await base44.functions.invoke('generatePerformanceReviewPDF', { review: reviewData });
+          const blob = new Blob([response.data], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `beoordeling_${new Date().toISOString().split('T')[0]}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          a.remove();
+        };
+
+        const calculateKPIPunten = (value, target, higherIsBetter = true) => {
     if (higherIsBetter) {
       return value >= target ? 3 : 0;
     } else {
