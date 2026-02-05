@@ -600,8 +600,61 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   />
                 </div>
               </div>
+            </div>
+          </div>
 
+          {/* Categorie 2: Vaardigheden en Verantwoord Gebruik van het Voertuig */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
+              <span className="text-blue-600">2.</span> Vaardigheden en Verantwoord Gebruik van het Voertuig
+            </h3>
+            <p className="text-xs text-slate-500 mb-3">Omgang met voertuig, rijstijl en punctualiteit</p>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Op tijd te laat Depot</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_postnl}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.kpi_postnl}
+                  onChange={(e) => setFormData({...formData, kpi_postnl: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
 
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Voertuig & schade</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.kpi_voertuig_onderhoud}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.kpi_voertuig_onderhoud}
+                  onChange={(e) => setFormData({...formData, kpi_voertuig_onderhoud: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Rijstijl analyse</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.rijstijl_analyse}/10</span>
+                </div>
+                <Input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.rijstijl_analyse}
+                  onChange={(e) => setFormData({...formData, rijstijl_analyse: e.target.value})}
+                  className="w-full h-1"
+                />
+              </div>
             </div>
           </div>
 
