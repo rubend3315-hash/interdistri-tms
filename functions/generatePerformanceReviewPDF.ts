@@ -77,6 +77,33 @@ Deno.serve(async (req) => {
       yPosition += (lines.length * 4) + 3;
     };
 
+    const addGrid = (items, cols = 2) => {
+      if (yPosition > pageHeight - 30) {
+        doc.addPage();
+        yPosition = 10;
+      }
+      const colWidth = maxWidth / cols;
+      let currentCol = 0;
+      let currentRow = yPosition;
+
+      items.forEach((item, index) => {
+        const xPos = margin + (currentCol * colWidth);
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${item.label}:`, xPos, currentRow);
+        doc.setFont(undefined, 'bold');
+        doc.text(String(item.value), xPos + (colWidth * 0.6), currentRow);
+
+        currentCol++;
+        if (currentCol >= cols) {
+          currentCol = 0;
+          currentRow += 8;
+        }
+      });
+
+      yPosition = currentRow + 5;
+    };
+
     // Title
     addTitle('Resultaat & Ontwikkeling');
     yPosition += 2;
