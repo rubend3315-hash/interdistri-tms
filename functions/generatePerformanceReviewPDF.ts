@@ -139,13 +139,22 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Section 4: Werk-privé balans
+    if (review.werk_prive_balans) {
+      addSection('4. Werk-Privé Balans');
+      addParagraph('Werk-privé balans en duurzame inzetbaarheid', review.werk_prive_balans);
+    }
+
     // Section: Evaluatie
-    addSection('4. Evaluatie en Afspraken');
+    addSection('5. Evaluatie en Afspraken');
     if (review.terugblik_vorige_periode) {
       addParagraph('Terugblik op doelen vorige periode', review.terugblik_vorige_periode);
     }
     if (review.nieuwe_doelen) {
       addParagraph('Nieuwe doelen (SMART)', review.nieuwe_doelen);
+    }
+    if (review.feedback_medewerker) {
+      addParagraph('Feedback medewerker', review.feedback_medewerker);
     }
     if (review.algemene_conclusie) {
       addParagraph('Algemene conclusie', review.algemene_conclusie);
