@@ -118,18 +118,22 @@ Deno.serve(async (req) => {
 
     // Section 1: Operationele Resultaten
     addSection('1. Operationele Resultaten (KPI\'s)');
-    if (review.tvi_dag) addLabelValue('TVI Dag (target: 93%)', `${review.tvi_dag}%`);
-    if (review.uitreik_locatie) addLabelValue('Uitreik locatie (target: 98%)', `${review.uitreik_locatie}%`);
-    if (review.scankwaliteit) addLabelValue('Scankwaliteit (target: 99,2%)', `${review.scankwaliteit}%`);
-    if (review.pba_bezorgen) addLabelValue('PBA-bezorgen (target: 93%)', `${review.pba_bezorgen}%`);
-    if (review.hitrate) addLabelValue('Hitrate (target: 97,9%)', `${review.hitrate}%`);
-    if (review.procesverstoring_cat1) addLabelValue('Procesverstoring cat. 1 (target: 3)', `${review.procesverstoring_cat1}`);
-    if (review.procesverstoring_cat2) addLabelValue('Procesverstoring cat. 2 (target: 1)', `${review.procesverstoring_cat2}`);
-    if (review.betwiste_klachten) addLabelValue('Betwiste klachten (target: 10)', `${review.betwiste_klachten}`);
-    if (review.onbetwiste_klachten) addLabelValue('Onbetwiste klachten (target: 5)', `${review.onbetwiste_klachten}`);
-    if (review.contract_ratio) addLabelValue('Contact ratio (target: 22,8)', `${review.contract_ratio}`);
-    if (review.claims) addLabelValue('Claims (target: 1,5)', `${review.claims}`);
-    yPosition += 2;
+    const kpiItems = [
+      ...(review.tvi_dag ? [{ label: 'TVI Dag', value: `${review.tvi_dag}%` }] : []),
+      ...(review.uitreik_locatie ? [{ label: 'Uitreik locatie', value: `${review.uitreik_locatie}%` }] : []),
+      ...(review.scankwaliteit ? [{ label: 'Scankwaliteit', value: `${review.scankwaliteit}%` }] : []),
+      ...(review.pba_bezorgen ? [{ label: 'PBA-bezorgen', value: `${review.pba_bezorgen}%` }] : []),
+      ...(review.hitrate ? [{ label: 'Hitrate', value: `${review.hitrate}%` }] : []),
+      ...(review.procesverstoring_cat1 ? [{ label: 'Procesverstoring cat. 1', value: `${review.procesverstoring_cat1}` }] : []),
+      ...(review.procesverstoring_cat2 ? [{ label: 'Procesverstoring cat. 2', value: `${review.procesverstoring_cat2}` }] : []),
+      ...(review.betwiste_klachten ? [{ label: 'Betwiste klachten', value: `${review.betwiste_klachten}` }] : []),
+      ...(review.onbetwiste_klachten ? [{ label: 'Onbetwiste klachten', value: `${review.onbetwiste_klachten}` }] : []),
+      ...(review.contract_ratio ? [{ label: 'Contact ratio', value: `${review.contract_ratio}` }] : []),
+      ...(review.claims ? [{ label: 'Claims', value: `${review.claims}` }] : []),
+    ];
+    if (kpiItems.length > 0) {
+      addGrid(kpiItems, 2);
+    }
 
     // Section 2: Vaardigheden
     addSection('2. Vaardigheden en Verantwoord Gebruik van het Voertuig');
