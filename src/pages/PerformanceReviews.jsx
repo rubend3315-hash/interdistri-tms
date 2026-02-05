@@ -15,6 +15,7 @@ import { Slider } from "@/components/ui/slider";
 import { Plus, FileText, MessageSquare, Eye, Loader2, TrendingUp, Award } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
+import SignaturePad from "@/components/ui/signature-pad";
 
 export default function PerformanceReviewsPage() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
@@ -1150,6 +1151,21 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 rows={2}
               />
             )}
+          </div>
+
+          {/* Handtekeningen */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="font-semibold text-slate-900 mb-3">Handtekeningen</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <SignaturePad
+                label="Handtekening Manager"
+                onChange={(sig) => setFormData({...formData, manager_signature_url: sig})}
+              />
+              <SignaturePad
+                label="Handtekening Medewerker"
+                onChange={(sig) => setFormData({...formData, employee_signature_url: sig})}
+              />
+            </div>
           </div>
 
           {/* Categorie 5: Evaluatie en Afspraken */}
