@@ -582,10 +582,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             </div>
           </div>
 
-          {/* Categorie 2: Persoonlijke Inzet en Samenwerking */}
+          {/* Categorie 3: Persoonlijke Inzet en Samenwerking */}
           <div className="border-t pt-4 mt-4">
             <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
-              <span className="text-blue-600">2.</span> Persoonlijke Inzet en Samenwerking
+              <span className="text-blue-600">3.</span> Persoonlijke Inzet en Samenwerking
             </h3>
             <p className="text-xs text-slate-500 mb-3">Vaardigheden en gedrag specifiek voor de rol</p>
             
@@ -667,10 +667,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             </div>
           </div>
 
-          {/* Categorie 3: Persoonlijke Ontwikkeling (POP) */}
+          {/* Categorie 4: Persoonlijke Ontwikkeling (POP) */}
           <div className="border-t pt-4 mt-4">
             <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
-              <span className="text-blue-600">3.</span> Persoonlijke Ontwikkeling (POP)
+              <span className="text-blue-600">4.</span> Persoonlijke Ontwikkeling (POP)
             </h3>
             <p className="text-xs text-slate-500 mb-3">Toekomst en groei van de medewerker</p>
             
@@ -750,10 +750,10 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             )}
           </div>
 
-          {/* Categorie 4: Evaluatie en Afspraken */}
+          {/* Categorie 5: Evaluatie en Afspraken */}
           <div className="border-t pt-4 mt-4">
             <h3 className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
-              <span className="text-blue-600">4.</span> Evaluatie en Afspraken
+              <span className="text-blue-600">5.</span> Evaluatie en Afspraken
             </h3>
             <p className="text-xs text-slate-500 mb-3">Concrete samenvatting en doelen</p>
             
