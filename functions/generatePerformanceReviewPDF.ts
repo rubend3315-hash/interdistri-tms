@@ -137,16 +137,20 @@ Deno.serve(async (req) => {
 
     // Section 2: Vaardigheden
     addSection('2. Vaardigheden en Verantwoord Gebruik van het Voertuig');
-    if (review.veilig_defensief_rijgedrag) addLabelValue('Veilig en defensief rijgedrag', `${review.veilig_defensief_rijgedrag}/4`);
-    if (review.naleven_verkeersregels) addLabelValue('Naleven verkeersregels', `${review.naleven_verkeersregels}/4`);
-    if (review.schadevrij_rijden) addLabelValue('Schadevrij rijden', `${review.schadevrij_rijden}/4`);
-    if (review.melden_schade_incidenten) addLabelValue('Melden schade en incidenten', `${review.melden_schade_incidenten}/4`);
-    if (review.representatief_gebruik_voertuig) addLabelValue('Representatief gebruik voertuig', `${review.representatief_gebruik_voertuig}/4`);
-    if (review.periodieke_voertuig_controle) addLabelValue('Periodieke voertuig controle', `${review.periodieke_voertuig_controle}/4`);
-    if (review.netheid_onderhoud_voertuig) addLabelValue('Netheid en onderhoud voertuig', `${review.netheid_onderhoud_voertuig}/4`);
-    if (review.zuinig_verantwoord_rijgedrag) addLabelValue('Zuinig en verantwoord rijgedrag', `${review.zuinig_verantwoord_rijgedrag}/4`);
-    if (review.bandenslijtage) addLabelValue('Bandenslijtage', `${review.bandenslijtage}/4`);
-    yPosition += 2;
+    const skillItems = [
+      ...(review.veilig_defensief_rijgedrag ? [{ label: 'Veilig rijgedrag', value: `${review.veilig_defensief_rijgedrag}/4` }] : []),
+      ...(review.naleven_verkeersregels ? [{ label: 'Verkeersregels', value: `${review.naleven_verkeersregels}/4` }] : []),
+      ...(review.schadevrij_rijden ? [{ label: 'Schadevrij rijden', value: `${review.schadevrij_rijden}/4` }] : []),
+      ...(review.melden_schade_incidenten ? [{ label: 'Melden schade', value: `${review.melden_schade_incidenten}/4` }] : []),
+      ...(review.representatief_gebruik_voertuig ? [{ label: 'Representatief gebruik', value: `${review.representatief_gebruik_voertuig}/4` }] : []),
+      ...(review.periodieke_voertuig_controle ? [{ label: 'Voertuig controle', value: `${review.periodieke_voertuig_controle}/4` }] : []),
+      ...(review.netheid_onderhoud_voertuig ? [{ label: 'Netheid voertuig', value: `${review.netheid_onderhoud_voertuig}/4` }] : []),
+      ...(review.zuinig_verantwoord_rijgedrag ? [{ label: 'Zuinig rijgedrag', value: `${review.zuinig_verantwoord_rijgedrag}/4` }] : []),
+      ...(review.bandenslijtage ? [{ label: 'Bandenslijtage', value: `${review.bandenslijtage}/4` }] : []),
+    ];
+    if (skillItems.length > 0) {
+      addGrid(skillItems, 2);
+    }
 
     // Section 3: Persoonlijke inzet
     addSection('3. Persoonlijke Inzet, Samenwerking en Wederkerigheid');
