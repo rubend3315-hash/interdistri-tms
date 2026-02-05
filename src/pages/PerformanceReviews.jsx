@@ -377,31 +377,30 @@ export default function PerformanceReviewsPage() {
 
 function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
   const queryClient = useQueryClient();
+  const calculateKPIPunten = (value, target, higherIsBetter = true) => {
+    if (higherIsBetter) {
+      return value >= target ? 4 : 0;
+    } else {
+      return value <= target ? 5 : 0;
+    }
+  };
+
   const [formData, setFormData] = useState({
     employee_id: employeeId || '',
     review_date: new Date().toISOString().split('T')[0],
     period_start: '',
     period_end: '',
     tvi_dag: 93,
-    tvi_dag_punten: 4,
     uitreik_locatie: 98,
-    uitreik_locatie_punten: 4,
     scankwaliteit: 99.2,
-    scankwaliteit_punten: 4,
     pba_bezorgen: 93,
-    pba_bezorgen_punten: 4,
     hitrate: 97.9,
-    hitrate_punten: 4,
     procesverstoring_cat1: 3,
-    procesverstoring_cat1_punten: 5,
     procesverstoring_cat2: 1,
-    procesverstoring_cat2_punten: 5,
     betwiste_klachten: 10,
-    betwiste_klachten_punten: 5,
     onbetwiste_klachten: 5,
-    onbetwiste_klachten_punten: 5,
     contract_ratio: 22.8,
-    contract_ratio_punten: 5,
+    claims: 1.5,
     veilig_defensief_rijgedrag: 5,
     veilig_defensief_rijgedrag_punten: 4,
     naleven_verkeersregels: 5,
@@ -442,6 +441,35 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     ontwikkelpunten: '',
     status: 'Concept'
   });
+
+  React.useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      tvi_dag_punten: calculateKPIPunten(prev.tvi_dag, 93, true),
+      uitreik_locatie_punten: calculateKPIPunten(prev.uitreik_locatie, 98, true),
+      scankwaliteit_punten: calculateKPIPunten(prev.scankwaliteit, 99.2, true),
+      pba_bezorgen_punten: calculateKPIPunten(prev.pba_bezorgen, 93, true),
+      hitrate_punten: calculateKPIPunten(prev.hitrate, 97.9, true),
+      procesverstoring_cat1_punten: calculateKPIPunten(prev.procesverstoring_cat1, 3, false),
+      procesverstoring_cat2_punten: calculateKPIPunten(prev.procesverstoring_cat2, 1, false),
+      betwiste_klachten_punten: calculateKPIPunten(prev.betwiste_klachten, 10, false),
+      onbetwiste_klachten_punten: calculateKPIPunten(prev.onbetwiste_klachten, 5, false),
+      contract_ratio_punten: calculateKPIPunten(prev.contract_ratio, 22.8, true),
+      claims_punten: calculateKPIPunten(prev.claims, 1.5, false)
+    }));
+  }, [
+    formData.tvi_dag,
+    formData.uitreik_locatie,
+    formData.scankwaliteit,
+    formData.pba_bezorgen,
+    formData.hitrate,
+    formData.procesverstoring_cat1,
+    formData.procesverstoring_cat2,
+    formData.betwiste_klachten,
+    formData.onbetwiste_klachten,
+    formData.contract_ratio,
+    formData.claims
+  ]);
 
   React.useEffect(() => {
     if (review) {
@@ -590,15 +618,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">TVI Dag (target: 93%)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.tvi_dag_punten || 0}
-                      onChange={(e) => setFormData({...formData, tvi_dag_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.tvi_dag >= 93 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.tvi_dag_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">{formData.tvi_dag || 0}%</span>
                   </div>
                 </div>
@@ -616,15 +638,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Uitreik locatie (target: 98%)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.uitreik_locatie_punten || 0}
-                      onChange={(e) => setFormData({...formData, uitreik_locatie_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.uitreik_locatie >= 98 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.uitreik_locatie_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">{formData.uitreik_locatie || 0}%</span>
                   </div>
                 </div>
@@ -642,15 +658,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Scankwaliteit (target: 99,2%)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.scankwaliteit_punten || 0}
-                      onChange={(e) => setFormData({...formData, scankwaliteit_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.scankwaliteit >= 99.2 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.scankwaliteit_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">{formData.scankwaliteit || 0}%</span>
                   </div>
                 </div>
@@ -668,15 +678,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">PBA-bezorgen (target: 93%)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.pba_bezorgen_punten || 0}
-                      onChange={(e) => setFormData({...formData, pba_bezorgen_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.pba_bezorgen >= 93 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.pba_bezorgen_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">{formData.pba_bezorgen || 0}%</span>
                   </div>
                 </div>
@@ -694,15 +698,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Hitrate (target: 97,9%)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.hitrate_punten || 0}
-                      onChange={(e) => setFormData({...formData, hitrate_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.hitrate >= 97.9 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.hitrate_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">{formData.hitrate || 0}%</span>
                   </div>
                 </div>
@@ -720,15 +718,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Procesverstoring cat. 1 (target ratio: 3)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.procesverstoring_cat1_punten || 0}
-                      onChange={(e) => setFormData({...formData, procesverstoring_cat1_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.procesverstoring_cat1 <= 3 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.procesverstoring_cat1_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">ratio {formData.procesverstoring_cat1 || 0}</span>
                   </div>
                 </div>
@@ -746,15 +738,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Procesverstoring cat. 2 (target ratio: 1)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.procesverstoring_cat2_punten || 0}
-                      onChange={(e) => setFormData({...formData, procesverstoring_cat2_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.procesverstoring_cat2 <= 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.procesverstoring_cat2_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">ratio {formData.procesverstoring_cat2 || 0}</span>
                   </div>
                 </div>
@@ -772,15 +758,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Betwiste klachten (target ratio: 10)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.betwiste_klachten_punten || 0}
-                      onChange={(e) => setFormData({...formData, betwiste_klachten_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.betwiste_klachten <= 10 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.betwiste_klachten_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">ratio {formData.betwiste_klachten || 0}</span>
                   </div>
                 </div>
@@ -798,15 +778,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Onbetwiste klachten (target ratio: 5)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.onbetwiste_klachten_punten || 0}
-                      onChange={(e) => setFormData({...formData, onbetwiste_klachten_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.onbetwiste_klachten <= 5 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.onbetwiste_klachten_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">ratio {formData.onbetwiste_klachten || 0}</span>
                   </div>
                 </div>
@@ -824,15 +798,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Contact ratio (target ratio: 22,8)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.contract_ratio_punten || 0}
-                      onChange={(e) => setFormData({...formData, contract_ratio_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.contract_ratio >= 22.8 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.contract_ratio_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">ratio {formData.contract_ratio || 0}</span>
                   </div>
                 </div>
@@ -850,15 +818,9 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 <div className="flex justify-between mb-1">
                   <Label className="text-xs">Claims (target ratio: 1,5)</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.claims_punten || 0}
-                      onChange={(e) => setFormData({...formData, claims_punten: parseFloat(e.target.value) || 0})}
-                      className="w-16 h-6 text-xs text-center"
-                    />
-                    <span className="text-xs text-slate-500">pnt</span>
+                    <Badge className={formData.claims <= 1.5 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {formData.claims_punten || 0} pnt
+                    </Badge>
                     <span className="text-xs font-semibold text-blue-600">ratio {formData.claims || 0}</span>
                   </div>
                 </div>
