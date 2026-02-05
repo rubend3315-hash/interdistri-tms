@@ -399,6 +399,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     omgang_veranderingen: 5,
     ziekteverzuim: 5,
     omgang_collega: 5,
+    nakomen_afspraken: 5,
     scholingsbehoeften: '',
     ambitie: '',
     werk_prive_balans: '',
@@ -888,8 +889,23 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                   className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
                 />
               </div>
-            </div>
-          </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <Label className="text-xs">Nakomen van afspraken</Label>
+                  <span className="text-xs font-semibold text-blue-600">{formData.nakomen_afspraken}/10</span>
+                </div>
+                <Slider
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={[formData.nakomen_afspraken || 5]}
+                  onValueChange={(val) => setFormData({...formData, nakomen_afspraken: val[0]})}
+                  className="[&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-white [&>span>span]:bg-blue-600"
+                />
+              </div>
+              </div>
+              </div>
 
           {/* Categorie 4: Persoonlijke Ontwikkeling (POP) */}
           <div className="border-t pt-4 mt-4">
@@ -947,7 +963,7 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                 parseFloat(formData.omgang_veranderingen || 0) +
                 parseFloat(formData.ziekteverzuim || 0) +
                 parseFloat(formData.omgang_collega || 0);
-              const meetsRequirement = totalScore >= 21;
+              const meetsRequirement = totalScore >= 22.5;
 
               return (
                 <div>
@@ -963,11 +979,11 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                       </Label>
                     </div>
                     <Badge className={meetsRequirement ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                      Totaal: {totalScore}/140 punten
+                      Totaal: {totalScore}/150 punten
                     </Badge>
                   </div>
                   {!meetsRequirement && (
-                    <p className="text-sm text-red-600">Minimaal 21 punten vereist voor trede verhoging</p>
+                    <p className="text-sm text-red-600">Minimaal 22.5 punten vereist voor trede verhoging</p>
                   )}
                 </div>
               );
