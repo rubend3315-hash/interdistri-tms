@@ -445,27 +445,35 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const totalScore = parseFloat(data.veilig_defensief_rijgedrag || 0) +
-        parseFloat(data.naleven_verkeersregels || 0) +
-        parseFloat(data.schadevrij_rijden || 0) +
-        parseFloat(data.melden_schade_incidenten || 0) +
-        parseFloat(data.representatief_gebruik_voertuig || 0) +
-        parseFloat(data.periodieke_voertuig_controle || 0) +
-        parseFloat(data.netheid_onderhoud_voertuig || 0) +
-        parseFloat(data.zuinig_verantwoord_rijgedrag || 0) +
-        parseFloat(data.bandenslijtage || 0) +
-        parseFloat(data.persoonlijke_inzet || 0) +
-        parseFloat(data.piek_ziektebezetting || 0) +
-        parseFloat(data.omgang_veranderingen || 0) +
-        parseFloat(data.ziekteverzuim || 0) +
-        parseFloat(data.omgang_collega || 0);
-      
-      const avg = totalScore / 14;
+      const totalPunten = parseFloat(data.tvi_dag_punten || 0) +
+        parseFloat(data.uitreik_locatie_punten || 0) +
+        parseFloat(data.scankwaliteit_punten || 0) +
+        parseFloat(data.pba_bezorgen_punten || 0) +
+        parseFloat(data.hitrate_punten || 0) +
+        parseFloat(data.altijd_op_tijd_depot_punten || 0) +
+        parseFloat(data.betwiste_klachten_punten || 0) +
+        parseFloat(data.onbetwiste_klachten_punten || 0) +
+        parseFloat(data.contract_ratio_punten || 0) +
+        parseFloat(data.veilig_defensief_rijgedrag_punten || 0) +
+        parseFloat(data.naleven_verkeersregels_punten || 0) +
+        parseFloat(data.schadevrij_rijden_punten || 0) +
+        parseFloat(data.melden_schade_incidenten_punten || 0) +
+        parseFloat(data.representatief_gebruik_voertuig_punten || 0) +
+        parseFloat(data.periodieke_voertuig_controle_punten || 0) +
+        parseFloat(data.netheid_onderhoud_voertuig_punten || 0) +
+        parseFloat(data.zuinig_verantwoord_rijgedrag_punten || 0) +
+        parseFloat(data.bandenslijtage_punten || 0) +
+        parseFloat(data.persoonlijke_inzet_punten || 0) +
+        parseFloat(data.piek_ziektebezetting_punten || 0) +
+        parseFloat(data.omgang_veranderingen_punten || 0) +
+        parseFloat(data.ziekteverzuim_punten || 0) +
+        parseFloat(data.omgang_collega_punten || 0) +
+        parseFloat(data.nakomen_afspraken_punten || 0);
 
       const reviewData = {
         ...data,
-        gemiddelde_score: avg,
-        trede_verhoging: totalScore >= 21 ? data.trede_verhoging : false,
+        gemiddelde_score: totalPunten,
+        trede_verhoging: totalPunten >= 85 ? data.trede_verhoging : false,
         reviewer_id: user?.id
       };
 
@@ -1234,21 +1242,31 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
 
           <div className="border-t pt-4 space-y-4">
             {(() => {
-              const totalScore = parseFloat(formData.veilig_defensief_rijgedrag || 0) +
-                parseFloat(formData.naleven_verkeersregels || 0) +
-                parseFloat(formData.schadevrij_rijden || 0) +
-                parseFloat(formData.melden_schade_incidenten || 0) +
-                parseFloat(formData.representatief_gebruik_voertuig || 0) +
-                parseFloat(formData.periodieke_voertuig_controle || 0) +
-                parseFloat(formData.netheid_onderhoud_voertuig || 0) +
-                parseFloat(formData.zuinig_verantwoord_rijgedrag || 0) +
-                parseFloat(formData.bandenslijtage || 0) +
-                parseFloat(formData.persoonlijke_inzet || 0) +
-                parseFloat(formData.piek_ziektebezetting || 0) +
-                parseFloat(formData.omgang_veranderingen || 0) +
-                parseFloat(formData.ziekteverzuim || 0) +
-                parseFloat(formData.omgang_collega || 0);
-              const meetsRequirement = totalScore >= 22.5;
+              const totalPunten = parseFloat(formData.tvi_dag_punten || 0) +
+                parseFloat(formData.uitreik_locatie_punten || 0) +
+                parseFloat(formData.scankwaliteit_punten || 0) +
+                parseFloat(formData.pba_bezorgen_punten || 0) +
+                parseFloat(formData.hitrate_punten || 0) +
+                parseFloat(formData.altijd_op_tijd_depot_punten || 0) +
+                parseFloat(formData.betwiste_klachten_punten || 0) +
+                parseFloat(formData.onbetwiste_klachten_punten || 0) +
+                parseFloat(formData.contract_ratio_punten || 0) +
+                parseFloat(formData.veilig_defensief_rijgedrag_punten || 0) +
+                parseFloat(formData.naleven_verkeersregels_punten || 0) +
+                parseFloat(formData.schadevrij_rijden_punten || 0) +
+                parseFloat(formData.melden_schade_incidenten_punten || 0) +
+                parseFloat(formData.representatief_gebruik_voertuig_punten || 0) +
+                parseFloat(formData.periodieke_voertuig_controle_punten || 0) +
+                parseFloat(formData.netheid_onderhoud_voertuig_punten || 0) +
+                parseFloat(formData.zuinig_verantwoord_rijgedrag_punten || 0) +
+                parseFloat(formData.bandenslijtage_punten || 0) +
+                parseFloat(formData.persoonlijke_inzet_punten || 0) +
+                parseFloat(formData.piek_ziektebezetting_punten || 0) +
+                parseFloat(formData.omgang_veranderingen_punten || 0) +
+                parseFloat(formData.ziekteverzuim_punten || 0) +
+                parseFloat(formData.omgang_collega_punten || 0) +
+                parseFloat(formData.nakomen_afspraken_punten || 0);
+              const meetsRequirement = totalPunten >= 85;
 
               return (
                 <div>
@@ -1264,11 +1282,11 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
                       </Label>
                     </div>
                     <Badge className={meetsRequirement ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                      Totaal: {totalScore}/150 punten
+                      Totaal: {totalPunten}/100 punten ({(totalPunten).toFixed(0)}%)
                     </Badge>
                   </div>
                   {!meetsRequirement && (
-                    <p className="text-sm text-red-600">Minimaal 22.5 punten vereist voor trede verhoging</p>
+                    <p className="text-sm text-red-600">Minimaal 85% (85 punten) vereist voor trede verhoging</p>
                   )}
                 </div>
               );
