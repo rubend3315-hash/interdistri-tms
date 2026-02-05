@@ -400,8 +400,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
     ziekteverzuim: 5,
     omgang_collega: 5,
     nakomen_afspraken: 5,
-    scholingsbehoeften: '',
-    ambitie: 'Geen andere functie',
     werk_prive_balans: '',
     terugblik_vorige_periode: '',
     nieuwe_doelen: '',
@@ -915,29 +913,6 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
             <p className="text-xs text-slate-500 mb-3">Toekomst en groei van de medewerker</p>
             
             <div className="space-y-3">
-              <div>
-                <Label>Scholingsbehoeften (Code 95, ADR, etc.)</Label>
-                <Textarea
-                  value={formData.scholingsbehoeften}
-                  onChange={(e) => setFormData({...formData, scholingsbehoeften: e.target.value})}
-                  rows={2}
-                  placeholder="Vereiste verlengingen en aanvullende certificaten..."
-                />
-              </div>
-
-              <div>
-                <Label>Ambitie en doorgroeimogelijkheden</Label>
-                <Select value={formData.ambitie} onValueChange={(val) => setFormData({...formData, ambitie: val})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Andere functie">Andere functie</SelectItem>
-                    <SelectItem value="Geen andere functie">Geen andere functie</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div>
                 <Label>Werk-privé balans en duurzame inzetbaarheid</Label>
                 <Textarea
