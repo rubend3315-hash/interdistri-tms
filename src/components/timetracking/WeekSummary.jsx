@@ -41,11 +41,11 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const nietGewerktEntries = empEntries.filter(e => !gewerktTypes.includes(e.shift_type));
   const totalNietGewerkt = nietGewerktEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
 
-  // Compensatieuren = alleen als totaal uren MINDER is dan contracturen (werkgever schuld)
-  // Als contracturen gehaald of overschreden: compensatie = 0
+  // Compensatieuren = contracturen - totaal uren (alleen positief, nooit negatief)
+  // Als contracturen niet gehaald: compensatie = verschil. Als wel gehaald: 0.
   const totalAlles = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
   const compensatie = contractWeekTotal > 0 && totalAlles < contractWeekTotal 
-    ? totalAlles - contractWeekTotal : 0;
+    ? contractWeekTotal - totalAlles : 0;
 
   // Variabele uren (gewerkte uren boven contract)
   const variabeleUren = totalGewerkt > contractWeekTotal && contractWeekTotal > 0 
