@@ -157,7 +157,12 @@ export default function WeekOverview({
                   )}
                 </th>
               ))}
-              <th className="text-center px-2 py-3 min-w-[80px] font-semibold text-slate-700">Totaal</th>
+              <th className="text-center px-2 py-3 min-w-[80px] font-semibold text-slate-700">
+                <div>Totaal</div>
+                {contractWeekTotal > 0 && (
+                  <div className="text-xs text-orange-600 font-medium">{contractWeekTotal.toFixed(2).replace('.', ',')}</div>
+                )}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -215,6 +220,32 @@ export default function WeekOverview({
                 </div>
               </td>
             </tr>
+
+            {/* Compensatieuren row */}
+            {contractWeekTotal > 0 && (
+              <tr className="border-b bg-slate-50">
+                <td className="px-4 py-2 font-medium text-blue-700">Compensatieuren</td>
+                {weekDays.map((day, idx) => {
+                  const dayTotal = getDayTotal(day);
+                  const scheduled = contractHours ? contractHours[idx] : 0;
+                  const comp = dayTotal - scheduled;
+                  return (
+                    <td key={idx} className="text-center px-2 py-2 text-sm">
+                      {scheduled > 0 || dayTotal > 0 ? (
+                        <span className={comp >= 0 ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
+                          {comp > 0 ? '+' : ''}{comp.toFixed(2).replace('.', ',')}
+                        </span>
+                      ) : ''}
+                    </td>
+                  );
+                })}
+                <td className="text-center px-2 py-2 font-semibold">
+                  <span className={(weekTotal - contractWeekTotal) >= 0 ? 'text-green-600' : 'text-red-500'}>
+                    {(weekTotal - contractWeekTotal) > 0 ? '+' : ''}{(weekTotal - contractWeekTotal).toFixed(2).replace('.', ',')}
+                  </span>
+                </td>
+              </tr>
+            )}
 
             {/* Wis dag row */}
             <tr className="border-b bg-slate-50">
