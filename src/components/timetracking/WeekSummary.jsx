@@ -201,7 +201,7 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         <SummaryRow label="Aanvulling contracturen" value={fmt(aanvullingContract)} />
         <SummaryRow label="Compensatieuren" value={
           contractWeekTotal > 0 
-            ? <span className={compensatie >= 0 ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'}>
+            ? <span className={compensatie > 0 ? 'text-red-500 font-semibold' : 'text-green-600 font-semibold'}>
                 {compensatie.toFixed(4).replace('.', ',')} uur
               </span>
             : '- uur'
