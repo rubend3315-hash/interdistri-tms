@@ -48,7 +48,9 @@ export function calculateSubsistenceAllowance(departureTime, arrivalTime, tripDa
         const [startH, startM] = rule.start_time.split(':').map(Number);
         const [endH, endM] = rule.end_time.split(':').map(Number);
         const ruleStartMinutes = startH * 60 + startM;
-        const ruleEndMinutes = endH * 60 + endM;
+        let ruleEndMinutes = endH * 60 + endM;
+        // Treat 23:59 as 24:00 (midnight)
+        if (endH === 23 && endM === 59) ruleEndMinutes = 24 * 60;
         const ruleRate = rule.value || 0;
 
         let ruleHours = 0;
