@@ -2,7 +2,7 @@ import React from "react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -149,11 +149,15 @@ export default function WeekOverview({
 
   const reiskostenTotal = weekDays.reduce((sum, day) => sum + getReiskosten(day), 0);
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-4">
       {/* Employee Header with Navigation */}
-      <div className="bg-slate-800 text-white rounded-xl p-4 flex items-center justify-between">
-        <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700" onClick={onPreviousEmployee}>
+      <div className="bg-slate-800 text-white rounded-xl p-4 flex items-center justify-between print:bg-slate-800 print:rounded-none">
+        <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onPreviousEmployee}>
           <ChevronLeft className="w-5 h-5" />
           <ChevronLeft className="w-5 h-5 -ml-3" />
         </Button>
@@ -161,11 +165,17 @@ export default function WeekOverview({
           <h2 className="text-lg font-bold">
             ({employee.employee_number || '-'}) {employee.first_name} {employee.last_name}
           </h2>
+          <p className="text-xs text-slate-300 hidden print:block">Week {weekNumber} - {year}</p>
         </div>
-        <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700" onClick={onNextEmployee}>
-          <ChevronRight className="w-5 h-5" />
-          <ChevronRight className="w-5 h-5 -ml-3" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={handlePrint} title="Afdrukken">
+            <Printer className="w-5 h-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onNextEmployee}>
+            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-5 h-5 -ml-3" />
+          </Button>
+        </div>
       </div>
 
       {/* Week Table */}
@@ -248,7 +258,7 @@ export default function WeekOverview({
             </tr>
 
             {/* Wis dag row */}
-            <tr className="border-b bg-slate-50">
+            <tr className="border-b bg-slate-50 print:hidden">
               <td className="px-4 py-2 text-slate-500 text-xs"></td>
               {weekDays.map((day, idx) => {
                 const dateStr = format(day, 'yyyy-MM-dd');
@@ -369,7 +379,8 @@ export default function WeekOverview({
         </div>
       </div>
 
-      {/* Week Summary */}
+      {/* Week Summary - starts on new page when printing */}
+      <div className="print:break-before-page" />
       <WeekSummary
         employee={employee}
         weekDays={weekDays}
