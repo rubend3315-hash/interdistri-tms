@@ -131,7 +131,7 @@ export default function TimeTracking() {
   // Auto-calculate break
   useEffect(() => {
     const calculateAutoBreak = async () => {
-      if (!["Vrij", "Verlof", "Ziek"].includes(formData.shift_type) && formData.start_time && formData.end_time) {
+      if (dialogCategory === "gewerkt" && formData.start_time && formData.end_time) {
         const hours = calculateHours(formData.start_time, formData.end_time, 0);
         const auto = await getBreakMinutesForHours(hours);
         setAutoBreak(auto || 30);
@@ -215,7 +215,7 @@ export default function TimeTracking() {
     const user = await base44.auth.me();
     const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
     let breakMinutes = Number(formData.break_minutes) || 0;
-    if (!manualBreak && !["Vrij", "Verlof", "Ziek"].includes(formData.shift_type)) {
+    if (!manualBreak && dialogCategory === "gewerkt") {
       const ab = await getBreakMinutesForHours(hours);
       breakMinutes = ab || breakMinutes;
     }
