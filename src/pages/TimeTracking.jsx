@@ -200,12 +200,53 @@ export default function TimeTracking() {
     ziek: "Ziek",
   };
 
+  // Bereken roosteruren voor een specifieke dag op basis van contractregels
+  const getScheduleHoursForDay = (emp, date) => {
+    if (!emp?.contractregels || emp.contractregels.length === 0) return 0;
+    const today = new Date();
+    let active = emp.contractregels
+      .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))
+      .find(cr => {
+        const start = new Date(cr.startdatum);
+        const end = cr.einddatum ? new Date(cr.einddatum) : null;
+        return start <= today && (!end || end >= today);
+      });
+    if (!active) active = emp.contractregels.find(cr => cr.week1 || cr.week2);
+    if (!active) return 0;
+
+    const wn = getWeek(date, { weekStartsOn: 1 });
+    const weekSchedule = (wn % 2 === 1) ? active.week1 : active.week2;
+    if (!weekSchedule || typeof weekSchedule !== 'object') return 0;
+
+    const dutchDays = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
+    const dayOfWeek = (date.getDay() + 6) % 7; // 0=ma, 6=zo
+    const dutchDay = dutchDays[dayOfWeek];
+
+    const hasBooleansOrStrings = Object.values(weekSchedule).some(v => typeof v === 'boolean' || (typeof v === 'string' && v !== '-'));
+    if (hasBooleansOrStrings) {
+      const workingDays = Object.entries(weekSchedule).filter(([, val]) =>
+        (typeof val === 'boolean' && val) || (typeof val === 'string' && val === 'true')
+      ).length;
+      const hoursPerDay = workingDays > 0 ? (active.uren_per_week || 0) / workingDays : 0;
+      const isWorking = weekSchedule[dutchDay];
+      return (isWorking === true || isWorking === 'true') ? Math.round(hoursPerDay * 100) / 100 : 0;
+    } else {
+      const value = weekSchedule[dutchDay];
+      return typeof value === 'number' ? value : (typeof value === 'string' && value !== '-' ? parseFloat(value) || 0 : 0);
+    }
+  };
+
   const openEntryDialog = (employeeId, date, categoryKey = "gewerkt") => {
     const dateStr = format(date, 'yyyy-MM-dd');
     setDialogCategory(categoryKey);
 
     const fixedType = categoryToShiftType[categoryKey];
     const defaultShiftType = fixedType || "Verlof";
+
+    // Bereken roosteruren voor niet-gewerkt categorieën
+    const isNonWorked = ["verlof", "atv", "ziek"].includes(categoryKey);
+    const emp = employees.find(e => e.id === employeeId);
+    const scheduleHours = isNonWorked ? getScheduleHoursForDay(emp, date) : 0;
 
     const existing = timeEntries.find(e => e.employee_id === employeeId && e.date === dateStr);
 
@@ -219,14 +260,16 @@ export default function TimeTracking() {
         project_id: existing.project_id || "", customer_id: existing.customer_id || "",
         travel_allowance_multiplier: existing.travel_allowance_multiplier || 0,
         advanced_costs: existing.advanced_costs || 0, meals: existing.meals || 0,
-        wkr: existing.wkr || 0, notes: existing.notes || ""
+        wkr: existing.wkr || 0, notes: existing.notes || "",
+        total_hours_override: existing.total_hours || (isNonWorked ? scheduleHours : 0)
       });
     } else {
       setSelectedEntry(null);
       setFormData({
         employee_id: employeeId, date: dateStr, end_date: dateStr, start_time: "", end_time: "",
         break_minutes: 30, shift_type: defaultShiftType, project_id: "", customer_id: "",
-        travel_allowance_multiplier: 0, advanced_costs: 0, meals: 0, wkr: 0, notes: ""
+        travel_allowance_multiplier: 0, advanced_costs: 0, meals: 0, wkr: 0, notes: "",
+        total_hours_override: isNonWorked ? scheduleHours : 0
       });
     }
     setManualBreak(false);
