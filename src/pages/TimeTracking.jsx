@@ -461,20 +461,20 @@ export default function TimeTracking() {
             )}
 
             <div className="border-t pt-4">
-              <h3 className="font-semibold text-slate-900 mb-4">Inhoudingen & kosten</h3>
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label>Voorgeschoten kosten</Label>
+              <h3 className="font-semibold text-slate-900 mb-3">Inhoudingen & kosten</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Voorgeschoten kosten</Label>
                   <Input type="number" min="0" step="0.01" value={formData.advanced_costs || 0}
                     onChange={(e) => setFormData({ ...formData, advanced_costs: Number(e.target.value) })} placeholder="0.00" />
                 </div>
-                <div className="space-y-2">
-                  <Label>Inhoudingen</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs">Inhoudingen</Label>
                   <Input type="number" min="0" step="0.01" value={formData.meals || 0}
                     onChange={(e) => setFormData({ ...formData, meals: Number(e.target.value) })} placeholder="0.00" />
                 </div>
-                <div className="space-y-2">
-                  <Label>WKR</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs">WKR</Label>
                   <Input type="number" min="0" step="0.01" value={formData.wkr || 0}
                     onChange={(e) => setFormData({ ...formData, wkr: Number(e.target.value) })} placeholder="0.00" />
                 </div>
