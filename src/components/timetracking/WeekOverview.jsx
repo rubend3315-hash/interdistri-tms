@@ -403,6 +403,7 @@ export default function WeekOverview({
         contractHours={contractHours}
         contractWeekTotal={contractWeekTotal}
         trips={weekTrips}
+        reiskostenTotal={reiskostenTotal}
       />
     </div>
   );
