@@ -32,9 +32,10 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const totalFeestdaguren = gewerkt.reduce((s, e) => s + (e.holiday_hours || 0), 0);
   const gewerkeDagen = new Set(gewerkt.map(e => e.date)).size;
 
-  // Aanvulling contracturen = contracturen - gewerkte uren (als positief)
-  const aanvullingContract = contractWeekTotal > 0 && totalGewerkt < contractWeekTotal 
-    ? contractWeekTotal - totalGewerkt : 0;
+  // Aanvulling contracturen = contracturen - totaal alle uren (als positief)
+  const totalAllesForAanvulling = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+  const aanvullingContract = contractWeekTotal > 0 && totalAllesForAanvulling < contractWeekTotal 
+    ? contractWeekTotal - totalAllesForAanvulling : 0;
   
   // Totaal niet gewerkt = alle uren behalve gewerkte dag types
   const nietGewerktEntries = empEntries.filter(e => !gewerktTypes.includes(e.shift_type));
