@@ -737,6 +737,102 @@ export default function HelpPage() {
                       </p>
                     </AccordionContent>
                   </AccordionItem>
+                  <AccordionItem value="vehicle-inspection">
+                    <AccordionTrigger>🔍 VehicleInspection - Voertuiginspecties</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Inspectiegegevens per voertuig: checklist items, schade-omschrijving, foto's, handtekening en status.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="expense">
+                    <AccordionTrigger>💰 Expense - Declaraties</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Kosten en declaraties per medewerker: brandstof, parkeren, tol, maaltijden, met bonnen/facturen en goedkeuringsstatus.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="niwo">
+                    <AccordionTrigger>📄 NiwoPermit - NIWO Vergunningen</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Eurovergunningen met vergunningsnummer, geldigheid, toewijzing aan voertuigen en status.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="salary-table">
+                    <AccordionTrigger>💵 SalaryTable - Loontabellen</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        CAO-loontabellen met loonschalen, tredes, uurloon, maandloon en geldigheidsperiodes.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="holiday">
+                    <AccordionTrigger>🎄 Holiday - Feestdagen</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Nationale feestdagen per jaar, gebruikt voor berekening van feestdagtoeslagen.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="message">
+                    <AccordionTrigger>✉️ Message - Berichten</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Interne berichten tussen medewerkers met onderwerp, inhoud, prioriteit en gelezen-status.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="supervisor-message">
+                    <AccordionTrigger>📢 SupervisorMessage - Welkomstberichten</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Welkomstberichten van managers, per afdeling of specifieke medewerker, met geldigheidsperiode. Getoond op het startscherm van de mobiele app.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="article">
+                    <AccordionTrigger>📦 Article - Artikelen</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Artikelen per klant met artikelnummer, omschrijving, eenheid en prijsregels met geldigheidsperiodes.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="timodel-route">
+                    <AccordionTrigger>🛣️ TIModelRoute - TI-Model Routes</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Routemodellen per klant: ritcode, ritnaam, rittijd, aantal stops, norm per uur en geldigheidsperiode.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="customer-import">
+                    <AccordionTrigger>📥 CustomerImport - Klant Imports</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Geïmporteerde Excel-data per klant met kolomtoewijzing, berekende omzetgegevens en status.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="notification">
+                    <AccordionTrigger>🔔 Notification - Notificaties</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Systeemnotificaties voor gebruikers, gegenereerd bij aflopende documenten, goedkeuringen en andere events.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="break-schedule">
+                    <AccordionTrigger>☕ BreakSchedule - Pauzeregels</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Configureerbare pauzeregels op basis van het aantal gewerkte uren per dienst.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
                   </Accordion>
               </div>
 
