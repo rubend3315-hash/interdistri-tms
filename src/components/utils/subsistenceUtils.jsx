@@ -28,9 +28,10 @@ export function calculateSubsistenceAllowance(departureTime, arrivalTime, tripDa
     if (rule.start_date && new Date(tripDate) < new Date(rule.start_date)) return false;
     if (rule.end_date && new Date(tripDate) > new Date(rule.end_date)) return false;
 
-    const nameLower = (rule.name || '').toLowerCase().normalize('NFC');
+    const nameLower = (rule.name || '').toLowerCase();
+    // Match ééndaagse rules - handle both composed and decomposed unicode
     const isVerblijf = nameLower.includes('verblijfskosten') || nameLower.includes('verblijfkosten');
-    const isEendaags = nameLower.includes('ééndaagse') || nameLower.includes('eendaagse') || nameLower.includes('éé') || nameLower.includes('\u00e9\u00e9ndaagse');
+    const isEendaags = nameLower.includes('ndaagse') || nameLower.includes('eendaagse');
     return isVerblijf && isEendaags;
   });
 
