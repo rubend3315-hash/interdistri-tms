@@ -132,7 +132,7 @@ export default function TimeTracking() {
   useEffect(() => {
     const calculateAutoBreak = async () => {
       if (dialogCategory === "gewerkt" && formData.start_time && formData.end_time) {
-        const hours = calculateHours(formData.start_time, formData.end_time, 0);
+        const hours = calculateHours(formData.start_time, formData.end_time, 0, formData.date, formData.end_date);
         const auto = await getBreakMinutesForHours(hours);
         setAutoBreak(auto || 30);
         if (!manualBreak) {
@@ -160,12 +160,17 @@ export default function TimeTracking() {
     calculateHourTypes();
   }, [formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.shift_type]);
 
-  const calculateHours = (start, end, breakMinutes) => {
+  const calculateHours = (start, end, breakMinutes, startDate, endDate) => {
     if (!start || !end) return 0;
     const [startH, startM] = start.split(':').map(Number);
     const [endH, endM] = end.split(':').map(Number);
     let totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
-    if (totalMinutes < 0) totalMinutes += 24 * 60;
+    // Als einddatum volgende dag is, of als eindtijd < starttijd
+    if (endDate && startDate && endDate > startDate) {
+      totalMinutes += 24 * 60;
+    } else if (totalMinutes < 0) {
+      totalMinutes += 24 * 60;
+    }
     totalMinutes -= breakMinutes || 0;
     return Math.round(totalMinutes / 60 * 100) / 100;
   };
@@ -214,7 +219,7 @@ export default function TimeTracking() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = await base44.auth.me();
-    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
+    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
     let breakMinutes = Number(formData.break_minutes) || 0;
     if (!manualBreak && dialogCategory === "gewerkt") {
       const ab = await getBreakMinutesForHours(hours);
