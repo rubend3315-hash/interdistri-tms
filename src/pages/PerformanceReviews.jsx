@@ -401,16 +401,25 @@ function ReviewDialog({ open, onClose, employeeId, employees, review, user }) {
         const queryClient = useQueryClient();
 
         const downloadPDF = async (reviewData) => {
-          const response = await base44.functions.invoke('generatePerformanceReviewPDF', { review: reviewData });
-          const blob = new Blob([response.data], { type: 'application/pdf' });
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `beoordeling_${new Date().toISOString().split('T')[0]}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          a.remove();
+          try {
+            const response = await base44.functions.invoke('generatePerformanceReviewPDF', { 
+              review_id: reviewData.id,
+              review_data: reviewData 
+            });
+            
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `beoordeling_${reviewData.employee_id}_${reviewData.review_date}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+          } catch (error) {
+            console.error('PDF download failed:', error);
+            alert('PDF download mislukt: ' + error.message);
+          }
         };
 
         const calculateKPIPunten = (value, target, higherIsBetter = true) => {
