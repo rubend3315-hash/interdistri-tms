@@ -313,15 +313,15 @@ export default function TimeTracking() {
       const totalHoursRaw = calculateHours(formData.start_time, formData.end_time, 0, startDate, endDate);
       const hours2Raw = totalHoursRaw - hours1;
       
-      // Distribute break: proportionally
+      // Calculate total break based on total raw hours
       let breakMinutes = Number(formData.break_minutes) || 0;
       if (!manualBreak && dialogCategory === "gewerkt") {
         const ab = await getBreakMinutesForHours(totalHoursRaw);
         breakMinutes = ab || breakMinutes;
       }
-      const totalRaw = hours1 + hours2Raw;
-      const break1 = totalRaw > 0 ? Math.round(breakMinutes * (hours1 / totalRaw)) : 0;
-      const break2 = breakMinutes - break1;
+      // Assign all break to the longer part of the shift
+      const break1 = hours1 >= hours2Raw ? breakMinutes : 0;
+      const break2 = hours1 >= hours2Raw ? 0 : breakMinutes;
       
       const finalHours1 = Math.max(0, hours1 - break1 / 60);
       const finalHours2 = Math.max(0, hours2Raw - break2 / 60);
