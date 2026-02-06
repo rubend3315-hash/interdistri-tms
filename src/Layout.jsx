@@ -212,12 +212,25 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Fetch employee data for mobile routing
+  const { data: allEmployees = [] } = useQuery({
+    queryKey: ['employeesForRouting'],
+    queryFn: () => base44.entities.Employee.list(),
+    enabled: isMobile && !!user?.email
+  });
+
+  const currentEmployee = allEmployees.find(e => e.email === user?.email);
+
   useEffect(() => {
-    // Redirect mobile users to MobileEntry
-    if (isMobile && currentPageName !== "MobileEntry") {
-      navigate(createPageUrl("MobileEntry"));
+    // Redirect mobile users to correct MobileEntry based on employee setting
+    if (isMobile && currentPageName !== "MobileEntry" && currentPageName !== "MobileEntryMultiDay") {
+      if (currentEmployee?.mobile_entry_type === "multi_day") {
+        navigate(createPageUrl("MobileEntryMultiDay"));
+      } else {
+        navigate(createPageUrl("MobileEntry"));
+      }
     }
-  }, [isMobile, currentPageName, navigate]);
+  }, [isMobile, currentPageName, navigate, currentEmployee]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
