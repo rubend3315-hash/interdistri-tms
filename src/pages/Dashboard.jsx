@@ -238,11 +238,8 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Charter Overview */}
-      <CharterOverview />
-
       {/* Quick Actions & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Quick Actions */}
         <Card>
           <CardHeader className="pb-4">
@@ -418,6 +415,9 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Charter Overview */}
+        <CharterOverview />
       </div>
     </div>
   );
