@@ -113,7 +113,7 @@ export default function TimeTracking() {
   // Form state
   const [formData, setFormData] = useState({
     employee_id: "", date: "", start_time: "", end_time: "",
-    break_minutes: 30, shift_type: "Dag", project_id: "", customer_id: "",
+    break_minutes: 30, shift_type: "Gewerkte dag", project_id: "", customer_id: "",
     travel_allowance_multiplier: 0, advanced_costs: 0, meals: 0, wkr: 0, notes: ""
   });
   const [autoBreak, setAutoBreak] = useState(null);
@@ -173,7 +173,7 @@ export default function TimeTracking() {
       setFormData({
         employee_id: existing.employee_id, date: existing.date,
         start_time: existing.start_time || "", end_time: existing.end_time || "",
-        break_minutes: existing.break_minutes || 30, shift_type: existing.shift_type || "Dag",
+        break_minutes: existing.break_minutes || 30, shift_type: "Gewerkte dag",
         project_id: existing.project_id || "", customer_id: existing.customer_id || "",
         travel_allowance_multiplier: existing.travel_allowance_multiplier || 0,
         advanced_costs: existing.advanced_costs || 0, meals: existing.meals || 0,
@@ -183,7 +183,7 @@ export default function TimeTracking() {
       setSelectedEntry(null);
       setFormData({
         employee_id: employeeId, date: dateStr, start_time: "", end_time: "",
-        break_minutes: 30, shift_type: "Dag", project_id: "", customer_id: "",
+        break_minutes: 30, shift_type: "Gewerkte dag", project_id: "", customer_id: "",
         travel_allowance_multiplier: 0, advanced_costs: 0, meals: 0, wkr: 0, notes: ""
       });
     }
@@ -293,12 +293,9 @@ export default function TimeTracking() {
 
             <div className="space-y-2">
               <Label>Diensttype</Label>
-              <Select value={formData.shift_type || "Dag"} onValueChange={(v) => setFormData({ ...formData, shift_type: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecteer diensttype" /></SelectTrigger>
-                <SelectContent>
-                  {shiftTypes.map(t => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <div className="h-9 flex items-center px-3 rounded-md border border-input bg-slate-50 text-sm text-slate-700 font-medium">
+                Gewerkte dag
+              </div>
             </div>
 
             {!["Vrij", "Verlof", "Ziek"].includes(formData.shift_type) && (
