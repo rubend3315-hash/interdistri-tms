@@ -107,20 +107,38 @@ export default function Layout({ children, currentPageName }) {
   const printStyles = `
     @media print {
       body, html {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: auto;
-      }
-      nav, aside, .lg\\:ml-72 {
-        display: none !important;
-      }
-      main {
-        display: block !important;
-        margin-left: 0 !important;
-        margin-top: -40px !important;
-        padding: 5px !important;
-      }
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: auto;
+          }
+          nav, aside, .lg\\:ml-72 {
+            display: none !important;
+          }
+          main {
+            display: block !important;
+            margin-left: 0 !important;
+            margin-top: -40px !important;
+            padding: 5px !important;
+          }
+          .print\\:break-before-page {
+            break-before: page !important;
+            page-break-before: always !important;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+          .print\\:block {
+            display: block !important;
+          }
+          .print\\:bg-slate-800 {
+            background-color: #1e293b !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .print\\:rounded-none {
+            border-radius: 0 !important;
+          }
       [role="dialog"] {
         position: relative !important;
         inset: auto !important;
