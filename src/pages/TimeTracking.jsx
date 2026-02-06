@@ -405,7 +405,7 @@ export default function TimeTracking() {
               )}
             </div>
 
-            {["verlof", "atv", "ziek"].includes(dialogCategory) && (
+            {["verlof", "atv", "ziek", "opleiding"].includes(dialogCategory) && (
               <div className="space-y-2">
                 <Label>Uren (roosteruren)</Label>
                 <Input
