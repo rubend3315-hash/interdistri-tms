@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { format } from "date-fns";
 import { isWeekend } from "../utils/hourCalculationUtils";
 import { base44 } from "@/api/base44Client";
