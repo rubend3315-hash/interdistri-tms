@@ -350,8 +350,8 @@ export default function WeekOverview({
                       }
                     </td>
                     <td className="px-4 py-2">
-                      {entry.date && entry.end_time
-                        ? `${format(new Date(entry.date), "EEEE d MMMM yyyy", { locale: nl })} ${entry.end_time}`
+                      {entry.end_time
+                        ? `${format(new Date(entry.end_date || entry.date), "EEEE d MMMM yyyy", { locale: nl })} ${entry.end_time}`
                         : '-'
                       }
                     </td>
