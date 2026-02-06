@@ -1,6 +1,9 @@
 import React from "react";
 import { format } from "date-fns";
 import { isWeekend } from "../utils/hourCalculationUtils";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
+import { calculateSubsistenceAllowance } from "../utils/subsistenceUtils";
 
 export default function WeekSummary({ employee, weekDays, timeEntries, contractHours, contractWeekTotal, trips = [] }) {
   const empEntries = timeEntries.filter(e => e.employee_id === employee.id);
@@ -66,8 +69,16 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const totalVoorgeschoten = empEntries.reduce((s, e) => s + (e.advanced_costs || 0), 0);
   const totalInhoudingen = empEntries.reduce((s, e) => s + (e.meals || 0), 0);
   const totalWkr = empEntries.reduce((s, e) => s + (e.wkr || 0), 0);
-  // Verblijfkosten ophalen uit ritten (trips)
-  const totalSubsistence = trips.reduce((s, t) => s + (t.subsistence_allowance || 0), 0);
+  // CAO-regels voor verblijfskosten
+  const { data: caoRules = [] } = useQuery({
+    queryKey: ['caoRulesVerblijf'],
+    queryFn: () => base44.entities.CaoRule.filter({ category: 'Verblijfkosten', status: 'Actief' })
+  });
+
+  // Verblijfkosten berekenen uit ritten op basis van vertrek/aankomsttijd + CAO-regels
+  const totalSubsistence = trips.reduce((s, t) => {
+    return s + calculateSubsistenceAllowance(t.departure_time, t.arrival_time, t.date, caoRules);
+  }, 0);
 
   // Weekend uren split (za 150%, zo 200%)
   const zaterdagUren = gewerkt.filter(e => {
