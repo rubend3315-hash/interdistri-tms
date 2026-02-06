@@ -8,8 +8,7 @@ import WeekSummary from "./WeekSummary";
 
 const urensoortCategories = [
   { key: "gewerkt", label: "Gewerkt", shiftTypes: ["Gewerkte dag", "Dag", "Avond", "Nacht"] },
-  { key: "algemeen", label: "Algemeen", shiftTypes: [] },
-  { key: "verlof", label: "Verlof", shiftTypes: ["Verlof"] },
+  { key: "verlof", label: "Verlof", shiftTypes: ["Verlof", "Betaalde feestdag", "Bijzonder verlof", "Partner verlof", "Ouderschapsverlof onbetaald", "Ouderschapsverlof betaald 70%", "Partnerverlof", "Zwangerschapsverlof", "Zorgverlof"] },
   { key: "atv", label: "ATV", shiftTypes: ["ATV"] },
   { key: "ziek", label: "Ziek", shiftTypes: ["Ziek"] },
   { key: "opleiding", label: "Opleiding", shiftTypes: ["Opleiding"] },
@@ -21,7 +20,7 @@ export default function WeekOverview({
   weekNumber,
   year,
   timeEntries,
-  onOpenEntry,
+  onOpenEntry, // (employeeId, day, categoryKey)
   onPreviousWeek,
   onNextWeek,
   onPreviousEmployee,
@@ -171,9 +170,8 @@ export default function WeekOverview({
                     const dayTotal = entries.reduce((sum, e) => sum + (e.total_hours || 0), 0);
                     return (
                       <td key={idx} className="text-center px-2 py-2">
-                        {cat.shiftTypes.length > 0 ? (
-                          <button
-                            onClick={() => onOpenEntry(employee.id, day)}
+                        <button
+                            onClick={() => onOpenEntry(employee.id, day, cat.key)}
                             className="w-full min-h-[32px] rounded hover:bg-blue-50 transition-colors flex items-center justify-center"
                           >
                             {dayTotal > 0 ? (
@@ -182,14 +180,6 @@ export default function WeekOverview({
                               <Plus className="w-3.5 h-3.5 text-slate-300" />
                             )}
                           </button>
-                        ) : (
-                          <button
-                            onClick={() => onOpenEntry(employee.id, day)}
-                            className="w-full min-h-[32px] rounded hover:bg-blue-50 transition-colors flex items-center justify-center"
-                          >
-                            <Plus className="w-3.5 h-3.5 text-slate-300" />
-                          </button>
-                        )}
                       </td>
                     );
                   })}
