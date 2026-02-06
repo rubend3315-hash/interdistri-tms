@@ -10,17 +10,7 @@ const urensoortCategories = [
   { key: "gewerkt", label: "Gewerkt", shiftTypes: ["Dag", "Avond", "Nacht"] },
   { key: "algemeen", label: "Algemeen", shiftTypes: [] },
   { key: "verlof", label: "Verlof", shiftTypes: ["Verlof"] },
-  { key: "betaalde_feestdag", label: "Betaalde feestdag", shiftTypes: [] },
   { key: "atv", label: "ATV", shiftTypes: [] },
-  { key: "bijzonder_verlof", label: "Bijzonder verlof", shiftTypes: [] },
-  { key: "partner_verlof", label: "Partner verlof", shiftTypes: [] },
-  { key: "ouderschapsverlof_70", label: "Ouderschapsverlof (70% doorbetaald)", shiftTypes: [] },
-  { key: "ouderschapsverlof_onbetaald", label: "Ouderschapsverlof (onbetaald)", shiftTypes: [] },
-  { key: "onbetaald_verlof", label: "Onbetaald verlof", shiftTypes: [] },
-  { key: "calamiteit_kort_verzuim", label: "Calamiteit/kort verzuimverlof (100% doorbetaald)", shiftTypes: [] },
-  { key: "kortdurend_zorgverlof", label: "Kortdurend zorgverlof (70% doorbetaald)", shiftTypes: [] },
-  { key: "langdurend_zorgverlof", label: "Langdurend zorgverlof (onbetaald)", shiftTypes: [] },
-  { key: "zwangerschapsverlof", label: "Zwangerschapsverlof (70% doorbetaald door UWV)", shiftTypes: [] },
   { key: "ziek", label: "Ziek", shiftTypes: ["Ziek"] },
 ];
 
