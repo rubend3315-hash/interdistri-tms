@@ -70,12 +70,7 @@ export default function TimeTracking() {
   const activeEmployees = employees.filter(e => e.status === 'Actief');
   const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
 
-  // Auto-select first employee
-  useEffect(() => {
-    if (!selectedEmployeeId && activeEmployees.length > 0) {
-      setSelectedEmployeeId(activeEmployees[0].id);
-    }
-  }, [activeEmployees, selectedEmployeeId]);
+  // No auto-select: user must choose an employee first
 
   // Navigate to previous/next employee
   const navigateEmployee = (direction) => {
