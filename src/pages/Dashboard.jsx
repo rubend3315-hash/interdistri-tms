@@ -24,6 +24,7 @@ import {
   Car,
   Bell
 } from "lucide-react";
+import CharterOverview from "../components/dashboard/CharterOverview";
 
 export default function Dashboard() {
   const today = new Date();
@@ -236,6 +237,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Charter Overview */}
+      <CharterOverview />
 
       {/* Quick Actions & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
