@@ -42,29 +42,20 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         Weeksamenvatting
       </div>
       <div className="p-4 space-y-6">
-        {/* Gewerkte uren */}
+        {/* Uren per categorie */}
         <div>
-          <h4 className="font-semibold text-slate-800 mb-2">Gewerkte uren</h4>
+          <h4 className="font-semibold text-slate-800 mb-2">Uren per categorie</h4>
           <div className="grid grid-cols-2 gap-y-1 text-sm">
             <span className="text-slate-600">Gewerkt</span>
             <span>{fmt(totalGewerkt)}</span>
-            <span className="text-slate-600">Overuren</span>
+            <span className="text-slate-600 pl-4">— Overuren</span>
             <span>{fmt(totalOveruren)}</span>
-            <span className="text-slate-600">Nachturen</span>
+            <span className="text-slate-600 pl-4">— Nachturen</span>
             <span>{fmt(totalNachturen)}</span>
-            <span className="text-slate-600">Weekenduren</span>
+            <span className="text-slate-600 pl-4">— Weekenduren</span>
             <span>{fmt(totalWeekenduren)}</span>
-            <span className="text-slate-600">Feestdaguren</span>
+            <span className="text-slate-600 pl-4">— Feestdaguren</span>
             <span>{fmt(totalFeestdaguren)}</span>
-            <span className="text-slate-600">Gewerkte dagen</span>
-            <span>{gewerkeDagen} dag(en)</span>
-          </div>
-        </div>
-
-        {/* Verlof, ATV, Ziek, Opleiding */}
-        <div>
-          <h4 className="font-semibold text-slate-800 mb-2">Verlof, ATV, Ziek & Opleiding</h4>
-          <div className="grid grid-cols-2 gap-y-1 text-sm">
             <span className="text-slate-600">Verlof</span>
             <span>{fmt(totalVerlof)}</span>
             <span className="text-slate-600">ATV</span>
@@ -73,11 +64,13 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
             <span>{fmt(totalZiek)}</span>
             <span className="text-slate-600">Opleiding</span>
             <span>{fmt(totalOpleiding)}</span>
+            <span className="text-slate-600">Gewerkte dagen</span>
+            <span>{gewerkeDagen} dag(en)</span>
           </div>
         </div>
 
         {/* Totalen & Compensatie */}
-        <div>
+        <div className="border-t pt-4">
           <h4 className="font-semibold text-slate-800 mb-2">Totalen</h4>
           <div className="grid grid-cols-2 gap-y-1 text-sm">
             <span className="text-slate-600 font-semibold">Totaal uren</span>
