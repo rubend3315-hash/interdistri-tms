@@ -19,7 +19,7 @@ import EmployeeSidebar from "../components/timetracking/EmployeeSidebar";
 import WeekCalendar from "../components/timetracking/WeekCalendar";
 import WeekOverview from "../components/timetracking/WeekOverview";
 
-const fallbackShiftTypes = ["Dag", "Avond", "Nacht", "Vrij", "Verlof", "Ziek"];
+
 
 export default function TimeTracking() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -54,13 +54,18 @@ export default function TimeTracking() {
     queryFn: () => base44.entities.Customer.list()
   });
 
-  const { data: uurcodes = [] } = useQuery({
-    queryKey: ['uurcodes'],
-    queryFn: () => base44.entities.Uurcode.list()
+  const { data: urensoorten = [] } = useQuery({
+    queryKey: ['urensoorten'],
+    queryFn: () => base44.entities.Urensoort.list()
   });
 
-  const activeUurcodes = uurcodes.filter(u => u.status === 'Actief').sort((a, b) => a.code.localeCompare(b.code));
-  const shiftTypes = activeUurcodes.length > 0 ? activeUurcodes.map(u => u.name) : fallbackShiftTypes;
+  // Verlofsoorten uit Urensoort (alles behalve ATV)
+  const verlofSoorten = urensoorten
+    .filter(u => u.status === 'Actief' && u.name !== 'ATV')
+    .filter(u => ['VER', 'BFD', 'BVL', 'PVL', 'OSV70', 'OSV70B', 'PVLW', 'ZWV', 'ZVL'].includes(u.code) || 
+                 u.name.toLowerCase().includes('verlof') || 
+                 u.name.toLowerCase().includes('feestdag'))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const activeEmployees = employees.filter(e => e.status === 'Actief');
   const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
@@ -111,6 +116,7 @@ export default function TimeTracking() {
   });
 
   // Form state
+  const [dialogCategory, setDialogCategory] = useState("gewerkt");
   const [formData, setFormData] = useState({
     employee_id: "", date: "", start_time: "", end_time: "",
     break_minutes: 30, shift_type: "Gewerkte dag", project_id: "", customer_id: "",
@@ -164,8 +170,20 @@ export default function TimeTracking() {
     return Math.round(totalMinutes / 60 * 100) / 100;
   };
 
-  const openEntryDialog = (employeeId, date) => {
+  const categoryToShiftType = {
+    gewerkt: "Gewerkte dag",
+    opleiding: "Opleiding",
+    atv: "ATV",
+    ziek: "Ziek",
+  };
+
+  const openEntryDialog = (employeeId, date, categoryKey = "gewerkt") => {
     const dateStr = format(date, 'yyyy-MM-dd');
+    setDialogCategory(categoryKey);
+
+    const fixedType = categoryToShiftType[categoryKey];
+    const defaultShiftType = fixedType || "Verlof";
+
     const existing = timeEntries.find(e => e.employee_id === employeeId && e.date === dateStr);
 
     if (existing) {
@@ -173,7 +191,7 @@ export default function TimeTracking() {
       setFormData({
         employee_id: existing.employee_id, date: existing.date,
         start_time: existing.start_time || "", end_time: existing.end_time || "",
-        break_minutes: existing.break_minutes || 30, shift_type: "Gewerkte dag",
+        break_minutes: existing.break_minutes || 30, shift_type: existing.shift_type || defaultShiftType,
         project_id: existing.project_id || "", customer_id: existing.customer_id || "",
         travel_allowance_multiplier: existing.travel_allowance_multiplier || 0,
         advanced_costs: existing.advanced_costs || 0, meals: existing.meals || 0,
@@ -183,7 +201,7 @@ export default function TimeTracking() {
       setSelectedEntry(null);
       setFormData({
         employee_id: employeeId, date: dateStr, start_time: "", end_time: "",
-        break_minutes: 30, shift_type: "Gewerkte dag", project_id: "", customer_id: "",
+        break_minutes: 30, shift_type: defaultShiftType, project_id: "", customer_id: "",
         travel_allowance_multiplier: 0, advanced_costs: 0, meals: 0, wkr: 0, notes: ""
       });
     }
@@ -293,12 +311,23 @@ export default function TimeTracking() {
 
             <div className="space-y-2">
               <Label>Diensttype</Label>
-              <div className="h-9 flex items-center px-3 rounded-md border border-input bg-slate-50 text-sm text-slate-700 font-medium">
-                Gewerkte dag
-              </div>
+              {dialogCategory === "verlof" ? (
+                <Select value={formData.shift_type} onValueChange={(v) => setFormData({ ...formData, shift_type: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecteer verlofsoort" /></SelectTrigger>
+                  <SelectContent>
+                    {verlofSoorten.map(v => (
+                      <SelectItem key={v.id} value={v.name}>{v.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="h-9 flex items-center px-3 rounded-md border border-input bg-slate-50 text-sm text-slate-700 font-medium">
+                  {categoryToShiftType[dialogCategory] || formData.shift_type}
+                </div>
+              )}
             </div>
 
-            {!["Vrij", "Verlof", "Ziek"].includes(formData.shift_type) && (
+            {dialogCategory === "gewerkt" && (
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
