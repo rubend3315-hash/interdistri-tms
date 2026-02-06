@@ -278,7 +278,7 @@ export default function TimeTracking() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = await base44.auth.me();
-    const isNonWorked = ["verlof", "atv", "ziek"].includes(dialogCategory);
+    const isNonWorked = ["verlof", "atv", "ziek", "opleiding"].includes(dialogCategory);
     const hours = isNonWorked
       ? Number(formData.total_hours_override) || 0
       : calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
