@@ -227,13 +227,15 @@ export default function Layout({ children, currentPageName }) {
   const currentEmployee = allEmployees.find(e => e.email === user?.email);
 
   useEffect(() => {
-    // Redirect mobile users to correct MobileEntry based on employee setting
-    if (isMobile && currentPageName !== "MobileEntry" && currentPageName !== "MobileEntryMultiDay") {
-      if (currentEmployee?.mobile_entry_type === "multi_day") {
-        navigate(createPageUrl("MobileEntryMultiDay"));
-      } else {
-        navigate(createPageUrl("MobileEntry"));
-      }
+    if (!isMobile || !currentEmployee) return;
+    
+    const isMultiDay = currentEmployee.mobile_entry_type === "multi_day";
+    const targetPage = isMultiDay ? "MobileEntryMultiDay" : "MobileEntry";
+    const wrongPage = isMultiDay ? "MobileEntry" : "MobileEntryMultiDay";
+    
+    // Redirect to correct mobile page if on wrong one or not on any mobile page
+    if (currentPageName === wrongPage || (currentPageName !== "MobileEntry" && currentPageName !== "MobileEntryMultiDay")) {
+      navigate(createPageUrl(targetPage));
     }
   }, [isMobile, currentPageName, navigate, currentEmployee]);
 
