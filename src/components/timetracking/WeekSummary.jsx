@@ -172,8 +172,8 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
     }
   }
 
-  // Weekend uren split (za 150%, zo 200%)
-  const zaterdagUren = gewerkt.filter(e => {
+  // Weekend uren berekening
+  const zaterdagUrenTotaal = gewerkt.filter(e => {
     const d = new Date(e.date);
     return d.getDay() === 6;
   }).reduce((s, e) => s + (e.total_hours || 0), 0);
@@ -183,16 +183,15 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
     return d.getDay() === 0;
   }).reduce((s, e) => s + (e.total_hours || 0), 0);
 
-  // Overwerk op za/zo
-  const zaterdagOverwerk = gewerkt.filter(e => {
-    const d = new Date(e.date);
-    return d.getDay() === 6;
-  }).reduce((s, e) => s + (e.overtime_hours || 0), 0);
+  // Zaterdag: contracturen-tekort wordt aangevuld vanuit zaterdaguren (diensturen 150% + 50% toeslag)
+  // Rest van zaterdaguren = overwerk 150%
+  // maVrOverwerkTotal = totaal ma-vr uren (gewerkt+verlof+atv+ziek excl. opleiding)
+  const contractTekort = contractWeekTotal > 0 ? Math.max(0, contractWeekTotal - maVrOverwerkTotal) : 0;
+  const zaterdagDiensturen = Math.min(zaterdagUrenTotaal, contractTekort); // uren die contract aanvullen
+  const zaterdagOverwerk = Math.max(0, zaterdagUrenTotaal - contractTekort); // uren boven contract = overwerk
 
-  const zondagOverwerk = gewerkt.filter(e => {
-    const d = new Date(e.date);
-    return d.getDay() === 0;
-  }).reduce((s, e) => s + (e.overtime_hours || 0), 0);
+  // Zondag overwerk
+  const zondagOverwerk = zondagUren; // alle zondag uren zijn overwerk
 
   const fmt = (val) => val > 0 ? `${val.toFixed(4).replace('.', ',')} uur` : '- uur';
   const fmtEuro = (val) => `€ ${val.toFixed(2).replace('.', ',')}`;
