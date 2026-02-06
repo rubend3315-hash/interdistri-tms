@@ -144,10 +144,14 @@ export default function Dashboard() {
 
   expiringDocuments.sort((a, b) => a.daysUntil - b.daysUntil);
 
-  // Recent activities - only show submitted and approved entries
+  // Recent activities - only show submitted and approved entries, deduplicated by employee+date
   const recentTimeEntries = [...timeEntries]
-    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
     .filter(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd')
+    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+    .filter((entry, index, arr) => {
+      const key = `${entry.employee_id}_${entry.date}`;
+      return arr.findIndex(e => `${e.employee_id}_${e.date}` === key) === index;
+    })
     .slice(0, 5);
 
   return (
