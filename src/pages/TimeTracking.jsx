@@ -280,7 +280,10 @@ export default function TimeTracking() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = await base44.auth.me();
-    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
+    const isNonWorked = ["verlof", "atv", "ziek"].includes(dialogCategory);
+    const hours = isNonWorked
+      ? Number(formData.total_hours_override) || 0
+      : calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
     let breakMinutes = Number(formData.break_minutes) || 0;
     if (!manualBreak && dialogCategory === "gewerkt") {
       const ab = await getBreakMinutesForHours(hours);
@@ -293,16 +296,19 @@ export default function TimeTracking() {
     const submitData = {
       ...formData, week_number: weekNumber, year,
       shift_type: finalShiftType,
-      total_hours: calculatedHours?.total_hours || hours,
-      overtime_hours: calculatedHours?.overtime_hours || 0,
-      night_hours: calculatedHours?.night_hours || 0,
-      weekend_hours: calculatedHours?.weekend_hours || 0,
-      holiday_hours: calculatedHours?.holiday_hours || 0,
-      break_minutes: breakMinutes,
+      total_hours: isNonWorked ? hours : (calculatedHours?.total_hours || hours),
+      overtime_hours: isNonWorked ? 0 : (calculatedHours?.overtime_hours || 0),
+      night_hours: isNonWorked ? 0 : (calculatedHours?.night_hours || 0),
+      weekend_hours: isNonWorked ? 0 : (calculatedHours?.weekend_hours || 0),
+      holiday_hours: isNonWorked ? 0 : (calculatedHours?.holiday_hours || 0),
+      break_minutes: isNonWorked ? 0 : breakMinutes,
+      start_time: isNonWorked ? "" : formData.start_time,
+      end_time: isNonWorked ? "" : formData.end_time,
       status: 'Goedgekeurd',
       approved_by: user?.email,
       approved_date: new Date().toISOString()
     };
+    delete submitData.total_hours_override;
     if (selectedEntry) {
       updateMutation.mutate({ id: selectedEntry.id, data: submitData });
     } else {
