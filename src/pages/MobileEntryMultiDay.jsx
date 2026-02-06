@@ -300,7 +300,7 @@ export default function MobileEntryMultiDay() {
       end_time: formData.end_time,
       break_minutes: Number(formData.break_minutes) || 0,
       total_hours: hours,
-      shift_type: determineShiftType(formData.start_time),
+      shift_type: determineShiftType(formData.start_time, formData.end_time),
       notes: formData.notes,
       status: isOnline ? "Ingediend" : "Concept",
       signature_url: signature
@@ -377,7 +377,7 @@ export default function MobileEntryMultiDay() {
       end_time: formData.end_time,
       break_minutes: Number(formData.break_minutes) || 0,
       total_hours: hours,
-      shift_type: determineShiftType(formData.start_time),
+      shift_type: determineShiftType(formData.start_time, formData.end_time),
       notes: formData.notes,
       status: "Concept"
     });
