@@ -69,6 +69,12 @@ const menuItems = [
     ]
   },
   {
+    label: "Charters",
+    items: [
+      { name: "Charters", icon: Truck, page: "Charters" },
+    ]
+    },
+    {
     label: "Klanten",
     items: [
       { name: "Klanten", icon: Building2, page: "Customers" },
@@ -217,8 +223,9 @@ export default function Layout({ children, currentPageName }) {
       'Holidays': 'holidays',
       'SalaryReports': 'reports',
       'MobileEntry': 'mobile',
-      'Messages': 'messages'
-    };
+      'Messages': 'messages',
+      'Charters': 'charters'
+      };
     
     const requiredPermission = pagePermissionMap[page];
     if (!requiredPermission) return true; // If a page has no defined permission, assume accessible
