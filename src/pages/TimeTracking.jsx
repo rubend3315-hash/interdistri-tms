@@ -316,6 +316,8 @@ export default function TimeTracking() {
               onPreviousEmployee={() => navigateEmployee('prev')}
               onNextEmployee={() => navigateEmployee('next')}
               contractregels={selectedEmployee?.contractregels}
+              onDeleteDay={handleDeleteDay}
+              onDeleteWeek={handleDeleteWeek}
             />
           </div>
         </div>
