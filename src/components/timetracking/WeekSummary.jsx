@@ -232,7 +232,6 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         {/* Ziek */}
         <SectionHeader title="Ziek" />
         <SummaryRow label="Ziek" value={fmt(totalZiek)} />
-        <SummaryRow label="Wachtdag" value={hasWachtdag ? 'Ja' : 'Nee'} />
 
         {/* Toeslagen en inhoudingen */}
         <SectionHeader title="Toeslagen en inhoudingen" />
