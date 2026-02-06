@@ -24,7 +24,8 @@ import {
   Clock,
   Heart,
   IdCard,
-  User
+  User,
+  Smartphone
 } from "lucide-react";
 import { format, addMonths, isBefore } from 'date-fns';
 
