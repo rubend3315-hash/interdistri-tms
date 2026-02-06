@@ -299,7 +299,7 @@ export default function TimeTracking() {
       && formData.end_date !== formData.date 
       && areDifferentWeeks(formData.date, formData.end_date);
 
-    if (spansWeekBoundary && !selectedEntry) {
+    if (spansWeekBoundary) {
       // Split into two entries: one for each week
       const startDate = formData.date;
       const endDate = formData.end_date;
