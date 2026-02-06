@@ -224,7 +224,7 @@ export default function TimeTracking() {
       ).length;
       const hoursPerDay = workingDays > 0 ? (active.uren_per_week || 0) / workingDays : 0;
       const isWorking = weekSchedule[dutchDay];
-      return (isWorking === true || isWorking === 'true') ? Math.round(hoursPerDay * 100) / 100 : 0;
+      return (isWorking === true || isWorking === 'true') ? Math.round(hoursPerDay * 10000) / 10000 : 0;
     } else {
       const value = weekSchedule[dutchDay];
       return typeof value === 'number' ? value : (typeof value === 'string' && value !== '-' ? parseFloat(value) || 0 : 0);
@@ -411,7 +411,7 @@ export default function TimeTracking() {
                 <Input
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="0.0001"
                   value={formData.total_hours_override || 0}
                   onChange={(e) => setFormData({ ...formData, total_hours_override: Number(e.target.value) })}
                 />
