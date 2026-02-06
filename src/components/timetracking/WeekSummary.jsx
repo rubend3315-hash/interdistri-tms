@@ -78,44 +78,55 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   // Filter alleen verblijfkosten regels
   const verblijfRules = caoRules.filter(r => r.category === 'Verblijfkosten' && r.status === 'Actief');
 
-  // Verblijfkosten berekenen uit ritten op basis van vertrek/aankomsttijd + CAO-regels
-  let totalSubsistence = 0;
-  let subsistence1800 = 0;
+  // Verblijfkosten berekenen uit ritten - uitgesplitst per soort
+  let subsistenceBasis = 0;    // Basisbedrag (uren × basistarief, excl. avonduren)
+  let subsistence1800 = 0;     // Avonduren × avondtarief (18:00-24:00)
+  let subsistenceLangeDag = 0; // Toeslag 12+ uur
 
   if (verblijfRules.length > 0 && trips.length > 0) {
+    // Zoek eendaagse regels
+    const eendaagsRules = verblijfRules.filter(r => {
+      const n = (r.name || '').toLowerCase();
+      const isMeerdaags = n.includes('meerdaags');
+      const isEendaags = (n.includes('ndaagse') || n.includes('eendaagse')) && !isMeerdaags;
+      return (n.includes('verblijfskosten') || n.includes('verblijfkosten')) && isEendaags;
+    });
+
+    const basisRule = eendaagsRules.find(r => !r.start_time && !r.end_time && !(r.name || '').toLowerCase().includes('toeslag'));
+    const basisRate = basisRule?.value || 0;
+
+    const avondRule = eendaagsRules.find(r => r.start_time && parseInt(r.start_time) >= 17);
+    const avondRate = avondRule?.value || 0;
+
+    const toeslagRule = eendaagsRules.find(r => {
+      const n = (r.name || '').toLowerCase();
+      const d = (r.description || '').toLowerCase();
+      return (n.includes('toeslag') || d.includes('toeslag')) && (d.includes('12 uur') || d.includes('12uur'));
+    });
+
     for (const trip of trips) {
       if (!trip.departure_time || !trip.arrival_time) continue;
-      
-      const amount = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date, verblijfRules);
-      totalSubsistence += amount;
-      
-      // Bereken het avondgedeelte (18:00-24:00) apart
+
       const [depH, depM] = trip.departure_time.split(':').map(Number);
       const [arrH, arrM] = trip.arrival_time.split(':').map(Number);
       let totalMin = (arrH * 60 + arrM) - (depH * 60 + depM);
       const spansNextDay = totalMin < 0;
       if (spansNextDay) totalMin += 24 * 60;
-      
+      const tripHours = totalMin / 60;
+
+      if (tripHours <= 4) continue;
+
       const depMinutes = depH * 60 + depM;
-      
-      // Avondregel zoeken (18:00-23:59 of 18:00-24:00)
-      const avondRule = verblijfRules.find(r => {
-        const nameLower = (r.name || '').toLowerCase();
-        return nameLower.includes('ééndaagse') && r.start_time && 
-          parseInt(r.start_time) >= 17;
-      });
-      
-      if (avondRule && depMinutes < 14 * 60) {
+      const arrMinutes = arrH * 60 + arrM;
+      const departsBefore14 = depMinutes < 14 * 60;
+
+      if (!departsBefore14 || !basisRule) continue;
+
+      // Bereken avonduren overlap (18:00-24:00)
+      let avondHours = 0;
+      if (avondRule) {
         const ruleStart = 18 * 60;
         const ruleEnd = 24 * 60;
-        const basisRule = verblijfRules.find(r => {
-          const n = (r.name || '').toLowerCase();
-          return n.includes('ééndaagse') && n.includes('basis') && !r.start_time;
-        });
-        const basisRate = basisRule?.value || 0;
-        const avondRate = avondRule.value || 0;
-        
-        let avondHours = 0;
         if (spansNextDay) {
           const overlapStart = Math.max(depMinutes, ruleStart);
           const overlapEnd = Math.min(24 * 60, ruleEnd);
@@ -125,10 +136,18 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
           const overlapEnd = Math.min(depMinutes + totalMin, ruleEnd);
           if (overlapEnd > overlapStart) avondHours = (overlapEnd - overlapStart) / 60;
         }
-        
-        if (avondHours > 0) {
-          subsistence1800 += avondHours * (avondRate - basisRate);
-        }
+      }
+
+      // Basisuren = totale uren minus avonduren
+      const basisHours = tripHours - avondHours;
+      subsistenceBasis += basisHours * basisRate;
+
+      // Avond apart
+      subsistence1800 += avondHours * avondRate;
+
+      // Lange dag toeslag (12+ uur)
+      if (tripHours >= 12 && toeslagRule) {
+        subsistenceLangeDag += toeslagRule.value || toeslagRule.fixed_amount || 0;
       }
     }
   }
