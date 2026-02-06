@@ -35,14 +35,21 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const totalFeestdaguren = gewerkt.reduce((s, e) => s + (e.holiday_hours || 0), 0);
   const gewerkeDagen = new Set(gewerkt.map(e => e.date)).size;
 
-  // Overwerk: berekend per dag over gewerkt+verlof+atv+ziek (excl. opleiding), boven 9 uur
-  const maxDailyHours = 9;
-  const totalOveruren = weekDays.reduce((sum, day) => {
+  // Overwerk 130%: berekend over ma-vr totaal, boven contracturen per week
+  // Alleen ma-vr dagen (index 0-4 in weekDays = ma t/m vr)
+  const maVrDays = weekDays.filter(day => {
+    const d = new Date(day);
+    const dayOfWeek = d.getDay();
+    return dayOfWeek >= 1 && dayOfWeek <= 5; // ma=1 t/m vr=5
+  });
+  const maVrOverwerkTotal = maVrDays.reduce((sum, day) => {
     const dateStr = format(day, 'yyyy-MM-dd');
     const dayEntries = overwerkEntries.filter(e => e.date === dateStr);
-    const dayTotal = dayEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
-    return sum + Math.max(0, dayTotal - maxDailyHours);
+    return sum + dayEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
   }, 0);
+  const totalOveruren = contractWeekTotal > 0 
+    ? Math.max(0, maVrOverwerkTotal - contractWeekTotal) 
+    : 0;
 
   // Aanvulling contracturen = contracturen - totaal alle uren (als positief)
   const totalAllesForAanvulling = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
