@@ -264,10 +264,8 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         <SummaryRow label="Verblijfskosten meerdaags" value={fmtEuro(0)} />
         <SummaryRow label="Toeslagenmatrix 19%" value={fmt(0)} />
         <SummaryRow label="Overwerk 130%" value={fmt(totalOveruren)} />
-        <SummaryRow label="Diensturen zaterdag 100%" value={fmt(zaterdagDiensturen)} />
         <SummaryRow label="Toeslag diensturen zaterdag 50%" value={fmt(zaterdagDiensturen)} />
         <SummaryRow label="Zaterdag overwerk 150%" value={fmt(zaterdagOverwerk)} />
-        <SummaryRow label="Diensturen zondag 100%" value={fmt(zondagDiensturen)} />
         <SummaryRow label="Toeslag diensturen zondag 100%" value={fmt(zondagDiensturen)} />
         <SummaryRow label="Zondag overwerk 200%" value={fmt(zondagOverwerk)} />
         <SummaryRow label="Diensturen feestdag 200%" value={fmt(totalFeestdaguren)} />
