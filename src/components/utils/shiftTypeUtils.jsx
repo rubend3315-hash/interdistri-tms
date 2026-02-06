@@ -11,7 +11,7 @@ export function determineShiftType(startTime) {
   
   if (hours >= 21 || hours < 5) {
     return "Nachtdienst";
-  } else if (hours >= 18) {
+  } else if (hours >= 16) {
     return "Avond";
   } else {
     return "Dag";
