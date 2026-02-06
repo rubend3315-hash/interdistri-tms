@@ -85,6 +85,44 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
     return contractHours[idx] === 0;
   });
 
+  // Toeslagenmatrix 19%: diensturen ma-zo tussen 21:00 en 05:00
+  const toeslagMatrix19 = gewerkt.reduce((sum, entry) => {
+    if (!entry.start_time || !entry.end_time) return sum;
+    const [sH, sM] = entry.start_time.split(':').map(Number);
+    const [eH, eM] = entry.end_time.split(':').map(Number);
+    const startMin = sH * 60 + sM;
+    const endMin = eH * 60 + eM;
+    const spansNextDay = endMin <= startMin;
+
+    // Nachtvenster: 21:00-05:00 = twee blokken: 21:00-24:00 (1260-1440) en 00:00-05:00 (0-300)
+    let nightMinutes = 0;
+
+    if (spansNextDay) {
+      // Shift loopt over middernacht
+      // Blok 1: start tot 24:00 → overlap met 21:00-24:00
+      const overlapStart1 = Math.max(startMin, 21 * 60);
+      const overlapEnd1 = 24 * 60;
+      if (overlapEnd1 > overlapStart1) nightMinutes += overlapEnd1 - overlapStart1;
+
+      // Blok 2: 00:00 tot eind → overlap met 00:00-05:00
+      const overlapEnd2 = Math.min(endMin, 5 * 60);
+      if (overlapEnd2 > 0) nightMinutes += overlapEnd2;
+    } else {
+      // Zelfde dag
+      // Overlap met 00:00-05:00
+      const overlapEnd_early = Math.min(endMin, 5 * 60);
+      const overlapStart_early = Math.min(startMin, 5 * 60);
+      if (overlapEnd_early > overlapStart_early) nightMinutes += overlapEnd_early - overlapStart_early;
+
+      // Overlap met 21:00-24:00
+      const overlapStart_late = Math.max(startMin, 21 * 60);
+      const overlapEnd_late = Math.min(endMin, 24 * 60);
+      if (overlapEnd_late > overlapStart_late) nightMinutes += overlapEnd_late - overlapStart_late;
+    }
+
+    return sum + nightMinutes / 60;
+  }, 0);
+
   // Toeslagen berekeningen
   const totalVoorgeschoten = empEntries.reduce((s, e) => s + (e.advanced_costs || 0), 0);
   const totalInhoudingen = empEntries.reduce((s, e) => s + (e.meals || 0), 0);
