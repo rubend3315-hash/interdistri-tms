@@ -301,6 +301,324 @@ export default function HelpPage() {
                   <li>✓ Offline synchronisatie</li>
                   <li>✓ Handtekening functionaliteit</li>
                   <li>✓ Berichten en notificaties</li>
+                  <li>✓ Meerdaagse diensten (aparte app via profiel)</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Contracten */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-indigo-600" />
+                  Contracten
+                </CardTitle>
+                <CardDescription>Contractbeheer per medewerker</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Beheer contractgegevens en -regels:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Contractregels met start-/einddatum</li>
+                  <li>✓ Loonschaal en uren per week</li>
+                  <li>✓ Tweewekelijks roosterschema (week 1/week 2)</li>
+                  <li>✓ Reiskostenregels per medewerker</li>
+                  <li>✓ Contract PDF generatie</li>
+                  <li>✓ Automatische herinneringen bij afloop</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Klanten */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-teal-600" />
+                  Klanten
+                </CardTitle>
+                <CardDescription>Klantbeheer en artikelen</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Centraal klantbeheer met uitgebreide opties:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Bedrijfsgegevens, KvK en BTW</li>
+                  <li>✓ Artikelen en prijsregels per klant</li>
+                  <li>✓ TI-Model routes met normen</li>
+                  <li>✓ Excel import van klantdata</li>
+                  <li>✓ Berekeningen en omzetoverzicht</li>
+                  <li>✓ Import historie en rapportage</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Projecten */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FolderKanban className="w-5 h-5 text-cyan-600" />
+                  Projecten
+                </CardTitle>
+                <CardDescription>Projectbeheer en -tracking</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Beheer projecten gekoppeld aan klanten:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Projecten per klant aanmaken</li>
+                  <li>✓ Budget en looptijd bijhouden</li>
+                  <li>✓ Status volgen (Actief, Voltooid, etc.)</li>
+                  <li>✓ Koppeling met tijdregistraties en ritten</li>
+                  <li>✓ Excel import en datavalidatie</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Loonrapport */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileSpreadsheet className="w-5 h-5 text-green-600" />
+                  Loonrapporten
+                </CardTitle>
+                <CardDescription>Loonverwerking en rapportages</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Genereer overzichten voor loonverwerking:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Weekoverzichten per medewerker</li>
+                  <li>✓ Berekening overuren, nachturen, weekenduren</li>
+                  <li>✓ Toeslagen conform CAO</li>
+                  <li>✓ Reiskostenvergoeding berekening</li>
+                  <li>✓ Verblijfskosten en inhoudingen</li>
+                  <li>✓ Export naar PDF en e-mail</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Loontabellen */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-yellow-600" />
+                  Loontabellen
+                </CardTitle>
+                <CardDescription>CAO-loontabellen beheren</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Beheer loonschalen en uurlonen:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ CAO Beroepsgoederenvervoer tabellen</li>
+                  <li>✓ Loonschalen met tredes</li>
+                  <li>✓ Uurloon en maandloon</li>
+                  <li>✓ Geldig vanaf/tot periodes</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* CAO-regels */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-rose-600" />
+                  CAO-regels
+                </CardTitle>
+                <CardDescription>Toeslagen en vergoedingsregels</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Configureer alle CAO-gerelateerde regels:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Bijzondere arbeid toeslagen (nacht, weekend, feestdag)</li>
+                  <li>✓ Overwerkvergoedingen en percentages</li>
+                  <li>✓ Verblijfskosten en reiskosten</li>
+                  <li>✓ Pauzeregels per dienstlengte</li>
+                  <li>✓ Prioriteiten en geldigheidsperiodes</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* HRM-instellingen */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-slate-600" />
+                  HRM-instellingen
+                </CardTitle>
+                <CardDescription>Urensoorten en uurcodes</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Configureer de basis voor tijdregistratie:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Urensoorten (Gewerkt, Verlof, ATV, Ziek, etc.)</li>
+                  <li>✓ Uurcodes per urensoort</li>
+                  <li>✓ Feestdagen beheer per jaar</li>
+                  <li>✓ Pauzeregels configuratie</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Berichten */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-sky-600" />
+                  Berichten
+                </CardTitle>
+                <CardDescription>Interne communicatie</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Communiceer met medewerkers:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Berichten sturen naar medewerkers</li>
+                  <li>✓ Prioriteit instellen (Normaal, Hoog, Urgent)</li>
+                  <li>✓ Gelezen/ongelezen status</li>
+                  <li>✓ Welkomstberichten per afdeling</li>
+                  <li>✓ Zichtbaar in mobiele app</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Charters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-violet-600" />
+                  Charters
+                </CardTitle>
+                <CardDescription>Charterbeheer</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Beheer charter opdrachten:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Charter overzicht en planning</li>
+                  <li>✓ Koppeling met voertuigen en chauffeurs</li>
+                  <li>✓ Klant- en routegegevens</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Voertuigen */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Car className="w-5 h-5 text-amber-600" />
+                  Voertuigen
+                </CardTitle>
+                <CardDescription>Wagenpark beheer</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Beheer je complete wagenpark:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Kenteken, merk, model en bouwjaar</li>
+                  <li>✓ Brandstoftype (Diesel, Elektrisch, Hybride, etc.)</li>
+                  <li>✓ APK, verzekering en tachograaf vervaldatums</li>
+                  <li>✓ Voertuiginspecties met foto's</li>
+                  <li>✓ NIWO vergunningen koppeling</li>
+                  <li>✓ Status monitoring (Beschikbaar, In onderhoud, etc.)</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* NIWO Vergunningen */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-slate-600" />
+                  NIWO Vergunningen
+                </CardTitle>
+                <CardDescription>Eurovergunningen beheer</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Beheer NIWO vergunningen:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Vergunningsnummers en geldigheid</li>
+                  <li>✓ Toewijzing aan voertuigen</li>
+                  <li>✓ Status (Beschikbaar, Toegewezen, Verlopen)</li>
+                  <li>✓ Vervaldatum monitoring</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Resultaat & Ontwikkeling */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-pink-600" />
+                  Resultaat & Ontwikkeling
+                </CardTitle>
+                <CardDescription>Beoordelingen en ontwikkeling</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Beheer beoordelingen en ontwikkeling van medewerkers:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Periodieke beoordelingen</li>
+                  <li>✓ Notities en ontwikkelafspraken</li>
+                  <li>✓ PDF generatie van beoordelingen</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Back-ups & Beheer */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-red-600" />
+                  Back-ups & Datamigratie
+                </CardTitle>
+                <CardDescription>Gegevensbeveiliging en migratie</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Bescherm en migreer je data:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Handmatige en automatische back-ups</li>
+                  <li>✓ Back-up herstellen</li>
+                  <li>✓ Datamigratie tools</li>
+                  <li>✓ Test database ondersteuning</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Gebruikers & Permissies */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-gray-600" />
+                  Gebruikers & Permissies
+                </CardTitle>
+                <CardDescription>Toegangsbeheer</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Beheer wie wat mag zien en doen:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Gebruikers uitnodigen en beheren</li>
+                  <li>✓ Rollen: Admin en Gebruiker</li>
+                  <li>✓ Permissies per pagina/module</li>
+                  <li>✓ Mobiele app type toewijzing (standaard/meerdaags)</li>
                 </ul>
               </CardContent>
             </Card>
