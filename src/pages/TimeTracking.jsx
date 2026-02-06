@@ -275,10 +275,128 @@ export default function TimeTracking() {
     setIsDialogOpen(true);
   };
 
+  // Helper: check if two dates are in different ISO weeks (week starts Monday)
+  const areDifferentWeeks = (dateStr1, dateStr2) => {
+    if (!dateStr1 || !dateStr2 || dateStr1 === dateStr2) return false;
+    const d1 = new Date(dateStr1);
+    const d2 = new Date(dateStr2);
+    const w1 = getWeek(d1, { weekStartsOn: 1 });
+    const y1 = getYear(d1);
+    const w2 = getWeek(d2, { weekStartsOn: 1 });
+    const y2 = getYear(d2);
+    return w1 !== w2 || y1 !== y2;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = await base44.auth.me();
     const isNonWorked = ["verlof", "atv", "ziek", "opleiding"].includes(dialogCategory);
+    const fixedShiftType = categoryToShiftType[dialogCategory];
+    const finalShiftType = fixedShiftType || formData.shift_type;
+
+    // Check if shift spans across week boundary (e.g. Sunday to Monday)
+    const spansWeekBoundary = !isNonWorked && formData.end_date && formData.date 
+      && formData.end_date !== formData.date 
+      && areDifferentWeeks(formData.date, formData.end_date);
+
+    if (spansWeekBoundary && !selectedEntry) {
+      // Split into two entries: one for each week
+      const startDate = formData.date;
+      const endDate = formData.end_date;
+      const midnightTime = "00:00";
+
+      // Part 1: startDate start_time → 00:00 (midnight)
+      const hours1Raw = calculateHours(formData.start_time, midnightTime, 0, startDate, endDate);
+      const hours1 = Math.max(0, hours1Raw);
+      
+      // Part 2: 00:00 → end_time on endDate
+      const totalHoursRaw = calculateHours(formData.start_time, formData.end_time, 0, startDate, endDate);
+      const hours2Raw = totalHoursRaw - hours1;
+      
+      // Distribute break: proportionally
+      let breakMinutes = Number(formData.break_minutes) || 0;
+      if (!manualBreak && dialogCategory === "gewerkt") {
+        const ab = await getBreakMinutesForHours(totalHoursRaw);
+        breakMinutes = ab || breakMinutes;
+      }
+      const totalRaw = hours1 + hours2Raw;
+      const break1 = totalRaw > 0 ? Math.round(breakMinutes * (hours1 / totalRaw)) : 0;
+      const break2 = breakMinutes - break1;
+      
+      const finalHours1 = Math.max(0, hours1 - break1 / 60);
+      const finalHours2 = Math.max(0, hours2Raw - break2 / 60);
+
+      const d1 = new Date(startDate);
+      const w1 = getWeek(d1, { weekStartsOn: 1 });
+      const y1 = getYear(d1);
+      const d2 = new Date(endDate);
+      const w2 = getWeek(d2, { weekStartsOn: 1 });
+      const y2 = getYear(d2);
+
+      const hourCalc1 = await calculateAllHours(formData.start_time, midnightTime, break1, startDate, finalShiftType);
+      const hourCalc2 = await calculateAllHours(midnightTime, formData.end_time, break2, endDate, finalShiftType);
+
+      const baseData = {
+        employee_id: formData.employee_id,
+        shift_type: finalShiftType,
+        project_id: formData.project_id,
+        customer_id: formData.customer_id,
+        notes: formData.notes,
+        status: 'Goedgekeurd',
+        approved_by: user?.email,
+        approved_date: new Date().toISOString(),
+      };
+
+      // Entry 1: start day (e.g. Sunday)
+      const entry1 = {
+        ...baseData,
+        date: startDate,
+        end_date: startDate,
+        start_time: formData.start_time,
+        end_time: midnightTime,
+        break_minutes: break1,
+        total_hours: hourCalc1?.total_hours ?? finalHours1,
+        overtime_hours: hourCalc1?.overtime_hours ?? 0,
+        night_hours: hourCalc1?.night_hours ?? 0,
+        weekend_hours: hourCalc1?.weekend_hours ?? 0,
+        holiday_hours: hourCalc1?.holiday_hours ?? 0,
+        week_number: w1,
+        year: y1,
+        travel_allowance_multiplier: formData.travel_allowance_multiplier || 0,
+        advanced_costs: formData.advanced_costs || 0,
+        meals: formData.meals || 0,
+        wkr: formData.wkr || 0,
+      };
+
+      // Entry 2: end day (e.g. Monday)
+      const entry2 = {
+        ...baseData,
+        date: endDate,
+        end_date: endDate,
+        start_time: midnightTime,
+        end_time: formData.end_time,
+        break_minutes: break2,
+        total_hours: hourCalc2?.total_hours ?? finalHours2,
+        overtime_hours: hourCalc2?.overtime_hours ?? 0,
+        night_hours: hourCalc2?.night_hours ?? 0,
+        weekend_hours: hourCalc2?.weekend_hours ?? 0,
+        holiday_hours: hourCalc2?.holiday_hours ?? 0,
+        week_number: w2,
+        year: y2,
+        travel_allowance_multiplier: 0,
+        advanced_costs: 0,
+        meals: 0,
+        wkr: 0,
+      };
+
+      await base44.entities.TimeEntry.create(entry1);
+      await base44.entities.TimeEntry.create(entry2);
+      queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
+      setIsDialogOpen(false);
+      return;
+    }
+
+    // Normal flow (same week or editing existing)
     const hours = isNonWorked
       ? Number(formData.total_hours_override) || 0
       : calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
@@ -287,9 +405,6 @@ export default function TimeTracking() {
       const ab = await getBreakMinutesForHours(hours);
       breakMinutes = ab || breakMinutes;
     }
-    // Forceer het juiste shift_type op basis van de categorie
-    const fixedShiftType = categoryToShiftType[dialogCategory];
-    const finalShiftType = fixedShiftType || formData.shift_type;
 
     const submitData = {
       ...formData, week_number: weekNumber, year,
