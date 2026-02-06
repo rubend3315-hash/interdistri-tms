@@ -209,7 +209,10 @@ export default function Trips() {
       if (rule.end_date && new Date(tripDate) > new Date(rule.end_date)) return false;
       
       const nameLower = (rule.name || '').toLowerCase();
-      return nameLower.includes('verblijfskosten') && nameLower.includes('ééndaagse');
+      const isVerblijf = nameLower.includes('verblijfskosten') || nameLower.includes('verblijfkosten');
+      const isMeerdaags = nameLower.includes('meerdaags');
+      const isEendaags = (nameLower.includes('ndaagse') || nameLower.includes('eendaagse')) && !isMeerdaags;
+      return isVerblijf && isEendaags;
     });
 
     if (applicableRules.length === 0) return 0;
