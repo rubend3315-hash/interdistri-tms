@@ -239,7 +239,7 @@ export default function TimeTracking() {
     const defaultShiftType = fixedType || "Verlof";
 
     // Bereken roosteruren voor niet-gewerkt categorieën
-    const isNonWorked = ["verlof", "atv", "ziek"].includes(categoryKey);
+    const isNonWorked = ["verlof", "atv", "ziek", "opleiding"].includes(categoryKey);
     const emp = employees.find(e => e.id === employeeId);
     const scheduleHours = isNonWorked ? getScheduleHoursForDay(emp, date) : 0;
 
