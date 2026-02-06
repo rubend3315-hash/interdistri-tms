@@ -76,58 +76,60 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   });
 
   // Verblijfkosten berekenen uit ritten op basis van vertrek/aankomsttijd + CAO-regels
+  // Verblijfkosten berekenen uit ritten op basis van vertrek/aankomsttijd + CAO-regels
   const { totalSubsistence, subsistence1800 } = useMemo(() => {
-    if (!caoRules.length || !trips.length) return { totalSubsistence: 0, subsistence1800: 0 };
+    if (!caoRules || caoRules.length === 0 || !trips || trips.length === 0) {
+      return { totalSubsistence: 0, subsistence1800: 0 };
+    }
     
     let total = 0;
     let avond = 0;
     
     for (const trip of trips) {
+      if (!trip.departure_time || !trip.arrival_time) continue;
+      
       const amount = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date, caoRules);
       total += amount;
       
       // Bereken het avondgedeelte (18:00-24:00) apart
-      if (trip.departure_time && trip.arrival_time) {
-        const [depH, depM] = trip.departure_time.split(':').map(Number);
-        const [arrH, arrM] = trip.arrival_time.split(':').map(Number);
-        let totalMin = (arrH * 60 + arrM) - (depH * 60 + depM);
-        const spansNextDay = totalMin < 0;
-        if (spansNextDay) totalMin += 24 * 60;
-        
-        const depMinutes = depH * 60 + depM;
-        const arrMinutes = arrH * 60 + arrM;
-        
-        // Avondregel zoeken
-        const avondRule = caoRules.find(r => {
-          const nameLower = (r.name || '').toLowerCase();
-          return nameLower.includes('ééndaagse') && r.start_time && 
-            parseInt(r.start_time) >= 17;
+      const [depH, depM] = trip.departure_time.split(':').map(Number);
+      const [arrH, arrM] = trip.arrival_time.split(':').map(Number);
+      let totalMin = (arrH * 60 + arrM) - (depH * 60 + depM);
+      const spansNextDay = totalMin < 0;
+      if (spansNextDay) totalMin += 24 * 60;
+      
+      const depMinutes = depH * 60 + depM;
+      
+      // Avondregel zoeken (18:00-23:59 of 18:00-24:00)
+      const avondRule = caoRules.find(r => {
+        const nameLower = (r.name || '').toLowerCase();
+        return nameLower.includes('ééndaagse') && r.start_time && 
+          parseInt(r.start_time) >= 17;
+      });
+      
+      if (avondRule && depMinutes < 14 * 60) {
+        const ruleStart = 18 * 60;
+        const ruleEnd = 24 * 60;
+        const basisRule = caoRules.find(r => {
+          const n = (r.name || '').toLowerCase();
+          return n.includes('ééndaagse') && n.includes('basis') && !r.start_time;
         });
+        const basisRate = basisRule?.value || 0;
+        const avondRate = avondRule.value || 0;
         
-        if (avondRule && depMinutes < 14 * 60) {
-          const ruleStart = 18 * 60;
-          const ruleEnd = 24 * 60;
-          const basisRule = caoRules.find(r => {
-            const n = (r.name || '').toLowerCase();
-            return n.includes('ééndaagse') && n.includes('basis') && !r.start_time;
-          });
-          const basisRate = basisRule?.value || 0;
-          const avondRate = avondRule.value || 0;
-          
-          let avondHours = 0;
-          if (spansNextDay) {
-            const overlapStart = Math.max(depMinutes, ruleStart);
-            const overlapEnd = Math.min(24 * 60, ruleEnd);
-            if (overlapEnd > overlapStart) avondHours += (overlapEnd - overlapStart) / 60;
-          } else {
-            const overlapStart = Math.max(depMinutes, ruleStart);
-            const overlapEnd = Math.min(depMinutes + totalMin, ruleEnd);
-            if (overlapEnd > overlapStart) avondHours = (overlapEnd - overlapStart) / 60;
-          }
-          
-          if (avondHours > 0) {
-            avond += avondHours * (avondRate - basisRate);
-          }
+        let avondHours = 0;
+        if (spansNextDay) {
+          const overlapStart = Math.max(depMinutes, ruleStart);
+          const overlapEnd = Math.min(24 * 60, ruleEnd);
+          if (overlapEnd > overlapStart) avondHours += (overlapEnd - overlapStart) / 60;
+        } else {
+          const overlapStart = Math.max(depMinutes, ruleStart);
+          const overlapEnd = Math.min(depMinutes + totalMin, ruleEnd);
+          if (overlapEnd > overlapStart) avondHours = (overlapEnd - overlapStart) / 60;
+        }
+        
+        if (avondHours > 0) {
+          avond += avondHours * (avondRate - basisRate);
         }
       }
     }
