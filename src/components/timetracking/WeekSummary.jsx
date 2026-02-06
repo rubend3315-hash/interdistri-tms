@@ -24,13 +24,25 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const ziekEntries = empEntries.filter(e => ziekTypes.includes(e.shift_type));
   const opleidingEntries = empEntries.filter(e => opleidingTypes.includes(e.shift_type));
 
+  // Types die meetellen voor overwerk (gewerkt + verlof + atv + ziek, NIET opleiding)
+  const overwerkTypes = [...gewerktTypes, ...verlofTypes, ...atvTypes, ...ziekTypes];
+  const overwerkEntries = empEntries.filter(e => overwerkTypes.includes(e.shift_type));
+
   // Gewerkte uren
   const totalGewerkt = gewerkt.reduce((s, e) => s + (e.total_hours || 0), 0);
-  const totalOveruren = gewerkt.reduce((s, e) => s + (e.overtime_hours || 0), 0);
   const totalNachturen = gewerkt.reduce((s, e) => s + (e.night_hours || 0), 0);
   const totalWeekenduren = gewerkt.reduce((s, e) => s + (e.weekend_hours || 0), 0);
   const totalFeestdaguren = gewerkt.reduce((s, e) => s + (e.holiday_hours || 0), 0);
   const gewerkeDagen = new Set(gewerkt.map(e => e.date)).size;
+
+  // Overwerk: berekend per dag over gewerkt+verlof+atv+ziek (excl. opleiding), boven 9 uur
+  const maxDailyHours = 9;
+  const totalOveruren = weekDays.reduce((sum, day) => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const dayEntries = overwerkEntries.filter(e => e.date === dateStr);
+    const dayTotal = dayEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+    return sum + Math.max(0, dayTotal - maxDailyHours);
+  }, 0);
 
   // Aanvulling contracturen = contracturen - totaal alle uren (als positief)
   const totalAllesForAanvulling = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
