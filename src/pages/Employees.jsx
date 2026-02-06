@@ -867,6 +867,31 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
       </div>
 
       <div className="border-t pt-4">
+        <h3 className="font-medium mb-3 flex items-center gap-2">
+          <Smartphone className="w-4 h-4" />
+          Mobiele App
+        </h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Type mobiele app</Label>
+            <Select 
+              value={formData.mobile_entry_type || 'single_day'} 
+              onValueChange={(v) => setFormData({ ...formData, mobile_entry_type: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single_day">Standaard (enkele dag)</SelectItem>
+                <SelectItem value="multi_day">Meerdaagse diensten</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500">Bepaalt welke mobiele app de medewerker ziet</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
         <h3 className="font-medium mb-3">Rijbewijs & Certificaten</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
