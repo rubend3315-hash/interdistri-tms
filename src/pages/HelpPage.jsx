@@ -1357,6 +1357,158 @@ export default function HelpPage() {
               </AccordionContent>
             </AccordionItem>
 
+            {/* Contracten Handleiding */}
+            <AccordionItem value="contracts-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <FileText className="w-4 h-4 mr-2" />
+                Hoe beheer ik contracten?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">1. Contractregels toevoegen</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar een medewerker en open het tabblad "Contractregels"</li>
+                      <li>• Voeg een nieuwe contractregel toe met start- en einddatum</li>
+                      <li>• Stel het type contract, loonschaal en uren per week in</li>
+                      <li>• Configureer het tweewekelijks rooster (week 1 en week 2)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">2. Reiskostenregels</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Voeg reiskostenregels toe per medewerker</li>
+                      <li>• Stel afstand en dagvergoeding in</li>
+                      <li>• Reiskosten worden automatisch berekend bij tijdregistratie</li>
+                    </ul>
+                  </div>
+                  <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                    <p className="text-sm text-indigo-700">
+                      💡 <strong>Tip:</strong> Het roosterschema bepaalt hoeveel uren per dag verwacht worden. Dit wordt gebruikt voor het berekenen van overuren en verlofuren.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Klanten Handleiding */}
+            <AccordionItem value="customers-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Building2 className="w-4 h-4 mr-2" />
+                Hoe beheer ik klanten?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">1. Klant toevoegen</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar "Klanten" en klik "Klant toevoegen"</li>
+                      <li>• Vul bedrijfsnaam, contactgegevens, KvK en BTW in</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">2. Artikelen en prijsregels</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Voeg artikelen toe per klant met prijsregels</li>
+                      <li>• Prijsregels hebben een geldigheidsperiode</li>
+                      <li>• Wordt gebruikt voor omzetberekeningen bij imports</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">3. TI-Model Routes</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Definieer routes met rittijd, stops en normen</li>
+                      <li>• Norm per besteluur wordt automatisch berekend</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">4. Data importeren</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Importeer Excel-bestanden met klantdata</li>
+                      <li>• Koppel kolommen aan velden</li>
+                      <li>• Bereken automatisch omzet op basis van artikelprijzen</li>
+                    </ul>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Loonrapporten Handleiding */}
+            <AccordionItem value="salary-reports-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Hoe gebruik ik loonrapporten?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">1. Rapport genereren</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar "Loonrapporten"</li>
+                      <li>• Selecteer week/periode en medewerker(s)</li>
+                      <li>• Het systeem berekent automatisch alle uursoorten</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">2. Wat wordt berekend</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Gewerkte uren, overuren (130%)</li>
+                      <li>• Nachturen, weekenduren, feestdaguren</li>
+                      <li>• Verlof, ATV, ziekte, opleiding</li>
+                      <li>• Toeslagen: nachttoeslag (19%), zaterdag-, zondag- en feestdagtoeslagen</li>
+                      <li>• Reiskostenvergoeding</li>
+                      <li>• Verblijfskosten conform CAO art. 40</li>
+                      <li>• Inhoudingen en WKR</li>
+                    </ul>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <p className="text-sm text-green-700">
+                      💡 <strong>Tip:</strong> Het weekoverzicht in Tijdregistratie toont ook een uitgebreide weeksamenvatting met alle berekeningen die je kunt afdrukken.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Meerdaagse Mobiele App */}
+            <AccordionItem value="multiday-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Smartphone className="w-4 h-4 mr-2" />
+                Meerdaagse Mobiele App
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Wat is het?</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Een aparte versie van de mobiele app voor medewerkers die diensten over meerdere dagen draaien (bijv. charterritten). Deze app heeft dezelfde functionaliteit als de standaard app, maar met een start- en einddatum.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Hoe activeer ik het?</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar "Medewerkers" en open het profiel van de medewerker</li>
+                      <li>• Stel het veld <strong>"Type mobiele app"</strong> in op <strong>"multi_day"</strong></li>
+                      <li>• De medewerker wordt automatisch doorgestuurd naar de meerdaagse app</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Verschil met standaard app</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Startdatum en einddatum in te stellen (max 7 dagen)</li>
+                      <li>• Uren worden correct berekend over meerdere dagen</li>
+                      <li>• Alle overige functies (ritten, inspectie, declaratie, etc.) zijn identiek</li>
+                    </ul>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> Deze instelling is per medewerker. Zet alleen medewerkers op "multi_day" die daadwerkelijk meerdaagse diensten draaien.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Algemene Tips */}
             <AccordionItem value="tips">
               <AccordionTrigger className="text-base font-semibold">
