@@ -72,24 +72,22 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   // CAO-regels voor verblijfskosten
   const { data: caoRules = [] } = useQuery({
     queryKey: ['caoRulesVerblijf'],
-    queryFn: () => base44.entities.CaoRule.filter({ category: 'Verblijfkosten', status: 'Actief' })
+    queryFn: () => base44.entities.CaoRule.list()
   });
 
+  // Filter alleen verblijfkosten regels
+  const verblijfRules = caoRules.filter(r => r.category === 'Verblijfkosten' && r.status === 'Actief');
+
   // Verblijfkosten berekenen uit ritten op basis van vertrek/aankomsttijd + CAO-regels
-  // Verblijfkosten berekenen uit ritten op basis van vertrek/aankomsttijd + CAO-regels
-  const { totalSubsistence, subsistence1800 } = useMemo(() => {
-    if (!caoRules || caoRules.length === 0 || !trips || trips.length === 0) {
-      return { totalSubsistence: 0, subsistence1800: 0 };
-    }
-    
-    let total = 0;
-    let avond = 0;
-    
+  let totalSubsistence = 0;
+  let subsistence1800 = 0;
+
+  if (verblijfRules.length > 0 && trips.length > 0) {
     for (const trip of trips) {
       if (!trip.departure_time || !trip.arrival_time) continue;
       
-      const amount = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date, caoRules);
-      total += amount;
+      const amount = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date, verblijfRules);
+      totalSubsistence += amount;
       
       // Bereken het avondgedeelte (18:00-24:00) apart
       const [depH, depM] = trip.departure_time.split(':').map(Number);
@@ -101,7 +99,7 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
       const depMinutes = depH * 60 + depM;
       
       // Avondregel zoeken (18:00-23:59 of 18:00-24:00)
-      const avondRule = caoRules.find(r => {
+      const avondRule = verblijfRules.find(r => {
         const nameLower = (r.name || '').toLowerCase();
         return nameLower.includes('ééndaagse') && r.start_time && 
           parseInt(r.start_time) >= 17;
@@ -110,7 +108,7 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
       if (avondRule && depMinutes < 14 * 60) {
         const ruleStart = 18 * 60;
         const ruleEnd = 24 * 60;
-        const basisRule = caoRules.find(r => {
+        const basisRule = verblijfRules.find(r => {
           const n = (r.name || '').toLowerCase();
           return n.includes('ééndaagse') && n.includes('basis') && !r.start_time;
         });
@@ -129,13 +127,11 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         }
         
         if (avondHours > 0) {
-          avond += avondHours * (avondRate - basisRate);
+          subsistence1800 += avondHours * (avondRate - basisRate);
         }
       }
     }
-    
-    return { totalSubsistence: total, subsistence1800: avond };
-  }, [trips, caoRules]);
+  }
 
   // Weekend uren split (za 150%, zo 200%)
   const zaterdagUren = gewerkt.filter(e => {
