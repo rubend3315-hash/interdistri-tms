@@ -115,6 +115,24 @@ export default function TimeTracking() {
     }
   });
 
+  const handleDeleteDay = async (employeeId, day) => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const entries = timeEntries.filter(e => e.employee_id === employeeId && e.date === dateStr);
+    for (const entry of entries) {
+      await base44.entities.TimeEntry.delete(entry.id);
+    }
+    queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
+  };
+
+  const handleDeleteWeek = async (employeeId, days) => {
+    const dateStrs = days.map(d => format(d, 'yyyy-MM-dd'));
+    const entries = timeEntries.filter(e => e.employee_id === employeeId && dateStrs.includes(e.date));
+    for (const entry of entries) {
+      await base44.entities.TimeEntry.delete(entry.id);
+    }
+    queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
+  };
+
   // Form state
   const [dialogCategory, setDialogCategory] = useState("gewerkt");
   const [formData, setFormData] = useState({
