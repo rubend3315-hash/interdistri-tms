@@ -644,6 +644,16 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
         </div>
 
         <div className="border-t pt-4">
+          <h3 className="font-medium mb-3">Mobiele App</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Type mobiele app</Label>
+              <Input value={formData.mobile_entry_type === 'multi_day' ? 'Meerdaagse diensten' : 'Standaard (enkele dag)'} readOnly />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
           <h3 className="font-medium mb-3">Rijbewijs & Certificaten</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
