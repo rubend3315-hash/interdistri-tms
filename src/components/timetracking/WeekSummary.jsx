@@ -1,105 +1,172 @@
 import React from "react";
 import { format } from "date-fns";
+import { isWeekend } from "../utils/hourCalculationUtils";
 
 export default function WeekSummary({ employee, weekDays, timeEntries, contractHours, contractWeekTotal }) {
   const empEntries = timeEntries.filter(e => e.employee_id === employee.id);
 
   const gewerktTypes = ["Gewerkte dag", "Dag", "Avond", "Nacht"];
-  const verlofTypes = ["Verlof", "Betaalde feestdag", "Bijzonder verlof", "Partner verlof", "Ouderschapsverlof onbetaald", "Ouderschapsverlof betaald 70%", "Partnerverlof", "Zwangerschapsverlof", "Zorgverlof"];
+  const verlofTypes = ["Verlof", "Betaalde feestdag", "Bijzonder verlof", "Partner verlof", 
+    "Ouderschapsverlof betaald 70%", "Ouderschapsverlof onbetaald", "Onbetaald verlof",
+    "Calamiteit/kort verzuimverlof (100% doorbetaald)", "Kortdurend zorgverlof (70% doorbetaald)",
+    "Langdurend zorgverlof (onbetaald)", "Zwangerschapsverlof (70% doorbetaald door UWV)",
+    "Partnerverlof", "Zwangerschapsverlof", "Zorgverlof"];
   const atvTypes = ["ATV"];
   const ziekTypes = ["Ziek"];
   const opleidingTypes = ["Opleiding"];
 
   const gewerkt = empEntries.filter(e => gewerktTypes.includes(e.shift_type));
-  const verlof = empEntries.filter(e => verlofTypes.includes(e.shift_type));
-  const atv = empEntries.filter(e => atvTypes.includes(e.shift_type));
-  const ziek = empEntries.filter(e => ziekTypes.includes(e.shift_type));
-  const opleiding = empEntries.filter(e => opleidingTypes.includes(e.shift_type));
+  const verlofEntries = empEntries.filter(e => verlofTypes.includes(e.shift_type));
+  const atvEntries = empEntries.filter(e => atvTypes.includes(e.shift_type));
+  const ziekEntries = empEntries.filter(e => ziekTypes.includes(e.shift_type));
+  const opleidingEntries = empEntries.filter(e => opleidingTypes.includes(e.shift_type));
 
+  // Gewerkte uren
   const totalGewerkt = gewerkt.reduce((s, e) => s + (e.total_hours || 0), 0);
   const totalOveruren = gewerkt.reduce((s, e) => s + (e.overtime_hours || 0), 0);
   const totalNachturen = gewerkt.reduce((s, e) => s + (e.night_hours || 0), 0);
   const totalWeekenduren = gewerkt.reduce((s, e) => s + (e.weekend_hours || 0), 0);
   const totalFeestdaguren = gewerkt.reduce((s, e) => s + (e.holiday_hours || 0), 0);
-  const totalVerlof = verlof.reduce((s, e) => s + (e.total_hours || 0), 0);
-  const totalAtv = atv.reduce((s, e) => s + (e.total_hours || 0), 0);
-  const totalZiek = ziek.reduce((s, e) => s + (e.total_hours || 0), 0);
-  const totalOpleiding = opleiding.reduce((s, e) => s + (e.total_hours || 0), 0);
-
   const gewerkeDagen = new Set(gewerkt.map(e => e.date)).size;
-  const totalAlles = totalGewerkt + totalVerlof + totalAtv + totalZiek + totalOpleiding;
+
+  // Aanvulling contracturen = contracturen - gewerkte uren (als positief)
+  const aanvullingContract = contractWeekTotal > 0 && totalGewerkt < contractWeekTotal 
+    ? contractWeekTotal - totalGewerkt : 0;
+  
+  // Compensatieuren = totaal alle uren - contracturen
+  const totalAlles = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
   const compensatie = contractWeekTotal > 0 ? totalAlles - contractWeekTotal : 0;
 
+  // Variabele uren (overuren boven contract)
+  const variabeleUren = totalGewerkt > contractWeekTotal && contractWeekTotal > 0 
+    ? totalGewerkt - contractWeekTotal : 0;
+
+  // Totaal niet gewerkt
+  const totalNietGewerkt = verlofEntries.reduce((s, e) => s + (e.total_hours || 0), 0)
+    + atvEntries.reduce((s, e) => s + (e.total_hours || 0), 0)
+    + ziekEntries.reduce((s, e) => s + (e.total_hours || 0), 0)
+    + opleidingEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+
+  // Verlof per type
+  const getVerlofByType = (type) => verlofEntries.filter(e => e.shift_type === type).reduce((s, e) => s + (e.total_hours || 0), 0);
+  const totalAtv = atvEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+  const totalZiek = ziekEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+  const totalOpleiding = opleidingEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+
+  // Wachtdag (ziekdag op een dag met 0 roosteruren)
+  const hasWachtdag = ziekEntries.some(e => {
+    if (!contractHours) return false;
+    const day = weekDays.find(d => format(d, 'yyyy-MM-dd') === e.date);
+    if (!day) return false;
+    const idx = weekDays.indexOf(day);
+    return contractHours[idx] === 0;
+  });
+
+  // Toeslagen berekeningen
   const totalVoorgeschoten = empEntries.reduce((s, e) => s + (e.advanced_costs || 0), 0);
   const totalInhoudingen = empEntries.reduce((s, e) => s + (e.meals || 0), 0);
   const totalWkr = empEntries.reduce((s, e) => s + (e.wkr || 0), 0);
+  const totalSubsistence = empEntries.reduce((s, e) => s + (e.subsistence_allowance || 0), 0);
+
+  // Weekend uren split (za 150%, zo 200%)
+  const zaterdagUren = gewerkt.filter(e => {
+    const d = new Date(e.date);
+    return d.getDay() === 6;
+  }).reduce((s, e) => s + (e.total_hours || 0), 0);
+
+  const zondagUren = gewerkt.filter(e => {
+    const d = new Date(e.date);
+    return d.getDay() === 0;
+  }).reduce((s, e) => s + (e.total_hours || 0), 0);
+
+  // Overwerk op za/zo
+  const zaterdagOverwerk = gewerkt.filter(e => {
+    const d = new Date(e.date);
+    return d.getDay() === 6;
+  }).reduce((s, e) => s + (e.overtime_hours || 0), 0);
+
+  const zondagOverwerk = gewerkt.filter(e => {
+    const d = new Date(e.date);
+    return d.getDay() === 0;
+  }).reduce((s, e) => s + (e.overtime_hours || 0), 0);
 
   const fmt = (val) => val > 0 ? `${val.toFixed(4).replace('.', ',')} uur` : '- uur';
+  const fmtEuro = (val) => `€ ${val.toFixed(2).replace('.', ',')}`;
+
+  const SummaryRow = ({ label, value, bold, indent, className }) => (
+    <div className={`grid grid-cols-2 gap-y-0 text-sm ${bold ? 'font-semibold' : ''} ${className || ''}`}>
+      <span className={`text-slate-600 ${indent ? 'pl-4' : ''}`}>{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+
+  const SectionHeader = ({ title }) => (
+    <h4 className="font-bold text-slate-900 mb-1 mt-4 first:mt-0">{title}</h4>
+  );
 
   return (
     <div className="bg-white border rounded-xl overflow-hidden">
-      <div className="px-4 py-3 bg-slate-50 border-b font-semibold text-slate-700">
+      <div className="px-4 py-3 bg-slate-800 text-white font-semibold">
         Weeksamenvatting
       </div>
-      <div className="p-4 space-y-6">
-        {/* Uren per categorie */}
-        <div>
-          <h4 className="font-semibold text-slate-800 mb-2">Uren per categorie</h4>
-          <div className="grid grid-cols-2 gap-y-1 text-sm">
-            <span className="text-slate-600">Gewerkt</span>
-            <span>{fmt(totalGewerkt)}</span>
-            <span className="text-slate-600 pl-4">— Overuren</span>
-            <span>{fmt(totalOveruren)}</span>
-            <span className="text-slate-600 pl-4">— Nachturen</span>
-            <span>{fmt(totalNachturen)}</span>
-            <span className="text-slate-600 pl-4">— Weekenduren</span>
-            <span>{fmt(totalWeekenduren)}</span>
-            <span className="text-slate-600 pl-4">— Feestdaguren</span>
-            <span>{fmt(totalFeestdaguren)}</span>
-            <span className="text-slate-600">Verlof</span>
-            <span>{fmt(totalVerlof)}</span>
-            <span className="text-slate-600">ATV</span>
-            <span>{fmt(totalAtv)}</span>
-            <span className="text-slate-600">Ziek</span>
-            <span>{fmt(totalZiek)}</span>
-            <span className="text-slate-600">Opleiding</span>
-            <span>{fmt(totalOpleiding)}</span>
-            <span className="text-slate-600">Gewerkte dagen</span>
-            <span>{gewerkeDagen} dag(en)</span>
-          </div>
-        </div>
+      <div className="p-4 space-y-1">
 
-        {/* Totalen & Compensatie */}
-        <div className="border-t pt-4">
-          <h4 className="font-semibold text-slate-800 mb-2">Totalen</h4>
-          <div className="grid grid-cols-2 gap-y-1 text-sm">
-            <span className="text-slate-600 font-semibold">Totaal uren</span>
-            <span className="font-semibold">{fmt(totalAlles)}</span>
-            {contractWeekTotal > 0 && (
-              <>
-                <span className="text-slate-600">Contracturen</span>
-                <span>{contractWeekTotal.toFixed(2).replace('.', ',')} uur</span>
-                <span className="text-slate-600 font-semibold">Compensatieuren</span>
-                <span className={`font-semibold ${compensatie >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {compensatie > 0 ? '+' : ''}{compensatie.toFixed(2).replace('.', ',')} uur
-                </span>
-              </>
-            )}
-          </div>
-        </div>
+        {/* Gewerkte uren */}
+        <SectionHeader title="Gewerkte uren" />
+        <SummaryRow label="Aanvulling contracturen" value={fmt(aanvullingContract)} />
+        <SummaryRow label="Compensatieuren" value={
+          contractWeekTotal > 0 
+            ? <span className={compensatie >= 0 ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'}>
+                {compensatie.toFixed(4).replace('.', ',')} uur
+              </span>
+            : '- uur'
+        } />
+        <SummaryRow label="Variabele uren" value={fmt(variabeleUren)} />
+        <SummaryRow label="Gewerkte dagen" value={`${gewerkeDagen} dag(en)`} />
+        <SummaryRow label="Totaal gewerkt" value={fmt(totalGewerkt)} bold />
+        <SummaryRow label="Totaal niet gewerkt" value={fmt(totalNietGewerkt)} />
 
-        {/* Kosten */}
-        <div>
-          <h4 className="font-semibold text-slate-800 mb-2">Kosten & Inhoudingen</h4>
-          <div className="grid grid-cols-2 gap-y-1 text-sm">
-            <span className="text-slate-600">Voorgeschoten kosten</span>
-            <span>€ {totalVoorgeschoten.toFixed(2).replace('.', ',')}</span>
-            <span className="text-slate-600">Inhoudingen</span>
-            <span>€ {totalInhoudingen.toFixed(2).replace('.', ',')}</span>
-            <span className="text-slate-600">WKR</span>
-            <span>€ {totalWkr.toFixed(2).replace('.', ',')}</span>
-          </div>
-        </div>
+        {/* Algemene uren */}
+        <SectionHeader title="Algemene uren" />
+        <SummaryRow label="Opleiding" value={fmt(totalOpleiding)} />
+
+        {/* Verlof en ATV */}
+        <SectionHeader title="Verlof en ATV" />
+        <SummaryRow label="Verlof" value={fmt(getVerlofByType("Verlof"))} />
+        <SummaryRow label="Betaalde feestdag" value={fmt(getVerlofByType("Betaalde feestdag"))} />
+        <SummaryRow label="ATV" value={fmt(totalAtv)} />
+        <SummaryRow label="Bijzonder verlof" value={fmt(getVerlofByType("Bijzonder verlof"))} />
+        <SummaryRow label="Partner verlof" value={fmt(getVerlofByType("Partner verlof") + getVerlofByType("Partnerverlof"))} />
+        <SummaryRow label="Ouderschapsverlof (70% doorbetaald)" value={fmt(getVerlofByType("Ouderschapsverlof betaald 70%"))} />
+        <SummaryRow label="Ouderschapsverlof (onbetaald)" value={fmt(getVerlofByType("Ouderschapsverlof onbetaald"))} />
+        <SummaryRow label="Onbetaald verlof" value={fmt(getVerlofByType("Onbetaald verlof"))} />
+        <SummaryRow label="Calamiteit/kort verzuimverlof (100% doorbetaald)" value={fmt(getVerlofByType("Calamiteit/kort verzuimverlof (100% doorbetaald)"))} />
+        <SummaryRow label="Kortdurend zorgverlof (70% doorbetaald)" value={fmt(getVerlofByType("Kortdurend zorgverlof (70% doorbetaald)"))} />
+        <SummaryRow label="Langdurend zorgverlof (onbetaald)" value={fmt(getVerlofByType("Langdurend zorgverlof (onbetaald)"))} />
+        <SummaryRow label="Zwangerschapsverlof (70% doorbetaald door UWV)" value={fmt(getVerlofByType("Zwangerschapsverlof (70% doorbetaald door UWV)") + getVerlofByType("Zwangerschapsverlof"))} />
+
+        {/* Ziek */}
+        <SectionHeader title="Ziek" />
+        <SummaryRow label="Ziek" value={fmt(totalZiek)} />
+        <SummaryRow label="Wachtdag" value={hasWachtdag ? 'Ja' : 'Nee'} />
+
+        {/* Toeslagen en inhoudingen */}
+        <SectionHeader title="Toeslagen en inhoudingen" />
+        <SummaryRow label="Verblijfkosten eendaags" value={fmtEuro(totalSubsistence)} />
+        <SummaryRow label="Toeslagenmatrix 19%" value={fmt(0)} />
+        <SummaryRow label="Overwerk 130%" value={fmt(totalOveruren)} />
+        <SummaryRow label="Diensturen zaterdag 150%" value={fmt(zaterdagUren)} />
+        <SummaryRow label="Toeslag diensturen zaterdag 50%" value={fmt(zaterdagUren > 0 ? zaterdagUren : 0)} />
+        <SummaryRow label="Zaterdag overwerk 150%" value={fmt(zaterdagOverwerk)} />
+        <SummaryRow label="Diensturen zondag 200%" value={fmt(zondagUren)} />
+        <SummaryRow label="Toeslag diensturen zondag 100%" value={fmt(zondagUren > 0 ? zondagUren : 0)} />
+        <SummaryRow label="Zondag overwerk 200%" value={fmt(zondagOverwerk)} />
+        <SummaryRow label="Diensturen feestdag 200%" value={fmt(totalFeestdaguren)} />
+        <SummaryRow label="Toeslag diensturen feestdag 100%" value={fmt(totalFeestdaguren)} />
+        <SummaryRow label="Nachturen" value={fmt(totalNachturen)} />
+        <SummaryRow label="Voorgeschoten kosten" value={fmtEuro(totalVoorgeschoten)} />
+        <SummaryRow label="Inhoudingen" value={fmtEuro(totalInhoudingen)} />
+        <SummaryRow label="WKR" value={fmtEuro(totalWkr)} />
       </div>
     </div>
   );
