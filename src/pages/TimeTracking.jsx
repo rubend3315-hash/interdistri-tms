@@ -118,7 +118,7 @@ export default function TimeTracking() {
   // Form state
   const [dialogCategory, setDialogCategory] = useState("gewerkt");
   const [formData, setFormData] = useState({
-    employee_id: "", date: "", start_time: "", end_time: "",
+    employee_id: "", date: "", end_date: "", start_time: "", end_time: "",
     break_minutes: 30, shift_type: "Gewerkte dag", project_id: "", customer_id: "",
     travel_allowance_multiplier: 0, advanced_costs: 0, meals: 0, wkr: 0, notes: ""
   });
@@ -190,6 +190,7 @@ export default function TimeTracking() {
       setSelectedEntry(existing);
       setFormData({
         employee_id: existing.employee_id, date: existing.date,
+        end_date: existing.end_date || existing.date,
         start_time: existing.start_time || "", end_time: existing.end_time || "",
         break_minutes: existing.break_minutes || 30, shift_type: existing.shift_type || defaultShiftType,
         project_id: existing.project_id || "", customer_id: existing.customer_id || "",
@@ -200,7 +201,7 @@ export default function TimeTracking() {
     } else {
       setSelectedEntry(null);
       setFormData({
-        employee_id: employeeId, date: dateStr, start_time: "", end_time: "",
+        employee_id: employeeId, date: dateStr, end_date: dateStr, start_time: "", end_time: "",
         break_minutes: 30, shift_type: defaultShiftType, project_id: "", customer_id: "",
         travel_allowance_multiplier: 0, advanced_costs: 0, meals: 0, wkr: 0, notes: ""
       });
