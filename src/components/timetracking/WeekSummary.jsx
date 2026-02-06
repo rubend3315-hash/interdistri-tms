@@ -78,10 +78,19 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   // Filter alleen verblijfkosten regels
   const verblijfRules = caoRules.filter(r => r.category === 'Verblijfkosten' && r.status === 'Actief');
   
-  // Debug logging
-  console.log('CAO rules loaded:', caoRules.length);
-  console.log('Verblijf rules:', verblijfRules.length, verblijfRules.map(r => r.name));
-  console.log('Trips:', trips.length, trips.map(t => ({ date: t.date, dep: t.departure_time, arr: t.arrival_time })));
+  // Debug
+  console.log('[WeekSummary] caoRules total:', caoRules.length, 'verblijfRules:', verblijfRules.length);
+  console.log('[WeekSummary] verblijfRules names:', verblijfRules.map(r => r.name));
+  console.log('[WeekSummary] trips:', trips.length, trips.map(t => ({ date: t.date, dep: t.departure_time, arr: t.arrival_time })));
+  
+  if (verblijfRules.length > 0 && trips.length > 0) {
+    for (const trip of trips) {
+      if (trip.departure_time && trip.arrival_time) {
+        const testAmount = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date, verblijfRules);
+        console.log('[WeekSummary] Trip', trip.date, trip.departure_time, '-', trip.arrival_time, '=> amount:', testAmount);
+      }
+    }
+  }
 
   // Verblijfkosten berekenen uit ritten op basis van vertrek/aankomsttijd + CAO-regels
   let totalSubsistence = 0;
