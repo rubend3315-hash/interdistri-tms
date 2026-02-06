@@ -153,7 +153,7 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
 
         {/* Toeslagen en inhoudingen */}
         <SectionHeader title="Toeslagen en inhoudingen" />
-        <SummaryRow label="Verblijfkosten eendaags" value={fmtEuro(totalSubsistence)} />
+        <SummaryRow label="Verblijfskosten" value={fmtEuro(totalSubsistence)} />
         <SummaryRow label="Toeslagenmatrix 19%" value={fmt(0)} />
         <SummaryRow label="Overwerk 130%" value={fmt(totalOveruren)} />
         <SummaryRow label="Diensturen zaterdag 150%" value={fmt(zaterdagUren)} />
