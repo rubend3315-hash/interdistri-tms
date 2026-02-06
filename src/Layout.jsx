@@ -212,6 +212,11 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   // Fetch employee data for mobile routing
   const { data: allEmployees = [] } = useQuery({
     queryKey: ['employeesForRouting'],
@@ -231,11 +236,6 @@ export default function Layout({ children, currentPageName }) {
       }
     }
   }, [isMobile, currentPageName, navigate, currentEmployee]);
-
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
 
   const hasPermission = (page) => {
     if (!user) return false;
