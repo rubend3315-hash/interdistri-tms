@@ -1509,6 +1509,74 @@ export default function HelpPage() {
               </AccordionContent>
             </AccordionItem>
 
+            {/* Automatisch Diensttype */}
+            <AccordionItem value="shifttype-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Clock className="w-4 h-4 mr-2" />
+                Automatisch Diensttype (Dag / Avond / Nacht)
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Hoe werkt het?</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Het diensttype (Dag, Avond of Nachtdienst) wordt <strong>automatisch bepaald</strong> op basis van de starttijd en eindtijd van de dienst. Je hoeft dit niet handmatig in te vullen.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Regels</h4>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <p className="text-sm font-medium text-amber-900">☀️ Dagdienst</p>
+                        <p className="text-sm text-amber-700">Starttijd tussen <strong>05:00</strong> en <strong>15:59</strong></p>
+                      </div>
+                      <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <p className="text-sm font-medium text-orange-900">🌆 Avonddienst</p>
+                        <p className="text-sm text-orange-700">Starttijd tussen <strong>16:00</strong> en <strong>20:59</strong></p>
+                      </div>
+                      <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                        <p className="text-sm font-medium text-indigo-900">🌙 Nachtdienst</p>
+                        <p className="text-sm text-indigo-700">Starttijd tussen <strong>21:00</strong> en <strong>04:59</strong></p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Avonddienst → Nachtdienst</h4>
+                    <p className="text-sm text-slate-600">
+                      Een avonddienst die <strong>na 21:00 eindigt</strong> wordt automatisch omgezet naar een <strong>Nachtdienst</strong>. Dit geldt ook als de eindtijd vóór 05:00 valt (bijv. 02:00).
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>Tip:</strong> Dit geldt zowel in de mobiele app als in de tijdregistratie op desktop. Het diensttype wordt pas definitief bepaald wanneer zowel start- als eindtijd zijn ingevuld.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Voorbeelden</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border border-slate-200 rounded-lg">
+                        <thead>
+                          <tr className="bg-slate-50">
+                            <th className="text-left p-2 border-b">Starttijd</th>
+                            <th className="text-left p-2 border-b">Eindtijd</th>
+                            <th className="text-left p-2 border-b">Diensttype</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-slate-600">
+                          <tr><td className="p-2 border-b">05:00</td><td className="p-2 border-b">14:00</td><td className="p-2 border-b"><Badge className="bg-amber-100 text-amber-700">Dag</Badge></td></tr>
+                          <tr><td className="p-2 border-b">08:30</td><td className="p-2 border-b">17:00</td><td className="p-2 border-b"><Badge className="bg-amber-100 text-amber-700">Dag</Badge></td></tr>
+                          <tr><td className="p-2 border-b">16:00</td><td className="p-2 border-b">20:30</td><td className="p-2 border-b"><Badge className="bg-orange-100 text-orange-700">Avond</Badge></td></tr>
+                          <tr><td className="p-2 border-b">17:00</td><td className="p-2 border-b">22:00</td><td className="p-2 border-b"><Badge className="bg-indigo-100 text-indigo-700">Nachtdienst</Badge></td></tr>
+                          <tr><td className="p-2 border-b">21:00</td><td className="p-2 border-b">05:00</td><td className="p-2 border-b"><Badge className="bg-indigo-100 text-indigo-700">Nachtdienst</Badge></td></tr>
+                          <tr><td className="p-2">02:00</td><td className="p-2">10:00</td><td className="p-2"><Badge className="bg-indigo-100 text-indigo-700">Nachtdienst</Badge></td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Algemene Tips */}
             <AccordionItem value="tips">
               <AccordionTrigger className="text-base font-semibold">
