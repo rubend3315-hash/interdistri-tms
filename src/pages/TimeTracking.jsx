@@ -19,7 +19,7 @@ import EmployeeSidebar from "../components/timetracking/EmployeeSidebar";
 import WeekCalendar from "../components/timetracking/WeekCalendar";
 import WeekOverview from "../components/timetracking/WeekOverview";
 
-const shiftTypes = ["Dag", "Avond", "Nacht", "Vrij", "Verlof", "Ziek"];
+const fallbackShiftTypes = ["Dag", "Avond", "Nacht", "Vrij", "Verlof", "Ziek"];
 
 export default function TimeTracking() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -53,6 +53,14 @@ export default function TimeTracking() {
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list()
   });
+
+  const { data: uurcodes = [] } = useQuery({
+    queryKey: ['uurcodes'],
+    queryFn: () => base44.entities.Uurcode.list()
+  });
+
+  const activeUurcodes = uurcodes.filter(u => u.status === 'Actief').sort((a, b) => a.code.localeCompare(b.code));
+  const shiftTypes = activeUurcodes.length > 0 ? activeUurcodes.map(u => u.name) : fallbackShiftTypes;
 
   const activeEmployees = employees.filter(e => e.status === 'Actief');
   const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
