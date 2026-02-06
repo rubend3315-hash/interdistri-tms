@@ -84,24 +84,26 @@ function UrensoortTab() {
       ) : urensoorten.length === 0 ? (
         <p className="text-slate-500">Geen urensoorten beschikbaar</p>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-1">
           {urensoorten.map((item) => (
-            <div key={item.id} className="p-4 border rounded-lg hover:bg-slate-50">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-medium">{item.code} - {item.name}</p>
-                  {item.description && <p className="text-sm text-slate-500 mt-1">{item.description}</p>}
-                  {item.toeslag_percentage && <p className="text-sm text-slate-600 mt-1">Toeslag: {item.toeslag_percentage}%</p>}
+            <div key={item.id} className="px-3 py-1.5 border rounded hover:bg-slate-50">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="font-medium text-slate-700">{item.code}</span>
+                  <span className="text-slate-600">{item.name}</span>
+                  {item.toeslag_percentage && <span className="text-xs text-slate-400">({item.toeslag_percentage}%)</span>}
+                  {item.description && <span className="text-xs text-slate-400">{item.description}</span>}
                 </div>
                 <Button 
                   variant="ghost" 
-                  size="sm"
+                  size="icon"
+                  className="h-7 w-7"
                   onClick={() => {
                     setSelectedUrensoort(item);
                     setShowDialog(true);
                   }}
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </div>
