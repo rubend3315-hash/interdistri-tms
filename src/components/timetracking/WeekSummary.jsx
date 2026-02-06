@@ -235,6 +235,13 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const zondagDiensturen = Math.min(zondagUren, contractTekortNaZaterdag);
   const zondagOverwerk = Math.max(0, zondagUren - contractTekortNaZaterdag);
 
+  // Resterend tekort na zondag
+  const contractTekortNaZondag = Math.max(0, contractTekortNaZaterdag - zondagUren);
+
+  // Feestdag: tekort wordt aangevuld (100% toeslag), rest = overwerk 200%
+  const feestdagDiensturen = Math.min(totalFeestdaguren, contractTekortNaZondag);
+  const feestdagOverwerk = Math.max(0, totalFeestdaguren - contractTekortNaZondag);
+
   const fmt = (val) => val > 0 ? `${val.toFixed(4).replace('.', ',')} uur` : '- uur';
   const fmtEuro = (val) => `€ ${val.toFixed(2).replace('.', ',')}`;
 
