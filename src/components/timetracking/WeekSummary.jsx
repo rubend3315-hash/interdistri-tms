@@ -26,9 +26,7 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
 
   // Gewerkte uren
   const totalGewerkt = gewerkt.reduce((s, e) => s + (e.total_hours || 0), 0);
-  // Overwerk = gewerkte uren boven contracturen (weekbasis), niet per dag
-  const totalOveruren = contractWeekTotal > 0 && totalGewerkt > contractWeekTotal 
-    ? totalGewerkt - contractWeekTotal : 0;
+  const totalOveruren = gewerkt.reduce((s, e) => s + (e.overtime_hours || 0), 0);
   const totalNachturen = gewerkt.reduce((s, e) => s + (e.night_hours || 0), 0);
   const totalWeekenduren = gewerkt.reduce((s, e) => s + (e.weekend_hours || 0), 0);
   const totalFeestdaguren = gewerkt.reduce((s, e) => s + (e.holiday_hours || 0), 0);
