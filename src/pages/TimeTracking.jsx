@@ -295,7 +295,7 @@ export default function TimeTracking() {
     const fixedShiftType = categoryToShiftType[dialogCategory];
     // Voor gewerkte dagen: automatisch bepalen op basis van starttijd
     const finalShiftType = dialogCategory === "gewerkt" && formData.start_time
-      ? determineShiftType(formData.start_time)
+      ? determineShiftType(formData.start_time, formData.end_time)
       : (fixedShiftType || formData.shift_type);
 
     // Check if shift spans across week boundary (e.g. Sunday to Monday)
