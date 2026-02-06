@@ -331,12 +331,25 @@ export default function TimeTracking() {
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Starttijd</Label>
-                    <Input type="time" value={formData.start_time} onChange={(e) => setFormData({ ...formData, start_time: e.target.value })} />
+                    <Label>Startdatum & tijd</Label>
+                    <div className="flex gap-2">
+                      <Input type="date" value={formData.date} className="flex-1" disabled />
+                      <Input type="time" value={formData.start_time} onChange={(e) => setFormData({ ...formData, start_time: e.target.value })} className="flex-1" />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Eindtijd</Label>
-                    <Input type="time" value={formData.end_time} onChange={(e) => setFormData({ ...formData, end_time: e.target.value })} />
+                    <Label>Einddatum & tijd</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        type="date" 
+                        value={formData.end_date || formData.date} 
+                        min={formData.date}
+                        max={formData.date ? format(new Date(new Date(formData.date).getTime() + 86400000), 'yyyy-MM-dd') : undefined}
+                        onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} 
+                        className="flex-1" 
+                      />
+                      <Input type="time" value={formData.end_time} onChange={(e) => setFormData({ ...formData, end_time: e.target.value })} className="flex-1" />
+                    </div>
                   </div>
                 </div>
 
