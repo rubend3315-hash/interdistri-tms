@@ -36,9 +36,8 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const aanvullingContract = contractWeekTotal > 0 && totalGewerkt < contractWeekTotal 
     ? contractWeekTotal - totalGewerkt : 0;
   
-  // Compensatieuren = totaal alle uren - contracturen
-  const totalAlles = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
-  const compensatie = contractWeekTotal > 0 ? totalAlles - contractWeekTotal : 0;
+  // Compensatieuren = alleen gewerkte uren - contracturen (niet-gewerkt telt niet mee)
+  const compensatie = contractWeekTotal > 0 ? totalGewerkt - (contractWeekTotal - totalNietGewerkt) : 0;
 
   // Variabele uren (overuren boven contract)
   const variabeleUren = totalGewerkt > contractWeekTotal && contractWeekTotal > 0 
