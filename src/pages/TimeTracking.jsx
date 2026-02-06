@@ -225,8 +225,13 @@ export default function TimeTracking() {
       const ab = await getBreakMinutesForHours(hours);
       breakMinutes = ab || breakMinutes;
     }
+    // Forceer het juiste shift_type op basis van de categorie
+    const fixedShiftType = categoryToShiftType[dialogCategory];
+    const finalShiftType = fixedShiftType || formData.shift_type;
+
     const submitData = {
       ...formData, week_number: weekNumber, year,
+      shift_type: finalShiftType,
       total_hours: calculatedHours?.total_hours || hours,
       overtime_hours: calculatedHours?.overtime_hours || 0,
       night_hours: calculatedHours?.night_hours || 0,
