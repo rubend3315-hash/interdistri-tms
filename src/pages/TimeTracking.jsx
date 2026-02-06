@@ -293,7 +293,10 @@ export default function TimeTracking() {
     const user = await base44.auth.me();
     const isNonWorked = ["verlof", "atv", "ziek", "opleiding"].includes(dialogCategory);
     const fixedShiftType = categoryToShiftType[dialogCategory];
-    const finalShiftType = fixedShiftType || formData.shift_type;
+    // Voor gewerkte dagen: automatisch bepalen op basis van starttijd
+    const finalShiftType = dialogCategory === "gewerkt" && formData.start_time
+      ? determineShiftType(formData.start_time)
+      : (fixedShiftType || formData.shift_type);
 
     // Check if shift spans across week boundary (e.g. Sunday to Monday)
     const spansWeekBoundary = !isNonWorked && formData.end_date && formData.date 
