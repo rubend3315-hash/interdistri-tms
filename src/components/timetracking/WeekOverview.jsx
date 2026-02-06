@@ -179,15 +179,15 @@ export default function WeekOverview({
                   <div className="font-semibold text-slate-700">{format(day, "EEEE", { locale: nl })}</div>
                   <div className="text-xs text-slate-500">{format(day, "dd-MM-yyyy")}</div>
                   {contractHours && contractHours[idx] > 0 && (
-                    <div className="text-xs text-orange-600 font-medium">{contractHours[idx].toFixed(2).replace('.', ',')}</div>
-                  )}
+                        <div className="text-xs text-orange-600 font-medium">{contractHours[idx].toFixed(4).replace('.', ',')}</div>
+                      )}
                 </th>
               ))}
               <th className="text-center px-2 py-3 min-w-[80px] font-semibold text-slate-700">
                 <div>Totaal</div>
                 {contractWeekTotal > 0 && (
-                  <div className="text-xs text-orange-600 font-medium">{contractWeekTotal.toFixed(2).replace('.', ',')}</div>
-                )}
+                        <div className="text-xs text-orange-600 font-medium">{contractWeekTotal.toFixed(4).replace('.', ',')}</div>
+                      )}
               </th>
             </tr>
           </thead>
@@ -230,20 +230,20 @@ export default function WeekOverview({
                 const dayTotal = getDayTotal(day);
                 return (
                   <td key={idx} className="text-center px-2 py-2">
-                    <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
-                      contractHours && dayTotal >= contractHours[idx] && contractHours[idx] > 0 ? 'bg-green-500 text-white' : dayTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
-                    }`}>
-                      {dayTotal > 0 ? dayTotal.toFixed(2).replace('.', ',') : '0'}
-                    </div>
+                    <div className={`inline-flex items-center justify-center px-2 h-8 rounded-full text-xs font-bold ${
+                          contractHours && dayTotal >= contractHours[idx] && contractHours[idx] > 0 ? 'bg-green-500 text-white' : dayTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
+                        }`}>
+                              {dayTotal > 0 ? dayTotal.toFixed(4).replace('.', ',') : '0'}
+                            </div>
                   </td>
                 );
               })}
               <td className="text-center px-2 py-2">
                 <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold ${
-                  contractWeekTotal > 0 && weekTotal >= contractWeekTotal ? 'bg-green-500 text-white' : weekTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
-                }`}>
-                  {weekTotal.toFixed(2).replace('.', ',')}
-                </div>
+                      contractWeekTotal > 0 && weekTotal >= contractWeekTotal ? 'bg-green-500 text-white' : weekTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
+                    }`}>
+                      {weekTotal.toFixed(4).replace('.', ',')}
+                    </div>
               </td>
             </tr>
 
@@ -259,15 +259,15 @@ export default function WeekOverview({
                     <td key={idx} className="text-center px-2 py-2 text-sm">
                       {scheduled > 0 || dayTotal > 0 ? (
                         <span className={comp >= 0 ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
-                          {comp > 0 ? '+' : ''}{comp.toFixed(2).replace('.', ',')}
-                        </span>
+                              {comp > 0 ? '+' : ''}{comp.toFixed(4).replace('.', ',')}
+                            </span>
                       ) : ''}
                     </td>
                   );
                 })}
                 <td className="text-center px-2 py-2 font-semibold">
                   <span className={(weekTotal - contractWeekTotal) >= 0 ? 'text-green-600' : 'text-red-500'}>
-                    {(weekTotal - contractWeekTotal) > 0 ? '+' : ''}{(weekTotal - contractWeekTotal).toFixed(2).replace('.', ',')}
+                    {(weekTotal - contractWeekTotal) > 0 ? '+' : ''}{(weekTotal - contractWeekTotal).toFixed(4).replace('.', ',')}
                   </span>
                 </td>
               </tr>
@@ -376,7 +376,7 @@ export default function WeekOverview({
                         {entry.shift_type === 'Dag' ? 'gewerkte dag' : entry.shift_type?.toLowerCase() || '-'}
                       </Badge>
                     </td>
-                    <td className="px-4 py-2">{entry.total_hours != null ? entry.total_hours.toFixed(2).replace('.', ',') : '-'}</td>
+                    <td className="px-4 py-2">{entry.total_hours != null ? entry.total_hours.toFixed(4).replace('.', ',') : '-'}</td>
                     <td className="px-4 py-2">{entry.advanced_costs || ''}</td>
                     <td className="px-4 py-2">{entry.meals || ''}</td>
                     <td className="px-4 py-2">{entry.wkr || ''}</td>
