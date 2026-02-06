@@ -200,7 +200,7 @@ export default function WeekOverview({
                 return (
                   <td key={idx} className="text-center px-2 py-2">
                     <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
-                      dayTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
+                      contractHours && dayTotal >= contractHours[idx] && contractHours[idx] > 0 ? 'bg-green-500 text-white' : dayTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
                     }`}>
                       {dayTotal > 0 ? dayTotal.toFixed(2).replace('.', ',') : '0'}
                     </div>
@@ -209,7 +209,7 @@ export default function WeekOverview({
               })}
               <td className="text-center px-2 py-2">
                 <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold ${
-                  weekTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
+                  contractWeekTotal > 0 && weekTotal >= contractWeekTotal ? 'bg-green-500 text-white' : weekTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
                 }`}>
                   {weekTotal.toFixed(2).replace('.', ',')}
                 </div>
