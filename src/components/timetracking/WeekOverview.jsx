@@ -202,7 +202,7 @@ export default function WeekOverview({
                     <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
                       dayTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
                     }`}>
-                      {dayTotal > 0 ? dayTotal.toFixed(1).replace('.', ',') : '0'}
+                      {dayTotal > 0 ? dayTotal.toFixed(2).replace('.', ',') : '0'}
                     </div>
                   </td>
                 );
@@ -211,7 +211,7 @@ export default function WeekOverview({
                 <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold ${
                   weekTotal > 0 ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
                 }`}>
-                  {weekTotal.toFixed(1).replace('.', ',')}
+                  {weekTotal.toFixed(2).replace('.', ',')}
                 </div>
               </td>
             </tr>
