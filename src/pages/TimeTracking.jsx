@@ -259,7 +259,7 @@ export default function TimeTracking() {
         travel_allowance_multiplier: existing.travel_allowance_multiplier ?? 0,
         advanced_costs: existing.advanced_costs || 0, meals: existing.meals || 0,
         wkr: existing.wkr || 0, notes: existing.notes || "",
-        total_hours_override: existing.total_hours || (isNonWorked ? scheduleHours : 0)
+        total_hours_override: isNonWorked ? (existing.total_hours || scheduleHours) : 0
       });
     } else {
       setSelectedEntry(null);
