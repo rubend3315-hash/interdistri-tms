@@ -124,11 +124,27 @@ export default function WeekOverview({
   const weekTotal = weekDays.reduce((sum, day) => sum + getDayTotal(day), 0);
   const contractWeekTotal = contractHours ? contractHours.reduce((a, b) => a + b, 0) : 0;
 
-  // Reiskosten per dag
+  // Reiskosten per dag - berekend op basis van actieve reiskostenregel en multiplier
+  const getActiveReiskostenRegel = (dateStr) => {
+    if (!employee.reiskostenregels || employee.reiskostenregels.length === 0) return null;
+    const d = new Date(dateStr);
+    return employee.reiskostenregels
+      .filter(r => r.status !== 'Inactief')
+      .find(r => {
+        const start = r.startdatum ? new Date(r.startdatum) : null;
+        const end = r.einddatum ? new Date(r.einddatum) : null;
+        return (!start || d >= start) && (!end || d <= end);
+      });
+  };
+
   const getReiskosten = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const entries = timeEntries.filter(e => e.employee_id === employee.id && e.date === dateStr);
-    return entries.reduce((sum, e) => sum + (e.travel_allowance_multiplier || 0), 0);
+    const multiplier = entries.reduce((sum, e) => sum + (e.travel_allowance_multiplier || 0), 0);
+    if (multiplier === 0) return 0;
+    const regel = getActiveReiskostenRegel(dateStr);
+    if (!regel) return 0;
+    return multiplier * (Number(regel.vergoeding_per_dag) || 0);
   };
 
   const reiskostenTotal = weekDays.reduce((sum, day) => sum + getReiskosten(day), 0);
