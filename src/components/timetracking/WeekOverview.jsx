@@ -219,12 +219,41 @@ export default function WeekOverview({
             {/* Wis dag row */}
             <tr className="border-b bg-slate-50">
               <td className="px-4 py-2 text-slate-500 text-xs"></td>
-              {weekDays.map((day, idx) => (
-                <td key={idx} className="text-center px-2 py-1 text-xs text-slate-400">
-                  Wis dag
-                </td>
-              ))}
-              <td className="text-center px-2 py-1 text-xs text-slate-400">Wis week</td>
+              {weekDays.map((day, idx) => {
+                const dateStr = format(day, 'yyyy-MM-dd');
+                const hasEntries = timeEntries.some(e => e.employee_id === employee.id && e.date === dateStr);
+                return (
+                  <td key={idx} className="text-center px-2 py-1">
+                    <button
+                      onClick={() => {
+                        if (hasEntries && confirm(`Alle tijdregistraties van ${format(day, "EEEE d MMMM", { locale: nl })} wissen?`)) {
+                          onDeleteDay?.(employee.id, day);
+                        }
+                      }}
+                      disabled={!hasEntries}
+                      className={`text-xs ${hasEntries ? 'text-red-500 hover:text-red-700 hover:underline cursor-pointer' : 'text-slate-300 cursor-default'}`}
+                    >
+                      Wis dag
+                    </button>
+                  </td>
+                );
+              })}
+              <td className="text-center px-2 py-1">
+                <button
+                  onClick={() => {
+                    const hasAny = weekDays.some(day => {
+                      const dateStr = format(day, 'yyyy-MM-dd');
+                      return timeEntries.some(e => e.employee_id === employee.id && e.date === dateStr);
+                    });
+                    if (hasAny && confirm('Alle tijdregistraties van deze week wissen?')) {
+                      onDeleteWeek?.(employee.id, weekDays);
+                    }
+                  }}
+                  className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer"
+                >
+                  Wis week
+                </button>
+              </td>
             </tr>
 
             {/* Reiskosten row */}
