@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import WeekSummary from "./WeekSummary";
 
 const urensoortCategories = [
-  { key: "gewerkt", label: "Gewerkt", shiftTypes: ["Dag", "Avond", "Nacht"] },
+  { key: "gewerkt", label: "Gewerkt", shiftTypes: ["Gewerkte dag", "Dag", "Avond", "Nacht"] },
   { key: "algemeen", label: "Algemeen", shiftTypes: [] },
   { key: "verlof", label: "Verlof", shiftTypes: ["Verlof"] },
-  { key: "atv", label: "ATV", shiftTypes: [] },
+  { key: "atv", label: "ATV", shiftTypes: ["ATV"] },
   { key: "ziek", label: "Ziek", shiftTypes: ["Ziek"] },
+  { key: "opleiding", label: "Opleiding", shiftTypes: ["Opleiding"] },
 ];
 
 export default function WeekOverview({
