@@ -71,7 +71,7 @@ export default function WeekOverview({
       const hoursPerDay = workingDays > 0 ? (active.uren_per_week || 0) / workingDays : 0;
       Object.entries(dutchDayMap).forEach(([dutchDay, idx]) => {
         const isWorking = weekSchedule[dutchDay];
-        hours[idx] = (isWorking === true || isWorking === 'true') ? Math.round(hoursPerDay * 100) / 100 : 0;
+        hours[idx] = (isWorking === true || isWorking === 'true') ? Math.round(hoursPerDay * 10000) / 10000 : 0;
       });
     } else {
       Object.entries(dutchDayMap).forEach(([dutchDay, idx]) => {
