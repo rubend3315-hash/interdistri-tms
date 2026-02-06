@@ -4,14 +4,21 @@
  * - Avond: starttijd tussen 18:00 en 20:59
  * - Dag: starttijd tussen 05:00 en 17:59
  */
-export function determineShiftType(startTime) {
+export function determineShiftType(startTime, endTime) {
   if (!startTime || !startTime.includes(':')) return "Dag";
   
-  const [hours] = startTime.split(':').map(Number);
+  const [startHours] = startTime.split(':').map(Number);
   
-  if (hours >= 21 || hours < 5) {
+  if (startHours >= 21 || startHours < 5) {
     return "Nachtdienst";
-  } else if (hours >= 16) {
+  } else if (startHours >= 16) {
+    // Avonddienst, maar als eindtijd na 21:00 → Nachtdienst
+    if (endTime && endTime.includes(':')) {
+      const [endHours] = endTime.split(':').map(Number);
+      if (endHours >= 21 || endHours < 5) {
+        return "Nachtdienst";
+      }
+    }
     return "Avond";
   } else {
     return "Dag";
