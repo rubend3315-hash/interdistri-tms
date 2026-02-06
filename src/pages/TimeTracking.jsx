@@ -439,7 +439,7 @@ export default function TimeTracking() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Weekoverzicht week {weekNumber.toString().padStart(2, '0')} - {year}</h1>
         </div>
@@ -457,8 +457,8 @@ export default function TimeTracking() {
         <Skeleton className="h-96" />
       ) : (
         <div className="flex gap-4">
-          {/* Left Sidebar: Calendar + Employee List */}
-          <div className="w-64 flex-shrink-0 space-y-4">
+          {/* Left Sidebar: Calendar + Employee List - hidden when printing */}
+          <div className="w-64 flex-shrink-0 space-y-4 print:hidden">
             <WeekCalendar currentDate={currentDate} onDateChange={setCurrentDate} />
             <div className="h-[600px]">
               <EmployeeSidebar
@@ -470,7 +470,7 @@ export default function TimeTracking() {
           </div>
 
           {/* Main Content: Week Overview */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 print:w-full">
             <WeekOverview
               employee={selectedEmployee}
               weekDays={weekDays}
