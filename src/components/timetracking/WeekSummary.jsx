@@ -252,6 +252,7 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         <SummaryRow label="Nachturen" value={fmt(totalNachturen)} />
         <SummaryRow label="Voorgeschoten kosten" value={fmtEuro(totalVoorgeschoten)} />
         <SummaryRow label="Inhoudingen" value={fmtEuro(totalInhoudingen)} />
+        <SummaryRow label="Reiskostenvergoeding" value={fmtEuro(reiskostenTotal)} />
         <SummaryRow label="WKR" value={fmtEuro(totalWkr)} />
       </div>
     </div>
