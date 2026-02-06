@@ -407,6 +407,22 @@ export default function TimeTracking() {
               )}
             </div>
 
+            {["verlof", "atv", "ziek"].includes(dialogCategory) && (
+              <div className="space-y-2">
+                <Label>Uren (roosteruren)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.total_hours_override || 0}
+                  onChange={(e) => setFormData({ ...formData, total_hours_override: Number(e.target.value) })}
+                />
+                <p className="text-xs text-slate-500">
+                  Standaard gevuld met roosteruren voor deze dag. Pas aan indien nodig.
+                </p>
+              </div>
+            )}
+
             {dialogCategory === "gewerkt" && (
               <>
                 <div className="grid grid-cols-2 gap-4">
