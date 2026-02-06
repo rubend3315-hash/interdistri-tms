@@ -23,6 +23,7 @@ import {
   Menu, Home, X, Bell, Mail
 } from "lucide-react";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
+import { determineShiftType } from "@/components/utils/shiftTypeUtils";
 
 export default function MobileEntryMultiDay() {
   const [activeTab, setActiveTab] = useState("home");
@@ -299,7 +300,7 @@ export default function MobileEntryMultiDay() {
       end_time: formData.end_time,
       break_minutes: Number(formData.break_minutes) || 0,
       total_hours: hours,
-      shift_type: "Dag",
+      shift_type: determineShiftType(formData.start_time),
       notes: formData.notes,
       status: isOnline ? "Ingediend" : "Concept",
       signature_url: signature
@@ -376,7 +377,7 @@ export default function MobileEntryMultiDay() {
       end_time: formData.end_time,
       break_minutes: Number(formData.break_minutes) || 0,
       total_hours: hours,
-      shift_type: "Dag",
+      shift_type: determineShiftType(formData.start_time),
       notes: formData.notes,
       status: "Concept"
     });

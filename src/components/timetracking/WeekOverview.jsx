@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import WeekSummary from "./WeekSummary";
 
 const urensoortCategories = [
-  { key: "gewerkt", label: "Gewerkt", shiftTypes: ["Gewerkte dag", "Dag", "Avond", "Nacht", "Nachtdienst"] },
+  { key: "gewerkt", label: "Gewerkt", shiftTypes: ["Gewerkte dag", "Dag", "Avond", "Nacht", "Nachtdienst", "Avonddienst"] },
   { key: "verlof", label: "Verlof", shiftTypes: ["Verlof", "Betaalde feestdag", "Bijzonder verlof", "Partner verlof", "Ouderschapsverlof onbetaald", "Ouderschapsverlof betaald 70%", "Partnerverlof", "Zwangerschapsverlof", "Zorgverlof"] },
   { key: "atv", label: "ATV", shiftTypes: ["ATV"] },
   { key: "ziek", label: "Ziek", shiftTypes: ["Ziek"] },
