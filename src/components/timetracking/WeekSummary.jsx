@@ -44,11 +44,9 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const variabeleUren = totalGewerkt > contractWeekTotal && contractWeekTotal > 0 
     ? totalGewerkt - contractWeekTotal : 0;
 
-  // Totaal niet gewerkt
-  const totalNietGewerkt = verlofEntries.reduce((s, e) => s + (e.total_hours || 0), 0)
-    + atvEntries.reduce((s, e) => s + (e.total_hours || 0), 0)
-    + ziekEntries.reduce((s, e) => s + (e.total_hours || 0), 0)
-    + opleidingEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+  // Totaal niet gewerkt = alle uren behalve gewerkte dag types
+  const nietGewerktEntries = empEntries.filter(e => !gewerktTypes.includes(e.shift_type));
+  const totalNietGewerkt = nietGewerktEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
 
   // Verlof per type
   const getVerlofByType = (type) => verlofEntries.filter(e => e.shift_type === type).reduce((s, e) => s + (e.total_hours || 0), 0);
