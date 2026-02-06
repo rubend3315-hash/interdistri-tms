@@ -535,15 +535,18 @@ export default function TimeTracking() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Reiskostenvergoeding (enkele reis)</Label>
-                  <Select value={String(formData.travel_allowance_multiplier || 0)} onValueChange={(v) => setFormData({ ...formData, travel_allowance_multiplier: Number(v) })}>
+                  <Label>Reiskostenvergoeding</Label>
+                  <Select value={String(formData.travel_allowance_multiplier ?? 0)} onValueChange={(v) => setFormData({ ...formData, travel_allowance_multiplier: Number(v) })}>
                     <SelectTrigger><SelectValue placeholder="Selecteer vergoeding" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">0x</SelectItem>
-                      <SelectItem value="1">1x</SelectItem>
-                      <SelectItem value="2">2x</SelectItem>
+                      <SelectItem value="0">Geen (0x)</SelectItem>
+                      <SelectItem value="1">Enkele reis (1x)</SelectItem>
+                      <SelectItem value="2">Retour (2x)</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-slate-500">
+                    Standaard op retour (2x) voor gewerkte dagen. Pas aan naar 0 als vervoer wordt aangeboden.
+                  </p>
                 </div>
               </>
             )}
