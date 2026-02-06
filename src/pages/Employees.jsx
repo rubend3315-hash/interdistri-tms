@@ -981,7 +981,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
       setReiskostenregels(newReiskostenregels);
       updateMutation.mutate({
         id: employee.id,
-        data: { contractregels, reiskostenregels: newReiskostenregels }
+        data: { reiskostenregels: newReiskostenregels }
       });
     };
 
