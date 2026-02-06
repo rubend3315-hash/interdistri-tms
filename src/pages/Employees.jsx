@@ -1548,8 +1548,16 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) 
   useEffect(() => {
     if (reiskosten) {
       setFormData(reiskosten);
+    } else if (open) {
+      setFormData({
+        startdatum: '',
+        einddatum: '',
+        afstand_km: 0,
+        vergoeding_per_dag: 0,
+        status: 'Actief'
+      });
     }
-  }, [reiskosten]);
+  }, [reiskosten, open]);
 
   const berekenVergoeding = () => {
     const afstand = Number(formData.afstand_km) || 0;
