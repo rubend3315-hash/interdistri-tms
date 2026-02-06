@@ -2,7 +2,7 @@ import React from "react";
 import { format } from "date-fns";
 import { isWeekend } from "../utils/hourCalculationUtils";
 
-export default function WeekSummary({ employee, weekDays, timeEntries, contractHours, contractWeekTotal }) {
+export default function WeekSummary({ employee, weekDays, timeEntries, contractHours, contractWeekTotal, trips = [] }) {
   const empEntries = timeEntries.filter(e => e.employee_id === employee.id);
 
   const gewerktTypes = ["Gewerkte dag", "Dag", "Avond", "Nacht"];
@@ -66,7 +66,8 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const totalVoorgeschoten = empEntries.reduce((s, e) => s + (e.advanced_costs || 0), 0);
   const totalInhoudingen = empEntries.reduce((s, e) => s + (e.meals || 0), 0);
   const totalWkr = empEntries.reduce((s, e) => s + (e.wkr || 0), 0);
-  const totalSubsistence = empEntries.reduce((s, e) => s + (e.subsistence_allowance || 0), 0);
+  // Verblijfkosten ophalen uit ritten (trips)
+  const totalSubsistence = trips.reduce((s, t) => s + (t.subsistence_allowance || 0), 0);
 
   // Weekend uren split (za 150%, zo 200%)
   const zaterdagUren = gewerkt.filter(e => {

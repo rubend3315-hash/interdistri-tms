@@ -4,6 +4,8 @@ import { nl } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import WeekSummary from "./WeekSummary";
 
 const urensoortCategories = [
@@ -81,6 +83,14 @@ export default function WeekOverview({
   };
 
   const contractHours = getContractHours();
+
+  // Fetch trips for this employee and week
+  const weekDateStrs = weekDays.map(d => format(d, 'yyyy-MM-dd'));
+  const { data: allTrips = [] } = useQuery({
+    queryKey: ['trips', employee.id, weekNumber, year],
+    queryFn: () => base44.entities.Trip.filter({ employee_id: employee.id }),
+  });
+  const weekTrips = allTrips.filter(t => weekDateStrs.includes(t.date));
 
   const getEntryForDay = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -376,6 +386,7 @@ export default function WeekOverview({
         timeEntries={timeEntries}
         contractHours={contractHours}
         contractWeekTotal={contractWeekTotal}
+        trips={weekTrips}
       />
     </div>
   );
