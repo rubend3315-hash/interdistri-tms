@@ -270,7 +270,7 @@ export default function Layout({ children, currentPageName }) {
     return user.permissions?.includes(requiredPermission) || false;
   };
 
-  const isMobilePage = currentPageName === "MobileEntry";
+  const isMobilePage = currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay";
 
   if (isMobilePage) {
     return <>{children}</>;
