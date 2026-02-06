@@ -315,16 +315,16 @@ export default function WeekOverview({
 
             {/* Reiskosten row */}
             <tr className="border-b">
-              <td className="px-4 py-2 font-medium text-slate-700">Reiskostenvergoeding (enkele reis)</td>
+              <td className="px-4 py-2 font-medium text-slate-700">Reiskostenvergoeding</td>
               {weekDays.map((day, idx) => {
                 const rk = getReiskosten(day);
                 return (
                   <td key={idx} className="text-center px-2 py-2">
-                    {rk}
+                    {rk > 0 ? `€${rk.toFixed(2).replace('.', ',')}` : '0'}
                   </td>
                 );
               })}
-              <td className="text-center px-2 py-2 font-semibold">{reiskostenTotal}</td>
+              <td className="text-center px-2 py-2 font-semibold">{reiskostenTotal > 0 ? `€${reiskostenTotal.toFixed(2).replace('.', ',')}` : '0'}</td>
             </tr>
           </tbody>
         </table>
