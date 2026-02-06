@@ -106,39 +106,70 @@ export default function Layout({ children, currentPageName }) {
 
   const printStyles = `
     @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
       body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: auto;
-          }
-          nav, aside, .lg\\:ml-72 {
-            display: none !important;
-          }
-          main {
-            display: block !important;
-            margin-left: 0 !important;
-            margin-top: -40px !important;
-            padding: 5px !important;
-          }
-          .print\\:break-before-page {
-            break-before: page !important;
-            page-break-before: always !important;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-          .print\\:block {
-            display: block !important;
-          }
-          .print\\:bg-slate-800 {
-            background-color: #1e293b !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .print\\:rounded-none {
-            border-radius: 0 !important;
-          }
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: auto;
+      }
+      /* Hide sidebar and mobile header */
+      aside {
+        display: none !important;
+      }
+      .lg\\:hidden {
+        display: none !important;
+      }
+      /* Main content full width */
+      main {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+      }
+      main > div {
+        padding: 8px !important;
+      }
+      /* Page break utilities */
+      .print\\:break-before-page {
+        break-before: page !important;
+        page-break-before: always !important;
+      }
+      .print\\:hidden {
+        display: none !important;
+      }
+      .print\\:block {
+        display: block !important;
+      }
+      /* Preserve dark header */
+      .print\\:bg-slate-800 {
+        background-color: #1e293b !important;
+        color: white !important;
+      }
+      .print\\:rounded-none {
+        border-radius: 0 !important;
+      }
+      /* Tables: keep readable */
+      table {
+        font-size: 9pt !important;
+        border-collapse: collapse !important;
+        width: 100% !important;
+      }
+      th, td {
+        padding: 3px 4px !important;
+      }
+      /* Badges print nicely */
+      .bg-green-500, .bg-orange-500 {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      /* Hide interactive elements only in non-print areas */
+      .print\\:hidden button {
+        display: none !important;
+      }
+      /* Dialog print */
       [role="dialog"] {
         position: relative !important;
         inset: auto !important;
@@ -158,41 +189,16 @@ export default function Layout({ children, currentPageName }) {
       [role="dialog"] + div {
         display: none !important;
       }
-      [role="dialog"] form {
-        margin: 0 !important;
-        padding: 0 !important;
+      /* Prevent content overflow */
+      .overflow-x-auto {
+        overflow: visible !important;
       }
-      button {
-        display: none !important;
-      }
-      input, textarea, select {
-        border: 1px solid #333 !important;
-        background: white !important;
-        color: #000 !important;
-        padding: 3px !important;
-        font-size: 10pt !important;
-      }
-      [class*="slider"], [class*="range"], [role="slider"] {
-        display: none !important;
-      }
-      label {
-        margin-bottom: 1px !important;
-        font-size: 9pt !important;
-      }
-      div[class*="space-y"] {
-        margin-bottom: 5px !important;
-      }
-      h1, h2, h3, h4, h5, h6 {
-        margin: 8px 0 3px 0 !important;
+      /* Spacing fixes */
+      h1, h2, h3, h4 {
         page-break-after: avoid !important;
-        font-size: 11pt !important;
       }
-      .grid {
-        display: block !important;
-      }
-      p {
-        margin: 0 !important;
-        font-size: 9pt !important;
+      .rounded-xl {
+        border-radius: 4px !important;
       }
     }
   `;
