@@ -26,6 +26,8 @@ export default function WeekOverview({
   onPreviousEmployee,
   onNextEmployee,
   contractregels,
+  onDeleteDay,
+  onDeleteWeek,
 }) {
   if (!employee) {
     return (
