@@ -286,6 +286,7 @@ export default function WeekOverview({
                 <th className="text-left px-4 py-2 text-slate-600 font-medium">Start registratie</th>
                 <th className="text-left px-4 py-2 text-slate-600 font-medium">Einde registratie</th>
                 <th className="text-left px-4 py-2 text-slate-600 font-medium">Uursoort</th>
+                <th className="text-left px-4 py-2 text-slate-600 font-medium">Uren</th>
                 <th className="text-left px-4 py-2 text-slate-600 font-medium">Voorgeschoten kosten</th>
                 <th className="text-left px-4 py-2 text-slate-600 font-medium">Inhoudingen</th>
                 <th className="text-left px-4 py-2 text-slate-600 font-medium">WKR</th>
@@ -318,6 +319,7 @@ export default function WeekOverview({
                         {entry.shift_type === 'Dag' ? 'gewerkte dag' : entry.shift_type?.toLowerCase() || '-'}
                       </Badge>
                     </td>
+                    <td className="px-4 py-2">{entry.total_hours != null ? entry.total_hours.toFixed(2).replace('.', ',') : '-'}</td>
                     <td className="px-4 py-2">{entry.advanced_costs || ''}</td>
                     <td className="px-4 py-2">{entry.meals || ''}</td>
                     <td className="px-4 py-2">{entry.wkr || ''}</td>
@@ -326,7 +328,7 @@ export default function WeekOverview({
               }
               {timeEntries.filter(e => e.employee_id === employee.id).length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-slate-400">
+                  <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
                     Geen tijdregels deze week
                   </td>
                 </tr>
