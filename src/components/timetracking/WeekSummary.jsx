@@ -40,14 +40,15 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const nietGewerktEntries = empEntries.filter(e => !gewerktTypes.includes(e.shift_type));
   const totalNietGewerkt = nietGewerktEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
 
-  // Compensatieuren = gewerkte uren - (contracturen - niet-gewerkte uren)
-  // Als contracturen zijn volgemaakt door gewerkt + niet-gewerkt, dan is compensatie 0
-  const openUren = contractWeekTotal > 0 ? Math.max(0, contractWeekTotal - totalNietGewerkt) : 0;
-  const compensatie = contractWeekTotal > 0 ? totalGewerkt - openUren : 0;
+  // Compensatieuren = alleen als totaal uren MINDER is dan contracturen (werkgever schuld)
+  // Als contracturen gehaald of overschreden: compensatie = 0
+  const totalAlles = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+  const compensatie = contractWeekTotal > 0 && totalAlles < contractWeekTotal 
+    ? totalAlles - contractWeekTotal : 0;
 
-  // Variabele uren (overuren boven contract)
-  const variabeleUren = totalGewerkt > openUren && contractWeekTotal > 0 
-    ? totalGewerkt - openUren : 0;
+  // Variabele uren (gewerkte uren boven contract)
+  const variabeleUren = totalGewerkt > contractWeekTotal && contractWeekTotal > 0 
+    ? totalGewerkt - contractWeekTotal : 0;
 
   // Verlof per type
   const getVerlofByType = (type) => verlofEntries.filter(e => e.shift_type === type).reduce((s, e) => s + (e.total_hours || 0), 0);
