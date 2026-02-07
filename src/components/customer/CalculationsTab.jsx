@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,6 +86,38 @@ export default function CalculationsTab({ customerId }) {
     queryFn: () => base44.entities.PostNLImportResult.list(),
     staleTime: 0
   });
+
+  // Auto-select week of most recent import on first load
+  const [autoLoaded, setAutoLoaded] = useState(false);
+  useEffect(() => {
+    if (autoLoaded || loadingImports || !importResults || importResults.length === 0) return;
+    
+    // Find the most recent date across all imports
+    let latestDate = null;
+    importResults.forEach(item => {
+      if (!item?.data) return;
+      const innerData = item.data.data || item.data;
+      if (!innerData) return;
+      const parsed = parseDatum(innerData['Datum']);
+      if (parsed && (!latestDate || parsed > latestDate)) {
+        latestDate = parsed;
+      }
+    });
+    
+    if (latestDate) {
+      const yr = getYear(latestDate);
+      const wk = getISOWeek(latestDate);
+      setSelectedYear(String(yr));
+      setSelectedWeek(String(wk));
+      const d = startOfISOWeek(setISOWeek(setDateYear(new Date(yr, 0, 4), yr), wk));
+      const e = endOfISOWeek(d);
+      setStartDate(format(d, 'yyyy-MM-dd'));
+      setEndDate(format(e, 'yyyy-MM-dd'));
+      setCalculated(true);
+      setReportTab("activiteiten");
+    }
+    setAutoLoaded(true);
+  }, [importResults, loadingImports, autoLoaded]);
 
   // Calculate week boundaries from startDate/endDate
   const weekStart = useMemo(() => {
