@@ -180,13 +180,13 @@ export default function ActiviteitenReport({ weekData }) {
                 <td className="py-2 px-2"></td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalTijdensRouteStuds}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalTijdensRouteStops}</td>
-                <td className="py-2 px-2 text-right text-slate-800">{totals.aantalStuksAangeboden}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalStopsAangeboden}</td>
+                <td className="py-2 px-2 text-right text-slate-800">{totals.aantalStuksAangeboden}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalBijTerugkomstStops}</td>
+                <td className="py-2 px-2 text-right text-slate-800">{totals.collectie}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalAfgeleverdStuks}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.bml}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.pba}</td>
-                <td className="py-2 px-2 text-right text-slate-800">{totals.collectie}</td>
                 <td className="py-2 px-2 text-right font-bold text-slate-900">{totals.aantalAfgeleverdStops}</td>
               </tr>
             </tfoot>
