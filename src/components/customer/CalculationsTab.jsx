@@ -126,7 +126,11 @@ export default function CalculationsTab({ customerId }) {
 
       const datum = parseDatum(innerData['Datum']);
       if (!datum) return;
-      if (datum < weekStart || datum > weekEnd) return;
+      // Compare dates without time component to avoid timezone issues
+      const datumDate = new Date(datum.getFullYear(), datum.getMonth(), datum.getDate()).getTime();
+      const startDate = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()).getTime();
+      const endDate = new Date(weekEnd.getFullYear(), weekEnd.getMonth(), weekEnd.getDate()).getTime();
+      if (datumDate < startDate || datumDate > endDate) return;
 
       rows.push({
         ...innerData,
