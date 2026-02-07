@@ -557,10 +557,7 @@ export default function CustomerDetail() {
 
         {/* Berekeningen Tab */}
         <TabsContent value="calculations">
-          <CalculationsTab 
-            imports={imports}
-            customerArticles={formData.articles}
-          />
+          <CalculationsTab customerId={customerId} />
         </TabsContent>
 
         {/* Opmerkingen Tab */}
