@@ -272,9 +272,18 @@ export default function KPITrendCharts({ employeeName, year, kpiDoelen = [], wee
       {/* KPI Mini Cards Grid */}
       {chartData.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {KPI_FIELDS.map((field) => (
-            <KPIMiniCard key={field.key} field={field} data={chartData} showAll={showAll} />
-          ))}
+          {KPI_FIELDS.map((field) => {
+            // Compute average doel value for this KPI
+            const doelKey = `${field.key}_doel`;
+            const relevantDoelen = showAll ? allDoelen : allDoelen.filter(d => {
+              // Match employee by employee_id from KPI records
+              const empKpi = allKpi.find(k => k.medewerker_naam === employeeName);
+              return empKpi && d.employee_id === empKpi.employee_id;
+            });
+            const doelVals = relevantDoelen.map(d => d[doelKey]).filter(v => v != null);
+            const doelValue = doelVals.length > 0 ? doelVals.reduce((s, v) => s + v, 0) / doelVals.length : null;
+            return <KPIMiniCard key={field.key} field={field} data={chartData} showAll={showAll} doelValue={doelValue} />;
+          })}
         </div>
       )}
 
