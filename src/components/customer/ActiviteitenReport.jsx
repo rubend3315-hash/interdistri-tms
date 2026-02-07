@@ -134,11 +134,10 @@ export default function ActiviteitenReport({ weekData }) {
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[80px] align-bottom">Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[80px] align-bottom">Aantal stops waarvoor geen aanbiedpoging is uitgevoerd</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal bij terugkomst - stops</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal afgeleverd - stuks</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">Aantal bij terugkomst</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[65px] align-bottom">Aantal stuks afgehaald/gecollecteerd</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal afgeleverd - stuks</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">Legitimatie aan de deur</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal PBA-pakketten bezorgd</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Geleverde stops</th>
             </tr>
           </thead>
