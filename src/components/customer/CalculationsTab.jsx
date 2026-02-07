@@ -194,6 +194,7 @@ export default function CalculationsTab({ customerId }) {
         totaalRitUren: parseTimeToHours(row['Totaal rit']),
         aantalRouteStops: Number(row['Aantal tijdens route - stops']) || 0,
         aantalRouteStuks: Number(row['Aantal tijdens route - stuks']) || 0,
+        succesvolleStops: stops,
       };
     });
   };
