@@ -66,6 +66,7 @@ const menuItems = [
     label: "Loon & Rapportage",
     items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
+      { name: "Medewerkersrapport", icon: Users, page: "EmployeeReport" },
     ]
   },
   {
@@ -261,6 +262,7 @@ export default function Layout({ children, currentPageName }) {
       'Customers': 'customers',
       'Projects': 'projects',
       'Documents': 'documents',
+      'EmployeeReport': 'reports',
       'CaoRules': 'cao',
       'SalaryTables': 'salary',
       'HRMSettings': 'hrmsettings',
