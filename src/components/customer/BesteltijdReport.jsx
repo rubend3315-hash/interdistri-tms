@@ -250,6 +250,8 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                     const normGehaald = normPerBesteluur && actualPerHour > 0 ? actualPerHour >= normPerBesteluur : null;
                     const hitrate = r.aantalRouteStops > 0 ? (r.succesvolleStops || 0) / r.aantalRouteStops : 0;
 
+                    const usedTiTime = (r.totaalRitUren || 0) <= 0 && effectieveRitUren > 0;
+
                     return (
                       <tr key={idx} className="border-b hover:bg-slate-50">
                         <td className="py-1.5 px-2 text-slate-700">{r.chauffeur}</td>
@@ -259,7 +261,9 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                         <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.besteltijdBruto)}</td>
                         <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.besteltijdNetto)}</td>
                         <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.voorbereiding)}</td>
-                        <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.totaalRit)}</td>
+                        <td className={`py-1.5 px-2 text-right ${usedTiTime ? 'text-orange-600 italic' : 'text-slate-700'}`} title={usedTiTime ? 'TI Model tijd gebruikt' : ''}>
+                          {usedTiTime ? hoursToHHMMSS(effectieveRitUren) + ' *' : formatTime(r.totaalRit)}
+                        </td>
                         <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStops || 0}</td>
                         <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStuks || 0}</td>
                         <td className="py-1.5 px-2 text-right text-slate-700">{normPerBesteluur ? normPerBesteluur.toFixed(1) : '-'}</td>
