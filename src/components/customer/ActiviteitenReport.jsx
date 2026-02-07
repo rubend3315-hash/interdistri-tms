@@ -122,7 +122,7 @@ export default function ActiviteitenReport({ weekData }) {
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">debrief</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">1ste stop</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">15 min geen scan</th>
-              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Laatste stop</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Laatste stop</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[40px] align-bottom">X 15 min geen scan</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">Bestel tijd Norm</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">Bestel tijd Bruto</th>
