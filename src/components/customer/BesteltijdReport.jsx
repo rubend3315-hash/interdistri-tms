@@ -421,8 +421,9 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
             })}
           </tbody>
           {totals && (() => {
-            const allTotals = calcGroupTotals(rows, findTiRoute);
+            const allTotals = calcGroupTotals(rows, findTiRoute, getGewerkteUren);
             const totalUurtarief = allTotals.totaalRitUren > 0 ? allTotals.omzet / allTotals.totaalRitUren : 0;
+            const totalUurtariefGewerkt = allTotals.gewerkteUren && allTotals.gewerkteUren > 0 ? allTotals.omzet / allTotals.gewerkteUren : null;
             const gemStops = allTotals.count > 0 ? allTotals.aantalRouteStops / allTotals.count : 0;
             const gemStuks = allTotals.count > 0 ? allTotals.aantalRouteStuks / allTotals.count : 0;
             const gemOmzet = allTotals.count > 0 ? allTotals.omzet / allTotals.count : 0;
@@ -440,6 +441,8 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
                   <td className="py-2 px-2 text-right text-slate-700">{allTotals.aantalRouteStops > 0 ? `${(allTotals.succesvolleStops / allTotals.aantalRouteStops * 100).toFixed(1)}%` : '-'}</td>
                   <td className="py-2 px-2 text-right font-bold text-slate-900">{fmt(allTotals.omzet)}</td>
                   <td className={`py-2 px-2 text-right font-bold ${totalUurtarief > 45 ? 'text-green-700' : 'text-red-600'}`}>{totalUurtarief > 0 ? fmt(totalUurtarief) : '-'}</td>
+                  <td className="py-2 px-2 text-right font-bold text-blue-800 bg-blue-100/50">{allTotals.gewerkteUren != null ? `${allTotals.gewerkteUren.toFixed(1)}` : '-'}</td>
+                  <td className={`py-2 px-2 text-right font-bold bg-blue-100/50 ${totalUurtariefGewerkt && totalUurtariefGewerkt > 45 ? 'text-green-700' : totalUurtariefGewerkt ? 'text-red-600' : 'text-slate-700'}`}>{totalUurtariefGewerkt ? fmt(totalUurtariefGewerkt) : '-'}</td>
                 </tr>
                 <tr className="bg-slate-50 italic text-xs">
                   <td className="py-2 px-2 text-slate-600" colSpan={2}>Gemiddelde per rit</td>
@@ -457,6 +460,8 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
                   <td className="py-2 px-2 text-right text-slate-600">{allTotals.aantalRouteStops > 0 ? `${(allTotals.succesvolleStops / allTotals.aantalRouteStops * 100).toFixed(1)}%` : '-'}</td>
                   <td className="py-2 px-2 text-right text-slate-600">{gemOmzet > 0 ? fmt(gemOmzet) : '-'}</td>
                   <td className={`py-2 px-2 text-right text-slate-600 ${totalUurtarief > 45 ? 'text-green-700' : totalUurtarief > 0 ? 'text-red-600' : ''}`}>{totalUurtarief > 0 ? fmt(totalUurtarief) : '-'}</td>
+                  <td className="py-2 px-2 text-right text-slate-600">{allTotals.gewerkteUren != null && allTotals.count > 0 ? `${(allTotals.gewerkteUren / allTotals.count).toFixed(1)}` : '-'}</td>
+                  <td className="py-2 px-2"></td>
                 </tr>
               </tfoot>
             );
