@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     const columnsSet = new Set();
     
     // ALLEEN kolommen uit PostNLImportResult.data.data (behoud volgorde)
-    const imports = await base44.asServiceRole.entities.PostNLImportResult.list();
+    const imports = await base44.asServiceRole.entities.PostNLImportResult.filter({});
     imports.forEach(imp => {
       if (imp.data && typeof imp.data === 'object') {
         const innerData = imp.data.data || imp.data;
