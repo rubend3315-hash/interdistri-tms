@@ -76,7 +76,7 @@ export default function TimeTracking() {
   // Navigate to previous/next employee
   const navigateEmployee = (direction) => {
     const sorted = [...activeEmployees].sort((a, b) =>
-      `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
+      `${a.first_name} ${a.prefix || ''} ${a.last_name}`.localeCompare(`${b.first_name} ${b.prefix || ''} ${b.last_name}`)
     );
     const currentIdx = sorted.findIndex(e => e.id === selectedEmployeeId);
     if (currentIdx === -1) return;
