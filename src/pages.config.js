@@ -56,7 +56,9 @@ import CustomerDetail from './pages/CustomerDetail';
 import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
 import DataMigration from './pages/DataMigration';
+import Documents from './pages/Documents';
 import EditTimeEntry from './pages/EditTimeEntry';
+import EmployeeReport from './pages/EmployeeReport';
 import Employees from './pages/Employees';
 import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
@@ -75,8 +77,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Documents from './pages/Documents';
-import EmployeeReport from './pages/EmployeeReport';
 import __Layout from './Layout.jsx';
 
 
@@ -90,7 +90,9 @@ export const PAGES = {
     "Customers": Customers,
     "Dashboard": Dashboard,
     "DataMigration": DataMigration,
+    "Documents": Documents,
     "EditTimeEntry": EditTimeEntry,
+    "EmployeeReport": EmployeeReport,
     "Employees": Employees,
     "HRMSettings": HRMSettings,
     "HelpPage": HelpPage,
@@ -109,8 +111,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Documents": Documents,
-    "EmployeeReport": EmployeeReport,
 }
 
 export const pagesConfig = {

@@ -33,6 +33,12 @@ export default function EmployeeReport() {
   const [importOpen, setImportOpen] = useState(false);
   const [tab, setTab] = useState("summary");
 
+  // Callback when KPI import completes - auto set week/year from file
+  const handleImportComplete = (week, year) => {
+    setSelectedWeek(String(week));
+    setSelectedYear(String(year));
+  };
+
   const weekNum = parseInt(selectedWeek) || currentWeek;
   const yearNum = parseInt(selectedYear) || currentYear;
 
