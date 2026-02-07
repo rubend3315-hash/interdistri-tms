@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertTriangle } from "lucide-react";
 
 function pct(val) {
   if (val == null || val === '') return '';
@@ -12,7 +14,25 @@ function pctColor(val, threshold = 0.95) {
   return 'text-red-600 font-medium';
 }
 
-export default function KPITable({ kpiData }) {
+function matchesPD(name, pdEmployees) {
+  if (!pdEmployees || pdEmployees.length === 0) return true; // no validation data
+  const n = (name || '').toLowerCase().trim();
+  return pdEmployees.some(e => {
+    const last = (e.last_name || '').trim().toLowerCase();
+    const first = (e.first_name || '').trim().toLowerCase();
+    const initial = first ? first.charAt(0) + '.' : '';
+    const variations = [
+      `${last} ${initial}`.trim(),
+      `${initial} ${last}`.trim(),
+      `${last} ${first}`.trim(),
+      `${first} ${last}`.trim(),
+      last,
+    ];
+    return variations.some(v => v === n || n.includes(v) || v.includes(n));
+  });
+}
+
+export default function KPITable({ kpiData, pdEmployees = [] }) {
   if (!kpiData || kpiData.length === 0) {
     return <p className="text-slate-500 text-sm py-4">Geen KPI data beschikbaar voor deze week.</p>;
   }
@@ -38,7 +58,19 @@ export default function KPITable({ kpiData }) {
         <tbody>
           {sorted.map((row, idx) => (
             <tr key={row.id || idx} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-blue-50 transition-colors`}>
-              <td className="py-2 px-3 font-medium text-slate-800">{row.medewerker_naam}</td>
+              <td className="py-2 px-3 font-medium text-slate-800">
+                <span className="flex items-center gap-1.5">
+                  {row.medewerker_naam}
+                  {!matchesPD(row.medewerker_naam, pdEmployees) && pdEmployees.length > 0 && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /></TooltipTrigger>
+                        <TooltipContent><p className="text-xs">Niet gevonden in afdeling PakketDistributie</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </span>
+              </td>
               <td className="py-2 px-3 text-center text-slate-600">{String(row.week).padStart(2, '0')}</td>
               <td className={`py-2 px-3 text-right ${pctColor(row.tvi_dag)}`}>{pct(row.tvi_dag)}</td>
               <td className={`py-2 px-3 text-right ${pctColor(row.tvi_avond)}`}>{pct(row.tvi_avond)}</td>

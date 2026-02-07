@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import { parseTimeToHours } from "@/components/customer/BesteltijdReport";
 import { getValidPriceRule } from "@/components/utils/priceRuleUtils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertTriangle } from "lucide-react";
 
 function fmt(v) {
   if (v === 0 || v == null) return '-';
@@ -8,7 +10,25 @@ function fmt(v) {
 }
 
 // Build per-chauffeur summary from rapportage rows + KPI + articles
-export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], tiModelRoutes = [], articles = [], weekStart }) {
+function matchesPD(name, pdEmployees) {
+  if (!pdEmployees || pdEmployees.length === 0) return true;
+  const n = (name || '').toLowerCase().trim();
+  return pdEmployees.some(e => {
+    const last = (e.last_name || '').trim().toLowerCase();
+    const first = (e.first_name || '').trim().toLowerCase();
+    const initial = first ? first.charAt(0) + '.' : '';
+    const variations = [
+      `${last} ${initial}`.trim(),
+      `${initial} ${last}`.trim(),
+      `${last} ${first}`.trim(),
+      `${first} ${last}`.trim(),
+      last,
+    ];
+    return variations.some(v => v === n || n.includes(v) || v.includes(n));
+  });
+}
+
+export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], tiModelRoutes = [], articles = [], weekStart, pdEmployees = [] }) {
   // Get stop article price for the week
   const stopPrice = useMemo(() => {
     const stopArticle = articles.find(a => a.description === 'Aantal afgeleverd - Stops' || a.article_number === 'ART-001');
@@ -125,7 +145,19 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
         <tbody>
           {chauffeurData.map((row, idx) => (
             <tr key={row.name} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-blue-50`}>
-              <td className="py-2 px-2 font-medium text-slate-800">{row.name}</td>
+              <td className="py-2 px-2 font-medium text-slate-800">
+                <span className="flex items-center gap-1">
+                  {row.name}
+                  {!matchesPD(row.name, pdEmployees) && pdEmployees.length > 0 && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger><AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" /></TooltipTrigger>
+                        <TooltipContent><p className="text-xs">Niet gevonden in afdeling PakketDistributie</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </span>
+              </td>
               <td className="py-2 px-2 text-right text-slate-700">{row.weeks?.join(', ') || '-'}</td>
               <td className="py-2 px-2 text-right text-slate-700">{row.ritten}</td>
               <td className="py-2 px-2 text-right text-slate-700">{row.aantalRouteStops}</td>
