@@ -68,10 +68,13 @@ export default function CalculationsTab({ customerId }) {
   const handleWeekChange = (wk) => {
     setSelectedWeek(wk);
     setCalculated(false);
-    if (wk) {
+    if (wk === "all") {
+      const yr = parseInt(selectedYear);
+      setStartDate(format(new Date(yr, 0, 1), 'yyyy-MM-dd'));
+      setEndDate(format(new Date(yr, 11, 31), 'yyyy-MM-dd'));
+    } else if (wk) {
       const yr = parseInt(selectedYear);
       const weekNum = parseInt(wk);
-      // Build a date in the given ISO week
       const d = startOfISOWeek(setISOWeek(setDateYear(new Date(yr, 0, 4), yr), weekNum));
       const e = endOfISOWeek(d);
       setStartDate(format(d, 'yyyy-MM-dd'));
@@ -154,7 +157,8 @@ export default function CalculationsTab({ customerId }) {
     return new Date(endDate);
   }, [endDate]);
 
-  const weekNumber = useMemo(() => selectedWeek ? parseInt(selectedWeek) : getISOWeek(weekStart), [selectedWeek, weekStart]);
+  const isFullYear = selectedWeek === "all";
+  const weekNumber = useMemo(() => isFullYear ? null : (selectedWeek ? parseInt(selectedWeek) : getISOWeek(weekStart)), [selectedWeek, weekStart, isFullYear]);
   const yearNumber = useMemo(() => parseInt(selectedYear), [selectedYear]);
 
   // Get article prices: map article description to price
@@ -352,6 +356,7 @@ export default function CalculationsTab({ customerId }) {
                   <SelectValue placeholder="Maak een keuze ..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">Heel jaar</SelectItem>
                   {Array.from({ length: 53 }, (_, i) => i + 1).map(w => (
                     <SelectItem key={w} value={String(w)}>Week {w}</SelectItem>
                   ))}
@@ -440,7 +445,7 @@ export default function CalculationsTab({ customerId }) {
                   <div className="flex justify-between items-start mb-6">
                     <div>
                       <h2 className="text-2xl font-bold text-[#2c3e6b]">PostNL weekrapport</h2>
-                      <p className="text-slate-600">Periode week {weekNumber} - {yearNumber}</p>
+                      <p className="text-slate-600">{isFullYear ? `Heel jaar ${yearNumber}` : `Periode week ${weekNumber} - ${yearNumber}`}</p>
                     </div>
                   </div>
 
@@ -508,7 +513,7 @@ export default function CalculationsTab({ customerId }) {
                   {/* Day Tables */}
                   {Object.keys(filteredDayGroups).length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-slate-500">Geen data gevonden voor week {weekNumber} - {yearNumber}</p>
+                      <p className="text-slate-500">Geen data gevonden voor {isFullYear ? `jaar ${yearNumber}` : `week ${weekNumber} - ${yearNumber}`}</p>
                       <p className="text-xs text-slate-400 mt-1">Totaal rijen in database: {importResults.length}</p>
                     </div>
                   ) : (
@@ -534,7 +539,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsContent value="besteltijd" className="space-y-4 mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Besteltijd & Uurtarief Rapportage - Week {weekNumber}</CardTitle>
+                  <CardTitle className="text-base">Besteltijd & Uurtarief Rapportage - {isFullYear ? `Heel jaar ${yearNumber}` : `Week ${weekNumber}`}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <BesteltijdReport rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
@@ -546,7 +551,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsContent value="samenvatting" className="space-y-4 mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Samenvatting per Route / Chauffeur per Week (week {weekNumber})</CardTitle>
+                  <CardTitle className="text-base">Samenvatting per Route / Chauffeur {isFullYear ? `- Heel jaar ${yearNumber}` : `per Week (week ${weekNumber})`}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <WeekSamenvatting rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
@@ -557,7 +562,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsContent value="activiteiten" className="space-y-4 mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Activiteitenrapport - Week {weekNumber}</CardTitle>
+                  <CardTitle className="text-base">Activiteitenrapport - {isFullYear ? `Heel jaar ${yearNumber}` : `Week ${weekNumber}`}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ActiviteitenReport weekData={weekData} />
@@ -568,7 +573,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsContent value="routeoverzicht" className="space-y-4 mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Route Overzicht — Week {weekNumber} ({yearNumber})</CardTitle>
+                  <CardTitle className="text-base">Route Overzicht — {isFullYear ? `Heel jaar ${yearNumber}` : `Week ${weekNumber} (${yearNumber})`}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <RouteOverview weekData={weekData} besteltijdRows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
