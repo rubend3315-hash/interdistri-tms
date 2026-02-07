@@ -25,6 +25,7 @@ import {
   Bell
 } from "lucide-react";
 import CharterOverview from "../components/dashboard/CharterOverview";
+import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
 
 export default function Dashboard() {
   const today = new Date();
