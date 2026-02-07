@@ -349,28 +349,30 @@ export default function CalculationsTab({ customerId }) {
         </CardContent>
       </Card>
 
+      {/* Tabs for report types - always visible */}
+      <Tabs value={reportTab} onValueChange={setReportTab}>
+        <div className="flex items-center justify-between flex-wrap gap-2 print:hidden">
+          <TabsList>
+            <TabsTrigger value="weekrapport">Weekrapport</TabsTrigger>
+            <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
+            <TabsTrigger value="samenvatting">Samenvatting per week</TabsTrigger>
+            <TabsTrigger value="activiteiten">Activiteitenrapport</TabsTrigger>
+          </TabsList>
+          {calculated && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.print()}
+              className="print:hidden gap-2"
+            >
+              <Printer className="w-4 h-4" />
+              Print / PDF
+            </Button>
+          )}
+        </div>
+
       {calculated && (
         <>
-          {/* Tabs for report types */}
-          <Tabs value={reportTab} onValueChange={setReportTab}>
-            <div className="flex items-center justify-between flex-wrap gap-2 print:hidden">
-              <TabsList>
-                <TabsTrigger value="weekrapport">Weekrapport</TabsTrigger>
-                <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
-                <TabsTrigger value="samenvatting">Samenvatting per week</TabsTrigger>
-                <TabsTrigger value="activiteiten">Activiteitenrapport</TabsTrigger>
-              </TabsList>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.print()}
-                className="print:hidden gap-2"
-              >
-                <Printer className="w-4 h-4" />
-                Print / PDF
-              </Button>
-            </div>
-
             {/* WEEK RAPPORT TAB */}
             <TabsContent value="weekrapport" className="space-y-4 mt-4">
               {/* Report Header */}
@@ -503,9 +505,12 @@ export default function CalculationsTab({ customerId }) {
                 </CardContent>
               </Card>
             </TabsContent>
+          </>
+          )}
           </Tabs>
 
-          {/* Tarieven overzicht */}
+          {calculated && (
+            {/* Tarieven overzicht */}
           <Card className="print:hidden">
             <CardHeader>
               <CardTitle className="text-sm">Gebruikte tarieven</CardTitle>
