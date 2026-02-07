@@ -511,7 +511,6 @@ export default function CalculationsTab({ customerId }) {
 
         {calculated && (
           <Card className="print:hidden">
-          {/* Tarieven overzicht */}
             <CardHeader>
               <CardTitle className="text-sm">Gebruikte tarieven</CardTitle>
             </CardHeader>
