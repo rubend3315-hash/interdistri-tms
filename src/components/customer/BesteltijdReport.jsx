@@ -37,31 +37,25 @@ function formatTime(timeStr) {
 export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
   const [sortBy, setSortBy] = useState("route");
 
-  // Build a lookup map: route_code/route_name -> TI model route
+  // Build a lookup map: route_code -> TI model route
+  // Import Ritnaam format: "0315 GS-CO" where "0315" maps to route_code "315"
   const findTiRoute = useMemo(() => {
-    const map = {};
+    const codeMap = {};
     tiModelRoutes.forEach(r => {
-      if (r.route_code) map[r.route_code.trim().toLowerCase()] = r;
-      if (r.route_name) map[r.route_name.trim().toLowerCase()] = r;
+      if (r.route_code) {
+        // Store by normalized code (strip leading zeros)
+        const normalized = r.route_code.trim().replace(/^0+/, '');
+        codeMap[normalized] = r;
+      }
     });
     return (routeName) => {
       if (!routeName || routeName === '-') return null;
-      const key = routeName.trim().toLowerCase();
-      // Direct match on code or name
-      if (map[key]) return map[key];
-      // Try matching: route in data may be "0303 Dintelloord Oost" while TI has code "0303" or name "Dintelloord Oost"
-      // Check if routeName starts with a code
-      const parts = key.match(/^(\d+)\s+(.+)$/);
-      if (parts) {
-        const code = parts[1];
-        const name = parts[2];
-        if (map[code]) return map[code];
-        if (map[name]) return map[name];
-      }
-      // Partial match: check if any TI route name is contained in the routeName or vice versa
-      for (const r of tiModelRoutes) {
-        const tiName = (r.route_name || '').trim().toLowerCase();
-        if (tiName && key.includes(tiName)) return r;
+      const key = routeName.trim();
+      // Extract leading digits from Ritnaam like "0315 GS-CO" -> "0315"
+      const match = key.match(/^(\d+)/);
+      if (match) {
+        const normalized = match[1].replace(/^0+/, '');
+        if (codeMap[normalized]) return codeMap[normalized];
       }
       return null;
     };
