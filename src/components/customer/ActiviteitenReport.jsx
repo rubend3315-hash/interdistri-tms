@@ -53,6 +53,7 @@ export default function ActiviteitenReport({ weekData }) {
         <table className="w-full text-xs">
           <thead className="bg-slate-50 border-b">
             <tr>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Dag</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Ritnaam</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Vrijgave</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">debrief</th>
@@ -80,6 +81,7 @@ export default function ActiviteitenReport({ weekData }) {
           <tbody>
             {rows.map((r, idx) => (
               <tr key={idx} className="border-b hover:bg-slate-50">
+                <td className="py-1.5 px-2 text-slate-600 whitespace-nowrap">{r._dayName || '-'}</td>
                 <td className="py-1.5 px-2 font-medium text-slate-800">{r['Ritnaam'] || '-'}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Vrijgegeven'])}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Afgehandeld'])}</td>
@@ -108,7 +110,7 @@ export default function ActiviteitenReport({ weekData }) {
           {totals && (
             <tfoot>
               <tr className="bg-slate-100 font-semibold border-t-2 border-slate-300">
-                <td className="py-2 px-2 text-slate-800">Totaal</td>
+                <td className="py-2 px-2 text-slate-800" colSpan={2}>Totaal</td>
                 <td className="py-2 px-2" colSpan={5}></td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalPeriodesGeenScan}</td>
                 <td className="py-2 px-2" colSpan={4}></td>
