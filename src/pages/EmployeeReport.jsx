@@ -272,6 +272,7 @@ export default function EmployeeReport() {
         open={importOpen}
         onOpenChange={setImportOpen}
         customerId={postNLCustomer?.id}
+        onImportComplete={handleImportComplete}
       />
     </div>
   );
