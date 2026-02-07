@@ -85,6 +85,8 @@ export default function KPIImportDialog({ open, onOpenChange, customerId, onImpo
     setResult({ success: true, count: records.length, week: weekFromFile });
     setImporting(false);
     queryClient.invalidateQueries({ queryKey: ['employee-kpi'] });
+    // Notify parent of the imported week so the page can auto-select it
+    if (onImportComplete) onImportComplete(weekFromFile, parseInt(year));
   };
 
   const handleClose = () => {
