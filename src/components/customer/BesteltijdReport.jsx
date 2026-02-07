@@ -42,7 +42,62 @@ function hoursToHHMMSS(hours) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
+// Match PostNL chauffeur name (e.g. "Es van, J.W.") to employee
+function matchChauffeurToEmployee(chauffeurName, employees) {
+  if (!chauffeurName || chauffeurName === '-' || !employees?.length) return null;
+  const cn = chauffeurName.toLowerCase().trim();
+  
+  for (const emp of employees) {
+    const last = (emp.last_name || '').toLowerCase();
+    const prefix = (emp.prefix || '').toLowerCase();
+    const first = (emp.first_name || '').toLowerCase();
+    const initials = (emp.initials || '').toLowerCase();
+    
+    // Format: "Lastname, F." or "Lastname prefix, F." 
+    // PostNL: "Es van, J.W." -> last=es, prefix=van
+    // Try: "{last} {prefix}, {initials}" and "{last}, {initials}" and "{prefix} {last}, {initials}"
+    const variants = [
+      `${last} ${prefix}, ${initials}`.trim(),
+      `${last}, ${initials}`.trim(),
+      `${prefix} ${last}, ${initials}`.trim(),
+      `${last} ${prefix}`.trim(),
+      `${last}`.trim(),
+    ];
+    
+    for (const v of variants) {
+      if (v && cn === v) return emp;
+    }
+    
+    // Fallback: check if last name is in chauffeur string
+    if (last && cn.includes(last) && (
+      (initials && cn.includes(initials)) ||
+      (first && cn.includes(first.charAt(0)))
+    )) {
+      return emp;
+    }
+  }
+  return null;
+}
+
+// Build a lookup: employee_id + date -> total_hours
+function buildTimeEntryLookup(timeEntries, weekStart, weekEnd) {
+  const lookup = {};
+  if (!timeEntries?.length) return lookup;
+  const start = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()).getTime();
+  const end = new Date(weekEnd.getFullYear(), weekEnd.getMonth(), weekEnd.getDate()).getTime();
+  
+  timeEntries.forEach(te => {
+    if (!te.date || !te.employee_id) return;
+    const d = new Date(te.date);
+    const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    if (dt < start || dt > end) return;
+    const key = `${te.employee_id}_${te.date}`;
+    lookup[key] = (lookup[key] || 0) + (te.total_hours || 0);
+  });
+  return lookup;
+}
+
+export default function BesteltijdReport({ rows, tiModelRoutes = [], employees = [], timeEntries = [], weekStart, weekEnd }) {
   const [sortBy, setSortBy] = useState("route");
 
   // Build a lookup map: route_code -> TI model route
@@ -68,6 +123,38 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
       return null;
     };
   }, [tiModelRoutes]);
+
+  // Lookup maps for time entries
+  const timeEntryLookup = useMemo(() => {
+    if (!weekStart || !weekEnd) return {};
+    return buildTimeEntryLookup(timeEntries, weekStart, weekEnd);
+  }, [timeEntries, weekStart, weekEnd]);
+
+  // Cache chauffeur -> employee mapping
+  const chauffeurEmployeeMap = useMemo(() => {
+    const map = {};
+    if (!rows?.length || !employees?.length) return map;
+    rows.forEach(r => {
+      const ch = r.chauffeur;
+      if (ch && !map.hasOwnProperty(ch)) {
+        map[ch] = matchChauffeurToEmployee(ch, employees);
+      }
+    });
+    return map;
+  }, [rows, employees]);
+
+  // Get gewerkte uren for a row
+  const getGewerkteUren = (row) => {
+    const emp = chauffeurEmployeeMap[row.chauffeur];
+    if (!emp) return null;
+    // Parse datum DD-MM-YYYY to YYYY-MM-DD
+    if (!row.datum || row.datum === '-') return null;
+    const parts = row.datum.match(/(\d{2})-(\d{2})-(\d{4})/);
+    if (!parts) return null;
+    const dateKey = `${parts[3]}-${parts[2]}-${parts[1]}`;
+    const key = `${emp.id}_${dateKey}`;
+    return timeEntryLookup[key] || null;
+  };
 
   const sortedRows = useMemo(() => {
     if (!rows || rows.length === 0) return [];
