@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Loader2, CheckCircle } from "lucide-react";
 import { getYear } from "date-fns";
+import * as XLSX from "xlsx";
 
 export default function KPIImportDialog({ open, onOpenChange, customerId }) {
   const queryClient = useQueryClient();
@@ -21,76 +21,50 @@ export default function KPIImportDialog({ open, onOpenChange, customerId }) {
     setImporting(true);
     setResult(null);
 
-    // Upload file
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    // Read Excel file client-side with xlsx
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const jsonRows = XLSX.utils.sheet_to_json(sheet);
 
-    // Extract data
-    const extracted = await base44.integrations.Core.ExtractDataFromUploadedFile({
-      file_url,
-      json_schema: {
-        type: "object",
-        properties: {
-          rows: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                zmedcid: { type: "string" },
-                Medewerker: { type: "string" },
-                Week: { type: "string" },
-                TVI_Dag: { type: "number", description: "TVI Dag column" },
-                TVI_Avond: { type: "number", description: "TVI Avond column" },
-                Uitreiklocatie: { type: "number" },
-                Vr_Distributie: { type: "number", description: "Vr Distributie column" },
-                Scankwaliteit: { type: "number" },
-                PBA_bezorgers: { type: "number", description: "PBA bezorgers column" },
-                Hitrate: { type: "number" }
-              }
-            }
-          }
-        }
-      }
-    });
-
-    if (extracted.status === "error") {
-      setResult({ error: extracted.details });
+    if (!jsonRows || jsonRows.length === 0) {
+      setResult({ error: "Geen data gevonden in het Excel bestand." });
       setImporting(false);
       return;
     }
 
-    const rows = extracted.output?.rows || [];
-    let created = 0;
-
-    // Bulk create KPI records
-    const records = rows.map(row => ({
+    const records = jsonRows.map(row => ({
       customer_id: customerId || "",
-      zmedcid: String(row.zmedcid || ""),
-      medewerker_naam: row.Medewerker || "",
-      week: parseInt(row.Week) || 0,
+      zmedcid: String(row["zmedcid"] || ""),
+      medewerker_naam: row["Medewerker"] || "",
+      week: parseInt(row["Week"]) || 0,
       year: parseInt(year),
-      tvi_dag: row.TVI_Dag != null ? row.TVI_Dag : null,
-      tvi_avond: row.TVI_Avond != null ? row.TVI_Avond : null,
-      uitreiklocatie: row.Uitreiklocatie != null ? row.Uitreiklocatie : null,
-      vr_distributie: row.Vr_Distributie != null ? row.Vr_Distributie : null,
-      scankwaliteit: row.Scankwaliteit != null ? row.Scankwaliteit : null,
-      pba_bezorgers: row.PBA_bezorgers != null ? row.PBA_bezorgers : null,
-      hitrate: row.Hitrate != null ? row.Hitrate : null
+      tvi_dag: row["TVI Dag"] != null ? Number(row["TVI Dag"]) : null,
+      tvi_avond: row["TVI Avond"] != null ? Number(row["TVI Avond"]) : null,
+      uitreiklocatie: row["Uitreiklocatie"] != null ? Number(row["Uitreiklocatie"]) : null,
+      vr_distributie: row["Vr Distributie"] != null ? Number(row["Vr Distributie"]) : null,
+      scankwaliteit: row["Scankwaliteit"] != null ? Number(row["Scankwaliteit"]) : null,
+      pba_bezorgers: row["PBA bezorgers"] != null ? Number(row["PBA bezorgers"]) : null,
+      hitrate: row["Hitrate"] != null ? Number(row["Hitrate"]) : null,
     })).filter(r => r.medewerker_naam);
 
-    if (records.length > 0) {
-      // Delete existing records for same week/year to avoid duplicates
-      const existing = await base44.entities.EmployeeKPI.filter({ 
-        week: parseInt(rows[0]?.Week) || 0, 
-        year: parseInt(year) 
-      });
-      for (const e of existing) {
-        await base44.entities.EmployeeKPI.delete(e.id);
-      }
-      await base44.entities.EmployeeKPI.bulkCreate(records);
-      created = records.length;
+    if (records.length === 0) {
+      setResult({ error: "Geen geldige medewerker rijen gevonden. Controleer de kolomnamen." });
+      setImporting(false);
+      return;
     }
 
-    setResult({ success: true, count: created });
+    // Delete existing records for same week/year to avoid duplicates
+    const weekNum = records[0].week;
+    const existing = await base44.entities.EmployeeKPI.filter({ week: weekNum, year: parseInt(year) });
+    for (const e of existing) {
+      await base44.entities.EmployeeKPI.delete(e.id);
+    }
+
+    await base44.entities.EmployeeKPI.bulkCreate(records);
+
+    setResult({ success: true, count: records.length });
     setImporting(false);
     queryClient.invalidateQueries({ queryKey: ['employee-kpi'] });
   };
