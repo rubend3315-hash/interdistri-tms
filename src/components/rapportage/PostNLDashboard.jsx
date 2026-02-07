@@ -160,31 +160,28 @@ export default function PostNLDashboard({ customerId }) {
     staleTime: 0
   });
 
-  const { data: excelColumnsData = {} } = useQuery({
-    queryKey: ['excelColumns'],
-    queryFn: async () => {
-      try {
-        const response = await base44.functions.invoke('getExcelColumns', {});
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch columns:', error);
-        return {};
-      }
-    },
-    staleTime: 0
-  });
-
+  // Derive columns directly from the loaded data (no backend call needed)
   const allColumns = useMemo(() => {
-    if (!excelColumnsData.columns || !Array.isArray(excelColumnsData.columns)) {
-      return [];
-    }
+    if (!rapportageRitten || rapportageRitten.length === 0) return [];
+    
+    const columnsSet = new Set();
+    const columnsArray = [];
+    
+    rapportageRitten.forEach(row => {
+      Object.keys(row).forEach(key => {
+        if (key !== '_importId' && !columnsSet.has(key)) {
+          columnsSet.add(key);
+          columnsArray.push(key);
+        }
+      });
+    });
 
-    return excelColumnsData.columns.map(key => ({
+    return columnsArray.map(key => ({
       key,
       label: key.replace(/_/g, ' '),
       category: 'Gegevens'
     }));
-  }, [excelColumnsData]);
+  }, [rapportageRitten]);
 
   const filteredColumns = useMemo(() => {
     if (!searchTerm) return allColumns;
