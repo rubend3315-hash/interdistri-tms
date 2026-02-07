@@ -114,31 +114,31 @@ export default function ActiviteitenReport({ weekData }) {
       </div>
       <div className="overflow-x-auto border border-slate-200 rounded-lg">
         <table className="w-full text-xs">
-          <thead className="bg-slate-50 border-b">
+          <thead className="bg-slate-50 border-b align-bottom">
             <tr>
-              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Dag</th>
-              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Ritnaam</th>
-              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Vrijgave</th>
-              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">debrief</th>
-              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">1ste stop</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">15 min geen scan</th>
-              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Laatste stop</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[40px]">X 15 min geen scan</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Bestel tijd Norm</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Bestel tijd Bruto</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Bestel tijd Netto</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[55px]">Laden aan-/afrijtij d debrief</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Totaal rit</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal tijdens route - stuks</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal tijdens route - stops</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Stuks (geen aanbod poging)</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[40px]">Stops bij terug komst</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Aantal afgeleverd - stuks</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[25px]">BML</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal PBA- pakketten bezorgd</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Collectie stuks</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Geleverde stops</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Dag</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Ritnaam</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Vrijgave</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">debrief</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">1ste stop</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[55px] align-bottom">15 min geen scan</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Laatste stop</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal periodes &gt;15 min geen scan</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[65px] align-bottom">Besteltijd Norm</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[65px] align-bottom">Besteltijd Bruto</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[65px] align-bottom">Besteltijd Netto</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[80px] align-bottom">Voorbereiding, aan-/afrijtijd en afhandeling</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[55px] align-bottom">Totaal rit</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal tijdens route - stuks</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal tijdens route - stops</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[80px] align-bottom">Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[80px] align-bottom">Aantal stops waarvoor geen aanbiedpoging is uitgevoerd</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal bij terugkomst - stops</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal afgeleverd - stuks</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">Legitimatie</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[65px] align-bottom">Aantal stuks afgehaald/gecollecteerd</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Aantal afgeleverd - stuks</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[60px] align-bottom">Geleverde stops</th>
             </tr>
           </thead>
           <tbody>
