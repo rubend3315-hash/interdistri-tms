@@ -76,6 +76,7 @@ import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
 import Documents from './pages/Documents';
+import EmployeeReport from './pages/EmployeeReport';
 import __Layout from './Layout.jsx';
 
 
@@ -109,6 +110,7 @@ export const PAGES = {
     "Users": Users,
     "Vehicles": Vehicles,
     "Documents": Documents,
+    "EmployeeReport": EmployeeReport,
 }
 
 export const pagesConfig = {
