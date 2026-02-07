@@ -40,6 +40,13 @@ export default function CalculationsTab({ customerId }) {
     enabled: !!customerId
   });
 
+  // Fetch TI Model Routes for this customer
+  const { data: tiModelRoutes = [] } = useQuery({
+    queryKey: ['ti-model-routes', customerId],
+    queryFn: () => customerId ? base44.entities.TIModelRoute.filter({ customer_id: customerId, status: 'Actief' }) : [],
+    enabled: !!customerId
+  });
+
   // Fetch PostNL import data
   const { data: importResults = [], isLoading: loadingImports } = useQuery({
     queryKey: ['postnl-imports-calc'],
@@ -377,7 +384,7 @@ export default function CalculationsTab({ customerId }) {
                   <CardTitle className="text-base">Besteltijd & Uurtarief Rapportage - Week {weekNumber}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BesteltijdReport rows={besteltijdRows} />
+                  <BesteltijdReport rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
                 </CardContent>
               </Card>
             </TabsContent>

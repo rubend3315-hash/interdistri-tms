@@ -34,8 +34,24 @@ function formatTime(timeStr) {
   return String(timeStr);
 }
 
-export default function BesteltijdReport({ rows }) {
+export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
   const [sortBy, setSortBy] = useState("route");
+
+  // Build a lookup map: route_code/route_name -> TI model route
+  const tiRouteMap = useMemo(() => {
+    const map = {};
+    tiModelRoutes.forEach(r => {
+      if (r.route_code) map[r.route_code.trim().toLowerCase()] = r;
+      if (r.route_name) map[r.route_name.trim().toLowerCase()] = r;
+    });
+    return map;
+  }, [tiModelRoutes]);
+
+  const findTiRoute = (routeName) => {
+    if (!routeName || routeName === '-') return null;
+    const key = routeName.trim().toLowerCase();
+    return tiRouteMap[key] || null;
+  };
 
   const sortedRows = useMemo(() => {
     if (!rows || rows.length === 0) return [];
@@ -96,6 +112,8 @@ export default function BesteltijdReport({ rows }) {
               <th className="text-right py-2 px-2 font-medium text-slate-600">Totaal Rit</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Route stops</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Route stuks</th>
+              <th className="text-right py-2 px-2 font-medium text-slate-600">Norm/besteluur</th>
+              <th className="text-right py-2 px-2 font-medium text-slate-600">Norm gehaald</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Omzet</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Uurtarief</th>
             </tr>
@@ -103,6 +121,14 @@ export default function BesteltijdReport({ rows }) {
           <tbody>
             {sortedRows.map((r, idx) => {
               const uurtarief = r.totaalRitUren > 0 ? r.omzet / r.totaalRitUren : 0;
+              const tiRoute = findTiRoute(r.route);
+              const normPerBesteluur = tiRoute?.manual_norm_per_hour || tiRoute?.calculated_norm_per_hour || null;
+              
+              // Calculate actual stops per besteltijd hour
+              const besteltijdUren = parseTimeToHours(r.besteltijdNetto);
+              const actualPerHour = besteltijdUren > 0 ? (r.aantalRouteStops || 0) / besteltijdUren : 0;
+              const normGehaald = normPerBesteluur && actualPerHour > 0 ? actualPerHour >= normPerBesteluur : null;
+
               return (
                 <tr key={idx} className="border-b hover:bg-slate-50">
                   <td className="py-1.5 px-2 text-slate-700">{r.chauffeur}</td>
@@ -115,6 +141,14 @@ export default function BesteltijdReport({ rows }) {
                   <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.totaalRit)}</td>
                   <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStops || 0}</td>
                   <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStuks || 0}</td>
+                  <td className="py-1.5 px-2 text-right text-slate-700">{normPerBesteluur ? normPerBesteluur.toFixed(1) : '-'}</td>
+                  <td className="py-1.5 px-2 text-right">
+                    {normGehaald === null ? '-' : normGehaald ? (
+                      <span className="inline-flex items-center gap-1 text-green-700 font-semibold">✓ Ja <span className="text-slate-400 font-normal">({actualPerHour.toFixed(1)})</span></span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-red-600 font-semibold">✗ Nee <span className="text-slate-400 font-normal">({actualPerHour.toFixed(1)})</span></span>
+                    )}
+                  </td>
                   <td className="py-1.5 px-2 text-right font-semibold text-slate-900">{fmt(r.omzet)}</td>
                   <td className="py-1.5 px-2 text-right font-semibold text-blue-700">{uurtarief > 0 ? fmt(uurtarief) : '-'}</td>
                 </tr>
@@ -128,6 +162,7 @@ export default function BesteltijdReport({ rows }) {
                 <td className="py-2 px-2 text-right text-slate-700">{totals.totaalRitUren > 0 ? `${totals.totaalRitUren.toFixed(1)} uur` : '-'}</td>
                 <td className="py-2 px-2 text-right text-slate-700">{totals.aantalRouteStops}</td>
                 <td className="py-2 px-2 text-right text-slate-700">{totals.aantalRouteStuks}</td>
+                <td className="py-2 px-2 text-right text-slate-700" colSpan={2}></td>
                 <td className="py-2 px-2 text-right font-bold text-slate-900">{fmt(totals.omzet)}</td>
                 <td className="py-2 px-2 text-right font-bold text-blue-700">{totals.totaalRitUren > 0 ? fmt(totals.omzet / totals.totaalRitUren) : '-'}</td>
               </tr>
