@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { parseTimeToHours } from "./BesteltijdReport";
+import RouteOverviewCharts from "./RouteOverviewCharts";
 
 function hoursToHHMMSS(hours) {
   if (!hours || hours <= 0) return '-';
@@ -192,6 +193,7 @@ export default function RouteOverview({ weekData, besteltijdRows, tiModelRoutes 
 
   return (
     <div>
+      <RouteOverviewCharts routeStats={sortedStats} />
       <div className="overflow-x-auto border border-slate-200 rounded-lg">
         <table className="w-full text-xs">
           <thead className="bg-slate-50 border-b">
