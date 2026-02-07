@@ -191,7 +191,9 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
     return groups;
   }, [sortedRows]);
 
-  const calcGroupTotals = (groupRows, findTiRouteFn) => {
+  const calcGroupTotals = (groupRows, findTiRouteFn, getGewerkteUrenFn) => {
+    let totalGewerkteUren = 0;
+    let hasGewerkteUren = false;
     const t = groupRows.reduce((acc, r) => {
       let ritUren = r.totaalRitUren || 0;
       if (ritUren <= 0) {
@@ -200,6 +202,8 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
           ritUren = tiRoute.total_time_hours;
         }
       }
+      const gu = getGewerkteUrenFn ? getGewerkteUrenFn(r) : null;
+      if (gu != null) { totalGewerkteUren += gu; hasGewerkteUren = true; }
       return {
         totaalRitUren: acc.totaalRitUren + ritUren,
         aantalRouteStops: acc.aantalRouteStops + (r.aantalRouteStops || 0),
@@ -209,6 +213,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
       };
     }, { totaalRitUren: 0, aantalRouteStops: 0, aantalRouteStuks: 0, succesvolleStops: 0, omzet: 0 });
     t.count = groupRows.length;
+    t.gewerkteUren = hasGewerkteUren ? totalGewerkteUren : null;
 
     // Sum time fields for averaging
     let sumBesteltijdNorm = 0, sumBesteltijdBruto = 0, sumBesteltijdNetto = 0, sumVoorbereiding = 0;
@@ -314,8 +319,9 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
           <tbody>
             {Object.keys(weekGroups).sort((a, b) => Number(a) - Number(b)).map(wk => {
               const groupRows = weekGroups[wk];
-              const wkTotals = calcGroupTotals(groupRows, findTiRoute);
+              const wkTotals = calcGroupTotals(groupRows, findTiRoute, getGewerkteUren);
               const wkUurtarief = wkTotals.totaalRitUren > 0 ? wkTotals.omzet / wkTotals.totaalRitUren : 0;
+              const wkUurtariefGewerkt = wkTotals.gewerkteUren && wkTotals.gewerkteUren > 0 ? wkTotals.omzet / wkTotals.gewerkteUren : null;
               const wkGemStops = wkTotals.count > 0 ? wkTotals.aantalRouteStops / wkTotals.count : 0;
               const wkGemStuks = wkTotals.count > 0 ? wkTotals.aantalRouteStuks / wkTotals.count : 0;
               const wkGemOmzet = wkTotals.count > 0 ? wkTotals.omzet / wkTotals.count : 0;
