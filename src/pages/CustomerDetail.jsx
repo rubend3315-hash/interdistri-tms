@@ -187,7 +187,7 @@ export default function CustomerDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-6 print:hidden">
         <Button 
           variant="outline" 
           onClick={() => navigate(createPageUrl('Customers'))}
@@ -209,7 +209,7 @@ export default function CustomerDetail() {
 
       {/* Tabs */}
       <Tabs defaultValue="info" className="space-y-4">
-        <TabsList>
+        <TabsList className="print:hidden">
           <TabsTrigger value="info" className="gap-2">
             <Building2 className="w-4 h-4" />
             Informatie
