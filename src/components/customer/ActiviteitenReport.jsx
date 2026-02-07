@@ -132,7 +132,7 @@ export default function ActiviteitenReport({ weekData }) {
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Aantal tijdens route - stuks</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Aantal tijdens route - stops</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Stuks (geen aanbod poging)</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Aantal stops waarvoor geen aanbiedpoging is uitgevoerd</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[40px] align-bottom">Stops bij terug komst</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">Aantal afgeleverd - stuks</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[25px] align-bottom">BML</th>
@@ -160,7 +160,7 @@ export default function ActiviteitenReport({ weekData }) {
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal tijdens route - stuks']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal tijdens route - stops']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stuks aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']) || 0}</td>
+                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stops waarvoor geen aanbiedpoging is uitgevoerd']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal bij terugkomst - stops']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal afgeleverd - stuks']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Legitimatiecheck aan de deur']) || 0}</td>
