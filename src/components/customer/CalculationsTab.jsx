@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Loader2, Download } from "lucide-react";
+import { Calendar, Loader2, Printer } from "lucide-react";
 import { startOfWeek, endOfWeek, format, addDays, getISOWeek, getYear, setISOWeek, setYear as setDateYear, startOfISOWeek, endOfISOWeek } from "date-fns";
 import { nl } from "date-fns/locale";
 import { getValidPriceRule } from "@/components/utils/priceRuleUtils";
@@ -270,9 +270,9 @@ export default function CalculationsTab({ customerId }) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 print-report">
       {/* Jaar & Week selectie */}
-      <Card>
+      <Card className="print:hidden">
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
@@ -317,7 +317,7 @@ export default function CalculationsTab({ customerId }) {
       </Card>
 
       {/* Rapport parameters */}
-      <Card>
+      <Card className="print:hidden">
         <CardHeader className="py-2 px-4 bg-slate-50 border-b">
           <CardTitle className="text-sm font-semibold text-blue-700">Rapport parameters</CardTitle>
         </CardHeader>
@@ -353,12 +353,23 @@ export default function CalculationsTab({ customerId }) {
         <>
           {/* Tabs for report types */}
           <Tabs value={reportTab} onValueChange={setReportTab}>
-            <TabsList>
-              <TabsTrigger value="weekrapport">Weekrapport</TabsTrigger>
-              <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
-              <TabsTrigger value="samenvatting">Samenvatting per week</TabsTrigger>
-              <TabsTrigger value="activiteiten">Activiteitenrapport</TabsTrigger>
-            </TabsList>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <TabsList>
+                <TabsTrigger value="weekrapport">Weekrapport</TabsTrigger>
+                <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
+                <TabsTrigger value="samenvatting">Samenvatting per week</TabsTrigger>
+                <TabsTrigger value="activiteiten">Activiteitenrapport</TabsTrigger>
+              </TabsList>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="print:hidden gap-2"
+              >
+                <Printer className="w-4 h-4" />
+                Print / PDF
+              </Button>
+            </div>
 
             {/* WEEK RAPPORT TAB */}
             <TabsContent value="weekrapport" className="space-y-4 mt-4">
@@ -495,7 +506,7 @@ export default function CalculationsTab({ customerId }) {
           </Tabs>
 
           {/* Tarieven overzicht */}
-          <Card>
+          <Card className="print:hidden">
             <CardHeader>
               <CardTitle className="text-sm">Gebruikte tarieven</CardTitle>
             </CardHeader>
