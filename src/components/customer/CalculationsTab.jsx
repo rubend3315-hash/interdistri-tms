@@ -13,6 +13,7 @@ import { nl } from "date-fns/locale";
 import { getValidPriceRule } from "@/components/utils/priceRuleUtils";
 import WeekReportTable from "./WeekReportTable";
 import BesteltijdReport, { parseTimeToHours } from "./BesteltijdReport";
+import WeekSamenvatting from "./WeekSamenvatting";
 
 const DAY_NAMES = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
 
@@ -350,6 +351,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsList>
               <TabsTrigger value="weekrapport">Weekrapport</TabsTrigger>
               <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
+              <TabsTrigger value="samenvatting">Samenvatting per week</TabsTrigger>
             </TabsList>
 
             {/* WEEK RAPPORT TAB */}
@@ -453,6 +455,18 @@ export default function CalculationsTab({ customerId }) {
                 </CardHeader>
                 <CardContent>
                   <BesteltijdReport rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* SAMENVATTING TAB */}
+            <TabsContent value="samenvatting" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Samenvatting per Route / Chauffeur per Week</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <WeekSamenvatting rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
                 </CardContent>
               </Card>
             </TabsContent>
