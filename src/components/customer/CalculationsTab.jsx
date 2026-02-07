@@ -506,11 +506,10 @@ export default function CalculationsTab({ customerId }) {
               </Card>
             </TabsContent>
           </>
-          )}
-          </Tabs>
+        )}
+        </Tabs>
 
-          {calculated && (
-            {/* Tarieven overzicht */}
+        {calculated && (
           <Card className="print:hidden">
             <CardHeader>
               <CardTitle className="text-sm">Gebruikte tarieven</CardTitle>
@@ -529,8 +528,7 @@ export default function CalculationsTab({ customerId }) {
               </div>
             </CardContent>
           </Card>
-        </>
-      )}
+        )}
     </div>
   );
 }
