@@ -268,6 +268,16 @@ export default function EmployeeReport() {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="imports" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Geïmporteerde KPI bestanden</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <KPIImportOverview />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Import Dialog */}
