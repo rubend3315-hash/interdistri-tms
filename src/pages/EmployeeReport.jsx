@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, Printer, Users, BarChart3, List, CalendarDays, TrendingUp } from "lucide-react";
+import { Upload, Printer, Users, BarChart3, List, CalendarDays, TrendingUp, Target } from "lucide-react";
 import KPIImportOverview from "@/components/employee-report/KPIImportOverview";
 import { getYear, getISOWeek, startOfISOWeek, endOfISOWeek, format, setISOWeek, setYear as setDateYear } from "date-fns";
 import { parseTimeToHours } from "@/components/customer/BesteltijdReport";
@@ -17,6 +17,7 @@ import KPITable from "@/components/employee-report/KPITable";
 import EmployeeSummaryTable from "@/components/employee-report/EmployeeSummaryTable";
 import EmployeeYearOverview from "@/components/employee-report/EmployeeYearOverview";
 import KPITrendCharts from "@/components/employee-report/KPITrendCharts";
+import KPIDoelEditor from "@/components/employee-report/KPIDoelEditor";
 
 function parseDatum(datumStr) {
   if (!datumStr) return null;
@@ -279,6 +280,9 @@ export default function EmployeeReport() {
           <TabsTrigger value="trends" className="gap-2">
             <TrendingUp className="w-4 h-4" /> Trends
           </TabsTrigger>
+          <TabsTrigger value="doelen" className="gap-2">
+            <Target className="w-4 h-4" /> KPI Doelen
+          </TabsTrigger>
           <TabsTrigger value="imports" className="gap-2">
             <List className="w-4 h-4" /> KPI Imports
           </TabsTrigger>
@@ -355,6 +359,18 @@ export default function EmployeeReport() {
             </CardHeader>
             <CardContent>
               <KPITrendCharts employeeName={selectedEmployee} year={selectedYear} kpiDoelen={kpiDoelen} weekNum={weekNum} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="doelen" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                KPI Doelen — Week {weekNum} ({yearNum})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <KPIDoelEditor year={selectedYear} week={selectedWeek} />
             </CardContent>
           </Card>
         </TabsContent>
