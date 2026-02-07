@@ -139,10 +139,12 @@ export default function CalculationsTab({ customerId }) {
         stuksGeleverd: stuks,
         bml,
         pbaBezorgd: pba,
+        collectie,
         stoptarief,
         stukstarief,
         bmlTarief,
         pbaTarief,
+        collectTarief,
         omzet,
         datum: row['Datum'] || '-',
         besteltijdNorm: row['Besteltijd Norm'] || '-',
@@ -184,12 +186,14 @@ export default function CalculationsTab({ customerId }) {
       stuksGeleverd: acc.stuksGeleverd + (r.stuksGeleverd || 0),
       bml: acc.bml + (r.bml || 0),
       pbaBezorgd: acc.pbaBezorgd + (r.pbaBezorgd || 0),
+      collectie: acc.collectie + (r.collectie || 0),
       stoptarief: acc.stoptarief + (r.stoptarief || 0),
       stukstarief: acc.stukstarief + (r.stukstarief || 0),
       bmlTarief: acc.bmlTarief + (r.bmlTarief || 0),
       pbaTarief: acc.pbaTarief + (r.pbaTarief || 0),
+      collectTarief: acc.collectTarief + (r.collectTarief || 0),
       omzet: acc.omzet + (r.omzet || 0),
-    }), { succesvolleStops: 0, stuksGeleverd: 0, bml: 0, pbaBezorgd: 0, stoptarief: 0, stukstarief: 0, bmlTarief: 0, pbaTarief: 0, omzet: 0 });
+    }), { succesvolleStops: 0, stuksGeleverd: 0, bml: 0, pbaBezorgd: 0, collectie: 0, stoptarief: 0, stukstarief: 0, bmlTarief: 0, pbaTarief: 0, collectTarief: 0, omzet: 0 });
   }, [dayGroups]);
 
   // All besteltijd rows
@@ -311,10 +315,12 @@ export default function CalculationsTab({ customerId }) {
                             <th className="text-right py-2 px-2 font-medium text-slate-600">Stuks geleverd</th>
                             <th className="text-right py-2 px-2 font-medium text-slate-600">BML</th>
                             <th className="text-right py-2 px-2 font-medium text-slate-600">PBA Bezorgd</th>
+                            <th className="text-right py-2 px-2 font-medium text-slate-600">Collectie</th>
                             <th className="text-right py-2 px-2 font-medium text-slate-600">Stoptarief</th>
                             <th className="text-right py-2 px-2 font-medium text-slate-600">Stukstarief</th>
                             <th className="text-right py-2 px-2 font-medium text-slate-600">BMLtarief</th>
                             <th className="text-right py-2 px-2 font-medium text-slate-600">PBAtarief</th>
+                            <th className="text-right py-2 px-2 font-medium text-slate-600">Collectietarief</th>
                             <th className="text-right py-2 px-2 font-medium text-slate-600">Omzet</th>
                           </tr>
                         </thead>
@@ -324,10 +330,12 @@ export default function CalculationsTab({ customerId }) {
                             <td className="py-2 px-2 text-right">{grandTotals.stuksGeleverd}</td>
                             <td className="py-2 px-2 text-right">{grandTotals.bml}</td>
                             <td className="py-2 px-2 text-right">{grandTotals.pbaBezorgd}</td>
+                            <td className="py-2 px-2 text-right">{grandTotals.collectie}</td>
                             <td className="py-2 px-2 text-right">{fmt(grandTotals.stoptarief)}</td>
                             <td className="py-2 px-2 text-right">{fmt(grandTotals.stukstarief)}</td>
                             <td className="py-2 px-2 text-right">{fmt(grandTotals.bmlTarief)}</td>
                             <td className="py-2 px-2 text-right">{fmt(grandTotals.pbaTarief)}</td>
+                            <td className="py-2 px-2 text-right">{fmt(grandTotals.collectTarief)}</td>
                             <td className="py-2 px-2 text-right font-bold">{fmt(grandTotals.omzet)}</td>
                           </tr>
                         </tbody>
