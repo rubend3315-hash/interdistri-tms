@@ -405,7 +405,7 @@ function ProfielTab({ employee, viewOnly }) {
             <div>
               <p className="text-xs text-slate-500">In dienst sinds</p>
               <p className="text-slate-900">
-                {employee.contract_start_date ? format(new Date(employee.contract_start_date), 'dd MMMM yyyy') : '-'}
+                {employee.in_service_since ? format(new Date(employee.in_service_since), 'dd MMMM yyyy') : '-'}
               </p>
             </div>
           </CardContent>
@@ -560,25 +560,37 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!viewOnly) {
-      // Clean up data before saving
-      const numericFields = ['hourly_rate', 'contract_hours', 'travel_allowance_per_km', 'travel_distance_km'];
       const cleanedData = { ...formData };
       
-      // Remove viewOnly flag if present
       delete cleanedData.viewOnly;
-      
-      numericFields.forEach(field => {
-        if (cleanedData[field] === '' || cleanedData[field] === undefined) {
-          delete cleanedData[field];
-        }
-      });
-      // Remove empty strings for optional fields to avoid validation errors
-      const requiredStringFields = ['first_name', 'last_name', 'department'];
+
+      const numericFields = ['hourly_rate', 'contract_hours', 'travel_allowance_per_km', 'travel_distance_km'];
+
       Object.keys(cleanedData).forEach(key => {
-        if (cleanedData[key] === '' && !requiredStringFields.includes(key)) {
-          delete cleanedData[key];
+        const value = cleanedData[key];
+
+        if (typeof value === 'string' && value.trim() === '') {
+          cleanedData[key] = null;
+        }
+
+        if (numericFields.includes(key)) {
+          if (cleanedData[key] === null) {
+            // already null from empty string conversion
+          } else if (typeof cleanedData[key] === 'string') {
+            const numValue = Number(cleanedData[key]);
+            cleanedData[key] = isNaN(numValue) ? null : numValue;
+          }
+        }
+
+        if (key === 'drivers_license_categories') {
+          if (typeof value === 'string' && value.trim() !== '') {
+            cleanedData[key] = value.split(',').map(item => item.trim());
+          } else {
+            cleanedData[key] = null;
+          }
         }
       });
+      
       onSubmit(cleanedData);
     }
   };
