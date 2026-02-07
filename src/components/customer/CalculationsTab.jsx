@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Loader2, Download } from "lucide-react";
-import { startOfWeek, endOfWeek, format, addDays, getISOWeek, getYear } from "date-fns";
+import { startOfWeek, endOfWeek, format, addDays, getISOWeek, getYear, setISOWeek, setYear as setDateYear, startOfISOWeek, endOfISOWeek } from "date-fns";
 import { nl } from "date-fns/locale";
 import { getValidPriceRule } from "@/components/utils/priceRuleUtils";
 import WeekReportTable from "./WeekReportTable";
@@ -28,10 +28,41 @@ function parseDatum(datumStr) {
 }
 
 export default function CalculationsTab({ customerId }) {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const currentYear = getYear(new Date());
+  const currentWeek = getISOWeek(new Date());
+  const [selectedYear, setSelectedYear] = useState(String(currentYear));
+  const [selectedWeek, setSelectedWeek] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [reportTab, setReportTab] = useState("weekrapport");
-  const [dayFilter, setDayFilter] = useState("all"); // 'all', 'maandag', 'dinsdag-zaterdag'
+  const [dayFilter, setDayFilter] = useState("all");
   const [calculated, setCalculated] = useState(false);
+
+  // When year/week changes, update start/end dates
+  const handleWeekChange = (wk) => {
+    setSelectedWeek(wk);
+    setCalculated(false);
+    if (wk) {
+      const yr = parseInt(selectedYear);
+      const weekNum = parseInt(wk);
+      // Build a date in the given ISO week
+      const d = startOfISOWeek(setISOWeek(setDateYear(new Date(yr, 0, 4), yr), weekNum));
+      const e = endOfISOWeek(d);
+      setStartDate(format(d, 'yyyy-MM-dd'));
+      setEndDate(format(e, 'yyyy-MM-dd'));
+    } else {
+      setStartDate("");
+      setEndDate("");
+    }
+  };
+
+  const handleYearChange = (yr) => {
+    setSelectedYear(yr);
+    setSelectedWeek("");
+    setStartDate("");
+    setEndDate("");
+    setCalculated(false);
+  };
 
   // Fetch articles for this customer
   const { data: articles = [] } = useQuery({
@@ -54,18 +85,19 @@ export default function CalculationsTab({ customerId }) {
     staleTime: 0
   });
 
-  // Calculate week boundaries
+  // Calculate week boundaries from startDate/endDate
   const weekStart = useMemo(() => {
-    const d = new Date(selectedDate);
-    return startOfWeek(d, { weekStartsOn: 1 });
-  }, [selectedDate]);
+    if (!startDate) return startOfWeek(new Date(), { weekStartsOn: 1 });
+    return new Date(startDate);
+  }, [startDate]);
 
   const weekEnd = useMemo(() => {
-    return endOfWeek(weekStart, { weekStartsOn: 1 });
-  }, [weekStart]);
+    if (!endDate) return endOfWeek(new Date(), { weekStartsOn: 1 });
+    return new Date(endDate);
+  }, [endDate]);
 
-  const weekNumber = useMemo(() => getISOWeek(weekStart), [weekStart]);
-  const yearNumber = useMemo(() => getYear(weekStart), [weekStart]);
+  const weekNumber = useMemo(() => selectedWeek ? parseInt(selectedWeek) : getISOWeek(weekStart), [selectedWeek, weekStart]);
+  const yearNumber = useMemo(() => parseInt(selectedYear), [selectedYear]);
 
   // Get article prices: map article description to price
   const articlePrices = useMemo(() => {
@@ -232,46 +264,81 @@ export default function CalculationsTab({ customerId }) {
 
   return (
     <div className="space-y-4">
-      {/* Periode Selectie */}
+      {/* Jaar & Week selectie */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Weekrapport genereren</CardTitle>
+        <CardContent className="pt-4 pb-3">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-slate-600 whitespace-nowrap">Jaar:</Label>
+              <Select value={selectedYear} onValueChange={handleYearChange}>
+                <SelectTrigger className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(y => (
+                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-slate-600 whitespace-nowrap">Week:</Label>
+              <Select value={selectedWeek} onValueChange={handleWeekChange}>
+                <SelectTrigger className="w-56">
+                  <SelectValue placeholder="Maak een keuze ..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 53 }, (_, i) => i + 1).map(w => (
+                    <SelectItem key={w} value={String(w)}>Week {w}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              onClick={handleCalculate}
+              disabled={loadingImports || !selectedWeek}
+              className="bg-orange-400 hover:bg-orange-500 text-white"
+            >
+              {loadingImports ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Laden...</>
+              ) : (
+                'Uitvoeren'
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Rapport parameters */}
+      <Card>
+        <CardHeader className="py-2 px-4 bg-slate-50 border-b">
+          <CardTitle className="text-sm font-semibold text-blue-700">Rapport parameters</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Week startdatum (maandag)</Label>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-slate-400" />
+        <CardContent className="pt-3 pb-3">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-slate-600 whitespace-nowrap">Startdatum:</Label>
+              <div className="flex items-center gap-1">
                 <Input
                   type="date"
-                  value={selectedDate}
-                  onChange={(e) => { setSelectedDate(e.target.value); setCalculated(false); }}
+                  value={startDate}
+                  onChange={(e) => { setStartDate(e.target.value); setCalculated(false); }}
+                  className="w-44"
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Week</Label>
-              <div className="text-sm font-semibold text-slate-900 pt-2">
-                Week {weekNumber} - {yearNumber}
-                <span className="text-slate-500 font-normal ml-2">
-                  ({format(weekStart, 'dd-MM-yyyy')} t/m {format(weekEnd, 'dd-MM-yyyy')})
-                </span>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-slate-600 whitespace-nowrap">Einddatum:</Label>
+              <div className="flex items-center gap-1">
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => { setEndDate(e.target.value); setCalculated(false); }}
+                  className="w-44"
+                />
               </div>
             </div>
           </div>
-
-          <Button
-            onClick={handleCalculate}
-            className="bg-blue-600 hover:bg-blue-700 w-full"
-            disabled={loadingImports}
-          >
-            {loadingImports ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Laden...</>
-            ) : (
-              'Berekeningen uitvoeren'
-            )}
-          </Button>
         </CardContent>
       </Card>
 
