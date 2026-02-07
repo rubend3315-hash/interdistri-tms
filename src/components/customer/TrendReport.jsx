@@ -39,7 +39,8 @@ function TrendCard({ title, value, prevValue, format: formatFn, color }) {
 }
 
 export default function TrendReport({ rows, tiModelRoutes = [] }) {
-  const [viewBy, setViewBy] = useState("all");
+  const [filterType, setFilterType] = useState("all"); // "all", "chauffeur", "route"
+  const [filterValue, setFilterValue] = useState("all");
 
   const findTiRoute = (routeName) => {
     if (!routeName || routeName === '-') return null;
@@ -49,17 +50,32 @@ export default function TrendReport({ rows, tiModelRoutes = [] }) {
     return tiModelRoutes.find(r => r.route_code && r.route_code.trim().replace(/^0+/, '') === normalized) || null;
   };
 
-  // Get unique chauffeurs
+  // Get unique chauffeurs and routes
   const chauffeurs = useMemo(() => {
     if (!rows) return [];
     return [...new Set(rows.map(r => r.chauffeur).filter(Boolean))].sort();
   }, [rows]);
 
+  const routes = useMemo(() => {
+    if (!rows) return [];
+    return [...new Set(rows.map(r => r.route).filter(r => r && r !== '-'))].sort();
+  }, [rows]);
+
+  const handleFilterTypeChange = (type) => {
+    setFilterType(type);
+    setFilterValue("all");
+  };
+
   // Group rows by week and calculate averages
   const weeklyData = useMemo(() => {
     if (!rows || rows.length === 0) return [];
 
-    const filtered = viewBy === "all" ? rows : rows.filter(r => r.chauffeur === viewBy);
+    let filtered = rows;
+    if (filterType === "chauffeur" && filterValue !== "all") {
+      filtered = rows.filter(r => r.chauffeur === filterValue);
+    } else if (filterType === "route" && filterValue !== "all") {
+      filtered = rows.filter(r => r.route === filterValue);
+    }
     const weekMap = {};
 
     filtered.forEach(r => {
@@ -114,7 +130,7 @@ export default function TrendReport({ rows, tiModelRoutes = [] }) {
           totaalUren: Math.round(totaalRitUren * 100) / 100,
         };
       });
-  }, [rows, viewBy, tiModelRoutes]);
+  }, [rows, filterType, filterValue, tiModelRoutes]);
 
   const latestWeek = weeklyData.length > 0 ? weeklyData[weeklyData.length - 1] : null;
   const prevWeek = weeklyData.length > 1 ? weeklyData[weeklyData.length - 2] : null;
@@ -141,19 +157,31 @@ export default function TrendReport({ rows, tiModelRoutes = [] }) {
   return (
     <div className="space-y-6">
       {/* Filter */}
-      <div className="flex items-center gap-3 print:hidden">
-        <span className="text-sm font-medium text-slate-700">Weergave:</span>
-        <Select value={viewBy} onValueChange={setViewBy}>
-          <SelectTrigger className="w-56">
+      <div className="flex items-center gap-3 flex-wrap print:hidden">
+        <span className="text-sm font-medium text-slate-700">Filter per:</span>
+        <Select value={filterType} onValueChange={handleFilterTypeChange}>
+          <SelectTrigger className="w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Alle chauffeurs (gemiddeld)</SelectItem>
-            {chauffeurs.map(c => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
-            ))}
+            <SelectItem value="all">Alles</SelectItem>
+            <SelectItem value="chauffeur">Chauffeur</SelectItem>
+            <SelectItem value="route">Route</SelectItem>
           </SelectContent>
         </Select>
+        {filterType !== "all" && (
+          <Select value={filterValue} onValueChange={setFilterValue}>
+            <SelectTrigger className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle {filterType === "chauffeur" ? "chauffeurs" : "routes"}</SelectItem>
+              {(filterType === "chauffeur" ? chauffeurs : routes).map(v => (
+                <SelectItem key={v} value={v}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* KPI Cards */}
