@@ -34,6 +34,14 @@ function formatTime(timeStr) {
   return String(timeStr);
 }
 
+function hoursToHHMMSS(hours) {
+  if (!hours || hours <= 0) return '-';
+  const h = Math.floor(hours);
+  const m = Math.floor((hours - h) * 60);
+  const s = Math.round(((hours - h) * 60 - m) * 60);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
   const [sortBy, setSortBy] = useState("route");
 
@@ -105,7 +113,10 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
     }), { totaalRitUren: 0, aantalRouteStops: 0, aantalRouteStuks: 0, omzet: 0 });
     t.count = groupRows.length;
 
-    // Calculate average norm/besteluur, werkelijk/uur across rows that have values
+    // Sum time fields for averaging
+    let sumBesteltijdNorm = 0, sumBesteltijdBruto = 0, sumBesteltijdNetto = 0, sumVoorbereiding = 0;
+    let countBesteltijdNorm = 0, countBesteltijdBruto = 0, countBesteltijdNetto = 0, countVoorbereiding = 0;
+
     let normSum = 0, normCount = 0;
     let actualSum = 0, actualCount = 0;
     groupRows.forEach(r => {
@@ -115,9 +126,22 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
       const besteltijdUren = parseTimeToHours(r.besteltijdNetto);
       const actual = besteltijdUren > 0 ? (r.aantalRouteStops || 0) / besteltijdUren : 0;
       if (actual > 0) { actualSum += actual; actualCount++; }
+
+      const bn = parseTimeToHours(r.besteltijdNorm);
+      if (bn > 0) { sumBesteltijdNorm += bn; countBesteltijdNorm++; }
+      const bb = parseTimeToHours(r.besteltijdBruto);
+      if (bb > 0) { sumBesteltijdBruto += bb; countBesteltijdBruto++; }
+      const bne = parseTimeToHours(r.besteltijdNetto);
+      if (bne > 0) { sumBesteltijdNetto += bne; countBesteltijdNetto++; }
+      const vb = parseTimeToHours(r.voorbereiding);
+      if (vb > 0) { sumVoorbereiding += vb; countVoorbereiding++; }
     });
     t.gemNorm = normCount > 0 ? normSum / normCount : 0;
     t.gemActual = actualCount > 0 ? actualSum / actualCount : 0;
+    t.gemBesteltijdNorm = countBesteltijdNorm > 0 ? sumBesteltijdNorm / countBesteltijdNorm : 0;
+    t.gemBesteltijdBruto = countBesteltijdBruto > 0 ? sumBesteltijdBruto / countBesteltijdBruto : 0;
+    t.gemBesteltijdNetto = countBesteltijdNetto > 0 ? sumBesteltijdNetto / countBesteltijdNetto : 0;
+    t.gemVoorbereiding = countVoorbereiding > 0 ? sumVoorbereiding / countVoorbereiding : 0;
     return t;
   };
 
@@ -240,7 +264,10 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                   <tr className="bg-blue-50/50 border-b-2 border-blue-300 text-xs italic">
                     <td className="py-1.5 px-2 text-blue-700" colSpan={2}>Week {wk} Gemiddelde</td>
                     <td className="py-1.5 px-2"></td>
-                    <td className="py-1.5 px-2" colSpan={4}></td>
+                    <td className="py-1.5 px-2 text-right text-blue-700">{hoursToHHMMSS(wkTotals.gemBesteltijdNorm)}</td>
+                    <td className="py-1.5 px-2 text-right text-blue-700">{hoursToHHMMSS(wkTotals.gemBesteltijdBruto)}</td>
+                    <td className="py-1.5 px-2 text-right text-blue-700">{hoursToHHMMSS(wkTotals.gemBesteltijdNetto)}</td>
+                    <td className="py-1.5 px-2 text-right text-blue-700">{hoursToHHMMSS(wkTotals.gemVoorbereiding)}</td>
                     <td className="py-1.5 px-2 text-right text-blue-700">{wkGemUren > 0 ? `${wkGemUren.toFixed(1)} uur` : '-'}</td>
                     <td className="py-1.5 px-2 text-right text-blue-700">{wkGemStops > 0 ? wkGemStops.toFixed(0) : '-'}</td>
                     <td className="py-1.5 px-2 text-right text-blue-700">{wkGemStuks > 0 ? wkGemStuks.toFixed(0) : '-'}</td>
@@ -277,7 +304,10 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                 <tr className="bg-slate-50 italic text-xs">
                   <td className="py-2 px-2 text-slate-600" colSpan={2}>Gemiddelde per rit</td>
                   <td className="py-2 px-2"></td>
-                  <td className="py-2 px-2" colSpan={4}></td>
+                  <td className="py-2 px-2 text-right text-slate-600">{hoursToHHMMSS(allTotals.gemBesteltijdNorm)}</td>
+                  <td className="py-2 px-2 text-right text-slate-600">{hoursToHHMMSS(allTotals.gemBesteltijdBruto)}</td>
+                  <td className="py-2 px-2 text-right text-slate-600">{hoursToHHMMSS(allTotals.gemBesteltijdNetto)}</td>
+                  <td className="py-2 px-2 text-right text-slate-600">{hoursToHHMMSS(allTotals.gemVoorbereiding)}</td>
                   <td className="py-2 px-2 text-right text-slate-600">{gemUren > 0 ? `${gemUren.toFixed(1)} uur` : '-'}</td>
                   <td className="py-2 px-2 text-right text-slate-600">{gemStops > 0 ? gemStops.toFixed(0) : '-'}</td>
                   <td className="py-2 px-2 text-right text-slate-600">{gemStuks > 0 ? gemStuks.toFixed(0) : '-'}</td>
