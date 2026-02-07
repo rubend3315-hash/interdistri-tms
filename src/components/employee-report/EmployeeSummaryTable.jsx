@@ -74,9 +74,13 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
         return kpiName === chauffeurName || chauffeurName.includes(kpiName) || kpiName.includes(chauffeurName);
       });
 
+      // Collect unique weeks from rows
+      const weeks = [...new Set(rows.map(r => r.weekNum).filter(Boolean))].sort((a, b) => a - b);
+
       return {
         name,
         ritten: rows.length,
+        weeks,
         totaalRitUren,
         aantalRouteStops,
         succesvolleStops,
@@ -103,6 +107,7 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
         <thead className="bg-[#2c3e6b] text-white">
           <tr>
             <th className="text-left py-2.5 px-2 font-medium">Medewerker</th>
+            <th className="text-right py-2.5 px-2 font-medium">Week</th>
             <th className="text-right py-2.5 px-2 font-medium">Ritten</th>
             <th className="text-right py-2.5 px-2 font-medium">Route stops</th>
             <th className="text-right py-2.5 px-2 font-medium">Geleverd</th>
@@ -121,6 +126,7 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
           {chauffeurData.map((row, idx) => (
             <tr key={row.name} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-blue-50`}>
               <td className="py-2 px-2 font-medium text-slate-800">{row.name}</td>
+              <td className="py-2 px-2 text-right text-slate-700">{row.weeks?.join(', ') || '-'}</td>
               <td className="py-2 px-2 text-right text-slate-700">{row.ritten}</td>
               <td className="py-2 px-2 text-right text-slate-700">{row.aantalRouteStops}</td>
               <td className="py-2 px-2 text-right text-slate-700">{row.succesvolleStops}</td>
@@ -153,6 +159,7 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
         <tfoot>
           <tr className="bg-slate-100 font-semibold border-t-2 border-slate-300">
             <td className="py-2 px-2 text-slate-800">Totaal</td>
+            <td className="py-2 px-2 text-right"></td>
             <td className="py-2 px-2 text-right">{chauffeurData.reduce((s, r) => s + r.ritten, 0)}</td>
             <td className="py-2 px-2 text-right">{chauffeurData.reduce((s, r) => s + r.aantalRouteStops, 0)}</td>
             <td className="py-2 px-2 text-right">{chauffeurData.reduce((s, r) => s + r.succesvolleStops, 0)}</td>
