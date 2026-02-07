@@ -26,7 +26,8 @@ import {
   Settings,
   Bell,
   CircleDot,
-  Mail
+  Mail,
+  TrendingUp
 } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import { cn } from "@/lib/utils";
