@@ -139,29 +139,14 @@ export default function EmployeeReport() {
       const innerData = item.data.data || item.data;
       if (!innerData || typeof innerData !== 'object') return;
 
-      // Filter by week number from the import data
-      const importWeek = parseInt(innerData['Week']);
+      // Filter by ISO week date range (ma t/m zo), onafhankelijk van jaar
       const datum = parseDatum(innerData['Datum']);
+      if (!datum) return;
       
-      // Primary: filter on Week field from import
-      if (importWeek) {
-        if (importWeek !== weekNum) return;
-        // For week-based filtering, check the date falls within the selected week range
-        // (handles cross-year weeks like week 1 starting in Dec)
-        if (datum) {
-          const datumMs = new Date(datum.getFullYear(), datum.getMonth(), datum.getDate()).getTime();
-          const startMs = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()).getTime();
-          const endMs = new Date(weekEnd.getFullYear(), weekEnd.getMonth(), weekEnd.getDate()).getTime();
-          if (datumMs < startMs || datumMs > endMs) return;
-        }
-      } else {
-        // Fallback: date-based filtering only when no Week field
-        if (!datum) return;
-        const datumDate = new Date(datum.getFullYear(), datum.getMonth(), datum.getDate()).getTime();
-        const startMs = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()).getTime();
-        const endMs = new Date(weekEnd.getFullYear(), weekEnd.getMonth(), weekEnd.getDate()).getTime();
-        if (datumDate < startMs || datumDate > endMs) return;
-      }
+      const datumMs = new Date(datum.getFullYear(), datum.getMonth(), datum.getDate()).getTime();
+      const startMs = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()).getTime();
+      const endMs = new Date(weekEnd.getFullYear(), weekEnd.getMonth(), weekEnd.getDate()).getTime();
+      if (datumMs < startMs || datumMs > endMs) return;
 
       const key = `${innerData['Datum']}_${innerData['Chauffeur']}_${innerData['Ritnaam']}_${innerData['Vrijgegeven']}`;
       if (seen.has(key)) return;
