@@ -42,40 +42,62 @@ function hoursToHHMMSS(hours) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-// Match PostNL chauffeur name (e.g. "Es van, J.W.") to employee
+// Match PostNL chauffeur name (e.g. "Es van, J.W." or "Oreel, D.G.") to employee
 function matchChauffeurToEmployee(chauffeurName, employees) {
   if (!chauffeurName || chauffeurName === '-' || !employees?.length) return null;
   const cn = chauffeurName.toLowerCase().trim();
   
+  // Parse PostNL format: "Lastname prefix, Initials" e.g. "Es van, J.W." or "Oreel, D.G."
+  const commaIdx = cn.indexOf(',');
+  const pnlLastPart = commaIdx >= 0 ? cn.substring(0, commaIdx).trim() : cn;
+  
+  // Extract just the surname from PostNL name (last word before comma, or handle "Es van" -> "es")
+  // PostNL format puts prefix after lastname: "Es van," means lastname=Es, prefix=van
+  const pnlParts = pnlLastPart.split(/\s+/);
+  const pnlSurname = pnlParts[0]; // First word is always the surname in PostNL format
+
+  // First pass: try exact matching with initials/prefix combinations
   for (const emp of employees) {
-    const last = (emp.last_name || '').toLowerCase();
-    const prefix = (emp.prefix || '').toLowerCase();
-    const first = (emp.first_name || '').toLowerCase();
-    const initials = (emp.initials || '').toLowerCase();
+    const last = (emp.last_name || '').toLowerCase().trim();
+    const prefix = (emp.prefix || '').toLowerCase().trim();
+    const initials = (emp.initials || '').toLowerCase().trim();
     
-    // Format: "Lastname, F." or "Lastname prefix, F." 
-    // PostNL: "Es van, J.W." -> last=es, prefix=van
-    // Try: "{last} {prefix}, {initials}" and "{last}, {initials}" and "{prefix} {last}, {initials}"
-    const variants = [
-      `${last} ${prefix}, ${initials}`.trim(),
-      `${last}, ${initials}`.trim(),
-      `${prefix} ${last}, ${initials}`.trim(),
-      `${last} ${prefix}`.trim(),
-      `${last}`.trim(),
-    ];
+    if (!last) continue;
+    
+    // Build variants of how PostNL might format this employee
+    const variants = [];
+    if (prefix && initials) {
+      variants.push(`${last} ${prefix}, ${initials}`);
+    }
+    if (initials) {
+      variants.push(`${last}, ${initials}`);
+    }
+    if (prefix) {
+      variants.push(`${last} ${prefix}`);
+    }
     
     for (const v of variants) {
-      if (v && cn === v) return emp;
-    }
-    
-    // Fallback: check if last name is in chauffeur string
-    if (last && cn.includes(last) && (
-      (initials && cn.includes(initials)) ||
-      (first && cn.includes(first.charAt(0)))
-    )) {
-      return emp;
+      if (cn === v) return emp;
     }
   }
+  
+  // Second pass: match on surname only - find all employees whose last_name matches
+  const surnameMatches = employees.filter(emp => {
+    const last = (emp.last_name || '').toLowerCase().trim();
+    return last && last === pnlSurname;
+  });
+  
+  // If exactly one match on surname, use it
+  if (surnameMatches.length === 1) return surnameMatches[0];
+  
+  // Third pass: broader fallback - check if last name appears in the chauffeur string
+  const broadMatches = employees.filter(emp => {
+    const last = (emp.last_name || '').toLowerCase().trim();
+    return last && last.length > 2 && cn.includes(last);
+  });
+  
+  if (broadMatches.length === 1) return broadMatches[0];
+  
   return null;
 }
 
