@@ -385,6 +385,11 @@ export default function CalculationsTab({ customerId }) {
                         <SelectItem value="dinsdag-zaterdag">Dinsdag t/m Zaterdag</SelectItem>
                       </SelectContent>
                     </Select>
+                    {dayFilter !== "all" && (
+                      <Button variant="outline" size="sm" onClick={() => setDayFilter("all")}>
+                        Reset filters
+                      </Button>
+                    )}
                   </div>
 
                   {/* Grand Total Summary */}
