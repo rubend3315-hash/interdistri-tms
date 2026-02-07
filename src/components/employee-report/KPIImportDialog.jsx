@@ -21,7 +21,7 @@ function parsePercentage(val) {
   return num > 1 ? num / 100 : num;
 }
 
-export default function KPIImportDialog({ open, onOpenChange, customerId }) {
+export default function KPIImportDialog({ open, onOpenChange, customerId, onImportComplete }) {
   const queryClient = useQueryClient();
   const [file, setFile] = useState(null);
   const [year, setYear] = useState(String(getYear(new Date())));
