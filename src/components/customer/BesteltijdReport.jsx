@@ -157,12 +157,21 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
 
   const totals = useMemo(() => {
     if (!rows || rows.length === 0) return null;
-    const t = rows.reduce((acc, r) => ({
-      totaalRitUren: acc.totaalRitUren + (r.totaalRitUren || 0),
-      aantalRouteStops: acc.aantalRouteStops + (r.aantalRouteStops || 0),
-      aantalRouteStuks: acc.aantalRouteStuks + (r.aantalRouteStuks || 0),
-      omzet: acc.omzet + (r.omzet || 0),
-    }), { totaalRitUren: 0, aantalRouteStops: 0, aantalRouteStuks: 0, omzet: 0 });
+    const t = rows.reduce((acc, r) => {
+      let ritUren = r.totaalRitUren || 0;
+      if (ritUren <= 0) {
+        const tiRoute = findTiRoute(r.route);
+        if (tiRoute && tiRoute.total_time_hours > 0) {
+          ritUren = tiRoute.total_time_hours;
+        }
+      }
+      return {
+        totaalRitUren: acc.totaalRitUren + ritUren,
+        aantalRouteStops: acc.aantalRouteStops + (r.aantalRouteStops || 0),
+        aantalRouteStuks: acc.aantalRouteStuks + (r.aantalRouteStuks || 0),
+        omzet: acc.omzet + (r.omzet || 0),
+      };
+    }, { totaalRitUren: 0, aantalRouteStops: 0, aantalRouteStuks: 0, omzet: 0 });
     t.count = rows.length;
     return t;
   }, [rows]);
