@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +18,7 @@ import EmployeeSummaryTable from "@/components/employee-report/EmployeeSummaryTa
 import EmployeeYearOverview from "@/components/employee-report/EmployeeYearOverview";
 import KPITrendCharts from "@/components/employee-report/KPITrendCharts";
 import KPIDoelEditor from "@/components/employee-report/KPIDoelEditor";
+import DataRefreshIndicator from "@/components/DataRefreshIndicator";
 
 function parseDatum(datumStr) {
   if (!datumStr) return null;
@@ -37,6 +38,28 @@ export default function EmployeeReport() {
   const [importOpen, setImportOpen] = useState(false);
   const [tab, setTab] = useState("summary");
   const [selectedEmployee, setSelectedEmployee] = useState("all");
+  const [lastRefresh, setLastRefresh] = useState(null);
+  const queryClient = useQueryClient();
+
+  // Real-time subscriptions
+  useEffect(() => {
+    const unsubs = [
+      base44.entities.EmployeeKPI.subscribe(() => {
+        queryClient.invalidateQueries({ queryKey: ['employee-kpi'] });
+        queryClient.invalidateQueries({ queryKey: ['employee-kpi-year-names'] });
+        setLastRefresh(Date.now());
+      }),
+      base44.entities.KPIDoel.subscribe(() => {
+        queryClient.invalidateQueries({ queryKey: ['kpi-doelen'] });
+        setLastRefresh(Date.now());
+      }),
+      base44.entities.PostNLImportResult.subscribe(() => {
+        queryClient.invalidateQueries({ queryKey: ['postnl-imports-report'] });
+        setLastRefresh(Date.now());
+      }),
+    ];
+    return () => unsubs.forEach(u => u());
+  }, [queryClient]);
 
   // Callback when KPI import completes - auto set week/year from file
   const handleImportComplete = (week, year) => {
@@ -204,6 +227,7 @@ export default function EmployeeReport() {
 
   return (
     <div className="space-y-6">
+      <DataRefreshIndicator lastRefresh={lastRefresh} />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
