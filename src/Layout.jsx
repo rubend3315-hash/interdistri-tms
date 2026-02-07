@@ -66,7 +66,7 @@ const menuItems = [
     label: "Loon & Rapportage",
     items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
-      { name: "Rapport PakketDistributie", icon: Users, page: "EmployeeReport" },
+      { name: "Medewerkersrapport", icon: Users, page: "EmployeeReport" },
     ]
   },
   {
