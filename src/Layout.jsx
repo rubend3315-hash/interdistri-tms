@@ -105,6 +105,9 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const printStyles = `
+    @page {
+      margin: 10mm;
+    }
     @media print {
       * {
         -webkit-print-color-adjust: exact !important;
