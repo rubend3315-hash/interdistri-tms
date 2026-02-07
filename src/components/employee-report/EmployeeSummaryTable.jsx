@@ -37,7 +37,7 @@ function matchesPD(name, pdEmployees) {
   });
 }
 
-export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], tiModelRoutes = [], articles = [], weekStart, pdEmployees = [] }) {
+export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], kpiDoelen = [], tiModelRoutes = [], articles = [], weekStart, pdEmployees = [] }) {
   // Get stop article price for the week
   const stopPrice = useMemo(() => {
     const stopArticle = articles.find(a => a.description === 'Aantal afgeleverd - Stops' || a.article_number === 'ART-001');
@@ -97,11 +97,13 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
 
       // Find matching KPI
       const kpi = kpiData.find(k => {
-        // Match by partial name
         const kpiName = (k.medewerker_naam || '').toLowerCase().trim();
         const chauffeurName = name.toLowerCase().trim();
         return kpiName === chauffeurName || chauffeurName.includes(kpiName) || kpiName.includes(chauffeurName);
       });
+
+      // Find matching KPI doel (via employee_id van kpi record)
+      const doel = kpi ? kpiDoelen.find(d => d.employee_id === kpi.employee_id) : null;
 
       // Collect unique weeks from rows
       const weeks = [...new Set(rows.map(r => r.weekNum).filter(Boolean))].sort((a, b) => a - b);
@@ -121,10 +123,11 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
         gemNorm,
         gemActual,
         uurtariefGehaald,
-        kpi
+        kpi,
+        doel
       };
     }).sort((a, b) => b.uurtarief - a.uurtarief);
-  }, [reportRows, kpiData, tiModelRoutes, stopPrice]);
+  }, [reportRows, kpiData, kpiDoelen, tiModelRoutes, stopPrice]);
 
   if (chauffeurData.length === 0) {
     return <p className="text-slate-500 text-sm py-4">Geen data beschikbaar.</p>;
@@ -149,6 +152,7 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
             <th className="text-right py-2.5 px-2 font-medium">Rit uren</th>
             <th className="text-right py-2.5 px-2 font-medium">Uurtarief</th>
             <th className="text-center py-2.5 px-2 font-medium">Gehaald</th>
+            <th className="text-center py-2.5 px-2 font-medium">KPI Doel</th>
           </tr>
         </thead>
         <tbody>
@@ -194,6 +198,34 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
                   </span>
                 ) : '-'}
               </td>
+              <td className="py-2 px-2 text-center">
+                {row.doel && row.kpi ? (() => {
+                  const doelFields = [
+                    { actual: 'hitrate', goal: 'hitrate_doel' },
+                    { actual: 'tvi_dag', goal: 'tvi_dag_doel' },
+                    { actual: 'tvi_avond', goal: 'tvi_avond_doel' },
+                    { actual: 'scankwaliteit', goal: 'scankwaliteit_doel' },
+                    { actual: 'uitreiklocatie', goal: 'uitreiklocatie_doel' },
+                    { actual: 'pba_bezorgers', goal: 'pba_bezorgers_doel' },
+                  ];
+                  let total = 0, behaald = 0;
+                  doelFields.forEach(df => {
+                    if (row.doel[df.goal] != null && row.kpi[df.actual] != null) {
+                      total++;
+                      if (row.kpi[df.actual] >= row.doel[df.goal]) behaald++;
+                    }
+                  });
+                  if (total === 0) return <span className="text-slate-400 text-xs">-</span>;
+                  const pctBehaald = behaald / total;
+                  return (
+                    <span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold ${
+                      pctBehaald >= 1 ? 'bg-green-100 text-green-700' : pctBehaald >= 0.5 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {behaald}/{total}
+                    </span>
+                  );
+                })() : <span className="text-slate-400 text-xs">-</span>}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -217,6 +249,7 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
             <td className="py-2 px-2 text-right font-bold">{fmt(chauffeurData.reduce((s, r) => s + r.omzet, 0))}</td>
             <td className="py-2 px-2 text-right">{chauffeurData.reduce((s, r) => s + r.totaalRitUren, 0).toFixed(1)}</td>
             <td className="py-2 px-2 text-right" colSpan={2}></td>
+            <td></td>
           </tr>
         </tfoot>
       </table>
