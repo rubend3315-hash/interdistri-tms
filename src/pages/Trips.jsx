@@ -20,9 +20,6 @@ import {
   User,
   Calendar,
   MapPin,
-  Truck,
-  User,
-  Calendar,
   Trash2
 } from "lucide-react";
 
