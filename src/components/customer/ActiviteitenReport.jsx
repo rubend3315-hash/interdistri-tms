@@ -159,13 +159,13 @@ export default function ActiviteitenReport({ weekData }) {
                 <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Totaal rit'])}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal tijdens route - stuks']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal tijdens route - stops']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stuks aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']) || 0}</td>
+                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stuks aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal bij terugkomst - stops']) || 0}</td>
+                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stuks afgehaald/gecollecteerd']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal afgeleverd - stuks']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Legitimatiecheck aan de deur']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal PBA-pakketten bezorgd']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stuks afgehaald/gecollecteerd']) || 0}</td>
                 <td className="py-1.5 px-2 text-right font-semibold text-slate-800">{Number(r['Aantal afgeleverd - stops']) || 0}</td>
               </tr>
             ))}
