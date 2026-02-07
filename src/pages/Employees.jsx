@@ -33,9 +33,11 @@ const departments = ['Management', 'Transport', 'PakketDistributie', 'Charters']
 const contractTypes = ['Vast', 'Tijdelijk', 'Oproep', 'Uitzend'];
 const statuses = ['Actief', 'Inactief', 'Uit dienst'];
 const licenseCategories = ['B', 'C', 'CE', 'D', 'DE'];
-const functions = [
+const functionOptions = [
   'Chauffeur',
+  'Pakketbezorger',
   'Pakketbezorger/Folderbezorger',
+  'Folderbezorger',
   'Magazijnmedewerker',
   'Planner',
   'Manager',
@@ -558,17 +560,22 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!viewOnly) {
-      // Clean up: remove empty strings for numeric fields to avoid validation errors
+      // Clean up data before saving
       const numericFields = ['hourly_rate', 'contract_hours', 'travel_allowance_per_km', 'travel_distance_km'];
       const cleanedData = { ...formData };
+      
+      // Remove viewOnly flag if present
+      delete cleanedData.viewOnly;
+      
       numericFields.forEach(field => {
         if (cleanedData[field] === '' || cleanedData[field] === undefined) {
           delete cleanedData[field];
         }
       });
-      // Also remove fields with empty string that aren't part of the entity schema
+      // Remove empty strings for optional fields to avoid validation errors
+      const requiredStringFields = ['first_name', 'last_name', 'department'];
       Object.keys(cleanedData).forEach(key => {
-        if (cleanedData[key] === '' && key !== 'first_name' && key !== 'last_name' && key !== 'email') {
+        if (cleanedData[key] === '' && !requiredStringFields.includes(key)) {
           delete cleanedData[key];
         }
       });
@@ -812,14 +819,15 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
         <div className="space-y-2">
           <Label>Functie</Label>
           <Select 
-            value={formData.function} 
-            onValueChange={(v) => setFormData({ ...formData, function: v })}
+            value={formData.function || '_placeholder'} 
+            onValueChange={(v) => setFormData({ ...formData, function: v === '_placeholder' ? '' : v })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecteer functie" />
             </SelectTrigger>
             <SelectContent>
-              {functions.map(func => (
+              <SelectItem value="_placeholder" disabled>Selecteer functie</SelectItem>
+              {functionOptions.map(func => (
                 <SelectItem key={func} value={func}>{func}</SelectItem>
               ))}
             </SelectContent>
