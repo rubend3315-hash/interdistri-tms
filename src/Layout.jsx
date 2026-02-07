@@ -67,6 +67,7 @@ const menuItems = [
     items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
       { name: "Medewerkersrapport", icon: Users, page: "EmployeeReport" },
+      { name: "Werkaanbod", icon: TrendingUp, page: "Werkaanbod" },
     ]
   },
   {
