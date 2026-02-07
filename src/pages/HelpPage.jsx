@@ -119,6 +119,88 @@ export default function HelpPage() {
 
         <div id="help-content">
 
+        {/* SYSTEEMREGELS TAB */}
+        <TabsContent value="system-rules" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-blue-600" />
+                Systeemregels & Afspraken
+              </CardTitle>
+              <CardDescription>
+                Vastgelegde regels die door het hele systeem worden gehanteerd. Deze regels gelden voor alle rapporten, berekeningen en overzichten.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Weekdefinitie */}
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <CalendarDays className="w-5 h-5" />
+                  Weekdefinitie (ISO 8601)
+                </h3>
+                <div className="space-y-3 text-sm text-blue-800">
+                  <p>
+                    <strong>Het systeem werkt altijd met volle ISO-weken:</strong>
+                  </p>
+                  <ul className="space-y-2 ml-4">
+                    <li>• Een week loopt van <strong>maandag t/m zondag</strong></li>
+                    <li>• De weeknummering volgt de <strong>ISO 8601 standaard</strong></li>
+                    <li>• Filtering en rapportage gebeurt op basis van het <strong>werkelijke datumbereik</strong> van de week, niet op basis van het kalenderjaar</li>
+                    <li>• Dit betekent dat week 1 van een jaar kan starten in december van het vorige jaar (bijv. week 1 van 2026 = 29-12-2025 t/m 04-01-2026)</li>
+                    <li>• Alle data die binnen het datumbereik ma-zo valt wordt meegenomen, <strong>ongeacht het kalenderjaar</strong> van de individuele datums</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Rapportageregels */}
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                <h3 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                  <FileSpreadsheet className="w-5 h-5" />
+                  Rapportageregels
+                </h3>
+                <div className="space-y-3 text-sm text-green-800">
+                  <ul className="space-y-2 ml-4">
+                    <li>• Alle weekrapporten (Medewerkersrapport, PostNL Berekeningen, Loonrapporten) hanteren dezelfde weekdefinitie</li>
+                    <li>• Import-data wordt gefilterd op het <strong>datumbereik van de geselecteerde week</strong>, niet op het weeknummerveld uit het bronbestand</li>
+                    <li>• Bij cross-year weken worden datums uit beide jaren correct meegenomen</li>
+                    <li>• Maandagtarieven worden apart berekend (apart artikel voor stoptarief op maandag)</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Naamconventies */}
+              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <h3 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Naamconventies
+                </h3>
+                <div className="space-y-3 text-sm text-amber-800">
+                  <ul className="space-y-2 ml-4">
+                    <li>• Chauffeursnamen worden genormaliseerd bij het matchen (komma's worden verwijderd)</li>
+                    <li>• "Biersteker, J." en "Biersteker J." worden als dezelfde persoon behandeld</li>
+                    <li>• Bij KPI-matching wordt een flexibele vergelijking gebruikt (contains-match)</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Data ophalen */}
+              <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <h3 className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
+                  <Layers className="w-5 h-5" />
+                  Data ophalen
+                </h3>
+                <div className="space-y-3 text-sm text-purple-800">
+                  <ul className="space-y-2 ml-4">
+                    <li>• Grote datasets (bijv. PostNL imports) worden met paginering opgehaald om alle records te laden</li>
+                    <li>• Er geldt een maximum van 500 records per batch, met automatisch doorgaan tot alle data geladen is</li>
+                    <li>• Deduplicatie vindt plaats op basis van de combinatie: datum + chauffeur + ritnaam + vrijgavetijd</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* FUNCTIES TAB */}
         <TabsContent value="functions" className="space-y-6 mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
