@@ -115,11 +115,20 @@ export default function ActiviteitenReport({ weekData }) {
   return (
     <div>
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 flex-wrap">
           <div>
             <p className="text-xs text-blue-600 font-medium mb-1">Rendabiliteit berekening</p>
             <p className="text-lg font-bold text-blue-900">
               {totalStops} stops / 150 = <span className="text-2xl">{rittenBerekening.toFixed(1)}</span> ritten
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-blue-600 font-medium mb-1">Stopverdeling over 11 contractritten</p>
+            <p className="text-lg font-bold text-blue-900">
+              {totalStops} / 11 = <span className="text-2xl">{(totalStops / 11).toFixed(0)}</span> stops per rit
+              <span className={`ml-2 text-sm font-semibold ${(totalStops / 11) >= 150 ? 'text-emerald-600' : 'text-red-600'}`}>
+                {(totalStops / 11) >= 150 ? '✓ rendabel' : '✗ niet rendabel'}
+              </span>
             </p>
           </div>
           <div className="text-xs text-blue-700 bg-blue-100 rounded px-3 py-2">
