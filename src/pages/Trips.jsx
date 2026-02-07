@@ -20,9 +20,6 @@ import {
   User,
   Calendar,
   MapPin,
-  Gauge,
-  Fuel,
-  Package,
   Trash2
 } from "lucide-react";
 

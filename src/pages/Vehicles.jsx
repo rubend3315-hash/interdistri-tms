@@ -17,12 +17,10 @@ import {
   Search,
   Car,
   Truck,
-  Calendar,
   Gauge,
   Fuel,
   Trash2,
-  FileText,
-  AlertTriangle
+  FileText
 } from "lucide-react";
 
 const vehicleTypes = ["Vrachtwagen", "Bestelbus", "Personenauto", "Aanhanger"];
