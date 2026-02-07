@@ -558,7 +558,21 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!viewOnly) {
-      onSubmit(formData);
+      // Clean up: remove empty strings for numeric fields to avoid validation errors
+      const numericFields = ['hourly_rate', 'contract_hours', 'travel_allowance_per_km', 'travel_distance_km'];
+      const cleanedData = { ...formData };
+      numericFields.forEach(field => {
+        if (cleanedData[field] === '' || cleanedData[field] === undefined) {
+          delete cleanedData[field];
+        }
+      });
+      // Also remove fields with empty string that aren't part of the entity schema
+      Object.keys(cleanedData).forEach(key => {
+        if (cleanedData[key] === '' && key !== 'first_name' && key !== 'last_name' && key !== 'email') {
+          delete cleanedData[key];
+        }
+      });
+      onSubmit(cleanedData);
     }
   };
 
