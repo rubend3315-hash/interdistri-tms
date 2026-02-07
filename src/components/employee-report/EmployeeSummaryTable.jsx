@@ -123,7 +123,7 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
         uurtariefGehaald,
         kpi
       };
-    }).sort((a, b) => b.hitrate - a.hitrate);
+    }).sort((a, b) => b.uurtarief - a.uurtarief);
   }, [reportRows, kpiData, tiModelRoutes, stopPrice]);
 
   if (chauffeurData.length === 0) {
