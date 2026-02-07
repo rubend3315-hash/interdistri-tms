@@ -77,7 +77,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Werkaanbod from './pages/Werkaanbod';
 import __Layout from './Layout.jsx';
 
 
@@ -112,7 +111,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Werkaanbod": Werkaanbod,
 }
 
 export const pagesConfig = {
