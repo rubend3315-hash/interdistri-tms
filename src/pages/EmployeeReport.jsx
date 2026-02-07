@@ -228,6 +228,9 @@ export default function EmployeeReport() {
           <TabsTrigger value="kpi" className="gap-2">
             <Users className="w-4 h-4" /> KPI Data
           </TabsTrigger>
+          <TabsTrigger value="imports" className="gap-2">
+            <List className="w-4 h-4" /> KPI Imports
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary" className="mt-4">
