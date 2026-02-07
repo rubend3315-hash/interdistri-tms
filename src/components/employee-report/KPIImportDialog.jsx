@@ -28,20 +28,25 @@ export default function KPIImportDialog({ open, onOpenChange, customerId }) {
     const extracted = await base44.integrations.Core.ExtractDataFromUploadedFile({
       file_url,
       json_schema: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            zmedcid: { type: "string" },
-            Medewerker: { type: "string" },
-            Week: { type: "string" },
-            "TVI Dag": { type: "number" },
-            "TVI Avond": { type: "number" },
-            Uitreiklocatie: { type: "number" },
-            "Vr Distributie": { type: "number" },
-            Scankwaliteit: { type: "number" },
-            "PBA bezorgers": { type: "number" },
-            Hitrate: { type: "number" }
+        type: "object",
+        properties: {
+          rows: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                zmedcid: { type: "string" },
+                Medewerker: { type: "string" },
+                Week: { type: "string" },
+                TVI_Dag: { type: "number", description: "TVI Dag column" },
+                TVI_Avond: { type: "number", description: "TVI Avond column" },
+                Uitreiklocatie: { type: "number" },
+                Vr_Distributie: { type: "number", description: "Vr Distributie column" },
+                Scankwaliteit: { type: "number" },
+                PBA_bezorgers: { type: "number", description: "PBA bezorgers column" },
+                Hitrate: { type: "number" }
+              }
+            }
           }
         }
       }
@@ -53,7 +58,7 @@ export default function KPIImportDialog({ open, onOpenChange, customerId }) {
       return;
     }
 
-    const rows = extracted.output || [];
+    const rows = extracted.output?.rows || [];
     let created = 0;
 
     // Bulk create KPI records
@@ -63,12 +68,12 @@ export default function KPIImportDialog({ open, onOpenChange, customerId }) {
       medewerker_naam: row.Medewerker || "",
       week: parseInt(row.Week) || 0,
       year: parseInt(year),
-      tvi_dag: row["TVI Dag"] != null ? row["TVI Dag"] : null,
-      tvi_avond: row["TVI Avond"] != null ? row["TVI Avond"] : null,
+      tvi_dag: row.TVI_Dag != null ? row.TVI_Dag : null,
+      tvi_avond: row.TVI_Avond != null ? row.TVI_Avond : null,
       uitreiklocatie: row.Uitreiklocatie != null ? row.Uitreiklocatie : null,
-      vr_distributie: row["Vr Distributie"] != null ? row["Vr Distributie"] : null,
+      vr_distributie: row.Vr_Distributie != null ? row.Vr_Distributie : null,
       scankwaliteit: row.Scankwaliteit != null ? row.Scankwaliteit : null,
-      pba_bezorgers: row["PBA bezorgers"] != null ? row["PBA bezorgers"] : null,
+      pba_bezorgers: row.PBA_bezorgers != null ? row.PBA_bezorgers : null,
       hitrate: row.Hitrate != null ? row.Hitrate : null
     })).filter(r => r.medewerker_naam);
 
