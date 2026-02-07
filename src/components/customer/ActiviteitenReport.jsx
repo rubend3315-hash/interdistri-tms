@@ -138,7 +138,6 @@ export default function ActiviteitenReport({ weekData }) {
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[25px] align-bottom">BML</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Aantal PBA- pakketten bezorgd</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Aantal stuks afgehaald/gecollecteerd</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Collectie stuks</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">Geleverde stops</th>
             </tr>
           </thead>
@@ -167,7 +166,6 @@ export default function ActiviteitenReport({ weekData }) {
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Legitimatiecheck aan de deur']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal PBA-pakketten bezorgd']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stuks afgehaald/gecollecteerd']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stuks afgehaald/gecollecteerd']) || 0}</td>
                 <td className="py-1.5 px-2 text-right font-semibold text-slate-800">{Number(r['Aantal afgeleverd - stops']) || 0}</td>
               </tr>
             ))}
@@ -188,7 +186,6 @@ export default function ActiviteitenReport({ weekData }) {
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalAfgeleverdStuks}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.bml}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.pba}</td>
-                <td className="py-2 px-2 text-right text-slate-800">{totals.collectie}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.collectie}</td>
                 <td className="py-2 px-2 text-right font-bold text-slate-900">{totals.aantalAfgeleverdStops}</td>
               </tr>
