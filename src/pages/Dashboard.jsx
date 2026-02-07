@@ -56,6 +56,11 @@ export default function Dashboard() {
     queryFn: () => base44.entities.NiwoPermit.list()
   });
 
+  const { data: managedDocuments = [] } = useQuery({
+    queryKey: ['documents-dashboard'],
+    queryFn: () => base44.entities.Document.filter({ status: 'Actief' })
+  });
+
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
@@ -137,6 +142,22 @@ export default function Dashboard() {
           expiry: p.validity_date,
           daysUntil,
           link: `NiwoPermits?id=${p.id}`
+        });
+      }
+    }
+  });
+
+  // Documents from Documentenbeheer
+  managedDocuments.forEach(doc => {
+    if (doc.expiry_date) {
+      const daysUntil = differenceInDays(new Date(doc.expiry_date), today);
+      if (daysUntil <= warningDays && daysUntil >= 0) {
+        expiringDocuments.push({
+          type: doc.document_type || 'Document',
+          name: doc.linked_entity_name || doc.name,
+          expiry: doc.expiry_date,
+          daysUntil,
+          link: 'Documents'
         });
       }
     }

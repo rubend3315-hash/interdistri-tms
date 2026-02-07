@@ -90,6 +90,7 @@ const menuItems = [
   {
     label: "Beheer",
     items: [
+      { name: "Documentenbeheer", icon: FileText, page: "Documents" },
       { name: "Gebruikers", icon: Settings, page: "Users" },
       { name: "Voertuigen", icon: Car, page: "Vehicles" },
       { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
@@ -259,6 +260,7 @@ export default function Layout({ children, currentPageName }) {
       'NiwoPermits': 'niwo',
       'Customers': 'customers',
       'Projects': 'projects',
+      'Documents': 'documents',
       'CaoRules': 'cao',
       'SalaryTables': 'salary',
       'HRMSettings': 'hrmsettings',
