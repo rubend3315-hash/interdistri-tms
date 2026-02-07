@@ -147,6 +147,7 @@ export default function EmployeeReport() {
         chauffeur: innerData['Chauffeur'] || '-',
         route: innerData['Ritnaam'] || '-',
         datum: innerData['Datum'] || '-',
+        weekNum: parseInt(innerData['Week']) || null,
         succesvolleStops: stops,
         aantalRouteStops: Number(innerData['Aantal tijdens route - stops']) || 0,
         aantalRouteStuks: Number(innerData['Aantal tijdens route - stuks']) || 0,
