@@ -50,11 +50,13 @@ function matchChauffeurToEmployee(chauffeurName, employees) {
   // Parse PostNL format: "Lastname prefix, Initials" e.g. "Es van, J.W." or "Oreel, D.G."
   const commaIdx = cn.indexOf(',');
   const pnlLastPart = commaIdx >= 0 ? cn.substring(0, commaIdx).trim() : cn;
+  const pnlInitials = commaIdx >= 0 ? cn.substring(commaIdx + 1).trim().replace(/\./g, '') : '';
   
-  // Extract just the surname from PostNL name (last word before comma, or handle "Es van" -> "es")
-  // PostNL format puts prefix after lastname: "Es van," means lastname=Es, prefix=van
   const pnlParts = pnlLastPart.split(/\s+/);
   const pnlSurname = pnlParts[0]; // First word is always the surname in PostNL format
+  const pnlPrefix = pnlParts.slice(1).join(' '); // Rest is prefix (e.g. "van")
+  // First letter of initials = first letter of first name
+  const pnlFirstLetter = pnlInitials ? pnlInitials.charAt(0) : '';
 
   // First pass: try exact matching with initials/prefix combinations
   for (const emp of employees) {
@@ -64,39 +66,34 @@ function matchChauffeurToEmployee(chauffeurName, employees) {
     
     if (!last) continue;
     
-    // Build variants of how PostNL might format this employee
     const variants = [];
-    if (prefix && initials) {
-      variants.push(`${last} ${prefix}, ${initials}`);
-    }
-    if (initials) {
-      variants.push(`${last}, ${initials}`);
-    }
-    if (prefix) {
-      variants.push(`${last} ${prefix}`);
-    }
+    if (prefix && initials) variants.push(`${last} ${prefix}, ${initials}`);
+    if (initials) variants.push(`${last}, ${initials}`);
+    if (prefix) variants.push(`${last} ${prefix}`);
     
     for (const v of variants) {
       if (cn === v) return emp;
     }
   }
   
-  // Second pass: match on surname only - find all employees whose last_name matches
+  // Second pass: match on surname + first letter of first name (handles duplicates like 2x Oreel)
   const surnameMatches = employees.filter(emp => {
     const last = (emp.last_name || '').toLowerCase().trim();
     return last && last === pnlSurname;
   });
   
-  // If exactly one match on surname, use it
   if (surnameMatches.length === 1) return surnameMatches[0];
   
-  // Third pass: broader fallback - check if last name appears in the chauffeur string
-  const broadMatches = employees.filter(emp => {
-    const last = (emp.last_name || '').toLowerCase().trim();
-    return last && last.length > 2 && cn.includes(last);
-  });
-  
-  if (broadMatches.length === 1) return broadMatches[0];
+  // Multiple surname matches: disambiguate using first letter of voornaam
+  if (surnameMatches.length > 1 && pnlFirstLetter) {
+    const initialsMatch = surnameMatches.filter(emp => {
+      const first = (emp.first_name || '').toLowerCase().trim();
+      const initials = (emp.initials || '').toLowerCase().replace(/\./g, '');
+      return (first && first.charAt(0) === pnlFirstLetter) || 
+             (initials && initials.charAt(0) === pnlFirstLetter);
+    });
+    if (initialsMatch.length === 1) return initialsMatch[0];
+  }
   
   return null;
 }
