@@ -1,4 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 function formatTime(val) {
   if (!val || val === '' || val === '-') return '';
@@ -6,11 +8,46 @@ function formatTime(val) {
 }
 
 export default function ActiviteitenReport({ weekData }) {
-  // Build rows from raw import data, sorted by Ritnaam
+  const [dayFilter, setDayFilter] = useState("auto");
+
+  // Find available days and the latest import date
+  const availableDays = useMemo(() => {
+    if (!weekData || weekData.length === 0) return [];
+    const dayMap = {};
+    weekData.forEach(r => {
+      const datum = r['Datum'];
+      if (datum && !dayMap[datum]) {
+        dayMap[datum] = r._dayName || datum;
+      }
+    });
+    // Sort by parsed date
+    return Object.entries(dayMap).sort((a, b) => {
+      const pa = a[0].split('-');
+      const pb = b[0].split('-');
+      const da = new Date(parseInt(pa[2]), parseInt(pa[1]) - 1, parseInt(pa[0]));
+      const db = new Date(parseInt(pb[2]), parseInt(pb[1]) - 1, parseInt(pb[0]));
+      return da - db;
+    }).map(([datum, dayName]) => ({ datum, dayName }));
+  }, [weekData]);
+
+  // Auto-select: last import date
+  const latestDatum = useMemo(() => {
+    if (availableDays.length === 0) return null;
+    return availableDays[availableDays.length - 1].datum;
+  }, [availableDays]);
+
+  // Determine effective filter
+  const effectiveFilter = dayFilter === "auto" ? latestDatum : dayFilter;
+
+  // Build rows from raw import data, filtered and sorted by Ritnaam
   const rows = useMemo(() => {
     if (!weekData || weekData.length === 0) return [];
-    return [...weekData].sort((a, b) => (a['Ritnaam'] || '').localeCompare(b['Ritnaam'] || ''));
-  }, [weekData]);
+    let filtered = weekData;
+    if (effectiveFilter && effectiveFilter !== "all") {
+      filtered = weekData.filter(r => r['Datum'] === effectiveFilter);
+    }
+    return [...filtered].sort((a, b) => (a['Ritnaam'] || '').localeCompare(b['Ritnaam'] || ''));
+  }, [weekData, effectiveFilter]);
 
   // Totals
   const totals = useMemo(() => {
@@ -46,9 +83,35 @@ export default function ActiviteitenReport({ weekData }) {
     return <p className="text-slate-500 text-sm py-4">Geen activiteiten data beschikbaar.</p>;
   }
 
+  const currentDayLabel = effectiveFilter && effectiveFilter !== "all"
+    ? availableDays.find(d => d.datum === effectiveFilter)?.dayName + ' ' + effectiveFilter
+    : 'Hele week';
+
   return (
     <div>
-      <h3 className="text-lg font-bold text-slate-800 mb-3">Activiteitenrapport</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-bold text-slate-800">Activiteitenrapport{effectiveFilter && effectiveFilter !== "all" ? ` - ${currentDayLabel}` : ''}</h3>
+        <div className="flex items-center gap-3 print:hidden">
+          <span className="text-sm font-medium text-slate-700">Dag:</span>
+          <Select value={dayFilter} onValueChange={setDayFilter}>
+            <SelectTrigger className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Laatste importdag</SelectItem>
+              <SelectItem value="all">Hele week</SelectItem>
+              {availableDays.map(d => (
+                <SelectItem key={d.datum} value={d.datum}>{d.dayName} {d.datum}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {dayFilter !== "auto" && (
+            <Button variant="outline" size="sm" onClick={() => setDayFilter("auto")}>
+              Reset filter
+            </Button>
+          )}
+        </div>
+      </div>
       <div className="overflow-x-auto border border-slate-200 rounded-lg">
         <table className="w-full text-xs">
           <thead className="bg-slate-50 border-b">
