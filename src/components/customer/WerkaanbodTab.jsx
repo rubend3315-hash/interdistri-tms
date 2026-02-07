@@ -9,6 +9,7 @@ import { getISOWeek, getYear, parseISO, format } from "date-fns";
 import DailyTrendChart from "@/components/werkaanbod/DailyTrendChart";
 import WeeklyTrendChart from "@/components/werkaanbod/WeeklyTrendChart";
 import YearComparisonChart from "@/components/werkaanbod/YearComparisonChart";
+import YearChangeIndicator from "@/components/werkaanbod/YearChangeIndicator";
 
 function parseDatum(datumStr) {
   if (!datumStr) return null;
@@ -121,6 +122,7 @@ export default function WerkaanbodTab({ importResults = [] }) {
               </div>
             </CardHeader>
             <CardContent>
+              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stops" filterWeek={selectedWeek} />
               <DailyTrendChart data={parsedData} selectedYears={selectedYears} selectedWeek={selectedWeek} metric="stops" />
             </CardContent>
           </Card>
@@ -132,6 +134,7 @@ export default function WerkaanbodTab({ importResults = [] }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stuks" filterWeek={selectedWeek} />
               <DailyTrendChart data={parsedData} selectedYears={selectedYears} selectedWeek={selectedWeek} metric="stuks" />
             </CardContent>
           </Card>
@@ -146,6 +149,7 @@ export default function WerkaanbodTab({ importResults = [] }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stops" />
               <WeeklyTrendChart data={parsedData} selectedYears={selectedYears} metric="stops" />
             </CardContent>
           </Card>
@@ -157,6 +161,7 @@ export default function WerkaanbodTab({ importResults = [] }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stuks" />
               <WeeklyTrendChart data={parsedData} selectedYears={selectedYears} metric="stuks" />
             </CardContent>
           </Card>
@@ -171,6 +176,7 @@ export default function WerkaanbodTab({ importResults = [] }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stops" />
               <YearComparisonChart data={parsedData} selectedYears={selectedYears} metric="stops" />
             </CardContent>
           </Card>
@@ -182,6 +188,7 @@ export default function WerkaanbodTab({ importResults = [] }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stuks" />
               <YearComparisonChart data={parsedData} selectedYears={selectedYears} metric="stuks" />
             </CardContent>
           </Card>
