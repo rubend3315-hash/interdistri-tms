@@ -105,9 +105,9 @@ export default function ActiviteitenReport({ weekData }) {
               ))}
             </SelectContent>
           </Select>
-          {dayFilter !== "auto" && (
-            <Button variant="outline" size="sm" onClick={() => setDayFilter("auto")}>
-              Reset filter
+          {dayFilter !== "all" && (
+            <Button variant="outline" size="sm" onClick={() => setDayFilter("all")}>
+              Toon hele week
             </Button>
           )}
         </div>
