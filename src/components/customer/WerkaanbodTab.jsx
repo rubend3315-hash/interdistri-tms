@@ -109,33 +109,26 @@ export default function WerkaanbodTab({ importResults = [] }) {
         <TabsContent value="daily" className="space-y-4 mt-4">
           <Card>
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-blue-600" />
-                  Stops per dag — Week {selectedWeek}
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={prevWeek}><ChevronLeft className="w-4 h-4" /></Button>
-                  <span className="text-xs font-medium w-14 text-center">Week {selectedWeek}</span>
-                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={nextWeek}><ChevronRight className="w-4 h-4" /></Button>
-                </div>
-              </div>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-blue-600" />
+                Stops per dag — Heel jaar
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stops" filterWeek={selectedWeek} />
-              <DailyTrendChart data={parsedData} selectedYears={selectedYears} selectedWeek={selectedWeek} metric="stops" />
+              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stops" />
+              <DailyTrendChart data={parsedData} selectedYears={selectedYears} metric="stops" />
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Package className="w-4 h-4 text-emerald-600" />
-                Stuks per dag — Week {selectedWeek}
+                Stuks per dag — Heel jaar
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stuks" filterWeek={selectedWeek} />
-              <DailyTrendChart data={parsedData} selectedYears={selectedYears} selectedWeek={selectedWeek} metric="stuks" />
+              <YearChangeIndicator data={parsedData} selectedYears={selectedYears} metric="stuks" />
+              <DailyTrendChart data={parsedData} selectedYears={selectedYears} metric="stuks" />
             </CardContent>
           </Card>
         </TabsContent>
