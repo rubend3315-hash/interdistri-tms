@@ -10,9 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, Package, MapPin, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import { getISOWeek, getYear, startOfYear, format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, addYears, subYears } from "date-fns";
 import { nl } from "date-fns/locale";
-import DailyTrendChart from "../components/werkaanbod/DailyTrendChart";
-import WeeklyTrendChart from "../components/werkaanbod/WeeklyTrendChart";
-import YearComparisonChart from "../components/werkaanbod/YearComparisonChart";
+import DailyTrendChart from "@/components/werkaanbod/DailyTrendChart";
+import WeeklyTrendChart from "@/components/werkaanbod/WeeklyTrendChart";
+import YearComparisonChart from "@/components/werkaanbod/YearComparisonChart";
 
 export default function Werkaanbod() {
   const currentYear = getYear(new Date());
