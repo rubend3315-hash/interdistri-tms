@@ -463,7 +463,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsContent value="samenvatting" className="space-y-4 mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Samenvatting per Route / Chauffeur per Week</CardTitle>
+                  <CardTitle className="text-base">Samenvatting per Route / Chauffeur per Week (week {weekNumber})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <WeekSamenvatting rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
