@@ -353,7 +353,7 @@ export default function CalculationsTab({ customerId }) {
         <>
           {/* Tabs for report types */}
           <Tabs value={reportTab} onValueChange={setReportTab}>
-            <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center justify-between flex-wrap gap-2 print:hidden">
               <TabsList>
                 <TabsTrigger value="weekrapport">Weekrapport</TabsTrigger>
                 <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
@@ -384,24 +384,24 @@ export default function CalculationsTab({ customerId }) {
                   </div>
 
                   {/* Day filter */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-sm font-medium text-slate-700">Filter:</span>
-                    <Select value={dayFilter} onValueChange={setDayFilter}>
-                      <SelectTrigger className="w-52">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Hele week</SelectItem>
-                        <SelectItem value="maandag">Alleen Maandag</SelectItem>
-                        <SelectItem value="dinsdag-zaterdag">Dinsdag t/m Zaterdag</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {dayFilter !== "all" && (
-                      <Button variant="outline" size="sm" onClick={() => setDayFilter("all")}>
-                        Reset filters
-                      </Button>
-                    )}
-                  </div>
+                    <div className="flex items-center gap-3 mb-4 print:hidden">
+                      <span className="text-sm font-medium text-slate-700">Filter:</span>
+                      <Select value={dayFilter} onValueChange={setDayFilter}>
+                        <SelectTrigger className="w-52">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Hele week</SelectItem>
+                          <SelectItem value="maandag">Alleen Maandag</SelectItem>
+                          <SelectItem value="dinsdag-zaterdag">Dinsdag t/m Zaterdag</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {dayFilter !== "all" && (
+                        <Button variant="outline" size="sm" onClick={() => setDayFilter("all")}>
+                          Reset filters
+                        </Button>
+                      )}
+                    </div>
 
                   {/* Grand Total Summary */}
                   <div className="mb-6">
