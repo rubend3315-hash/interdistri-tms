@@ -162,6 +162,34 @@ function SummaryTable({ grouped, tiModelRoutes, labelHeader }) {
             );
           })}
         </tbody>
+        {(() => {
+          const allRows = groupKeys.flatMap(key => Object.values(grouped[key]).flat());
+          const totalAvg = calcAvg(allRows, tiModelRoutes);
+          if (!totalAvg) return null;
+          return (
+            <tfoot>
+              <tr className="bg-slate-100 font-semibold border-t-2 border-slate-300 text-xs">
+                <td className="py-2 px-2 text-slate-800">Eindtotaal</td>
+                <td className="py-2 px-2 text-slate-800"></td>
+                <td className="py-2 px-2 text-right text-slate-800">{totalAvg.count}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{hoursToHHMMSS(totalAvg.gemBesteltijdNorm)}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{hoursToHHMMSS(totalAvg.gemBesteltijdBruto)}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{hoursToHHMMSS(totalAvg.gemBesteltijdNetto)}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{hoursToHHMMSS(totalAvg.gemVoorbereiding)}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{totalAvg.gemUren > 0 ? `${totalAvg.gemUren.toFixed(1)}` : '-'}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{totalAvg.gemStops > 0 ? totalAvg.gemStops.toFixed(0) : '-'}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{totalAvg.gemStuks > 0 ? totalAvg.gemStuks.toFixed(0) : '-'}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{totalAvg.gemNorm > 0 ? totalAvg.gemNorm.toFixed(1) : '-'}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{totalAvg.gemActual > 0 ? totalAvg.gemActual.toFixed(1) : '-'}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{totalAvg.hitrate > 0 ? `${(totalAvg.hitrate * 100).toFixed(1)}%` : '-'}</td>
+                <td className="py-2 px-2 text-right font-bold text-slate-900">{fmt(totalAvg.gemOmzet)}</td>
+                <td className={`py-2 px-2 text-right font-bold ${totalAvg.uurtarief > 45 ? 'text-green-700' : totalAvg.uurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>
+                  {totalAvg.uurtarief > 0 ? fmt(totalAvg.uurtarief) : '-'}
+                </td>
+              </tr>
+            </tfoot>
+          );
+        })()}
       </table>
     </div>
   );
