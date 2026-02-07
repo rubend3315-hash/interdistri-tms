@@ -98,10 +98,14 @@ export default function HelpPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 no-print">
+        <TabsList className="grid w-full grid-cols-4 no-print">
           <TabsTrigger value="functions" className="gap-2">
             <Zap className="w-4 h-4" />
             Functies
+          </TabsTrigger>
+          <TabsTrigger value="system-rules" className="gap-2">
+            <Shield className="w-4 h-4" />
+            Systeemregels
           </TabsTrigger>
           <TabsTrigger value="architecture" className="gap-2">
             <Layers className="w-4 h-4" />
