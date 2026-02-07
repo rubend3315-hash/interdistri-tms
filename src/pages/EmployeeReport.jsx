@@ -106,15 +106,15 @@ export default function EmployeeReport() {
       const innerData = item.data.data || item.data;
       if (!innerData || typeof innerData !== 'object') return;
 
-      // Filter by week number from the import data itself
+      // Filter by week number from the import data
       const importWeek = parseInt(innerData['Week']);
       const datum = parseDatum(innerData['Datum']);
       
-      // Primary filter: use Week field from import data if available
-      if (importWeek && importWeek !== weekNum) return;
-      
-      // If no Week field, fall back to date-based filtering
-      if (!importWeek) {
+      // Primary: filter on Week field from import
+      if (importWeek) {
+        if (importWeek !== weekNum) return;
+      } else {
+        // Fallback: date-based filtering only when no Week field
         if (!datum) return;
         const datumDate = new Date(datum.getFullYear(), datum.getMonth(), datum.getDate()).getTime();
         const startMs = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()).getTime();
@@ -122,10 +122,9 @@ export default function EmployeeReport() {
         if (datumDate < startMs || datumDate > endMs) return;
       }
       
-      // Also check year - parse year from datum
+      // Check year from datum
       if (datum) {
-        const datumYear = datum.getFullYear();
-        if (datumYear !== yearNum) return;
+        if (datum.getFullYear() !== yearNum) return;
       }
 
       const key = `${innerData['Datum']}_${innerData['Chauffeur']}_${innerData['Ritnaam']}_${innerData['Vrijgegeven']}`;
