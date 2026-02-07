@@ -97,10 +97,21 @@ export default function EmployeeReport() {
     enabled: !!postNLCustomer
   });
 
-  // Fetch import results for report rows
+  // Fetch import results for report rows - fetch ALL records
   const { data: importResults = [], isLoading: loadingImports } = useQuery({
     queryKey: ['postnl-imports-report'],
-    queryFn: () => base44.entities.PostNLImportResult.list()
+    queryFn: async () => {
+      let allResults = [];
+      let skip = 0;
+      const batchSize = 100;
+      while (true) {
+        const batch = await base44.entities.PostNLImportResult.list('-created_date', batchSize, skip);
+        allResults = allResults.concat(batch);
+        if (batch.length < batchSize) break;
+        skip += batchSize;
+      }
+      return allResults;
+    }
   });
 
   // Build report rows for selected week (same logic as CalculationsTab)
@@ -282,8 +293,8 @@ export default function EmployeeReport() {
               ) : (
                 <EmployeeSummaryTable
                   reportRows={selectedEmployee === "all" ? reportRows : reportRows.filter(r => {
-                    const chauffeur = (r.chauffeur || '').toLowerCase().trim();
-                    const selected = selectedEmployee.toLowerCase().trim();
+                    const chauffeur = (r.chauffeur || '').toLowerCase().trim().replace(/,/g, '');
+                    const selected = selectedEmployee.toLowerCase().trim().replace(/,/g, '');
                     return chauffeur === selected || chauffeur.includes(selected) || selected.includes(chauffeur);
                   })}
                   kpiData={filteredKpiData}
