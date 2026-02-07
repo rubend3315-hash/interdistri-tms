@@ -109,8 +109,9 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
       totaalRitUren: acc.totaalRitUren + (r.totaalRitUren || 0),
       aantalRouteStops: acc.aantalRouteStops + (r.aantalRouteStops || 0),
       aantalRouteStuks: acc.aantalRouteStuks + (r.aantalRouteStuks || 0),
+      succesvolleStops: acc.succesvolleStops + (r.succesvolleStops || 0),
       omzet: acc.omzet + (r.omzet || 0),
-    }), { totaalRitUren: 0, aantalRouteStops: 0, aantalRouteStuks: 0, omzet: 0 });
+    }), { totaalRitUren: 0, aantalRouteStops: 0, aantalRouteStuks: 0, succesvolleStops: 0, omzet: 0 });
     t.count = groupRows.length;
 
     // Sum time fields for averaging
@@ -260,6 +261,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                     <td className="py-1.5 px-2 text-right text-blue-800">{wkTotals.aantalRouteStops}</td>
                     <td className="py-1.5 px-2 text-right text-blue-800">{wkTotals.aantalRouteStuks}</td>
                     <td className="py-1.5 px-2" colSpan={3}></td>
+                    <td className="py-1.5 px-2 text-right text-blue-800">{wkTotals.aantalRouteStops > 0 ? `${(wkTotals.succesvolleStops / wkTotals.aantalRouteStops * 100).toFixed(1)}%` : '-'}</td>
                     <td className="py-1.5 px-2 text-right text-blue-900">{fmt(wkTotals.omzet)}</td>
                     <td className={`py-1.5 px-2 text-right ${wkUurtarief > 45 ? 'text-green-700' : wkUurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{wkUurtarief > 0 ? fmt(wkUurtarief) : '-'}</td>
                   </tr>
@@ -277,6 +279,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                     <td className="py-1.5 px-2 text-right text-blue-700">{wkTotals.gemNorm > 0 ? wkTotals.gemNorm.toFixed(1) : '-'}</td>
                     <td className="py-1.5 px-2 text-right text-blue-700">{wkTotals.gemActual > 0 ? wkTotals.gemActual.toFixed(1) : '-'}</td>
                     <td className="py-1.5 px-2"></td>
+                    <td className="py-1.5 px-2 text-right text-blue-700">{wkTotals.aantalRouteStops > 0 ? `${(wkTotals.succesvolleStops / wkTotals.aantalRouteStops * 100).toFixed(1)}%` : '-'}</td>
                     <td className="py-1.5 px-2 text-right text-blue-700">{wkGemOmzet > 0 ? fmt(wkGemOmzet) : '-'}</td>
                     <td className={`py-1.5 px-2 text-right ${wkUurtarief > 45 ? 'text-green-700' : wkUurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{wkUurtarief > 0 ? fmt(wkUurtarief) : '-'}</td>
                   </tr>
@@ -301,6 +304,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                   <td className="py-2 px-2 text-right text-slate-700">{allTotals.aantalRouteStops}</td>
                   <td className="py-2 px-2 text-right text-slate-700">{allTotals.aantalRouteStuks}</td>
                   <td className="py-2 px-2" colSpan={3}></td>
+                  <td className="py-2 px-2 text-right text-slate-700">{allTotals.aantalRouteStops > 0 ? `${(allTotals.succesvolleStops / allTotals.aantalRouteStops * 100).toFixed(1)}%` : '-'}</td>
                   <td className="py-2 px-2 text-right font-bold text-slate-900">{fmt(allTotals.omzet)}</td>
                   <td className={`py-2 px-2 text-right font-bold ${totalUurtarief > 45 ? 'text-green-700' : 'text-red-600'}`}>{totalUurtarief > 0 ? fmt(totalUurtarief) : '-'}</td>
                 </tr>
@@ -317,6 +321,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                   <td className="py-2 px-2 text-right text-slate-600">{allTotals.gemNorm > 0 ? allTotals.gemNorm.toFixed(1) : '-'}</td>
                   <td className="py-2 px-2 text-right text-slate-600">{allTotals.gemActual > 0 ? allTotals.gemActual.toFixed(1) : '-'}</td>
                   <td className="py-2 px-2"></td>
+                  <td className="py-2 px-2 text-right text-slate-600">{allTotals.aantalRouteStops > 0 ? `${(allTotals.succesvolleStops / allTotals.aantalRouteStops * 100).toFixed(1)}%` : '-'}</td>
                   <td className="py-2 px-2 text-right text-slate-600">{gemOmzet > 0 ? fmt(gemOmzet) : '-'}</td>
                   <td className={`py-2 px-2 text-right text-slate-600 ${totalUurtarief > 45 ? 'text-green-700' : totalUurtarief > 0 ? 'text-red-600' : ''}`}>{totalUurtarief > 0 ? fmt(totalUurtarief) : '-'}</td>
                 </tr>
