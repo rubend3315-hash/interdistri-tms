@@ -50,31 +50,31 @@ export default function ActiviteitenReport({ weekData }) {
     <div>
       <h3 className="text-lg font-bold text-slate-800 mb-3">Activiteitenrapport</h3>
       <div className="overflow-x-auto border border-slate-200 rounded-lg">
-        <table className="w-full text-xs whitespace-nowrap">
+        <table className="w-full text-xs">
           <thead className="bg-slate-50 border-b">
             <tr>
-              <th className="text-left py-2 px-2 font-medium text-slate-600">Ritnaam</th>
-              <th className="text-left py-2 px-2 font-medium text-slate-600">Vrijgave</th>
-              <th className="text-left py-2 px-2 font-medium text-slate-600">Debrief</th>
-              <th className="text-left py-2 px-2 font-medium text-slate-600">1ste stop</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">15 min geen scan</th>
-              <th className="text-left py-2 px-2 font-medium text-slate-600">Laatste stop</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">X 15 min geen scan</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Besteltijd Norm</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Besteltijd Bruto</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Besteltijd Netto</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Laden aan-/afrijtijd</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Totaal rit</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Route stuks</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Route stops</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Stuks geen gehoor/gew.</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Stops geen gehoor/gew.</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Stops terugkomst</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Geleverd stuks</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">BML</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">PBA bezorgd</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Collectie stuks</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Geleverde stops</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Ritnaam</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Vrijgave</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">debrief</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">1ste stop</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">15 min geen scan</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Laatste stop</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[40px]">X 15 min geen scan</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Bestel tijd Norm</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Bestel tijd Bruto</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Bestel tijd Netto</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[55px]">Laden aan-/afrijtij d debrief</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Totaal rit</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal tijdens route - stuks</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal tijdens route - stops</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal stuks PKT GEW 2de</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Stuks (geen aanbod poging)</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[40px]">Stops bij terug komst</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Geleverd &amp; Collectie stuks</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[25px]">BML</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal PBA- pakketten bezorgd</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Collectie stuks</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Geleverde stops</th>
             </tr>
           </thead>
           <tbody>
