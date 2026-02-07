@@ -65,6 +65,12 @@ export default function EmployeeReport() {
     queryFn: () => base44.entities.EmployeeKPI.filter({ week: weekNum, year: yearNum })
   });
 
+  // Fetch KPI doelen for selected week
+  const { data: kpiDoelen = [] } = useQuery({
+    queryKey: ['kpi-doelen', weekNum, yearNum],
+    queryFn: () => base44.entities.KPIDoel.filter({ week: weekNum, jaar: yearNum })
+  });
+
   // Fetch all KPI data for the year (for employee name list)
   const { data: yearKpiData = [] } = useQuery({
     queryKey: ['employee-kpi-year-names', yearNum],
@@ -297,6 +303,7 @@ export default function EmployeeReport() {
                     return chauffeur === selected || chauffeur.includes(selected) || selected.includes(chauffeur);
                   })}
                   kpiData={filteredKpiData}
+                  kpiDoelen={kpiDoelen}
                   tiModelRoutes={tiModelRoutes}
                   articles={articles}
                   weekStart={weekStart}
@@ -347,7 +354,7 @@ export default function EmployeeReport() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <KPITrendCharts employeeName={selectedEmployee} year={selectedYear} />
+              <KPITrendCharts employeeName={selectedEmployee} year={selectedYear} kpiDoelen={kpiDoelen} weekNum={weekNum} />
             </CardContent>
           </Card>
         </TabsContent>
