@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import WeekSamenvatting from "./WeekSamenvatting";
 import ActiviteitenReport from "./ActiviteitenReport";
 import TrendReport from "./TrendReport";
 import RouteOverview from "./RouteOverview";
+import DataRefreshIndicator from "@/components/DataRefreshIndicator";
 
 const DAY_NAMES = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
 
@@ -41,6 +42,27 @@ export default function CalculationsTab({ customerId }) {
   const [reportTab, setReportTab] = useState("weekrapport");
   const [dayFilter, setDayFilter] = useState("all");
   const [calculated, setCalculated] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(null);
+  const queryClient = useQueryClient();
+
+  // Real-time subscriptions
+  useEffect(() => {
+    const unsubs = [
+      base44.entities.PostNLImportResult.subscribe(() => {
+        queryClient.invalidateQueries({ queryKey: ['postnl-imports-calc'] });
+        setLastRefresh(Date.now());
+      }),
+      base44.entities.Article.subscribe(() => {
+        queryClient.invalidateQueries({ queryKey: ['articles'] });
+        setLastRefresh(Date.now());
+      }),
+      base44.entities.TIModelRoute.subscribe(() => {
+        queryClient.invalidateQueries({ queryKey: ['ti-model-routes'] });
+        setLastRefresh(Date.now());
+      }),
+    ];
+    return () => unsubs.forEach(u => u());
+  }, [queryClient]);
 
   // When year/week changes, update start/end dates
   const handleWeekChange = (wk) => {
@@ -305,6 +327,7 @@ export default function CalculationsTab({ customerId }) {
 
   return (
     <div className="space-y-4 print-report">
+      <DataRefreshIndicator lastRefresh={lastRefresh} />
       {/* Jaar & Week selectie */}
       <Card className="print:hidden">
         <CardContent className="pt-4 pb-3">
