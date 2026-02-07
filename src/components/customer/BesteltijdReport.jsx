@@ -187,7 +187,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-3 mb-3 print:hidden">
         <span className="text-sm font-medium text-slate-700">Sorteer op:</span>
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="w-40">
