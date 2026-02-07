@@ -131,7 +131,7 @@ export default function ActiviteitenReport({ weekData }) {
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap">Totaal rit</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal tijdens route - stuks</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal tijdens route - stops</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal stuks PKT GEW 2de</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px]">Stuks (geen aanbod poging)</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[40px]">Stops bij terug komst</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px]">Aantal afgeleverd - stuks</th>
