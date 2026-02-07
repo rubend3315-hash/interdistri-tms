@@ -393,6 +393,8 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
                     <td className="py-1.5 px-2 text-right text-blue-800">{wkTotals.aantalRouteStops > 0 ? `${(wkTotals.succesvolleStops / wkTotals.aantalRouteStops * 100).toFixed(1)}%` : '-'}</td>
                     <td className="py-1.5 px-2 text-right text-blue-900">{fmt(wkTotals.omzet)}</td>
                     <td className={`py-1.5 px-2 text-right ${wkUurtarief > 45 ? 'text-green-700' : wkUurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{wkUurtarief > 0 ? fmt(wkUurtarief) : '-'}</td>
+                    <td className="py-1.5 px-2 text-right text-blue-800 bg-blue-100/50">{wkTotals.gewerkteUren != null ? `${wkTotals.gewerkteUren.toFixed(1)}` : '-'}</td>
+                    <td className={`py-1.5 px-2 text-right font-semibold bg-blue-100/50 ${wkUurtariefGewerkt && wkUurtariefGewerkt > 45 ? 'text-green-700' : wkUurtariefGewerkt ? 'text-red-600' : 'text-slate-700'}`}>{wkUurtariefGewerkt ? fmt(wkUurtariefGewerkt) : '-'}</td>
                   </tr>
                   {/* Week gemiddelde */}
                   <tr className="bg-blue-50/50 border-b-2 border-blue-300 text-xs italic">
@@ -411,6 +413,8 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
                     <td className="py-1.5 px-2 text-right text-blue-700">{wkTotals.aantalRouteStops > 0 ? `${(wkTotals.succesvolleStops / wkTotals.aantalRouteStops * 100).toFixed(1)}%` : '-'}</td>
                     <td className="py-1.5 px-2 text-right text-blue-700">{wkGemOmzet > 0 ? fmt(wkGemOmzet) : '-'}</td>
                     <td className={`py-1.5 px-2 text-right ${wkUurtarief > 45 ? 'text-green-700' : wkUurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{wkUurtarief > 0 ? fmt(wkUurtarief) : '-'}</td>
+                    <td className="py-1.5 px-2 text-right text-blue-700 bg-blue-50/50">{wkTotals.gewerkteUren != null && wkTotals.count > 0 ? `${(wkTotals.gewerkteUren / wkTotals.count).toFixed(1)}` : '-'}</td>
+                    <td className="py-1.5 px-2 bg-blue-50/50"></td>
                   </tr>
                 </React.Fragment>
               );
