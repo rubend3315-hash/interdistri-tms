@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, Printer, Users, BarChart3, List } from "lucide-react";
+import { Upload, Printer, Users, BarChart3, List, CalendarDays } from "lucide-react";
 import KPIImportOverview from "@/components/employee-report/KPIImportOverview";
 import { getYear, getISOWeek, startOfISOWeek, endOfISOWeek, format, setISOWeek, setYear as setDateYear } from "date-fns";
 import { parseTimeToHours } from "@/components/customer/BesteltijdReport";
@@ -15,6 +15,7 @@ import { getValidPriceRule } from "@/components/utils/priceRuleUtils";
 import KPIImportDialog from "@/components/employee-report/KPIImportDialog";
 import KPITable from "@/components/employee-report/KPITable";
 import EmployeeSummaryTable from "@/components/employee-report/EmployeeSummaryTable";
+import EmployeeYearOverview from "@/components/employee-report/EmployeeYearOverview";
 
 function parseDatum(datumStr) {
   if (!datumStr) return null;
@@ -33,6 +34,7 @@ export default function EmployeeReport() {
   const [selectedWeek, setSelectedWeek] = useState(String(currentWeek));
   const [importOpen, setImportOpen] = useState(false);
   const [tab, setTab] = useState("summary");
+  const [selectedEmployee, setSelectedEmployee] = useState("all");
 
   // Callback when KPI import completes - auto set week/year from file
   const handleImportComplete = (week, year) => {
@@ -55,6 +57,24 @@ export default function EmployeeReport() {
     queryKey: ['employee-kpi', weekNum, yearNum],
     queryFn: () => base44.entities.EmployeeKPI.filter({ week: weekNum, year: yearNum })
   });
+
+  // Fetch all KPI data for the year (for employee name list)
+  const { data: yearKpiData = [] } = useQuery({
+    queryKey: ['employee-kpi-year-names', yearNum],
+    queryFn: () => base44.entities.EmployeeKPI.filter({ year: yearNum })
+  });
+
+  // Get unique employee names from year KPI data
+  const employeeNames = useMemo(() => {
+    const names = [...new Set(yearKpiData.map(k => k.medewerker_naam).filter(Boolean))];
+    return names.sort((a, b) => a.localeCompare(b));
+  }, [yearKpiData]);
+
+  // Filtered KPI data based on selected employee
+  const filteredKpiData = useMemo(() => {
+    if (selectedEmployee === "all") return kpiData;
+    return kpiData.filter(k => k.medewerker_naam === selectedEmployee);
+  }, [kpiData, selectedEmployee]);
 
   // Fetch PostNL customer to find customer_id
   const { data: customers = [] } = useQuery({
@@ -186,7 +206,7 @@ export default function EmployeeReport() {
         </div>
       </div>
 
-      {/* Week selection */}
+      {/* Filters */}
       <Card className="print:hidden">
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center gap-4 flex-wrap">
@@ -212,6 +232,18 @@ export default function EmployeeReport() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-slate-600 whitespace-nowrap">Medewerker:</Label>
+              <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                <SelectTrigger className="w-56"><SelectValue placeholder="Alle medewerkers" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle medewerkers</SelectItem>
+                  {employeeNames.map(name => (
+                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="text-sm text-slate-500">
               {format(weekStart, 'dd-MM-yyyy')} t/m {format(weekEnd, 'dd-MM-yyyy')}
             </div>
@@ -228,6 +260,9 @@ export default function EmployeeReport() {
           <TabsTrigger value="kpi" className="gap-2">
             <Users className="w-4 h-4" /> KPI Data
           </TabsTrigger>
+          <TabsTrigger value="year" className="gap-2">
+            <CalendarDays className="w-4 h-4" /> Jaaroverzicht
+          </TabsTrigger>
           <TabsTrigger value="imports" className="gap-2">
             <List className="w-4 h-4" /> KPI Imports
           </TabsTrigger>
@@ -236,15 +271,22 @@ export default function EmployeeReport() {
         <TabsContent value="summary" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Medewerkersoverzicht - Week {weekNum} ({yearNum})</CardTitle>
+              <CardTitle className="text-base">
+                Medewerkersoverzicht - Week {weekNum} ({yearNum})
+                {selectedEmployee !== "all" && ` - ${selectedEmployee}`}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-10" />)}</div>
               ) : (
                 <EmployeeSummaryTable
-                  reportRows={reportRows}
-                  kpiData={kpiData}
+                  reportRows={selectedEmployee === "all" ? reportRows : reportRows.filter(r => {
+                    const chauffeur = (r.chauffeur || '').toLowerCase().trim();
+                    const selected = selectedEmployee.toLowerCase().trim();
+                    return chauffeur === selected || chauffeur.includes(selected) || selected.includes(chauffeur);
+                  })}
+                  kpiData={filteredKpiData}
                   tiModelRoutes={tiModelRoutes}
                   articles={articles}
                   weekStart={weekStart}
@@ -257,13 +299,34 @@ export default function EmployeeReport() {
         <TabsContent value="kpi" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">KPI Scores - Week {weekNum} ({yearNum})</CardTitle>
+              <CardTitle className="text-base">
+                KPI Scores - Week {weekNum} ({yearNum})
+                {selectedEmployee !== "all" && ` - ${selectedEmployee}`}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {loadingKPI ? (
                 <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-10" />)}</div>
               ) : (
-                <KPITable kpiData={kpiData} />
+                <KPITable kpiData={filteredKpiData} />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="year" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                Jaaroverzicht KPI {yearNum}
+                {selectedEmployee !== "all" ? ` - ${selectedEmployee}` : ''}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedEmployee === "all" ? (
+                <p className="text-slate-500 text-sm py-4">Selecteer een medewerker in het filter hierboven om het jaaroverzicht te bekijken.</p>
+              ) : (
+                <EmployeeYearOverview employeeName={selectedEmployee} year={selectedYear} />
               )}
             </CardContent>
           </Card>
