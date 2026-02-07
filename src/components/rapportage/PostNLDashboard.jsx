@@ -12,6 +12,7 @@ import * as XLSX from 'xlsx';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 
 const PERIOD_OPTIONS = {
+  all: 'Alles',
   week: 'Deze week',
   month: 'Deze maand',
   quarter: 'Dit kwartaal',
@@ -21,7 +22,7 @@ const PERIOD_OPTIONS = {
 
 
 export default function PostNLDashboard({ customerId }) {
-  const [selectedPeriod, setSelectedPeriod] = useState('week');
+  const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showColumnSelector, setShowColumnSelector] = useState(false);
@@ -56,6 +57,8 @@ export default function PostNLDashboard({ customerId }) {
   };
 
   const getPeriodDates = () => {
+    if (selectedPeriod === 'all') return null;
+    
     const now = new Date();
     let startDate, endDate;
 
