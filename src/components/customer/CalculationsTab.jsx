@@ -93,6 +93,18 @@ export default function CalculationsTab({ customerId }) {
     setCalculated(false);
   };
 
+  // Fetch employees and time entries for besteltijd report
+  const { data: employees = [] } = useQuery({
+    queryKey: ['employees-besteltijd'],
+    queryFn: () => base44.entities.Employee.filter({ department: 'PakketDistributie' }),
+  });
+
+  const { data: timeEntries = [] } = useQuery({
+    queryKey: ['time-entries-besteltijd', startDate, endDate],
+    queryFn: () => base44.entities.TimeEntry.list('-date', 5000),
+    enabled: !!startDate && !!endDate
+  });
+
   // Fetch articles for this customer
   const { data: articles = [] } = useQuery({
     queryKey: ['articles', customerId],
@@ -542,7 +554,7 @@ export default function CalculationsTab({ customerId }) {
                   <CardTitle className="text-base">Besteltijd & Uurtarief Rapportage - {isFullYear ? `Heel jaar ${yearNumber}` : `Week ${weekNumber}`}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BesteltijdReport rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
+                  <BesteltijdReport rows={besteltijdRows} tiModelRoutes={tiModelRoutes} employees={employees} timeEntries={timeEntries} weekStart={weekStart} weekEnd={weekEnd} />
                 </CardContent>
               </Card>
             </TabsContent>
