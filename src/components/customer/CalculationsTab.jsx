@@ -153,6 +153,8 @@ export default function CalculationsTab({ customerId }) {
         voorbereiding: row['Voorbereiding, aan-/afrijtijd en afhandeling'] || '-',
         totaalRit: row['Totaal rit'] || '-',
         totaalRitUren: parseTimeToHours(row['Totaal rit']),
+        aantalRouteStops: Number(row['Aantal tijdens route - stops']) || 0,
+        aantalRouteStuks: Number(row['Aantal tijdens route - stuks']) || 0,
       };
     });
   };
