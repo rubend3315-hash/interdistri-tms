@@ -503,8 +503,10 @@ export default function TimeTracking() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="p-3 bg-slate-50 rounded-lg">
               <p className="font-medium text-slate-900">
-                {employees.find(e => e.id === formData.employee_id)?.first_name}{' '}
-                {employees.find(e => e.id === formData.employee_id)?.last_name}
+                {(() => {
+                  const emp = employees.find(e => e.id === formData.employee_id);
+                  return emp ? [emp.first_name, emp.prefix, emp.last_name].filter(Boolean).join(' ') : '';
+                })()}
               </p>
               <p className="text-sm text-slate-500">
                 {formData.date && format(new Date(formData.date), "EEEE d MMMM yyyy", { locale: nl })}

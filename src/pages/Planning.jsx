@@ -441,7 +441,8 @@ export default function Planning() {
           const totalHours = weekScheduleHours ? Object.values(weekScheduleHours).reduce((a, b) => a + b, 0) : 0;
 
           doc.setFontSize(7);
-          const nameText = `${employee.first_name} ${employee.last_name}`;
+          const prefix = employee.prefix ? `${employee.prefix} ` : '';
+          const nameText = `${employee.first_name} ${prefix}${employee.last_name}`;
           const hoursText = totalHours > 0 ? ` (${totalHours}h)` : '';
           doc.text(nameText + hoursText, 15, y + 4);
 

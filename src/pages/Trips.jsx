@@ -22,6 +22,7 @@ import {
   MapPin,
   Trash2
 } from "lucide-react";
+import { getFullName } from "@/components/utils/employeeUtils";
 
 const statuses = ["Gepland", "Onderweg", "Voltooid", "Geannuleerd"];
 
@@ -421,136 +422,136 @@ export default function Trips() {
                               {employee && (
                                 <span className="flex items-center gap-1">
                                   <User className="w-4 h-4 text-slate-400" />
-                                  {employee.first_name} {employee.last_name}
-                                </span>
-                              )}
-                              {vehicle && (
-                                <span className="flex items-center gap-1">
+                                  {getFullName(employee)}
+                                  </span>
+                                  )}
+                                  {vehicle && (
+                                  <span className="flex items-center gap-1">
                                   <Truck className="w-4 h-4 text-slate-400" />
                                   {vehicle.license_plate}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                                  </span>
+                                  )}
+                                  </div>
+                                  </div>
+                                  </div>
 
-                        <div className="flex flex-wrap gap-4 text-sm">
-                          {trip.start_km && trip.end_km && (
-                            <div className="text-center">
-                              <p className="text-slate-500">Begin - Eind km</p>
-                              <p className="font-semibold text-slate-900">{trip.start_km} - {trip.end_km}</p>
-                            </div>
-                          )}
-                          {trip.total_km && (
-                            <div className="text-center">
-                              <p className="text-slate-500">Kilometers</p>
-                              <p className="font-semibold text-slate-900">{trip.total_km} km</p>
-                            </div>
-                          )}
-                          {trip.planned_stops && (
-                            <div className="text-center">
-                              <p className="text-slate-500">Stops</p>
-                              <p className="font-semibold text-slate-900">
-                                {trip.completed_stops || 0}/{trip.planned_stops}
-                              </p>
-                            </div>
-                          )}
-                          {trip.departure_time && trip.arrival_time && (
-                            <>
-                              <div className="text-center">
-                                <p className="text-slate-500">Vertrek</p>
-                                <p className="font-semibold text-slate-900">
+                                  <div className="flex flex-wrap gap-4 text-sm">
+                                  {trip.start_km && trip.end_km && (
+                                  <div className="text-center">
+                                  <p className="text-slate-500">Begin - Eind km</p>
+                                  <p className="font-semibold text-slate-900">{trip.start_km} - {trip.end_km}</p>
+                                  </div>
+                                  )}
+                                  {trip.total_km && (
+                                  <div className="text-center">
+                                  <p className="text-slate-500">Kilometers</p>
+                                  <p className="font-semibold text-slate-900">{trip.total_km} km</p>
+                                  </div>
+                                  )}
+                                  {trip.planned_stops && (
+                                  <div className="text-center">
+                                  <p className="text-slate-500">Stops</p>
+                                  <p className="font-semibold text-slate-900">
+                                  {trip.completed_stops || 0}/{trip.planned_stops}
+                                  </p>
+                                  </div>
+                                  )}
+                                  {trip.departure_time && trip.arrival_time && (
+                                  <>
+                                  <div className="text-center">
+                                  <p className="text-slate-500">Vertrek</p>
+                                  <p className="font-semibold text-slate-900">
                                   {trip.date && format(new Date(trip.date), "d MMM", { locale: nl })}
                                   {trip.departure_time && ` ${trip.departure_time}`}
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-slate-500">Aankomst</p>
-                                <p className="font-semibold text-slate-900">
+                                  </p>
+                                  </div>
+                                  <div className="text-center">
+                                  <p className="text-slate-500">Aankomst</p>
+                                  <p className="font-semibold text-slate-900">
                                   {(() => {
-                                    const [depH, depM] = trip.departure_time.split(':').map(Number);
-                                    const [arrH, arrM] = trip.arrival_time.split(':').map(Number);
-                                    let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
-                                    const nextDay = totalMinutes < 0;
-                                    if (nextDay) totalMinutes += 24 * 60;
-                                    const arrivalDate = nextDay ? new Date(new Date(trip.date).getTime() + 24*60*60*1000) : new Date(trip.date);
-                                    return format(arrivalDate, "d MMM", { locale: nl }) + ` ${trip.arrival_time}`;
+                                   const [depH, depM] = trip.departure_time.split(':').map(Number);
+                                   const [arrH, arrM] = trip.arrival_time.split(':').map(Number);
+                                   let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
+                                   const nextDay = totalMinutes < 0;
+                                   if (nextDay) totalMinutes += 24 * 60;
+                                   const arrivalDate = nextDay ? new Date(new Date(trip.date).getTime() + 24*60*60*1000) : new Date(trip.date);
+                                   return format(arrivalDate, "d MMM", { locale: nl }) + ` ${trip.arrival_time}`;
                                   })()}
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-slate-500">Uren</p>
-                                <p className="font-semibold text-blue-700">
+                                  </p>
+                                  </div>
+                                  <div className="text-center">
+                                  <p className="text-slate-500">Uren</p>
+                                  <p className="font-semibold text-blue-700">
                                   {(() => {
-                                    const [depH, depM] = trip.departure_time.split(':').map(Number);
-                                    const [arrH, arrM] = trip.arrival_time.split(':').map(Number);
-                                    let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
-                                    if (totalMinutes < 0) totalMinutes += 24 * 60;
-                                    return (totalMinutes / 60).toFixed(2);
+                                   const [depH, depM] = trip.departure_time.split(':').map(Number);
+                                   const [arrH, arrM] = trip.arrival_time.split(':').map(Number);
+                                   let totalMinutes = (arrH * 60 + arrM) - (depH * 60 + depM);
+                                   if (totalMinutes < 0) totalMinutes += 24 * 60;
+                                   return (totalMinutes / 60).toFixed(2);
                                   })()}u
-                                </p>
-                              </div>
-                            </>
-                          )}
-                          {subsistence > 0 && (
-                            <div className="text-center">
-                              <p className="text-slate-500">Verblijfskosten</p>
-                              <p className="font-semibold text-emerald-700">€{subsistence.toFixed(2)}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            )}
-          </TabsContent>
+                                  </p>
+                                  </div>
+                                  </>
+                                  )}
+                                  {subsistence > 0 && (
+                                  <div className="text-center">
+                                  <p className="text-slate-500">Verblijfskosten</p>
+                                  <p className="font-semibold text-emerald-700">€{subsistence.toFixed(2)}</p>
+                                  </div>
+                                  )}
+                                  </div>
+                                  </div>
+                                  </CardContent>
+                                  </Card>
+                                  );
+                                  })
+                                  )}
+                                  </TabsContent>
 
-          <TabsContent value="concept" className="space-y-4 mt-4">
-            {conceptTrips.length === 0 ? (
-              <Card className="p-12 text-center">
-                <Truck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900">Geen concept ritten</h3>
-                <p className="text-slate-500 mt-1">Er zijn geen concept ritten (status: Gepland).</p>
-              </Card>
-            ) : (
-              conceptTrips.map(trip => {
-            const employee = getEmployee(trip.employee_id);
-            const vehicle = getVehicle(trip.vehicle_id);
-            const customer = getCustomer(trip.customer_id);
-            const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
-            
-            return (
-              <Card 
-                key={trip.id} 
-                className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => openEditDialog(trip)}
-              >
-                <CardContent className="p-5">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center">
-                        <Truck className="w-7 h-7 text-slate-600" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-slate-900">
-                            {trip.route_name || 'Rit'}
-                          </h3>
-                          <Badge className={getStatusColor(trip.status)}>
-                            {trip.status}
-                          </Badge>
-                        </div>
-                        <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
-                           <span className="flex items-center gap-1">
-                             <Calendar className="w-4 h-4 text-slate-400" />
-                             {trip.date && format(new Date(trip.date), "d MMM yyyy", { locale: nl })}
-                           </span>
-                          {employee && (
-                            <span className="flex items-center gap-1">
-                              <User className="w-4 h-4 text-slate-400" />
-                              {employee.first_name} {employee.last_name}
+                                  <TabsContent value="concept" className="space-y-4 mt-4">
+                                  {conceptTrips.length === 0 ? (
+                                  <Card className="p-12 text-center">
+                                  <Truck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                  <h3 className="text-lg font-medium text-slate-900">Geen concept ritten</h3>
+                                  <p className="text-slate-500 mt-1">Er zijn geen concept ritten (status: Gepland).</p>
+                                  </Card>
+                                  ) : (
+                                  conceptTrips.map(trip => {
+                                  const employee = getEmployee(trip.employee_id);
+                                  const vehicle = getVehicle(trip.vehicle_id);
+                                  const customer = getCustomer(trip.customer_id);
+                                  const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
+
+                                  return (
+                                  <Card 
+                                  key={trip.id} 
+                                  className="hover:shadow-md transition-shadow cursor-pointer"
+                                  onClick={() => openEditDialog(trip)}
+                                  >
+                                  <CardContent className="p-5">
+                                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                  <div className="flex items-start gap-4">
+                                  <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center">
+                                  <Truck className="w-7 h-7 text-slate-600" />
+                                  </div>
+                                  <div>
+                                  <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-slate-900">
+                                  {trip.route_name || 'Rit'}
+                                  </h3>
+                                  <Badge className={getStatusColor(trip.status)}>
+                                  {trip.status}
+                                  </Badge>
+                                  </div>
+                                  <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
+                                  <span className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4 text-slate-400" />
+                                  {trip.date && format(new Date(trip.date), "d MMM yyyy", { locale: nl })}
+                                  </span>
+                                  {employee && (
+                                  <span className="flex items-center gap-1">
+                                  <User className="w-4 h-4 text-slate-400" />
+                                  {getFullName(employee)}
                             </span>
                           )}
                           {vehicle && (
@@ -676,7 +677,7 @@ export default function Trips() {
                   <SelectContent>
                     {employees.filter(e => e.status === 'Actief').map(e => (
                       <SelectItem key={e.id} value={e.id}>
-                        {e.first_name} {e.last_name}
+                        {getFullName(e)}
                       </SelectItem>
                     ))}
                   </SelectContent>
