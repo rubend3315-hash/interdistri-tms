@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 function formatTime(val) {
   if (!val || val === '' || val === '-') return '';
@@ -38,6 +39,23 @@ export default function ActiviteitenReport({ weekData }) {
 
   // Determine effective filter
   const effectiveFilter = dayFilter === "auto" ? latestDatum : dayFilter;
+
+  const currentDayIndex = useMemo(() => {
+    if (!effectiveFilter || effectiveFilter === "all") return -1;
+    return availableDays.findIndex(d => d.datum === effectiveFilter);
+  }, [effectiveFilter, availableDays]);
+
+  const goToPrevDay = () => {
+    if (currentDayIndex > 0) {
+      setDayFilter(availableDays[currentDayIndex - 1].datum);
+    }
+  };
+
+  const goToNextDay = () => {
+    if (currentDayIndex >= 0 && currentDayIndex < availableDays.length - 1) {
+      setDayFilter(availableDays[currentDayIndex + 1].datum);
+    }
+  };
 
   // Build rows from raw import data, filtered and sorted by Ritnaam
   const rows = useMemo(() => {
@@ -91,8 +109,17 @@ export default function ActiviteitenReport({ weekData }) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-slate-800">Activiteitenrapport{effectiveFilter && effectiveFilter !== "all" ? ` - ${currentDayLabel}` : ''}</h3>
-        <div className="flex items-center gap-3 print:hidden">
-          <span className="text-sm font-medium text-slate-700">Dag:</span>
+        <div className="flex items-center gap-2 print:hidden">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9"
+            disabled={currentDayIndex <= 0}
+            onClick={goToPrevDay}
+            title="Vorige dag"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
           <Select value={dayFilter} onValueChange={setDayFilter}>
             <SelectTrigger className="w-56">
               <SelectValue />
@@ -105,6 +132,16 @@ export default function ActiviteitenReport({ weekData }) {
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9"
+            disabled={currentDayIndex < 0 || currentDayIndex >= availableDays.length - 1}
+            onClick={goToNextDay}
+            title="Volgende dag"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
           {dayFilter !== "all" && (
             <Button variant="outline" size="sm" onClick={() => setDayFilter("all")}>
               Toon hele week
