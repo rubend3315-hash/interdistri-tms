@@ -97,18 +97,19 @@ export default function EmployeeReport() {
     enabled: !!postNLCustomer
   });
 
-  // Fetch import results for report rows - fetch ALL records
+  // Fetch import results for report rows - fetch ALL records with pagination
   const { data: importResults = [], isLoading: loadingImports } = useQuery({
     queryKey: ['postnl-imports-report'],
     queryFn: async () => {
-      let allResults = [];
+      const allResults = [];
       let skip = 0;
-      const batchSize = 100;
+      const limit = 500;
       while (true) {
-        const batch = await base44.entities.PostNLImportResult.list('-created_date', batchSize, skip);
-        allResults = allResults.concat(batch);
-        if (batch.length < batchSize) break;
-        skip += batchSize;
+        const batch = await base44.entities.PostNLImportResult.list('-created_date', limit, skip);
+        if (!batch || batch.length === 0) break;
+        allResults.push(...batch);
+        if (batch.length < limit) break;
+        skip += limit;
       }
       return allResults;
     }
