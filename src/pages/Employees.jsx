@@ -337,7 +337,7 @@ function ProfielTab({ employee, viewOnly }) {
           {employee.photo_url ? (
             <img 
               src={employee.photo_url} 
-              alt={`${employee.first_name} ${employee.last_name}`}
+              alt={getFullName(employee)}
               className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
             />
           ) : (
