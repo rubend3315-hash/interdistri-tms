@@ -67,15 +67,20 @@ export default function EmployeeReport() {
     setSelectedYear(String(year));
   };
 
-  const weekNum = parseInt(selectedWeek) || currentWeek;
+  const isFullYear = selectedWeek === "all";
+  const weekNum = isFullYear ? null : (parseInt(selectedWeek) || currentWeek);
   const yearNum = parseInt(selectedYear) || currentYear;
 
   const weekStart = useMemo(() => {
+    if (isFullYear) return new Date(yearNum, 0, 1);
     const d = startOfISOWeek(setISOWeek(setDateYear(new Date(yearNum, 0, 4), yearNum), weekNum));
     return d;
-  }, [weekNum, yearNum]);
+  }, [weekNum, yearNum, isFullYear]);
 
-  const weekEnd = useMemo(() => endOfISOWeek(weekStart), [weekStart]);
+  const weekEnd = useMemo(() => {
+    if (isFullYear) return new Date(yearNum, 11, 31);
+    return endOfISOWeek(weekStart);
+  }, [weekStart, isFullYear, yearNum]);
 
   // Fetch PakketDistributie employees for validation
   const { data: pdEmployees = [] } = useQuery({
@@ -83,16 +88,20 @@ export default function EmployeeReport() {
     queryFn: () => base44.entities.Employee.filter({ department: 'PakketDistributie', status: 'Actief' }),
   });
 
-  // Fetch KPI data for selected week
+  // Fetch KPI data for selected week (or full year)
   const { data: kpiData = [], isLoading: loadingKPI } = useQuery({
-    queryKey: ['employee-kpi', weekNum, yearNum],
-    queryFn: () => base44.entities.EmployeeKPI.filter({ week: weekNum, year: yearNum })
+    queryKey: ['employee-kpi', weekNum, yearNum, isFullYear],
+    queryFn: () => isFullYear
+      ? base44.entities.EmployeeKPI.filter({ year: yearNum })
+      : base44.entities.EmployeeKPI.filter({ week: weekNum, year: yearNum })
   });
 
-  // Fetch KPI doelen for selected week
+  // Fetch KPI doelen for selected week (or full year)
   const { data: kpiDoelen = [] } = useQuery({
-    queryKey: ['kpi-doelen', weekNum, yearNum],
-    queryFn: () => base44.entities.KPIDoel.filter({ week: weekNum, jaar: yearNum })
+    queryKey: ['kpi-doelen', weekNum, yearNum, isFullYear],
+    queryFn: () => isFullYear
+      ? base44.entities.KPIDoel.filter({ jaar: yearNum })
+      : base44.entities.KPIDoel.filter({ week: weekNum, jaar: yearNum })
   });
 
   // Fetch all KPI data for the year (for employee name list)
@@ -264,6 +273,7 @@ export default function EmployeeReport() {
               <Select value={selectedWeek} onValueChange={setSelectedWeek}>
                 <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">Heel jaar</SelectItem>
                   {Array.from({ length: 53 }, (_, i) => i + 1).map(w => (
                     <SelectItem key={w} value={String(w)}>Week {w}</SelectItem>
                   ))}
@@ -283,7 +293,7 @@ export default function EmployeeReport() {
               </Select>
             </div>
             <div className="text-sm text-slate-500">
-              {format(weekStart, 'dd-MM-yyyy')} t/m {format(weekEnd, 'dd-MM-yyyy')}
+              {isFullYear ? `01-01-${yearNum} t/m 31-12-${yearNum}` : `${format(weekStart, 'dd-MM-yyyy')} t/m ${format(weekEnd, 'dd-MM-yyyy')}`}
             </div>
           </div>
         </CardContent>
@@ -316,7 +326,7 @@ export default function EmployeeReport() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                Medewerkersoverzicht - Week {weekNum} ({yearNum})
+                Medewerkersoverzicht - {isFullYear ? `Heel jaar ${yearNum}` : `Week ${weekNum} (${yearNum})`}
                 {selectedEmployee !== "all" && ` - ${selectedEmployee}`}
               </CardTitle>
             </CardHeader>
@@ -346,7 +356,7 @@ export default function EmployeeReport() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                KPI Scores - Week {weekNum} ({yearNum})
+                KPI Scores - {isFullYear ? `Heel jaar ${yearNum}` : `Week ${weekNum} (${yearNum})`}
                 {selectedEmployee !== "all" && ` - ${selectedEmployee}`}
               </CardTitle>
             </CardHeader>
