@@ -20,12 +20,21 @@ function matchesPD(name, pdEmployees) {
   return pdEmployees.some(e => {
     const last = (e.last_name || '').trim().toLowerCase();
     const first = (e.first_name || '').trim().toLowerCase();
+    const prefix = (e.prefix || '').trim().toLowerCase();
     const initial = first ? first.charAt(0) + '.' : '';
+    const fullLast = prefix ? `${prefix} ${last}` : last;
     const variations = [
+      `${fullLast}, ${initial}`.trim(),
+      `${fullLast} ${initial}`.trim(),
+      `${initial} ${fullLast}`.trim(),
+      `${fullLast} ${first}`.trim(),
+      `${first} ${fullLast}`.trim(),
+      `${last}, ${initial}`.trim(),
       `${last} ${initial}`.trim(),
       `${initial} ${last}`.trim(),
       `${last} ${first}`.trim(),
       `${first} ${last}`.trim(),
+      fullLast,
       last,
     ];
     return variations.some(v => v === n || n.includes(v) || v.includes(n));
