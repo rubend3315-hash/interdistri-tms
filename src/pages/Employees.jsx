@@ -27,6 +27,7 @@ import {
   Smartphone
 } from "lucide-react";
 import { format, addMonths, isBefore } from 'date-fns';
+import { getFullName, getDisplayName } from '@/components/utils/employeeUtils';
 
 const departments = ['Management', 'Transport', 'PakketDistributie', 'Charters'];
 const statuses = ['Actief', 'Inactief', 'Uit dienst'];
