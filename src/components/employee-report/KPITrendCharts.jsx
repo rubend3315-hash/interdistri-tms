@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine, Area, AreaChart
+  ResponsiveContainer, ReferenceLine, Area, AreaChart,
+  BarChart, Bar, Cell
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
@@ -199,20 +200,19 @@ export default function KPITrendCharts({ employeeName, year }) {
   }, [allKpi]);
 
   const employeeComparisonData = useMemo(() => {
-    if (!showAll || allKpi.length === 0) return { data: [], names: [] };
-    const byWeek = {};
-    const names = new Set();
+    if (!showAll || allKpi.length === 0) return [];
+    const byEmployee = {};
     allKpi.forEach((k) => {
       if (!k.medewerker_naam || k[selectedKPI] == null) return;
-      names.add(k.medewerker_naam);
-      if (!byWeek[k.week]) byWeek[k.week] = {};
-      byWeek[k.week][k.medewerker_naam] = k[selectedKPI];
+      if (!byEmployee[k.medewerker_naam]) byEmployee[k.medewerker_naam] = [];
+      byEmployee[k.medewerker_naam].push(k[selectedKPI]);
     });
-    const sortedWeeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b);
-    return {
-      data: sortedWeeks.map((w) => ({ week: w, ...byWeek[w] })),
-      names: [...names].sort(),
-    };
+    return Object.entries(byEmployee)
+      .map(([name, vals]) => ({
+        name,
+        value: vals.reduce((s, v) => s + v, 0) / vals.length,
+      }))
+      .sort((a, b) => b.value - a.value);
   }, [allKpi, showAll, selectedKPI]);
 
   if (isLoading) {
@@ -227,7 +227,7 @@ export default function KPITrendCharts({ employeeName, year }) {
 
   const chartData = showAll ? teamTrendData : employeeTrendData;
 
-  if (chartData.length === 0 && employeeComparisonData?.data?.length === 0) {
+  if (chartData.length === 0 && employeeComparisonData?.length === 0) {
     return <p className="text-slate-500 text-sm py-4">Geen KPI data beschikbaar voor trendanalyse in {yearNum}.</p>;
   }
 
@@ -259,8 +259,8 @@ export default function KPITrendCharts({ employeeName, year }) {
         </div>
       )}
 
-      {/* Employee Comparison Chart */}
-      {showAll && employeeComparisonData?.data?.length > 0 && (
+      {/* Employee Comparison Bar Chart */}
+      {showAll && employeeComparisonData?.length > 0 && (
         <div>
           <div className="flex items-center gap-3 mb-3 flex-wrap">
             <h3 className="text-sm font-semibold text-slate-700">Vergelijking per medewerker</h3>
@@ -277,45 +277,53 @@ export default function KPITrendCharts({ employeeName, year }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="h-80 bg-white border border-slate-200 rounded-xl p-4">
+          <div
+            className="bg-white border border-slate-200 rounded-xl p-4"
+            style={{ height: Math.max(300, employeeComparisonData.length * 40 + 60) }}
+          >
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={employeeComparisonData.data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <BarChart
+                data={employeeComparisonData}
+                layout="vertical"
+                margin={{ top: 5, right: 40, left: 10, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                 <XAxis
-                  dataKey="week"
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
-                  axisLine={false}
-                  tickLine={false}
-                  label={{ value: "Week", position: "insideBottom", offset: -5, fontSize: 11, fill: "#94a3b8" }}
-                />
-                <YAxis
+                  type="number"
                   tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
                   domain={[
                     (dataMin) => Math.max(0, Math.floor((dataMin - 0.03) * 100) / 100),
-                    (dataMax) => Math.min(1, Math.ceil((dataMax + 0.03) * 100) / 100),
+                    (dataMax) => Math.min(1, Math.ceil((dataMax + 0.02) * 100) / 100),
                   ]}
                   tick={{ fontSize: 11, fill: "#94a3b8" }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip content={<ComparisonTooltip />} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 12, fill: "#475569" }}
+                  width={130}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  formatter={(val) => [pct(val), selectedField?.label]}
+                  labelStyle={{ fontWeight: 600 }}
+                  contentStyle={{ borderRadius: 8, border: "1px solid #e2e8f0" }}
+                />
                 {selectedField?.threshold > 0.5 && (
-                  <ReferenceLine y={selectedField.threshold} stroke="#cbd5e1" strokeDasharray="4 4" />
+                  <ReferenceLine x={selectedField.threshold} stroke="#94a3b8" strokeDasharray="4 4" label={{ value: `${(selectedField.threshold * 100)}%`, position: "top", fontSize: 10, fill: "#94a3b8" }} />
                 )}
-                {employeeComparisonData.names.map((name, idx) => (
-                  <Line
-                    key={name}
-                    type="monotone"
-                    dataKey={name}
-                    name={name}
-                    stroke={EMPLOYEE_COLORS[idx % EMPLOYEE_COLORS.length]}
-                    strokeWidth={2}
-                    dot={{ r: 2.5 }}
-                    activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2 }}
-                    connectNulls
-                  />
-                ))}
-              </LineChart>
+                <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24}>
+                  {employeeComparisonData.map((entry, idx) => (
+                    <Cell
+                      key={entry.name}
+                      fill={entry.value >= (selectedField?.threshold ?? 0.95) ? "#16a34a" : entry.value >= (selectedField?.threshold ?? 0.95) - 0.05 ? "#ca8a04" : "#dc2626"}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
