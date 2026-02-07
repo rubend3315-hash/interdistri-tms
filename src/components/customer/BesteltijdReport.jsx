@@ -306,7 +306,9 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
               <th className="text-right py-2 px-2 font-medium text-slate-600">Norm gehaald</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Hitrate</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Omzet</th>
-              <th className="text-right py-2 px-2 font-medium text-slate-600">Uurtarief</th>
+              <th className="text-right py-2 px-2 font-medium text-slate-600">Uurtarief (rit)</th>
+              <th className="text-right py-2 px-2 font-medium text-blue-700 bg-blue-50">Gewerkte uren</th>
+              <th className="text-right py-2 px-2 font-medium text-blue-700 bg-blue-50">Uurtarief (gewerkt)</th>
             </tr>
           </thead>
           <tbody>
@@ -339,6 +341,9 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
 
                     const usedTiTime = (r.totaalRitUren || 0) <= 0 && effectieveRitUren > 0;
 
+                    const gewerkteUren = getGewerkteUren(r);
+                    const uurtariefGewerkt = gewerkteUren && gewerkteUren > 0 ? r.omzet / gewerkteUren : null;
+
                     return (
                       <tr key={idx} className="border-b hover:bg-slate-50">
                         <td className="py-1.5 px-2 text-slate-700">{r.chauffeur}</td>
@@ -365,6 +370,8 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [], employees =
                         <td className="py-1.5 px-2 text-right text-slate-700">{hitrate > 0 ? `${(hitrate * 100).toFixed(1)}%` : '-'}</td>
                         <td className="py-1.5 px-2 text-right font-semibold text-slate-900">{fmt(r.omzet)}</td>
                         <td className={`py-1.5 px-2 text-right font-semibold ${uurtarief > 45 ? 'text-green-700' : uurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{uurtarief > 0 ? fmt(uurtarief) : '-'}</td>
+                        <td className="py-1.5 px-2 text-right text-blue-700 bg-blue-50/30">{gewerkteUren != null ? `${gewerkteUren.toFixed(1)}` : '-'}</td>
+                        <td className={`py-1.5 px-2 text-right font-semibold bg-blue-50/30 ${uurtariefGewerkt && uurtariefGewerkt > 45 ? 'text-green-700' : uurtariefGewerkt ? 'text-red-600' : 'text-slate-400'}`}>{uurtariefGewerkt ? fmt(uurtariefGewerkt) : '-'}</td>
                       </tr>
                     );
                   })}
