@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, Printer, Users, BarChart3 } from "lucide-react";
+import { Upload, Printer, Users, BarChart3, List } from "lucide-react";
+import KPIImportOverview from "@/components/employee-report/KPIImportOverview";
 import { getYear, getISOWeek, startOfISOWeek, endOfISOWeek, format, setISOWeek, setYear as setDateYear } from "date-fns";
 import { parseTimeToHours } from "@/components/customer/BesteltijdReport";
 import { getValidPriceRule } from "@/components/utils/priceRuleUtils";
