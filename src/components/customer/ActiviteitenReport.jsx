@@ -137,7 +137,7 @@ export default function ActiviteitenReport({ weekData }) {
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">Aantal afgeleverd - stuks</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[25px] align-bottom">BML</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Aantal PBA- pakketten bezorgd</th>
-              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Aantal stuks afgehaald/gecollecteerd</th>
+              <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[45px] align-bottom">Aantal stuks afgehaald/<wbr/>gecollecteerd</th>
               <th className="text-right py-2 px-1.5 font-medium text-slate-600 min-w-[50px] align-bottom">Geleverde stops</th>
             </tr>
           </thead>
