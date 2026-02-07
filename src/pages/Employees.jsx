@@ -487,7 +487,7 @@ function ProfielTab({ employee, viewOnly }) {
 }
 
 function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
-  const [formData, setFormData] = useState(employee || {
+  const defaults = {
     employee_number: '',
     initials: '',
     first_name: '',
@@ -515,7 +515,18 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
     emergency_contact_phone: '',
     emergency_contact_relation: '',
     photo_url: '',
-    supervisor_notities: ''
+    supervisor_notities: '',
+    mobile_entry_type: 'single_day'
+  };
+
+  // Merge employee data with defaults, replacing null/undefined with ''
+  const [formData, setFormData] = useState(() => {
+    if (!employee) return defaults;
+    const merged = { ...defaults };
+    Object.keys(defaults).forEach(key => {
+      merged[key] = employee[key] != null ? employee[key] : defaults[key];
+    });
+    return merged;
   });
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
