@@ -264,6 +264,9 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {/* Revenue per Customer */}
+      <RevenuePerCustomer />
+
       {/* Quick Actions & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Quick Actions */}
