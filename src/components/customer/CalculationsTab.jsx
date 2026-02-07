@@ -17,6 +17,7 @@ import WeekSamenvatting from "./WeekSamenvatting";
 import ActiviteitenReport from "./ActiviteitenReport";
 import TrendReport from "./TrendReport";
 import RouteOverview from "./RouteOverview";
+import WerkaanbodTab from "./WerkaanbodTab";
 import DataRefreshIndicator from "@/components/DataRefreshIndicator";
 
 const DAY_NAMES = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
@@ -433,6 +434,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsTrigger value="activiteiten">Activiteitenrapport</TabsTrigger>
             <TabsTrigger value="routeoverzicht">Route Overzicht</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="werkaanbod">Werkaanbod</TabsTrigger>
           </TabsList>
           {calculated && (
             <Button
@@ -600,6 +602,17 @@ export default function CalculationsTab({ customerId }) {
                 </CardHeader>
                 <CardContent>
                   <TrendReport rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            {/* WERKAANBOD TAB */}
+            <TabsContent value="werkaanbod" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Werkaanbod — Trends Stops & Stuks</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <WerkaanbodTab importResults={importResults} />
                 </CardContent>
               </Card>
             </TabsContent>
