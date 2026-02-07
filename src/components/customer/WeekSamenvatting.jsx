@@ -136,35 +136,9 @@ function SummaryTable({ grouped, tiModelRoutes, labelHeader }) {
 
             return (
               <React.Fragment key={key}>
-                {/* Weekrijen per groep */}
-                {weekKeys.map(wk => {
-                  const wkAvg = calcAvg(weekMap[wk], tiModelRoutes);
-                  if (!wkAvg) return null;
-                  return (
-                    <tr key={`${key}-wk-${wk}`} className="border-b hover:bg-slate-50 text-xs">
-                      <td className="py-1.5 px-2 text-slate-700">{key}</td>
-                      <td className="py-1.5 px-2 text-slate-500">Week {wk}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{wkAvg.count}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{hoursToHHMMSS(wkAvg.gemBesteltijdNorm)}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{hoursToHHMMSS(wkAvg.gemBesteltijdBruto)}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{hoursToHHMMSS(wkAvg.gemBesteltijdNetto)}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{hoursToHHMMSS(wkAvg.gemVoorbereiding)}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{wkAvg.gemUren > 0 ? `${wkAvg.gemUren.toFixed(1)}` : '-'}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{wkAvg.gemStops > 0 ? wkAvg.gemStops.toFixed(0) : '-'}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{wkAvg.gemStuks > 0 ? wkAvg.gemStuks.toFixed(0) : '-'}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{wkAvg.gemNorm > 0 ? wkAvg.gemNorm.toFixed(1) : '-'}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{wkAvg.gemActual > 0 ? wkAvg.gemActual.toFixed(1) : '-'}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{wkAvg.hitrate > 0 ? `${(wkAvg.hitrate * 100).toFixed(1)}%` : '-'}</td>
-                      <td className="py-1.5 px-2 text-right text-slate-700">{fmt(wkAvg.gemOmzet)}</td>
-                      <td className={`py-1.5 px-2 text-right ${wkAvg.uurtarief > 45 ? 'text-green-700' : wkAvg.uurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>
-                        {wkAvg.uurtarief > 0 ? fmt(wkAvg.uurtarief) : '-'}
-                      </td>
-                    </tr>
-                  );
-                })}
                 {/* Totaal rij per groep */}
                 {grandAvg && (
-                  <tr className="bg-blue-50 border-b-2 border-blue-200 hover:bg-blue-100 font-semibold text-xs">
+                  <tr className="bg-blue-50 border-b hover:bg-blue-100 font-semibold text-xs">
                     <td className="py-1.5 px-2 text-blue-800">{key}</td>
                     <td className="py-1.5 px-2 text-blue-800">Totaal</td>
                     <td className="py-1.5 px-2 text-right text-blue-800">{grandAvg.count}</td>
