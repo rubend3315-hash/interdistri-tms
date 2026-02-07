@@ -13,7 +13,21 @@ Deno.serve(async (req) => {
     const columnsSet = new Set();
     
     // ALLEEN kolommen uit PostNLImportResult.data.data (behoud volgorde)
-    const imports = await base44.asServiceRole.entities.PostNLImportResult.filter({});
+    let imports = [];
+    try {
+      const result = await base44.asServiceRole.entities.PostNLImportResult.filter({});
+      imports = Array.isArray(result) ? result : [];
+    } catch (e) {
+      console.error('Failed to list PostNLImportResult:', e.message);
+      // Fallback: try with user scope
+      try {
+        const result2 = await base44.entities.PostNLImportResult.filter({});
+        imports = Array.isArray(result2) ? result2 : [];
+      } catch (e2) {
+        console.error('Fallback also failed:', e2.message);
+        imports = [];
+      }
+    }
     imports.forEach(imp => {
       if (imp.data && typeof imp.data === 'object') {
         const innerData = imp.data.data || imp.data;
