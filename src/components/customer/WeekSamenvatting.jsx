@@ -39,7 +39,15 @@ function calcAvg(rows, tiModelRoutes) {
   };
 
   rows.forEach(r => {
-    totaalRitUren += r.totaalRitUren || 0;
+    let ritUren = r.totaalRitUren || 0;
+    // Als geen rit uren, gebruik TI Model route tijd
+    if (ritUren <= 0) {
+      const tiRoute = findTiRoute(r.route);
+      if (tiRoute && tiRoute.total_time_hours > 0) {
+        ritUren = tiRoute.total_time_hours;
+      }
+    }
+    totaalRitUren += ritUren;
     aantalRouteStops += r.aantalRouteStops || 0;
     aantalRouteStuks += r.aantalRouteStuks || 0;
     succesvolleStops += r.succesvolleStops || 0;
