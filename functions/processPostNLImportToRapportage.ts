@@ -71,6 +71,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Admin check
+    if (user.role !== 'admin') {
+      return Response.json(
+        { error: 'Forbidden: Admin access required' }, 
+        { status: 403 }
+      );
+    }
+
     // Parse en valideer payload
     let payload: ImportPayload;
     try {

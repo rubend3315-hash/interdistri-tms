@@ -63,11 +63,85 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
 
   const parseMutation = useMutation({
     mutationFn: async (file) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('customerId', customerId);
-      const response = await base44.functions.invoke('parseExcelImport', { file, customerId });
-      return response.data;
+      // Parse Excel client-side using xlsx library
+      const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs');
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { cellDates: true, raw: false, defval: '' });
+      
+      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+        throw new Error('Excel bestand bevat geen sheets');
+      }
+
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const allRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' });
+
+      if (allRows.length === 0) {
+        throw new Error('Excel sheet is leeg');
+      }
+
+      // Find header row containing "Depot"
+      let headerRowIndex = -1;
+      let headerRow = [];
+      for (let i = 0; i < allRows.length; i++) {
+        const firstCell = allRows[i][0];
+        if (firstCell && firstCell.toString().toLowerCase().includes('depot')) {
+          headerRowIndex = i;
+          headerRow = allRows[i].map((cell, idx) => cell ? cell.toString().trim() : `__EMPTY_${idx}`);
+          break;
+        }
+      }
+
+      if (headerRowIndex === -1) {
+        throw new Error('Header rij met "Depot" niet gevonden');
+      }
+
+      // Find data start (skip empty rows after header)
+      let dataStartIndex = headerRowIndex + 1;
+      while (dataStartIndex < allRows.length) {
+        const hasValue = allRows[dataStartIndex].some(cell => cell !== null && cell !== undefined && cell.toString().trim() !== '');
+        if (hasValue) break;
+        dataStartIndex++;
+      }
+
+      // Parse data rows
+      const rawData = [];
+      for (let i = dataStartIndex; i < allRows.length; i++) {
+        const row = allRows[i];
+        const hasValue = row.some(cell => cell !== null && cell !== undefined && cell.toString().trim() !== '');
+        if (!hasValue) break;
+        
+        const firstCell = row[0] ? row[0].toString().trim() : '';
+        if (firstCell.toLowerCase().includes('totaal') || !firstCell) continue;
+
+        const rowObj = {};
+        headerRow.forEach((colName, idx) => {
+          const value = row[idx];
+          rowObj[colName] = value === null || value === undefined ? '' : typeof value === 'string' ? value.trim() : value;
+        });
+        rawData.push(rowObj);
+      }
+
+      if (rawData.length === 0) {
+        throw new Error('Geen data rijen gevonden');
+      }
+
+      // Filter empty columns
+      const filteredColumns = headerRow.filter(colName =>
+        rawData.some(row => {
+          const value = row[colName];
+          return value !== null && value !== undefined && value !== '' && (typeof value !== 'string' || value.trim() !== '');
+        })
+      );
+
+      return {
+        success: true,
+        fileName: file.name,
+        columns: filteredColumns,
+        preview: rawData.slice(0, 100),
+        totalRows: rawData.length,
+        rawData: rawData
+      };
     },
     onSuccess: (data) => {
       setParseResult(data);

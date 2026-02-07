@@ -75,9 +75,11 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
             return r.bestandsnaam === file?.name && r.import_datum === today;
           });
 
-          const result = await base44.functions.invoke('createRapportageRitsFromImports', {
-            records: todayRecords,
-            customerId
+          const result = await base44.functions.invoke('processPostNLImportToRapportage', {
+            project_id: selectedProject,
+            project_naam: 'PakketDistributie',
+            klant_id: customerId,
+            import_data: todayRecords.map(r => r.data || r)
           });
 
           toast.success(`Data opgeslagen en ${result.data.count} ritten geconverteerd`);
