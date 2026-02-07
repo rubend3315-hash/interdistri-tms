@@ -128,12 +128,17 @@ export default function Vehicles() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const submitData = {
-      ...formData,
-      year: formData.year ? Number(formData.year) : null,
-      current_mileage: formData.current_mileage ? Number(formData.current_mileage) : null,
-      max_weight: formData.max_weight ? Number(formData.max_weight) : null
-    };
+    const submitData = { ...formData };
+    // Clean empty strings for enum/optional fields
+    Object.keys(submitData).forEach(key => {
+      if (typeof submitData[key] === 'string' && submitData[key].trim() === '') {
+        submitData[key] = null;
+      }
+    });
+    // Convert numeric fields
+    submitData.year = formData.year ? Number(formData.year) : null;
+    submitData.current_mileage = formData.current_mileage ? Number(formData.current_mileage) : null;
+    submitData.max_weight = formData.max_weight ? Number(formData.max_weight) : null;
 
     if (selectedVehicle) {
       updateMutation.mutate({ id: selectedVehicle.id, data: submitData });

@@ -107,10 +107,14 @@ export default function Projects() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const submitData = {
-      ...formData,
-      budget: formData.budget ? Number(formData.budget) : null
-    };
+    const submitData = { ...formData };
+    // Clean empty strings for optional fields
+    Object.keys(submitData).forEach(key => {
+      if (typeof submitData[key] === 'string' && submitData[key].trim() === '') {
+        submitData[key] = null;
+      }
+    });
+    submitData.budget = formData.budget ? Number(formData.budget) : null;
 
     if (selectedProject) {
       updateMutation.mutate({ id: selectedProject.id, data: submitData });

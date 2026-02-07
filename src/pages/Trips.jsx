@@ -162,18 +162,23 @@ export default function Trips() {
       formData.date
     );
 
-    const submitData = {
-      ...formData,
-      planned_stops: formData.planned_stops ? Number(formData.planned_stops) : null,
-      completed_stops: formData.completed_stops ? Number(formData.completed_stops) : null,
-      start_km: formData.start_km ? Number(formData.start_km) : null,
-      end_km: formData.end_km ? Number(formData.end_km) : null,
-      total_km: formData.start_km && formData.end_km ? Number(formData.end_km) - Number(formData.start_km) : null,
-      fuel_liters: formData.fuel_liters ? Number(formData.fuel_liters) : null,
-      fuel_cost: formData.fuel_cost ? Number(formData.fuel_cost) : null,
-      cargo_weight: formData.cargo_weight ? Number(formData.cargo_weight) : null,
-      subsistence_allowance: subsistenceAllowance
-    };
+    const submitData = { ...formData };
+    // Clean empty strings for optional fields
+    Object.keys(submitData).forEach(key => {
+      if (typeof submitData[key] === 'string' && submitData[key].trim() === '') {
+        submitData[key] = null;
+      }
+    });
+    // Convert numeric fields
+    submitData.planned_stops = formData.planned_stops ? Number(formData.planned_stops) : null;
+    submitData.completed_stops = formData.completed_stops ? Number(formData.completed_stops) : null;
+    submitData.start_km = formData.start_km ? Number(formData.start_km) : null;
+    submitData.end_km = formData.end_km ? Number(formData.end_km) : null;
+    submitData.total_km = formData.start_km && formData.end_km ? Number(formData.end_km) - Number(formData.start_km) : null;
+    submitData.fuel_liters = formData.fuel_liters ? Number(formData.fuel_liters) : null;
+    submitData.fuel_cost = formData.fuel_cost ? Number(formData.fuel_cost) : null;
+    submitData.cargo_weight = formData.cargo_weight ? Number(formData.cargo_weight) : null;
+    submitData.subsistence_allowance = subsistenceAllowance;
 
     if (selectedTrip) {
       updateMutation.mutate({ id: selectedTrip.id, data: submitData });
