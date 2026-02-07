@@ -52,6 +52,12 @@ export default function EmployeeReport() {
 
   const weekEnd = useMemo(() => endOfISOWeek(weekStart), [weekStart]);
 
+  // Fetch PakketDistributie employees for validation
+  const { data: pdEmployees = [] } = useQuery({
+    queryKey: ['pd-employees'],
+    queryFn: () => base44.entities.Employee.filter({ department: 'PakketDistributie', status: 'Actief' }),
+  });
+
   // Fetch KPI data for selected week
   const { data: kpiData = [], isLoading: loadingKPI } = useQuery({
     queryKey: ['employee-kpi', weekNum, yearNum],
@@ -290,6 +296,7 @@ export default function EmployeeReport() {
                   tiModelRoutes={tiModelRoutes}
                   articles={articles}
                   weekStart={weekStart}
+                  pdEmployees={pdEmployees}
                 />
               )}
             </CardContent>
@@ -308,7 +315,7 @@ export default function EmployeeReport() {
               {loadingKPI ? (
                 <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-10" />)}</div>
               ) : (
-                <KPITable kpiData={filteredKpiData} />
+                <KPITable kpiData={filteredKpiData} pdEmployees={pdEmployees} />
               )}
             </CardContent>
           </Card>
