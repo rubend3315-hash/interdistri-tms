@@ -17,6 +17,7 @@ function pctColor(val, threshold = 0.95) {
 
 export default function EmployeeYearOverview({ employeeName, year }) {
   const yearNum = parseInt(year);
+  const showAll = !employeeName || employeeName === 'all';
 
   const { data: allKpi = [], isLoading } = useQuery({
     queryKey: ['employee-kpi-year', yearNum],
@@ -25,13 +26,35 @@ export default function EmployeeYearOverview({ employeeName, year }) {
 
   // Filter for selected employee
   const employeeKpi = useMemo(() => {
-    if (!employeeName) return [];
+    if (showAll) return [];
     return allKpi
       .filter(k => k.medewerker_naam === employeeName)
       .sort((a, b) => a.week - b.week);
-  }, [allKpi, employeeName]);
+  }, [allKpi, employeeName, showAll]);
 
-  // Calculate averages
+  // All-employees summary: per employee, calculate averages across all weeks
+  const allEmployeeSummary = useMemo(() => {
+    if (!showAll || allKpi.length === 0) return [];
+    const grouped = {};
+    allKpi.forEach(k => {
+      const name = k.medewerker_naam;
+      if (!name) return;
+      if (!grouped[name]) grouped[name] = [];
+      grouped[name].push(k);
+    });
+
+    const fields = ['tvi_dag', 'tvi_avond', 'uitreiklocatie', 'vr_distributie', 'scankwaliteit', 'pba_bezorgers', 'hitrate'];
+    return Object.entries(grouped).map(([name, rows]) => {
+      const avgs = {};
+      fields.forEach(f => {
+        const vals = rows.map(r => r[f]).filter(v => v != null);
+        avgs[f] = vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+      });
+      return { name, weeks: rows.length, ...avgs };
+    }).sort((a, b) => (b.hitrate ?? 0) - (a.hitrate ?? 0));
+  }, [allKpi, showAll]);
+
+  // Calculate averages for single employee
   const averages = useMemo(() => {
     if (employeeKpi.length === 0) return null;
     const fields = ['tvi_dag', 'tvi_avond', 'uitreiklocatie', 'vr_distributie', 'scankwaliteit', 'pba_bezorgers', 'hitrate'];
@@ -47,10 +70,48 @@ export default function EmployeeYearOverview({ employeeName, year }) {
     return <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-10" />)}</div>;
   }
 
-  if (!employeeName) {
-    return <p className="text-slate-500 text-sm py-4">Selecteer een medewerker om het jaaroverzicht te bekijken.</p>;
+  // All employees overview
+  if (showAll) {
+    if (allEmployeeSummary.length === 0) {
+      return <p className="text-slate-500 text-sm py-4">Geen KPI data beschikbaar voor {yearNum}.</p>;
+    }
+    return (
+      <div className="overflow-x-auto border border-slate-200 rounded-lg">
+        <table className="w-full text-sm">
+          <thead className="bg-[#2c3e6b] text-white">
+            <tr>
+              <th className="text-left py-2.5 px-3 font-medium">Medewerker</th>
+              <th className="text-center py-2.5 px-3 font-medium">Weken</th>
+              <th className="text-right py-2.5 px-3 font-medium">TVI Dag</th>
+              <th className="text-right py-2.5 px-3 font-medium">TVI Avond</th>
+              <th className="text-right py-2.5 px-3 font-medium">Uitreiklocatie</th>
+              <th className="text-right py-2.5 px-3 font-medium">Vr Distributie</th>
+              <th className="text-right py-2.5 px-3 font-medium">Scankwaliteit</th>
+              <th className="text-right py-2.5 px-3 font-medium">PBA bezorgers</th>
+              <th className="text-right py-2.5 px-3 font-medium">Hitrate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allEmployeeSummary.map((row, idx) => (
+              <tr key={row.name} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-blue-50 transition-colors`}>
+                <td className="py-2 px-3 font-medium text-slate-800">{row.name}</td>
+                <td className="py-2 px-3 text-center text-slate-600">{row.weeks}</td>
+                <td className={`py-2 px-3 text-right ${pctColor(row.tvi_dag)}`}>{pct(row.tvi_dag)}</td>
+                <td className={`py-2 px-3 text-right ${pctColor(row.tvi_avond)}`}>{pct(row.tvi_avond)}</td>
+                <td className={`py-2 px-3 text-right ${pctColor(row.uitreiklocatie)}`}>{pct(row.uitreiklocatie)}</td>
+                <td className={`py-2 px-3 text-right ${pctColor(row.vr_distributie, 0.01)}`}>{pct(row.vr_distributie)}</td>
+                <td className={`py-2 px-3 text-right ${pctColor(row.scankwaliteit)}`}>{pct(row.scankwaliteit)}</td>
+                <td className={`py-2 px-3 text-right ${pctColor(row.pba_bezorgers)}`}>{pct(row.pba_bezorgers)}</td>
+                <td className={`py-2 px-3 text-right ${pctColor(row.hitrate)}`}>{pct(row.hitrate)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
   }
 
+  // Single employee view
   if (employeeKpi.length === 0) {
     return <p className="text-slate-500 text-sm py-4">Geen KPI data beschikbaar voor {employeeName} in {yearNum}.</p>;
   }

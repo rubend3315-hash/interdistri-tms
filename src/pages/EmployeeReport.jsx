@@ -330,11 +330,7 @@ export default function EmployeeReport() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {selectedEmployee === "all" ? (
-                <p className="text-slate-500 text-sm py-4">Selecteer een medewerker in het filter hierboven om het jaaroverzicht te bekijken.</p>
-              ) : (
-                <EmployeeYearOverview employeeName={selectedEmployee} year={selectedYear} />
-              )}
+              <EmployeeYearOverview employeeName={selectedEmployee} year={selectedYear} />
             </CardContent>
           </Card>
         </TabsContent>
