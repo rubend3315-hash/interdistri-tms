@@ -20,11 +20,8 @@ import {
   Phone,
   Mail,
   MapPin,
-  Edit,
   Package,
   ChevronRight,
-  Trash2,
-  Upload,
   X
 } from "lucide-react";
 

@@ -18,7 +18,6 @@ import {
   FileText,
   Car,
   Calendar,
-  Trash2,
   AlertTriangle
 } from "lucide-react";
 

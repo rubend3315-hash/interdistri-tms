@@ -18,8 +18,7 @@ import {
   FolderKanban,
   Building2,
   Calendar,
-  Euro,
-  Trash2
+  Euro
 } from "lucide-react";
 
 const statuses = ["Actief", "Voltooid", "Gepauzeerd", "Geannuleerd"];

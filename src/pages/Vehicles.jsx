@@ -20,7 +20,6 @@ import {
   Calendar,
   Gauge,
   Fuel,
-  Edit,
   Trash2,
   FileText,
   AlertTriangle
