@@ -40,7 +40,7 @@ function SingleKPITooltip({ active, payload, label, kpiLabel, color }) {
   );
 }
 
-function KPIMiniCard({ field, data, showAll }) {
+function KPIMiniCard({ field, data, showAll, doelValue }) {
   const vals = data.map(d => d[field.key]).filter(v => v != null);
   if (vals.length === 0) return null;
 
@@ -84,6 +84,11 @@ function KPIMiniCard({ field, data, showAll }) {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">gem. {pct(avg)}</p>
+          {doelValue != null && (
+            <p className={`text-xs font-medium mt-0.5 ${last >= doelValue ? 'text-green-600' : 'text-red-500'}`}>
+              doel: {pct(doelValue)}
+            </p>
+          )}
         </div>
       </div>
 
@@ -112,14 +117,22 @@ function KPIMiniCard({ field, data, showAll }) {
               tickLine={false}
             />
             <Tooltip content={<SingleKPITooltip kpiLabel={field.label} color={field.color} />} />
-            {field.threshold > 0.5 && (
+            {doelValue != null ? (
+              <ReferenceLine
+                y={doelValue}
+                stroke="#f59e0b"
+                strokeDasharray="6 3"
+                strokeWidth={1.5}
+                label={{ value: `Doel ${pct(doelValue)}`, position: "right", fontSize: 9, fill: "#d97706" }}
+              />
+            ) : field.threshold > 0.5 ? (
               <ReferenceLine
                 y={field.threshold}
                 stroke="#94a3b8"
                 strokeDasharray="4 4"
                 strokeWidth={1}
               />
-            )}
+            ) : null}
             <Area
               type="monotone"
               dataKey={field.key}
@@ -156,7 +169,7 @@ function ComparisonTooltip({ active, payload, label }) {
   );
 }
 
-export default function KPITrendCharts({ employeeName, year }) {
+export default function KPITrendCharts({ employeeName, year, kpiDoelen = [], weekNum }) {
   const yearNum = parseInt(year);
   const showAll = !employeeName || employeeName === "all";
   const [selectedKPI, setSelectedKPI] = useState("hitrate");
@@ -164,6 +177,12 @@ export default function KPITrendCharts({ employeeName, year }) {
   const { data: allKpi = [], isLoading } = useQuery({
     queryKey: ["employee-kpi-year", yearNum],
     queryFn: () => base44.entities.EmployeeKPI.filter({ year: yearNum }),
+  });
+
+  // Fetch all doelen for the year
+  const { data: allDoelen = [] } = useQuery({
+    queryKey: ["kpi-doelen-year", yearNum],
+    queryFn: () => base44.entities.KPIDoel.filter({ jaar: yearNum }),
   });
 
   const employeeTrendData = useMemo(() => {
