@@ -350,6 +350,10 @@ export default function HelpPage() {
                   <li>✓ Excel import van klantdata</li>
                   <li>✓ Berekeningen en omzetoverzicht</li>
                   <li>✓ Import historie en rapportage</li>
+                  <li>✓ <strong>PostNL Berekeningen:</strong> Weekrapport, Besteltijd & Uurtarief, Samenvatting en Activiteitenrapport</li>
+                  <li>✓ Auto-detectie laatste import — opent direct het rapport</li>
+                  <li>✓ Dagfilter in Activiteitenrapport (standaard laatste importdag)</li>
+                  <li>✓ Print / PDF export per rapporttype</li>
                 </ul>
               </CardContent>
             </Card>
@@ -1428,6 +1432,131 @@ export default function HelpPage() {
                       <li>• Koppel kolommen aan velden</li>
                       <li>• Bereken automatisch omzet op basis van artikelprijzen</li>
                     </ul>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* PostNL Berekeningen Handleiding */}
+            <AccordionItem value="postnl-calculations-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Building2 className="w-4 h-4 mr-2" />
+                Hoe gebruik ik PostNL Berekeningen?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Overzicht</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      De Berekeningen-tab bij klant PostNL biedt vier rapporttypes die automatisch worden gegenereerd op basis van geïmporteerde PostNL data. Bij het openen wordt automatisch de week van de <strong>laatste import</strong> geselecteerd en het Activiteitenrapport getoond.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">1. Automatische weekselectie</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Je hoeft niet zelf een week te kiezen. Het systeem:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Detecteert automatisch de <strong>meest recente datum</strong> in de geïmporteerde data</li>
+                      <li>• Selecteert het bijbehorende <strong>jaar en weeknummer</strong></li>
+                      <li>• Vult start- en einddatum automatisch in</li>
+                      <li>• Opent direct het <strong>Activiteitenrapport</strong></li>
+                    </ul>
+                    <p className="text-sm text-slate-600 mt-2">
+                      Je kunt altijd handmatig een ander jaar of week kiezen en op "Uitvoeren" klikken.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">2. Weekrapport</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Toont een gedetailleerd omzetoverzicht per dag:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Overzicht per chauffeur en rit met stops, stuks, BML, PBA en collectie</li>
+                      <li>• Automatische berekening van <strong>stoptarief, stukstarief, BML-tarief, PBA-tarief en collectietarief</strong></li>
+                      <li>• Totale <strong>omzet per dag en per week</strong></li>
+                      <li>• <strong>Maandagtarief</strong> wordt apart berekend (apart stopsartikel)</li>
+                      <li>• Filter op: Hele week, Alleen Maandag, of Dinsdag t/m Zaterdag</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">3. Besteltijd & Uurtarief</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Analyseert de efficiency per rit:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Besteltijd norm, bruto en netto per rit</li>
+                      <li>• Voorbereiding en totale rittijd</li>
+                      <li>• Stops en stuks per rit</li>
+                      <li>• <strong>Omzet en uurtarief</strong> per rit</li>
+                      <li>• Sorteerbaar op route of chauffeur</li>
+                      <li>• Koppeling met <strong>TI-Model Routes</strong> voor norm per uur</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">4. Samenvatting per week</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Geeft een geaggregeerd overzicht:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Groepeerbaar op <strong>route</strong> of <strong>chauffeur</strong></li>
+                      <li>• Gemiddelde besteltijd, stops, stuks per groep</li>
+                      <li>• Totale en gemiddelde omzet en uurtarief</li>
+                      <li>• Weekoverzicht met vergelijking tussen groepen</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">5. Activiteitenrapport</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Detailoverzicht van dagelijkse activiteiten:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Toont standaard <strong>alleen de laatste importdag</strong></li>
+                      <li>• <strong>Dagfilter</strong>: selecteer een specifieke dag of bekijk de hele week</li>
+                      <li>• Kolommen: ritnaam, chauffeur, totaal rit, geen scan, besteltijden, stops, stuks en meer</li>
+                      <li>• <strong>Totalen onderaan</strong> voor alle zichtbare kolommen</li>
+                      <li>• Knop "Toon hele week" om de dagfilter te resetten</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">6. Tarieven en artikelen</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Onder het rapport wordt een overzicht getoond van de gebruikte tarieven:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Alle actieve artikelen met hun huidige prijs</li>
+                      <li>• Prijzen worden bepaald op basis van de <strong>prijsregels en geldigheidsperiode</strong></li>
+                      <li>• Beheer artikelen en prijsregels via het tabblad "Artikelen" bij de klant</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">7. Print / PDF</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Elk rapport kan worden afgedrukt of als PDF worden opgeslagen:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Klik op de knop <strong>"Print / PDF"</strong> rechtsboven</li>
+                      <li>• Alle filters en navigatie worden verborgen bij het printen</li>
+                      <li>• Het rapport wordt netjes opgemaakt voor A4 formaat</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>Tip:</strong> De berekeningen gebruiken de artikelprijzen die je hebt ingesteld bij de klant. Zorg ervoor dat prijsregels actueel zijn en de juiste geldigheidsperiode hebben.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> Het maandagtarief voor stops wordt apart berekend. Zorg dat het artikel "Aantal afgeleverd - Stops Maandagtarief" is aangemaakt bij de klant.
+                    </p>
                   </div>
                 </div>
               </AccordionContent>
