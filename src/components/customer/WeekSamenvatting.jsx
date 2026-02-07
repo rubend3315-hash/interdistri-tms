@@ -218,7 +218,7 @@ export default function WeekSamenvatting({ rows, tiModelRoutes = [] }) {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-3 mb-3 print:hidden">
         <span className="text-sm font-medium text-slate-700">Weergave per:</span>
         <Select value={viewBy} onValueChange={setViewBy}>
           <SelectTrigger className="w-40">
