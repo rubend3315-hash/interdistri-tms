@@ -198,6 +198,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
               <th className="text-right py-2 px-2 font-medium text-slate-600">Norm/besteluur</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Werkelijk/uur</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Norm gehaald</th>
+              <th className="text-right py-2 px-2 font-medium text-slate-600">Hitrate</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Omzet</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Uurtarief</th>
             </tr>
@@ -221,6 +222,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                     const besteltijdUren = parseTimeToHours(r.besteltijdNetto);
                     const actualPerHour = besteltijdUren > 0 ? (r.aantalRouteStops || 0) / besteltijdUren : 0;
                     const normGehaald = normPerBesteluur && actualPerHour > 0 ? actualPerHour >= normPerBesteluur : null;
+                    const hitrate = r.aantalRouteStops > 0 ? (r.succesvolleStops || 0) / r.aantalRouteStops : 0;
 
                     return (
                       <tr key={idx} className="border-b hover:bg-slate-50">
@@ -243,6 +245,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                             <span className="text-red-600 font-semibold">✗ Nee</span>
                           )}
                         </td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{hitrate > 0 ? `${(hitrate * 100).toFixed(1)}%` : '-'}</td>
                         <td className="py-1.5 px-2 text-right font-semibold text-slate-900">{fmt(r.omzet)}</td>
                         <td className={`py-1.5 px-2 text-right font-semibold ${uurtarief > 45 ? 'text-green-700' : uurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{uurtarief > 0 ? fmt(uurtarief) : '-'}</td>
                       </tr>
