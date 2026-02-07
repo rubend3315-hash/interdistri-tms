@@ -255,7 +255,7 @@ export default function Employees() {
                       </div>
                       <div>
                         <CardTitle className="text-lg">
-                          {employee.first_name} {employee.last_name}
+                          {getFullName(employee)}
                         </CardTitle>
                         <p className="text-sm text-slate-500">{employee.function}</p>
                       </div>
