@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, Printer, Users, BarChart3, List, CalendarDays } from "lucide-react";
+import { Upload, Printer, Users, BarChart3, List, CalendarDays, TrendingUp } from "lucide-react";
 import KPIImportOverview from "@/components/employee-report/KPIImportOverview";
 import { getYear, getISOWeek, startOfISOWeek, endOfISOWeek, format, setISOWeek, setYear as setDateYear } from "date-fns";
 import { parseTimeToHours } from "@/components/customer/BesteltijdReport";
@@ -16,6 +16,7 @@ import KPIImportDialog from "@/components/employee-report/KPIImportDialog";
 import KPITable from "@/components/employee-report/KPITable";
 import EmployeeSummaryTable from "@/components/employee-report/EmployeeSummaryTable";
 import EmployeeYearOverview from "@/components/employee-report/EmployeeYearOverview";
+import KPITrendCharts from "@/components/employee-report/KPITrendCharts";
 
 function parseDatum(datumStr) {
   if (!datumStr) return null;
@@ -269,6 +270,9 @@ export default function EmployeeReport() {
           <TabsTrigger value="year" className="gap-2">
             <CalendarDays className="w-4 h-4" /> Jaaroverzicht
           </TabsTrigger>
+          <TabsTrigger value="trends" className="gap-2">
+            <TrendingUp className="w-4 h-4" /> Trends
+          </TabsTrigger>
           <TabsTrigger value="imports" className="gap-2">
             <List className="w-4 h-4" /> KPI Imports
           </TabsTrigger>
@@ -331,6 +335,19 @@ export default function EmployeeReport() {
             </CardHeader>
             <CardContent>
               <EmployeeYearOverview employeeName={selectedEmployee} year={selectedYear} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="trends" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                KPI Trends {yearNum}
+                {selectedEmployee !== "all" ? ` - ${selectedEmployee}` : ' - Team'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <KPITrendCharts employeeName={selectedEmployee} year={selectedYear} />
             </CardContent>
           </Card>
         </TabsContent>
