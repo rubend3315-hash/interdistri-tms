@@ -15,6 +15,7 @@ import WeekReportTable from "./WeekReportTable";
 import BesteltijdReport, { parseTimeToHours } from "./BesteltijdReport";
 import WeekSamenvatting from "./WeekSamenvatting";
 import ActiviteitenReport from "./ActiviteitenReport";
+import TrendReport from "./TrendReport";
 
 const DAY_NAMES = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
 
@@ -389,6 +390,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
             <TabsTrigger value="samenvatting">Samenvatting per week</TabsTrigger>
             <TabsTrigger value="activiteiten">Activiteitenrapport</TabsTrigger>
+            <TabsTrigger value="trends">Trends</TabsTrigger>
           </TabsList>
           {calculated && (
             <Button
@@ -534,6 +536,17 @@ export default function CalculationsTab({ customerId }) {
                 </CardHeader>
                 <CardContent>
                   <ActiviteitenReport weekData={weekData} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            {/* TRENDS TAB */}
+            <TabsContent value="trends" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Trend Overzicht</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <TrendReport rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
                 </CardContent>
               </Card>
             </TabsContent>
