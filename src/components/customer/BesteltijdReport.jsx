@@ -217,7 +217,14 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
               return (
                 <React.Fragment key={`week-${wk}`}>
                   {groupRows.map((r, idx) => {
-                    const uurtarief = r.totaalRitUren > 0 ? r.omzet / r.totaalRitUren : 0;
+                    let effectieveRitUren = r.totaalRitUren || 0;
+                    if (effectieveRitUren <= 0) {
+                      const tiRouteForUren = findTiRoute(r.route);
+                      if (tiRouteForUren && tiRouteForUren.total_time_hours > 0) {
+                        effectieveRitUren = tiRouteForUren.total_time_hours;
+                      }
+                    }
+                    const uurtarief = effectieveRitUren > 0 ? r.omzet / effectieveRitUren : 0;
                     const tiRoute = findTiRoute(r.route);
                     const normPerBesteluur = tiRoute?.manual_norm_per_hour || tiRoute?.calculated_norm_per_hour || null;
                     const besteltijdUren = parseTimeToHours(r.besteltijdNetto);
