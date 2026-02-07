@@ -195,7 +195,7 @@ export default function ActiviteitenReport({ weekData }) {
                 <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Voorbereiding, aan-/afrijtijd en afhandeling'])}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Totaal rit'])}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal tijdens route - stuks']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal tijdens route - stops']) || 0}</td>
+                <td className={`py-1.5 px-2 text-right font-medium ${(Number(r['Aantal tijdens route - stops']) || 0) >= 150 ? 'text-emerald-600' : 'text-red-600'}`}>{Number(r['Aantal tijdens route - stops']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stops waarvoor geen aanbiedpoging is uitgevoerd']) || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal bij terugkomst - stops']) || 0}</td>
