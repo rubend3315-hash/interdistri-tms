@@ -616,7 +616,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Voorletter(s)</Label>
             <Input value={formData.initials} readOnly />
@@ -624,6 +624,10 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
           <div className="space-y-2">
             <Label>Voornaam</Label>
             <Input value={formData.first_name} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>Tussenvoegsel</Label>
+            <Input value={formData.prefix} readOnly />
           </div>
           <div className="space-y-2">
             <Label>Achternaam</Label>
