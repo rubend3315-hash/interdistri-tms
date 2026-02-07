@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, Package, MapPin, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { TrendingUp, Package, MapPin, Plus, X } from "lucide-react";
 import { getISOWeek, getYear, parseISO, format } from "date-fns";
 import DailyTrendChart from "@/components/werkaanbod/DailyTrendChart";
 import WeeklyTrendChart from "@/components/werkaanbod/WeeklyTrendChart";
@@ -25,7 +25,6 @@ function parseDatum(datumStr) {
 export default function WerkaanbodTab({ importResults = [] }) {
   const currentYear = getYear(new Date());
   const [selectedYears, setSelectedYears] = useState([currentYear, currentYear - 1]);
-  const [selectedWeek, setSelectedWeek] = useState(getISOWeek(new Date()));
   const [subTab, setSubTab] = useState("daily");
 
   // Parse all import data into chart-ready format
@@ -71,9 +70,6 @@ export default function WerkaanbodTab({ importResults = [] }) {
     if (selectedYears.length <= 1) return;
     setSelectedYears(prev => prev.filter(y => y !== year));
   };
-
-  const prevWeek = () => setSelectedWeek(w => w > 1 ? w - 1 : 53);
-  const nextWeek = () => setSelectedWeek(w => w < 53 ? w + 1 : 1);
 
   if (parsedData.length === 0) {
     return <p className="text-slate-500 text-sm py-4">Geen importdata beschikbaar voor werkaanbod trends.</p>;
