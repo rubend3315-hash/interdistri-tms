@@ -72,14 +72,51 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
     return sorted;
   }, [rows, sortBy]);
 
-  const totals = useMemo(() => {
-    if (!rows || rows.length === 0) return null;
-    return rows.reduce((acc, r) => ({
+  // Group rows by week number (from datum DD-MM-YYYY)
+  const getWeekNumber = (datumStr) => {
+    if (!datumStr) return null;
+    const parts = datumStr.match(/(\d{2})-(\d{2})-(\d{4})/);
+    if (!parts) return null;
+    const d = new Date(parseInt(parts[3]), parseInt(parts[2]) - 1, parseInt(parts[1]));
+    // ISO week number
+    const tmp = new Date(d.valueOf());
+    tmp.setDate(tmp.getDate() + 3 - ((tmp.getDay() + 6) % 7));
+    const week1 = new Date(tmp.getFullYear(), 0, 4);
+    return 1 + Math.round(((tmp.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+  };
+
+  const weekGroups = useMemo(() => {
+    if (!sortedRows || sortedRows.length === 0) return {};
+    const groups = {};
+    sortedRows.forEach(r => {
+      const wk = getWeekNumber(r.datum) || 0;
+      if (!groups[wk]) groups[wk] = [];
+      groups[wk].push(r);
+    });
+    return groups;
+  }, [sortedRows]);
+
+  const calcGroupTotals = (groupRows) => {
+    const t = groupRows.reduce((acc, r) => ({
       totaalRitUren: acc.totaalRitUren + (r.totaalRitUren || 0),
       aantalRouteStops: acc.aantalRouteStops + (r.aantalRouteStops || 0),
       aantalRouteStuks: acc.aantalRouteStuks + (r.aantalRouteStuks || 0),
       omzet: acc.omzet + (r.omzet || 0),
     }), { totaalRitUren: 0, aantalRouteStops: 0, aantalRouteStuks: 0, omzet: 0 });
+    t.count = groupRows.length;
+    return t;
+  };
+
+  const totals = useMemo(() => {
+    if (!rows || rows.length === 0) return null;
+    const t = rows.reduce((acc, r) => ({
+      totaalRitUren: acc.totaalRitUren + (r.totaalRitUren || 0),
+      aantalRouteStops: acc.aantalRouteStops + (r.aantalRouteStops || 0),
+      aantalRouteStuks: acc.aantalRouteStuks + (r.aantalRouteStuks || 0),
+      omzet: acc.omzet + (r.omzet || 0),
+    }), { totaalRitUren: 0, aantalRouteStops: 0, aantalRouteStuks: 0, omzet: 0 });
+    t.count = rows.length;
+    return t;
   }, [rows]);
 
   const fmt = (v) => {
@@ -128,56 +165,112 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
             </tr>
           </thead>
           <tbody>
-            {sortedRows.map((r, idx) => {
-              const uurtarief = r.totaalRitUren > 0 ? r.omzet / r.totaalRitUren : 0;
-              const tiRoute = findTiRoute(r.route);
-              const normPerBesteluur = tiRoute?.manual_norm_per_hour || tiRoute?.calculated_norm_per_hour || null;
-              
-              // Calculate actual stops per besteltijd hour
-              const besteltijdUren = parseTimeToHours(r.besteltijdNetto);
-              const actualPerHour = besteltijdUren > 0 ? (r.aantalRouteStops || 0) / besteltijdUren : 0;
-              const normGehaald = normPerBesteluur && actualPerHour > 0 ? actualPerHour >= normPerBesteluur : null;
+            {Object.keys(weekGroups).sort((a, b) => Number(a) - Number(b)).map(wk => {
+              const groupRows = weekGroups[wk];
+              const wkTotals = calcGroupTotals(groupRows);
+              const wkUurtarief = wkTotals.totaalRitUren > 0 ? wkTotals.omzet / wkTotals.totaalRitUren : 0;
+              const wkGemStops = wkTotals.count > 0 ? wkTotals.aantalRouteStops / wkTotals.count : 0;
+              const wkGemStuks = wkTotals.count > 0 ? wkTotals.aantalRouteStuks / wkTotals.count : 0;
+              const wkGemOmzet = wkTotals.count > 0 ? wkTotals.omzet / wkTotals.count : 0;
+              const wkGemUren = wkTotals.count > 0 ? wkTotals.totaalRitUren / wkTotals.count : 0;
 
               return (
-                <tr key={idx} className="border-b hover:bg-slate-50">
-                  <td className="py-1.5 px-2 text-slate-700">{r.chauffeur}</td>
-                  <td className="py-1.5 px-2 text-slate-700">{r.route}</td>
-                  <td className="py-1.5 px-2 text-slate-500">{r.datum}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.besteltijdNorm)}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.besteltijdBruto)}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.besteltijdNetto)}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.voorbereiding)}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.totaalRit)}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStops || 0}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStuks || 0}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-700">{normPerBesteluur ? normPerBesteluur.toFixed(1) : '-'}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-700">{actualPerHour > 0 ? actualPerHour.toFixed(1) : '-'}</td>
-                  <td className="py-1.5 px-2 text-right">
-                    {normGehaald === null ? '-' : normGehaald ? (
-                      <span className="text-green-700 font-semibold">✓ Ja</span>
-                    ) : (
-                      <span className="text-red-600 font-semibold">✗ Nee</span>
-                    )}
-                  </td>
-                  <td className="py-1.5 px-2 text-right font-semibold text-slate-900">{fmt(r.omzet)}</td>
-                  <td className={`py-1.5 px-2 text-right font-semibold ${uurtarief > 45 ? 'text-green-700' : uurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{uurtarief > 0 ? fmt(uurtarief) : '-'}</td>
-                </tr>
+                <React.Fragment key={`week-${wk}`}>
+                  {groupRows.map((r, idx) => {
+                    const uurtarief = r.totaalRitUren > 0 ? r.omzet / r.totaalRitUren : 0;
+                    const tiRoute = findTiRoute(r.route);
+                    const normPerBesteluur = tiRoute?.manual_norm_per_hour || tiRoute?.calculated_norm_per_hour || null;
+                    const besteltijdUren = parseTimeToHours(r.besteltijdNetto);
+                    const actualPerHour = besteltijdUren > 0 ? (r.aantalRouteStops || 0) / besteltijdUren : 0;
+                    const normGehaald = normPerBesteluur && actualPerHour > 0 ? actualPerHour >= normPerBesteluur : null;
+
+                    return (
+                      <tr key={idx} className="border-b hover:bg-slate-50">
+                        <td className="py-1.5 px-2 text-slate-700">{r.chauffeur}</td>
+                        <td className="py-1.5 px-2 text-slate-700">{r.route}</td>
+                        <td className="py-1.5 px-2 text-slate-500">{r.datum}</td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.besteltijdNorm)}</td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.besteltijdBruto)}</td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.besteltijdNetto)}</td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.voorbereiding)}</td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.totaalRit)}</td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStops || 0}</td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStuks || 0}</td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{normPerBesteluur ? normPerBesteluur.toFixed(1) : '-'}</td>
+                        <td className="py-1.5 px-2 text-right text-slate-700">{actualPerHour > 0 ? actualPerHour.toFixed(1) : '-'}</td>
+                        <td className="py-1.5 px-2 text-right">
+                          {normGehaald === null ? '-' : normGehaald ? (
+                            <span className="text-green-700 font-semibold">✓ Ja</span>
+                          ) : (
+                            <span className="text-red-600 font-semibold">✗ Nee</span>
+                          )}
+                        </td>
+                        <td className="py-1.5 px-2 text-right font-semibold text-slate-900">{fmt(r.omzet)}</td>
+                        <td className={`py-1.5 px-2 text-right font-semibold ${uurtarief > 45 ? 'text-green-700' : uurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{uurtarief > 0 ? fmt(uurtarief) : '-'}</td>
+                      </tr>
+                    );
+                  })}
+                  {/* Week totaal */}
+                  <tr className="bg-blue-50 border-b-2 border-blue-200 font-semibold text-xs">
+                    <td className="py-1.5 px-2 text-blue-800" colSpan={2}>Week {wk} Totaal ({wkTotals.count} ritten)</td>
+                    <td className="py-1.5 px-2"></td>
+                    <td className="py-1.5 px-2" colSpan={4}></td>
+                    <td className="py-1.5 px-2 text-right text-blue-800">{wkTotals.totaalRitUren > 0 ? `${wkTotals.totaalRitUren.toFixed(1)} uur` : '-'}</td>
+                    <td className="py-1.5 px-2 text-right text-blue-800">{wkTotals.aantalRouteStops}</td>
+                    <td className="py-1.5 px-2 text-right text-blue-800">{wkTotals.aantalRouteStuks}</td>
+                    <td className="py-1.5 px-2" colSpan={3}></td>
+                    <td className="py-1.5 px-2 text-right text-blue-900">{fmt(wkTotals.omzet)}</td>
+                    <td className={`py-1.5 px-2 text-right ${wkUurtarief > 45 ? 'text-green-700' : wkUurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{wkUurtarief > 0 ? fmt(wkUurtarief) : '-'}</td>
+                  </tr>
+                  {/* Week gemiddelde */}
+                  <tr className="bg-blue-50/50 border-b-2 border-blue-300 text-xs italic">
+                    <td className="py-1.5 px-2 text-blue-700" colSpan={2}>Week {wk} Gemiddelde</td>
+                    <td className="py-1.5 px-2"></td>
+                    <td className="py-1.5 px-2" colSpan={4}></td>
+                    <td className="py-1.5 px-2 text-right text-blue-700">{wkGemUren > 0 ? `${wkGemUren.toFixed(1)} uur` : '-'}</td>
+                    <td className="py-1.5 px-2 text-right text-blue-700">{wkGemStops > 0 ? wkGemStops.toFixed(0) : '-'}</td>
+                    <td className="py-1.5 px-2 text-right text-blue-700">{wkGemStuks > 0 ? wkGemStuks.toFixed(0) : '-'}</td>
+                    <td className="py-1.5 px-2" colSpan={3}></td>
+                    <td className="py-1.5 px-2 text-right text-blue-700">{wkGemOmzet > 0 ? fmt(wkGemOmzet) : '-'}</td>
+                    <td className="py-1.5 px-2"></td>
+                  </tr>
+                </React.Fragment>
               );
             })}
           </tbody>
-          {totals && (
-            <tfoot className="bg-slate-50 font-semibold">
-              <tr>
-                <td className="py-2 px-2 text-slate-700" colSpan={7}>Totaal</td>
-                <td className="py-2 px-2 text-right text-slate-700">{totals.totaalRitUren > 0 ? `${totals.totaalRitUren.toFixed(1)} uur` : '-'}</td>
-                <td className="py-2 px-2 text-right text-slate-700">{totals.aantalRouteStops}</td>
-                <td className="py-2 px-2 text-right text-slate-700">{totals.aantalRouteStuks}</td>
-                <td className="py-2 px-2 text-right text-slate-700" colSpan={3}></td>
-                <td className="py-2 px-2 text-right font-bold text-slate-900">{fmt(totals.omzet)}</td>
-                <td className={`py-2 px-2 text-right font-bold ${totals.totaalRitUren > 0 && (totals.omzet / totals.totaalRitUren) > 45 ? 'text-green-700' : 'text-red-600'}`}>{totals.totaalRitUren > 0 ? fmt(totals.omzet / totals.totaalRitUren) : '-'}</td>
-              </tr>
-            </tfoot>
-          )}
+          {totals && (() => {
+            const totalUurtarief = totals.totaalRitUren > 0 ? totals.omzet / totals.totaalRitUren : 0;
+            const gemStops = totals.count > 0 ? totals.aantalRouteStops / totals.count : 0;
+            const gemStuks = totals.count > 0 ? totals.aantalRouteStuks / totals.count : 0;
+            const gemOmzet = totals.count > 0 ? totals.omzet / totals.count : 0;
+            const gemUren = totals.count > 0 ? totals.totaalRitUren / totals.count : 0;
+            return (
+              <tfoot>
+                <tr className="bg-slate-100 font-semibold border-t-2 border-slate-300">
+                  <td className="py-2 px-2 text-slate-700" colSpan={2}>Eindtotaal ({totals.count} ritten)</td>
+                  <td className="py-2 px-2"></td>
+                  <td className="py-2 px-2" colSpan={4}></td>
+                  <td className="py-2 px-2 text-right text-slate-700">{totals.totaalRitUren > 0 ? `${totals.totaalRitUren.toFixed(1)} uur` : '-'}</td>
+                  <td className="py-2 px-2 text-right text-slate-700">{totals.aantalRouteStops}</td>
+                  <td className="py-2 px-2 text-right text-slate-700">{totals.aantalRouteStuks}</td>
+                  <td className="py-2 px-2" colSpan={3}></td>
+                  <td className="py-2 px-2 text-right font-bold text-slate-900">{fmt(totals.omzet)}</td>
+                  <td className={`py-2 px-2 text-right font-bold ${totalUurtarief > 45 ? 'text-green-700' : 'text-red-600'}`}>{totalUurtarief > 0 ? fmt(totalUurtarief) : '-'}</td>
+                </tr>
+                <tr className="bg-slate-50 italic text-xs">
+                  <td className="py-2 px-2 text-slate-600" colSpan={2}>Gemiddelde per rit</td>
+                  <td className="py-2 px-2"></td>
+                  <td className="py-2 px-2" colSpan={4}></td>
+                  <td className="py-2 px-2 text-right text-slate-600">{gemUren > 0 ? `${gemUren.toFixed(1)} uur` : '-'}</td>
+                  <td className="py-2 px-2 text-right text-slate-600">{gemStops > 0 ? gemStops.toFixed(0) : '-'}</td>
+                  <td className="py-2 px-2 text-right text-slate-600">{gemStuks > 0 ? gemStuks.toFixed(0) : '-'}</td>
+                  <td className="py-2 px-2" colSpan={3}></td>
+                  <td className="py-2 px-2 text-right text-slate-600">{gemOmzet > 0 ? fmt(gemOmzet) : '-'}</td>
+                  <td className="py-2 px-2"></td>
+                </tr>
+              </tfoot>
+            );
+          })()}
         </table>
       </div>
     </div>
