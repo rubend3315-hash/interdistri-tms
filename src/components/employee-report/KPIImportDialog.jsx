@@ -5,8 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Loader2, CheckCircle } from "lucide-react";
+import { Upload, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import { getYear } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 import * as XLSX from "xlsx";
 
 function parsePercentage(val) {
@@ -27,6 +28,12 @@ export default function KPIImportDialog({ open, onOpenChange, customerId, onImpo
   const [year, setYear] = useState(String(getYear(new Date())));
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState(null);
+
+  // Fetch PakketDistributie employees for validation
+  const { data: pdEmployees = [] } = useQuery({
+    queryKey: ['pd-employees-validation'],
+    queryFn: () => base44.entities.Employee.filter({ department: 'PakketDistributie', status: 'Actief' }),
+  });
 
   const handleImport = async () => {
     if (!file) return;
@@ -82,7 +89,29 @@ export default function KPIImportDialog({ open, onOpenChange, customerId, onImpo
 
     await base44.entities.EmployeeKPI.bulkCreate(records);
 
-    setResult({ success: true, count: records.length, week: weekFromFile });
+    // Validate imported names against PakketDistributie employees
+    const pdNames = pdEmployees.map(e => {
+      const last = (e.last_name || '').trim();
+      const first = (e.first_name || '').trim();
+      // Build variations: "Achternaam V.", "V. Achternaam", "Achternaam Voornaam", etc.
+      const initial = first ? first.charAt(0) + '.' : '';
+      return [
+        `${last} ${initial}`.trim().toLowerCase(),
+        `${initial} ${last}`.trim().toLowerCase(),
+        `${last} ${first}`.trim().toLowerCase(),
+        `${first} ${last}`.trim().toLowerCase(),
+        last.toLowerCase(),
+      ];
+    });
+
+    const unmatchedNames = records
+      .map(r => r.medewerker_naam)
+      .filter(name => {
+        const n = name.toLowerCase().trim();
+        return !pdNames.some(variations => variations.some(v => v === n || n.includes(v) || v.includes(n)));
+      });
+
+    setResult({ success: true, count: records.length, week: weekFromFile, unmatchedNames });
     setImporting(false);
     queryClient.invalidateQueries({ queryKey: ['employee-kpi'] });
     // Notify parent of the imported week so the page can auto-select it
@@ -126,9 +155,22 @@ export default function KPIImportDialog({ open, onOpenChange, customerId, onImpo
             <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{result.error}</div>
           )}
           {result?.success && (
-            <div className="text-sm text-green-700 bg-green-50 p-3 rounded-lg flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              {result.count} medewerker KPI's geïmporteerd voor week {result.week}
+            <div className="space-y-2">
+              <div className="text-sm text-green-700 bg-green-50 p-3 rounded-lg flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                {result.count} medewerker KPI's geïmporteerd voor week {result.week}
+              </div>
+              {result.unmatchedNames?.length > 0 && (
+                <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+                  <div className="flex items-center gap-2 font-medium mb-1">
+                    <AlertTriangle className="w-4 h-4" />
+                    {result.unmatchedNames.length} naam/namen niet gevonden in afdeling PakketDistributie:
+                  </div>
+                  <ul className="list-disc ml-6 mt-1 space-y-0.5">
+                    {result.unmatchedNames.map(n => <li key={n}>{n}</li>)}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
