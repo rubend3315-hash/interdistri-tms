@@ -769,7 +769,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="space-y-2">
           <Label>Voorletter(s)</Label>
           <Input
@@ -784,6 +784,14 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
             value={formData.first_name}
             onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
             required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Tussenvoegsel</Label>
+          <Input
+            value={formData.prefix}
+            onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
+            placeholder="bijv. van, de"
           />
         </div>
         <div className="space-y-2">
