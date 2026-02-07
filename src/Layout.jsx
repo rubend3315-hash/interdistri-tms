@@ -26,8 +26,7 @@ import {
   Settings,
   Bell,
   CircleDot,
-  Mail,
-  TrendingUp
+  Mail
 } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import { cn } from "@/lib/utils";
@@ -68,8 +67,7 @@ const menuItems = [
     items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
       { name: "Medewerkersrapport", icon: Users, page: "EmployeeReport" },
-      { name: "Werkaanbod", icon: TrendingUp, page: "Werkaanbod" },
-    ]
+      ]
   },
   {
     label: "Charters",
