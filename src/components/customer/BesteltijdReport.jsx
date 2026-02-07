@@ -160,7 +160,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                     )}
                   </td>
                   <td className="py-1.5 px-2 text-right font-semibold text-slate-900">{fmt(r.omzet)}</td>
-                  <td className="py-1.5 px-2 text-right font-semibold text-blue-700">{uurtarief > 0 ? fmt(uurtarief) : '-'}</td>
+                  <td className={`py-1.5 px-2 text-right font-semibold ${uurtarief > 45 ? 'text-green-700' : uurtarief > 0 ? 'text-red-600' : 'text-slate-700'}`}>{uurtarief > 0 ? fmt(uurtarief) : '-'}</td>
                 </tr>
               );
             })}
@@ -174,7 +174,7 @@ export default function BesteltijdReport({ rows, tiModelRoutes = [] }) {
                 <td className="py-2 px-2 text-right text-slate-700">{totals.aantalRouteStuks}</td>
                 <td className="py-2 px-2 text-right text-slate-700" colSpan={3}></td>
                 <td className="py-2 px-2 text-right font-bold text-slate-900">{fmt(totals.omzet)}</td>
-                <td className="py-2 px-2 text-right font-bold text-blue-700">{totals.totaalRitUren > 0 ? fmt(totals.omzet / totals.totaalRitUren) : '-'}</td>
+                <td className={`py-2 px-2 text-right font-bold ${totals.totaalRitUren > 0 && (totals.omzet / totals.totaalRitUren) > 45 ? 'text-green-700' : 'text-red-600'}`}>{totals.totaalRitUren > 0 ? fmt(totals.omzet / totals.totaalRitUren) : '-'}</td>
               </tr>
             </tfoot>
           )}
