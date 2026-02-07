@@ -15,15 +15,17 @@ export default function EmployeeSidebar({ employees, selectedEmployeeId, onSelec
     );
   };
 
+  const getFullName = (e) => [e.first_name, e.prefix, e.last_name].filter(Boolean).join(' ');
+
   const filteredEmployees = employees.filter(e => {
-    const name = `${e.first_name} ${e.last_name}`.toLowerCase();
+    const name = getFullName(e).toLowerCase();
     return name.includes(search.toLowerCase());
   });
 
   const grouped = departments.reduce((acc, dept) => {
     acc[dept] = filteredEmployees
       .filter(e => e.department === dept)
-      .sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
+      .sort((a, b) => getFullName(a).localeCompare(getFullName(b)));
     return acc;
   }, {});
 
@@ -68,7 +70,7 @@ export default function EmployeeSidebar({ employees, selectedEmployeeId, onSelec
                       : "text-slate-700"
                   )}
                 >
-                  ({emp.employee_number || '-'}) {emp.first_name} {emp.last_name}
+                  ({emp.employee_number || '-'}) {getFullName(emp)}
                 </button>
               ))}
             </div>
