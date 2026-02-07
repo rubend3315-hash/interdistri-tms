@@ -14,6 +14,7 @@ import { getValidPriceRule } from "@/components/utils/priceRuleUtils";
 import WeekReportTable from "./WeekReportTable";
 import BesteltijdReport, { parseTimeToHours } from "./BesteltijdReport";
 import WeekSamenvatting from "./WeekSamenvatting";
+import ActiviteitenReport from "./ActiviteitenReport";
 
 const DAY_NAMES = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
 
@@ -352,6 +353,7 @@ export default function CalculationsTab({ customerId }) {
               <TabsTrigger value="weekrapport">Weekrapport</TabsTrigger>
               <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
               <TabsTrigger value="samenvatting">Samenvatting per week</TabsTrigger>
+              <TabsTrigger value="activiteiten">Activiteitenrapport</TabsTrigger>
             </TabsList>
 
             {/* WEEK RAPPORT TAB */}
@@ -467,6 +469,17 @@ export default function CalculationsTab({ customerId }) {
                 </CardHeader>
                 <CardContent>
                   <WeekSamenvatting rows={besteltijdRows} tiModelRoutes={tiModelRoutes} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            {/* ACTIVITEITEN TAB */}
+            <TabsContent value="activiteiten" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Activiteitenrapport - Week {weekNumber}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ActiviteitenReport weekData={weekData} />
                 </CardContent>
               </Card>
             </TabsContent>
