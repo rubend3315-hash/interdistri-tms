@@ -94,7 +94,7 @@ export default function EmployeeSummaryTable({ reportRows = [], kpiData = [], ti
         uurtariefGehaald,
         kpi
       };
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    }).sort((a, b) => b.hitrate - a.hitrate);
   }, [reportRows, kpiData, tiModelRoutes, stopPrice]);
 
   if (chauffeurData.length === 0) {

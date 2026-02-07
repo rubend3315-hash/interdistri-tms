@@ -17,7 +17,7 @@ export default function KPITable({ kpiData }) {
     return <p className="text-slate-500 text-sm py-4">Geen KPI data beschikbaar voor deze week.</p>;
   }
 
-  const sorted = [...kpiData].sort((a, b) => (a.medewerker_naam || '').localeCompare(b.medewerker_naam || ''));
+  const sorted = [...kpiData].sort((a, b) => (b.hitrate || 0) - (a.hitrate || 0));
 
   return (
     <div className="overflow-x-auto border border-slate-200 rounded-lg">
