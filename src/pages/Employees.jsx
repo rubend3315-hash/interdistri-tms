@@ -489,6 +489,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
     employee_number: '',
     initials: '',
     first_name: '',
+    prefix: '',
     last_name: '',
     email: '',
     phone: '',
