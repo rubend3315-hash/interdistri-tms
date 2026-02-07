@@ -260,7 +260,11 @@ export default function TIModelRoutesTab({ customerId }) {
                   </td>
                 </tr>
               ) : (
-                routes.map((route) => (
+                [...routes].sort((a, b) => {
+                  const codeA = parseInt((a.route_code || '0').replace(/^0+/, '')) || 0;
+                  const codeB = parseInt((b.route_code || '0').replace(/^0+/, '')) || 0;
+                  return codeA - codeB;
+                }).map((route) => (
                   <tr key={route.id} className={`border-b hover:bg-slate-50 ${!route.is_active ? 'opacity-60' : ''}`}>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${route.is_active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'}`}>
