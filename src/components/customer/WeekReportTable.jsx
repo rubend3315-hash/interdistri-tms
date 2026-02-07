@@ -13,12 +13,14 @@ export default function WeekReportTable({ dayLabel, rows, bgColor = "bg-[#2c3e6b
     stuksGeleverd: acc.stuksGeleverd + (r.stuksGeleverd || 0),
     bml: acc.bml + (r.bml || 0),
     pbaBezorgd: acc.pbaBezorgd + (r.pbaBezorgd || 0),
+    collectie: acc.collectie + (r.collectie || 0),
     stoptarief: acc.stoptarief + (r.stoptarief || 0),
     stukstarief: acc.stukstarief + (r.stukstarief || 0),
     bmlTarief: acc.bmlTarief + (r.bmlTarief || 0),
     pbaTarief: acc.pbaTarief + (r.pbaTarief || 0),
+    collectTarief: acc.collectTarief + (r.collectTarief || 0),
     omzet: acc.omzet + (r.omzet || 0),
-  }), { succesvolleStops: 0, stuksGeleverd: 0, bml: 0, pbaBezorgd: 0, stoptarief: 0, stukstarief: 0, bmlTarief: 0, pbaTarief: 0, omzet: 0 });
+  }), { succesvolleStops: 0, stuksGeleverd: 0, bml: 0, pbaBezorgd: 0, collectie: 0, stoptarief: 0, stukstarief: 0, bmlTarief: 0, pbaTarief: 0, collectTarief: 0, omzet: 0 });
 
   const fmt = (v) => {
     if (v === 0 || v === undefined || v === null) return '-';
@@ -41,10 +43,12 @@ export default function WeekReportTable({ dayLabel, rows, bgColor = "bg-[#2c3e6b
               <th className="text-right py-2 px-2 font-medium text-slate-600">Stuks geleverd</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">BML</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">PBA Bezorgd</th>
+              <th className="text-right py-2 px-2 font-medium text-slate-600">Collectie</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Stoptarief</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Stukstarief</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">BMLtarief</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">PBAtarief</th>
+              <th className="text-right py-2 px-2 font-medium text-slate-600">Collectietarief</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Omzet</th>
             </tr>
           </thead>
@@ -58,10 +62,12 @@ export default function WeekReportTable({ dayLabel, rows, bgColor = "bg-[#2c3e6b
                 <td className="py-1.5 px-2 text-right text-slate-700">{r.stuksGeleverd || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{r.bml || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{r.pbaBezorgd || 0}</td>
+                <td className="py-1.5 px-2 text-right text-slate-700">{r.collectie || 0}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{fmt(r.stoptarief)}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{fmt(r.stukstarief)}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{fmt(r.bmlTarief)}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{fmt(r.pbaTarief)}</td>
+                <td className="py-1.5 px-2 text-right text-slate-700">{fmt(r.collectTarief)}</td>
                 <td className="py-1.5 px-2 text-right font-semibold text-slate-900">{fmt(r.omzet)}</td>
               </tr>
             ))}
@@ -73,10 +79,12 @@ export default function WeekReportTable({ dayLabel, rows, bgColor = "bg-[#2c3e6b
               <td className="py-2 px-2 text-right text-slate-700">{totals.stuksGeleverd}</td>
               <td className="py-2 px-2 text-right text-slate-700">{totals.bml}</td>
               <td className="py-2 px-2 text-right text-slate-700">{totals.pbaBezorgd}</td>
+              <td className="py-2 px-2 text-right text-slate-700">{totals.collectie}</td>
               <td className="py-2 px-2 text-right text-slate-700">{fmt(totals.stoptarief)}</td>
               <td className="py-2 px-2 text-right text-slate-700">{fmt(totals.stukstarief)}</td>
               <td className="py-2 px-2 text-right text-slate-700">{fmt(totals.bmlTarief)}</td>
               <td className="py-2 px-2 text-right text-slate-700">{fmt(totals.pbaTarief)}</td>
+              <td className="py-2 px-2 text-right text-slate-700">{fmt(totals.collectTarief)}</td>
               <td className="py-2 px-2 text-right font-bold text-slate-900">{fmt(totals.omzet)}</td>
             </tr>
           </tfoot>
