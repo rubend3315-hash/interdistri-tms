@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ import {
   AlertCircle,
   MapPin,
   FileText,
-  Clock,
   Heart,
   IdCard,
   User,
@@ -30,9 +29,7 @@ import {
 import { format, addMonths, isBefore } from 'date-fns';
 
 const departments = ['Management', 'Transport', 'PakketDistributie', 'Charters'];
-const contractTypes = ['Vast', 'Tijdelijk', 'Oproep', 'Uitzend'];
 const statuses = ['Actief', 'Inactief', 'Uit dienst'];
-const licenseCategories = ['B', 'C', 'CE', 'D', 'DE'];
 const functionOptions = [
   'Chauffeur',
   'Pakketbezorger',
@@ -88,11 +85,6 @@ export default function Employees() {
 
   const openNewDialog = () => {
     setSelectedEmployee(null);
-    setShowDialog(true);
-  };
-
-  const openEditDialog = (employee) => {
-    setSelectedEmployee(employee);
     setShowDialog(true);
   };
 
@@ -1376,12 +1368,6 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
       return (a.step || 0) - (b.step || 0);
     });
 
-  const calculateDaysPerWeek = () => {
-    const week1Days = Object.values(formData.week1).filter(Boolean).length;
-    const week2Days = Object.values(formData.week2).filter(Boolean).length;
-    return { week1Days, week2Days, avgDays: (week1Days + week2Days) / 2 };
-  };
-
   const calculateHoursPerDayWeek = (week) => {
     const daysChecked = Object.values(week).filter(Boolean).length;
     return daysChecked > 0 ? (formData.uren_per_week / daysChecked).toFixed(1) : 0;
@@ -1745,135 +1731,6 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) 
           </div>
 
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-              Annuleren
-            </Button>
-            <Button 
-              className="flex-1 bg-blue-900" 
-              onClick={() => onSave(formData)}
-              disabled={!formData.startdatum}
-            >
-              Opslaan
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function WeekroosterDialog({ open, onOpenChange, weekrooster, onSave, onDelete }) {
-  const [formData, setFormData] = useState(weekrooster || {
-    startdatum: '',
-    einddatum: '',
-    week1: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
-    week2: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
-    status: 'Actief'
-  });
-
-  useEffect(() => {
-    if (weekrooster) {
-      setFormData(weekrooster);
-    }
-  }, [weekrooster]);
-
-  const toggleDay = (week, day) => {
-    setFormData({
-      ...formData,
-      [week]: { ...formData[week], [day]: !formData[week][day] }
-    });
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Nieuw Weekrooster</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Startdatum *</Label>
-              <Input
-                type="date"
-                value={formData.startdatum}
-                onChange={(e) => setFormData({ ...formData, startdatum: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Einddatum</Label>
-              <Input
-                type="date"
-                value={formData.einddatum}
-                onChange={(e) => setFormData({ ...formData, einddatum: e.target.value })}
-              />
-              <p className="text-xs text-slate-500">Leeg laten voor doorlopend</p>
-            </div>
-          </div>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-blue-600">Week 1 (Oneven weken)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map(day => (
-                <label key={day} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.week1[day]}
-                    onChange={() => toggleDay('week1', day)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm capitalize">{day}</span>
-                </label>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-blue-600">Week 2 (Even weken)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'].map(day => (
-                <label key={day} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.week2[day]}
-                    onChange={() => toggleDay('week2', day)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm capitalize">{day}</span>
-                </label>
-              ))}
-            </CardContent>
-          </Card>
-
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Select 
-              value={formData.status || 'Actief'}
-              onValueChange={(v) => setFormData({ ...formData, status: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Actief">Actief</SelectItem>
-                <SelectItem value="Inactief">Inactief</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex gap-2">
-            {weekrooster?.index !== undefined && onDelete && (
-              <Button 
-                variant="destructive" 
-                onClick={() => onDelete(weekrooster.index)}
-              >
-                Inactiveren
-              </Button>
-            )}
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Annuleren
             </Button>
