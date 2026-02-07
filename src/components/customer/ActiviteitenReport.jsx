@@ -56,7 +56,7 @@ export default function ActiviteitenReport({ weekData }) {
       aantalPeriodesGeenScan: acc.aantalPeriodesGeenScan + (Number(r['Aantal periodes >15 min geen scan']) || 0),
       aantalTijdensRouteStuds: acc.aantalTijdensRouteStuds + (Number(r['Aantal tijdens route - stuks']) || 0),
       aantalTijdensRouteStops: acc.aantalTijdensRouteStops + (Number(r['Aantal tijdens route - stops']) || 0),
-      aantalStuksAangeboden: acc.aantalStuksAangeboden + (Number(r['Aantal stuks aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']) || 0),
+      aantalStopsGeenAanbiedpoging: acc.aantalStopsGeenAanbiedpoging + (Number(r['Aantal stops waarvoor geen aanbiedpoging is uitgevoerd']) || 0),
       aantalStopsAangeboden: acc.aantalStopsAangeboden + (Number(r['Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']) || 0),
       aantalBijTerugkomstStops: acc.aantalBijTerugkomstStops + (Number(r['Aantal bij terugkomst - stops']) || 0),
       aantalAfgeleverdStuks: acc.aantalAfgeleverdStuks + (Number(r['Aantal afgeleverd - stuks']) || 0),
@@ -68,7 +68,7 @@ export default function ActiviteitenReport({ weekData }) {
       aantalPeriodesGeenScan: 0,
       aantalTijdensRouteStuds: 0,
       aantalTijdensRouteStops: 0,
-      aantalStuksAangeboden: 0,
+      aantalStopsGeenAanbiedpoging: 0,
       aantalStopsAangeboden: 0,
       aantalBijTerugkomstStops: 0,
       aantalAfgeleverdStuks: 0,
@@ -181,7 +181,7 @@ export default function ActiviteitenReport({ weekData }) {
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalTijdensRouteStuds}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalTijdensRouteStops}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalStopsAangeboden}</td>
-                <td className="py-2 px-2 text-right text-slate-800">{totals.aantalStuksAangeboden}</td>
+                <td className="py-2 px-2 text-right text-slate-800">{totals.aantalStopsGeenAanbiedpoging}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalBijTerugkomstStops}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalAfgeleverdStuks}</td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.bml}</td>
