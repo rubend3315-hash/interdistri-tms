@@ -52,8 +52,10 @@ export default function BesteltijdReport({ rows }) {
     if (!rows || rows.length === 0) return null;
     return rows.reduce((acc, r) => ({
       totaalRitUren: acc.totaalRitUren + (r.totaalRitUren || 0),
+      aantalRouteStops: acc.aantalRouteStops + (r.aantalRouteStops || 0),
+      aantalRouteStuks: acc.aantalRouteStuks + (r.aantalRouteStuks || 0),
       omzet: acc.omzet + (r.omzet || 0),
-    }), { totaalRitUren: 0, omzet: 0 });
+    }), { totaalRitUren: 0, aantalRouteStops: 0, aantalRouteStuks: 0, omzet: 0 });
   }, [rows]);
 
   const fmt = (v) => {
@@ -92,6 +94,8 @@ export default function BesteltijdReport({ rows }) {
               <th className="text-right py-2 px-2 font-medium text-slate-600">Besteltijd Netto</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Voorbereiding</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Totaal Rit</th>
+              <th className="text-right py-2 px-2 font-medium text-slate-600">Route stops</th>
+              <th className="text-right py-2 px-2 font-medium text-slate-600">Route stuks</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Omzet</th>
               <th className="text-right py-2 px-2 font-medium text-slate-600">Uurtarief</th>
             </tr>
@@ -109,6 +113,8 @@ export default function BesteltijdReport({ rows }) {
                   <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.besteltijdNetto)}</td>
                   <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.voorbereiding)}</td>
                   <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r.totaalRit)}</td>
+                  <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStops || 0}</td>
+                  <td className="py-1.5 px-2 text-right text-slate-700">{r.aantalRouteStuks || 0}</td>
                   <td className="py-1.5 px-2 text-right font-semibold text-slate-900">{fmt(r.omzet)}</td>
                   <td className="py-1.5 px-2 text-right font-semibold text-blue-700">{uurtarief > 0 ? fmt(uurtarief) : '-'}</td>
                 </tr>
@@ -120,6 +126,8 @@ export default function BesteltijdReport({ rows }) {
               <tr>
                 <td className="py-2 px-2 text-slate-700" colSpan={7}>Totaal</td>
                 <td className="py-2 px-2 text-right text-slate-700">{totals.totaalRitUren > 0 ? `${totals.totaalRitUren.toFixed(1)} uur` : '-'}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{totals.aantalRouteStops}</td>
+                <td className="py-2 px-2 text-right text-slate-700">{totals.aantalRouteStuks}</td>
                 <td className="py-2 px-2 text-right font-bold text-slate-900">{fmt(totals.omzet)}</td>
                 <td className="py-2 px-2 text-right font-bold text-blue-700">{totals.totaalRitUren > 0 ? fmt(totals.omzet / totals.totaalRitUren) : '-'}</td>
               </tr>
