@@ -449,6 +449,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsTrigger value="routeoverzicht">Route Overzicht</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="werkaanbod">Werkaanbod</TabsTrigger>
+            <TabsTrigger value="dashboard-charts">📊 Dashboard</TabsTrigger>
           </TabsList>
           {calculated && (
             <Button
