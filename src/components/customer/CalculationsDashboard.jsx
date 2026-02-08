@@ -243,8 +243,8 @@ export default function CalculationsDashboard({ importResults, articlePrices, bu
     const pct = (c, p) => p > 0 ? ((c - p) / p) * 100 : 0;
 
     return {
-      currentLabel: `W${lastWeekKey.split('-W')[1]}`,
-      prevLabel: `W${prevWeekKey.split('-W')[1]}`,
+      currentLabel: `W${lastWeekKey.split('-W')[1]} '${lastWeekKey.split('-W')[0].slice(2)}`,
+      prevLabel: `W${prevWeekKey.split('-W')[1]} '${prevWeekKey.split('-W')[0].slice(2)}`,
       current,
       prev,
       rittenChange: pct(current.ritten, prev.ritten),
