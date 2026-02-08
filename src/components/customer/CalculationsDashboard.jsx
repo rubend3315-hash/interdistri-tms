@@ -220,13 +220,20 @@ export default function CalculationsDashboard({ importResults, articlePrices, se
     return [1, 2, 3, 4, 5, 6, 0].map(d => ({ ...dayMap[d], gemStops: dayMap[d].ritten > 0 ? Math.round(dayMap[d].stops / dayMap[d].ritten) : 0 }));
   }, [allRows]);
 
+  // Determine the active week key (from selection or fallback to latest)
+  const activeWeekKey = useMemo(() => {
+    if (selectedWeekKey && weekKeys.includes(selectedWeekKey)) return selectedWeekKey;
+    return weekKeys.length > 0 ? weekKeys[weekKeys.length - 1] : null;
+  }, [selectedWeekKey, weekKeys]);
+
   // 5. Periodenvergelijking
   const comparison = useMemo(() => {
-    if (weekKeys.length < 2) return null;
-    const lastWeekKey = weekKeys[weekKeys.length - 1];
+    if (!activeWeekKey || weekKeys.length < 2) return null;
+    const lastWeekKey = activeWeekKey;
     let prevWeekKey;
     if (compareMode === "vorige_week") {
-      prevWeekKey = weekKeys.length >= 2 ? weekKeys[weekKeys.length - 2] : null;
+      const idx = weekKeys.indexOf(lastWeekKey);
+      prevWeekKey = idx > 0 ? weekKeys[idx - 1] : null;
     } else {
       // Zelfde week vorig jaar
       const parts = lastWeekKey.split('-W');
