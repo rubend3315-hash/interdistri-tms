@@ -79,7 +79,7 @@ const fmtTime = (h) => {
   return `${hrs}:${String(mins).padStart(2, '0')}`;
 };
 
-export default function CalculationsDashboard({ importResults, articlePrices, buildReportRows }) {
+export default function CalculationsDashboard({ importResults, articlePrices, selectedWeekKey }) {
   const [compareMode, setCompareMode] = useState("vorige_week");
 
   // Parse all import data into flat rows
