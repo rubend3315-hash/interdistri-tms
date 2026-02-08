@@ -27,30 +27,46 @@ export default function WerkaanbodTab({ importResults = [] }) {
   const [selectedYears, setSelectedYears] = useState([currentYear, currentYear - 1]);
   const [subTab, setSubTab] = useState("daily");
 
-  // Parse all import data into chart-ready format
-  const parsedData = useMemo(() => {
-    return importResults.map(item => {
-      if (!item?.data) return null;
+  // Parse all import data into chart-ready format, deduplicating on ritnaam+datum
+  const { parsedData, duplicatesRemoved } = useMemo(() => {
+    const seen = new Set();
+    let dupes = 0;
+    const results = [];
+
+    for (const item of importResults) {
+      if (!item?.data) continue;
       const innerData = item.data.data || item.data;
-      if (!innerData) return null;
+      if (!innerData) continue;
 
       // Try multiple locations for the date field
       const rawDate = innerData['Datum'] || item.data.datum || item.datum;
       const dateObj = parseDatum(rawDate);
-      if (!dateObj) return null;
+      if (!dateObj) continue;
 
-      return {
+      const ritnaam = item.ritnaam || item.data.ritnaam || innerData['Ritnaam'] || '';
+      const dateStr = format(dateObj, 'yyyy-MM-dd');
+      const dedupeKey = `${ritnaam}||${dateStr}`;
+
+      if (seen.has(dedupeKey)) {
+        dupes++;
+        continue;
+      }
+      seen.add(dedupeKey);
+
+      results.push({
         date: dateObj,
-        dateStr: format(dateObj, 'yyyy-MM-dd'),
+        dateStr,
         year: getYear(dateObj),
         week: getISOWeek(dateObj),
         dayOfWeek: dateObj.getDay(),
         month: dateObj.getMonth(),
         stops: Number(innerData['Aantal tijdens route - stops']) || 0,
         stuks: Number(innerData['Aantal tijdens route - stuks']) || 0,
-        ritnaam: item.ritnaam || item.data.ritnaam || innerData['Ritnaam'] || '',
-      };
-    }).filter(Boolean);
+        ritnaam,
+      });
+    }
+
+    return { parsedData: results, duplicatesRemoved: dupes };
   }, [importResults]);
 
   // Available years from data
