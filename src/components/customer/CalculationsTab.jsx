@@ -18,6 +18,7 @@ import ActiviteitenReport from "./ActiviteitenReport";
 import TrendReport from "./TrendReport";
 import RouteOverview from "./RouteOverview";
 import WerkaanbodTab from "./WerkaanbodTab";
+import CalculationsDashboard from "./CalculationsDashboard";
 import DataRefreshIndicator from "@/components/DataRefreshIndicator";
 
 const DAY_NAMES = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
