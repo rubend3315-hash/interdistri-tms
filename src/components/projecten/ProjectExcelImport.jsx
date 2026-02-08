@@ -334,7 +334,7 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
       data: filteredData
     }));
 
-    setExtractedData({ rows: recordsToAdd, skippedDuplicates: duplicates.length, warnings });
+    setExtractedData({ rows: recordsToAdd, skippedDuplicates: duplicateCount.value, warnings });
     saveDataMutation.mutate(recordsToAdd);
   } catch (error) {
     setImportResult({
