@@ -71,12 +71,36 @@ export default function WerkaanbodTab({ importResults = [] }) {
     setSelectedYears(prev => prev.filter(y => y !== year));
   };
 
+  // Stats per year
+  const yearStats = useMemo(() => {
+    const stats = {};
+    parsedData.forEach(d => {
+      if (!stats[d.year]) stats[d.year] = { count: 0, minWeek: 53, maxWeek: 0 };
+      stats[d.year].count++;
+      if (d.week < stats[d.year].minWeek) stats[d.year].minWeek = d.week;
+      if (d.week > stats[d.year].maxWeek) stats[d.year].maxWeek = d.week;
+    });
+    return stats;
+  }, [parsedData]);
+
   if (parsedData.length === 0) {
     return <p className="text-slate-500 text-sm py-4">Geen importdata beschikbaar voor werkaanbod trends.</p>;
   }
 
   return (
     <div className="space-y-4">
+      {/* Data stats per year */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {Object.keys(yearStats).sort((a,b) => b - a).map(year => {
+          const s = yearStats[year];
+          return (
+            <Badge key={year} variant="secondary" className="text-xs px-2 py-1 font-normal">
+              {year}: {s.count.toLocaleString()} ritten (wk {s.minWeek}–{s.maxWeek})
+            </Badge>
+          );
+        })}
+      </div>
+
       {/* Year selection */}
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-sm font-medium text-slate-600">Jaren vergelijken:</span>
