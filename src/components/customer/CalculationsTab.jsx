@@ -633,7 +633,7 @@ export default function CalculationsTab({ customerId }) {
             </TabsContent>
             {/* DASHBOARD CHARTS TAB */}
             <TabsContent value="dashboard-charts" className="space-y-4 mt-4">
-              <CalculationsDashboard importResults={importResults} articlePrices={articlePrices} />
+              <CalculationsDashboard importResults={importResults} articlePrices={articlePrices} selectedWeekKey={selectedWeek && selectedWeek !== "all" ? `${selectedYear}-W${String(selectedWeek).padStart(2, '0')}` : null} />
             </TabsContent>
           </>
         )}
