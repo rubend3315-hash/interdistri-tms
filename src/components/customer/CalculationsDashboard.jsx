@@ -141,7 +141,7 @@ export default function CalculationsDashboard({ importResults, articlePrices, se
         gemBruto: +(avg(d.bruto) * 60).toFixed(1),
         gemNetto: +(avg(d.netto) * 60).toFixed(1),
       };
-    }).slice(-26); // Last 26 weeks
+    }));
   }, [allRows, weekKeys]);
 
   // 2. Omzet per week (using stops * price as proxy)
