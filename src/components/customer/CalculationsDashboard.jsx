@@ -275,12 +275,12 @@ export default function CalculationsDashboard({ importResults, articlePrices, se
       omzetChange: pct(current.omzet, prev.omzet),
       besteltijdChange: pct(current.gemBesteltijd, prev.gemBesteltijd),
     };
-  }, [allRows, weekKeys, compareMode, articlePrices]);
+  }, [allRows, weekKeys, activeWeekKey, compareMode, articlePrices]);
 
   // KPIs
   const kpis = useMemo(() => {
-    if (allRows.length === 0) return null;
-    const lastWeekKey = weekKeys[weekKeys.length - 1];
+    if (allRows.length === 0 || !activeWeekKey) return null;
+    const lastWeekKey = activeWeekKey;
     const lastWeekRows = allRows.filter(r => r._weekKey === lastWeekKey);
     let omzet = 0;
     lastWeekRows.forEach(r => {
