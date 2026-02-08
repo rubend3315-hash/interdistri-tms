@@ -120,16 +120,17 @@ export default function CalculationsTab({ customerId }) {
     enabled: !!customerId
   });
 
-  // Fetch PostNL import data - use filter with pagination to get ALL records
+  // Fetch PostNL import data - use pagination with max 5000 per batch to get ALL records
   const { data: importResults = [], isLoading: loadingImports } = useQuery({
     queryKey: ['postnl-imports-calc'],
     queryFn: async () => {
       const allResults = [];
       let skip = 0;
-      const pageSize = 2000;
+      const pageSize = 5000;
       while (true) {
-        const batch = await base44.entities.PostNLImportResult.filter({}, '-created_date', pageSize, skip);
+        const batch = await base44.entities.PostNLImportResult.list('-created_date', pageSize, skip);
         allResults.push(...batch);
+        console.log(`[PostNL Import] Batch ophalen: skip=${skip}, ontvangen=${batch.length}`);
         if (batch.length < pageSize) break;
         skip += pageSize;
       }
