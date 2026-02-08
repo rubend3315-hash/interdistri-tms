@@ -191,6 +191,22 @@ export default function CalculationsDashboard({ importResults, articlePrices, bu
       .slice(0, 15);
   }, [allRows]);
 
+  // 3b. Ritten per route (top 15)
+  const rittenPerRoute = useMemo(() => {
+    const routeMap = {};
+    allRows.forEach(r => {
+      const route = r['Ritnaam'] || 'Onbekend';
+      if (!routeMap[route]) routeMap[route] = { ritten: 0, stops: 0, stuks: 0 };
+      routeMap[route].ritten += 1;
+      routeMap[route].stops += Number(r['Aantal afgeleverd - stops']) || 0;
+      routeMap[route].stuks += Number(r['Aantal afgeleverd - stuks']) || 0;
+    });
+    return Object.entries(routeMap)
+      .map(([name, data]) => ({ route: name, ...data, gemStops: data.ritten > 0 ? Math.round(data.stops / data.ritten) : 0 }))
+      .sort((a, b) => b.ritten - a.ritten)
+      .slice(0, 15);
+  }, [allRows]);
+
   // 4. Ritten per dag van de week
   const rittenPerDag = useMemo(() => {
     const dayMap = { 1: { label: 'Ma', ritten: 0, stops: 0 }, 2: { label: 'Di', ritten: 0, stops: 0 }, 3: { label: 'Wo', ritten: 0, stops: 0 }, 4: { label: 'Do', ritten: 0, stops: 0 }, 5: { label: 'Vr', ritten: 0, stops: 0 }, 6: { label: 'Za', ritten: 0, stops: 0 }, 0: { label: 'Zo', ritten: 0, stops: 0 } };
