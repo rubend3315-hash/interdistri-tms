@@ -387,10 +387,10 @@ export default function CalculationsDashboard({ importResults, articlePrices, bu
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={rittenPerChauffeur} layout="vertical" margin={{ left: 10 }}>
+              <BarChart data={rittenPerChauffeur} layout="vertical" margin={{ left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis type="number" tick={{ fontSize: 10 }} />
-                <YAxis dataKey="chauffeur" type="category" tick={{ fontSize: 10 }} width={120} />
+                <YAxis dataKey="chauffeur" type="category" tick={{ fontSize: 10 }} width={180} />
                 <Tooltip formatter={(val, name) => [val, name === 'ritten' ? 'Ritten' : 'Gem. stops/rit']} />
                 <Legend />
                 <Bar dataKey="ritten" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Ritten" />
