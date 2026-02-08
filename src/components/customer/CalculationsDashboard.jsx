@@ -141,7 +141,7 @@ export default function CalculationsDashboard({ importResults, articlePrices, se
         gemBruto: +(avg(d.bruto) * 60).toFixed(1),
         gemNetto: +(avg(d.netto) * 60).toFixed(1),
       };
-    }));
+    });
   }, [allRows, weekKeys]);
 
   // 2. Omzet per week (using stops * price as proxy)
@@ -172,7 +172,7 @@ export default function CalculationsDashboard({ importResults, articlePrices, se
       ritten: weekMap[key]?.ritten || 0,
       stops: weekMap[key]?.stops || 0,
       gemOmzetPerRit: weekMap[key]?.ritten > 0 ? +((weekMap[key]?.omzet || 0) / weekMap[key].ritten).toFixed(2) : 0,
-    })).slice(-26);
+    }));
   }, [allRows, weekKeys, articlePrices]);
 
   // 3. Ritten per chauffeur (top 15)
