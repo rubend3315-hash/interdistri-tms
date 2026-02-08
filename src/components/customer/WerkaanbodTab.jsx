@@ -34,7 +34,8 @@ export default function WerkaanbodTab({ importResults = [] }) {
       const innerData = item.data.data || item.data;
       if (!innerData) return null;
 
-      const rawDate = innerData['Datum'];
+      // Try multiple locations for the date field
+      const rawDate = innerData['Datum'] || item.data.datum || item.datum;
       const dateObj = parseDatum(rawDate);
       if (!dateObj) return null;
 
@@ -47,7 +48,7 @@ export default function WerkaanbodTab({ importResults = [] }) {
         month: dateObj.getMonth(),
         stops: Number(innerData['Aantal tijdens route - stops']) || 0,
         stuks: Number(innerData['Aantal tijdens route - stuks']) || 0,
-        ritnaam: item.ritnaam || innerData['Ritnaam'] || '',
+        ritnaam: item.ritnaam || item.data.ritnaam || innerData['Ritnaam'] || '',
       };
     }).filter(Boolean);
   }, [importResults]);
