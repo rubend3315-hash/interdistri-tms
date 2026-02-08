@@ -34,16 +34,42 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
     }
   }, []);
 
+  // Build a Set of existing ritnaam||datum||chauffeur keys for fast duplicate detection
+  const { data: existingImportKeys = new Set() } = useQuery({
+    queryKey: ['postNLImportKeys'],
+    queryFn: async () => {
+      const keys = new Set();
+      let skip = 0;
+      const pageSize = 5000;
+      while (true) {
+        const batch = await base44.entities.PostNLImportResult.list('-created_date', pageSize, skip);
+        for (const item of batch) {
+          const ritnaam = item.data?.ritnaam || item.data?.data?.['Ritnaam'] || '';
+          const datum = item.data?.datum || item.data?.data?.['Datum'] || '';
+          const chauffeur = item.data?.data?.['Chauffeur'] || '';
+          if (ritnaam && datum) keys.add(`${ritnaam}||${datum}||${chauffeur}`);
+        }
+        if (batch.length < pageSize) break;
+        skip += pageSize;
+      }
+      return keys;
+    }
+  });
+
+  // Also keep a list for the logs tab
   const { data: existingImports = [] } = useQuery({
     queryKey: ['postNLImportResults', projectFilter],
     queryFn: async () => {
-      const data = await base44.entities.PostNLImportResult.list();
-      return data;
-    },
-    select: (data) => {
-      if (!projectFilter) return data;
-      const projectIds = projecten.map(p => p.id);
-      return data.filter(i => projectIds.includes(i.project_id));
+      const allResults = [];
+      let skip = 0;
+      const pageSize = 5000;
+      while (true) {
+        const batch = await base44.entities.PostNLImportResult.list('-created_date', pageSize, skip);
+        allResults.push(...batch);
+        if (batch.length < pageSize) break;
+        skip += pageSize;
+      }
+      return allResults;
     }
   });
 
