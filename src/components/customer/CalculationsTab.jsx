@@ -631,6 +631,10 @@ export default function CalculationsTab({ customerId }) {
                 </CardContent>
               </Card>
             </TabsContent>
+            {/* DASHBOARD CHARTS TAB */}
+            <TabsContent value="dashboard-charts" className="space-y-4 mt-4">
+              <CalculationsDashboard importResults={importResults} articlePrices={articlePrices} />
+            </TabsContent>
           </>
         )}
         </Tabs>
