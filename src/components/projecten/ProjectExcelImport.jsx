@@ -299,35 +299,28 @@ export default function ProjectExcelImport({ projectFilter, customerId }) {
 
     const today = new Date().toISOString().split('T')[0];
 
-    // Check duplicates - match on ritnaam + datum + chauffeur
-    const duplicates = jsonData.filter(newRecord =>
-      existingImports.some(existing =>
-        existing.ritnaam === (newRecord['Ritnaam'] || '') &&
-        existing.datum === (newRecord['Datum'] || '') &&
-        existing.data?.Chauffeur === (newRecord['Chauffeur'] || '')
-      )
-    );
+    // Check duplicates using the key Set (ritnaam||datum||chauffeur)
+    const newRows = [];
+    const duplicateCount = { value: 0 };
+    
+    for (const newRecord of jsonData) {
+      const key = `${newRecord['Ritnaam'] || ''}||${newRecord['Datum'] || ''}||${newRecord['Chauffeur'] || ''}`;
+      if (existingImportKeys.has(key)) {
+        duplicateCount.value++;
+      } else {
+        newRows.push(newRecord);
+      }
+    }
 
-    if (duplicates.length > 0 && duplicates.length === jsonData.length) {
+    if (newRows.length === 0 && duplicateCount.value > 0) {
       setImportResult({
         success: false,
-        error: `Alle ${duplicates.length} rijen zijn al eerder geïmporteerd (dubbele data).`,
-        duplicateCount: duplicates.length,
+        error: `Alle ${duplicateCount.value} rijen zijn al eerder geïmporteerd (dubbele data).`,
+        duplicateCount: duplicateCount.value,
         totalRows: jsonData.length
       });
       return;
     }
-
-    // Filter out duplicates, keep only new rows
-    const newRows = duplicates.length > 0 
-      ? jsonData.filter(newRecord =>
-          !existingImports.some(existing =>
-            existing.ritnaam === (newRecord['Ritnaam'] || '') &&
-            existing.datum === (newRecord['Datum'] || '') &&
-            existing.data?.Chauffeur === (newRecord['Chauffeur'] || '')
-          )
-        )
-      : jsonData;
 
     const recordsToAdd = newRows.map(filteredData => ({
       project_id: selectedProject,
