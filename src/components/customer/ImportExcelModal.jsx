@@ -53,11 +53,34 @@ export default function ImportExcelModal({ open, onOpenChange, customerId, custo
   const [existingImports, setExistingImports] = useState([]);
   const queryClient = useQueryClient();
 
-  // Fetch existing imports to check for duplicates
+  const [existingRitKeys, setExistingRitKeys] = useState(new Set());
+  const [loadingExisting, setLoadingExisting] = useState(false);
+
+  // Fetch existing imports and existing PostNLImportResult keys for duplicate check
   React.useEffect(() => {
     if (open && customerId) {
       base44.entities.CustomerImport.filter({ customer_id: customerId })
         .then(setExistingImports);
+      
+      // Build a set of ritnaam||datum keys from existing PostNLImportResult records
+      setLoadingExisting(true);
+      (async () => {
+        const keys = new Set();
+        let skip = 0;
+        const pageSize = 5000;
+        while (true) {
+          const batch = await base44.entities.PostNLImportResult.list('-created_date', pageSize, skip);
+          for (const item of batch) {
+            const ritnaam = item.data?.ritnaam || item.data?.data?.['Ritnaam'] || '';
+            const datum = item.data?.datum || item.data?.data?.['Datum'] || '';
+            if (ritnaam && datum) keys.add(`${ritnaam}||${datum}`);
+          }
+          if (batch.length < pageSize) break;
+          skip += pageSize;
+        }
+        setExistingRitKeys(keys);
+        setLoadingExisting(false);
+      })();
     }
   }, [open, customerId]);
 
