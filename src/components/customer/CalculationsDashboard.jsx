@@ -417,6 +417,28 @@ export default function CalculationsDashboard({ importResults, articlePrices, bu
         </CardContent>
       </Card>
 
+      {/* Ritten per route */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold">Ritten per route (top 15)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={rittenPerRoute} layout="vertical" margin={{ left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis type="number" tick={{ fontSize: 10 }} />
+                <YAxis dataKey="route" type="category" tick={{ fontSize: 10 }} width={180} />
+                <Tooltip formatter={(val, name) => [val, name === 'ritten' ? 'Ritten' : 'Gem. stops/rit']} />
+                <Legend />
+                <Bar dataKey="ritten" fill="#8b5cf6" radius={[0, 4, 4, 0]} name="Ritten" />
+                <Bar dataKey="gemStops" fill="#06b6d4" radius={[0, 4, 4, 0]} name="Gem. stops/rit" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Periodenvergelijking */}
       {comparison && (
         <Card>
