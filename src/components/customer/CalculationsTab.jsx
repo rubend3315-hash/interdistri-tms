@@ -120,10 +120,10 @@ export default function CalculationsTab({ customerId }) {
     enabled: !!customerId
   });
 
-  // Fetch PostNL import data
+  // Fetch PostNL import data - use high limit to get all records
   const { data: importResults = [], isLoading: loadingImports } = useQuery({
     queryKey: ['postnl-imports-calc'],
-    queryFn: () => base44.entities.PostNLImportResult.list(),
+    queryFn: () => base44.entities.PostNLImportResult.list('-created_date', 50000),
     staleTime: 0
   });
 
