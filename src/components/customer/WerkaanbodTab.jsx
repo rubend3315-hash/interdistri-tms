@@ -109,7 +109,7 @@ export default function WerkaanbodTab({ importResults = [] }) {
       {/* Data stats per year */}
       <div className="flex items-center gap-2 flex-wrap">
         <Badge variant="outline" className="text-xs px-2 py-1 font-normal bg-slate-50">
-          Totaal: {importResults.length.toLocaleString()} ruw / {parsedData.length.toLocaleString()} geparsed
+          Totaal: {importResults.length.toLocaleString()} ruw / {parsedData.length.toLocaleString()} uniek{duplicatesRemoved > 0 && ` (${duplicatesRemoved} dubbel verwijderd)`}
         </Badge>
         {Object.keys(yearStats).sort((a,b) => b - a).map(year => {
           const s = yearStats[year];
