@@ -186,7 +186,7 @@ export default function CalculationsDashboard({ importResults, articlePrices, bu
       chMap[ch].stuks += Number(r['Aantal afgeleverd - stuks']) || 0;
     });
     return Object.entries(chMap)
-      .map(([name, data]) => ({ chauffeur: name.length > 15 ? name.slice(0, 15) + '…' : name, fullName: name, ...data, gemStops: data.ritten > 0 ? Math.round(data.stops / data.ritten) : 0 }))
+      .map(([name, data]) => ({ chauffeur: name, fullName: name, ...data, gemStops: data.ritten > 0 ? Math.round(data.stops / data.ritten) : 0 }))
       .sort((a, b) => b.ritten - a.ritten)
       .slice(0, 15);
   }, [allRows]);
