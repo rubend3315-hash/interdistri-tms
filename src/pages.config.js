@@ -71,6 +71,7 @@ import NiwoPermits from './pages/NiwoPermits';
 import PerformanceReviews from './pages/PerformanceReviews';
 import Planning from './pages/Planning';
 import Projects from './pages/Projects';
+import Recalculations from './pages/Recalculations';
 import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
 import ShiftTime from './pages/ShiftTime';
@@ -78,7 +79,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Recalculations from './pages/Recalculations';
 import __Layout from './Layout.jsx';
 
 
@@ -107,6 +107,7 @@ export const PAGES = {
     "PerformanceReviews": PerformanceReviews,
     "Planning": Planning,
     "Projects": Projects,
+    "Recalculations": Recalculations,
     "SalaryReports": SalaryReports,
     "SalaryTables": SalaryTables,
     "ShiftTime": ShiftTime,
@@ -114,7 +115,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Recalculations": Recalculations,
 }
 
 export const pagesConfig = {
