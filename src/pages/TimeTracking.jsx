@@ -61,6 +61,13 @@ export default function TimeTracking() {
     queryFn: () => base44.entities.Urensoort.list()
   });
 
+  const { data: loonperiodeStatuses = [] } = useQuery({
+    queryKey: ['loonperiodeStatuses'],
+    queryFn: () => base44.entities.LoonperiodeStatus.list()
+  });
+
+  const weekIsDefinitief = isWeekInDefinitiefPeriode(weekNumber, year, loonperiodeStatuses);
+
   // Verlofsoorten uit Urensoort (alles behalve ATV)
   const verlofSoorten = urensoorten
     .filter(u => u.status === 'Actief' && u.name !== 'ATV')
