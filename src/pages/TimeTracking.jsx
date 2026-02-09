@@ -241,6 +241,7 @@ export default function TimeTracking() {
   };
 
   const openEntryDialog = (employeeId, date, categoryKey = "gewerkt") => {
+    if (weekIsDefinitief) return; // Geblokkeerd: periode is definitief
     const dateStr = format(date, 'yyyy-MM-dd');
     setDialogCategory(categoryKey);
 
