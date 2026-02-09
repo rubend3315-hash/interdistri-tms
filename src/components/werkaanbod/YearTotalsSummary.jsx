@@ -1,17 +1,40 @@
-import React, { useMemo } from "react";
-import { TrendingUp, TrendingDown, Minus, MapPin, Package } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { TrendingUp, TrendingDown, Minus, MapPin, Package, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function YearTotalsSummary({ data, selectedYears }) {
+  // Date range filter state (MM-DD format, applied across all years)
+  const [startMMDD, setStartMMDD] = useState("01-01");
+  const [endMMDD, setEndMMDD] = useState("12-31");
+
+  // Filter data based on selected date range (month-day only)
+  const filteredData = useMemo(() => {
+    return data.filter(d => {
+      const mm = String(d.date.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.date.getDate()).padStart(2, '0');
+      const mmdd = `${mm}-${dd}`;
+      return mmdd >= startMMDD && mmdd <= endMMDD;
+    });
+  }, [data, startMMDD, endMMDD]);
+
   const yearTotals = useMemo(() => {
     const totals = {};
-    data.forEach(d => {
+    filteredData.forEach(d => {
       if (!totals[d.year]) totals[d.year] = { stops: 0, stuks: 0 };
       totals[d.year].stops += d.stops;
       totals[d.year].stuks += d.stuks;
     });
     return totals;
-  }, [data]);
+  }, [filteredData]);
+
+  // Helper to convert MM-DD to readable date
+  const formatMMDD = (mmdd) => {
+    const [mm, dd] = mmdd.split('-');
+    const months = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+    return `${parseInt(dd)} ${months[parseInt(mm) - 1]}`;
+  };
 
   // Calculate year-over-year changes for each consecutive pair
   const comparisons = useMemo(() => {
@@ -48,7 +71,43 @@ export default function YearTotalsSummary({ data, selectedYears }) {
   return (
     <Card>
       <CardContent className="pt-4 pb-3">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Jaartotalen & Ontwikkeling</p>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Jaartotalen & Ontwikkeling</p>
+          <div className="flex items-end gap-3 flex-wrap">
+            <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs text-slate-500 whitespace-nowrap">Van</Label>
+                <Input
+                  type="date"
+                  value={`2000-${startMMDD}`}
+                  onChange={e => {
+                    const v = e.target.value;
+                    if (v) setStartMMDD(v.slice(5));
+                  }}
+                  className="h-7 w-36 text-xs"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs text-slate-500 whitespace-nowrap">t/m</Label>
+                <Input
+                  type="date"
+                  value={`2000-${endMMDD}`}
+                  onChange={e => {
+                    const v = e.target.value;
+                    if (v) setEndMMDD(v.slice(5));
+                  }}
+                  className="h-7 w-36 text-xs"
+                />
+              </div>
+            </div>
+            {(startMMDD !== "01-01" || endMMDD !== "12-31") && (
+              <span className="text-xs text-blue-600 font-medium">
+                Periode: {formatMMDD(startMMDD)} – {formatMMDD(endMMDD)}
+              </span>
+            )}
+          </div>
+        </div>
         
         {/* Year totals table */}
         <div className="overflow-x-auto">
