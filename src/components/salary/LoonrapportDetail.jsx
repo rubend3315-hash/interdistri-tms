@@ -25,6 +25,8 @@ export default function LoonrapportDetail({
 
   const loonschaal = contract.loonschaal || employee.salary_scale || "";
   const contractHours = contract.uren_per_week || employee.contract_hours || 0;
+  const isOproepkracht = employee.contract_type === "Oproep" ||
+    (contract.type_contract || "").toLowerCase().includes("oproep");
 
   const hourlyRate = useMemo(() => {
     if (employee.hourly_rate) return employee.hourly_rate;

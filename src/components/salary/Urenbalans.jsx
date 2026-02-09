@@ -28,7 +28,8 @@ export default function Urenbalans({
   }, [employee]);
 
   const contractHours = contract.uren_per_week || employee.contract_hours || 0;
-  const isOproepkracht = employee.contract_type === "Oproep";
+  const isOproepkracht = employee.contract_type === "Oproep" ||
+    (contract.type_contract || "").toLowerCase().includes("oproep");
 
   const loonschaal = contract.loonschaal || employee.salary_scale || "";
   const hourlyRate = useMemo(() => {

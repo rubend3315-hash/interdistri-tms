@@ -133,7 +133,8 @@ export function calculateWeekData(employee, entries, holidays) {
   const overwerk130 = Math.max(0, regularHours - contractHours);
 
   // Oproepkracht: alle gewerkte uren zijn variabele uren
-  const isOproep = (employee.contract_type === "Oproep");
+  const isOproep = employee.contract_type === "Oproep" ||
+    ((contract.type_contract || "").toLowerCase().includes("oproep"));
   const variabeleUren100 = isOproep ? totalHours : 0;
 
   const r = (v) => Math.round(v * 10000) / 10000;
