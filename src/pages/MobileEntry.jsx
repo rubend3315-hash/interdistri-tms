@@ -55,7 +55,7 @@ export default function MobileEntry() {
   const { isOnline, syncStatus, addToQueue } = useOfflineSync();
 
   // Tab order for swiping
-  const tabOrder = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "berichten", "links"];
+  const tabOrder = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "berichten", "reglement", "links"];
   
   const handleSwipe = (direction) => {
     const currentIndex = tabOrder.indexOf(activeTab);
@@ -526,6 +526,7 @@ export default function MobileEntry() {
     { id: "overzicht", label: "Overzicht", icon: CheckCircle },
     { id: "planning", label: "Planning", icon: CalendarDays },
     { id: "berichten", label: "Berichten", icon: Mail, badge: unreadCount },
+    { id: "reglement", label: "Bedrijfsreglement", icon: FileText },
     { id: "links", label: "Links", icon: ExternalLink }
   ];
 
@@ -1716,6 +1717,11 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Reglement Tab */}
+          <TabsContent value="reglement" className="space-y-4">
+            <MobileReglementTab />
           </TabsContent>
 
           {/* Links Tab */}
