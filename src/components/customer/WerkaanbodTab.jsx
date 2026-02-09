@@ -10,6 +10,7 @@ import DailyTrendChart from "@/components/werkaanbod/DailyTrendChart";
 import WeeklyTrendChart from "@/components/werkaanbod/WeeklyTrendChart";
 import YearComparisonChart from "@/components/werkaanbod/YearComparisonChart";
 import YearChangeIndicator from "@/components/werkaanbod/YearChangeIndicator";
+import YearTotalsSummary from "@/components/werkaanbod/YearTotalsSummary";
 
 function parseDatum(datumStr) {
   if (!datumStr) return null;
@@ -138,6 +139,8 @@ export default function WerkaanbodTab({ importResults = [] }) {
           <Plus className="w-3 h-3" /> Jaar toevoegen
         </Button>
       </div>
+
+      <YearTotalsSummary data={parsedData} selectedYears={selectedYears} />
 
       <Tabs value={subTab} onValueChange={setSubTab}>
         <TabsList>
