@@ -341,6 +341,47 @@ export default function SalaryReports() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Definitief maken dialog */}
+      <Dialog open={definitiefDialogOpen} onOpenChange={setDefinitiefDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Loonperiode definitief maken
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800 font-medium mb-2">
+                U staat op het punt Periode {selectedPeriode} ({periodes.find(p => p.periode === selectedPeriode)?.maand}) van {selectedYear} definitief te maken.
+              </p>
+              <p className="text-sm text-amber-700">
+                Na het definitief maken:
+              </p>
+              <ul className="text-sm text-amber-700 mt-1 list-disc ml-5 space-y-1">
+                <li>Kunnen tijdregistraties in deze periode niet meer gewijzigd worden</li>
+                <li>Kunnen ritten in deze periode niet meer gewijzigd worden</li>
+                <li>Het loonrapport van deze periode wordt vergrendeld</li>
+                <li>Alleen een admin kan de periode heropenen</li>
+              </ul>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setDefinitiefDialogOpen(false)}>
+                Annuleren
+              </Button>
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700"
+                onClick={() => definitiefMutation.mutate({ year: selectedYear, periode: selectedPeriode, action: "definitief" })}
+                disabled={definitiefMutation.isPending}
+              >
+                <Lock className="w-4 h-4 mr-1" />
+                Bevestigen – Definitief maken
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
