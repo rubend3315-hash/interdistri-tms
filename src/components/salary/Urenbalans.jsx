@@ -1,11 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Download } from "lucide-react";
 import { getWeek, getDay } from "date-fns";
 import { getFullName } from "@/components/utils/employeeUtils";
+import { calculateWeekData, VARIABELE_KOLOMMEN } from "@/components/salary/LoonrapportOverzicht";
 
 export default function Urenbalans({
   year, periodes, employees, timeEntries, holidays, salaryTables,
