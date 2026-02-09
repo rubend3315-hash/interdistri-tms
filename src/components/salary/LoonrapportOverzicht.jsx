@@ -8,7 +8,7 @@ import { getWeek, getDay } from "date-fns";
 import { getFullName } from "@/components/utils/employeeUtils";
 
 // Kolom-definities voor de variabele componenten (op basis van Urensoort entity)
-const VARIABELE_KOLOMMEN = [
+export const VARIABELE_KOLOMMEN = [
   { key: "gewerkte_dagen", label: "Gewerkte dagen" },
   { key: "uren_100", label: "100% uren" },
   { key: "compensatie_uren", label: "Compensatie-uren" },
@@ -39,7 +39,7 @@ const VARIABELE_KOLOMMEN = [
   { key: "verblijfkosten", label: "Verblijfkosten" },
 ];
 
-function calculateWeekData(employee, entries, holidays) {
+export function calculateWeekData(employee, entries, holidays) {
   const contract = (employee.contractregels || [])
     .filter(c => c.status !== "Inactief")
     .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0] || {};
