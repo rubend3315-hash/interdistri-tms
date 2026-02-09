@@ -222,6 +222,7 @@ export default function CalculationsTab({ customerId }) {
 
       rows.push({
         ...innerData,
+        _importId: item.id,
         _parsedDate: datum,
         _dayOfWeek: datum.getDay(), // 0=Sun, 1=Mon, ...
         _dayName: DAY_NAMES[datum.getDay()],
@@ -619,7 +620,7 @@ export default function CalculationsTab({ customerId }) {
                   <CardTitle className="text-base">Activiteitenrapport - {isFullYear ? `Heel jaar ${yearNumber}` : `Week ${weekNumber}`}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ActiviteitenReport weekData={weekData} />
+                  <ActiviteitenReport weekData={weekData} onDataUpdated={() => queryClient.invalidateQueries({ queryKey: ['postnl-imports-calc'] })} />
                 </CardContent>
               </Card>
             </TabsContent>
