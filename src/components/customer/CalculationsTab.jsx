@@ -37,6 +37,7 @@ function parseDatum(datumStr) {
 export default function CalculationsTab({ customerId }) {
   const currentYear = getYear(new Date());
   const currentWeek = getISOWeek(new Date());
+  const [selectionMode, setSelectionMode] = useState("week"); // "week" or "period"
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [selectedWeek, setSelectedWeek] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -359,40 +360,90 @@ export default function CalculationsTab({ customerId }) {
   return (
     <div className="space-y-4 print-report">
       <DataRefreshIndicator lastRefresh={lastRefresh} />
-      {/* Jaar & Week selectie */}
+      {/* Selectie */}
       <Card className="print:hidden">
         <CardContent className="pt-4 pb-3">
+          {/* Mode toggle */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+              <button
+                onClick={() => { setSelectionMode("week"); setCalculated(false); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  selectionMode === "week" ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5 inline mr-1.5" />
+                Week selectie
+              </button>
+              <button
+                onClick={() => { setSelectionMode("period"); setCalculated(false); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  selectionMode === "period" ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5 inline mr-1.5" />
+                Vrije periode
+              </button>
+            </div>
+          </div>
+
           <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Label className="text-sm text-slate-600 whitespace-nowrap">Jaar:</Label>
-              <Select value={selectedYear} onValueChange={handleYearChange}>
-                <SelectTrigger className="w-28">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(y => (
-                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-sm text-slate-600 whitespace-nowrap">Week:</Label>
-              <Select value={selectedWeek} onValueChange={handleWeekChange}>
-                <SelectTrigger className="w-56">
-                  <SelectValue placeholder="Maak een keuze ..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Heel jaar</SelectItem>
-                  {Array.from({ length: 53 }, (_, i) => i + 1).map(w => (
-                    <SelectItem key={w} value={String(w)}>Week {w}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {selectionMode === "week" ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-slate-600 whitespace-nowrap">Jaar:</Label>
+                  <Select value={selectedYear} onValueChange={handleYearChange}>
+                    <SelectTrigger className="w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(y => (
+                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-slate-600 whitespace-nowrap">Week:</Label>
+                  <Select value={selectedWeek} onValueChange={handleWeekChange}>
+                    <SelectTrigger className="w-56">
+                      <SelectValue placeholder="Maak een keuze ..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Heel jaar</SelectItem>
+                      {Array.from({ length: 53 }, (_, i) => i + 1).map(w => (
+                        <SelectItem key={w} value={String(w)}>Week {w}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-slate-600 whitespace-nowrap">Startdatum:</Label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => { setStartDate(e.target.value); setSelectedWeek("custom"); setCalculated(false); }}
+                    className="w-44"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-slate-600 whitespace-nowrap">Einddatum:</Label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => { setEndDate(e.target.value); setSelectedWeek("custom"); setCalculated(false); }}
+                    className="w-44"
+                  />
+                </div>
+              </>
+            )}
+
             <Button
               onClick={handleCalculate}
-              disabled={loadingImports || !selectedWeek}
+              disabled={loadingImports || (selectionMode === "week" ? !selectedWeek : (!startDate || !endDate))}
               className="bg-orange-400 hover:bg-orange-500 text-white"
             >
               {loadingImports ? (
@@ -401,39 +452,13 @@ export default function CalculationsTab({ customerId }) {
                 'Uitvoeren'
               )}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Rapport parameters */}
-      <Card className="print:hidden">
-        <CardHeader className="py-2 px-4 bg-slate-50 border-b">
-          <CardTitle className="text-sm font-semibold text-blue-700">Rapport parameters</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-3 pb-3">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Label className="text-sm text-slate-600 whitespace-nowrap">Startdatum:</Label>
-              <div className="flex items-center gap-1">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => { setStartDate(e.target.value); setCalculated(false); }}
-                  className="w-44"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-sm text-slate-600 whitespace-nowrap">Einddatum:</Label>
-              <div className="flex items-center gap-1">
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => { setEndDate(e.target.value); setCalculated(false); }}
-                  className="w-44"
-                />
-              </div>
-            </div>
+            {/* Show resulting period */}
+            {startDate && endDate && (
+              <span className="text-xs text-slate-400 ml-auto">
+                Periode: {format(new Date(startDate), 'dd-MM-yyyy')} t/m {format(new Date(endDate), 'dd-MM-yyyy')}
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
