@@ -7,15 +7,14 @@ import { ChevronDown, ChevronRight, FileSpreadsheet, Download } from "lucide-rea
 import { getWeek, getDay } from "date-fns";
 import { getFullName } from "@/components/utils/employeeUtils";
 
-// Kolom-definities voor de variabele componenten
+// Kolom-definities voor de variabele componenten (op basis van Urensoort entity)
 const VARIABELE_KOLOMMEN = [
   { key: "gewerkte_dagen", label: "Gewerkte dagen" },
   { key: "uren_100", label: "100% uren" },
   { key: "compensatie_uren", label: "Compensatie-uren" },
   { key: "aanvulling_contract", label: "Aanvulling contract" },
-  { key: "meeruren", label: "Meeruren" },
-  { key: "diensttoeslag_za_150", label: "Diensttoesl. zaterdag 150%" },
-  { key: "diensttoeslag_zo_200", label: "Diensttoesl. zondag 200%" },
+  { key: "diensttoeslag_za_150", label: "Diensturen zaterdag 150%" },
+  { key: "diensttoeslag_zo_200", label: "Diensturen zondag 200%" },
   { key: "vakantiedag", label: "Vakantiedag" },
   { key: "ziek", label: "Ziek" },
   { key: "verlof", label: "Verlof" },
@@ -28,6 +27,15 @@ const VARIABELE_KOLOMMEN = [
   { key: "ouderschapsverlof_onbetaald", label: "Ouderschapsverl. (onbetaald)" },
   { key: "variabele_uren_100", label: "Variabele uren 100%" },
   { key: "toeslagenmatrix_19", label: "Toeslagenmatrix 19%" },
+  { key: "toeslag_za_50", label: "Toeslag diensturen zaterdag 50%" },
+  { key: "za_overwerk_150", label: "Zaterdag overwerk 150%" },
+  { key: "toeslag_zo_100", label: "Toeslag diensturen zondag 100%" },
+  { key: "zo_overwerk_200", label: "Zondag overwerk 200%" },
+  { key: "diensturen_feestdag_200", label: "Diensturen feestdag 200%" },
+  { key: "toeslag_feestdag_100", label: "Toeslag diensturen feestdag 100%" },
+  { key: "feestdag_overwerk_200", label: "Feestdag overwerk 200%" },
+  { key: "overwerk_130", label: "Overwerk 130%" },
+  { key: "partnerverlof_week", label: "Partnerverlof" },
   { key: "verblijfkosten", label: "Verblijfkosten" },
 ];
 
