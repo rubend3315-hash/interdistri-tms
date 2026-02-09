@@ -338,11 +338,21 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
                 <td className="py-1.5 px-2 text-right text-slate-700">
                   <EditableCell value={r['Aantal periodes >15 min geen scan']} field="Aantal periodes >15 min geen scan" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
                 </td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Besteltijd Norm'])}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Besteltijd Bruto'])}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Besteltijd Netto'])}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Voorbereiding, aan-/afrijtijd en afhandeling'])}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Totaal rit'])}</td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Besteltijd Norm']} field="Besteltijd Norm" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isTime />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Besteltijd Bruto']} field="Besteltijd Bruto" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isTime />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Besteltijd Netto']} field="Besteltijd Netto" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isTime />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Voorbereiding, aan-/afrijtijd en afhandeling']} field="Voorbereiding, aan-/afrijtijd en afhandeling" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isTime />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Totaal rit']} field="Totaal rit" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isTime />
+                </td>
                 <td className="py-1.5 px-2 text-right text-slate-700">
                   <EditableCell value={r['Aantal tijdens route - stuks']} field="Aantal tijdens route - stuks" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
                 </td>
