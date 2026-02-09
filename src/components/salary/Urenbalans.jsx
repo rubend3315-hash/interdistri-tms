@@ -1,0 +1,291 @@
+import React, { useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { getWeek, getDay } from "date-fns";
+import { getFullName } from "@/components/utils/employeeUtils";
+
+export default function Urenbalans({
+  year, periodes, employees, timeEntries, holidays, salaryTables,
+  employeeIndex, onChangeEmployee
+}) {
+  const activeEmployees = useMemo(() =>
+    employees
+      .filter(e => e.status === "Actief" && e.department !== "Charters")
+      .sort((a, b) => (a.last_name || "").localeCompare(b.last_name || "")),
+    [employees]
+  );
+
+  const employee = activeEmployees[employeeIndex] || activeEmployees[0];
+  if (!employee) return <p className="text-slate-500">Geen medewerkers gevonden.</p>;
+
+  const contract = useMemo(() => {
+    return (employee.contractregels || [])
+      .filter(c => c.status !== "Inactief")
+      .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0] || {};
+  }, [employee]);
+
+  const contractHours = contract.uren_per_week || employee.contract_hours || 0;
+
+  const loonschaal = contract.loonschaal || employee.salary_scale || "";
+  const hourlyRate = useMemo(() => {
+    if (employee.hourly_rate) return employee.hourly_rate;
+    if (!loonschaal || !salaryTables.length) return 0;
+    const match = salaryTables.find(t =>
+      t.status === "Actief" &&
+      `${t.scale}${t.step != null ? ` Trede ${t.step}` : ""}` === loonschaal
+    );
+    return match?.hourly_rate || 0;
+  }, [employee, loonschaal, salaryTables]);
+
+  const holidayDates = useMemo(() => new Set(holidays.map(h => h.date)), [holidays]);
+
+  // Bereken per periode de uren-balans
+  const periodeBalans = useMemo(() => {
+    // Groepeer entries per week
+    const entriesByWeek = {};
+    timeEntries.forEach(e => {
+      if (!e.date || e.status !== "Goedgekeurd" || e.employee_id !== employee.id) return;
+      const d = new Date(e.date);
+      if (d.getFullYear() !== year) return;
+      const wk = e.week_number || getWeek(d, { weekStartsOn: 1 });
+      if (!entriesByWeek[wk]) entriesByWeek[wk] = [];
+      entriesByWeek[wk].push(e);
+    });
+
+    let saldoCumulatief = 0;
+
+    return periodes.map(periode => {
+      let contractUren = 0;
+      let gewerkteUren = 0;
+      let verlofUren = 0;
+      let ziekUren = 0;
+      let atvUren = 0;
+      let feestdagUren = 0;
+      let overwerkUren = 0;
+      let bijzonderVerlof = 0;
+
+      periode.weken.forEach(weekNr => {
+        contractUren += contractHours;
+        const entries = entriesByWeek[weekNr] || [];
+
+        let weekWorked = 0;
+        let weekVerlof = 0;
+        let weekZiek = 0;
+        let weekAtv = 0;
+        let weekFeestdag = 0;
+        let weekBvl = 0;
+
+        entries.forEach(e => {
+          const hours = e.total_hours || 0;
+          weekWorked += hours;
+
+          const st = (e.shift_type || "").toLowerCase();
+          if (st.includes("bijzonder verlof") || st.includes("bijzonderverlof")) weekBvl += hours;
+          else if (st.includes("verlof")) weekVerlof += hours;
+          if (st.includes("ziek")) weekZiek += hours;
+          if (st.includes("atv")) weekAtv += hours;
+
+          const d = new Date(e.date);
+          const isHoliday = holidayDates.has(e.date);
+          if (isHoliday) weekFeestdag += hours;
+        });
+
+        verlofUren += weekVerlof;
+        ziekUren += weekZiek;
+        atvUren += weekAtv;
+        feestdagUren += weekFeestdag;
+        bijzonderVerlof += weekBvl;
+        gewerkteUren += weekWorked;
+      });
+
+      // Saldo = gewerkt - contract (positief = meer gewerkt)
+      const saldo = gewerkteUren - contractUren;
+      saldoCumulatief += saldo;
+
+      return {
+        periode: periode.periode,
+        maand: periode.maand,
+        weken: `${periode.weken[0]}-${periode.weken[periode.weken.length - 1]}`,
+        aantalWeken: periode.weken.length,
+        contractUren: Math.round(contractUren * 100) / 100,
+        gewerkteUren: Math.round(gewerkteUren * 100) / 100,
+        verlofUren: Math.round(verlofUren * 100) / 100,
+        ziekUren: Math.round(ziekUren * 100) / 100,
+        atvUren: Math.round(atvUren * 100) / 100,
+        feestdagUren: Math.round(feestdagUren * 100) / 100,
+        bijzonderVerlof: Math.round(bijzonderVerlof * 100) / 100,
+        saldo: Math.round(saldo * 100) / 100,
+        saldoCumulatief: Math.round(saldoCumulatief * 100) / 100,
+      };
+    });
+  }, [timeEntries, employee, year, periodes, contractHours, holidayDates]);
+
+  // Jaartotalen
+  const totalen = useMemo(() => {
+    const t = { contractUren: 0, gewerkteUren: 0, verlofUren: 0, ziekUren: 0, atvUren: 0, feestdagUren: 0, bijzonderVerlof: 0, saldo: 0 };
+    periodeBalans.forEach(p => {
+      t.contractUren += p.contractUren;
+      t.gewerkteUren += p.gewerkteUren;
+      t.verlofUren += p.verlofUren;
+      t.ziekUren += p.ziekUren;
+      t.atvUren += p.atvUren;
+      t.feestdagUren += p.feestdagUren;
+      t.bijzonderVerlof += p.bijzonderVerlof;
+      t.saldo += p.saldo;
+    });
+    Object.keys(t).forEach(k => t[k] = Math.round(t[k] * 100) / 100);
+    return t;
+  }, [periodeBalans]);
+
+  const fmt = (v) => {
+    if (v === 0) return "-";
+    return v.toFixed(2).replace(".", ",");
+  };
+
+  const fmtSaldo = (v) => {
+    if (v === 0) return "-";
+    const str = Math.abs(v).toFixed(2).replace(".", ",");
+    return v > 0 ? `+${str}` : `-${str}`;
+  };
+
+  const exportCSV = () => {
+    const headers = ["Periode", "Maand", "Weken", "Contract", "Gewerkt", "Verlof", "Ziek", "ATV", "Feestdag", "Bijz. verlof", "Saldo", "Saldo cumulatief"];
+    const rows = periodeBalans.map(p => [
+      p.periode, p.maand, p.weken, p.contractUren, p.gewerkteUren,
+      p.verlofUren, p.ziekUren, p.atvUren, p.feestdagUren, p.bijzonderVerlof,
+      p.saldo, p.saldoCumulatief
+    ]);
+    rows.push(["Totaal", "", "", totalen.contractUren, totalen.gewerkteUren,
+      totalen.verlofUren, totalen.ziekUren, totalen.atvUren, totalen.feestdagUren, totalen.bijzonderVerlof,
+      totalen.saldo, ""]);
+
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(";")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `urenbalans_${getFullName(employee).replace(/\s/g, "_")}_${year}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Navigatie */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={employeeIndex <= 0}
+              onClick={() => onChangeEmployee(employeeIndex - 1)}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" /> Vorige
+            </Button>
+            <div className="text-center">
+              <p className="font-bold text-slate-900">{getFullName(employee)}</p>
+              <p className="text-xs text-slate-500">
+                {employee.employee_number || ""} · {employee.department || ""} · {employee.function || ""} · Contract {contractHours} uur/week
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {employeeIndex + 1} van {activeEmployees.length}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={employeeIndex >= activeEmployees.length - 1}
+              onClick={() => onChangeEmployee(employeeIndex + 1)}
+            >
+              Volgende <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Balans tabel */}
+      <Card className="overflow-hidden">
+        <div className="bg-slate-700 text-white px-4 py-3 flex items-center justify-between">
+          <span className="font-semibold text-sm">Urenbalans {year} – {getFullName(employee)}</span>
+          <Button size="sm" variant="ghost" className="text-white hover:bg-slate-600" onClick={exportCSV}>
+            <Download className="w-3 h-3 mr-1" /> CSV
+          </Button>
+        </div>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-100">
+                  <TableHead className="text-xs">Per.</TableHead>
+                  <TableHead className="text-xs">Maand</TableHead>
+                  <TableHead className="text-xs text-center">Weken</TableHead>
+                  <TableHead className="text-xs text-right">Contract</TableHead>
+                  <TableHead className="text-xs text-right">Gewerkt</TableHead>
+                  <TableHead className="text-xs text-right">Verlof</TableHead>
+                  <TableHead className="text-xs text-right">Ziek</TableHead>
+                  <TableHead className="text-xs text-right">ATV</TableHead>
+                  <TableHead className="text-xs text-right">Feestdag</TableHead>
+                  <TableHead className="text-xs text-right">Bijz. verlof</TableHead>
+                  <TableHead className="text-xs text-right">Saldo</TableHead>
+                  <TableHead className="text-xs text-right">Cumulatief</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {periodeBalans.map(p => (
+                  <TableRow key={p.periode} className="hover:bg-slate-50">
+                    <TableCell className="font-medium text-sm">{p.periode}</TableCell>
+                    <TableCell className="text-sm text-slate-600">{p.maand}</TableCell>
+                    <TableCell className="text-sm text-center text-slate-500">{p.weken}</TableCell>
+                    <TableCell className="text-sm text-right">{fmt(p.contractUren)}</TableCell>
+                    <TableCell className="text-sm text-right font-medium">{fmt(p.gewerkteUren)}</TableCell>
+                    <TableCell className="text-sm text-right text-blue-600">{fmt(p.verlofUren)}</TableCell>
+                    <TableCell className="text-sm text-right text-orange-600">{fmt(p.ziekUren)}</TableCell>
+                    <TableCell className="text-sm text-right text-purple-600">{fmt(p.atvUren)}</TableCell>
+                    <TableCell className="text-sm text-right text-amber-600">{fmt(p.feestdagUren)}</TableCell>
+                    <TableCell className="text-sm text-right text-teal-600">{fmt(p.bijzonderVerlof)}</TableCell>
+                    <TableCell className={`text-sm text-right font-semibold ${p.saldo > 0 ? "text-emerald-600" : p.saldo < 0 ? "text-red-600" : "text-slate-400"}`}>
+                      {fmtSaldo(p.saldo)}
+                    </TableCell>
+                    <TableCell className={`text-sm text-right font-semibold ${p.saldoCumulatief > 0 ? "text-emerald-600" : p.saldoCumulatief < 0 ? "text-red-600" : "text-slate-400"}`}>
+                      {fmtSaldo(p.saldoCumulatief)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {/* Totaalrij */}
+                <TableRow className="bg-slate-200 font-bold border-t-2">
+                  <TableCell colSpan={3} className="text-sm">Jaartotaal</TableCell>
+                  <TableCell className="text-sm text-right">{fmt(totalen.contractUren)}</TableCell>
+                  <TableCell className="text-sm text-right">{fmt(totalen.gewerkteUren)}</TableCell>
+                  <TableCell className="text-sm text-right text-blue-600">{fmt(totalen.verlofUren)}</TableCell>
+                  <TableCell className="text-sm text-right text-orange-600">{fmt(totalen.ziekUren)}</TableCell>
+                  <TableCell className="text-sm text-right text-purple-600">{fmt(totalen.atvUren)}</TableCell>
+                  <TableCell className="text-sm text-right text-amber-600">{fmt(totalen.feestdagUren)}</TableCell>
+                  <TableCell className="text-sm text-right text-teal-600">{fmt(totalen.bijzonderVerlof)}</TableCell>
+                  <TableCell className={`text-sm text-right font-bold ${totalen.saldo > 0 ? "text-emerald-600" : totalen.saldo < 0 ? "text-red-600" : ""}`}>
+                    {fmtSaldo(totalen.saldo)}
+                  </TableCell>
+                  <TableCell className="text-sm text-right" />
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Samenvatting badges */}
+      <div className="flex flex-wrap gap-2">
+        <Badge className="bg-slate-100 text-slate-700">Contract: {fmt(totalen.contractUren)} uur</Badge>
+        <Badge className="bg-emerald-100 text-emerald-700">Gewerkt: {fmt(totalen.gewerkteUren)} uur</Badge>
+        <Badge className={`${totalen.saldo >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+          Saldo: {fmtSaldo(totalen.saldo)} uur
+        </Badge>
+        {totalen.verlofUren > 0 && <Badge className="bg-blue-100 text-blue-700">Verlof: {fmt(totalen.verlofUren)} uur</Badge>}
+        {totalen.ziekUren > 0 && <Badge className="bg-orange-100 text-orange-700">Ziek: {fmt(totalen.ziekUren)} uur</Badge>}
+      </div>
+    </div>
+  );
+}

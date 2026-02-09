@@ -11,13 +11,15 @@ import {
   Euro,
   Users,
   RefreshCw,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Scale
 } from "lucide-react";
 import SalaryExportStamgegevens from "@/components/salary/SalaryExportStamgegevens";
 import SalaryExportMutation from "@/components/salary/SalaryExportMutation";
 import LoonperiodeConfig, { getDefaultPeriodes } from "@/components/salary/LoonperiodeConfig";
 import LoonrapportOverzicht from "@/components/salary/LoonrapportOverzicht";
 import LoonrapportDetail from "@/components/salary/LoonrapportDetail";
+import Urenbalans from "@/components/salary/Urenbalans";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -30,6 +32,7 @@ export default function SalaryReports() {
   const [periodes, setPeriodes] = useState(getDefaultPeriodes());
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showConfig, setShowConfig] = useState(false);
+  const [balansEmployeeIndex, setBalansEmployeeIndex] = useState(0);
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
@@ -75,10 +78,14 @@ export default function SalaryReports() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="loonrapport" className="gap-2">
             <Euro className="w-4 h-4" />
             Loonrapport
+          </TabsTrigger>
+          <TabsTrigger value="urenbalans" className="gap-2">
+            <Scale className="w-4 h-4" />
+            Urenbalans
           </TabsTrigger>
           <TabsTrigger value="mutaties" className="gap-2">
             <RefreshCw className="w-4 h-4" />
@@ -169,6 +176,43 @@ export default function SalaryReports() {
                 holidays={holidays}
                 salaryTables={salaryTables}
                 onSelectEmployee={setSelectedEmployee}
+              />
+            )}
+          </div>
+        </TabsContent>
+
+        {/* === URENBALANS TAB === */}
+        <TabsContent value="urenbalans">
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <Label>Jaar</Label>
+                  <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {years.map(y => (
+                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+            {isLoading ? (
+              <Skeleton className="h-96" />
+            ) : (
+              <Urenbalans
+                year={selectedYear}
+                periodes={periodes}
+                employees={employees}
+                timeEntries={timeEntries}
+                holidays={holidays}
+                salaryTables={salaryTables}
+                employeeIndex={balansEmployeeIndex}
+                onChangeEmployee={setBalansEmployeeIndex}
               />
             )}
           </div>
