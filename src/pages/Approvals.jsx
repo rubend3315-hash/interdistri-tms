@@ -22,9 +22,11 @@ import {
   Car,
   FileText,
   Eye,
-  Edit
+  Edit,
+  Lock
 } from "lucide-react";
 import { getBreakMinutesForHours } from "@/components/utils/breakScheduleUtils";
+import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 
 export default function Approvals() {
   const [selectedEntry, setSelectedEntry] = useState(null);
