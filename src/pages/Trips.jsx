@@ -20,9 +20,11 @@ import {
   User,
   Calendar,
   MapPin,
-  Trash2
+  Trash2,
+  Lock
 } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
+import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 
 const statuses = ["Gepland", "Onderweg", "Voltooid", "Geannuleerd"];
 
