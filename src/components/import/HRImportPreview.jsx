@@ -28,13 +28,32 @@ function mapStatus(val) {
   return "Actief";
 }
 
+function parseFullName(fullName) {
+  if (!fullName) return { first: "", prefix: "", last: "" };
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return { first: parts[0], prefix: "", last: "" };
+  const prefixes = ["van", "de", "der", "den", "het", "ter", "ten", "op"];
+  const first = parts[0];
+  let prefixParts = [];
+  let lastStart = 1;
+  for (let i = 1; i < parts.length - 1; i++) {
+    if (prefixes.includes(parts[i].toLowerCase())) {
+      prefixParts.push(parts[i]);
+      lastStart = i + 1;
+    } else break;
+  }
+  const last = parts.slice(lastStart).join(" ");
+  return { first, prefix: prefixParts.join(" "), last };
+}
+
 function mapToEmployee(row) {
+  const parsed = parseFullName(row.volledige_naam);
   return {
     employee_number: row.personeelsnummer || "",
     initials: row.voorletters || "",
-    first_name: row.voornaam || row.roepnaam || "",
-    prefix: row.tussenvoegsel || row.voorvoegsel || "",
-    last_name: row.achternaam || row.geboortenaam || "",
+    first_name: row.voornaam || row.roepnaam || parsed.first || "",
+    prefix: row.tussenvoegsel || row.voorvoegsel || parsed.prefix || "",
+    last_name: row.achternaam || row.geboortenaam || parsed.last || "",
     date_of_birth: row.geboortedatum || "",
     email: row.email || "",
     phone: row.telefoon || "",
