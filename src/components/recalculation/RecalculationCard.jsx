@@ -27,7 +27,7 @@ export default function RecalculationCard({ title, description, useCases, impact
 
   return (
     <Card className="overflow-hidden">
-      <div className="bg-orange-500 text-white px-5 py-3 font-semibold text-sm">
+      <div className="bg-slate-800 text-white px-5 py-3 font-semibold text-sm">
         {title}
       </div>
       <CardContent className="p-0">
@@ -35,7 +35,7 @@ export default function RecalculationCard({ title, description, useCases, impact
           {/* Beschrijving */}
           <div className="p-4">
             <p className="text-xs font-semibold text-slate-500 mb-1">Beschrijving</p>
-            <p className="text-sm text-blue-700">{description}</p>
+            <p className="text-sm text-slate-700">{description}</p>
           </div>
 
           {/* Gebruik bij */}
@@ -83,7 +83,7 @@ export default function RecalculationCard({ title, description, useCases, impact
             </div>
             <Button
               size="sm"
-              className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+              className="bg-blue-600 hover:bg-blue-700 text-white w-full"
               onClick={handleExecute}
               disabled={loading}
             >
