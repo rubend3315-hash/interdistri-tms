@@ -25,6 +25,7 @@ import SalaryExportMutation from "@/components/salary/SalaryExportMutation";
 import LoonperiodeConfig, { getDefaultPeriodes } from "@/components/salary/LoonperiodeConfig";
 import LoonrapportOverzicht from "@/components/salary/LoonrapportOverzicht";
 import LoonrapportDetail from "@/components/salary/LoonrapportDetail";
+import LoonrapportPrintAll from "@/components/salary/LoonrapportPrintAll";
 import Urenbalans from "@/components/salary/Urenbalans";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
