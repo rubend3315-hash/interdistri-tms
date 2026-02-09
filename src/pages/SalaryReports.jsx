@@ -39,6 +39,8 @@ export default function SalaryReports() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showConfig, setShowConfig] = useState(false);
   const [balansEmployeeIndex, setBalansEmployeeIndex] = useState(0);
+  const [definitiefDialogOpen, setDefinitiefDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
