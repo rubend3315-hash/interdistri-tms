@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   BookOpen, Plus, Pencil, Printer, Search, ChevronDown, ChevronRight,
-  FileText, Trash2, Eye
+  FileText, Trash2, Eye, History
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
@@ -20,6 +20,7 @@ import {
 import ReglementArtikelEditor from "../components/reglement/ReglementArtikelEditor";
 import ReglementLegenda from "../components/reglement/ReglementLegenda";
 import ReglementPrintView from "../components/reglement/ReglementPrintView";
+import VersionHistoryPanel from "../components/reglement/VersionHistoryPanel";
 
 export default function Bedrijfsreglement() {
   const [editingArtikel, setEditingArtikel] = useState(null);
@@ -29,6 +30,7 @@ export default function Bedrijfsreglement() {
   const [expandedHoofdstuk, setExpandedHoofdstuk] = useState(null);
   const [selectedArtikel, setSelectedArtikel] = useState(null);
   const [deleteArtikel, setDeleteArtikel] = useState(null);
+  const [historyArtikel, setHistoryArtikel] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: artikelen = [], isLoading } = useQuery({
@@ -120,10 +122,45 @@ export default function Bedrijfsreglement() {
     await saveMutation.mutateAsync({ id, data });
   };
 
+  const handleRevert = async (artikel, versionData) => {
+    // Revert saves current as history then applies old version data
+    const existing = artikelen.find(a => a.id === artikel.id);
+    const versieGeschiedenis = [...(existing.versie_geschiedenis || [])];
+    versieGeschiedenis.push({
+      versie: existing.versie || 1,
+      datum: new Date().toISOString(),
+      bewerkt_door: user?.full_name || user?.email || "Onbekend",
+      oude_inhoud: existing.inhoud,
+      oude_titel: existing.titel,
+    });
+    await base44.entities.BedrijfsreglementArtikel.update(artikel.id, {
+      titel: versionData.titel,
+      inhoud: versionData.inhoud,
+      versie: (existing.versie || 1) + 1,
+      versie_geschiedenis: versieGeschiedenis,
+    });
+    queryClient.invalidateQueries({ queryKey: ["bedrijfsreglementArtikelen"] });
+    setHistoryArtikel(null);
+  };
+
   const handlePrint = () => {
     setShowPrint(true);
     setTimeout(() => window.print(), 500);
   };
+
+  if (historyArtikel) {
+    // Re-fetch fresh data for the article being viewed
+    const freshArtikel = artikelen.find(a => a.id === historyArtikel.id) || historyArtikel;
+    return (
+      <div className="max-w-5xl mx-auto">
+        <VersionHistoryPanel
+          artikel={freshArtikel}
+          onRevert={(versionData) => handleRevert(freshArtikel, versionData)}
+          onClose={() => setHistoryArtikel(null)}
+        />
+      </div>
+    );
+  }
 
   if (editingArtikel || isCreating) {
     return (
@@ -132,6 +169,7 @@ export default function Bedrijfsreglement() {
           artikel={editingArtikel}
           onSave={handleSave}
           onClose={() => { setEditingArtikel(null); setIsCreating(false); }}
+          onShowHistory={() => { setHistoryArtikel(editingArtikel); setEditingArtikel(null); }}
         />
       </div>
     );
@@ -259,13 +297,25 @@ export default function Bedrijfsreglement() {
                               variant="ghost" size="icon"
                               className="h-7 w-7"
                               onClick={(e) => { e.stopPropagation(); setSelectedArtikel(selectedArtikel === art.id ? null : art.id); }}
+                              title="Bekijken"
                             >
                               <Eye className="w-3.5 h-3.5 text-slate-400" />
                             </Button>
+                            {(art.versie_geschiedenis || []).length > 0 && (
+                              <Button
+                                variant="ghost" size="icon"
+                                className="h-7 w-7"
+                                onClick={(e) => { e.stopPropagation(); setHistoryArtikel(art); }}
+                                title="Versiegeschiedenis"
+                              >
+                                <History className="w-3.5 h-3.5 text-blue-400" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost" size="icon"
                               className="h-7 w-7"
                               onClick={(e) => { e.stopPropagation(); setEditingArtikel(art); }}
+                              title="Bewerken"
                             >
                               <Pencil className="w-3.5 h-3.5 text-slate-400" />
                             </Button>
@@ -273,6 +323,7 @@ export default function Bedrijfsreglement() {
                               variant="ghost" size="icon"
                               className="h-7 w-7"
                               onClick={(e) => { e.stopPropagation(); setDeleteArtikel(art); }}
+                              title="Verwijderen"
                             >
                               <Trash2 className="w-3.5 h-3.5 text-red-400" />
                             </Button>
