@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen } from "lucide-react";
 
-export default function ReglementLegenda({ artikelen }) {
+export default function ReglementLegenda({ artikelen, onArtikelClick }) {
   // Group by hoofdstuk
   const hoofdstukken = {};
   artikelen
@@ -27,15 +27,16 @@ export default function ReglementLegenda({ artikelen }) {
             <h3 className="text-sm font-semibold text-slate-800 mb-1">{hoofdstuk}</h3>
             <div className="space-y-0.5 ml-2">
               {arts.map((art) => (
-                <div
+                <button
                   key={art.id}
-                  className="text-xs text-slate-600 flex items-center gap-2"
+                  onClick={() => onArtikelClick?.(art)}
+                  className="text-xs text-slate-600 flex items-center gap-2 hover:text-blue-600 hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 transition-colors w-full text-left"
                 >
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0 min-w-[28px] justify-center">
                     {art.artikel_nummer}
                   </Badge>
                   <span>{art.titel}</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
