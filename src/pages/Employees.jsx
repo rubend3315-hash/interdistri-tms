@@ -1646,7 +1646,7 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) 
   const berekenVergoeding = () => {
     const afstand = Number(formData.afstand_km) || 0;
     const tarief = 0.23; // €0.23 per km
-    const berekend = afstand * 2 * tarief; // Enkele reis x 2
+    const berekend = afstand * tarief; // Enkele reis
     setFormData({ ...formData, vergoeding_per_dag: Number(berekend.toFixed(2)) });
   };
 
