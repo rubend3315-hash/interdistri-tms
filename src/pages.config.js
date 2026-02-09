@@ -80,6 +80,7 @@ import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
 import Bedrijfsreglement from './pages/Bedrijfsreglement';
+import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import __Layout from './Layout.jsx';
 
 
@@ -117,6 +118,7 @@ export const PAGES = {
     "Users": Users,
     "Vehicles": Vehicles,
     "Bedrijfsreglement": Bedrijfsreglement,
+    "MobileBedrijfsreglement": MobileBedrijfsreglement,
 }
 
 export const pagesConfig = {
