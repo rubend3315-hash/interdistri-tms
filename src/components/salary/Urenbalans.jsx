@@ -28,6 +28,7 @@ export default function Urenbalans({
   }, [employee]);
 
   const contractHours = contract.uren_per_week || employee.contract_hours || 0;
+  const isOproepkracht = employee.contract_type === "Oproep";
 
   const loonschaal = contract.loonschaal || employee.salary_scale || "";
   const hourlyRate = useMemo(() => {
@@ -105,6 +106,10 @@ export default function Urenbalans({
       const saldo = gewerkteUren - contractUren;
       saldoCumulatief += saldo;
 
+      // Oproepkracht: variabele uren = gewerkte uren, bedrag = uren x uurloon
+      const variabeleUren = isOproepkracht ? gewerkteUren : 0;
+      const variabeleBedrag = isOproepkracht ? Math.round(gewerkteUren * hourlyRate * 100) / 100 : 0;
+
       return {
         periode: periode.periode,
         maand: periode.maand,
@@ -119,13 +124,15 @@ export default function Urenbalans({
         bijzonderVerlof: Math.round(bijzonderVerlof * 100) / 100,
         saldo: Math.round(saldo * 100) / 100,
         saldoCumulatief: Math.round(saldoCumulatief * 100) / 100,
+        variabeleUren: Math.round(variabeleUren * 100) / 100,
+        variabeleBedrag,
       };
     });
   }, [timeEntries, employee, year, periodes, contractHours, holidayDates]);
 
   // Jaartotalen
   const totalen = useMemo(() => {
-    const t = { contractUren: 0, gewerkteUren: 0, verlofUren: 0, ziekUren: 0, atvUren: 0, feestdagUren: 0, bijzonderVerlof: 0, saldo: 0 };
+    const t = { contractUren: 0, gewerkteUren: 0, verlofUren: 0, ziekUren: 0, atvUren: 0, feestdagUren: 0, bijzonderVerlof: 0, saldo: 0, variabeleUren: 0, variabeleBedrag: 0 };
     periodeBalans.forEach(p => {
       t.contractUren += p.contractUren;
       t.gewerkteUren += p.gewerkteUren;
@@ -135,6 +142,8 @@ export default function Urenbalans({
       t.feestdagUren += p.feestdagUren;
       t.bijzonderVerlof += p.bijzonderVerlof;
       t.saldo += p.saldo;
+      t.variabeleUren += p.variabeleUren;
+      t.variabeleBedrag += p.variabeleBedrag;
     });
     Object.keys(t).forEach(k => t[k] = Math.round(t[k] * 100) / 100);
     return t;
@@ -149,6 +158,11 @@ export default function Urenbalans({
     if (v === 0) return "-";
     const str = Math.abs(v).toFixed(2).replace(".", ",");
     return v > 0 ? `+${str}` : `-${str}`;
+  };
+
+  const fmtEuro = (v) => {
+    if (v === 0) return "-";
+    return `€${v.toFixed(2).replace(".", ",")}`;
   };
 
   const exportCSV = () => {

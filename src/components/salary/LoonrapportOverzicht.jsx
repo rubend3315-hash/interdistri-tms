@@ -132,13 +132,17 @@ export function calculateWeekData(employee, entries, holidays) {
   const overwerkFeestdag200 = Math.max(0, holidayHoursWorked - toeslagFeestdag100);
   const overwerk130 = Math.max(0, regularHours - contractHours);
 
+  // Oproepkracht: alle gewerkte uren zijn variabele uren
+  const isOproep = (employee.contract_type === "Oproep");
+  const variabeleUren100 = isOproep ? totalHours : 0;
+
   const r = (v) => Math.round(v * 10000) / 10000;
 
   return {
     gewerkte_dagen: gewerkteDagen,
     uren_100: r(totalHours),
     compensatie_uren: 0,
-    aanvulling_contract: r(aanvulling),
+    aanvulling_contract: isOproep ? 0 : r(aanvulling),
     diensttoeslag_za_150: r(dienstZa),
     diensttoeslag_zo_200: r(dienstZo),
     vakantiedag: 0,
@@ -151,7 +155,7 @@ export function calculateWeekData(employee, entries, holidays) {
     onbetaald_verlof: r(onbetaaldVerlof),
     ouderschapsverlof_betaald: r(ouderschapsBetaald),
     ouderschapsverlof_onbetaald: r(ouderschapsOnbetaald),
-    variabele_uren_100: 0,
+    variabele_uren_100: r(variabeleUren100),
     toeslagenmatrix_19: r(nightHours),
     toeslag_za_50: r(toeslagZa50),
     za_overwerk_150: r(overwerkZa150),
