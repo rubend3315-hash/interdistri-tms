@@ -166,15 +166,19 @@ export default function Urenbalans({
   };
 
   const exportCSV = () => {
-    const headers = ["Periode", "Maand", "Weken", "Contract", "Gewerkt", "Verlof", "Ziek", "ATV", "Feestdag", "Bijz. verlof", "Saldo", "Saldo cumulatief"];
-    const rows = periodeBalans.map(p => [
-      p.periode, p.maand, p.weken, p.contractUren, p.gewerkteUren,
-      p.verlofUren, p.ziekUren, p.atvUren, p.feestdagUren, p.bijzonderVerlof,
-      p.saldo, p.saldoCumulatief
-    ]);
-    rows.push(["Totaal", "", "", totalen.contractUren, totalen.gewerkteUren,
-      totalen.verlofUren, totalen.ziekUren, totalen.atvUren, totalen.feestdagUren, totalen.bijzonderVerlof,
-      totalen.saldo, ""]);
+    const baseHeaders = ["Periode", "Maand", "Weken", "Contract", "Gewerkt", "Verlof", "Ziek", "ATV", "Feestdag", "Bijz. verlof"];
+    const oproepHeaders = isOproepkracht ? ["Var. uren", "Var. bedrag"] : [];
+    const headers = [...baseHeaders, ...oproepHeaders, "Saldo", "Saldo cumulatief"];
+    const rows = periodeBalans.map(p => {
+      const base = [p.periode, p.maand, p.weken, p.contractUren, p.gewerkteUren,
+        p.verlofUren, p.ziekUren, p.atvUren, p.feestdagUren, p.bijzonderVerlof];
+      const oproep = isOproepkracht ? [p.variabeleUren, p.variabeleBedrag] : [];
+      return [...base, ...oproep, p.saldo, p.saldoCumulatief];
+    });
+    const totalBase = [totalen.contractUren, totalen.gewerkteUren,
+      totalen.verlofUren, totalen.ziekUren, totalen.atvUren, totalen.feestdagUren, totalen.bijzonderVerlof];
+    const totalOproep = isOproepkracht ? [totalen.variabeleUren, totalen.variabeleBedrag] : [];
+    rows.push(["Totaal", "", "", ...totalBase, ...totalOproep, totalen.saldo, ""]);
 
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(";")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -203,7 +207,7 @@ export default function Urenbalans({
             <div className="text-center">
               <p className="font-bold text-slate-900">{getFullName(employee)}</p>
               <p className="text-xs text-slate-500">
-                {employee.employee_number || ""} · {employee.department || ""} · {employee.function || ""} · Contract {contractHours} uur/week
+                {employee.employee_number || ""} · {employee.department || ""} · {employee.function || ""} · {isOproepkracht ? "Oproepkracht" : `Contract ${contractHours} uur/week`}
               </p>
               <p className="text-xs text-slate-400 mt-0.5">
                 {employeeIndex + 1} van {activeEmployees.length}
@@ -244,6 +248,8 @@ export default function Urenbalans({
                   <TableHead className="text-xs text-right">ATV</TableHead>
                   <TableHead className="text-xs text-right">Feestdag</TableHead>
                   <TableHead className="text-xs text-right">Bijz. verlof</TableHead>
+                  {isOproepkracht && <TableHead className="text-xs text-right">Var. uren</TableHead>}
+                  {isOproepkracht && <TableHead className="text-xs text-right">Var. bedrag</TableHead>}
                   <TableHead className="text-xs text-right">Saldo</TableHead>
                   <TableHead className="text-xs text-right">Cumulatief</TableHead>
                 </TableRow>
@@ -261,6 +267,8 @@ export default function Urenbalans({
                     <TableCell className="text-sm text-right text-purple-600">{fmt(p.atvUren)}</TableCell>
                     <TableCell className="text-sm text-right text-amber-600">{fmt(p.feestdagUren)}</TableCell>
                     <TableCell className="text-sm text-right text-teal-600">{fmt(p.bijzonderVerlof)}</TableCell>
+                    {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmt(p.variabeleUren)}</TableCell>}
+                    {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmtEuro(p.variabeleBedrag)}</TableCell>}
                     <TableCell className={`text-sm text-right font-semibold ${p.saldo > 0 ? "text-emerald-600" : p.saldo < 0 ? "text-red-600" : "text-slate-400"}`}>
                       {fmtSaldo(p.saldo)}
                     </TableCell>
@@ -279,6 +287,8 @@ export default function Urenbalans({
                   <TableCell className="text-sm text-right text-purple-600">{fmt(totalen.atvUren)}</TableCell>
                   <TableCell className="text-sm text-right text-amber-600">{fmt(totalen.feestdagUren)}</TableCell>
                   <TableCell className="text-sm text-right text-teal-600">{fmt(totalen.bijzonderVerlof)}</TableCell>
+                  {isOproepkracht && <TableCell className="text-sm text-right text-indigo-600">{fmt(totalen.variabeleUren)}</TableCell>}
+                  {isOproepkracht && <TableCell className="text-sm text-right text-indigo-600">{fmtEuro(totalen.variabeleBedrag)}</TableCell>}
                   <TableCell className={`text-sm text-right font-bold ${totalen.saldo > 0 ? "text-emerald-600" : totalen.saldo < 0 ? "text-red-600" : ""}`}>
                     {fmtSaldo(totalen.saldo)}
                   </TableCell>
@@ -292,6 +302,7 @@ export default function Urenbalans({
 
       {/* Samenvatting badges */}
       <div className="flex flex-wrap gap-2">
+        {isOproepkracht && <Badge className="bg-indigo-100 text-indigo-700">Oproepkracht</Badge>}
         <Badge className="bg-slate-100 text-slate-700">Contract: {fmt(totalen.contractUren)} uur</Badge>
         <Badge className="bg-emerald-100 text-emerald-700">Gewerkt: {fmt(totalen.gewerkteUren)} uur</Badge>
         <Badge className={`${totalen.saldo >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
@@ -299,6 +310,9 @@ export default function Urenbalans({
         </Badge>
         {totalen.verlofUren > 0 && <Badge className="bg-blue-100 text-blue-700">Verlof: {fmt(totalen.verlofUren)} uur</Badge>}
         {totalen.ziekUren > 0 && <Badge className="bg-orange-100 text-orange-700">Ziek: {fmt(totalen.ziekUren)} uur</Badge>}
+        {isOproepkracht && totalen.variabeleBedrag > 0 && (
+          <Badge className="bg-indigo-100 text-indigo-700">Variabel: {fmtEuro(totalen.variabeleBedrag)}</Badge>
+        )}
       </div>
     </div>
   );
