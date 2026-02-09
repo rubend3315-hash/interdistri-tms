@@ -229,7 +229,26 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
         </div>
       </div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-slate-800">Activiteitenrapport{effectiveFilter && effectiveFilter !== "all" ? ` - ${currentDayLabel}` : ''}</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-bold text-slate-800">Activiteitenrapport{effectiveFilter && effectiveFilter !== "all" ? ` - ${currentDayLabel}` : ''}</h3>
+          {!isEditing ? (
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-1.5 print:hidden">
+              <Pencil className="w-3.5 h-3.5" /> Correcties aanbrengen
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 print:hidden">
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
+                Bewerkmodus actief {changedCount > 0 && `· ${changedCount} wijziging(en)`}
+              </Badge>
+              <Button size="sm" onClick={handleSave} disabled={changedCount === 0 || saving} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700">
+                <Save className="w-3.5 h-3.5" /> {saving ? 'Opslaan...' : 'Opslaan'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCancel} className="gap-1.5">
+                <X className="w-3.5 h-3.5" /> Annuleren
+              </Button>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2 print:hidden">
           <Button
             variant="outline"
