@@ -217,7 +217,6 @@ export default function LoonrapportOverzicht({
     return periodes.map(periode => {
       const wekenData = periode.weken.map(weekNr => {
         const weekEntries = entriesByWeek[weekNr] || [];
-        // Bereken startdatum van deze week voor contract-lookup
         const jan4 = new Date(year, 0, 4);
         const weekStart = new Date(jan4);
         weekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
@@ -229,7 +228,6 @@ export default function LoonrapportOverzicht({
           return { employee: emp, ...data };
         });
 
-        // Week totalen
         const totals = {};
         VARIABELE_KOLOMMEN.forEach(k => {
           totals[k.key] = perEmployee.reduce((s, e) => s + (e[k.key] || 0), 0);
@@ -238,13 +236,25 @@ export default function LoonrapportOverzicht({
         return { weekNr, perEmployee, totals };
       });
 
+      // Per medewerker: tel alle weken in de periode op
+      const perEmployeeTotals = activeEmployees.map(emp => {
+        const empTotals = {};
+        VARIABELE_KOLOMMEN.forEach(col => {
+          empTotals[col.key] = wekenData.reduce((s, w) => {
+            const empData = w.perEmployee.find(e => e.employee.id === emp.id);
+            return s + ((empData && empData[col.key]) || 0);
+          }, 0);
+        });
+        return { employee: emp, ...empTotals };
+      });
+
       // Periode totalen
       const periodeTotals = {};
       VARIABELE_KOLOMMEN.forEach(k => {
-        periodeTotals[k.key] = wekenData.reduce((s, w) => s + (w.totals[k.key] || 0), 0);
+        periodeTotals[k.key] = perEmployeeTotals.reduce((s, e) => s + (e[k.key] || 0), 0);
       });
 
-      return { ...periode, wekenData, periodeTotals };
+      return { ...periode, wekenData, perEmployeeTotals, periodeTotals };
     });
   }, [periodes, entriesByWeek, activeEmployees, holidays]);
 
