@@ -361,7 +361,7 @@ export default function SalaryReports() {
         </TabsContent>
 
         <TabsContent value="loonrapport">
-
+      <div className="space-y-6">
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
