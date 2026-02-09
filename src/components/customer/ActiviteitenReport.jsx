@@ -12,13 +12,15 @@ function formatTime(val) {
 }
 
 // Editable cell component
-function EditableCell({ value, field, rowId, isEditing, editValues, onEditChange, isNumeric = false }) {
+function EditableCell({ value, field, rowId, isEditing, editValues, onEditChange, isNumeric = false, isTime = false }) {
+  const displayVal = isNumeric ? (Number(value) || 0) : (isTime ? formatTime(value) : (value || '-'));
   if (!isEditing) {
-    return isNumeric ? (Number(value) || 0) : (value || '-');
+    return displayVal;
   }
   const editVal = editValues[rowId]?.[field];
-  const currentVal = editVal !== undefined ? editVal : (isNumeric ? (Number(value) || 0) : (value || ''));
-  const hasChanged = editVal !== undefined && editVal !== (isNumeric ? (Number(value) || 0) : (value || ''));
+  const originalVal = isNumeric ? (Number(value) || 0) : (value || '');
+  const currentVal = editVal !== undefined ? editVal : originalVal;
+  const hasChanged = editVal !== undefined && String(editVal) !== String(originalVal);
   
   return (
     <input
@@ -26,7 +28,8 @@ function EditableCell({ value, field, rowId, isEditing, editValues, onEditChange
       value={currentVal}
       onChange={(e) => onEditChange(rowId, field, isNumeric ? Number(e.target.value) : e.target.value)}
       className={`w-full border rounded px-1 py-0.5 text-xs ${hasChanged ? 'bg-yellow-50 border-yellow-400' : 'border-slate-300'}`}
-      style={{ minWidth: isNumeric ? '50px' : '60px' }}
+      style={{ minWidth: isNumeric ? '50px' : '70px' }}
+      placeholder={isTime ? 'HH:MM:SS' : ''}
     />
   );
 }
