@@ -201,7 +201,7 @@ export default function Employees() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
-                placeholder="Zoek op naam of email..."
+                placeholder="Zoek op naam, personeelsnummer of email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
