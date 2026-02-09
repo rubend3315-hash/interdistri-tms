@@ -62,6 +62,51 @@ export default function SalaryReports() {
     queryFn: () => base44.entities.SalaryTable.list()
   });
 
+  const { data: loonperiodeStatuses = [] } = useQuery({
+    queryKey: ['loonperiodeStatuses'],
+    queryFn: () => base44.entities.LoonperiodeStatus.list()
+  });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  const definitiefMutation = useMutation({
+    mutationFn: async ({ year, periode, action }) => {
+      const existing = loonperiodeStatuses.find(s => s.year === year && s.periode === periode);
+      if (action === "definitief") {
+        const user = await base44.auth.me();
+        if (existing) {
+          return base44.entities.LoonperiodeStatus.update(existing.id, {
+            status: "Definitief",
+            definitief_datum: new Date().toISOString(),
+            definitief_door: user?.email
+          });
+        } else {
+          return base44.entities.LoonperiodeStatus.create({
+            year, periode, status: "Definitief",
+            definitief_datum: new Date().toISOString(),
+            definitief_door: user?.email
+          });
+        }
+      } else {
+        if (existing) {
+          return base44.entities.LoonperiodeStatus.update(existing.id, { status: "Open" });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loonperiodeStatuses'] });
+      setDefinitiefDialogOpen(false);
+    }
+  });
+
+  const currentPeriodeStatus = loonperiodeStatuses.find(
+    s => s.year === selectedYear && s.periode === selectedPeriode
+  );
+  const isDefinitief = currentPeriodeStatus?.status === "Definitief";
+
   const isLoading = loadingEmployees || loadingEntries;
 
   const years = [];
