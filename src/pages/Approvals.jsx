@@ -245,6 +245,8 @@ export default function Approvals() {
   const EntryCard = ({ entry, showActions = false }) => {
     const employee = getEmployee(entry.employee_id);
     const vehicle = getVehicle(entry.vehicle_id);
+    const entryYear = entry.date ? new Date(entry.date).getFullYear() : null;
+    const entryLocked = entry.date && entryYear && isDateInDefinitiefPeriode(entry.date, entryYear, loonperiodeStatuses);
 
     return (
       <Card className="hover:shadow-md transition-shadow">
