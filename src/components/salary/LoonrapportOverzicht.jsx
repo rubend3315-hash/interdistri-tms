@@ -133,7 +133,7 @@ export default function LoonrapportOverzicht({
   const [expandedPeriodes, setExpandedPeriodes] = useState(new Set([selectedPeriode]));
 
   const activeEmployees = useMemo(() =>
-    employees.filter(e => e.status === "Actief"),
+    employees.filter(e => e.status === "Actief" && e.department !== "Charters"),
   [employees]);
 
   // Get all entries for the year grouped by week
