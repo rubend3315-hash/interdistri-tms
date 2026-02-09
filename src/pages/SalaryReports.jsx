@@ -221,6 +221,15 @@ export default function SalaryReports() {
                           Heropenen
                         </Button>
                       )}
+                      <LoonrapportPrintAll
+                        year={selectedYear}
+                        selectedPeriode={selectedPeriode}
+                        periodes={periodes}
+                        employees={employees}
+                        timeEntries={timeEntries}
+                        holidays={holidays}
+                        salaryTables={salaryTables}
+                      />
                       <Button
                         variant="outline"
                         size="sm"
