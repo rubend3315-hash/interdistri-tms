@@ -66,7 +66,12 @@ export default function LoonrapportDetail({
         const wk = e.week_number || getWeek(d, { weekStartsOn: 1 });
         return wk === weekNr;
       });
-      const data = calculateWeekData(employee, weekEntries, holidays);
+      // Bereken startdatum van deze week voor contract-lookup
+      const jan4 = new Date(year, 0, 4);
+      const weekStart = new Date(jan4);
+      weekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
+      const weekStartStr = weekStart.toISOString().split("T")[0];
+      const data = calculateWeekData(employee, weekEntries, holidays, weekStartStr);
       
       // Reiskosten
       let woonWerk = 0;

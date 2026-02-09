@@ -217,10 +217,15 @@ export default function LoonrapportOverzicht({
     return periodes.map(periode => {
       const wekenData = periode.weken.map(weekNr => {
         const weekEntries = entriesByWeek[weekNr] || [];
-        
+        // Bereken startdatum van deze week voor contract-lookup
+        const jan4 = new Date(year, 0, 4);
+        const weekStart = new Date(jan4);
+        weekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
+        const weekStartStr = weekStart.toISOString().split("T")[0];
+
         const perEmployee = activeEmployees.map(emp => {
           const empEntries = weekEntries.filter(e => e.employee_id === emp.id);
-          const data = calculateWeekData(emp, empEntries, holidays);
+          const data = calculateWeekData(emp, empEntries, holidays, weekStartStr);
           return { employee: emp, ...data };
         });
 
