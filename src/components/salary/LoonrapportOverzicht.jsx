@@ -40,7 +40,6 @@ const VARIABELE_KOLOMMEN = [
 ];
 
 function calculateWeekData(employee, entries, holidays) {
-  const dayNames = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
   const contract = (employee.contractregels || [])
     .filter(c => c.status !== "Inactief")
     .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0] || {};
@@ -49,7 +48,7 @@ function calculateWeekData(employee, entries, holidays) {
   let totalHours = 0;
   let saturdayHours = 0;
   let sundayHours = 0;
-  let holidayHours = 0;
+  let holidayHoursWorked = 0;
   let weekdayHours = 0;
   let nightHours = 0;
   let gewerkteDagen = 0;
@@ -57,6 +56,12 @@ function calculateWeekData(employee, entries, holidays) {
   let verlofHours = 0;
   let ziekHours = 0;
   let atvHours = 0;
+  let bijzonderVerlof = 0;
+  let partnerVerlof = 0;
+  let onbetaaldVerlof = 0;
+  let ouderschapsBetaald = 0;
+  let ouderschapsOnbetaald = 0;
+  let partnerverlofWeek = 0;
 
   const holidayDates = new Set(holidays.map(h => h.date));
 
@@ -73,7 +78,7 @@ function calculateWeekData(employee, entries, holidays) {
     const isHoliday = holidayDates.has(e.date);
 
     if (isHoliday) {
-      holidayHours += hours;
+      holidayHoursWorked += hours;
     } else if (dayOfWeek === 0) {
       sundayHours += hours;
     } else if (dayOfWeek === 6) {
@@ -82,55 +87,81 @@ function calculateWeekData(employee, entries, holidays) {
       weekdayHours += hours;
     }
 
-    // Check shift type for verlof/ziek/atv
+    // Check shift type for verlof/ziek/atv etc.
     const st = (e.shift_type || "").toLowerCase();
-    if (st.includes("verlof")) verlofHours += hours;
+    if (st.includes("bijzonder verlof") || st.includes("bijzonderverlof")) bijzonderVerlof += hours;
+    else if (st.includes("partner verlof") || st.includes("partnerverlof")) partnerVerlof += hours;
+    else if (st.includes("onbetaald verlof") || st.includes("onbetaaldverlof")) onbetaaldVerlof += hours;
+    else if (st.includes("ouderschapsverlof") && st.includes("betaald")) ouderschapsBetaald += hours;
+    else if (st.includes("ouderschapsverlof") && st.includes("onbetaald")) ouderschapsOnbetaald += hours;
+    else if (st.includes("partnerverlof week")) partnerverlofWeek += hours;
+    else if (st.includes("verlof")) verlofHours += hours;
     if (st.includes("ziek")) ziekHours += hours;
     if (st.includes("atv")) atvHours += hours;
   });
 
-  // Aanvulling contract berekening
+  // Aanvulling contract: als weekdaguren < contract, aanvullen vanuit za/zo
   const regularHours = weekdayHours;
-  let aanvulling = 0;
-  let remaining = contractHours - regularHours;
+  let aanvullingZa = 0;
+  let aanvullingZo = 0;
+  let remaining = Math.max(0, contractHours - regularHours);
 
   if (remaining > 0 && saturdayHours > 0) {
-    const fromSat = Math.min(remaining, saturdayHours);
-    aanvulling += fromSat;
-    remaining -= fromSat;
+    aanvullingZa = Math.min(remaining, saturdayHours);
+    remaining -= aanvullingZa;
   }
   if (remaining > 0 && sundayHours > 0) {
-    const fromSun = Math.min(remaining, sundayHours);
-    aanvulling += fromSun;
-    remaining -= fromSun;
+    aanvullingZo = Math.min(remaining, sundayHours);
+    remaining -= aanvullingZo;
   }
+  const aanvulling = aanvullingZa + aanvullingZo;
 
-  // Overwerk berekening
-  const effectiveWorked = regularHours + saturdayHours + sundayHours + holidayHours;
-  const overwerkBase = Math.max(0, regularHours - contractHours);
-  const overwerkZa = Math.max(0, saturdayHours - Math.max(0, contractHours - regularHours));
-  const overwerkZo = Math.max(0, sundayHours - Math.max(0, contractHours - regularHours - saturdayHours));
+  // Diensturen = uren op die dag (voor aanvulling)
+  const dienstZa = saturdayHours;
+  const dienstZo = sundayHours;
+  const dienstFeestdag = holidayHoursWorked;
+
+  // Toeslag berekening: over aanvullings-uren
+  const toeslagZa50 = aanvullingZa; // uren die aanvullen uit zaterdag → 50% toeslag
+  const toeslagZo100 = aanvullingZo; // uren die aanvullen uit zondag → 100% toeslag
+  const toeslagFeestdag100 = Math.min(holidayHoursWorked, Math.max(0, contractHours - regularHours - aanvullingZa - aanvullingZo));
+
+  // Overwerk: uren boven contracturen
+  const overwerkZa150 = Math.max(0, saturdayHours - aanvullingZa);
+  const overwerkZo200 = Math.max(0, sundayHours - aanvullingZo);
+  const overwerkFeestdag200 = Math.max(0, holidayHoursWorked - toeslagFeestdag100);
+  const overwerk130 = Math.max(0, regularHours - contractHours);
+
+  const r = (v) => Math.round(v * 10000) / 10000;
 
   return {
     gewerkte_dagen: gewerkteDagen,
-    uren_100: Math.round(totalHours * 10000) / 10000,
+    uren_100: r(totalHours),
     compensatie_uren: 0,
-    aanvulling_contract: Math.round(aanvulling * 10000) / 10000,
-    meeruren: Math.round(overwerkBase * 10000) / 10000,
-    diensttoeslag_za_150: Math.round(overwerkZa * 10000) / 10000,
-    diensttoeslag_zo_200: Math.round(overwerkZo * 10000) / 10000,
+    aanvulling_contract: r(aanvulling),
+    diensttoeslag_za_150: r(dienstZa),
+    diensttoeslag_zo_200: r(dienstZo),
     vakantiedag: 0,
-    ziek: Math.round(ziekHours * 10000) / 10000,
-    verlof: Math.round(verlofHours * 10000) / 10000,
-    feestdag: Math.round(holidayHours * 10000) / 10000,
-    atv: Math.round(atvHours * 10000) / 10000,
-    bijzonder_verlof: 0,
-    partner_verlof: 0,
-    onbetaald_verlof: 0,
-    ouderschapsverlof_betaald: 0,
-    ouderschapsverlof_onbetaald: 0,
+    ziek: r(ziekHours),
+    verlof: r(verlofHours),
+    feestdag: r(holidayHoursWorked),
+    atv: r(atvHours),
+    bijzonder_verlof: r(bijzonderVerlof),
+    partner_verlof: r(partnerVerlof),
+    onbetaald_verlof: r(onbetaaldVerlof),
+    ouderschapsverlof_betaald: r(ouderschapsBetaald),
+    ouderschapsverlof_onbetaald: r(ouderschapsOnbetaald),
     variabele_uren_100: 0,
-    toeslagenmatrix_19: Math.round(nightHours * 10000) / 10000,
+    toeslagenmatrix_19: r(nightHours),
+    toeslag_za_50: r(toeslagZa50),
+    za_overwerk_150: r(overwerkZa150),
+    toeslag_zo_100: r(toeslagZo100),
+    zo_overwerk_200: r(overwerkZo200),
+    diensturen_feestdag_200: r(dienstFeestdag),
+    toeslag_feestdag_100: r(toeslagFeestdag100),
+    feestdag_overwerk_200: r(overwerkFeestdag200),
+    overwerk_130: r(overwerk130),
+    partnerverlof_week: r(partnerverlofWeek),
     verblijfkosten: Math.round(subsistence * 100) / 100,
   };
 }
