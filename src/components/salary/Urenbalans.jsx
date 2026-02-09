@@ -336,26 +336,83 @@ export default function Urenbalans({
               </TableHeader>
               <TableBody>
                 {periodeBalans.map(p => (
-                  <TableRow key={p.periode} className="hover:bg-slate-50">
-                    <TableCell className="font-medium text-sm">{p.periode}</TableCell>
-                    <TableCell className="text-sm text-slate-600">{p.maand}</TableCell>
-                    <TableCell className="text-sm text-center text-slate-500">{p.weken}</TableCell>
-                    <TableCell className="text-sm text-right">{fmt(p.contractUren)}</TableCell>
-                    <TableCell className="text-sm text-right font-medium">{fmt(p.gewerkteUren)}</TableCell>
-                    <TableCell className="text-sm text-right text-blue-600">{fmt(p.verlofUren)}</TableCell>
-                    <TableCell className="text-sm text-right text-orange-600">{fmt(p.ziekUren)}</TableCell>
-                    <TableCell className="text-sm text-right text-purple-600">{fmt(p.atvUren)}</TableCell>
-                    <TableCell className="text-sm text-right text-amber-600">{fmt(p.feestdagUren)}</TableCell>
-                    <TableCell className="text-sm text-right text-teal-600">{fmt(p.bijzonderVerlof)}</TableCell>
-                    {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmt(p.variabeleUren)}</TableCell>}
-                    {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmtEuro(p.variabeleBedrag)}</TableCell>}
-                    <TableCell className={`text-sm text-right font-semibold ${p.saldo > 0 ? "text-emerald-600" : p.saldo < 0 ? "text-red-600" : "text-slate-400"}`}>
-                      {fmtSaldo(p.saldo)}
-                    </TableCell>
-                    <TableCell className={`text-sm text-right font-semibold ${p.saldoCumulatief > 0 ? "text-emerald-600" : p.saldoCumulatief < 0 ? "text-red-600" : "text-slate-400"}`}>
-                      {fmtSaldo(p.saldoCumulatief)}
-                    </TableCell>
-                  </TableRow>
+                  <React.Fragment key={p.periode}>
+                    <TableRow
+                      className="hover:bg-slate-50 cursor-pointer"
+                      onClick={() => togglePeriode(p.periode)}
+                    >
+                      <TableCell className="font-medium text-sm">
+                        <div className="flex items-center gap-1">
+                          {expandedPeriodes.has(p.periode) ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                          )}
+                          {p.periode}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">{p.maand}</TableCell>
+                      <TableCell className="text-sm text-center text-slate-500">{p.weken}</TableCell>
+                      <TableCell className="text-sm text-right">{fmt(p.contractUren)}</TableCell>
+                      <TableCell className="text-sm text-right font-medium">{fmt(p.gewerkteUren)}</TableCell>
+                      <TableCell className="text-sm text-right text-blue-600">{fmt(p.verlofUren)}</TableCell>
+                      <TableCell className="text-sm text-right text-orange-600">{fmt(p.ziekUren)}</TableCell>
+                      <TableCell className="text-sm text-right text-purple-600">{fmt(p.atvUren)}</TableCell>
+                      <TableCell className="text-sm text-right text-amber-600">{fmt(p.feestdagUren)}</TableCell>
+                      <TableCell className="text-sm text-right text-teal-600">{fmt(p.bijzonderVerlof)}</TableCell>
+                      {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmt(p.variabeleUren)}</TableCell>}
+                      {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmtEuro(p.variabeleBedrag)}</TableCell>}
+                      <TableCell className={`text-sm text-right font-semibold ${p.saldo > 0 ? "text-emerald-600" : p.saldo < 0 ? "text-red-600" : "text-slate-400"}`}>
+                        {fmtSaldo(p.saldo)}
+                      </TableCell>
+                      <TableCell className={`text-sm text-right font-semibold ${p.saldoCumulatief > 0 ? "text-emerald-600" : p.saldoCumulatief < 0 ? "text-red-600" : "text-slate-400"}`}>
+                        {fmtSaldo(p.saldoCumulatief)}
+                      </TableCell>
+                    </TableRow>
+
+                    {/* Uitklapbare weekdetails */}
+                    {expandedPeriodes.has(p.periode) && (
+                      <TableRow>
+                        <TableCell colSpan={10 + (isOproepkracht ? 2 : 0) + 2} className="p-0 bg-slate-50">
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="bg-slate-100">
+                                  <TableHead className="text-xs font-semibold">Week</TableHead>
+                                  <TableHead className="text-xs text-right font-semibold">Gewerkte dagen</TableHead>
+                                  <TableHead className="text-xs text-right font-semibold">100% uren</TableHead>
+                                  {visibleDetailColumns
+                                    .filter(c => c.key !== "gewerkte_dagen" && c.key !== "uren_100")
+                                    .map(col => (
+                                      <TableHead key={col.key} className="text-xs text-right whitespace-nowrap">{col.label}</TableHead>
+                                    ))}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {p.weekDetails.map(w => {
+                                  const hasData = (w.weekData.uren_100 || 0) > 0 || (w.weekData.verlof || 0) > 0 || (w.weekData.ziek || 0) > 0 || (w.weekData.feestdag || 0) > 0;
+                                  return (
+                                    <TableRow key={w.weekNr} className={hasData ? "" : "text-slate-400"}>
+                                      <TableCell className="text-sm font-medium pl-6">{year} - {w.weekNr}</TableCell>
+                                      <TableCell className="text-sm text-right">{fmtDetail(w.weekData.gewerkte_dagen)}</TableCell>
+                                      <TableCell className="text-sm text-right">{fmtDetail(w.weekData.uren_100)}</TableCell>
+                                      {visibleDetailColumns
+                                        .filter(c => c.key !== "gewerkte_dagen" && c.key !== "uren_100")
+                                        .map(col => (
+                                          <TableCell key={col.key} className="text-sm text-right">
+                                            {formatDetailCell(col, w.weekData[col.key])}
+                                          </TableCell>
+                                        ))}
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 ))}
                 {/* Totaalrij */}
                 <TableRow className="bg-slate-200 font-bold border-t-2">
