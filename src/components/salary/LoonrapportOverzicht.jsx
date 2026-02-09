@@ -39,10 +39,22 @@ export const VARIABELE_KOLOMMEN = [
   { key: "verblijfkosten", label: "Verblijfkosten" },
 ];
 
-export function calculateWeekData(employee, entries, holidays) {
-  const contract = (employee.contractregels || [])
+export function calculateWeekData(employee, entries, holidays, weekStartDate) {
+  // Bepaal welk contract actief was voor deze week
+  const activeContracts = (employee.contractregels || [])
     .filter(c => c.status !== "Inactief")
-    .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0] || {};
+    .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum));
+
+  let contract = activeContracts[0] || {};
+  if (weekStartDate && activeContracts.length > 1) {
+    const refDate = new Date(weekStartDate);
+    contract = activeContracts.find(c => {
+      const start = new Date(c.startdatum);
+      const end = c.einddatum ? new Date(c.einddatum) : new Date("2099-12-31");
+      return refDate >= start && refDate <= end;
+    }) || activeContracts[0] || {};
+  }
+
   const contractHours = contract.uren_per_week || employee.contract_hours || 0;
 
   let totalHours = 0;
@@ -132,7 +144,7 @@ export function calculateWeekData(employee, entries, holidays) {
   const overwerkFeestdag200 = Math.max(0, holidayHoursWorked - toeslagFeestdag100);
   const overwerk130 = Math.max(0, regularHours - contractHours);
 
-  // Oproepkracht: alle gewerkte uren zijn variabele uren
+  // Oproepkracht: check op basis van het actieve contract voor deze week
   const isOproep = employee.contract_type === "Oproep" ||
     ((contract.type_contract || "").toLowerCase().includes("oproep"));
   const variabeleUren100 = isOproep ? totalHours : 0;
