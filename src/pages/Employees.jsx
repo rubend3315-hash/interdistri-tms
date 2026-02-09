@@ -403,9 +403,15 @@ function ProfielTab({ employee, viewOnly }) {
             <div>
               <p className="text-xs text-slate-500">In dienst sinds</p>
               <p className="text-slate-900">
-                {(employee.in_service_since || employee.contract_start_date) 
-                  ? format(new Date(employee.in_service_since || employee.contract_start_date), 'dd MMMM yyyy') 
-                  : '-'}
+                {(() => {
+                  const inServiceDate = employee.in_service_since || employee.contract_start_date;
+                  if (inServiceDate) return format(new Date(inServiceDate), 'dd MMMM yyyy');
+                  // Fallback: earliest contractregel startdatum
+                  const earliest = (employee.contractregels || [])
+                    .filter(c => c.startdatum)
+                    .sort((a, b) => new Date(a.startdatum) - new Date(b.startdatum))[0];
+                  return earliest ? format(new Date(earliest.startdatum), 'dd MMMM yyyy') : '-';
+                })()}
               </p>
             </div>
           </CardContent>
