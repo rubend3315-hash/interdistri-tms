@@ -187,14 +187,48 @@ export default function SalaryReports() {
                       </Select>
                     </div>
                     <div className="flex-1" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowConfig(!showConfig)}
-                    >
-                      <FileSpreadsheet className="w-4 h-4 mr-1" />
-                      {showConfig ? "Verberg periodes" : "Periodes inzien"}
-                    </Button>
+                    {isDefinitief ? (
+                      <Badge className="bg-emerald-100 text-emerald-700 px-3 py-1.5 flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5" />
+                        Definitief – {currentPeriodeStatus?.definitief_door} op {currentPeriodeStatus?.definitief_datum ? format(new Date(currentPeriodeStatus.definitief_datum), "d MMM yyyy HH:mm", { locale: nl }) : ""}
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-amber-100 text-amber-700 px-3 py-1.5 flex items-center gap-1.5">
+                        <Unlock className="w-3.5 h-3.5" />
+                        Open – Nog niet definitief
+                      </Badge>
+                    )}
+                    <div className="flex gap-2">
+                      {!isDefinitief && (
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700"
+                          onClick={() => setDefinitiefDialogOpen(true)}
+                        >
+                          <ShieldCheck className="w-4 h-4 mr-1" />
+                          Definitief maken
+                        </Button>
+                      )}
+                      {isDefinitief && currentUser?.role === 'admin' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                          onClick={() => definitiefMutation.mutate({ year: selectedYear, periode: selectedPeriode, action: "heropenen" })}
+                        >
+                          <Unlock className="w-4 h-4 mr-1" />
+                          Heropenen
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowConfig(!showConfig)}
+                      >
+                        <FileSpreadsheet className="w-4 h-4 mr-1" />
+                        {showConfig ? "Verberg periodes" : "Periodes inzien"}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
