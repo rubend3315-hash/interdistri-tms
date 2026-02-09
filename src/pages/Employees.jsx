@@ -525,6 +525,15 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
     Object.keys(defaults).forEach(key => {
       merged[key] = employee[key] != null ? employee[key] : defaults[key];
     });
+    // Auto-fill "in dienst sinds" from earliest contract start date if not set
+    if (!merged.in_service_since && Array.isArray(employee.contractregels) && employee.contractregels.length > 0) {
+      const earliest = employee.contractregels
+        .filter(c => c.startdatum && c.status !== 'Inactief')
+        .sort((a, b) => new Date(a.startdatum) - new Date(b.startdatum))[0];
+      if (earliest) {
+        merged.in_service_since = earliest.startdatum;
+      }
+    }
     return merged;
   });
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
