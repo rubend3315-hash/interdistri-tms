@@ -232,6 +232,7 @@ export default function LoonrapportDetail({
               const total = periodeTotals[col.key] || 0;
               if (total === 0) return null;
               const isEuro = col.key === "verblijfkosten";
+              const isDagen = col.key === "gewerkte_dagen";
               const bedrag = toeslagBedragen[col.key] || null;
 
               return (
@@ -239,7 +240,7 @@ export default function LoonrapportDetail({
                   <span className="text-sm text-slate-600">{col.label}</span>
                   <div className="flex items-center gap-8">
                     <span className="text-sm font-medium text-slate-700 min-w-[100px] text-right">
-                      {isEuro ? `€ ${total.toFixed(2)}` : `${fmt(total)} uur`}
+                      {isEuro ? `€ ${total.toFixed(2)}` : isDagen ? `${fmt(total)} ${total === 1 ? 'dag' : 'dagen'}` : `${fmt(total)} uur`}
                     </span>
                     {!isEuro && bedrag ? (
                       <span className="text-sm font-medium text-slate-700 min-w-[100px] text-right">
