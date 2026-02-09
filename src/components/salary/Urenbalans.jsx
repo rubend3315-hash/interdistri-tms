@@ -244,6 +244,32 @@ export default function Urenbalans({
     URL.revokeObjectURL(url);
   };
 
+  const [expandedPeriodes, setExpandedPeriodes] = useState(new Set());
+
+  const togglePeriode = (periodeNr) => {
+    setExpandedPeriodes(prev => {
+      const next = new Set(prev);
+      next.has(periodeNr) ? next.delete(periodeNr) : next.add(periodeNr);
+      return next;
+    });
+  };
+
+  const fmtDetail = (v) => {
+    if (v === 0 || v === undefined || v === null) return "-";
+    if (Number.isInteger(v)) return v.toString();
+    return v.toFixed(4).replace(/\.?0+$/, "");
+  };
+
+  const fmtDetailEuro = (v) => {
+    if (v === 0 || v === undefined || v === null) return "-";
+    return `€${v.toFixed(2).replace(".", ",")}`;
+  };
+
+  const formatDetailCell = (col, val) => {
+    if (col.key === "verblijfkosten") return fmtDetailEuro(val);
+    return fmtDetail(val);
+  };
+
   return (
     <div className="space-y-4">
       {/* Navigatie */}
