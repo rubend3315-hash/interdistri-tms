@@ -70,6 +70,7 @@ function mapToEmployee(row) {
     bank_account: row.iban || "",
     emergency_contact_name: row.noodcontact_naam || "",
     emergency_contact_phone: row.noodcontact_telefoon || "",
+    contract_end_date: row.datum_uit_dienst || "",
     status: mapStatus(row.status),
   };
 }
@@ -170,6 +171,7 @@ export default function HRImportPreview({ data, existingEmployees, onImport, isI
                   <th className="px-3 py-2 text-left text-slate-600 font-medium">Functie</th>
                   <th className="px-3 py-2 text-left text-slate-600 font-medium">In dienst</th>
                   <th className="px-3 py-2 text-left text-slate-600 font-medium">Uren/week</th>
+                  <th className="px-3 py-2 text-left text-slate-600 font-medium">Uit dienst</th>
                 </tr>
               </thead>
               <tbody>
@@ -203,6 +205,7 @@ export default function HRImportPreview({ data, existingEmployees, onImport, isI
                       <td className="px-3 py-2 text-slate-600">{emp.function || "-"}</td>
                       <td className="px-3 py-2 text-slate-600">{emp.in_service_since || "-"}</td>
                       <td className="px-3 py-2 text-slate-600">{emp.contract_hours || "-"}</td>
+                      <td className="px-3 py-2 text-slate-600">{emp.contract_end_date || "-"}</td>
                     </tr>
                   );
                 })}

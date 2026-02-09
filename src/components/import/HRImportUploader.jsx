@@ -55,6 +55,7 @@ export default function HRImportUploader({ onDataExtracted, isProcessing }) {
             iban: { type: "string", description: "IBAN bankrekeningnummer" },
             noodcontact_naam: { type: "string", description: "Naam noodcontact" },
             noodcontact_telefoon: { type: "string", description: "Telefoon noodcontact" },
+            datum_uit_dienst: { type: "string", description: "Datum uit dienst / End date employment (YYYY-MM-DD)" },
             status: { type: "string", description: "Status (Actief, Inactief, Uit dienst)" }
           }
         }
