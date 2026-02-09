@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -18,8 +19,12 @@ import {
   Clock,
   Moon,
   Calendar,
-  Sun
+  Sun,
+  Users,
+  RefreshCw
 } from "lucide-react";
+import SalaryExportStamgegevens from "@/components/salary/SalaryExportStamgegevens";
+import SalaryExportMutation from "@/components/salary/SalaryExportMutation";
 
 export default function SalaryReports() {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
