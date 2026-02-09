@@ -515,16 +515,20 @@ export default function Approvals() {
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Tijdregistratie Details</span>
-              {!isEditMode && selectedEntry?.status === 'Ingediend' && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsEditMode(true)}
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Bewerken
-                </Button>
-              )}
+              {!isEditMode && selectedEntry?.status === 'Ingediend' && (() => {
+                const entryYear = selectedEntry?.date ? new Date(selectedEntry.date).getFullYear() : null;
+                const locked = selectedEntry?.date && entryYear && isDateInDefinitiefPeriode(selectedEntry.date, entryYear, loonperiodeStatuses);
+                if (locked) return (
+                  <Badge className="bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                    <Lock className="w-3 h-3" /> Vergrendeld
+                  </Badge>
+                );
+                return (
+                  <Button size="sm" variant="outline" onClick={() => setIsEditMode(true)}>
+                    <Edit className="w-4 h-4 mr-1" /> Bewerken
+                  </Button>
+                );
+              })()}
             </DialogTitle>
           </DialogHeader>
           {selectedEntry && (
