@@ -183,93 +183,115 @@ export default function LoonrapportDetail({
         </CardContent>
       </Card>
 
-      {/* Variabele componenten per week */}
+      {/* Variabele kosten loonperiode - opgeteld */}
       <Card className="overflow-hidden">
-        <div className="bg-slate-700 text-white px-6 py-3">
+        <div className="bg-slate-700 text-white px-6 py-3 flex items-center justify-between">
           <span className="font-semibold text-sm">
-            Variabele kosten Periode {selectedPeriode} – Week {currentPeriode.weken[0]} t/m {currentPeriode.weken[currentPeriode.weken.length - 1]}
+            Variabele kosten loonperiode {currentPeriode.weken.length > 0 ? (() => {
+              const jan4 = new Date(year, 0, 4);
+              const firstWeekStart = new Date(jan4);
+              firstWeekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (currentPeriode.weken[0] - 1) * 7);
+              const lastWeekStart = new Date(jan4);
+              lastWeekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (currentPeriode.weken[currentPeriode.weken.length - 1] - 1) * 7);
+              const lastWeekEnd = new Date(lastWeekStart);
+              lastWeekEnd.setDate(lastWeekStart.getDate() + 6);
+              return `${format(firstWeekStart, "dd-MM-yyyy")} t/m ${format(lastWeekEnd, "dd-MM-yyyy")}`;
+            })() : ""}
           </span>
+          <span className="text-sm text-slate-300">Bedragen toelichting</span>
         </div>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-100">
-                  <TableHead className="sticky left-0 bg-slate-100 z-10 text-xs">Component</TableHead>
-                  {currentPeriode.weken.map(wk => (
-                    <TableHead key={wk} className="text-right text-xs whitespace-nowrap">Wk {wk}</TableHead>
-                  ))}
-                  <TableHead className="text-right text-xs font-bold bg-slate-200">Totaal</TableHead>
-                  <TableHead className="text-right text-xs font-bold bg-slate-200">Bedrag</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visibleColumns.map(col => {
-                  const total = periodeTotals[col.key] || 0;
-                  const isEuro = col.key === "verblijfkosten";
-                  const toeslagKey = col.key;
-                  const bedrag = toeslagBedragen[toeslagKey] || null;
+          <div className="divide-y">
+            {/* Weeknummers */}
+            <div className="flex items-center justify-between px-6 py-2.5 hover:bg-slate-50">
+              <span className="text-sm text-slate-600">Weeknummers in deze periode</span>
+              <span className="text-sm font-medium text-slate-700">
+                {currentPeriode.weken.join(", ")}
+              </span>
+            </div>
 
-                  return (
-                    <TableRow key={col.key} className="hover:bg-slate-50">
-                      <TableCell className="sticky left-0 bg-white z-10 text-xs text-slate-600 whitespace-nowrap">
-                        {col.label}
-                      </TableCell>
-                      {currentPeriode.weken.map(wk => {
-                        const weekData = wekenDetail.find(w => w.weekNr === wk);
-                        const val = weekData ? weekData[col.key] || 0 : 0;
-                        return (
-                          <TableCell key={wk} className="text-right text-xs text-slate-600">
-                            {isEuro ? fmtEuro(val) : fmt(val)}
-                          </TableCell>
-                        );
-                      })}
-                      <TableCell className="text-right text-xs font-semibold bg-slate-50">
-                        {isEuro ? fmtEuro(total) : fmt(total)}
-                      </TableCell>
-                      <TableCell className="text-right text-xs font-medium text-emerald-600 bg-slate-50">
-                        {isEuro ? fmtEuro(total) : bedrag ? fmtEuro(bedrag) : "-"}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {/* Woon-werk reiskosten */}
-                {periodeTotals.woonwerk > 0 && (
-                  <TableRow className="hover:bg-slate-50">
-                    <TableCell className="sticky left-0 bg-white z-10 text-xs text-slate-600 whitespace-nowrap">
-                      Woon-werkverkeer onbelast
-                    </TableCell>
-                    {currentPeriode.weken.map(wk => {
-                      const weekData = wekenDetail.find(w => w.weekNr === wk);
-                      return (
-                        <TableCell key={wk} className="text-right text-xs text-slate-600">
-                          {fmtEuro(weekData?.woonwerk || 0)}
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell className="text-right text-xs font-semibold bg-slate-50">
-                      {fmtEuro(periodeTotals.woonwerk)}
-                    </TableCell>
-                    <TableCell className="text-right text-xs font-medium text-emerald-600 bg-slate-50">
-                      {fmtEuro(periodeTotals.woonwerk)}
-                    </TableCell>
-                  </TableRow>
-                )}
-                {/* Totaalrij */}
-                <TableRow className="bg-slate-200 font-bold border-t-2">
-                  <TableCell className="sticky left-0 bg-slate-200 z-10 text-xs">Totaal periode</TableCell>
-                  {currentPeriode.weken.map(wk => (
-                    <TableCell key={wk} className="text-right text-xs">
-                      {fmt(wekenDetail.find(w => w.weekNr === wk)?.uren_100 || 0)}
-                    </TableCell>
-                  ))}
-                  <TableCell className="text-right text-xs bg-slate-200">
-                    {fmt(periodeTotals.uren_100)}
-                  </TableCell>
-                  <TableCell className="text-right text-xs bg-slate-200" />
-                </TableRow>
-              </TableBody>
-            </Table>
+            {/* Saldo meeruren */}
+            {(() => {
+              const saldoMeeruren = Math.round(((periodeTotals.overwerk_130 || 0) + (periodeTotals.variabele_uren_100 || 0) + (periodeTotals.diensttoeslag_za_150 || 0)) * 10000) / 10000;
+              if (saldoMeeruren > 0) {
+                return (
+                  <div className="flex items-center justify-between px-6 py-2.5 hover:bg-slate-50">
+                    <span className="text-sm text-slate-600">Saldo meeruren t.b.v. vakantiebijslag/verlof</span>
+                    <div className="flex items-center gap-8">
+                      <span className="text-sm font-medium text-slate-700">{fmt(saldoMeeruren)} uur</span>
+                      <span className="text-xs text-slate-500">Meeruren/variabele uren + diensturen zaterdag 150%</span>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            {/* Variabele kosten regels - alleen gevulde tonen */}
+            {visibleColumns.map(col => {
+              const total = periodeTotals[col.key] || 0;
+              if (total === 0) return null;
+              const isEuro = col.key === "verblijfkosten";
+              const bedrag = toeslagBedragen[col.key] || null;
+
+              return (
+                <div key={col.key} className="flex items-center justify-between px-6 py-2.5 hover:bg-slate-50">
+                  <span className="text-sm text-slate-600">{col.label}</span>
+                  <div className="flex items-center gap-8">
+                    <span className="text-sm font-medium text-slate-700 min-w-[100px] text-right">
+                      {isEuro ? `€ ${total.toFixed(2)}` : `${fmt(total)} uur`}
+                    </span>
+                    {!isEuro && bedrag ? (
+                      <span className="text-sm font-medium text-slate-700 min-w-[100px] text-right">
+                        € {bedrag.toFixed(2)}
+                      </span>
+                    ) : (
+                      <span className="min-w-[100px]" />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Woon-werkverkeer */}
+            {periodeTotals.woonwerk > 0 && (
+              <div className="flex items-center justify-between px-6 py-2.5 hover:bg-slate-50">
+                <span className="text-sm text-slate-600">Woon-werk onbelast</span>
+                <div className="flex items-center gap-8">
+                  <span className="text-sm font-medium text-slate-700 min-w-[100px] text-right">
+                    € {periodeTotals.woonwerk.toFixed(2)}
+                  </span>
+                  <span className="min-w-[100px]" />
+                </div>
+              </div>
+            )}
+
+            {/* Inhoudingen */}
+            {(() => {
+              const meals = wekenDetail.reduce((s, w) => {
+                const weekEntries = timeEntries.filter(e => {
+                  if (!e.date || e.employee_id !== employee.id) return false;
+                  const d = new Date(e.date);
+                  const wk = e.week_number || getWeek(d, { weekStartsOn: 1 });
+                  return wk === w.weekNr;
+                });
+                return s + weekEntries.reduce((ms, e) => ms + (e.meals || 0), 0);
+              }, 0);
+              if (meals > 0) {
+                return (
+                  <div className="flex items-center justify-between px-6 py-2.5 hover:bg-slate-50">
+                    <span className="text-sm text-slate-600">Inhoudingen</span>
+                    <div className="flex items-center gap-8">
+                      <span className="text-sm font-medium text-slate-700 min-w-[100px] text-right">
+                        € {meals.toFixed(2)}
+                      </span>
+                      <span className="min-w-[100px]" />
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         </CardContent>
       </Card>
