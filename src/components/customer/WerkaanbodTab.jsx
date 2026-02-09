@@ -76,11 +76,11 @@ export default function WerkaanbodTab({ importResults = [] }) {
     return years.length > 0 ? years : [currentYear];
   }, [parsedData, currentYear]);
 
-  const addYear = () => {
-    const minYear = Math.min(...selectedYears);
-    const prevYear = minYear - 1;
-    if (availableYears.includes(prevYear) && !selectedYears.includes(prevYear)) {
-      setSelectedYears(prev => [...prev, prevYear].sort((a, b) => b - a));
+  const addableYears = availableYears.filter(y => !selectedYears.includes(y));
+
+  const addYear = (year) => {
+    if (year && !selectedYears.includes(year)) {
+      setSelectedYears(prev => [...prev, year].sort((a, b) => b - a));
     }
   };
 
@@ -135,9 +135,18 @@ export default function WerkaanbodTab({ importResults = [] }) {
             )}
           </Badge>
         ))}
-        <Button variant="outline" size="sm" onClick={addYear} className="gap-1">
-          <Plus className="w-3 h-3" /> Jaar toevoegen
-        </Button>
+        {addableYears.length > 0 && (
+          <Select onValueChange={(v) => addYear(Number(v))}>
+            <SelectTrigger className="h-8 w-44 text-xs">
+              <span className="flex items-center gap-1"><Plus className="w-3 h-3" /> Jaar toevoegen</span>
+            </SelectTrigger>
+            <SelectContent>
+              {addableYears.map(y => (
+                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <YearTotalsSummary data={parsedData} selectedYears={selectedYears} />
