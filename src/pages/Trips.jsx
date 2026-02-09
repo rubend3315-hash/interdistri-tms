@@ -137,6 +137,11 @@ export default function Trips() {
   };
 
   const openEditDialog = (trip) => {
+    // Check of rit in definitieve periode valt
+    if (trip.date) {
+      const tripYear = new Date(trip.date).getFullYear();
+      if (isDateInDefinitiefPeriode(trip.date, tripYear, loonperiodeStatuses)) return;
+    }
     setSelectedTrip(trip);
     setFormData({
       ...trip,
