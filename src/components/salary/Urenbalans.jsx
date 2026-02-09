@@ -91,7 +91,10 @@ export default function Urenbalans({
         const weekIsOproep = employee.contract_type === "Oproep" ||
           (weekContract.type_contract || "").toLowerCase().includes("oproep");
 
-        contractUren += weekContractHours;
+        // Oproepkrachten hebben geen contracturenplicht, dus 0 voor saldo
+        if (!weekIsOproep) {
+          contractUren += weekContractHours;
+        }
         const entries = entriesByWeek[weekNr] || [];
 
         let weekWorked = 0;
