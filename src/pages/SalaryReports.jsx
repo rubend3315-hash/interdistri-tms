@@ -724,6 +724,9 @@ export default function SalaryReports() {
           )}
         </CardContent>
       </Card>
+
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
