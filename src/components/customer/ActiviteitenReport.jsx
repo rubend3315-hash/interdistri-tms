@@ -319,8 +319,11 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, idx) => (
-              <tr key={idx} className="border-b hover:bg-slate-50">
+            {rows.map((r, idx) => {
+              const rowId = r._importId || `row-${idx}`;
+              const hasEdits = editValues[rowId] && Object.keys(editValues[rowId]).length > 0;
+              return (
+              <tr key={idx} className={`border-b hover:bg-slate-50 ${hasEdits ? 'bg-yellow-50/50' : ''}`}>
                 <td className="py-1.5 px-2 text-slate-600 whitespace-nowrap">{r._dayName || '-'}</td>
                 <td className="py-1.5 px-2 font-medium text-slate-800">{r['Ritnaam'] || '-'}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Vrijgegeven'])}</td>
@@ -328,24 +331,47 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Eerste stop'])}</td>
                 <td className="py-1.5 px-2 text-right text-slate-600">{formatTime(r['>15 min geen scan'])}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Laatste stop'])}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal periodes >15 min geen scan']) || 0}</td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Aantal periodes >15 min geen scan']} field="Aantal periodes >15 min geen scan" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Besteltijd Norm'])}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Besteltijd Bruto'])}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Besteltijd Netto'])}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Voorbereiding, aan-/afrijtijd en afhandeling'])}</td>
                 <td className="py-1.5 px-2 text-right text-slate-700">{formatTime(r['Totaal rit'])}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal tijdens route - stuks']) || 0}</td>
-                <td className={`py-1.5 px-2 text-right font-medium ${(Number(r['Aantal tijdens route - stops']) || 0) >= 150 ? 'text-emerald-600' : 'text-red-600'}`}>{Number(r['Aantal tijdens route - stops']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stops waarvoor geen aanbiedpoging is uitgevoerd']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal bij terugkomst - stops']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal afgeleverd - stuks']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Legitimatiecheck aan de deur']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal PBA-pakketten bezorgd']) || 0}</td>
-                <td className="py-1.5 px-2 text-right text-slate-700">{Number(r['Aantal stuks afgehaald/gecollecteerd']) || 0}</td>
-                <td className="py-1.5 px-2 text-right font-semibold text-slate-800">{Number(r['Aantal afgeleverd - stops']) || 0}</td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Aantal tijdens route - stuks']} field="Aantal tijdens route - stuks" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
+                <td className={`py-1.5 px-2 text-right font-medium ${(Number(r['Aantal tijdens route - stops']) || 0) >= 150 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  <EditableCell value={r['Aantal tijdens route - stops']} field="Aantal tijdens route - stops" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)']} field="Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Aantal stops waarvoor geen aanbiedpoging is uitgevoerd']} field="Aantal stops waarvoor geen aanbiedpoging is uitgevoerd" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Aantal bij terugkomst - stops']} field="Aantal bij terugkomst - stops" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Aantal afgeleverd - stuks']} field="Aantal afgeleverd - stuks" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Legitimatiecheck aan de deur']} field="Legitimatiecheck aan de deur" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Aantal PBA-pakketten bezorgd']} field="Aantal PBA-pakketten bezorgd" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
+                <td className="py-1.5 px-2 text-right text-slate-700">
+                  <EditableCell value={r['Aantal stuks afgehaald/gecollecteerd']} field="Aantal stuks afgehaald/gecollecteerd" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
+                <td className="py-1.5 px-2 text-right font-semibold text-slate-800">
+                  <EditableCell value={r['Aantal afgeleverd - stops']} field="Aantal afgeleverd - stops" rowId={rowId} isEditing={isEditing} editValues={editValues} onEditChange={handleEditChange} isNumeric />
+                </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
           {totals && (
             <tfoot>
