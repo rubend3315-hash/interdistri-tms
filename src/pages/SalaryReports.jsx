@@ -724,7 +724,7 @@ export default function SalaryReports() {
           )}
         </CardContent>
       </Card>
-
+      </div>
         </TabsContent>
       </Tabs>
     </div>
