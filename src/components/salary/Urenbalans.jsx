@@ -21,15 +21,27 @@ export default function Urenbalans({
   const employee = activeEmployees[employeeIndex] || activeEmployees[0];
   if (!employee) return <p className="text-slate-500">Geen medewerkers gevonden.</p>;
 
-  const contract = useMemo(() => {
+  const activeContracts = useMemo(() => {
     return (employee.contractregels || [])
       .filter(c => c.status !== "Inactief")
-      .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0] || {};
+      .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum));
   }, [employee]);
 
+  const contract = activeContracts[0] || {};
   const contractHours = contract.uren_per_week || employee.contract_hours || 0;
   const isOproepkracht = employee.contract_type === "Oproep" ||
     (contract.type_contract || "").toLowerCase().includes("oproep");
+
+  // Functie om het juiste contract per weekdatum op te zoeken
+  const getContractForDate = (dateStr) => {
+    if (activeContracts.length <= 1) return contract;
+    const refDate = new Date(dateStr);
+    return activeContracts.find(c => {
+      const start = new Date(c.startdatum);
+      const end = c.einddatum ? new Date(c.einddatum) : new Date("2099-12-31");
+      return refDate >= start && refDate <= end;
+    }) || contract;
+  };
 
   const loonschaal = contract.loonschaal || employee.salary_scale || "";
   const hourlyRate = useMemo(() => {
@@ -70,7 +82,16 @@ export default function Urenbalans({
       let bijzonderVerlof = 0;
 
       periode.weken.forEach(weekNr => {
-        contractUren += contractHours;
+        // Bereken startdatum van deze week
+        const jan4 = new Date(year, 0, 4);
+        const weekStart = new Date(jan4);
+        weekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
+        const weekContract = getContractForDate(weekStart.toISOString().split("T")[0]);
+        const weekContractHours = weekContract.uren_per_week || employee.contract_hours || 0;
+        const weekIsOproep = employee.contract_type === "Oproep" ||
+          (weekContract.type_contract || "").toLowerCase().includes("oproep");
+
+        contractUren += weekContractHours;
         const entries = entriesByWeek[weekNr] || [];
 
         let weekWorked = 0;
@@ -107,9 +128,24 @@ export default function Urenbalans({
       const saldo = gewerkteUren - contractUren;
       saldoCumulatief += saldo;
 
-      // Oproepkracht: variabele uren = gewerkte uren, bedrag = uren x uurloon
-      const variabeleUren = isOproepkracht ? gewerkteUren : 0;
-      const variabeleBedrag = isOproepkracht ? Math.round(gewerkteUren * hourlyRate * 100) / 100 : 0;
+      // Oproepkracht: variabele uren = gewerkte uren van weken met oproepcontract
+      let variabeleUren = 0;
+      periode.weken.forEach(weekNr => {
+        const jan4 = new Date(year, 0, 4);
+        const ws = new Date(jan4);
+        ws.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
+        const wc = getContractForDate(ws.toISOString().split("T")[0]);
+        const wIsOproep = employee.contract_type === "Oproep" ||
+          (wc.type_contract || "").toLowerCase().includes("oproep");
+        if (wIsOproep) {
+          const wEntries = entriesByWeek[weekNr] || [];
+          wEntries.filter(e => e.employee_id === employee.id).forEach(e => {
+            variabeleUren += e.total_hours || 0;
+          });
+        }
+      });
+      variabeleUren = Math.round(variabeleUren * 100) / 100;
+      const variabeleBedrag = Math.round(variabeleUren * hourlyRate * 100) / 100;
 
       return {
         periode: periode.periode,
