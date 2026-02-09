@@ -47,34 +47,58 @@ function parseFullName(fullName) {
 }
 
 function mapToEmployee(row) {
-  // Only use parseFullName as fallback when no separate name fields exist
-  const hasFirstName = row.voornaam || row.roepnaam;
-  const hasLastName = row.achternaam || row.geboortenaam;
-  const parsed = (!hasFirstName && !hasLastName && row.volledige_naam) ? parseFullName(row.volledige_naam) : { first: "", prefix: "", last: "" };
+  // Build address from separate fields if available
+  const address = row.adres || [row.straat, row.huisnummer, row.toevoeging].filter(Boolean).join(" ") || "";
+  
+  // Determine first name: use roepnaam, voornaam, or fallback from volledige_naam
+  const firstName = row.roepnaam || row.voornaam || "";
+  const lastName = row.geboortenaam || row.achternaam || "";
+  const prefix = row.tussenvoegsel || row.voorvoegsel || "";
+  
+  // Only parse volledige_naam as fallback if no separate name fields
+  let finalFirst = firstName;
+  let finalPrefix = prefix;
+  let finalLast = lastName;
+  if (!finalFirst && !finalLast && row.volledige_naam) {
+    const parsed = parseFullName(row.volledige_naam);
+    finalFirst = parsed.first;
+    finalPrefix = parsed.prefix || finalPrefix;
+    finalLast = parsed.last;
+  }
+
+  // Determine status from arbeidstijd_einddatum if no explicit status
+  let status = row.status;
+  if (!status && row.arbeidstijd_einddatum) {
+    const endDate = new Date(row.arbeidstijd_einddatum);
+    if (endDate < new Date()) {
+      status = "Uit dienst";
+    }
+  }
+
   return {
     employee_number: row.personeelsnummer || "",
     initials: row.voorletters || "",
-    first_name: row.voornaam || row.roepnaam || parsed.first || "",
-    prefix: row.tussenvoegsel || row.voorvoegsel || parsed.prefix || "",
-    last_name: row.achternaam || row.geboortenaam || parsed.last || "",
+    first_name: finalFirst,
+    prefix: finalPrefix,
+    last_name: finalLast,
     date_of_birth: row.geboortedatum || "",
     email: row.email || "",
     phone: row.telefoon || "",
-    address: row.adres || "",
+    address: address,
     postal_code: row.postcode || "",
     city: row.woonplaats || "",
     department: mapDepartment(row.afdeling),
     function: row.functie || "",
-    in_service_since: row.in_dienst_sinds || "",
-    contract_type: row.contract_type || "",
+    in_service_since: row.arbeidstijd_ingangsdatum || row.in_dienst_sinds || "",
+    contract_type: row.contract_omschrijving || row.contract_type || "",
     contract_hours: row.uren_per_week || null,
     salary_scale: row.loonschaal || "",
     bsn: row.bsn || "",
     bank_account: row.iban || "",
     emergency_contact_name: row.noodcontact_naam || "",
     emergency_contact_phone: row.noodcontact_telefoon || "",
-    contract_end_date: row.datum_uit_dienst || "",
-    status: mapStatus(row.status),
+    contract_end_date: row.arbeidstijd_einddatum || row.datum_uit_dienst || "",
+    status: mapStatus(status),
   };
 }
 
