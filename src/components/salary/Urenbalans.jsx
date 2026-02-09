@@ -57,19 +57,22 @@ export default function Urenbalans({
 
   const holidayDates = useMemo(() => new Set(holidays.map(h => h.date)), [holidays]);
 
-  // Bereken per periode de uren-balans
-  const periodeBalans = useMemo(() => {
-    // Groepeer entries per week
-    const entriesByWeek = {};
+  // Groepeer entries per week
+  const entriesByWeek = useMemo(() => {
+    const map = {};
     timeEntries.forEach(e => {
       if (!e.date || e.status !== "Goedgekeurd" || e.employee_id !== employee.id) return;
       const d = new Date(e.date);
       if (d.getFullYear() !== year) return;
       const wk = e.week_number || getWeek(d, { weekStartsOn: 1 });
-      if (!entriesByWeek[wk]) entriesByWeek[wk] = [];
-      entriesByWeek[wk].push(e);
+      if (!map[wk]) map[wk] = [];
+      map[wk].push(e);
     });
+    return map;
+  }, [timeEntries, employee, year]);
 
+  // Bereken per periode de uren-balans inclusief weekdetails
+  const periodeBalans = useMemo(() => {
     let saldoCumulatief = 0;
 
     return periodes.map(periode => {
@@ -79,24 +82,26 @@ export default function Urenbalans({
       let ziekUren = 0;
       let atvUren = 0;
       let feestdagUren = 0;
-      let overwerkUren = 0;
       let bijzonderVerlof = 0;
 
-      periode.weken.forEach(weekNr => {
-        // Bereken startdatum van deze week
+      // Bereken weekdetails met calculateWeekData
+      const weekDetails = periode.weken.map(weekNr => {
         const jan4 = new Date(year, 0, 4);
         const weekStart = new Date(jan4);
         weekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
-        const weekContract = getContractForDate(weekStart.toISOString().split("T")[0]);
+        const weekStartStr = weekStart.toISOString().split("T")[0];
+        const weekContract = getContractForDate(weekStartStr);
         const weekContractHours = weekContract.uren_per_week || employee.contract_hours || 0;
         const weekIsOproep = employee.contract_type === "Oproep" ||
           (weekContract.type_contract || "").toLowerCase().includes("oproep");
 
-        // Oproepkrachten hebben geen contracturenplicht, dus 0 voor saldo
         if (!weekIsOproep) {
           contractUren += weekContractHours;
         }
         const entries = entriesByWeek[weekNr] || [];
+
+        // Berekende weekdata via gedeelde functie
+        const weekData = calculateWeekData(employee, entries, holidays, weekStartStr);
 
         let weekWorked = 0;
         let weekVerlof = 0;
@@ -108,16 +113,12 @@ export default function Urenbalans({
         entries.forEach(e => {
           const hours = e.total_hours || 0;
           weekWorked += hours;
-
           const st = (e.shift_type || "").toLowerCase();
           if (st.includes("bijzonder verlof") || st.includes("bijzonderverlof")) weekBvl += hours;
           else if (st.includes("verlof")) weekVerlof += hours;
           if (st.includes("ziek")) weekZiek += hours;
           if (st.includes("atv")) weekAtv += hours;
-
-          const d = new Date(e.date);
-          const isHoliday = holidayDates.has(e.date);
-          if (isHoliday) weekFeestdag += hours;
+          if (holidayDates.has(e.date)) weekFeestdag += hours;
         });
 
         verlofUren += weekVerlof;
@@ -126,14 +127,14 @@ export default function Urenbalans({
         feestdagUren += weekFeestdag;
         bijzonderVerlof += weekBvl;
         gewerkteUren += weekWorked;
+
+        return { weekNr, weekData, contractHours: weekIsOproep ? 0 : weekContractHours };
       });
 
-      // Saldo = gewerkt - contract (positief = meer gewerkt)
-      // Voor oproepweken tellen contracturen als 0 (er is geen vast contract)
       const saldo = gewerkteUren - contractUren;
       saldoCumulatief += saldo;
 
-      // Oproepkracht: variabele uren = gewerkte uren van weken met oproepcontract
+      // Oproepkracht: variabele uren
       let variabeleUren = 0;
       periode.weken.forEach(weekNr => {
         const jan4 = new Date(year, 0, 4);
@@ -156,6 +157,8 @@ export default function Urenbalans({
         periode: periode.periode,
         maand: periode.maand,
         weken: `${periode.weken[0]}-${periode.weken[periode.weken.length - 1]}`,
+        wekenNrs: periode.weken,
+        weekDetails,
         aantalWeken: periode.weken.length,
         contractUren: Math.round(contractUren * 100) / 100,
         gewerkteUren: Math.round(gewerkteUren * 100) / 100,
@@ -170,7 +173,16 @@ export default function Urenbalans({
         variabeleBedrag,
       };
     });
-  }, [timeEntries, employee, year, periodes, contractHours, holidayDates]);
+  }, [timeEntries, employee, year, periodes, contractHours, holidayDates, entriesByWeek, holidays]);
+
+  // Bepaal welke detailkolommen data hebben over alle weken
+  const visibleDetailColumns = useMemo(() => {
+    return VARIABELE_KOLOMMEN.filter(col => {
+      return periodeBalans.some(p =>
+        p.weekDetails.some(w => (w.weekData[col.key] || 0) > 0)
+      );
+    });
+  }, [periodeBalans]);
 
   // Jaartotalen
   const totalen = useMemo(() => {
