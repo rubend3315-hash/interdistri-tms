@@ -32,9 +32,9 @@ export default function HRImportUploader({ onDataExtracted, isProcessing }) {
           properties: {
             personeelsnummer: { type: "string", description: "Personeelsnummer / Employee number" },
             voorletters: { type: "string", description: "Voorletters / Initials" },
-            voornaam: { type: "string", description: "Voornaam / First name" },
-            tussenvoegsel: { type: "string", description: "Tussenvoegsel / Prefix (van, de, etc.)" },
-            achternaam: { type: "string", description: "Achternaam / Last name" },
+            voornaam: { type: "string", description: "Voornaam / Roepnaam / First name" },
+            tussenvoegsel: { type: "string", description: "Tussenvoegsel / Voorvoegsel / Prefix (van, de, etc.)" },
+            achternaam: { type: "string", description: "Achternaam / Geboortenaam / Last name" },
             geboortedatum: { type: "string", description: "Geboortedatum / Date of birth (YYYY-MM-DD)" },
             email: { type: "string", description: "E-mailadres" },
             telefoon: { type: "string", description: "Telefoonnummer" },
