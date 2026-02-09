@@ -289,7 +289,7 @@ export default function LoonrapportOverzicht({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `loonrapport_overzicht_${year}.csv`;
+    a.download = `loonrapport_periode-${String(selectedPeriode).padStart(2, "0")}_${year}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
