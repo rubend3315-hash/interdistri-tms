@@ -47,7 +47,10 @@ function parseFullName(fullName) {
 }
 
 function mapToEmployee(row) {
-  const parsed = parseFullName(row.volledige_naam);
+  // Only use parseFullName as fallback when no separate name fields exist
+  const hasFirstName = row.voornaam || row.roepnaam;
+  const hasLastName = row.achternaam || row.geboortenaam;
+  const parsed = (!hasFirstName && !hasLastName && row.volledige_naam) ? parseFullName(row.volledige_naam) : { first: "", prefix: "", last: "" };
   return {
     employee_number: row.personeelsnummer || "",
     initials: row.voorletters || "",
