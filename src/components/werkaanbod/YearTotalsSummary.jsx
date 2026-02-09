@@ -1,23 +1,36 @@
 import React, { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Minus, MapPin, Package, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+
+const MONTHS = [
+  { value: "01", label: "Januari" },
+  { value: "02", label: "Februari" },
+  { value: "03", label: "Maart" },
+  { value: "04", label: "April" },
+  { value: "05", label: "Mei" },
+  { value: "06", label: "Juni" },
+  { value: "07", label: "Juli" },
+  { value: "08", label: "Augustus" },
+  { value: "09", label: "September" },
+  { value: "10", label: "Oktober" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
+];
 
 export default function YearTotalsSummary({ data, selectedYears }) {
-  // Date range filter state (MM-DD format, applied across all years)
-  const [startMMDD, setStartMMDD] = useState("01-01");
-  const [endMMDD, setEndMMDD] = useState("12-31");
+  const [startMonth, setStartMonth] = useState("01");
+  const [endMonth, setEndMonth] = useState("12");
 
-  // Filter data based on selected date range (month-day only)
+  // Filter data based on selected month range
   const filteredData = useMemo(() => {
     return data.filter(d => {
       const mm = String(d.date.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.date.getDate()).padStart(2, '0');
-      const mmdd = `${mm}-${dd}`;
-      return mmdd >= startMMDD && mmdd <= endMMDD;
+      return mm >= startMonth && mm <= endMonth;
     });
-  }, [data, startMMDD, endMMDD]);
+  }, [data, startMonth, endMonth]);
 
   const yearTotals = useMemo(() => {
     const totals = {};
@@ -29,12 +42,8 @@ export default function YearTotalsSummary({ data, selectedYears }) {
     return totals;
   }, [filteredData]);
 
-  // Helper to convert MM-DD to readable date
-  const formatMMDD = (mmdd) => {
-    const [mm, dd] = mmdd.split('-');
-    const months = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
-    return `${parseInt(dd)} ${months[parseInt(mm) - 1]}`;
-  };
+  const getMonthLabel = (mm) => MONTHS.find(m => m.value === mm)?.label || mm;
+  const isFiltered = startMonth !== "01" || endMonth !== "12";
 
   // Calculate year-over-year changes for each consecutive pair
   const comparisons = useMemo(() => {
@@ -73,38 +82,41 @@ export default function YearTotalsSummary({ data, selectedYears }) {
       <CardContent className="pt-4 pb-3">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Jaartotalen & Ontwikkeling</p>
-          <div className="flex items-end gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
-              <div className="flex items-center gap-1.5">
-                <Label className="text-xs text-slate-500 whitespace-nowrap">Van</Label>
-                <Input
-                  type="date"
-                  value={`2000-${startMMDD}`}
-                  onChange={e => {
-                    const v = e.target.value;
-                    if (v) setStartMMDD(v.slice(5));
-                  }}
-                  className="h-7 w-36 text-xs"
-                />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Label className="text-xs text-slate-500 whitespace-nowrap">t/m</Label>
-                <Input
-                  type="date"
-                  value={`2000-${endMMDD}`}
-                  onChange={e => {
-                    const v = e.target.value;
-                    if (v) setEndMMDD(v.slice(5));
-                  }}
-                  className="h-7 w-36 text-xs"
-                />
-              </div>
+              <Label className="text-xs text-slate-500 whitespace-nowrap">Van</Label>
+              <Select value={startMonth} onValueChange={setStartMonth}>
+                <SelectTrigger className="h-7 w-32 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map(m => (
+                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Label className="text-xs text-slate-500 whitespace-nowrap">t/m</Label>
+              <Select value={endMonth} onValueChange={setEndMonth}>
+                <SelectTrigger className="h-7 w-32 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map(m => (
+                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            {(startMMDD !== "01-01" || endMMDD !== "12-31") && (
-              <span className="text-xs text-blue-600 font-medium">
-                Periode: {formatMMDD(startMMDD)} – {formatMMDD(endMMDD)}
-              </span>
+            {isFiltered && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-blue-600 font-medium">
+                  Periode: {getMonthLabel(startMonth)} – {getMonthLabel(endMonth)}
+                </span>
+                <Button variant="ghost" size="sm" className="h-6 text-xs text-slate-400 px-2" onClick={() => { setStartMonth("01"); setEndMonth("12"); }}>
+                  Reset
+                </Button>
+              </div>
             )}
           </div>
         </div>
