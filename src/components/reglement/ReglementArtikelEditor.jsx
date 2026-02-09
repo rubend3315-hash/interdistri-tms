@@ -2,19 +2,15 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Save, X, History, Clock } from "lucide-react";
+import { Save, X, History } from "lucide-react";
 import ReactQuill from "react-quill";
-import { format } from "date-fns";
 
-export default function ReglementArtikelEditor({ artikel, onSave, onClose }) {
+export default function ReglementArtikelEditor({ artikel, onSave, onClose, onShowHistory }) {
   const [titel, setTitel] = useState(artikel?.titel || "");
   const [inhoud, setInhoud] = useState(artikel?.inhoud || "");
   const [hoofdstuk, setHoofdstuk] = useState(artikel?.hoofdstuk || "");
   const [artikelNummer, setArtikelNummer] = useState(artikel?.artikel_nummer || "");
-  const [showHistory, setShowHistory] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -28,7 +24,7 @@ export default function ReglementArtikelEditor({ artikel, onSave, onClose }) {
     setSaving(false);
   };
 
-  const versieGeschiedenis = artikel?.versie_geschiedenis || [];
+  const hasHistory = (artikel?.versie_geschiedenis || []).length > 0;
 
   return (
     <div className="space-y-4">
@@ -44,8 +40,8 @@ export default function ReglementArtikelEditor({ artikel, onSave, onClose }) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {versieGeschiedenis.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => setShowHistory(true)}>
+          {hasHistory && onShowHistory && (
+            <Button variant="outline" size="sm" onClick={onShowHistory}>
               <History className="w-4 h-4 mr-1" /> Versiegeschiedenis
             </Button>
           )}
@@ -103,53 +99,6 @@ export default function ReglementArtikelEditor({ artikel, onSave, onClose }) {
           }}
         />
       </div>
-
-      {/* Versiegeschiedenis dialog */}
-      <Dialog open={showHistory} onOpenChange={setShowHistory}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Versiegeschiedenis - Artikel {artikel?.artikel_nummer}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {versieGeschiedenis.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-4">Geen eerdere versies</p>
-            ) : (
-              [...versieGeschiedenis].reverse().map((v, idx) => (
-                <Card key={idx}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-slate-400" />
-                        Versie {v.versie}
-                      </CardTitle>
-                      <div className="text-xs text-slate-500">
-                        {v.datum ? format(new Date(v.datum), "dd-MM-yyyy HH:mm") : "-"} • {v.bewerkt_door || "Onbekend"}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {v.oude_titel && (
-                      <div className="mb-2">
-                        <span className="text-xs font-medium text-slate-500">Titel:</span>
-                        <p className="text-sm text-slate-700">{v.oude_titel}</p>
-                      </div>
-                    )}
-                    {v.oude_inhoud && (
-                      <div>
-                        <span className="text-xs font-medium text-slate-500">Inhoud:</span>
-                        <div
-                          className="text-sm text-slate-700 prose prose-sm max-w-none mt-1 max-h-40 overflow-y-auto border rounded p-2 bg-slate-50"
-                          dangerouslySetInnerHTML={{ __html: v.oude_inhoud }}
-                        />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
