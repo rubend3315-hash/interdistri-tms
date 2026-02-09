@@ -87,6 +87,11 @@ export default function Approvals() {
     }
   });
 
+  const { data: loonperiodeStatuses = [] } = useQuery({
+    queryKey: ['loonperiodeStatuses'],
+    queryFn: () => base44.entities.LoonperiodeStatus.list()
+  });
+
   const approveMutation = useMutation({
     mutationFn: (entry) => base44.entities.TimeEntry.update(entry.id, {
       status: 'Goedgekeurd',
