@@ -70,7 +70,7 @@ export default function HRImportPreview({ data, existingEmployees, onImport, isI
 
   const rowStatuses = useMemo(() => {
     return mappedData.map((emp) => {
-      if (!emp.first_name || !emp.last_name) return { status: "error", message: "Naam ontbreekt" };
+      if (!emp.first_name && !emp.last_name) return { status: "error", message: "Naam ontbreekt" };
       if (emp.employee_number && existingNumbers.has(emp.employee_number)) return { status: "duplicate", message: "Personeelsnr bestaat al" };
       if (emp.email && existingEmails.has(emp.email.toLowerCase())) return { status: "duplicate", message: "Email bestaat al" };
       return { status: "new", message: "Nieuw" };
