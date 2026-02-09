@@ -13,12 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, Lock } from "lucide-react";
 
 import { determineShiftType } from "../components/utils/shiftTypeUtils";
 import EmployeeSidebar from "../components/timetracking/EmployeeSidebar";
 import WeekCalendar from "../components/timetracking/WeekCalendar";
 import WeekOverview from "../components/timetracking/WeekOverview";
+import { isWeekInDefinitiefPeriode } from "../components/utils/loonperiodeUtils";
 
 
 
