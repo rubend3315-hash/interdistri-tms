@@ -359,7 +359,8 @@ export default function LoonrapportOverzicht({
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-100">
-                      <TableHead className="sticky left-0 bg-slate-100 z-10">Week</TableHead>
+                      <TableHead className="sticky left-0 bg-slate-100 z-10">Medewerker</TableHead>
+                      <TableHead className="text-center text-xs whitespace-nowrap">Weken</TableHead>
                       {visibleColumns.map(col => (
                         <TableHead key={col.key} className="text-right text-xs whitespace-nowrap">
                           {col.label}
@@ -368,45 +369,33 @@ export default function LoonrapportOverzicht({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {p.wekenData.map(w => (
-                      <React.Fragment key={w.weekNr}>
-                        {/* Week totaal rij */}
-                        <TableRow className="bg-slate-50 font-medium border-t-2 border-slate-200">
-                          <TableCell className="sticky left-0 bg-slate-50 z-10 font-semibold">
-                            {year} - {w.weekNr}
+                    {p.perEmployeeTotals
+                      .filter(emp => emp.uren_100 > 0 || emp.verlof > 0 || emp.ziek > 0 || emp.feestdag > 0 || emp.atv > 0 || emp.bijzonder_verlof > 0)
+                      .map(emp => (
+                        <TableRow
+                          key={emp.employee.id}
+                          className="hover:bg-blue-50 cursor-pointer"
+                          onClick={() => onSelectEmployee?.(emp.employee)}
+                        >
+                          <TableCell className="sticky left-0 bg-white z-10 text-sm font-medium">
+                            {getFullName(emp.employee)}
+                          </TableCell>
+                          <TableCell className="text-center text-xs text-slate-500">
+                            {p.weken.join(", ")}
                           </TableCell>
                           {visibleColumns.map(col => (
-                            <TableCell key={col.key} className="text-right text-sm">
-                              {formatCell(col, w.totals[col.key])}
+                            <TableCell key={col.key} className="text-right text-sm text-slate-600">
+                              {formatCell(col, emp[col.key])}
                             </TableCell>
                           ))}
                         </TableRow>
-                        {/* Per medewerker */}
-                        {w.perEmployee
-                          .filter(emp => emp.uren_100 > 0 || emp.verlof > 0 || emp.ziek > 0 || emp.feestdag > 0 || emp.atv > 0)
-                          .map(emp => (
-                            <TableRow
-                              key={`${w.weekNr}-${emp.employee.id}`}
-                              className="hover:bg-blue-50 cursor-pointer"
-                              onClick={() => onSelectEmployee?.(emp.employee)}
-                            >
-                              <TableCell className="sticky left-0 bg-white z-10 pl-8 text-slate-600 text-sm">
-                                {getFullName(emp.employee)}
-                              </TableCell>
-                              {visibleColumns.map(col => (
-                                <TableCell key={col.key} className="text-right text-sm text-slate-600">
-                                  {formatCell(col, emp[col.key])}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))}
-                      </React.Fragment>
-                    ))}
+                      ))}
                     {/* Periode totaal */}
                     <TableRow className="bg-slate-200 font-bold border-t-2">
                       <TableCell className="sticky left-0 bg-slate-200 z-10">
                         Totaal Periode {p.periode}
                       </TableCell>
+                      <TableCell className="bg-slate-200" />
                       {visibleColumns.map(col => (
                         <TableCell key={col.key} className="text-right">
                           {formatCell(col, p.periodeTotals[col.key])}
