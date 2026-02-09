@@ -303,14 +303,64 @@ export default function SalaryReports() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Loonrapporten</h1>
-          <p className="text-slate-500 mt-1">CAO Beroepsgoederenvervoer berekeningen</p>
+          <h1 className="text-3xl font-bold text-slate-900">Salarisadministratie</h1>
+          <p className="text-slate-500 mt-1">Loonrapporten, exports & mutaties</p>
         </div>
-        <Button onClick={exportCSV} className="bg-emerald-600 hover:bg-emerald-700">
-          <Download className="w-4 h-4 mr-2" />
-          Exporteer CSV
-        </Button>
       </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="loonrapport" className="gap-2">
+            <Euro className="w-4 h-4" />
+            Loonrapport
+          </TabsTrigger>
+          <TabsTrigger value="mutaties" className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Salarismutaties
+          </TabsTrigger>
+          <TabsTrigger value="stamgegevens" className="gap-2">
+            <Users className="w-4 h-4" />
+            Stamgegevens Export
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="stamgegevens">
+          <SalaryExportStamgegevens employees={employees} />
+        </TabsContent>
+
+        <TabsContent value="mutaties">
+          {/* Period filter for mutaties */}
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <Label>Periode</Label>
+                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {months.map(m => (
+                        <SelectItem key={m} value={m}>
+                          {format(new Date(m + '-01'), "MMMM yyyy", { locale: nl })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+            <SalaryExportMutation
+              employees={employees}
+              timeEntries={timeEntries}
+              salaryTables={salaryTables}
+              selectedMonth={selectedMonth}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="loonrapport">
 
       {/* Filters */}
       <Card>
@@ -346,6 +396,12 @@ export default function SalaryReports() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex-1 flex items-end justify-end">
+              <Button onClick={exportCSV} className="bg-emerald-600 hover:bg-emerald-700">
+                <Download className="w-4 h-4 mr-2" />
+                Exporteer CSV
+              </Button>
             </div>
           </div>
         </CardContent>
