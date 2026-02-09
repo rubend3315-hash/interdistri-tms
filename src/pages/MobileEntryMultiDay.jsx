@@ -23,6 +23,7 @@ import {
   Menu, Home, X, Bell, Mail
 } from "lucide-react";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
+import MobileReglementTab from "@/components/mobile/MobileReglementTab";
 import { determineShiftType } from "@/components/utils/shiftTypeUtils";
 
 export default function MobileEntryMultiDay() {

@@ -42,6 +42,7 @@ import {
   Mail
 } from "lucide-react";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
+import MobileReglementTab from "@/components/mobile/MobileReglementTab";
 
 export default function MobileEntry() {
   const [activeTab, setActiveTab] = useState("home");
