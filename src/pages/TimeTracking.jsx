@@ -120,6 +120,7 @@ export default function TimeTracking() {
   });
 
   const handleDeleteDay = async (employeeId, day) => {
+    if (weekIsDefinitief) return;
     const dateStr = format(day, 'yyyy-MM-dd');
     const entries = timeEntries.filter(e => e.employee_id === employeeId && e.date === dateStr);
     for (const entry of entries) {
@@ -129,6 +130,7 @@ export default function TimeTracking() {
   };
 
   const handleDeleteWeek = async (employeeId, days) => {
+    if (weekIsDefinitief) return;
     const dateStrs = days.map(d => format(d, 'yyyy-MM-dd'));
     const entries = timeEntries.filter(e => e.employee_id === employeeId && dateStrs.includes(e.date));
     for (const entry of entries) {
