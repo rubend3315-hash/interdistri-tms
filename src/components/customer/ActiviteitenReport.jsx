@@ -1,15 +1,107 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight, Pencil, Save, X, RotateCcw } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 function formatTime(val) {
   if (!val || val === '' || val === '-') return '';
   return String(val);
 }
 
-export default function ActiviteitenReport({ weekData }) {
+// Editable cell component
+function EditableCell({ value, field, rowId, isEditing, editValues, onEditChange, isNumeric = false }) {
+  if (!isEditing) {
+    return isNumeric ? (Number(value) || 0) : (value || '-');
+  }
+  const editVal = editValues[rowId]?.[field];
+  const currentVal = editVal !== undefined ? editVal : (isNumeric ? (Number(value) || 0) : (value || ''));
+  const hasChanged = editVal !== undefined && editVal !== (isNumeric ? (Number(value) || 0) : (value || ''));
+  
+  return (
+    <input
+      type={isNumeric ? "number" : "text"}
+      value={currentVal}
+      onChange={(e) => onEditChange(rowId, field, isNumeric ? Number(e.target.value) : e.target.value)}
+      className={`w-full border rounded px-1 py-0.5 text-xs ${hasChanged ? 'bg-yellow-50 border-yellow-400' : 'border-slate-300'}`}
+      style={{ minWidth: isNumeric ? '50px' : '60px' }}
+    />
+  );
+}
+
+export default function ActiviteitenReport({ weekData, onDataUpdated }) {
   const [dayFilter, setDayFilter] = useState("auto");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValues, setEditValues] = useState({}); // { importId: { field: value } }
+  const [saving, setSaving] = useState(false);
+
+  // Editable fields: the numeric fields users are most likely to correct
+  const EDITABLE_NUMERIC_FIELDS = [
+    'Aantal tijdens route - stuks',
+    'Aantal tijdens route - stops',
+    'Aantal stops aangeboden (Geen gehoor-geweigerd-op verzoek afhaalkantoor)',
+    'Aantal stops waarvoor geen aanbiedpoging is uitgevoerd',
+    'Aantal bij terugkomst - stops',
+    'Aantal afgeleverd - stuks',
+    'Aantal afgeleverd - stops',
+    'Legitimatiecheck aan de deur',
+    'Aantal PBA-pakketten bezorgd',
+    'Aantal stuks afgehaald/gecollecteerd',
+    'Aantal periodes >15 min geen scan',
+  ];
+
+  const handleEditChange = useCallback((rowId, field, value) => {
+    setEditValues(prev => ({
+      ...prev,
+      [rowId]: { ...(prev[rowId] || {}), [field]: value }
+    }));
+  }, []);
+
+  const changedCount = useMemo(() => {
+    return Object.values(editValues).reduce((sum, fields) => sum + Object.keys(fields).length, 0);
+  }, [editValues]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const entries = Object.entries(editValues);
+    let savedCount = 0;
+    for (const [importId, fields] of entries) {
+      if (Object.keys(fields).length === 0) continue;
+      // Find the original row to get the current data
+      const originalRow = weekData.find(r => r._importId === importId);
+      if (!originalRow) continue;
+      
+      // Build updated inner data
+      const updatedData = {};
+      for (const [field, val] of Object.entries(fields)) {
+        updatedData[field] = val;
+      }
+      
+      // Update the PostNLImportResult record's data
+      const currentRecord = await base44.entities.PostNLImportResult.list('-created_date', 5000);
+      const record = currentRecord.find(r => r.id === importId);
+      if (record) {
+        const innerData = record.data?.data || record.data || {};
+        const newInnerData = { ...innerData, ...updatedData };
+        const newData = record.data?.data ? { ...record.data, data: newInnerData } : newInnerData;
+        await base44.entities.PostNLImportResult.update(importId, { data: newData });
+        savedCount++;
+      }
+    }
+    
+    toast.success(`${savedCount} rit(ten) bijgewerkt`);
+    setEditValues({});
+    setIsEditing(false);
+    setSaving(false);
+    if (onDataUpdated) onDataUpdated();
+  };
+
+  const handleCancel = () => {
+    setEditValues({});
+    setIsEditing(false);
+  };
 
   // Find available days and the latest import date
   const availableDays = useMemo(() => {
