@@ -76,7 +76,17 @@ export default function Bedrijfsreglement() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.BedrijfsreglementArtikel.delete(id),
+    mutationFn: async (id) => {
+      await base44.entities.BedrijfsreglementArtikel.delete(id);
+      // Hernummer alle overgebleven artikelen
+      const remaining = sorted.filter(a => a.id !== id);
+      for (let i = 0; i < remaining.length; i++) {
+        const newNr = i + 1;
+        if (remaining[i].artikel_nummer !== newNr) {
+          await base44.entities.BedrijfsreglementArtikel.update(remaining[i].id, { artikel_nummer: newNr });
+        }
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bedrijfsreglementArtikelen"] });
       setDeleteArtikel(null);
