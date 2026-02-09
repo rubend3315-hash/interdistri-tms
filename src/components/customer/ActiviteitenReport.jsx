@@ -69,26 +69,27 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
     let savedCount = 0;
     for (const [importId, fields] of entries) {
       if (Object.keys(fields).length === 0) continue;
-      // Find the original row to get the current data
+      
+      // Find the original weekData row to reconstruct the full data object
       const originalRow = weekData.find(r => r._importId === importId);
       if (!originalRow) continue;
       
-      // Build updated inner data
-      const updatedData = {};
+      // Build the updated fields
+      const updatedFields = {};
       for (const [field, val] of Object.entries(fields)) {
-        updatedData[field] = val;
+        updatedFields[field] = val;
       }
       
-      // Update the PostNLImportResult record's data
-      const currentRecord = await base44.entities.PostNLImportResult.list('-created_date', 5000);
-      const record = currentRecord.find(r => r.id === importId);
-      if (record) {
-        const innerData = record.data?.data || record.data || {};
-        const newInnerData = { ...innerData, ...updatedData };
-        const newData = record.data?.data ? { ...record.data, data: newInnerData } : newInnerData;
-        await base44.entities.PostNLImportResult.update(importId, { data: newData });
-        savedCount++;
+      // Reconstruct data object: copy all original fields except internal ones, apply updates
+      const cleanOriginal = {};
+      for (const [key, val] of Object.entries(originalRow)) {
+        if (key.startsWith('_')) continue; // skip internal fields
+        cleanOriginal[key] = val;
       }
+      const newInnerData = { ...cleanOriginal, ...updatedFields };
+      
+      await base44.entities.PostNLImportResult.update(importId, { data: { data: newInnerData } });
+      savedCount++;
     }
     
     toast.success(`${savedCount} rit(ten) bijgewerkt`);
