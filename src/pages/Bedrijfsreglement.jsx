@@ -180,7 +180,13 @@ export default function Bedrijfsreglement() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar - Legenda */}
         <div className="lg:col-span-1">
-          <ReglementLegenda artikelen={sorted} />
+          <ReglementLegenda artikelen={sorted} onArtikelClick={(art) => {
+            setExpandedHoofdstuk(art.hoofdstuk || "Overig");
+            setSelectedArtikel(art.id);
+            setTimeout(() => {
+              document.getElementById(`artikel-${art.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 100);
+          }} />
         </div>
 
         {/* Main content */}
@@ -213,7 +219,8 @@ export default function Bedrijfsreglement() {
                     {arts.map((art) => (
                       <div
                         key={art.id}
-                        className="border rounded-lg p-3 hover:bg-slate-50 transition-colors"
+                        id={`artikel-${art.id}`}
+                        className={`border rounded-lg p-3 hover:bg-slate-50 transition-colors ${selectedArtikel === art.id ? "ring-2 ring-blue-400 bg-blue-50/50" : ""}`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
