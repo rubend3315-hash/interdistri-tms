@@ -157,7 +157,7 @@ export default function WeekOverview({
     <div className="space-y-4">
       {/* Employee Header with Navigation */}
       <div className="bg-slate-800 text-white rounded-xl p-4 flex items-center justify-between print:bg-slate-800 print:rounded-none">
-        <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onPreviousEmployee}>
+        <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onPreviousWeek} title="Vorige week">
           <ChevronLeft className="w-5 h-5" />
           <ChevronLeft className="w-5 h-5 -ml-3" />
         </Button>
@@ -171,7 +171,7 @@ export default function WeekOverview({
           <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={handlePrint} title="Afdrukken">
             <Printer className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onNextEmployee}>
+          <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onNextWeek} title="Volgende week">
             <ChevronRight className="w-5 h-5" />
             <ChevronRight className="w-5 h-5 -ml-3" />
           </Button>
