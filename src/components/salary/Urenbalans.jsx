@@ -125,6 +125,7 @@ export default function Urenbalans({
       });
 
       // Saldo = gewerkt - contract (positief = meer gewerkt)
+      // Voor oproepweken tellen contracturen als 0 (er is geen vast contract)
       const saldo = gewerkteUren - contractUren;
       saldoCumulatief += saldo;
 
