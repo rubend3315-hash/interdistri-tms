@@ -266,21 +266,22 @@ export default function LoonrapportOverzicht({
   }, [periodeData]);
 
   const exportCSV = () => {
+    const currentPeriodeData = periodeData.find(p => p.periode === selectedPeriode);
+    if (!currentPeriodeData) return;
+
     const headers = ["Periode", "Weken", "Medewerker", ...visibleColumns.map(c => c.label)];
     const rows = [];
 
-    periodeData.forEach(p => {
-      const wekenStr = p.weken.join(", ");
-      p.perEmployeeTotals.forEach(emp => {
-        const hasData = visibleColumns.some(c => emp[c.key] > 0);
-        if (!hasData) return;
-        rows.push([
-          `${year}-${String(p.periode).padStart(2, "0")}`,
-          wekenStr,
-          getFullName(emp.employee),
-          ...visibleColumns.map(c => emp[c.key] || 0)
-        ]);
-      });
+    const wekenStr = currentPeriodeData.weken.join(", ");
+    currentPeriodeData.perEmployeeTotals.forEach(emp => {
+      const hasData = visibleColumns.some(c => emp[c.key] > 0);
+      if (!hasData) return;
+      rows.push([
+        `${year}-${String(currentPeriodeData.periode).padStart(2, "0")}`,
+        wekenStr,
+        getFullName(emp.employee),
+        ...visibleColumns.map(c => emp[c.key] || 0)
+      ]);
     });
 
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(";")).join("\n");
