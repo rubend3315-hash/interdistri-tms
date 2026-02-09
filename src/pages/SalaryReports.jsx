@@ -29,6 +29,7 @@ import SalaryExportMutation from "@/components/salary/SalaryExportMutation";
 export default function SalaryReports() {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [selectedEmployee, setSelectedEmployee] = useState("all");
+  const [activeTab, setActiveTab] = useState("loonrapport");
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
@@ -48,6 +49,11 @@ export default function SalaryReports() {
   const { data: holidays = [] } = useQuery({
     queryKey: ['holidays-all'],
     queryFn: () => base44.entities.Holiday.list()
+  });
+
+  const { data: salaryTables = [] } = useQuery({
+    queryKey: ['salaryTables'],
+    queryFn: () => base44.entities.SalaryTable.list()
   });
 
   const isLoading = loadingEmployees || loadingEntries;
