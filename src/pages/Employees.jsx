@@ -403,7 +403,9 @@ function ProfielTab({ employee, viewOnly }) {
             <div>
               <p className="text-xs text-slate-500">In dienst sinds</p>
               <p className="text-slate-900">
-                {employee.in_service_since ? format(new Date(employee.in_service_since), 'dd MMMM yyyy') : '-'}
+                {(employee.in_service_since || employee.contract_start_date) 
+                  ? format(new Date(employee.in_service_since || employee.contract_start_date), 'dd MMMM yyyy') 
+                  : '-'}
               </p>
             </div>
           </CardContent>
