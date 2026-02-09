@@ -110,8 +110,9 @@ export default function LoonrapportDetail({
       toeslag_feestdag_100: calc("toeslag_feestdag_100", 1.00),
       feestdag_overwerk_200: calc("feestdag_overwerk_200", 1.00),
       overwerk_130: calc("overwerk_130", 0.30), // 30% toeslag op 130%
+      variabele_uren_100: isOproepkracht ? Math.round((periodeTotals.variabele_uren_100 || 0) * hourlyRate * 100) / 100 : 0,
     };
-  }, [periodeTotals, hourlyRate]);
+  }, [periodeTotals, hourlyRate, isOproepkracht]);
 
   const handlePrint = () => window.print();
 
@@ -165,7 +166,7 @@ export default function LoonrapportDetail({
             <p className="text-sm text-slate-500">Loonrun {year}-{String(selectedPeriode).padStart(2, "0")} · {currentPeriode.maand}</p>
           </div>
           <div className="divide-y">
-            <Row label="Uren" value={contractHours >= 40 ? "Vast" : `Parttime (${contractHours} uur)`} />
+            <Row label="Uren" value={isOproepkracht ? "Oproep (variabel)" : contractHours >= 40 ? "Vast" : `Parttime (${contractHours} uur)`} />
             <Row label="Loonschaal" value={loonschaal || "-"} />
             <Row label="Parttime percentage" value={`${parttime},00 %`} />
             <Row label="Contracturen per week" value={contractHours.toFixed(2)} />
