@@ -404,12 +404,14 @@ export default function Trips() {
                 const vehicle = getVehicle(trip.vehicle_id);
                 const customer = getCustomer(trip.customer_id);
                 const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
+                const tripYear = trip.date ? new Date(trip.date).getFullYear() : null;
+                const tripLocked = trip.date && tripYear && isDateInDefinitiefPeriode(trip.date, tripYear, loonperiodeStatuses);
                 
                 return (
                   <Card 
                     key={trip.id} 
-                    className="hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => openEditDialog(trip)}
+                    className={`transition-shadow ${tripLocked ? "opacity-75" : "hover:shadow-md cursor-pointer"}`}
+                    onClick={() => !tripLocked && openEditDialog(trip)}
                   >
                     <CardContent className="p-5">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
