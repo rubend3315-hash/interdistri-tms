@@ -95,13 +95,15 @@ export default function Employees() {
   };
 
   const filteredEmployees = employees.filter(emp => {
+    const search = searchTerm.toLowerCase();
     const fullName = getFullName(emp).toLowerCase();
-    const matchesSearch = 
-      fullName.includes(searchTerm.toLowerCase()) ||
-      emp.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.prefix?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !search ||
+      fullName.includes(search) ||
+      emp.first_name?.toLowerCase().includes(search) ||
+      emp.last_name?.toLowerCase().includes(search) ||
+      emp.prefix?.toLowerCase().includes(search) ||
+      emp.email?.toLowerCase().includes(search) ||
+      emp.employee_number?.toLowerCase().includes(search);
     const matchesDepartment = filterDepartment === 'all' || emp.department === filterDepartment;
     const matchesStatus = filterStatus === 'all' || emp.status === filterStatus;
     return matchesSearch && matchesDepartment && matchesStatus;
