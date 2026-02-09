@@ -64,6 +64,11 @@ export default function Trips() {
     })
   });
 
+  const { data: loonperiodeStatuses = [] } = useQuery({
+    queryKey: ['loonperiodeStatuses'],
+    queryFn: () => base44.entities.LoonperiodeStatus.list()
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Trip.create(data),
     onSuccess: () => {
