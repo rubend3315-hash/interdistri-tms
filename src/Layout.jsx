@@ -92,6 +92,7 @@ const menuItems = [
   {
     label: "Beheer",
     items: [
+      { name: "Herberekeningen", icon: Shield, page: "Recalculations" },
       { name: "Documentenbeheer", icon: FileText, page: "Documents" },
       { name: "Gebruikers", icon: Settings, page: "Users" },
       { name: "Voertuigen", icon: Car, page: "Vehicles" },
