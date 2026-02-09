@@ -452,8 +452,13 @@ export default function TimeTracking() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between print:hidden">
-        <div>
+        <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-slate-900">Weekoverzicht week {weekNumber.toString().padStart(2, '0')} - {year}</h1>
+          {weekIsDefinitief && (
+            <Badge className="bg-emerald-100 text-emerald-700 flex items-center gap-1">
+              <Lock className="w-3 h-3" /> Definitief
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setCurrentDate(subWeeks(currentDate, 1))}>
