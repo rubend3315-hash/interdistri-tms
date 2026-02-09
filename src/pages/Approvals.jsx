@@ -310,49 +310,54 @@ export default function Approvals() {
             </div>
 
             <div className="flex flex-col items-end gap-2">
-              {entry.shift_type && (
-                <Badge className={`${
-                  entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
-                  entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
-                  entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
-                  'bg-slate-100 text-slate-700'
-                }`}>
-                  {entry.shift_type}
-                </Badge>
-              )}
+            {entry.shift_type && (
+              <Badge className={`${
+                entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
+                entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
+                entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
+                'bg-slate-100 text-slate-700'
+              }`}>
+                {entry.shift_type}
+              </Badge>
+            )}
+            {entryLocked && (
+              <Badge className="bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                <Lock className="w-3 h-3" /> Vergrendeld
+              </Badge>
+            )}
 
-              <div className="flex gap-2 mt-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => openDetailDialog(entry)}
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  Bekijken
-                </Button>
-                {showActions && (
-                  <>
-                    <Button
-                      size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-700"
-                      onClick={() => handleApprove(entry)}
-                      disabled={approveMutation.isPending}
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Goedkeuren
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 border-red-200 hover:bg-red-50"
-                      onClick={() => openRejectDialog(entry)}
-                    >
-                      <XCircle className="w-4 h-4 mr-1" />
-                      Afkeuren
-                    </Button>
-                  </>
-                )}
-              </div>
+            <div className="flex gap-2 mt-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => openDetailDialog(entry)}
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                Bekijken
+              </Button>
+              {showActions && !entryLocked && (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => handleApprove(entry)}
+                    disabled={approveMutation.isPending}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    Goedkeuren
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                    onClick={() => openRejectDialog(entry)}
+                  >
+                    <XCircle className="w-4 h-4 mr-1" />
+                    Afkeuren
+                  </Button>
+                </>
+              )}
+            </div>
 
               {entry.approved_by && (
                 <p className="text-xs text-slate-500 mt-2">
