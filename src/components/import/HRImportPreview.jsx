@@ -32,9 +32,9 @@ function mapToEmployee(row) {
   return {
     employee_number: row.personeelsnummer || "",
     initials: row.voorletters || "",
-    first_name: row.voornaam || "",
-    prefix: row.tussenvoegsel || "",
-    last_name: row.achternaam || "",
+    first_name: row.voornaam || row.roepnaam || "",
+    prefix: row.tussenvoegsel || row.voorvoegsel || "",
+    last_name: row.achternaam || row.geboortenaam || "",
     date_of_birth: row.geboortedatum || "",
     email: row.email || "",
     phone: row.telefoon || "",
