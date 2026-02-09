@@ -427,6 +427,11 @@ export default function Trips() {
                               <Badge className={getStatusColor(trip.status)}>
                                 {trip.status}
                               </Badge>
+                              {tripLocked && (
+                                <Badge className="bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                                  <Lock className="w-3 h-3" /> Vergrendeld
+                                </Badge>
+                              )}
                             </div>
                             <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
                                <span className="flex items-center gap-1">
