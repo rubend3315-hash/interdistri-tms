@@ -697,6 +697,46 @@ export default function Contracts() {
         </DialogContent>
       </Dialog>
 
+      {/* Preview Contract Dialog */}
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5 text-blue-600" />
+              Contract Voorbeeld - Aanpassen en Opslaan
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <ContractPreviewEditor
+              html={previewHtml}
+              onChange={setPreviewHtml}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => {
+                setShowPreviewDialog(false);
+                setShowGenerateDialog(true);
+              }}>
+                Terug
+              </Button>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => generateContractMutation.mutate({
+                  ...generateForm,
+                  final_html: previewHtml
+                })}
+                disabled={generateContractMutation.isPending}
+              >
+                {generateContractMutation.isPending ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Opslaan...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4 mr-2" />Contract Opslaan</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* View/Edit Contract Dialog */}
       <ContractEditDialog
         open={showViewDialog}
