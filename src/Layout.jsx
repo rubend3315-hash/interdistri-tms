@@ -51,6 +51,7 @@ const menuItems = [
       { name: "Medewerkers", icon: Users, page: "Employees" },
       { name: "HR Import", icon: FileSpreadsheet, page: "HRImport" },
       { name: "Contracten", icon: FileText, page: "Contracts" },
+          { name: "Contractwijzigingen", icon: FileText, page: "ContractWijzigingen" },
       { name: "Bedrijfsreglement", icon: BookOpen, page: "Bedrijfsreglement" },
       { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
       { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
