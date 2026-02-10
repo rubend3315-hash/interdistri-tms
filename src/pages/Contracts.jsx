@@ -55,8 +55,13 @@ export default function Contracts() {
     contract_type: "Vast",
     start_date: format(new Date(), 'yyyy-MM-dd'),
     end_date: "",
-    hours_per_week: 40
+    hours_per_week: 40,
+    proeftijd: "Geen proeftijd",
+    is_verlenging: false,
+    oorspronkelijke_indienst_datum: ""
   });
+  const [previewHtml, setPreviewHtml] = useState(null);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -81,14 +86,18 @@ export default function Contracts() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       setShowGenerateDialog(false);
+      setShowPreviewDialog(false);
+      setPreviewHtml(null);
       setGenerateForm({
         employee_id: "",
         contract_type: "Vast",
         start_date: format(new Date(), 'yyyy-MM-dd'),
         end_date: "",
-        hours_per_week: 40
+        hours_per_week: 40,
+        proeftijd: "Geen proeftijd",
+        is_verlenging: false,
+        oorspronkelijke_indienst_datum: ""
       });
-      // Show generated contract with AI results
       if (data?.contract) {
         setSelectedContract(data.contract);
         setConflictAnalysis(data.conflict_analysis || null);
@@ -629,26 +638,60 @@ export default function Contracts() {
               />
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
-                <Sparkles className="w-4 h-4 inline mr-1" />
-                AI genereert automatisch een professioneel contract op basis van de CAO-regels en medewerkergegevens.
-              </p>
+            <div className="space-y-2">
+              <Label>Proeftijd</Label>
+              <Select
+                value={generateForm.proeftijd}
+                onValueChange={(v) => setGenerateForm({ ...generateForm, proeftijd: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Geen proeftijd">Geen proeftijd</SelectItem>
+                  <SelectItem value="1 maand proeftijd">1 maand proeftijd</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={generateForm.is_verlenging}
+                  onChange={(e) => setGenerateForm({ ...generateForm, is_verlenging: e.target.checked })}
+                  className="rounded"
+                />
+                Dit is een verlenging
+              </Label>
+            </div>
+
+            {generateForm.is_verlenging && (
+              <div className="space-y-2">
+                <Label>Oorspronkelijke datum in dienst</Label>
+                <Input
+                  type="date"
+                  value={generateForm.oorspronkelijke_indienst_datum}
+                  onChange={(e) => setGenerateForm({ ...generateForm, oorspronkelijke_indienst_datum: e.target.value })}
+                />
+              </div>
+            )}
 
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700"
-              onClick={() => generateContractMutation.mutate(generateForm)}
+              onClick={async () => {
+                const res = await base44.functions.invoke('generateContract', {
+                  ...generateForm,
+                  preview_only: true
+                });
+                setPreviewHtml(res.data.preview_html);
+                setShowGenerateDialog(false);
+                setShowPreviewDialog(true);
+              }}
               disabled={!generateForm.employee_id || generateContractMutation.isPending}
             >
-              {generateContractMutation.isPending ? (
-                <>Genereren...</>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Genereer Contract
-                </>
-              )}
+              <Eye className="w-4 h-4 mr-2" />
+              Voorbeeld bekijken
             </Button>
           </div>
         </DialogContent>
