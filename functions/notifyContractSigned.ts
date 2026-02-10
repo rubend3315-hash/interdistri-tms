@@ -1,0 +1,155 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { contract_id, signer_role } = await req.json();
+
+    if (!contract_id || !signer_role) {
+      return Response.json({ error: 'Missing contract_id or signer_role' }, { status: 400 });
+    }
+
+    const contract = await base44.asServiceRole.entities.Contract.get(contract_id);
+    if (!contract) {
+      return Response.json({ error: 'Contract not found' }, { status: 404 });
+    }
+
+    const employee = await base44.asServiceRole.entities.Employee.get(contract.employee_id);
+    if (!employee) {
+      return Response.json({ error: 'Employee not found' }, { status: 404 });
+    }
+
+    const employeeName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
+    const allUsers = await base44.asServiceRole.entities.User.list();
+    const adminUsers = allUsers.filter(u => u.role === 'admin');
+    const employeeUser = allUsers.find(u => u.email === employee.email);
+    const appBaseUrl = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
+
+    if (signer_role === 'manager') {
+      // Manager has signed -> now send contract to employee for their signature
+      if (employee.email) {
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: employee.email,
+          subject: `Contract goedgekeurd door management - onderteken nu - ${contract.contract_number}`,
+          from_name: 'Interdistri HR',
+          body: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #059669, #10b981); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 22px;">Interdistri Transport</h1>
+                <p style="color: #d1fae5; margin: 8px 0 0;">Contract goedgekeurd ✓</p>
+              </div>
+              <div style="background: white; padding: 24px; border: 1px solid #e2e8f0; border-top: none;">
+                <p style="font-size: 16px; color: #1e293b;">Beste ${employeeName},</p>
+                <p style="color: #475569; line-height: 1.6;">
+                  Goed nieuws! Je arbeidscontract <strong>${contract.contract_number}</strong> is goedgekeurd en ondertekend door het management. 
+                  Je kunt nu inloggen om het contract te bekijken en zelf te ondertekenen.
+                </p>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                  <p style="color: #166534; font-weight: 600; margin: 0;">Actie vereist: Onderteken je contract</p>
+                  <p style="color: #15803d; font-size: 14px; margin: 4px 0 0;">
+                    Na jouw ondertekening wordt het contract automatisch geactiveerd.
+                  </p>
+                </div>
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="${appBaseUrl}" 
+                     style="display: inline-block; background: #059669; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
+                    Contract bekijken &amp; ondertekenen
+                  </a>
+                </div>
+              </div>
+              <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
+                <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+                  Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle
+                </p>
+              </div>
+            </div>
+          `
+        });
+      }
+
+      // Create notification for employee
+      if (employeeUser) {
+        await base44.asServiceRole.entities.Notification.create({
+          title: 'Contract goedgekeurd — onderteken nu',
+          description: `Je contract ${contract.contract_number} is goedgekeurd door management. Log in om te ondertekenen.`,
+          type: 'general',
+          target_page: 'Contracts',
+          user_ids: [employeeUser.id],
+          priority: 'urgent'
+        });
+      }
+
+    } else if (signer_role === 'employee') {
+      // Employee has signed -> notify all admins
+      for (const admin of adminUsers) {
+        if (admin.email) {
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: admin.email,
+            subject: `Contract ondertekend door ${employeeName} - ${contract.contract_number}`,
+            from_name: 'Interdistri HR',
+            body: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                  <h1 style="color: white; margin: 0; font-size: 22px;">Interdistri Transport</h1>
+                  <p style="color: #bfdbfe; margin: 8px 0 0;">Contract ondertekend door medewerker</p>
+                </div>
+                <div style="background: white; padding: 24px; border: 1px solid #e2e8f0; border-top: none;">
+                  <p style="font-size: 16px; color: #1e293b;">Beste ${admin.full_name},</p>
+                  <p style="color: #475569; line-height: 1.6;">
+                    <strong>${employeeName}</strong> heeft contract <strong>${contract.contract_number}</strong> ondertekend.
+                  </p>
+                  ${contract.manager_signature_url
+                    ? `<div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                        <p style="color: #166534; font-weight: 600; margin: 0;">✓ Beide partijen hebben getekend</p>
+                        <p style="color: #15803d; font-size: 14px; margin: 4px 0 0;">Het contract is automatisch geactiveerd.</p>
+                      </div>`
+                    : `<div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                        <p style="color: #92400e; font-weight: 600; margin: 0;">Actie vereist: Uw handtekening</p>
+                        <p style="color: #a16207; font-size: 14px; margin: 4px 0 0;">De medewerker heeft getekend. Het contract wacht nog op uw handtekening.</p>
+                      </div>`
+                  }
+                  <div style="text-align: center; margin: 24px 0;">
+                    <a href="${appBaseUrl}" 
+                       style="display: inline-block; background: #2563eb; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
+                      Contract bekijken
+                    </a>
+                  </div>
+                </div>
+                <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
+                  <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+                    Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle
+                  </p>
+                </div>
+              </div>
+            `
+          });
+        }
+      }
+
+      // Create notification for admins
+      const adminUserIds = adminUsers.map(u => u.id);
+      await base44.asServiceRole.entities.Notification.create({
+        title: `Contract ondertekend door ${employeeName}`,
+        description: contract.manager_signature_url 
+          ? `Contract ${contract.contract_number} is door beide partijen ondertekend en geactiveerd.`
+          : `Contract ${contract.contract_number} is door ${employeeName} ondertekend. Uw handtekening is nog nodig.`,
+        type: 'general',
+        target_page: 'Contracts',
+        user_ids: adminUserIds,
+        priority: 'high'
+      });
+    }
+
+    return Response.json({ success: true, message: 'Notificaties verzonden' });
+
+  } catch (error) {
+    console.error('Notify contract signed error:', error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});

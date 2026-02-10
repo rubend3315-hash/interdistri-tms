@@ -25,7 +25,8 @@ import {
   Settings,
   Loader2,
   Trash2,
-  Save
+  Save,
+  RotateCw
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ContractEditDialog from "../components/contracts/ContractEditDialog";
@@ -173,23 +174,23 @@ export default function Contracts() {
       manager_signature_url: dataUrl,
       manager_signed_date: new Date().toISOString(),
       manager_signed_by: user.full_name,
-      status: selectedContract.employee_signature_url ? 'Ondertekend' : 'TerOndertekening'
+      status: selectedContract.employee_signature_url ? 'Actief' : 'TerOndertekening'
     } : {
       employee_signature_url: dataUrl,
       employee_signed_date: new Date().toISOString(),
-      status: selectedContract.manager_signature_url ? 'Ondertekend' : 'TerOndertekening'
+      status: selectedContract.manager_signature_url ? 'Actief' : 'TerOndertekening'
     };
-
-    // If both signatures are present, activate the contract
-    if ((isManager && selectedContract.employee_signature_url) || 
-        (!isManager && selectedContract.manager_signature_url)) {
-      updateData.status = 'Actief';
-    }
 
     await updateContractMutation.mutateAsync({
       id: selectedContract.id,
       data: updateData
     });
+
+    // Send notifications asynchronously (don't block UI)
+    base44.functions.invoke('notifyContractSigned', {
+      contract_id: selectedContract.id,
+      signer_role: isManager ? 'manager' : 'employee'
+    }).catch(err => console.error('Notificatie fout:', err));
 
     setShowSignDialog(false);
     setSignature(null);
@@ -380,16 +381,32 @@ export default function Contracts() {
                           </div>
                         </div>
                         <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
-                          {contract.employee_signature_url && (
-                            <div className="flex items-center gap-1">
-                              <UserCheck className="w-4 h-4 text-emerald-600" />
-                              <span>Chauffeur getekend</span>
-                            </div>
-                          )}
-                          {contract.manager_signature_url && (
+                          {contract.manager_signature_url ? (
                             <div className="flex items-center gap-1">
                               <UserCheck className="w-4 h-4 text-blue-600" />
-                              <span>Management getekend</span>
+                              <span>Management getekend ({contract.manager_signed_by || 'onbekend'})</span>
+                            </div>
+                          ) : contract.status === 'TerOndertekening' && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4 text-amber-500" />
+                              <span className="text-amber-600">Wacht op management</span>
+                            </div>
+                          )}
+                          {contract.employee_signature_url ? (
+                            <div className="flex items-center gap-1">
+                              <UserCheck className="w-4 h-4 text-emerald-600" />
+                              <span>Medewerker getekend</span>
+                            </div>
+                          ) : contract.status === 'TerOndertekening' && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4 text-amber-500" />
+                              <span className="text-amber-600">Wacht op medewerker</span>
+                            </div>
+                          )}
+                          {contract.reminder_sent_dates?.length > 0 && (
+                            <div className="flex items-center gap-1">
+                              <Send className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{contract.reminder_sent_dates.length}x verzonden</span>
                             </div>
                           )}
                         </div>
@@ -408,11 +425,27 @@ export default function Contracts() {
                             size="sm"
                             onClick={() => handleSendForSigning(contract)}
                             disabled={sendingContract === contract.id}
+                            title="Verstuur ter ondertekening"
                           >
                             {sendingContract === contract.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <Send className="w-4 h-4" />
+                            )}
+                          </Button>
+                        )}
+                        {contract.status === 'TerOndertekening' && isAdmin && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSendForSigning(contract)}
+                            disabled={sendingContract === contract.id}
+                            title="Herinnering versturen"
+                          >
+                            {sendingContract === contract.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <RotateCw className="w-4 h-4" />
                             )}
                           </Button>
                         )}
@@ -473,29 +506,54 @@ export default function Contracts() {
           })}
         </TabsContent>
 
-        <TabsContent value="pending">
+        <TabsContent value="pending" className="space-y-4">
           {pendingContracts.map(contract => {
             const employee = employees.find(e => e.id === contract.employee_id);
+            const canSign = (isAdmin && !contract.manager_signature_url) || (!isAdmin && !contract.employee_signature_url);
             return (
               <Card key={contract.id}>
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-lg">
                         {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
                       </h3>
                       <p className="text-sm text-slate-500">{contract.contract_number}</p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                        {contract.manager_signature_url 
+                          ? <span className="text-blue-600 flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Management ✓</span> 
+                          : <span className="text-amber-600 flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Wacht op management</span>}
+                        {contract.employee_signature_url 
+                          ? <span className="text-emerald-600 flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Medewerker ✓</span> 
+                          : <span className="text-amber-600 flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Wacht op medewerker</span>}
+                      </div>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setSelectedContract(contract);
-                        setShowSignDialog(true);
-                      }}
-                    >
-                      <UserCheck className="w-4 h-4 mr-1" />
-                      Onderteken
-                    </Button>
+                    <div className="flex gap-2">
+                      {isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendForSigning(contract)}
+                          disabled={sendingContract === contract.id}
+                          title="Herinnering versturen"
+                        >
+                          {sendingContract === contract.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCw className="w-4 h-4" />}
+                        </Button>
+                      )}
+                      {canSign && (
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            setSelectedContract(contract);
+                            setShowSignDialog(true);
+                          }}
+                        >
+                          <UserCheck className="w-4 h-4 mr-1" />
+                          Onderteken
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
