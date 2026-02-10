@@ -868,6 +868,32 @@ export default function Contracts() {
             <DialogTitle>Contract Ondertekenen</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {selectedContract && (
+              <div className="space-y-2">
+                <div className="bg-slate-50 rounded-lg p-3 text-sm space-y-1">
+                  <p className="font-medium text-slate-700">
+                    {selectedContract.contract_number} — {selectedContract.contract_type}
+                  </p>
+                  <p className="text-slate-500">
+                    Je tekent als: <strong>{user?.role === 'admin' ? 'Management' : 'Medewerker'}</strong>
+                  </p>
+                </div>
+                {/* Progress */}
+                <div className="flex items-center gap-2 text-xs">
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${selectedContract.manager_signature_url || user?.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'}`}>
+                    <UserCheck className="w-3 h-3" /> Management {selectedContract.manager_signature_url ? '✓' : user?.role === 'admin' ? '(nu)' : ''}
+                  </div>
+                  <div className="w-4 h-px bg-slate-300" />
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${selectedContract.employee_signature_url || user?.role !== 'admin' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
+                    <UserCheck className="w-3 h-3" /> Medewerker {selectedContract.employee_signature_url ? '✓' : user?.role !== 'admin' ? '(nu)' : ''}
+                  </div>
+                  <div className="w-4 h-px bg-slate-300" />
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-400">
+                    <CheckCircle className="w-3 h-3" /> Actief
+                  </div>
+                </div>
+              </div>
+            )}
             <p className="text-sm text-slate-600">
               Teken hieronder om het contract te ondertekenen:
             </p>
