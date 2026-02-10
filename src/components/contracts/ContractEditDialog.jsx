@@ -115,12 +115,64 @@ export default function ContractEditDialog({
 
   if (!contract) return null;
 
+  const applyFieldsToContent = (content) => {
+    let updated = content;
+    // Replace [NOG IN TE VULLEN] placeholders based on context
+    if (editFields.salary_scale) {
+      // Replace salary scale placeholders like "functiegroep C trede [NOG IN TE VULLEN]"
+      updated = updated.replace(
+        /functiegroep\s+\w+\s+trede\s+\[NOG IN TE VULLEN\]/gi,
+        `functiegroep ${editFields.salary_scale}`
+      );
+      // Also replace standalone loonschaal placeholder
+      updated = updated.replace(
+        /loonschaal\s+\[NOG IN TE VULLEN\]/gi,
+        `loonschaal ${editFields.salary_scale}`
+      );
+    }
+    if (editFields.hourly_rate) {
+      updated = updated.replace(
+        /uurloon[:\s]*\[NOG IN TE VULLEN\]/gi,
+        `uurloon €${Number(editFields.hourly_rate).toFixed(2)}`
+      );
+      // Also handle "bruto uurloon" pattern
+      updated = updated.replace(
+        /bruto\s+uurloon[:\s]*\[NOG IN TE VULLEN\]/gi,
+        `bruto uurloon €${Number(editFields.hourly_rate).toFixed(2)}`
+      );
+    }
+    if (editFields.hours_per_week !== "" && editFields.hours_per_week !== null) {
+      updated = updated.replace(
+        /uren per week[:\s]*\[NOG IN TE VULLEN\]/gi,
+        `uren per week ${editFields.hours_per_week}`
+      );
+      updated = updated.replace(
+        /arbeidsomvang[:\s]*\[NOG IN TE VULLEN\]/gi,
+        `arbeidsomvang ${editFields.hours_per_week} uur per week`
+      );
+    }
+    if (editFields.function_title) {
+      updated = updated.replace(
+        /functie van\s+\[NOG IN TE VULLEN\]/gi,
+        `functie van ${editFields.function_title}`
+      );
+      updated = updated.replace(
+        /functie[:\s]*\[NOG IN TE VULLEN\]/gi,
+        `functie ${editFields.function_title}`
+      );
+    }
+    return updated;
+  };
+
   const handleSave = () => {
+    const updatedContent = applyFieldsToContent(editContent);
+    setEditContent(updatedContent);
+    
     onSave({
       ...editFields,
       hourly_rate: editFields.hourly_rate ? Number(editFields.hourly_rate) : null,
       hours_per_week: editFields.hours_per_week !== "" ? Number(editFields.hours_per_week) : null,
-      contract_content: editContent,
+      contract_content: updatedContent,
     });
     setIsEditing(false);
   };
