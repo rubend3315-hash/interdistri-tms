@@ -191,7 +191,7 @@ export default function TIRekenmodule() {
                 onChange={(e) => setRijtijdMinuten(Number(e.target.value))}
                 min={0}
               />
-              <p className="text-xs text-slate-400">Tijd van depot naar eerste stop en terug</p>
+              <p className="text-xs text-slate-400">Tijd van standplaats naar depot klant</p>
             </div>
 
             {/* Opstarttijd */}
@@ -203,7 +203,7 @@ export default function TIRekenmodule() {
                 onChange={(e) => setOpstarttijdMinuten(Number(e.target.value))}
                 min={0}
               />
-              <p className="text-xs text-slate-400">Tijd voor laden, scannen en gereedmaken</p>
+              <p className="text-xs text-slate-400">Bus controleren, voertuigcontrole, tanken</p>
             </div>
           </CardContent>
         </Card>
