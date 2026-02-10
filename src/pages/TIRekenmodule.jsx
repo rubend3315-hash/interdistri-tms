@@ -294,7 +294,7 @@ export default function TIRekenmodule() {
                 <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-5">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
-                      <p className="text-xs text-emerald-600 font-medium mb-1">Besteltijd</p>
+                      <p className="text-xs text-emerald-600 font-medium mb-1">Totaal rit klant</p>
                       <p className="text-2xl font-bold text-emerald-800">{formatHoursToHHMM(berekening.besteltijdUren)}</p>
                       <p className="text-xs text-emerald-600">{berekening.besteltijdUren.toFixed(2)} uur</p>
                     </div>
