@@ -6,11 +6,21 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function calcMonths(start, end) {
+function calcDuration(start, end) {
   if (!start || !end) return '[NOG IN TE VULLEN]';
-  const s = new Date(start);
-  const e = new Date(end);
-  return String((e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()));
+  const s = new Date(start + 'T12:00:00');
+  const e = new Date(end + 'T12:00:00');
+  let months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
+  // Calculate remaining days after full months
+  const afterMonths = new Date(s);
+  afterMonths.setMonth(afterMonths.getMonth() + months);
+  if (afterMonths > e) {
+    months--;
+    afterMonths.setMonth(afterMonths.getMonth() - 1);
+  }
+  const days = Math.round((e - afterMonths) / (1000 * 60 * 60 * 24));
+  if (days === 0) return `${months} maanden`;
+  return `${months} maanden en ${days} dagen`;
 }
 
 function signatureBlock(fullName) {
@@ -549,7 +559,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { employee_id, contract_type, start_date, end_date, hours_per_week } = await req.json();
+    const body = await req.json();
+    const { employee_id, contract_type, start_date, end_date, hours_per_week, proeftijd, is_verlenging, oorspronkelijke_indienst_datum, preview_only, final_html } = body;
 
     if (!employee_id || !contract_type || !start_date) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
@@ -574,6 +585,10 @@ Deno.serve(async (req) => {
     const actualHours = hours_per_week || employee.contract_hours || 40;
 
     const fullName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
+    const inDienstDatum = is_verlenging && oorspronkelijke_indienst_datum
+      ? formatDate(oorspronkelijke_indienst_datum)
+      : (employee.in_service_since ? formatDate(employee.in_service_since) : '[NOG IN TE VULLEN]');
+
     const vars = {
       fullName,
       geboortedatum: formatDate(employee.date_of_birth),
@@ -584,10 +599,12 @@ Deno.serve(async (req) => {
       uurloon: hourlyRate > 0 ? `€ ${hourlyRate.toFixed(2)}` : '[NOG IN TE VULLEN]',
       startDatum: formatDate(start_date),
       eindDatum: formatDate(end_date),
-      duurMaanden: calcMonths(start_date, end_date),
+      duurTekst: calcDuration(start_date, end_date),
       ondertekeningDatum: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }),
       functie: employee.function || 'Pakketbezorger',
       afdeling: employee.department || 'PakketDistributie',
+      proeftijd: proeftijd || 'Geen proeftijd',
+      inDienstDatum,
     };
 
     let contractContent;
