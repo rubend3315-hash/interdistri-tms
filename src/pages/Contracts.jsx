@@ -16,19 +16,16 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   FileText,
   Plus,
-  Sparkles,
   Send,
   CheckCircle,
   Clock,
   AlertTriangle,
-  Download,
   Eye,
   UserCheck,
   Settings,
-  Shield,
-  BookOpen,
   Loader2,
-  Trash2
+  Trash2,
+  Save
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ContractEditDialog from "../components/contracts/ContractEditDialog";
@@ -45,11 +42,7 @@ export default function Contracts() {
   const canvasRef = useRef(null);
   const [deleteContract, setDeleteContract] = useState(null);
 
-  // AI analysis state
-  const [conflictAnalysis, setConflictAnalysis] = useState(null);
-  const [clauseSummary, setClauseSummary] = useState(null);
-  const [loadingConflicts, setLoadingConflicts] = useState(false);
-  const [loadingSummary, setLoadingSummary] = useState(false);
+  
 
   const [generateForm, setGenerateForm] = useState({
     employee_id: "",
@@ -103,8 +96,6 @@ export default function Contracts() {
       });
       if (data?.contract) {
         setSelectedContract(data.contract);
-        setConflictAnalysis(data.conflict_analysis || null);
-        setClauseSummary(data.clause_summary || null);
         setShowViewDialog(true);
       }
     }
@@ -218,34 +209,8 @@ export default function Contracts() {
     );
   };
 
-  const handleAnalyzeContract = async (contractId, action) => {
-    if (action === 'conflict_analysis') {
-      setLoadingConflicts(true);
-      setConflictAnalysis(null);
-      try {
-        const res = await base44.functions.invoke('analyzeContract', { contract_id: contractId, action });
-        setConflictAnalysis(res.data.analysis);
-      } catch (err) {
-        console.error(err);
-      }
-      setLoadingConflicts(false);
-    } else if (action === 'clause_summary') {
-      setLoadingSummary(true);
-      setClauseSummary(null);
-      try {
-        const res = await base44.functions.invoke('analyzeContract', { contract_id: contractId, action });
-        setClauseSummary(res.data.summary);
-      } catch (err) {
-        console.error(err);
-      }
-      setLoadingSummary(false);
-    }
-  };
-
   const handleOpenContract = (contract) => {
     setSelectedContract(contract);
-    setConflictAnalysis(null);
-    setClauseSummary(null);
     setShowViewDialog(true);
   };
 
@@ -283,15 +248,15 @@ export default function Contracts() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Contracten</h1>
-          <p className="text-slate-500 mt-1">Beheer arbeidscontracten met AI en digitale handtekeningen</p>
+          <p className="text-slate-500 mt-1">Beheer arbeidscontracten en digitale handtekeningen</p>
         </div>
         {isAdmin && (
           <Button
             onClick={() => setShowGenerateDialog(true)}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Genereer Contract
+            <Plus className="w-4 h-4 mr-2" />
+            Nieuw Contract
           </Button>
         )}
       </div>
@@ -361,7 +326,7 @@ export default function Contracts() {
           ) : contracts.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-slate-500">
-                Nog geen contracten. Genereer je eerste contract met AI.
+                Nog geen contracten. Genereer je eerste contract.
               </CardContent>
             </Card>
           ) : (
@@ -572,8 +537,8 @@ export default function Contracts() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-600" />
-              Contract Genereren met AI
+              <FileText className="w-5 h-5 text-blue-600" />
+              Nieuw Contract Genereren
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -764,7 +729,7 @@ export default function Contracts() {
                 {generateContractMutation.isPending ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Opslaan...</>
                 ) : (
-                  <><Sparkles className="w-4 h-4 mr-2" />Contract Opslaan</>
+                  <><Save className="w-4 h-4 mr-2" />Contract Opslaan</>
                 )}
               </Button>
             </div>
@@ -781,11 +746,6 @@ export default function Contracts() {
         isAdmin={isAdmin}
         onSave={handleSaveContract}
         saving={updateContractMutation.isPending}
-        onAnalyze={(action) => handleAnalyzeContract(selectedContract?.id, action)}
-        conflictAnalysis={conflictAnalysis}
-        clauseSummary={clauseSummary}
-        loadingConflicts={loadingConflicts}
-        loadingSummary={loadingSummary}
       />
 
       {/* Delete Contract Dialog */}
