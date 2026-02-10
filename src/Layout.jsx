@@ -83,6 +83,7 @@ const menuItems = [
     items: [
       { name: "Klanten", icon: Building2, page: "Customers" },
       { name: "Projecten", icon: FolderKanban, page: "Projects" },
+      { name: "TI Rekenmodule", icon: CalendarDays, page: "TIRekenmodule" },
     ]
   },
   {

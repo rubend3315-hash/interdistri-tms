@@ -52,6 +52,7 @@ import Backups from './pages/Backups';
 import Bedrijfsreglement from './pages/Bedrijfsreglement';
 import CaoRules from './pages/CaoRules';
 import Charters from './pages/Charters';
+import ContractWijzigingen from './pages/ContractWijzigingen';
 import Contracts from './pages/Contracts';
 import CustomerDetail from './pages/CustomerDetail';
 import Customers from './pages/Customers';
@@ -81,7 +82,7 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import ContractWijzigingen from './pages/ContractWijzigingen';
+import TIRekenmodule from './pages/TIRekenmodule';
 import __Layout from './Layout.jsx';
 
 
@@ -91,6 +92,7 @@ export const PAGES = {
     "Bedrijfsreglement": Bedrijfsreglement,
     "CaoRules": CaoRules,
     "Charters": Charters,
+    "ContractWijzigingen": ContractWijzigingen,
     "Contracts": Contracts,
     "CustomerDetail": CustomerDetail,
     "Customers": Customers,
@@ -120,7 +122,7 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "ContractWijzigingen": ContractWijzigingen,
+    "TIRekenmodule": TIRekenmodule,
 }
 
 export const pagesConfig = {
