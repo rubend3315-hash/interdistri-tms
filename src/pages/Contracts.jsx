@@ -27,8 +27,10 @@ import {
   Settings,
   Shield,
   BookOpen,
-  Loader2
+  Loader2,
+  Trash2
 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ConflictAnalysisPanel from "../components/contracts/ConflictAnalysisPanel";
 import ClauseSummaryPanel from "../components/contracts/ClauseSummaryPanel";
 
@@ -42,6 +44,7 @@ export default function Contracts() {
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
   const [viewTab, setViewTab] = useState("contract");
+  const [deleteContract, setDeleteContract] = useState(null);
 
   // AI analysis state
   const [conflictAnalysis, setConflictAnalysis] = useState(null);
@@ -103,6 +106,14 @@ export default function Contracts() {
     mutationFn: ({ id, data }) => base44.entities.Contract.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    }
+  });
+
+  const deleteContractMutation = useMutation({
+    mutationFn: (id) => base44.entities.Contract.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      setDeleteContract(null);
     }
   });
 
@@ -423,6 +434,16 @@ export default function Contracts() {
                             Onderteken
                           </Button>
                         )}
+                        {isAdmin && contract.status !== 'Actief' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            onClick={() => setDeleteContract(contract)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -722,6 +743,28 @@ export default function Contracts() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Contract Dialog */}
+      <AlertDialog open={!!deleteContract} onOpenChange={(open) => !open && setDeleteContract(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contract verwijderen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je contract <strong>{deleteContract?.contract_number}</strong> wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => deleteContractMutation.mutate(deleteContract.id)}
+              disabled={deleteContractMutation.isPending}
+            >
+              {deleteContractMutation.isPending ? "Verwijderen..." : "Verwijderen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Sign Contract Dialog */}
       <Dialog open={showSignDialog} onOpenChange={setShowSignDialog}>

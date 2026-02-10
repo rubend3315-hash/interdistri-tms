@@ -78,11 +78,11 @@ import Recalculations from './pages/Recalculations';
 import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
 import ShiftTime from './pages/ShiftTime';
+import TIRekenmodule from './pages/TIRekenmodule';
 import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import TIRekenmodule from './pages/TIRekenmodule';
 import __Layout from './Layout.jsx';
 
 
@@ -118,11 +118,11 @@ export const PAGES = {
     "SalaryReports": SalaryReports,
     "SalaryTables": SalaryTables,
     "ShiftTime": ShiftTime,
+    "TIRekenmodule": TIRekenmodule,
     "TimeTracking": TimeTracking,
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "TIRekenmodule": TIRekenmodule,
 }
 
 export const pagesConfig = {
