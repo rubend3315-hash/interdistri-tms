@@ -246,11 +246,17 @@ export default function Contracts() {
     setSelectedContract(prev => ({ ...prev, ...data }));
   };
 
+  const [sendingContract, setSendingContract] = useState(null);
+
   const handleSendForSigning = async (contract) => {
-    await updateContractMutation.mutateAsync({
-      id: contract.id,
-      data: { status: 'TerOndertekening' }
-    });
+    setSendingContract(contract.id);
+    try {
+      await base44.functions.invoke('sendContractForSigning', { contract_id: contract.id });
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    } catch (err) {
+      console.error('Fout bij verzenden contract:', err);
+    }
+    setSendingContract(null);
   };
 
   const activeContracts = contracts.filter(c => c.status === 'Actief' || c.status === 'Ondertekend');
@@ -417,8 +423,13 @@ export default function Contracts() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleSendForSigning(contract)}
+                            disabled={sendingContract === contract.id}
                           >
-                            <Send className="w-4 h-4" />
+                            {sendingContract === contract.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Send className="w-4 h-4" />
+                            )}
                           </Button>
                         )}
                         {contract.status === 'TerOndertekening' && (
@@ -526,8 +537,13 @@ export default function Contracts() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleSendForSigning(contract)}
+                        disabled={sendingContract === contract.id}
                       >
-                        <Send className="w-4 h-4 mr-1" />
+                        {sendingContract === contract.id ? (
+                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4 mr-1" />
+                        )}
                         Versturen
                       </Button>
                     )}
