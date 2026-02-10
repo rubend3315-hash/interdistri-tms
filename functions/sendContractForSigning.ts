@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { contract_id } = await req.json();
+    const { contract_id, auto_invite } = await req.json();
 
     if (!contract_id) {
       return Response.json({ error: 'Missing contract_id' }, { status: 400 });
@@ -22,31 +22,67 @@ Deno.serve(async (req) => {
     // Fetch contract and employee
     const contract = await base44.asServiceRole.entities.Contract.get(contract_id);
     if (!contract) {
-      return Response.json({ error: 'Contract not found' }, { status: 404 });
+      return Response.json({ error: 'Contract niet gevonden' }, { status: 404 });
     }
 
     const employee = await base44.asServiceRole.entities.Employee.get(contract.employee_id);
     if (!employee) {
-      return Response.json({ error: 'Employee not found' }, { status: 404 });
+      return Response.json({ error: 'Medewerker niet gevonden' }, { status: 404 });
+    }
+
+    if (!employee.email) {
+      return Response.json({ 
+        error: 'Medewerker heeft geen e-mailadres. Voeg eerst een e-mailadres toe aan het medewerkersprofiel.',
+        error_type: 'no_email'
+      }, { status: 400 });
     }
 
     const employeeName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
 
-    // Update contract status FIRST (before emails, so status always changes)
+    // Check if employee is a registered app user
+    const allUsers = await base44.asServiceRole.entities.User.list();
+    const employeeUser = allUsers.find(u => u.email === employee.email);
+
+    if (!employeeUser) {
+      // Employee is not a registered app user
+      if (auto_invite) {
+        // Invite the employee as app user with role "user"
+        try {
+          await base44.users.inviteUser(employee.email, "user");
+        } catch (inviteError) {
+          return Response.json({ 
+            error: `Kon medewerker niet uitnodigen: ${inviteError.message}`,
+            error_type: 'invite_failed'
+          }, { status: 500 });
+        }
+        // Return success but tell frontend to retry after invite
+        return Response.json({ 
+          success: true,
+          invited: true,
+          message: `${employeeName} is uitgenodigd als app-gebruiker op ${employee.email}. Zodra de medewerker de uitnodiging heeft geaccepteerd, kun je het contract opnieuw versturen.`
+        });
+      } else {
+        // Return error with clear message
+        return Response.json({ 
+          error: `${employeeName} (${employee.email}) is geen geregistreerde app-gebruiker. De e-mail kan alleen worden verstuurd naar gebruikers die in de app zijn uitgenodigd.`,
+          error_type: 'not_app_user',
+          employee_name: employeeName,
+          employee_email: employee.email
+        }, { status: 400 });
+      }
+    }
+
+    // Employee is a registered app user — proceed with sending
+    const appBaseUrl = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
+
+    // Update contract status
     await base44.asServiceRole.entities.Contract.update(contract_id, {
       status: 'TerOndertekening',
       reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
     });
 
-    // Build signing URL - link to the contracts page
-    const appBaseUrl = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
-
-    // Try to send emails - may fail if employee is not an app user
-    let emailSent = false;
-
-    if (employee.email) {
-      try {
-        await base44.asServiceRole.integrations.Core.SendEmail({
+    // Send email to employee
+    await base44.asServiceRole.integrations.Core.SendEmail({
       to: employee.email,
       subject: `Arbeidsovereenkomst ter ondertekening - ${contract.contract_number}`,
       from_name: 'Interdistri HR',
@@ -113,46 +149,29 @@ Deno.serve(async (req) => {
           </div>
         </div>
       `
-        });
+    });
 
-        // Send copy to admin
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: user.email,
-          subject: `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`,
-          from_name: 'Interdistri HR',
-          body: `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`
-        });
+    // Send copy to admin
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      to: user.email,
+      subject: `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`,
+      from_name: 'Interdistri HR',
+      body: `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`
+    });
 
-        emailSent = true;
-      } catch (emailError) {
-        console.warn('Email kon niet verzonden worden:', emailError.message);
-      }
-    }
-
-    // Create notification for the employee (if they are an app user)
-    try {
-      const allUsers = await base44.asServiceRole.entities.User.list();
-      const employeeUser = allUsers.find(u => u.email === employee.email);
-      if (employeeUser) {
-        await base44.asServiceRole.entities.Notification.create({
-          title: 'Contract ter ondertekening',
-          description: `Je arbeidscontract ${contract.contract_number} is verzonden ter ondertekening. Bekijk en onderteken het contract.`,
-          type: 'general',
-          target_page: 'Contracts',
-          user_ids: [employeeUser.id],
-          priority: 'high'
-        });
-      }
-    } catch (notifError) {
-      console.warn('Notificatie fout:', notifError.message);
-    }
+    // Create in-app notification for the employee
+    await base44.asServiceRole.entities.Notification.create({
+      title: 'Contract ter ondertekening',
+      description: `Je arbeidscontract ${contract.contract_number} is verzonden ter ondertekening. Bekijk en onderteken het contract.`,
+      type: 'general',
+      target_page: 'Contracts',
+      user_ids: [employeeUser.id],
+      priority: 'high'
+    });
 
     return Response.json({
       success: true,
-      emailSent,
-      message: emailSent 
-        ? `Contract is verzonden naar ${employee.email}` 
-        : `Contract status is gewijzigd naar 'Ter Ondertekening'. E-mail kon niet verzonden worden (medewerker is geen app-gebruiker).`
+      message: `Contract is verzonden naar ${employeeName} (${employee.email})`
     });
 
   } catch (error) {
