@@ -27,34 +27,47 @@ const STATUS_CONFIG = {
 
 function plainTextToHtml(text) {
   if (!text) return "";
-  // Already HTML - return as-is
-  if (text.includes("<p>") || text.includes("<br") || text.includes("<div")) return text;
+  
+  // Check if it's already mostly HTML (has multiple HTML tags)
+  const htmlTagCount = (text.match(/<\/?(?:p|h[1-6]|div|br|ul|ol|li|table|strong|em)\b/gi) || []).length;
+  if (htmlTagCount > 5) return text;
+  
+  // It might be a mix: extract any trailing HTML block (like signature div) and process the rest as plain text
+  let trailingHtml = "";
+  const divMatch = text.match(/(<div\s+style=[\s\S]*<\/div>)\s*$/);
+  let plainPart = text;
+  if (divMatch) {
+    trailingHtml = divMatch[1];
+    plainPart = text.substring(0, text.indexOf(divMatch[1]));
+  }
   
   // Split on double newlines to get paragraphs/blocks
-  const blocks = text.split(/\n\n+/);
-  return blocks
+  const blocks = plainPart.split(/\n\n+/);
+  const html = blocks
     .map(block => {
       const trimmed = block.trim();
       if (!trimmed) return "";
       // Headings: "Artikel X: ..." or "ARBEIDSOVEREENKOMST..."
       if (/^Artikel\s+\d+/i.test(trimmed)) {
-        // Could be multi-line: first line is title, rest is content
         const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
-        let html = `<h3>${lines[0]}</h3>`;
+        let h = `<h3>${lines[0]}</h3>`;
         if (lines.length > 1) {
-          html += lines.slice(1).map(l => `<p>${l}</p>`).join('');
+          h += lines.slice(1).map(l => `<p>${l}</p>`).join('');
         }
-        return html;
+        return h;
       }
       if (/^ARBEIDSOVEREENKOMST/.test(trimmed)) {
-        return `<h3>${trimmed.split('\n')[0]}</h3>` + 
-          trimmed.split('\n').slice(1).filter(l => l.trim()).map(l => `<p>${l.trim()}</p>`).join('');
+        const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+        return `<h3>${lines[0]}</h3>` + 
+          lines.slice(1).map(l => `<p>${l}</p>`).join('');
       }
       // Regular paragraph(s) - each line becomes a <p>
       const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
       return lines.map(l => `<p>${l}</p>`).join('');
     })
     .join('');
+  
+  return html + trailingHtml;
 }
 
 export default function ContractEditDialog({
