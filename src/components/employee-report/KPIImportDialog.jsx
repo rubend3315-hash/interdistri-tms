@@ -40,87 +40,136 @@ export default function KPIImportDialog({ open, onOpenChange, customerId, onImpo
     setImporting(true);
     setResult(null);
 
-    const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const jsonRows = XLSX.utils.sheet_to_json(sheet);
+    try {
+      let buffer;
+      try {
+        buffer = await file.arrayBuffer();
+      } catch (e) {
+        setResult({ error: "Kan het bestand niet lezen. Controleer of het bestand geldig is en probeer opnieuw." });
+        setImporting(false);
+        return;
+      }
 
-    if (!jsonRows || jsonRows.length === 0) {
-      setResult({ error: "Geen data gevonden in het Excel bestand." });
-      setImporting(false);
-      return;
-    }
+      let workbook;
+      try {
+        workbook = XLSX.read(buffer, { type: "array" });
+      } catch (e) {
+        setResult({ error: "Het bestand kon niet worden geopend als Excel-bestand. Zorg dat het een geldig .xlsx of .xls bestand is." });
+        setImporting(false);
+        return;
+      }
 
-    // Get week from first row
-    const weekFromFile = parseInt(jsonRows[0]["Week"]);
-    if (!weekFromFile) {
-      setResult({ error: "Kolom 'Week' niet gevonden in het bestand." });
-      setImporting(false);
-      return;
-    }
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) {
+        setResult({ error: "Het Excel-bestand bevat geen werkbladen." });
+        setImporting(false);
+        return;
+      }
 
-    const records = jsonRows.map(row => ({
-      customer_id: customerId || "",
-      zmedcid: String(row["zmedcid"] || ""),
-      medewerker_naam: row["Medewerker"] || "",
-      week: parseInt(row["Week"]) || weekFromFile,
-      year: parseInt(year),
-      tvi_dag: parsePercentage(row["TVI Dag"]),
-      tvi_avond: parsePercentage(row["TVI Avond"]),
-      uitreiklocatie: parsePercentage(row["Uitreiklocatie"]),
-      vr_distributie: parsePercentage(row["Vr Distributie"]),
-      scankwaliteit: parsePercentage(row["Scankwaliteit"]),
-      pba_bezorgers: parsePercentage(row["PBA bezorgers"]),
-      hitrate: parsePercentage(row["Hitrate"]),
-    })).filter(r => r.medewerker_naam);
+      const sheet = workbook.Sheets[sheetName];
+      const jsonRows = XLSX.utils.sheet_to_json(sheet);
 
-    if (records.length === 0) {
-      setResult({ error: "Geen geldige medewerker rijen gevonden. Controleer de kolomnamen." });
-      setImporting(false);
-      return;
-    }
+      if (!jsonRows || jsonRows.length === 0) {
+        setResult({ error: "Geen data gevonden in het Excel bestand. Het eerste werkblad is leeg." });
+        setImporting(false);
+        return;
+      }
 
-    // Delete existing records for same week/year to avoid duplicates
-    const existing = await base44.entities.EmployeeKPI.filter({ week: weekFromFile, year: parseInt(year) });
-    if (existing.length > 0) {
-      await Promise.all(existing.map(e => base44.entities.EmployeeKPI.delete(e.id)));
-    }
+      // Validate required columns
+      const firstRow = jsonRows[0];
+      const requiredColumns = ["Week", "Medewerker"];
+      const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+      if (missingColumns.length > 0) {
+        const availableCols = Object.keys(firstRow).join(', ');
+        setResult({ 
+          error: `Verplichte kolom(men) niet gevonden: ${missingColumns.join(', ')}. Gevonden kolommen: ${availableCols}` 
+        });
+        setImporting(false);
+        return;
+      }
 
-    // BulkCreate in batches of 20 to avoid timeouts
-    const batchSize = 20;
-    for (let i = 0; i < records.length; i += batchSize) {
-      const batch = records.slice(i, i + batchSize);
-      await base44.entities.EmployeeKPI.bulkCreate(batch);
-    }
+      // Get week from first row
+      const weekFromFile = parseInt(firstRow["Week"]);
+      if (!weekFromFile || weekFromFile < 1 || weekFromFile > 53) {
+        setResult({ error: `Ongeldig weeknummer in het bestand: "${firstRow["Week"]}". Verwacht een getal tussen 1 en 53.` });
+        setImporting(false);
+        return;
+      }
 
-    // Validate imported names against PakketDistributie employees
-    const pdNames = pdEmployees.map(e => {
-      const last = (e.last_name || '').trim();
-      const first = (e.first_name || '').trim();
-      // Build variations: "Achternaam V.", "V. Achternaam", "Achternaam Voornaam", etc.
-      const initial = first ? first.charAt(0) + '.' : '';
-      return [
-        `${last} ${initial}`.trim().toLowerCase(),
-        `${initial} ${last}`.trim().toLowerCase(),
-        `${last} ${first}`.trim().toLowerCase(),
-        `${first} ${last}`.trim().toLowerCase(),
-        last.toLowerCase(),
-      ];
-    });
+      const records = jsonRows.map(row => ({
+        customer_id: customerId || "",
+        zmedcid: String(row["zmedcid"] || ""),
+        medewerker_naam: row["Medewerker"] || "",
+        week: parseInt(row["Week"]) || weekFromFile,
+        year: parseInt(year),
+        tvi_dag: parsePercentage(row["TVI Dag"]),
+        tvi_avond: parsePercentage(row["TVI Avond"]),
+        uitreiklocatie: parsePercentage(row["Uitreiklocatie"]),
+        vr_distributie: parsePercentage(row["Vr Distributie"]),
+        scankwaliteit: parsePercentage(row["Scankwaliteit"]),
+        pba_bezorgers: parsePercentage(row["PBA bezorgers"]),
+        hitrate: parsePercentage(row["Hitrate"]),
+      })).filter(r => r.medewerker_naam);
 
-    const unmatchedNames = records
-      .map(r => r.medewerker_naam)
-      .filter(name => {
-        const n = name.toLowerCase().trim();
-        return !pdNames.some(variations => variations.some(v => v === n || n.includes(v) || v.includes(n)));
+      if (records.length === 0) {
+        setResult({ error: `Geen geldige rijen gevonden. Het bestand bevat ${jsonRows.length} rij(en), maar geen enkele heeft een waarde in de kolom "Medewerker".` });
+        setImporting(false);
+        return;
+      }
+
+      // Delete existing records for same week/year to avoid duplicates
+      const existing = await base44.entities.EmployeeKPI.filter({ week: weekFromFile, year: parseInt(year) });
+      let deletedCount = 0;
+      if (existing.length > 0) {
+        await Promise.all(existing.map(e => base44.entities.EmployeeKPI.delete(e.id)));
+        deletedCount = existing.length;
+      }
+
+      // BulkCreate in batches of 20 to avoid timeouts
+      const batchSize = 20;
+      for (let i = 0; i < records.length; i += batchSize) {
+        const batch = records.slice(i, i + batchSize);
+        await base44.entities.EmployeeKPI.bulkCreate(batch);
+      }
+
+      // Validate imported names against PakketDistributie employees
+      const pdNames = pdEmployees.map(e => {
+        const last = (e.last_name || '').trim();
+        const first = (e.first_name || '').trim();
+        const initial = first ? first.charAt(0) + '.' : '';
+        return [
+          `${last} ${initial}`.trim().toLowerCase(),
+          `${initial} ${last}`.trim().toLowerCase(),
+          `${last} ${first}`.trim().toLowerCase(),
+          `${first} ${last}`.trim().toLowerCase(),
+          last.toLowerCase(),
+        ];
       });
 
-    setResult({ success: true, count: records.length, week: weekFromFile, unmatchedNames });
-    setImporting(false);
-    queryClient.invalidateQueries({ queryKey: ['employee-kpi'] });
-    // Notify parent of the imported week so the page can auto-select it
-    if (onImportComplete) onImportComplete(weekFromFile, parseInt(year));
+      const unmatchedNames = records
+        .map(r => r.medewerker_naam)
+        .filter(name => {
+          const n = name.toLowerCase().trim();
+          return !pdNames.some(variations => variations.some(v => v === n || n.includes(v) || v.includes(n)));
+        });
+
+      setResult({ 
+        success: true, 
+        count: records.length, 
+        week: weekFromFile, 
+        unmatchedNames,
+        deletedCount 
+      });
+      queryClient.invalidateQueries({ queryKey: ['employee-kpi'] });
+      if (onImportComplete) onImportComplete(weekFromFile, parseInt(year));
+    } catch (err) {
+      const errorMsg = err?.response?.data?.error || err?.message || String(err);
+      setResult({ 
+        error: `Import mislukt: ${errorMsg}. Controleer het bestand en probeer opnieuw.` 
+      });
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleClose = () => {
