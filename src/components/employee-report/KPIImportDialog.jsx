@@ -206,18 +206,32 @@ export default function KPIImportDialog({ open, onOpenChange, customerId, onImpo
           </div>
 
           {result?.error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{result.error}</div>
+            <div className="text-sm text-red-600 bg-red-50 p-4 rounded-lg border border-red-200">
+              <div className="flex items-center gap-2 font-medium mb-1">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                Import mislukt
+              </div>
+              <p className="ml-6">{result.error}</p>
+            </div>
           )}
           {result?.success && (
             <div className="space-y-2">
-              <div className="text-sm text-green-700 bg-green-50 p-3 rounded-lg flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                {result.count} medewerker KPI's geïmporteerd voor week {result.week}
+              <div className="text-sm text-green-700 bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2 font-medium mb-1">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                  Import succesvol
+                </div>
+                <ul className="ml-6 space-y-0.5">
+                  <li>• <strong>{result.count}</strong> KPI-regels geïmporteerd voor week {result.week}, {year}</li>
+                  {result.deletedCount > 0 && (
+                    <li>• {result.deletedCount} bestaande regels voor deze week zijn vervangen</li>
+                  )}
+                </ul>
               </div>
               {result.unmatchedNames?.length > 0 && (
-                <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+                <div className="text-sm text-amber-700 bg-amber-50 p-4 rounded-lg border border-amber-200">
                   <div className="flex items-center gap-2 font-medium mb-1">
-                    <AlertTriangle className="w-4 h-4" />
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                     {result.unmatchedNames.length} naam/namen niet gevonden in afdeling PakketDistributie:
                   </div>
                   <ul className="list-disc ml-6 mt-1 space-y-0.5">
