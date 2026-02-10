@@ -226,16 +226,51 @@ export default function Contracts() {
   };
 
   const [sendingContract, setSendingContract] = useState(null);
+  const [sendError, setSendError] = useState(null);
+  const [invitingEmployee, setInvitingEmployee] = useState(false);
 
-  const handleSendForSigning = async (contract) => {
+  const handleSendForSigning = async (contract, autoInvite = false) => {
     setSendingContract(contract.id);
+    setSendError(null);
     try {
-      await base44.functions.invoke('sendContractForSigning', { contract_id: contract.id });
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      const response = await base44.functions.invoke('sendContractForSigning', { 
+        contract_id: contract.id,
+        auto_invite: autoInvite
+      });
+      if (response.data?.invited) {
+        setSendError({
+          type: 'invited',
+          message: response.data.message,
+          contract
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      }
     } catch (err) {
-      console.error('Fout bij verzenden contract:', err);
+      const errorData = err?.response?.data;
+      if (errorData?.error_type === 'not_app_user') {
+        setSendError({
+          type: 'not_app_user',
+          message: errorData.error,
+          employeeName: errorData.employee_name,
+          employeeEmail: errorData.employee_email,
+          contract
+        });
+      } else {
+        setSendError({
+          type: 'general',
+          message: errorData?.error || err.message || 'Onbekende fout bij verzenden contract'
+        });
+      }
     }
     setSendingContract(null);
+  };
+
+  const handleInviteAndRetry = async () => {
+    if (!sendError?.contract) return;
+    setInvitingEmployee(true);
+    await handleSendForSigning(sendError.contract, true);
+    setInvitingEmployee(false);
   };
 
   const activeContracts = contracts.filter(c => c.status === 'Actief' || c.status === 'Ondertekend');
