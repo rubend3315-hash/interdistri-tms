@@ -176,6 +176,52 @@ export default function ContractEditDialog({
         `functie ${editFields.function_title}`
       );
     }
+    // Einddatum replacement
+    if (editFields.end_date) {
+      const endDateObj = new Date(editFields.end_date + 'T12:00:00');
+      const endDateFormatted = endDateObj.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+      updated = updated.replace(
+        /op\s+\[NOG IN TE VULLEN\]\s+zonder\s+dat/gi,
+        `op ${endDateFormatted} zonder dat`
+      );
+      updated = updated.replace(
+        /einddatum\)\s*\./gi,
+        `${endDateFormatted}).`
+      );
+      updated = updated.replace(
+        /eindigt[^.]*\[NOG IN TE VULLEN\]/gi,
+        `eindigt derhalve van rechtswege op ${endDateFormatted}`
+      );
+      // Also handle generic "per (einddatum)" pattern
+      updated = updated.replace(
+        /per\s*\(einddatum\)/gi,
+        `per ${endDateFormatted}`
+      );
+    }
+
+    // Startdatum replacement
+    if (editFields.start_date) {
+      const startDateObj = new Date(editFields.start_date + 'T12:00:00');
+      const startDateFormatted = startDateObj.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+      updated = updated.replace(
+        /vangt aan op\s+\[NOG IN TE VULLEN\]/gi,
+        `vangt aan op ${startDateFormatted}`
+      );
+    }
+
+    // Duur in maanden berekenen
+    if (editFields.start_date && editFields.end_date) {
+      const startD = new Date(editFields.start_date);
+      const endD = new Date(editFields.end_date);
+      const months = (endD.getFullYear() - startD.getFullYear()) * 12 + (endD.getMonth() - startD.getMonth());
+      if (months > 0) {
+        updated = updated.replace(
+          /duur van\s+\[NOG IN TE VULLEN\]\s+maanden/gi,
+          `duur van ${months} maanden`
+        );
+      }
+    }
+
     // Proeftijd replacement
     if (editFields.is_verlenging) {
       // Remove proeftijd clause or replace with "geen proeftijd"

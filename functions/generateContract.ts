@@ -259,15 +259,23 @@ Aldus overeengekomen, opgemaakt in 3-voud en ondertekend te Kapelle,
 
 d.d. ${ondertekeningDatum}
 
-Voor akkoord\t\t\tVoor akkoord
 
-…………………………………………\t……………………………………
-
-Van Dooren Transport Zeeland B.V.\t${heerMevrouw} ${fullName}
-
-Namens deze:
-
-De heer M. Schetters`;
+<div style="display: flex; justify-content: space-between; margin-top: 40px;">
+<div style="width: 45%; text-align: center;">
+<p><strong>Voor akkoord werkgever</strong></p>
+<br/><br/>
+<p>…………………………………………</p>
+<p>Van Dooren Transport Zeeland B.V.</p>
+<p>Namens deze:</p>
+<p>De heer M. Schetters</p>
+</div>
+<div style="width: 45%; text-align: center;">
+<p><strong>Voor akkoord werknemer</strong></p>
+<br/><br/>
+<p>…………………………………………</p>
+<p>${heerMevrouw} ${fullName}</p>
+</div>
+</div>`;
 
       // Generate contract number
       const contractNumber = `CONTRACT-${employee.employee_number || employee_id.substring(0, 8)}-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
