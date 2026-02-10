@@ -374,6 +374,71 @@ export default function ContractEditDialog({
                       />
                     </div>
                   </div>
+                  {/* Verlenging / eerder in dienst */}
+                  <div className="border-t border-amber-200 pt-3 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="is_verlenging"
+                        checked={editFields.is_verlenging}
+                        onCheckedChange={(checked) => {
+                          const newFields = { ...editFields, is_verlenging: !!checked };
+                          if (checked) {
+                            newFields.proeftijd = "Geen proeftijd";
+                          } else {
+                            newFields.proeftijd = "1 maand proeftijd";
+                            newFields.oorspronkelijke_indienst_datum = "";
+                            newFields.verlenging_nummer = "";
+                          }
+                          setEditFields(newFields);
+                        }}
+                      />
+                      <Label htmlFor="is_verlenging" className="text-sm font-medium cursor-pointer">
+                        Werknemer is oorspronkelijk eerder in dienst getreden
+                      </Label>
+                    </div>
+
+                    {editFields.is_verlenging && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ml-7">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Oorspronkelijke indienst datum</Label>
+                          <Input
+                            type="date"
+                            value={editFields.oorspronkelijke_indienst_datum}
+                            onChange={(e) => setEditFields({ ...editFields, oorspronkelijke_indienst_datum: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Verlenging</Label>
+                          <Select
+                            value={editFields.verlenging_nummer}
+                            onValueChange={(v) => setEditFields({ ...editFields, verlenging_nummer: v })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Kies verlenging..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1e verlenging">1e verlenging</SelectItem>
+                              <SelectItem value="2e verlenging">2e verlenging</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Proeftijd</Label>
+                          <Input value="Geen proeftijd" disabled className="bg-slate-100 text-slate-500" />
+                        </div>
+                      </div>
+                    )}
+
+                    {!editFields.is_verlenging && (
+                      <div className="ml-7">
+                        <div className="space-y-1 max-w-xs">
+                          <Label className="text-xs">Proeftijd</Label>
+                          <Input value="1 maand proeftijd" disabled className="bg-slate-100 text-slate-500" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="space-y-1">
                     <Label className="text-xs">Status</Label>
                     <Select value={editFields.status} onValueChange={(v) => setEditFields({ ...editFields, status: v })}>
