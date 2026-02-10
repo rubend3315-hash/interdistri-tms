@@ -30,17 +30,23 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Employee not found' }, { status: 404 });
     }
 
-    if (!employee.email) {
-      return Response.json({ error: 'Medewerker heeft geen e-mailadres' }, { status: 400 });
-    }
-
     const employeeName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
+
+    // Update contract status FIRST (before emails, so status always changes)
+    await base44.asServiceRole.entities.Contract.update(contract_id, {
+      status: 'TerOndertekening',
+      reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
+    });
 
     // Build signing URL - link to the contracts page
     const appBaseUrl = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
 
-    // Send email to employee
-    await base44.asServiceRole.integrations.Core.SendEmail({
+    // Try to send emails - may fail if employee is not an app user
+    let emailSent = false;
+
+    if (employee.email) {
+      try {
+        await base44.asServiceRole.integrations.Core.SendEmail({
       to: employee.email,
       subject: `Arbeidsovereenkomst ter ondertekening - ${contract.contract_number}`,
       from_name: 'Interdistri HR',
