@@ -16,7 +16,7 @@ import {
   getYear,
   getMonth
 } from "date-fns";
-import { getWeek as getWeekFn } from "date-fns";
+
 import { nl } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { jsPDF } from "jspdf";
@@ -595,6 +595,7 @@ export default function Planning() {
             customers={customers}
             filterDepartment={filterDepartment}
             getWeekScheduleHours={getWeekScheduleHours}
+            onDragDrop={handleDragDrop}
           />
         </CardContent>
       </Card>
