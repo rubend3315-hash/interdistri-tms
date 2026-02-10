@@ -338,6 +338,9 @@ export default function HelpPage() {
                   <li>✓ CAO-regels en toeslagen</li>
                   <li>✓ Loontabellen</li>
                   <li>✓ Gebruikers en permissies</li>
+                  <li>✓ <strong>Chauffeur-toggle:</strong> Bepaalt of nachttoeslag (21:00-05:00) wordt berekend</li>
+                  <li>✓ <strong>Tonen in planner:</strong> Bepaalt of medewerker zichtbaar is in de planning</li>
+                  <li>✓ <strong>Opnemen in loonrapport:</strong> Bepaalt of er een loonrapport wordt gegenereerd</li>
                 </ul>
               </CardContent>
             </Card>
@@ -388,6 +391,7 @@ export default function HelpPage() {
                   <li>✓ Handtekening functionaliteit</li>
                   <li>✓ Berichten en notificaties</li>
                   <li>✓ Meerdaagse diensten (aparte app via profiel)</li>
+                  <li>✓ <strong>Bedrijfsreglement:</strong> Artikelen doorzoeken en lezen per hoofdstuk</li>
                 </ul>
               </CardContent>
             </Card>
@@ -1238,6 +1242,9 @@ export default function HelpPage() {
                       <li>• <strong>Contracttype:</strong> Vast, Tijdelijk, Oproep, Uitzend</li>
                       <li>• <strong>Contract uren:</strong> Uren per week</li>
                       <li>• <strong>Rijbewijs:</strong> Categorieën en vervaldatum</li>
+                      <li>• <strong>Chauffeur:</strong> Aan/uit — bepaalt of nachttoeslag (21:00-05:00) berekend wordt</li>
+                      <li>• <strong>Tonen in planner:</strong> Aan/uit — medewerker wordt niet getoond in de planning als dit uitstaat</li>
+                      <li>• <strong>Opnemen in loonrapport:</strong> Aan/uit — geen loonrapport als dit uitstaat</li>
                     </ul>
                   </div>
                   <div>
@@ -1676,10 +1683,138 @@ export default function HelpPage() {
                       <li>• Inhoudingen en WKR</li>
                     </ul>
                   </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">3. Medewerker-instellingen die het loonrapport beïnvloeden</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Chauffeur (aan/uit):</strong> Bepaalt of de <strong>nachttoeslag (toeslagenmatrix 19%)</strong> berekend wordt. Als deze toggle uit staat, worden nachturen (21:00-05:00) niet meegenomen in het loonrapport.</li>
+                      <li>• <strong>Opnemen in loonrapport (aan/uit):</strong> Als deze toggle uit staat, wordt de medewerker <strong>volledig uitgesloten</strong> uit het loonrapport overzicht, de printversie en de urenbalans. Gebruik dit voor medewerkers die niet via dit systeem verloond worden.</li>
+                    </ul>
+                  </div>
                   <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-sm text-green-700">
                       💡 <strong>Tip:</strong> Het weekoverzicht in Tijdregistratie toont ook een uitgebreide weeksamenvatting met alle berekeningen die je kunt afdrukken.
                     </p>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> De Chauffeur- en Loonrapport-toggles stel je in bij het medewerker profiel onder "Overige gegevens". Standaard staan alle toggles aan.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Bedrijfsreglement in mobiele app */}
+            <AccordionItem value="reglement-mobile-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Bedrijfsreglement in de mobiele app
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Wat is het?</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Medewerkers kunnen het bedrijfsreglement inzien via de mobiele app. Dit is een apart tabblad "Reglement" in zowel de standaard als de meerdaagse mobiele app.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Functionaliteit</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Alle actieve artikelen worden getoond, gegroepeerd per <strong>hoofdstuk</strong></li>
+                      <li>• Medewerkers kunnen <strong>zoeken</strong> op titel of inhoud</li>
+                      <li>• Artikelen zijn uitklapbaar om de volledige inhoud te lezen</li>
+                      <li>• Alleen artikelen met status <strong>"Actief"</strong> worden getoond</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Beheer</h4>
+                    <p className="text-sm text-slate-600">
+                      Het bedrijfsreglement wordt beheerd via de pagina <strong>"Bedrijfsreglement"</strong> in het hoofdmenu. Daar kun je artikelen toevoegen, bewerken en de versiegeschiedenis bekijken.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Medewerker Toggles */}
+            <AccordionItem value="employee-toggles-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Users className="w-4 h-4 mr-2" />
+                Medewerker-toggles (Chauffeur, Planner, Loonrapport)
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Overzicht</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Bij elk medewerkersprofiel staan drie toggles onder "Overige gegevens" die bepalen hoe de medewerker in het systeem behandeld wordt. Standaard staan alle drie aan.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h4 className="font-medium text-blue-900 mb-2">🚛 Chauffeur (is_chauffeur)</h4>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• Bepaalt of <strong>nachttoeslag (toeslagenmatrix 19%)</strong> berekend wordt</li>
+                      <li>• Nachturen zijn uren gewerkt tussen <strong>21:00 en 05:00</strong></li>
+                      <li>• <strong>Uit:</strong> Nachturen worden op 0 gezet in het loonrapport</li>
+                      <li>• <strong>Aan (standaard):</strong> Nachturen worden normaal berekend</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-medium text-green-900 mb-2">📅 Tonen in planner (tonen_in_planner)</h4>
+                    <ul className="text-sm text-green-800 space-y-1">
+                      <li>• Bepaalt of de medewerker <strong>zichtbaar is in de Planning</strong></li>
+                      <li>• <strong>Uit:</strong> Medewerker verschijnt niet in het planningsscherm en kan niet ingepland worden</li>
+                      <li>• <strong>Aan (standaard):</strong> Medewerker is zichtbaar en inplanbaar</li>
+                      <li>• Gebruik dit voor medewerkers die je niet wilt inplannen (bijv. kantoorpersoneel)</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <h4 className="font-medium text-purple-900 mb-2">💰 Opnemen in loonrapport (opnemen_in_loonrapport)</h4>
+                    <ul className="text-sm text-purple-800 space-y-1">
+                      <li>• Bepaalt of er een <strong>loonrapport gegenereerd</strong> wordt voor deze medewerker</li>
+                      <li>• <strong>Uit:</strong> Geen loonrapport, geen printversie, niet in urenbalans</li>
+                      <li>• <strong>Aan (standaard):</strong> Normaal opgenomen in alle loonrapporten</li>
+                      <li>• Gebruik dit voor medewerkers die niet via dit systeem verloond worden</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> Deze toggles zijn onafhankelijk van de medewerkerstatus (Actief/Inactief). Een medewerker kan Actief zijn maar toch niet in de planner staan of geen loonrapport krijgen.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* HR Import */}
+            <AccordionItem value="hr-import-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                HR Import
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Wat is het?</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Met HR Import kun je medewerkersgegevens in bulk importeren vanuit een Excel-bestand. Dit is handig bij het opzetten van het systeem of bij grote wijzigingen.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Hoe gebruik je het?</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar <strong>"HR Import"</strong> in het menu onder HR & Beheer</li>
+                      <li>• Upload een Excel-bestand (.xlsx of .csv)</li>
+                      <li>• Het systeem detecteert automatisch de kolommen</li>
+                      <li>• Koppel de kolommen aan de juiste medewerkersvelden</li>
+                      <li>• Bekijk de preview van de te importeren data</li>
+                      <li>• Bevestig de import</li>
+                    </ul>
                   </div>
                 </div>
               </AccordionContent>
