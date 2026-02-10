@@ -389,7 +389,7 @@ ${signatureBlock(fullName)}`;
 }
 
 function buildVastTemplate(emp, vars) {
-  const { fullName, geboortedatum, adres, postcode, woonplaats, trede, uurloon, startDatum, ondertekeningDatum, functie, afdeling } = vars;
+  const { fullName, geboortedatum, adres, postcode, woonplaats, trede, uurloon, startDatum, ondertekeningDatum, functie, afdeling, proeftijd, inDienstDatum } = vars;
   return `<h2>ARBEIDSOVEREENKOMST VOOR ONBEPAALDE TIJD</h2>
 
 <p>De ondergetekenden:</p>
@@ -416,7 +416,7 @@ function buildVastTemplate(emp, vars) {
 
 <p>Deze overeenkomst vangt aan op ${startDatum}.</p>
 
-<p>De werknemer is oorspronkelijk bij werkgever in dienst getreden op [NOG IN TE VULLEN]</p>
+<p>De werknemer is oorspronkelijk bij werkgever in dienst getreden op ${inDienstDatum}.</p>
 
 <h3>Artikel 3: functie</h3>
 
@@ -444,7 +444,7 @@ function buildVastTemplate(emp, vars) {
 
 <h3>Artikel 6: proeftijd</h3>
 
-<p>Er geldt één maand / geen proeftijd.</p>
+<p>${proeftijd === 'Geen proeftijd' ? 'Er geldt geen proeftijd.' : 'Er geldt één maand proeftijd.'}</p>
 
 <h3>Artikel 7: arbeidstijd</h3>
 
