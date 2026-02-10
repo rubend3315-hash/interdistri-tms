@@ -83,11 +83,16 @@ export default function KPIImportDialog({ open, onOpenChange, customerId, onImpo
 
     // Delete existing records for same week/year to avoid duplicates
     const existing = await base44.entities.EmployeeKPI.filter({ week: weekFromFile, year: parseInt(year) });
-    for (const e of existing) {
-      await base44.entities.EmployeeKPI.delete(e.id);
+    if (existing.length > 0) {
+      await Promise.all(existing.map(e => base44.entities.EmployeeKPI.delete(e.id)));
     }
 
-    await base44.entities.EmployeeKPI.bulkCreate(records);
+    // BulkCreate in batches of 20 to avoid timeouts
+    const batchSize = 20;
+    for (let i = 0; i < records.length; i += batchSize) {
+      const batch = records.slice(i, i + batchSize);
+      await base44.entities.EmployeeKPI.bulkCreate(batch);
+    }
 
     // Validate imported names against PakketDistributie employees
     const pdNames = pdEmployees.map(e => {
