@@ -136,14 +136,24 @@ export default function ContractEditDialog({
       );
     }
     if (editFields.hourly_rate) {
+      const formattedRate = `€${Number(editFields.hourly_rate).toFixed(2)}`;
       updated = updated.replace(
         /uurloon[:\s]*\[NOG IN TE VULLEN\]/gi,
-        `uurloon €${Number(editFields.hourly_rate).toFixed(2)}`
+        `uurloon ${formattedRate}`
       );
-      // Also handle "bruto uurloon" pattern
       updated = updated.replace(
         /bruto\s+uurloon[:\s]*\[NOG IN TE VULLEN\]/gi,
-        `bruto uurloon €${Number(editFields.hourly_rate).toFixed(2)}`
+        `bruto uurloon ${formattedRate}`
+      );
+      // "overeenkomst [NOG IN TE VULLEN] bruto per" pattern (salaris artikel)
+      updated = updated.replace(
+        /overeenkomst\s+\[NOG IN TE VULLEN\]\s+bruto\s+per/gi,
+        `overeenkomst ${formattedRate} bruto per`
+      );
+      // Generic: "aanvangssalaris ... [NOG IN TE VULLEN] bruto"
+      updated = updated.replace(
+        /aanvangssalaris[^[]*\[NOG IN TE VULLEN\]/gi,
+        `aanvangssalaris bedraagt ten tijde van het aangaan van deze overeenkomst ${formattedRate}`
       );
     }
     if (editFields.hours_per_week !== "" && editFields.hours_per_week !== null) {
