@@ -1485,9 +1485,68 @@ export default function HelpPage() {
                       <li>• Reiskosten worden automatisch berekend bij tijdregistratie</li>
                     </ul>
                   </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">3. Contract genereren en bewerken</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar <strong>"Contracten"</strong> en klik op <strong>"Nieuw Contract"</strong></li>
+                      <li>• Selecteer de medewerker, contracttype, startdatum en uren per week</li>
+                      <li>• Optioneel: kies een contractsjabloon (of gebruik het standaardsjabloon)</li>
+                      <li>• Klik op <strong>"Voorbeeld bekijken"</strong> om het contract te zien</li>
+                      <li>• Je kunt de contracttekst <strong>bewerken met de rich text editor</strong> voordat je opslaat</li>
+                      <li>• Klik op <strong>"Contract Opslaan"</strong> — het contract krijgt status "Concept"</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">4. Contract verzenden ter ondertekening</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Bij een concept-contract klik je op de <strong>verzendknop</strong> (envelop-icoon)</li>
+                      <li>• Het systeem controleert of de medewerker een <strong>geregistreerde app-gebruiker</strong> is</li>
+                      <li>• <strong>Wel geregistreerd:</strong> Contract wordt direct verzonden per e-mail, status wordt "Ter Ondertekening"</li>
+                      <li>• <strong>Niet geregistreerd:</strong> Je krijgt een duidelijke foutmelding met de optie om de medewerker <strong>direct uit te nodigen als app-gebruiker</strong></li>
+                      <li>• Na uitnodigen moet de medewerker eerst de uitnodiging accepteren, daarna kun je het contract opnieuw versturen</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">5. Ondertekeningsflow</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Het ondertekenen verloopt in twee stappen:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Stap 1 — Medewerker tekent:</strong> De medewerker ontvangt een e-mail en kan in de app het contract bekijken en digitaal ondertekenen</li>
+                      <li>• <strong>Stap 2 — Management tekent:</strong> Pas nadat de medewerker heeft getekend, kan de admin/manager het contract ondertekenen</li>
+                      <li>• <strong>Resultaat:</strong> Na beide handtekeningen wordt het contract automatisch <strong>"Actief"</strong></li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">6. Herinneringen versturen</h4>
+                    <p className="text-sm text-slate-600">
+                      Bij contracten met status "Ter Ondertekening" kun je een <strong>herinnering</strong> versturen via de herhalingsknop. Het systeem houdt bij hoeveel herinneringen zijn verstuurd.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">7. Contract sjablonen</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar <strong>"Contract Sjablonen"</strong> in het menu</li>
+                      <li>• Maak sjablonen per contracttype (Vast, Tijdelijk, Nul Uren, etc.)</li>
+                      <li>• Gebruik placeholders die automatisch worden ingevuld met medewerkergegevens</li>
+                      <li>• Stel één sjabloon per type in als <strong>standaard</strong></li>
+                    </ul>
+                  </div>
+
                   <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
                     <p className="text-sm text-indigo-700">
                       💡 <strong>Tip:</strong> Het roosterschema bepaalt hoeveel uren per dag verwacht worden. Dit wordt gebruikt voor het berekenen van overuren en verlofuren.
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> E-mails kunnen alleen worden verstuurd naar medewerkers die als app-gebruiker zijn uitgenodigd. Uitgenodigde medewerkers met de rol "gebruiker" hebben alleen toegang tot de mobiele app en contractondertekening — niet tot het backoffice.
                     </p>
                   </div>
                 </div>
