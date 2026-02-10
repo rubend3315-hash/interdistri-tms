@@ -223,7 +223,7 @@ ${signatureBlock(fullName)}`;
 }
 
 function buildOproepTemplate(emp, vars) {
-  const { fullName, geboortedatum, adres, postcode, woonplaats, trede, uurloon, startDatum, eindDatum, duurMaanden, ondertekeningDatum, functie, afdeling } = vars;
+  const { fullName, geboortedatum, adres, postcode, woonplaats, trede, uurloon, startDatum, eindDatum, duurTekst, ondertekeningDatum, functie, afdeling, proeftijd, inDienstDatum } = vars;
   // Oproep = Bepaalde tijd Zonder vaste uren - uses different arbeidstijd/salaris articles
   return `<h2>ARBEIDSOVEREENKOMST VOOR BEPAALDE TIJD Zonder vaste uren</h2>
 
@@ -265,7 +265,7 @@ function buildOproepTemplate(emp, vars) {
 
 <h3>Artikel 5: duur</h3>
 
-<p>Deze arbeidsovereenkomst is aangegaan voor de duur van ${duurMaanden} maanden en eindigt derhalve van rechtswege op ${eindDatum} zonder dat daartoe toestemming van UWV WERKbedrijf vereist zal zijn.</p>
+<p>Deze arbeidsovereenkomst is aangegaan voor de duur van ${duurTekst} en eindigt derhalve van rechtswege op ${eindDatum} zonder dat daartoe toestemming van UWV WERKbedrijf vereist zal zijn.</p>
 
 <p>Voor de werkgever geldt wel een schriftelijke aanzegtermijn van 1 maand; de werkgever zal de werknemer minimaal 1 maand voor afloop van deze overeenkomst schriftelijk laten weten of hij deze tijdelijke overeenkomst wel of niet wenst te verlengen, en indien wordt verlengd onder welke voorwaarden.</p>
 
