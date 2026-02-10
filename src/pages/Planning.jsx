@@ -16,6 +16,7 @@ import {
   getYear,
   getMonth
 } from "date-fns";
+import { getWeek as getWeekFn } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { jsPDF } from "jspdf";
@@ -309,6 +310,67 @@ export default function Planning() {
       toast.success(`Planning gekopieerd naar week ${targetWeek} (${targetYear})`);
     } catch (error) {
       toast.error('Fout bij kopiëren: ' + error.message);
+    }
+  };
+
+  const handleDragDrop = (dropData) => {
+    if (dropData.shiftValue) {
+      // Shift dragged from one cell to another
+      const targetEmployee = activeEmployees.find(e => e.id === dropData.targetEmployeeId);
+      if (!targetEmployee) return;
+
+      // Build minimal formData to create the same shift type
+      const shiftValue = dropData.shiftValue;
+      const formData = {
+        planned_department: targetEmployee.department || '',
+        is_standby: shiftValue === 'Stand-by',
+        is_training: shiftValue === 'Opleiding',
+        time_block_day: shiftValue.includes('Dag'),
+        time_block_evening: shiftValue.includes('Avond'),
+        time_block_night: shiftValue.includes('Nacht'),
+        route_id: '',
+        vehicle_id: '',
+        notes_1: '',
+        notes_2: '',
+        copy_to_days: []
+      };
+
+      // Copy route/vehicle from source if same employee
+      if (dropData.sourceEmployeeId) {
+        const sourceSchedule = schedules.find(s => s.employee_id === dropData.sourceEmployeeId);
+        if (sourceSchedule) {
+          formData.route_id = sourceSchedule[`${dropData.sourceDayKey}_route_id`] || '';
+          formData.vehicle_id = sourceSchedule[`${dropData.sourceDayKey}_vehicle_id`] || '';
+          formData.notes_1 = sourceSchedule[`${dropData.sourceDayKey}_notes_1`] || '';
+          formData.notes_2 = sourceSchedule[`${dropData.sourceDayKey}_notes_2`] || '';
+          formData.planned_department = sourceSchedule[`${dropData.sourceDayKey}_planned_department`] || targetEmployee.department || '';
+        }
+      }
+
+      handleShiftChange(dropData.targetEmployeeId, dropData.targetDayIndex, formData);
+      toast.success('Dienst verplaatst');
+    } else if (dropData.resourceType === 'vehicle') {
+      // Vehicle resource dropped on cell
+      const dayKey = getDayKey(dropData.targetDayIndex);
+      const targetWeek = getWeek(days[dropData.targetDayIndex], { weekStartsOn: 1 });
+      const targetYear = getYear(days[dropData.targetDayIndex]);
+      const existingSchedule = schedules.find(s => s.employee_id === dropData.targetEmployeeId && s.week_number === targetWeek && s.year === targetYear);
+
+      if (existingSchedule) {
+        updateMutation.mutate({ id: existingSchedule.id, data: { [`${dayKey}_vehicle_id`]: dropData.resourceId } });
+      }
+      toast.success(`Voertuig ${dropData.resourceLabel} toegewezen`);
+    } else if (dropData.resourceType === 'route') {
+      // Route resource dropped on cell
+      const dayKey = getDayKey(dropData.targetDayIndex);
+      const targetWeek = getWeek(days[dropData.targetDayIndex], { weekStartsOn: 1 });
+      const targetYear = getYear(days[dropData.targetDayIndex]);
+      const existingSchedule = schedules.find(s => s.employee_id === dropData.targetEmployeeId && s.week_number === targetWeek && s.year === targetYear);
+
+      if (existingSchedule) {
+        updateMutation.mutate({ id: existingSchedule.id, data: { [`${dayKey}_route_id`]: dropData.resourceId } });
+      }
+      toast.success(`Route ${dropData.resourceLabel} toegewezen`);
     }
   };
 
