@@ -28,7 +28,7 @@ function signatureBlock(fullName) {
 }
 
 function buildBepaaldetijdTemplate(emp, vars) {
-  const { fullName, geboortedatum, adres, postcode, woonplaats, trede, uurloon, startDatum, eindDatum, duurMaanden, ondertekeningDatum, functie, afdeling } = vars;
+  const { fullName, geboortedatum, adres, postcode, woonplaats, trede, uurloon, startDatum, eindDatum, duurTekst, ondertekeningDatum, functie, afdeling, proeftijd, inDienstDatum } = vars;
   return `<h2>ARBEIDSOVEREENKOMST VOOR BEPAALDE TIJD</h2>
 
 <p>De ondergetekenden:</p>
@@ -55,7 +55,7 @@ function buildBepaaldetijdTemplate(emp, vars) {
 
 <p>Deze overeenkomst vangt aan op ${startDatum}.</p>
 
-<p>Werknemer is oorspronkelijk bij werkgever in dienst getreden op [NOG IN TE VULLEN]</p>
+<p>Werknemer is oorspronkelijk bij werkgever in dienst getreden op ${inDienstDatum}.</p>
 
 <h3>Artikel 3: functie</h3>
 
@@ -71,7 +71,7 @@ function buildBepaaldetijdTemplate(emp, vars) {
 
 <h3>Artikel 5: duur</h3>
 
-<p>Deze arbeidsovereenkomst is aangegaan voor de duur van ${duurMaanden} maanden, en eindigt derhalve van rechtswege op ${eindDatum} zonder dat daartoe toestemming van UWV WERKbedrijf vereist zal zijn.</p>
+<p>Deze arbeidsovereenkomst is aangegaan voor de duur van ${duurTekst}, en eindigt derhalve van rechtswege op ${eindDatum} zonder dat daartoe toestemming van UWV WERKbedrijf vereist zal zijn.</p>
 
 <p>Voor de werkgever geldt wel een schriftelijke aanzegtermijn van 1 maand; de werkgever zal de werknemer minimaal 1 maand voor afloop van deze overeenkomst schriftelijk laten weten of hij deze tijdelijke overeenkomst wel of niet wenst te verlengen, en indien wordt verlengd onder welke voorwaarden.</p>
 
@@ -85,7 +85,7 @@ function buildBepaaldetijdTemplate(emp, vars) {
 
 <h3>Artikel 6: proeftijd</h3>
 
-<p>Er geldt één maand proeftijd.</p>
+<p>${proeftijd === 'Geen proeftijd' ? 'Er geldt geen proeftijd.' : 'Er geldt één maand proeftijd.'}</p>
 
 <h3>Artikel 7: arbeidstijd</h3>
 
