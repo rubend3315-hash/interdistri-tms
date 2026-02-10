@@ -187,6 +187,7 @@ export default function Planning() {
 
   const activeEmployees = employees.filter(e => {
     if (e.status !== 'Actief') return false;
+    if (e.tonen_in_planner === false) return false;
     if (filterDepartment === 'all') return true;
     if (e.department === filterDepartment) return true;
     
