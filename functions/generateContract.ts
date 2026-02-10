@@ -622,10 +622,23 @@ Deno.serve(async (req) => {
       templateNote = 'Bepaalde tijd sjabloon (vaste uren)';
       contractHours = actualHours;
     } else {
-      // Vast
       contractContent = buildVastTemplate(employee, vars);
       templateNote = 'Onbepaalde tijd sjabloon (vaste uren)';
       contractHours = actualHours;
+    }
+
+    // Preview mode: return HTML without saving
+    if (preview_only) {
+      return Response.json({
+        success: true,
+        preview_html: contractContent,
+        message: 'Preview gegenereerd'
+      });
+    }
+
+    // If final_html is provided, use the user-edited version
+    if (final_html) {
+      contractContent = final_html;
     }
 
     const contractNumber = `CONTRACT-${employee.employee_number || employee_id.substring(0, 8)}-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
