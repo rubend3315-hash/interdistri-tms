@@ -59,7 +59,8 @@ export default function Contracts() {
     hours_per_week: 40,
     proeftijd: "Geen proeftijd",
     is_verlenging: false,
-    oorspronkelijke_indienst_datum: ""
+    oorspronkelijke_indienst_datum: "",
+    verlenging_nummer: ""
   });
   const [previewHtml, setPreviewHtml] = useState(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
@@ -97,7 +98,8 @@ export default function Contracts() {
         hours_per_week: 40,
         proeftijd: "Geen proeftijd",
         is_verlenging: false,
-        oorspronkelijke_indienst_datum: ""
+        oorspronkelijke_indienst_datum: "",
+        verlenging_nummer: ""
       });
       if (data?.contract) {
         setSelectedContract(data.contract);
@@ -644,27 +646,20 @@ export default function Contracts() {
             )}
 
             <div className="space-y-2">
-              <Label>Proeftijd</Label>
-              <Select
-                value={generateForm.proeftijd}
-                onValueChange={(v) => setGenerateForm({ ...generateForm, proeftijd: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Geen proeftijd">Geen proeftijd</SelectItem>
-                  <SelectItem value="1 maand proeftijd">1 maand proeftijd</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={generateForm.is_verlenging}
-                  onChange={(e) => setGenerateForm({ ...generateForm, is_verlenging: e.target.checked })}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setGenerateForm({ 
+                      ...generateForm, 
+                      is_verlenging: checked,
+                      proeftijd: checked ? "Geen proeftijd" : generateForm.proeftijd,
+                      oorspronkelijke_indienst_datum: checked ? generateForm.oorspronkelijke_indienst_datum : "",
+                      verlenging_nummer: checked ? generateForm.verlenging_nummer : ""
+                    });
+                  }}
                   className="rounded"
                 />
                 Dit is een verlenging
@@ -672,13 +667,48 @@ export default function Contracts() {
             </div>
 
             {generateForm.is_verlenging && (
+              <div className="space-y-3 bg-slate-50 rounded-lg p-3">
+                <div className="space-y-2">
+                  <Label>Oorspronkelijke datum in dienst</Label>
+                  <Input
+                    type="date"
+                    value={generateForm.oorspronkelijke_indienst_datum}
+                    onChange={(e) => setGenerateForm({ ...generateForm, oorspronkelijke_indienst_datum: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Verlenging</Label>
+                  <Select
+                    value={generateForm.verlenging_nummer}
+                    onValueChange={(v) => setGenerateForm({ ...generateForm, verlenging_nummer: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecteer verlenging" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1e verlenging">1e verlenging</SelectItem>
+                      <SelectItem value="2e verlenging">2e verlenging</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {!generateForm.is_verlenging && (
               <div className="space-y-2">
-                <Label>Oorspronkelijke datum in dienst</Label>
-                <Input
-                  type="date"
-                  value={generateForm.oorspronkelijke_indienst_datum}
-                  onChange={(e) => setGenerateForm({ ...generateForm, oorspronkelijke_indienst_datum: e.target.value })}
-                />
+                <Label>Proeftijd</Label>
+                <Select
+                  value={generateForm.proeftijd}
+                  onValueChange={(v) => setGenerateForm({ ...generateForm, proeftijd: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Geen proeftijd">Geen proeftijd</SelectItem>
+                    <SelectItem value="1 maand proeftijd">1 maand proeftijd</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
