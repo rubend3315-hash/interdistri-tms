@@ -192,6 +192,8 @@ export default function Contracts() {
       signer_role: isManager ? 'manager' : 'employee'
     }).catch(err => console.error('Notificatie fout:', err));
 
+    queryClient.invalidateQueries({ queryKey: ['contracts'] });
+
     setShowSignDialog(false);
     setSignature(null);
   };
@@ -381,17 +383,6 @@ export default function Contracts() {
                           </div>
                         </div>
                         <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
-                          {contract.manager_signature_url ? (
-                            <div className="flex items-center gap-1">
-                              <UserCheck className="w-4 h-4 text-blue-600" />
-                              <span>Management getekend ({contract.manager_signed_by || 'onbekend'})</span>
-                            </div>
-                          ) : contract.status === 'TerOndertekening' && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4 text-amber-500" />
-                              <span className="text-amber-600">Wacht op management</span>
-                            </div>
-                          )}
                           {contract.employee_signature_url ? (
                             <div className="flex items-center gap-1">
                               <UserCheck className="w-4 h-4 text-emerald-600" />
@@ -400,7 +391,18 @@ export default function Contracts() {
                           ) : contract.status === 'TerOndertekening' && (
                             <div className="flex items-center gap-1">
                               <Clock className="w-4 h-4 text-amber-500" />
-                              <span className="text-amber-600">Wacht op medewerker</span>
+                              <span className="text-amber-600">Stap 1: Wacht op medewerker</span>
+                            </div>
+                          )}
+                          {contract.manager_signature_url ? (
+                            <div className="flex items-center gap-1">
+                              <UserCheck className="w-4 h-4 text-blue-600" />
+                              <span>Management getekend ({contract.manager_signed_by || 'onbekend'})</span>
+                            </div>
+                          ) : contract.status === 'TerOndertekening' && contract.employee_signature_url && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4 text-amber-500" />
+                              <span className="text-amber-600">Stap 2: Wacht op management</span>
                             </div>
                           )}
                           {contract.reminder_sent_dates?.length > 0 && (
@@ -459,8 +461,10 @@ export default function Contracts() {
                             }}
                             disabled={
                               (isAdmin && contract.manager_signature_url) ||
+                              (isAdmin && !contract.employee_signature_url) ||
                               (!isAdmin && contract.employee_signature_url)
                             }
+                            title={isAdmin && !contract.employee_signature_url ? 'Wacht tot medewerker eerst tekent' : ''}
                           >
                             <UserCheck className="w-4 h-4 mr-1" />
                             Onderteken
@@ -520,12 +524,14 @@ export default function Contracts() {
                       </h3>
                       <p className="text-sm text-slate-500">{contract.contract_number}</p>
                       <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
-                        {contract.manager_signature_url 
-                          ? <span className="text-blue-600 flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Management ✓</span> 
-                          : <span className="text-amber-600 flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Wacht op management</span>}
                         {contract.employee_signature_url 
                           ? <span className="text-emerald-600 flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Medewerker ✓</span> 
-                          : <span className="text-amber-600 flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Wacht op medewerker</span>}
+                          : <span className="text-amber-600 flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Stap 1: Wacht op medewerker</span>}
+                        {contract.manager_signature_url 
+                          ? <span className="text-blue-600 flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Management ✓</span> 
+                          : contract.employee_signature_url 
+                            ? <span className="text-amber-600 flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Stap 2: Wacht op management</span>
+                            : null}
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -540,7 +546,7 @@ export default function Contracts() {
                           {sendingContract === contract.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCw className="w-4 h-4" />}
                         </Button>
                       )}
-                      {canSign && (
+                      {canSign && !(isAdmin && !contract.employee_signature_url) && (
                         <Button
                           size="sm"
                           className="bg-blue-600 hover:bg-blue-700"
@@ -880,16 +886,16 @@ export default function Contracts() {
                 </div>
                 {/* Progress */}
                 <div className="flex items-center gap-2 text-xs">
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${selectedContract.manager_signature_url || user?.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'}`}>
-                    <UserCheck className="w-3 h-3" /> Management {selectedContract.manager_signature_url ? '✓' : user?.role === 'admin' ? '(nu)' : ''}
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${selectedContract.employee_signature_url || user?.role !== 'admin' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
+                    <UserCheck className="w-3 h-3" /> 1. Medewerker {selectedContract.employee_signature_url ? '✓' : user?.role !== 'admin' ? '(nu)' : ''}
                   </div>
                   <div className="w-4 h-px bg-slate-300" />
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${selectedContract.employee_signature_url || user?.role !== 'admin' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
-                    <UserCheck className="w-3 h-3" /> Medewerker {selectedContract.employee_signature_url ? '✓' : user?.role !== 'admin' ? '(nu)' : ''}
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${selectedContract.manager_signature_url || (user?.role === 'admin' && selectedContract.employee_signature_url) ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'}`}>
+                    <UserCheck className="w-3 h-3" /> 2. Management {selectedContract.manager_signature_url ? '✓' : (user?.role === 'admin' && selectedContract.employee_signature_url) ? '(nu)' : ''}
                   </div>
                   <div className="w-4 h-px bg-slate-300" />
                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-400">
-                    <CheckCircle className="w-3 h-3" /> Actief
+                    <CheckCircle className="w-3 h-3" /> 3. Actief
                   </div>
                 </div>
               </div>
