@@ -611,7 +611,7 @@ export default function Contracts() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid ${generateForm.contract_type !== 'Vast' ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
               <div className="space-y-2">
                 <Label>Startdatum</Label>
                 <Input
@@ -620,14 +620,16 @@ export default function Contracts() {
                   onChange={(e) => setGenerateForm({ ...generateForm, start_date: e.target.value })}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Einddatum (optioneel)</Label>
-                <Input
-                  type="date"
-                  value={generateForm.end_date}
-                  onChange={(e) => setGenerateForm({ ...generateForm, end_date: e.target.value })}
-                />
-              </div>
+              {generateForm.contract_type !== 'Vast' && (
+                <div className="space-y-2">
+                  <Label>Einddatum</Label>
+                  <Input
+                    type="date"
+                    value={generateForm.end_date}
+                    onChange={(e) => setGenerateForm({ ...generateForm, end_date: e.target.value })}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
