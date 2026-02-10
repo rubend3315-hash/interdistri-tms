@@ -324,17 +324,21 @@ Deno.serve(async (req) => {
       contractHours = contract_type === 'Oproep' ? 0 : actualHours;
     } else {
       // Fallback to hardcoded templates
-      if (contract_type === 'Oproep') {
+      if (contract_type === 'Tijdelijk Nul Uren') {
         contractContent = buildOproepTemplate(employee, vars);
-        templateNote = 'Standaard oproepcontract sjabloon';
+        templateNote = 'Standaard oproepcontract sjabloon (fallback)';
         contractHours = 0;
       } else if (contract_type === 'Tijdelijk') {
         contractContent = buildBepaaldetijdTemplate(employee, vars);
-        templateNote = 'Standaard bepaalde tijd sjabloon';
+        templateNote = 'Standaard bepaalde tijd sjabloon (fallback)';
         contractHours = actualHours;
+      } else if (contract_type === 'Vast Nul Uren') {
+        contractContent = buildOproepTemplate(employee, vars);
+        templateNote = 'Standaard onbepaalde tijd nul uren sjabloon (fallback)';
+        contractHours = 0;
       } else {
         contractContent = buildVastTemplate(employee, vars);
-        templateNote = 'Standaard onbepaalde tijd sjabloon';
+        templateNote = 'Standaard onbepaalde tijd sjabloon (fallback)';
         contractHours = actualHours;
       }
     }
