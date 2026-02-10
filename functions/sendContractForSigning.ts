@@ -113,84 +113,46 @@ Deno.serve(async (req) => {
           </div>
         </div>
       `
-    });
+        });
 
-    // Send copy to admin
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: user.email,
-      subject: `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`,
-      from_name: 'Interdistri HR',
-      body: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 22px;">Interdistri Transport</h1>
-            <p style="color: #bfdbfe; margin: 8px 0 0;">Kopie — Contract verzonden</p>
-          </div>
-          <div style="background: white; padding: 24px; border: 1px solid #e2e8f0; border-top: none;">
-            <p style="font-size: 16px; color: #1e293b;">Beste ${user.full_name},</p>
-            <p style="color: #475569; line-height: 1.6;">
-              Het volgende contract is ter ondertekening verzonden naar <strong>${employeeName}</strong> (${employee.email}):
-            </p>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Contractnummer:</td>
-                  <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_number}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Type:</td>
-                  <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_type}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Startdatum:</td>
-                  <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.start_date ? new Date(contract.start_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</td>
-                </tr>
-                ${contract.end_date ? `<tr>
-                  <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Einddatum:</td>
-                  <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${new Date(contract.end_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
-                </tr>` : ''}
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Functie:</td>
-                  <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.function_title || '-'}</td>
-                </tr>
-              </table>
-            </div>
-            <p style="color: #94a3b8; font-size: 13px; margin-top: 24px;">
-              Dit is een automatische kopie. De medewerker heeft een uitnodiging ontvangen om het contract digitaal te ondertekenen.
-            </p>
-          </div>
-          <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
-            <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-              Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle
-            </p>
-          </div>
-        </div>
-      `
-    });
+        // Send copy to admin
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: user.email,
+          subject: `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`,
+          from_name: 'Interdistri HR',
+          body: `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`
+        });
 
-    // Update contract status
-    await base44.asServiceRole.entities.Contract.update(contract_id, {
-      status: 'TerOndertekening',
-      reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
-    });
+        emailSent = true;
+      } catch (emailError) {
+        console.warn('Email kon niet verzonden worden:', emailError.message);
+      }
+    }
 
-    // Create notification for the employee
-    const allUsers = await base44.asServiceRole.entities.User.list();
-    const employeeUser = allUsers.find(u => u.email === employee.email);
-    if (employeeUser) {
-      await base44.asServiceRole.entities.Notification.create({
-        title: 'Contract ter ondertekening',
-        description: `Je arbeidscontract ${contract.contract_number} is verzonden ter ondertekening. Bekijk en onderteken het contract.`,
-        type: 'general',
-        target_page: 'Contracts',
-        user_ids: [employeeUser.id],
-        priority: 'high'
-      });
+    // Create notification for the employee (if they are an app user)
+    try {
+      const allUsers = await base44.asServiceRole.entities.User.list();
+      const employeeUser = allUsers.find(u => u.email === employee.email);
+      if (employeeUser) {
+        await base44.asServiceRole.entities.Notification.create({
+          title: 'Contract ter ondertekening',
+          description: `Je arbeidscontract ${contract.contract_number} is verzonden ter ondertekening. Bekijk en onderteken het contract.`,
+          type: 'general',
+          target_page: 'Contracts',
+          user_ids: [employeeUser.id],
+          priority: 'high'
+        });
+      }
+    } catch (notifError) {
+      console.warn('Notificatie fout:', notifError.message);
     }
 
     return Response.json({
       success: true,
-      message: `Contract is verzonden naar ${employee.email}`
+      emailSent,
+      message: emailSent 
+        ? `Contract is verzonden naar ${employee.email}` 
+        : `Contract status is gewijzigd naar 'Ter Ondertekening'. E-mail kon niet verzonden worden (medewerker is geen app-gebruiker).`
     });
 
   } catch (error) {
