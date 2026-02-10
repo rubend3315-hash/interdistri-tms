@@ -90,8 +90,9 @@ export default function TemplateEditorDialog({ open, onOpenChange, template, onS
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Vast">Vast</SelectItem>
+                  <SelectItem value="Vast Nul Uren">Vast Nul Uren</SelectItem>
                   <SelectItem value="Tijdelijk">Tijdelijk</SelectItem>
-                  <SelectItem value="Oproep">Oproep</SelectItem>
+                  <SelectItem value="Tijdelijk Nul Uren">Tijdelijk Nul Uren</SelectItem>
                 </SelectContent>
               </Select>
             </div>

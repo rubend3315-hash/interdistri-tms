@@ -12,9 +12,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import TemplateEditorDialog from "../components/contracts/TemplateEditorDialog";
 
 const TYPE_COLORS = {
-  Vast: "bg-emerald-100 text-emerald-700",
-  Tijdelijk: "bg-blue-100 text-blue-700",
-  Oproep: "bg-amber-100 text-amber-700"
+  "Vast": "bg-emerald-100 text-emerald-700",
+  "Vast Nul Uren": "bg-teal-100 text-teal-700",
+  "Tijdelijk": "bg-blue-100 text-blue-700",
+  "Tijdelijk Nul Uren": "bg-indigo-100 text-indigo-700"
 };
 
 export default function ContractTemplates() {
@@ -77,9 +78,10 @@ export default function ContractTemplates() {
   };
 
   const grouped = {
-    Vast: templates.filter(t => t.contract_type === 'Vast'),
-    Tijdelijk: templates.filter(t => t.contract_type === 'Tijdelijk'),
-    Oproep: templates.filter(t => t.contract_type === 'Oproep'),
+    "Vast": templates.filter(t => t.contract_type === 'Vast'),
+    "Vast Nul Uren": templates.filter(t => t.contract_type === 'Vast Nul Uren'),
+    "Tijdelijk": templates.filter(t => t.contract_type === 'Tijdelijk'),
+    "Tijdelijk Nul Uren": templates.filter(t => t.contract_type === 'Tijdelijk Nul Uren'),
   };
 
   return (
