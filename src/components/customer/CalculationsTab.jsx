@@ -20,6 +20,7 @@ import RouteOverview from "./RouteOverview";
 import WerkaanbodTab from "./WerkaanbodTab";
 import CalculationsDashboard from "./CalculationsDashboard";
 import DataRefreshIndicator from "@/components/DataRefreshIndicator";
+import TIRekenmoduleTab from "./TIRekenmoduleTab";
 
 const DAY_NAMES = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
 
@@ -472,6 +473,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
             <TabsTrigger value="samenvatting">Samenvatting per week</TabsTrigger>
             <TabsTrigger value="activiteiten">Activiteitenrapport</TabsTrigger>
+            <TabsTrigger value="rekenmodule">Rekenmodule</TabsTrigger>
             <TabsTrigger value="routeoverzicht">Route Overzicht</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="werkaanbod">Werkaanbod</TabsTrigger>
@@ -621,6 +623,14 @@ export default function CalculationsTab({ customerId }) {
                 </CardHeader>
                 <CardContent>
                   <ActiviteitenReport weekData={weekData} onDataUpdated={() => queryClient.invalidateQueries({ queryKey: ['postnl-imports-calc'] })} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            {/* REKENMODULE TAB */}
+            <TabsContent value="rekenmodule" className="space-y-4 mt-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <TIRekenmoduleTab tiModelRoutes={tiModelRoutes} />
                 </CardContent>
               </Card>
             </TabsContent>
