@@ -393,10 +393,7 @@ export default function Contracts() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            setSelectedContract(contract);
-                            setShowViewDialog(true);
-                          }}
+                          onClick={() => handleOpenContract(contract)}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -619,15 +616,18 @@ export default function Contracts() {
 
       {/* View Contract Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Contract Weergeven</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Contract Weergeven
+            </DialogTitle>
           </DialogHeader>
           {selectedContract && (
             <div className="space-y-4">
+              {/* Contract info header */}
               <div className="bg-slate-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">Contract Details</h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                   <div>
                     <p className="text-slate-500">Nummer</p>
                     <p className="font-medium">{selectedContract.contract_number}</p>
@@ -636,11 +636,88 @@ export default function Contracts() {
                     <p className="text-slate-500">Status</p>
                     <div className="mt-1">{getStatusBadge(selectedContract)}</div>
                   </div>
+                  <div>
+                    <p className="text-slate-500">Type</p>
+                    <p className="font-medium">{selectedContract.contract_type}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Uren/week</p>
+                    <p className="font-medium">{selectedContract.hours_per_week}u</p>
+                  </div>
                 </div>
               </div>
-              <div className="border rounded-lg p-6 bg-white whitespace-pre-wrap font-serif text-sm">
-                {selectedContract.contract_content}
-              </div>
+
+              {/* Tabs for contract / analysis / summary */}
+              <Tabs value={viewTab} onValueChange={setViewTab}>
+                <TabsList className="w-full">
+                  <TabsTrigger value="contract" className="flex-1">
+                    <FileText className="w-4 h-4 mr-1" />
+                    Contract
+                  </TabsTrigger>
+                  <TabsTrigger value="analyse" className="flex-1" onClick={() => {
+                    if (!conflictAnalysis && !loadingConflicts) {
+                      handleAnalyzeContract(selectedContract.id, 'conflict_analysis');
+                    }
+                  }}>
+                    <Shield className="w-4 h-4 mr-1" />
+                    AI Analyse
+                  </TabsTrigger>
+                  <TabsTrigger value="samenvatting" className="flex-1" onClick={() => {
+                    if (!clauseSummary && !loadingSummary) {
+                      handleAnalyzeContract(selectedContract.id, 'clause_summary');
+                    }
+                  }}>
+                    <BookOpen className="w-4 h-4 mr-1" />
+                    Samenvatting
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="contract">
+                  <div className="border rounded-lg p-6 bg-white whitespace-pre-wrap font-serif text-sm max-h-[50vh] overflow-y-auto">
+                    {selectedContract.contract_content || 'Geen contracttekst beschikbaar.'}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="analyse">
+                  <ConflictAnalysisPanel
+                    analysis={conflictAnalysis}
+                    isLoading={loadingConflicts}
+                  />
+                  {!conflictAnalysis && !loadingConflicts && (
+                    <div className="text-center py-6">
+                      <Shield className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                      <p className="text-slate-500 text-sm mb-3">Laat AI dit contract analyseren op conflicten en afwijkingen</p>
+                      <Button
+                        onClick={() => handleAnalyzeContract(selectedContract.id, 'conflict_analysis')}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Start Analyse
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="samenvatting">
+                  <ClauseSummaryPanel
+                    summary={clauseSummary}
+                    isLoading={loadingSummary}
+                  />
+                  {!clauseSummary && !loadingSummary && (
+                    <div className="text-center py-6">
+                      <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                      <p className="text-slate-500 text-sm mb-3">Laat AI een samenvatting maken van alle clausules</p>
+                      <Button
+                        onClick={() => handleAnalyzeContract(selectedContract.id, 'clause_summary')}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Genereer Samenvatting
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           )}
         </DialogContent>
