@@ -53,7 +53,8 @@ export default function Contracts() {
     proeftijd: "Geen proeftijd",
     is_verlenging: false,
     oorspronkelijke_indienst_datum: "",
-    verlenging_nummer: ""
+    verlenging_nummer: "",
+    template_id: ""
   });
   const [previewHtml, setPreviewHtml] = useState(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
@@ -71,6 +72,11 @@ export default function Contracts() {
   const { data: contracts = [], isLoading: loadingContracts } = useQuery({
     queryKey: ['contracts'],
     queryFn: () => base44.entities.Contract.list('-created_date')
+  });
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ['contractTemplates'],
+    queryFn: () => base44.entities.ContractTemplate.filter({ status: 'Actief' })
   });
 
   const generateContractMutation = useMutation({
@@ -92,7 +98,8 @@ export default function Contracts() {
         proeftijd: "Geen proeftijd",
         is_verlenging: false,
         oorspronkelijke_indienst_datum: "",
-        verlenging_nummer: ""
+        verlenging_nummer: "",
+        template_id: ""
       });
       if (data?.contract) {
         setSelectedContract(data.contract);
@@ -672,6 +679,32 @@ export default function Contracts() {
                   <SelectContent>
                     <SelectItem value="Geen proeftijd">Geen proeftijd</SelectItem>
                     <SelectItem value="1 maand proeftijd">1 maand proeftijd</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Template selectie */}
+            {templates.filter(t => t.contract_type === generateForm.contract_type).length > 0 && (
+              <div className="space-y-2">
+                <Label>Sjabloon</Label>
+                <Select
+                  value={generateForm.template_id}
+                  onValueChange={(v) => setGenerateForm({ ...generateForm, template_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Standaard sjabloon gebruiken" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>Standaard sjabloon</SelectItem>
+                    {templates
+                      .filter(t => t.contract_type === generateForm.contract_type)
+                      .map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} {t.is_default ? '(standaard)' : ''}
+                        </SelectItem>
+                      ))
+                    }
                   </SelectContent>
                 </Select>
               </div>
