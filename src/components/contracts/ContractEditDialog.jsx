@@ -116,16 +116,11 @@ export default function ContractEditDialog({
   if (!contract) return null;
 
   const handleSave = () => {
-    // Convert html back to plain text for storage
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = editContent;
-    const plainText = tempDiv.innerText || tempDiv.textContent;
-    
     onSave({
       ...editFields,
       hourly_rate: editFields.hourly_rate ? Number(editFields.hourly_rate) : null,
       hours_per_week: editFields.hours_per_week !== "" ? Number(editFields.hours_per_week) : null,
-      contract_content: plainText,
+      contract_content: editContent,
     });
     setIsEditing(false);
   };
