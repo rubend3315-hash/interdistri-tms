@@ -403,19 +403,25 @@ export default function HelpPage() {
                   <FileText className="w-5 h-5 text-indigo-600" />
                   Contracten
                 </CardTitle>
-                <CardDescription>Contractbeheer per medewerker</CardDescription>
+                <CardDescription>Contractbeheer en digitale ondertekening</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-slate-600">
-                  Beheer contractgegevens en -regels:
+                  Beheer contractgegevens, genereer contracten en laat ze digitaal ondertekenen:
                 </p>
                 <ul className="text-sm space-y-2 text-slate-600">
                   <li>✓ Contractregels met start-/einddatum</li>
                   <li>✓ Loonschaal en uren per week</li>
                   <li>✓ Tweewekelijks roosterschema (week 1/week 2)</li>
                   <li>✓ Reiskostenregels per medewerker</li>
-                  <li>✓ Contract PDF generatie</li>
-                  <li>✓ Automatische herinneringen bij afloop</li>
+                  <li>✓ <strong>Contract genereren</strong> op basis van sjablonen</li>
+                  <li>✓ <strong>Contractinhoud bewerken</strong> voor verzending</li>
+                  <li>✓ <strong>Verzenden ter ondertekening</strong> met automatische e-mail</li>
+                  <li>✓ <strong>Digitale handtekening</strong> door medewerker en management</li>
+                  <li>✓ <strong>Automatisch uitnodigen</strong> medewerker als app-gebruiker bij verzenden</li>
+                  <li>✓ Ondertekeningsflow: Medewerker eerst → Management → Actief</li>
+                  <li>✓ Herinneringen versturen voor openstaande contracten</li>
+                  <li>✓ Contract sjablonen per contracttype beheren</li>
                 </ul>
               </CardContent>
             </Card>
