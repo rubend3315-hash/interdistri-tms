@@ -106,6 +106,10 @@ export default function ContractEditDialog({
         start_date: contract.start_date || "",
         end_date: contract.end_date || "",
         status: contract.status || "Concept",
+        is_verlenging: contract.is_verlenging || false,
+        oorspronkelijke_indienst_datum: contract.oorspronkelijke_indienst_datum || "",
+        verlenging_nummer: contract.verlenging_nummer || "",
+        proeftijd: contract.proeftijd || "1 maand proeftijd",
       });
       setIsEditing(false);
       setViewTab("contract");
