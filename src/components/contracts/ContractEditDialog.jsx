@@ -166,6 +166,27 @@ export default function ContractEditDialog({
         `functie ${editFields.function_title}`
       );
     }
+    // Proeftijd replacement
+    if (editFields.is_verlenging) {
+      // Remove proeftijd clause or replace with "geen proeftijd"
+      updated = updated.replace(
+        /proeftijd[:\s]*\[NOG IN TE VULLEN\]/gi,
+        `geen proeftijd (verlenging)`
+      );
+      updated = updated.replace(
+        /De\s+proeftijd\s+bedraagt\s+\[NOG IN TE VULLEN\]/gi,
+        `Er is geen proeftijd van toepassing (${editFields.verlenging_nummer || 'verlenging'})`
+      );
+    } else {
+      updated = updated.replace(
+        /proeftijd[:\s]*\[NOG IN TE VULLEN\]/gi,
+        `proeftijd 1 maand`
+      );
+      updated = updated.replace(
+        /De\s+proeftijd\s+bedraagt\s+\[NOG IN TE VULLEN\]/gi,
+        `De proeftijd bedraagt 1 maand`
+      );
+    }
     return updated;
   };
 
