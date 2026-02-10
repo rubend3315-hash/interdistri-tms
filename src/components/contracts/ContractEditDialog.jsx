@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  FileText, Save, Pencil, Eye, Shield, BookOpen, Sparkles, X, Loader2
+  FileText, Save, Pencil, Eye, Shield, BookOpen, Sparkles, X, Loader2, TableProperties
 } from "lucide-react";
 import ReactQuill from "react-quill";
 import ConflictAnalysisPanel from "./ConflictAnalysisPanel";
@@ -57,6 +59,40 @@ export default function ContractEditDialog({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [editFields, setEditFields] = useState({});
+  const [selectedScale, setSelectedScale] = useState("");
+  const [selectedStep, setSelectedStep] = useState("");
+
+  const { data: salaryTables = [] } = useQuery({
+    queryKey: ['salaryTables'],
+    queryFn: () => base44.entities.SalaryTable.filter({ status: 'Actief' }),
+  });
+
+  // Get unique scales
+  const scales = useMemo(() => {
+    const scaleSet = new Set(salaryTables.map(t => t.scale));
+    return [...scaleSet].sort();
+  }, [salaryTables]);
+
+  // Get steps for selected scale
+  const stepsForScale = useMemo(() => {
+    if (!selectedScale) return [];
+    return salaryTables
+      .filter(t => t.scale === selectedScale)
+      .sort((a, b) => a.step - b.step);
+  }, [salaryTables, selectedScale]);
+
+  // When scale+step selected, apply rate
+  const handleScaleStepSelect = (scale, step) => {
+    const entry = salaryTables.find(t => t.scale === scale && t.step === Number(step));
+    if (entry) {
+      const label = step == -1 ? `${scale} Min` : `${scale} trede ${step}`;
+      setEditFields(prev => ({
+        ...prev,
+        salary_scale: label,
+        hourly_rate: entry.hourly_rate
+      }));
+    }
+  };
 
   useEffect(() => {
     if (contract) {
@@ -72,6 +108,8 @@ export default function ContractEditDialog({
       });
       setIsEditing(false);
       setViewTab("contract");
+      setSelectedScale("");
+      setSelectedStep("");
     }
   }, [contract]);
 
@@ -193,11 +231,55 @@ export default function ContractEditDialog({
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Loonschaal / Trede</Label>
+                      <Label className="text-xs flex items-center gap-1">
+                        <TableProperties className="w-3 h-3" /> Loonschaal
+                      </Label>
+                      <Select
+                        value={selectedScale}
+                        onValueChange={(v) => {
+                          setSelectedScale(v);
+                          setSelectedStep("");
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Kies schaal..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {scales.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Trede</Label>
+                      <Select
+                        value={selectedStep}
+                        onValueChange={(v) => {
+                          setSelectedStep(v);
+                          handleScaleStepSelect(selectedScale, v);
+                        }}
+                        disabled={!selectedScale}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={selectedScale ? "Kies trede..." : "Kies eerst schaal"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {stepsForScale.map(t => (
+                            <SelectItem key={t.id} value={String(t.step)}>
+                              {t.step == -1 ? 'Min' : `Trede ${t.step}`} — €{t.hourly_rate.toFixed(2)}/u
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Loonschaal (resultaat)</Label>
                       <Input
                         value={editFields.salary_scale}
                         onChange={(e) => setEditFields({ ...editFields, salary_scale: e.target.value })}
-                        placeholder="Bijv. C trede 2"
+                        placeholder="Wordt automatisch ingevuld"
+                        className="bg-slate-50"
                       />
                     </div>
                     <div className="space-y-1">
@@ -207,7 +289,7 @@ export default function ContractEditDialog({
                         step="0.01"
                         value={editFields.hourly_rate}
                         onChange={(e) => setEditFields({ ...editFields, hourly_rate: e.target.value })}
-                        placeholder="Bijv. 14.50"
+                        placeholder="Wordt automatisch ingevuld"
                       />
                     </div>
                     <div className="space-y-1">
