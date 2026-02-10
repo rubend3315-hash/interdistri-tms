@@ -51,10 +51,6 @@ export default function Contracts() {
     start_date: format(new Date(), 'yyyy-MM-dd'),
     end_date: "",
     hours_per_week: 40,
-    proeftijd: "Geen proeftijd",
-    is_verlenging: false,
-    oorspronkelijke_indienst_datum: "",
-    verlenging_nummer: "",
     template_id: ""
   });
   const [previewHtml, setPreviewHtml] = useState(null);
@@ -96,10 +92,6 @@ export default function Contracts() {
         start_date: format(new Date(), 'yyyy-MM-dd'),
         end_date: "",
         hours_per_week: 40,
-        proeftijd: "Geen proeftijd",
-        is_verlenging: false,
-        oorspronkelijke_indienst_datum: "",
-        verlenging_nummer: "",
         template_id: ""
       });
       if (data?.contract) {
@@ -643,110 +635,52 @@ export default function Contracts() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Vast">Vast</SelectItem>
+                  <SelectItem value="Vast Nul Uren">Vast Nul Uren</SelectItem>
                   <SelectItem value="Tijdelijk">Tijdelijk</SelectItem>
-                  <SelectItem value="Oproep">Oproep</SelectItem>
+                  <SelectItem value="Tijdelijk Nul Uren">Tijdelijk Nul Uren</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className={`grid ${generateForm.contract_type !== 'Vast' ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
-              <div className="space-y-2">
-                <Label>Startdatum</Label>
-                <Input
-                  type="date"
-                  value={generateForm.start_date}
-                  onChange={(e) => setGenerateForm({ ...generateForm, start_date: e.target.value })}
-                />
-              </div>
-              {generateForm.contract_type !== 'Vast' && (
-                <div className="space-y-2">
-                  <Label>Einddatum</Label>
-                  <Input
-                    type="date"
-                    value={generateForm.end_date}
-                    onChange={(e) => setGenerateForm({ ...generateForm, end_date: e.target.value })}
-                  />
-                </div>
-              )}
-            </div>
+            {(() => {
+              const isNulUren = generateForm.contract_type.includes('Nul Uren');
+              const isTijdelijk = generateForm.contract_type.includes('Tijdelijk');
+              return (
+                <>
+                  <div className={`grid ${isTijdelijk ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+                    <div className="space-y-2">
+                      <Label>Startdatum</Label>
+                      <Input
+                        type="date"
+                        value={generateForm.start_date}
+                        onChange={(e) => setGenerateForm({ ...generateForm, start_date: e.target.value })}
+                      />
+                    </div>
+                    {isTijdelijk && (
+                      <div className="space-y-2">
+                        <Label>Einddatum</Label>
+                        <Input
+                          type="date"
+                          value={generateForm.end_date}
+                          onChange={(e) => setGenerateForm({ ...generateForm, end_date: e.target.value })}
+                        />
+                      </div>
+                    )}
+                  </div>
 
-            {generateForm.contract_type !== 'Oproep' && (
-              <div className="space-y-2">
-                <Label>Uren per week</Label>
-                <Input
-                  type="number"
-                  value={generateForm.hours_per_week}
-                  onChange={(e) => setGenerateForm({ ...generateForm, hours_per_week: e.target.value })}
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={generateForm.is_verlenging}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setGenerateForm({ 
-                      ...generateForm, 
-                      is_verlenging: checked,
-                      proeftijd: checked ? "Geen proeftijd" : generateForm.proeftijd,
-                      oorspronkelijke_indienst_datum: checked ? generateForm.oorspronkelijke_indienst_datum : "",
-                      verlenging_nummer: checked ? generateForm.verlenging_nummer : ""
-                    });
-                  }}
-                  className="rounded"
-                />
-                Dit is een verlenging
-              </Label>
-            </div>
-
-            {generateForm.is_verlenging && (
-              <div className="space-y-3 bg-slate-50 rounded-lg p-3">
-                <div className="space-y-2">
-                  <Label>Oorspronkelijke datum in dienst</Label>
-                  <Input
-                    type="date"
-                    value={generateForm.oorspronkelijke_indienst_datum}
-                    onChange={(e) => setGenerateForm({ ...generateForm, oorspronkelijke_indienst_datum: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Verlenging</Label>
-                  <Select
-                    value={generateForm.verlenging_nummer}
-                    onValueChange={(v) => setGenerateForm({ ...generateForm, verlenging_nummer: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer verlenging" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1e verlenging">1e verlenging</SelectItem>
-                      <SelectItem value="2e verlenging">2e verlenging</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-
-            {!generateForm.is_verlenging && (
-              <div className="space-y-2">
-                <Label>Proeftijd</Label>
-                <Select
-                  value={generateForm.proeftijd}
-                  onValueChange={(v) => setGenerateForm({ ...generateForm, proeftijd: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Geen proeftijd">Geen proeftijd</SelectItem>
-                    <SelectItem value="1 maand proeftijd">1 maand proeftijd</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+                  {!isNulUren && (
+                    <div className="space-y-2">
+                      <Label>Uren per week</Label>
+                      <Input
+                        type="number"
+                        value={generateForm.hours_per_week}
+                        onChange={(e) => setGenerateForm({ ...generateForm, hours_per_week: e.target.value })}
+                      />
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Template selectie */}
             {templates.filter(t => t.contract_type === generateForm.contract_type).length > 0 && (
