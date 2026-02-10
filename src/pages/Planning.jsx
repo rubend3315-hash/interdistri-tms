@@ -268,7 +268,8 @@ export default function Planning() {
     setCurrentDate(viewMode === "week" ? addWeeks(currentDate, 1) : addMonths(currentDate, 1));
   };
 
-  const handleCopyWeek = async (targetWeek, targetYear) => {
+  const handleCopyWeek = async (targetWeek, targetYear, options = {}) => {
+    const { includeRoutes = true, includeVehicles = true, includeNotes = true } = options;
     try {
       const sourceSchedules = schedules.filter(s => s.week_number === weekNumber && s.year === year);
       
@@ -279,19 +280,23 @@ export default function Planning() {
           year: targetYear
         });
 
+        const dayFields = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         const scheduleData = {
           employee_id: schedule.employee_id,
           week_number: targetWeek,
           year: targetYear,
-          monday: schedule.monday,
-          tuesday: schedule.tuesday,
-          wednesday: schedule.wednesday,
-          thursday: schedule.thursday,
-          friday: schedule.friday,
-          saturday: schedule.saturday,
-          sunday: schedule.sunday,
-          notes: schedule.notes
         };
+
+        dayFields.forEach(day => {
+          scheduleData[day] = schedule[day];
+          scheduleData[`${day}_planned_department`] = schedule[`${day}_planned_department`] || '';
+          if (includeRoutes) scheduleData[`${day}_route_id`] = schedule[`${day}_route_id`] || '';
+          if (includeVehicles) scheduleData[`${day}_vehicle_id`] = schedule[`${day}_vehicle_id`] || '';
+          if (includeNotes) {
+            scheduleData[`${day}_notes_1`] = schedule[`${day}_notes_1`] || '';
+            scheduleData[`${day}_notes_2`] = schedule[`${day}_notes_2`] || '';
+          }
+        });
 
         if (existingTarget.length > 0) {
           await base44.entities.Schedule.update(existingTarget[0].id, scheduleData);
