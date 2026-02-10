@@ -13,7 +13,7 @@ export default function LoonrapportPrintAll({
 
   const activeEmployees = useMemo(() =>
     employees
-      .filter(e => e.status === "Actief" && e.department !== "Charters")
+      .filter(e => e.status === "Actief" && e.department !== "Charters" && e.opnemen_in_loonrapport !== false)
       .sort((a, b) => (a.last_name || "").localeCompare(b.last_name || "")),
     [employees]
   );
