@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Users,
   Plus,
@@ -525,7 +526,10 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
     emergency_contact_relation: '',
     photo_url: '',
     supervisor_notities: '',
-    mobile_entry_type: 'single_day'
+    mobile_entry_type: 'single_day',
+    is_chauffeur: true,
+    tonen_in_planner: true,
+    opnemen_in_loonrapport: true
   };
 
   // Merge employee data with defaults, replacing null/undefined with ''
@@ -708,8 +712,20 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
         </div>
 
         <div className="border-t pt-4">
-          <h3 className="font-medium mb-3">Mobiele App</h3>
+          <h3 className="font-medium mb-3">Overige gegevens</h3>
           <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label>Chauffeur</Label>
+              <span className="text-sm text-slate-600">{formData.is_chauffeur !== false ? 'Ja' : 'Nee'}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label>Opnemen in loonrapport</Label>
+              <span className="text-sm text-slate-600">{formData.opnemen_in_loonrapport !== false ? 'Ja' : 'Nee'}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label>Tonen in planner</Label>
+              <span className="text-sm text-slate-600">{formData.tonen_in_planner !== false ? 'Ja' : 'Nee'}</span>
+            </div>
             <div className="space-y-2">
               <Label>Type mobiele app</Label>
               <Input value={formData.mobile_entry_type === 'multi_day' ? 'Meerdaagse diensten' : 'Standaard (enkele dag)'} readOnly />
@@ -936,6 +952,33 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
           />
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="font-medium mb-3">Overige gegevens</h3>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+          <div className="flex items-center justify-between">
+            <Label>Chauffeur</Label>
+            <Switch
+              checked={formData.is_chauffeur !== false}
+              onCheckedChange={(v) => setFormData({ ...formData, is_chauffeur: v })}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label>Opnemen in loonrapport</Label>
+            <Switch
+              checked={formData.opnemen_in_loonrapport !== false}
+              onCheckedChange={(v) => setFormData({ ...formData, opnemen_in_loonrapport: v })}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label>Tonen in planner</Label>
+            <Switch
+              checked={formData.tonen_in_planner !== false}
+              onCheckedChange={(v) => setFormData({ ...formData, tonen_in_planner: v })}
+            />
+          </div>
         </div>
       </div>
 

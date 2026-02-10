@@ -49,6 +49,7 @@
  */
 import Approvals from './pages/Approvals';
 import Backups from './pages/Backups';
+import Bedrijfsreglement from './pages/Bedrijfsreglement';
 import CaoRules from './pages/CaoRules';
 import Charters from './pages/Charters';
 import Contracts from './pages/Contracts';
@@ -65,6 +66,7 @@ import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
 import Holidays from './pages/Holidays';
 import Messages from './pages/Messages';
+import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import MobileEntry from './pages/MobileEntry';
 import MobileEntryMultiDay from './pages/MobileEntryMultiDay';
 import NiwoPermits from './pages/NiwoPermits';
@@ -79,14 +81,13 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Bedrijfsreglement from './pages/Bedrijfsreglement';
-import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Approvals": Approvals,
     "Backups": Backups,
+    "Bedrijfsreglement": Bedrijfsreglement,
     "CaoRules": CaoRules,
     "Charters": Charters,
     "Contracts": Contracts,
@@ -103,6 +104,7 @@ export const PAGES = {
     "HelpPage": HelpPage,
     "Holidays": Holidays,
     "Messages": Messages,
+    "MobileBedrijfsreglement": MobileBedrijfsreglement,
     "MobileEntry": MobileEntry,
     "MobileEntryMultiDay": MobileEntryMultiDay,
     "NiwoPermits": NiwoPermits,
@@ -117,8 +119,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Bedrijfsreglement": Bedrijfsreglement,
-    "MobileBedrijfsreglement": MobileBedrijfsreglement,
 }
 
 export const pagesConfig = {
