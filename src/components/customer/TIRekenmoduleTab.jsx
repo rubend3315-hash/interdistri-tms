@@ -130,6 +130,25 @@ export default function TIRekenmoduleTab({ tiModelRoutes = [] }) {
             />
           </div>
 
+          {selectedRoute && aantalStops && Number(aantalStops) > 0 && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-1">
+              <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> NORM STOPS PER BESTELUUR
+              </p>
+              <div className="text-sm">
+                <p className="text-emerald-600">
+                  {aantalStops} stops ÷ {(selectedRoute.manual_norm_per_hour || selectedRoute.calculated_norm_per_hour || (selectedRoute.number_of_stops / selectedRoute.total_time_hours)).toFixed(1)} norm/uur
+                </p>
+                <p className="font-bold text-emerald-900 text-lg">
+                  = {(Number(aantalStops) / (selectedRoute.manual_norm_per_hour || selectedRoute.calculated_norm_per_hour || (selectedRoute.number_of_stops / selectedRoute.total_time_hours))).toFixed(2)} uur besteltijd
+                  <span className="text-sm font-normal text-emerald-700 ml-1">
+                    ({formatHoursToHHMM(Number(aantalStops) / (selectedRoute.manual_norm_per_hour || selectedRoute.calculated_norm_per_hour || (selectedRoute.number_of_stops / selectedRoute.total_time_hours)))})
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Rijtijd (minuten)</Label>
             <Input
