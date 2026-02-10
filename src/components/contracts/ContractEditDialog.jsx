@@ -28,11 +28,11 @@ const STATUS_CONFIG = {
 function plainTextToHtml(text) {
   if (!text) return "";
   
-  // Check if it's already mostly HTML (has multiple HTML tags)
-  const htmlTagCount = (text.match(/<\/?(?:p|h[1-6]|div|br|ul|ol|li|table|strong|em)\b/gi) || []).length;
+  // Check if it's already proper HTML (has block-level tags)
+  const htmlTagCount = (text.match(/<\/?(?:p|h[1-6]|div|br|ul|ol|li|table)\b/gi) || []).length;
   if (htmlTagCount > 5) return text;
   
-  // It might be a mix: extract any trailing HTML block (like signature div) and process the rest as plain text
+  // Extract any trailing HTML block (like signature div) and process the rest as plain text
   let trailingHtml = "";
   const divMatch = text.match(/(<div\s+style=[\s\S]*<\/div>)\s*$/);
   let plainPart = text;
@@ -41,31 +41,46 @@ function plainTextToHtml(text) {
     plainPart = text.substring(0, text.indexOf(divMatch[1]));
   }
   
-  // Split on double newlines to get paragraphs/blocks
-  const blocks = plainPart.split(/\n\n+/);
-  const html = blocks
-    .map(block => {
-      const trimmed = block.trim();
-      if (!trimmed) return "";
-      // Headings: "Artikel X: ..." or "ARBEIDSOVEREENKOMST..."
-      if (/^Artikel\s+\d+/i.test(trimmed)) {
-        const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
-        let h = `<h3>${lines[0]}</h3>`;
-        if (lines.length > 1) {
-          h += lines.slice(1).map(l => `<p>${l}</p>`).join('');
-        }
-        return h;
-      }
-      if (/^ARBEIDSOVEREENKOMST/.test(trimmed)) {
-        const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
-        return `<h3>${lines[0]}</h3>` + 
-          lines.slice(1).map(l => `<p>${l}</p>`).join('');
-      }
-      // Regular paragraph(s) - each line becomes a <p>
-      const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
-      return lines.map(l => `<p>${l}</p>`).join('');
-    })
-    .join('');
+  // Split into lines and process each
+  const lines = plainPart.split('\n');
+  let html = '';
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Empty line = spacing
+    if (!line) {
+      html += '<br/>';
+      continue;
+    }
+    
+    // Main title: ARBEIDSOVEREENKOMST...
+    if (/^ARBEIDSOVEREENKOMST/.test(line)) {
+      html += `<h2 style="font-size:1.2em;font-weight:bold;margin:1em 0 0.5em 0;text-align:center;">${line}</h2>`;
+      continue;
+    }
+    
+    // Artikel heading
+    if (/^Artikel\s+\d+/i.test(line)) {
+      html += `<h3 style="font-weight:bold;margin:1.5em 0 0.3em 0;font-size:1.05em;color:#1e293b;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">${line}</h3>`;
+      continue;
+    }
+    
+    // Numbered items like "1." "2." etc at start of line
+    if (/^\d+\.\s/.test(line)) {
+      html += `<p style="margin:0.3em 0 0.3em 1.5em;">${line}</p>`;
+      continue;
+    }
+    
+    // Lines starting with a tab or bullet
+    if (/^\t/.test(lines[i]) || /^[-•]/.test(line)) {
+      html += `<p style="margin:0.2em 0 0.2em 1.5em;">${line}</p>`;
+      continue;
+    }
+    
+    // Regular paragraph
+    html += `<p style="margin:0.3em 0;">${line}</p>`;
+  }
   
   return html + trailingHtml;
 }
