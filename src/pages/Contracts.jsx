@@ -903,8 +903,55 @@ export default function Contracts() {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+          </DialogContent>
+          </Dialog>
+
+          {/* Send Error Dialog */}
+          <Dialog open={!!sendError} onOpenChange={(open) => !open && setSendError(null)}>
+          <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {sendError?.type === 'invited' ? (
+                <><CheckCircle className="w-5 h-5 text-emerald-600" /> Uitnodiging verstuurd</>
+              ) : sendError?.type === 'not_app_user' ? (
+                <><AlertTriangle className="w-5 h-5 text-amber-600" /> Medewerker niet geregistreerd</>
+              ) : (
+                <><XCircle className="w-5 h-5 text-red-600" /> Fout bij verzenden</>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600">{sendError?.message}</p>
+
+            {sendError?.type === 'not_app_user' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                <p className="text-sm font-medium text-blue-800">
+                  Wil je {sendError.employeeName} uitnodigen als app-gebruiker?
+                </p>
+                <p className="text-xs text-blue-600">
+                  Er wordt een uitnodiging verstuurd naar {sendError.employeeEmail}. 
+                  De medewerker krijgt alleen toegang tot de mobiele app en contractondertekening.
+                </p>
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  onClick={handleInviteAndRetry}
+                  disabled={invitingEmployee}
+                >
+                  {invitingEmployee ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uitnodigen...</>
+                  ) : (
+                    <><UserPlus className="w-4 h-4 mr-2" /> Uitnodigen als app-gebruiker</>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            <Button variant="outline" className="w-full" onClick={() => setSendError(null)}>
+              Sluiten
+            </Button>
+          </div>
+          </DialogContent>
+          </Dialog>
+          </div>
+          );
+          }
