@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Truck, MapPin } from "lucide-react";
+import { Users, Truck, MapPin, GripVertical } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
+import DraggableResourceBadge from "./DraggableResourceBadge";
 
 export default function AvailableResources({
   employees = [],
@@ -16,14 +17,13 @@ export default function AvailableResources({
   days = []
 }) {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  // Fetch TI Model routes for all customers
+  
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutes'],
     queryFn: () => base44.entities.TIModelRoute.list(),
     enabled: customers.length > 0
   });
 
-  // Get scheduled items for the selected day
   const selectedDay = days[selectedDayIndex];
   const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   const selectedDayKey = dayKeys[selectedDayIndex % 7];
@@ -49,7 +49,6 @@ export default function AvailableResources({
   const availableEmployees = employees.filter(e => !scheduledEmployeeIds.has(e.id) && e.status === 'Actief');
   const availableVehicles = vehicles.filter(v => !scheduledVehicleIds.has(v.id) && (v.status === 'Beschikbaar' || v.status === 'In onderhoud'));
   
-  // Group available routes by customer
   const routesByCustomer = {};
   tiModelRoutes
     .filter(r => !scheduledRouteIds.has(r.id) && r.status === 'Actief')
@@ -70,6 +69,7 @@ export default function AvailableResources({
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <span className="text-emerald-600">✓</span> Beschikbare resources
+            <span className="text-xs font-normal text-slate-400 ml-2">— sleep naar de planner</span>
           </CardTitle>
           {selectedDay && (
             <span className="text-sm text-slate-600">
@@ -109,12 +109,17 @@ export default function AvailableResources({
               {availableEmployees.length > 0 ? (
                 <div className="space-y-1">
                   {availableEmployees.map(emp => (
-                    <Badge
+                    <DraggableResourceBadge
                       key={emp.id}
-                      className="bg-blue-100 text-blue-700 border-blue-200 text-xs cursor-default w-full justify-start"
+                      resourceType="employee"
+                      resourceId={emp.id}
+                      label={`${emp.first_name} ${emp.last_name}`}
                     >
-                      {emp.first_name.substring(0, 1)}. {emp.last_name}
-                    </Badge>
+                      <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs w-full justify-start gap-1 cursor-grab active:cursor-grabbing hover:bg-blue-200 transition-colors">
+                        <GripVertical className="w-3 h-3 opacity-40 flex-shrink-0" />
+                        {emp.first_name.substring(0, 1)}. {emp.last_name}
+                      </Badge>
+                    </DraggableResourceBadge>
                   ))}
                 </div>
               ) : (
@@ -135,12 +140,17 @@ export default function AvailableResources({
               {availableVehicles.length > 0 ? (
                 <div className="space-y-1">
                   {availableVehicles.map(veh => (
-                    <Badge
+                    <DraggableResourceBadge
                       key={veh.id}
-                      className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs cursor-default w-full justify-start"
+                      resourceType="vehicle"
+                      resourceId={veh.id}
+                      label={veh.license_plate}
                     >
-                      {veh.license_plate}
-                    </Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs w-full justify-start gap-1 cursor-grab active:cursor-grabbing hover:bg-emerald-200 transition-colors">
+                        <GripVertical className="w-3 h-3 opacity-40 flex-shrink-0" />
+                        {veh.license_plate}
+                      </Badge>
+                    </DraggableResourceBadge>
                   ))}
                 </div>
               ) : (
@@ -167,12 +177,17 @@ export default function AvailableResources({
                       </p>
                       <div className="space-y-1">
                         {customerRoutes.map(route => (
-                          <Badge
+                          <DraggableResourceBadge
                             key={route.id}
-                            className="bg-orange-100 text-orange-700 border-orange-200 text-xs cursor-default w-full justify-start"
+                            resourceType="route"
+                            resourceId={route.id}
+                            label={`${route.route_code} - ${route.route_name}`}
                           >
-                            {route.route_code} - {route.route_name}
-                          </Badge>
+                            <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs w-full justify-start gap-1 cursor-grab active:cursor-grabbing hover:bg-orange-200 transition-colors">
+                              <GripVertical className="w-3 h-3 opacity-40 flex-shrink-0" />
+                              {route.route_code} - {route.route_name}
+                            </Badge>
+                          </DraggableResourceBadge>
                         ))}
                       </div>
                     </div>
