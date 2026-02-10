@@ -25,10 +25,10 @@ const STATUS_CONFIG = {
   'Beëindigd': { bg: 'bg-slate-100', text: 'text-slate-700' }
 };
 
-function plainTextToHtml(text) {
+function ensureHtml(text) {
   if (!text) return "";
   
-  // Check if it's already proper HTML (has block-level tags)
+  // Already proper HTML - return as-is
   const htmlTagCount = (text.match(/<\/?(?:p|h[1-6]|div|br|ul|ol|li|table)\b/gi) || []).length;
   if (htmlTagCount > 5) return text;
   
@@ -41,45 +41,35 @@ function plainTextToHtml(text) {
     plainPart = text.substring(0, text.indexOf(divMatch[1]));
   }
   
-  // Split into lines and process each
+  // Convert plain text to HTML line by line
   const lines = plainPart.split('\n');
   let html = '';
   
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const rawLine = lines[i];
+    const line = rawLine.trim();
     
-    // Empty line = spacing
     if (!line) {
       html += '<br/>';
       continue;
     }
     
-    // Main title: ARBEIDSOVEREENKOMST...
     if (/^ARBEIDSOVEREENKOMST/.test(line)) {
-      html += `<h2 style="font-size:1.2em;font-weight:bold;margin:1em 0 0.5em 0;text-align:center;">${line}</h2>`;
+      html += `<h2>${line}</h2>`;
       continue;
     }
     
-    // Artikel heading
     if (/^Artikel\s+\d+/i.test(line)) {
-      html += `<h3 style="font-weight:bold;margin:1.5em 0 0.3em 0;font-size:1.05em;color:#1e293b;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">${line}</h3>`;
+      html += `<h3>${line}</h3>`;
       continue;
     }
     
-    // Numbered items like "1." "2." etc at start of line
-    if (/^\d+\.\s/.test(line)) {
-      html += `<p style="margin:0.3em 0 0.3em 1.5em;">${line}</p>`;
+    if (/^\d+\.\t/.test(line) || /^\t/.test(rawLine)) {
+      html += `<p class="indent">${line}</p>`;
       continue;
     }
     
-    // Lines starting with a tab or bullet
-    if (/^\t/.test(lines[i]) || /^[-•]/.test(line)) {
-      html += `<p style="margin:0.2em 0 0.2em 1.5em;">${line}</p>`;
-      continue;
-    }
-    
-    // Regular paragraph
-    html += `<p style="margin:0.3em 0;">${line}</p>`;
+    html += `<p>${line}</p>`;
   }
   
   return html + trailingHtml;
@@ -140,7 +130,7 @@ export default function ContractEditDialog({
 
   useEffect(() => {
     if (contract) {
-      setEditContent(plainTextToHtml(contract.contract_content || ""));
+      setEditContent(ensureHtml(contract.contract_content || ""));
       setEditFields({
         hourly_rate: contract.hourly_rate || "",
         salary_scale: contract.salary_scale || "",
@@ -342,7 +332,7 @@ export default function ContractEditDialog({
               <div className="flex gap-2 shrink-0">
                 <Button size="sm" variant="outline" onClick={() => {
                   setIsEditing(false);
-                  setEditContent(plainTextToHtml(contract.contract_content || ""));
+                  setEditContent(ensureHtml(contract.contract_content || ""));
                   setEditFields({
                     hourly_rate: contract.hourly_rate || "",
                     salary_scale: contract.salary_scale || "",
@@ -661,33 +651,42 @@ export default function ContractEditDialog({
                     style={{ fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: '1.8' }}
                   >
                     {contract.contract_content ? (
-                      <div dangerouslySetInnerHTML={{ __html: plainTextToHtml(contract.contract_content) }} />
+                      <div dangerouslySetInnerHTML={{ __html: ensureHtml(contract.contract_content) }} />
                     ) : (
                       <p className="text-slate-400 italic">Geen contracttekst beschikbaar.</p>
                     )}
                   </div>
                   <style>{`
+                    .contract-view h2 {
+                      font-size: 1.2em;
+                      font-weight: bold;
+                      margin: 0.8em 0 0.5em 0;
+                      text-align: center;
+                      color: #1e293b;
+                    }
                     .contract-view h3 {
-                      font-weight: 700 !important;
-                      margin-top: 1.5em !important;
-                      margin-bottom: 0.5em !important;
-                      font-size: 1.05em !important;
-                      color: #1e293b !important;
+                      font-weight: 700;
+                      margin: 1.5em 0 0.3em 0;
+                      font-size: 1.05em;
+                      color: #1e293b;
                       border-bottom: 1px solid #e2e8f0;
                       padding-bottom: 4px;
-                      display: block !important;
                     }
                     .contract-view p {
-                      margin-bottom: 0.4em !important;
+                      margin: 0.3em 0;
                       color: #334155;
-                      display: block !important;
                     }
-                    .contract-view div > div {
-                      display: block !important;
+                    .contract-view p.indent {
+                      margin-left: 1.5em;
+                    }
+                    .contract-view br {
+                      display: block;
+                      content: "";
+                      margin: 0.3em 0;
                     }
                     @media (max-width: 640px) {
                       .contract-view { font-size: 14px; line-height: 1.7; }
-                      .contract-view h3 { font-size: 15px !important; }
+                      .contract-view h3 { font-size: 15px; }
                     }
                   `}</style>
                 </div>
