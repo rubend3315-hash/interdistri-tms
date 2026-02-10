@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ContractEditDialog from "../components/contracts/ContractEditDialog";
+import ContractPreviewEditor from "../components/contracts/ContractPreviewEditor";
 
 export default function Contracts() {
   const queryClient = useQueryClient();
