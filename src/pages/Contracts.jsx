@@ -26,7 +26,9 @@ import {
   Loader2,
   Trash2,
   Save,
-  RotateCw
+  RotateCw,
+  UserPlus,
+  XCircle
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ContractEditDialog from "../components/contracts/ContractEditDialog";
