@@ -958,12 +958,15 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
       <div className="border-t pt-4">
         <h3 className="font-medium mb-3">Overige gegevens</h3>
         <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-          <div className="flex items-center justify-between">
-            <Label>Chauffeur</Label>
-            <Switch
-              checked={formData.is_chauffeur !== false}
-              onCheckedChange={(v) => setFormData({ ...formData, is_chauffeur: v })}
-            />
+          <div>
+            <div className="flex items-center justify-between">
+              <Label>Chauffeur</Label>
+              <Switch
+                checked={formData.is_chauffeur !== false}
+                onCheckedChange={(v) => setFormData({ ...formData, is_chauffeur: v })}
+              />
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Bepaalt of nachttoeslag berekend wordt</p>
           </div>
           <div className="flex items-center justify-between">
             <Label>Opnemen in loonrapport</Label>
