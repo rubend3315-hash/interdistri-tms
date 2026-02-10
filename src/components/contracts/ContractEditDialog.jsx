@@ -501,6 +501,22 @@ export default function ContractEditDialog({
                       <p className="text-slate-400 text-xs">Einddatum</p>
                       <p className="font-medium">{contract.end_date || '-'}</p>
                     </div>
+                    <div>
+                      <p className="text-slate-400 text-xs">Proeftijd</p>
+                      <p className="font-medium">{contract.proeftijd || '-'}</p>
+                    </div>
+                    {contract.is_verlenging && (
+                      <>
+                        <div>
+                          <p className="text-slate-400 text-xs">Verlenging</p>
+                          <p className="font-medium">{contract.verlenging_nummer || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400 text-xs">Oorspronkelijk in dienst</p>
+                          <p className="font-medium">{contract.oorspronkelijke_indienst_datum || '-'}</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
