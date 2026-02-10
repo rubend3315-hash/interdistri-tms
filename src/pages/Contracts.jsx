@@ -632,14 +632,16 @@ export default function Contracts() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label>Uren per week</Label>
-              <Input
-                type="number"
-                value={generateForm.hours_per_week}
-                onChange={(e) => setGenerateForm({ ...generateForm, hours_per_week: e.target.value })}
-              />
-            </div>
+            {generateForm.contract_type !== 'Oproep' && (
+              <div className="space-y-2">
+                <Label>Uren per week</Label>
+                <Input
+                  type="number"
+                  value={generateForm.hours_per_week}
+                  onChange={(e) => setGenerateForm({ ...generateForm, hours_per_week: e.target.value })}
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Proeftijd</Label>
