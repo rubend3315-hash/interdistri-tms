@@ -6,15 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  FileText, Save, Pencil, Eye, Shield, BookOpen, Sparkles, X, Loader2, TableProperties
+  FileText, Save, Pencil, X, Loader2, TableProperties
 } from "lucide-react";
 import ReactQuill from "react-quill";
-import ConflictAnalysisPanel from "./ConflictAnalysisPanel";
-import ClauseSummaryPanel from "./ClauseSummaryPanel";
 
 const STATUS_CONFIG = {
   'Concept': { bg: 'bg-slate-100', text: 'text-slate-700' },
@@ -82,14 +80,9 @@ export default function ContractEditDialog({
   employee,
   isAdmin,
   onSave,
-  saving,
-  onAnalyze,
-  conflictAnalysis,
-  clauseSummary,
-  loadingConflicts,
-  loadingSummary
+  saving
 }) {
-  const [viewTab, setViewTab] = useState("contract");
+
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [editFields, setEditFields] = useState({});
@@ -145,7 +138,6 @@ export default function ContractEditDialog({
         proeftijd: contract.proeftijd || "1 maand proeftijd",
       });
       setIsEditing(false);
-      setViewTab("contract");
       setSelectedScale("");
       setSelectedStep("");
     }
@@ -358,31 +350,10 @@ export default function ContractEditDialog({
           </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={viewTab} onValueChange={setViewTab} className="flex flex-col flex-1 overflow-hidden">
-          <div className="px-4 sm:px-6 pt-2 shrink-0">
-            <TabsList className="w-full grid grid-cols-3">
-              <TabsTrigger value="contract" className="text-xs sm:text-sm">
-                <FileText className="w-3.5 h-3.5 mr-1 hidden sm:block" />
-                Contract
-              </TabsTrigger>
-              <TabsTrigger value="analyse" className="text-xs sm:text-sm" onClick={() => {
-                if (!conflictAnalysis && !loadingConflicts) onAnalyze?.('conflict_analysis');
-              }}>
-                <Shield className="w-3.5 h-3.5 mr-1 hidden sm:block" />
-                Analyse
-              </TabsTrigger>
-              <TabsTrigger value="samenvatting" className="text-xs sm:text-sm" onClick={() => {
-                if (!clauseSummary && !loadingSummary) onAnalyze?.('clause_summary');
-              }}>
-                <BookOpen className="w-3.5 h-3.5 mr-1 hidden sm:block" />
-                Samenvatting
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
+        {/* Content */}
+        <div className="flex flex-col flex-1 overflow-hidden">
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6">
-            <TabsContent value="contract" className="mt-4 space-y-4">
+            <div className="mt-4 space-y-4">
               {/* Editable contract fields */}
               {isEditing ? (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4 space-y-3">
@@ -691,35 +662,9 @@ export default function ContractEditDialog({
                   `}</style>
                 </div>
               )}
-            </TabsContent>
-
-            <TabsContent value="analyse" className="mt-4">
-              <ConflictAnalysisPanel analysis={conflictAnalysis} isLoading={loadingConflicts} />
-              {!conflictAnalysis && !loadingConflicts && (
-                <div className="text-center py-8">
-                  <Shield className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                  <p className="text-slate-500 text-sm mb-3">Analyseer dit contract op conflicten</p>
-                  <Button onClick={() => onAnalyze?.('conflict_analysis')} className="bg-blue-600 hover:bg-blue-700">
-                    <Sparkles className="w-4 h-4 mr-2" /> Start Analyse
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="samenvatting" className="mt-4">
-              <ClauseSummaryPanel summary={clauseSummary} isLoading={loadingSummary} />
-              {!clauseSummary && !loadingSummary && (
-                <div className="text-center py-8">
-                  <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                  <p className="text-slate-500 text-sm mb-3">Genereer een samenvatting van alle clausules</p>
-                  <Button onClick={() => onAnalyze?.('clause_summary')} className="bg-purple-600 hover:bg-purple-700">
-                    <Sparkles className="w-4 h-4 mr-2" /> Genereer Samenvatting
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
+            </div>
           </div>
-        </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   );
