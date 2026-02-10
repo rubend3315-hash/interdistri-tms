@@ -597,7 +597,6 @@ export default function Contracts() {
                   <SelectItem value="Vast">Vast</SelectItem>
                   <SelectItem value="Tijdelijk">Tijdelijk</SelectItem>
                   <SelectItem value="Oproep">Oproep</SelectItem>
-                  <SelectItem value="Uitzend">Uitzend</SelectItem>
                 </SelectContent>
               </Select>
             </div>
