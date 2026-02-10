@@ -251,6 +251,8 @@ function buildOproepTemplate(emp, vars) {
 
 <p>Deze overeenkomst vangt aan op ${startDatum}.</p>
 
+<p>Werknemer is oorspronkelijk bij werkgever in dienst getreden op ${inDienstDatum}.</p>
+
 <h3>Artikel 3: functie</h3>
 
 <p>De werknemer treedt in dienst in de functie van ${functie}. De werknemer wordt ingedeeld in functiegroep C trede ${trede} van de CAO. Afdeling 3. ${afdeling}.</p>
@@ -279,7 +281,7 @@ function buildOproepTemplate(emp, vars) {
 
 <h3>Artikel 6: proeftijd</h3>
 
-<p>Er geldt één maand proeftijd.</p>
+<p>${proeftijd === 'Geen proeftijd' ? 'Er geldt geen proeftijd.' : 'Er geldt één maand proeftijd.'}</p>
 
 <h3>Artikel 7: arbeidstijd</h3>
 
