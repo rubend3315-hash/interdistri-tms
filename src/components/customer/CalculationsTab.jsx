@@ -473,7 +473,7 @@ export default function CalculationsTab({ customerId }) {
             <TabsTrigger value="besteltijd">Besteltijd & Uurtarief</TabsTrigger>
             <TabsTrigger value="samenvatting">Samenvatting per week</TabsTrigger>
             <TabsTrigger value="activiteiten">Activiteitenrapport</TabsTrigger>
-            <TabsTrigger value="rekenmodule">Rekenmodule</TabsTrigger>
+            <TabsTrigger value="rekenmodule">TI Rekenmodule</TabsTrigger>
             <TabsTrigger value="routeoverzicht">Route Overzicht</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="werkaanbod">Werkaanbod</TabsTrigger>
