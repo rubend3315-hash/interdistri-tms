@@ -642,7 +642,7 @@ export default function ContractEditDialog({
               ) : (
                 <div className="border rounded-lg bg-white">
                   <div
-                    className="p-4 sm:p-6 lg:p-8 prose prose-sm sm:prose max-w-none contract-view"
+                    className="p-4 sm:p-6 lg:p-8 contract-view"
                     style={{ fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: '1.8' }}
                   >
                     {contract.contract_content ? (
@@ -653,21 +653,26 @@ export default function ContractEditDialog({
                   </div>
                   <style>{`
                     .contract-view h3 {
-                      font-weight: 700;
-                      margin-top: 1.5em;
-                      margin-bottom: 0.5em;
-                      font-size: 1.05em;
-                      color: #1e293b;
+                      font-weight: 700 !important;
+                      margin-top: 1.5em !important;
+                      margin-bottom: 0.5em !important;
+                      font-size: 1.05em !important;
+                      color: #1e293b !important;
                       border-bottom: 1px solid #e2e8f0;
                       padding-bottom: 4px;
+                      display: block !important;
                     }
                     .contract-view p {
-                      margin-bottom: 0.4em;
+                      margin-bottom: 0.4em !important;
                       color: #334155;
+                      display: block !important;
+                    }
+                    .contract-view div > div {
+                      display: block !important;
                     }
                     @media (max-width: 640px) {
                       .contract-view { font-size: 14px; line-height: 1.7; }
-                      .contract-view h3 { font-size: 15px; }
+                      .contract-view h3 { font-size: 15px !important; }
                     }
                   `}</style>
                 </div>
