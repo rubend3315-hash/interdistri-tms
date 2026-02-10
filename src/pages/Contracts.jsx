@@ -42,7 +42,6 @@ export default function Contracts() {
   const [signature, setSignature] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
-  const [viewTab, setViewTab] = useState("contract");
   const [deleteContract, setDeleteContract] = useState(null);
 
   // AI analysis state
@@ -50,7 +49,6 @@ export default function Contracts() {
   const [clauseSummary, setClauseSummary] = useState(null);
   const [loadingConflicts, setLoadingConflicts] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
-  const [generationResult, setGenerationResult] = useState(null);
 
   const [generateForm, setGenerateForm] = useState({
     employee_id: "",
@@ -95,7 +93,6 @@ export default function Contracts() {
         setSelectedContract(data.contract);
         setConflictAnalysis(data.conflict_analysis || null);
         setClauseSummary(data.clause_summary || null);
-        setViewTab("analyse");
         setShowViewDialog(true);
       }
     }
