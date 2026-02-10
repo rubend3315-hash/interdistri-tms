@@ -169,7 +169,7 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
     ouderschapsverlof_betaald: r(ouderschapsBetaald),
     ouderschapsverlof_onbetaald: r(ouderschapsOnbetaald),
     variabele_uren_100: r(variabeleUren100),
-    toeslagenmatrix_19: r(nightHours),
+    toeslagenmatrix_19: (employee.is_chauffeur !== false) ? r(nightHours) : 0,
     toeslag_za_50: r(toeslagZa50),
     za_overwerk_150: r(overwerkZa150),
     toeslag_zo_100: r(toeslagZo100),
