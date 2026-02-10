@@ -24,8 +24,13 @@ import {
   Download,
   Eye,
   UserCheck,
-  Settings
+  Settings,
+  Shield,
+  BookOpen,
+  Loader2
 } from "lucide-react";
+import ConflictAnalysisPanel from "../components/contracts/ConflictAnalysisPanel";
+import ClauseSummaryPanel from "../components/contracts/ClauseSummaryPanel";
 
 export default function Contracts() {
   const queryClient = useQueryClient();
@@ -36,6 +41,14 @@ export default function Contracts() {
   const [signature, setSignature] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
+  const [viewTab, setViewTab] = useState("contract");
+
+  // AI analysis state
+  const [conflictAnalysis, setConflictAnalysis] = useState(null);
+  const [clauseSummary, setClauseSummary] = useState(null);
+  const [loadingConflicts, setLoadingConflicts] = useState(false);
+  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [generationResult, setGenerationResult] = useState(null);
 
   const [generateForm, setGenerateForm] = useState({
     employee_id: "",
@@ -65,7 +78,7 @@ export default function Contracts() {
       const response = await base44.functions.invoke('generateContract', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       setShowGenerateDialog(false);
       setGenerateForm({
@@ -75,6 +88,14 @@ export default function Contracts() {
         end_date: "",
         hours_per_week: 40
       });
+      // Show generated contract with AI results
+      if (data?.contract) {
+        setSelectedContract(data.contract);
+        setConflictAnalysis(data.conflict_analysis || null);
+        setClauseSummary(data.clause_summary || null);
+        setViewTab("analyse");
+        setShowViewDialog(true);
+      }
     }
   });
 
@@ -176,6 +197,38 @@ export default function Contracts() {
         {contract.status}
       </Badge>
     );
+  };
+
+  const handleAnalyzeContract = async (contractId, action) => {
+    if (action === 'conflict_analysis') {
+      setLoadingConflicts(true);
+      setConflictAnalysis(null);
+      try {
+        const res = await base44.functions.invoke('analyzeContract', { contract_id: contractId, action });
+        setConflictAnalysis(res.data.analysis);
+      } catch (err) {
+        console.error(err);
+      }
+      setLoadingConflicts(false);
+    } else if (action === 'clause_summary') {
+      setLoadingSummary(true);
+      setClauseSummary(null);
+      try {
+        const res = await base44.functions.invoke('analyzeContract', { contract_id: contractId, action });
+        setClauseSummary(res.data.summary);
+      } catch (err) {
+        console.error(err);
+      }
+      setLoadingSummary(false);
+    }
+  };
+
+  const handleOpenContract = (contract) => {
+    setSelectedContract(contract);
+    setConflictAnalysis(null);
+    setClauseSummary(null);
+    setViewTab("contract");
+    setShowViewDialog(true);
   };
 
   const handleSendForSigning = async (contract) => {
