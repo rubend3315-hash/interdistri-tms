@@ -539,16 +539,6 @@ export default function Contracts() {
           </DialogContent>
         </Dialog>
 
-        {/* View Contract Dialog */}
-        <ContractEditDialog
-          open={showViewDialog}
-          onOpenChange={setShowViewDialog}
-          contract={selectedContract}
-          employee={null}
-          isAdmin={false}
-          onSave={() => {}}
-          saving={false}
-        />
       </div>
     );
   }
