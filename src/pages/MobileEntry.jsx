@@ -41,6 +41,8 @@ import {
   Bell,
   Mail
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "../utils";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 import MobileReglementTab from "@/components/mobile/MobileReglementTab.jsx";
 
