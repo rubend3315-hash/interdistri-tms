@@ -104,7 +104,7 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
             <div style={{
               backgroundColor: '#1e293b',
               color: 'white',
-              padding: '24px 40px',
+              padding: '24px 50px',
             }}>
               <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '4px' }}>
                 Interdistri Transport
