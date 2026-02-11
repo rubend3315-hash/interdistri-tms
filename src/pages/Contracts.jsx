@@ -68,9 +68,6 @@ export default function Contracts() {
   const [showSignDialog, setShowSignDialog] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
-  const [signature, setSignature] = useState(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const canvasRef = useRef(null);
   const [deleteContract, setDeleteContract] = useState(null);
 
   const [generateForm, setGenerateForm] = useState({
