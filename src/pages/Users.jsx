@@ -89,6 +89,16 @@ export default function UsersPage() {
     queryFn: () => base44.auth.me()
   });
 
+  const { data: employees = [] } = useQuery({
+    queryKey: ['employees-for-invite'],
+    queryFn: () => base44.entities.Employee.list('last_name'),
+  });
+
+  // Filter employees that don't have a user account yet
+  const uninvitedEmployees = employees.filter(emp => 
+    emp.email && !users.some(u => u.email?.toLowerCase() === emp.email?.toLowerCase())
+  );
+
   const [inviteData, setInviteData] = useState({
     email: '',
     role: 'user'
