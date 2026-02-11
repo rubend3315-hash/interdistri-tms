@@ -73,11 +73,11 @@ async function fetchSignatureAsBmpDataUri(url) {
 
     if (isPng) {
       // Decode PNG to get raw RGBA pixels, composite onto white background, output as BMP
-      const png = decodePng(arrayBuf);
+      const png = UPNG.decode(arrayBuf);
       const width = png.width;
       const height = png.height;
       // toRGBA8 returns array of frames, each frame is ArrayBuffer of RGBA pixels
-      const frames = decodePng.toRGBA8(png);
+      const frames = UPNG.toRGBA8(png);
       const rgba = new Uint8Array(frames[0]);
 
       // Composite RGBA onto white background -> RGB
