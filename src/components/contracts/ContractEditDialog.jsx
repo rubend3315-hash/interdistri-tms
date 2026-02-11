@@ -622,7 +622,18 @@ export default function ContractEditDialog({
                     style={{ fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: '1.8' }}
                   >
                     {contract.contract_content ? (
-                      <div dangerouslySetInnerHTML={{ __html: ensureHtml(contract.contract_content) }} />
+                      <div dangerouslySetInnerHTML={{ __html: (() => {
+                        let html = ensureHtml(contract.contract_content);
+                        // Remove template signature block if real signatures exist
+                        if (contract.employee_signature_url || contract.manager_signature_url) {
+                          // Remove everything from "Voor akkoord werkgever" onwards
+                          html = html.replace(/<p[^>]*>\s*<strong>\s*Voor akkoord werkgever\s*<\/strong>\s*<\/p>[\s\S]*$/i, '');
+                          html = html.replace(/<p[^>]*>\s*<b>\s*Voor akkoord werkgever\s*<\/b>\s*<\/p>[\s\S]*$/i, '');
+                          // Also plain text bold
+                          html = html.replace(/<strong>\s*Voor akkoord werkgever\s*<\/strong>[\s\S]*$/i, '');
+                        }
+                        return html;
+                      })() }} />
                     ) : (
                       <p className="text-slate-400 italic">Geen contracttekst beschikbaar.</p>
                     )}
