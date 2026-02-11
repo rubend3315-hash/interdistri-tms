@@ -33,52 +33,58 @@ export default function Dashboard() {
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUserDashboard'],
     queryFn: () => base44.auth.me()
   });
 
+  const isAdmin = currentUser?.role === 'admin';
+
   // Redirect non-admin users away from dashboard
   React.useEffect(() => {
-    if (currentUser && currentUser.role !== 'admin') {
+    if (currentUser && !isAdmin) {
       navigate(createPageUrl("Contracts"));
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, isAdmin, navigate]);
 
+  // Only fetch dashboard data for admin users
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryFn: () => base44.entities.Employee.list(),
+    enabled: isAdmin
   });
 
   const { data: vehicles = [], isLoading: loadingVehicles } = useQuery({
     queryKey: ['vehicles'],
-    queryFn: () => base44.entities.Vehicle.list()
+    queryFn: () => base44.entities.Vehicle.list(),
+    enabled: isAdmin
   });
 
   const { data: timeEntries = [], isLoading: loadingTimeEntries } = useQuery({
     queryKey: ['timeEntries'],
-    queryFn: () => base44.entities.TimeEntry.list('-created_date', 100)
+    queryFn: () => base44.entities.TimeEntry.list('-created_date', 100),
+    enabled: isAdmin
   });
 
   const { data: trips = [], isLoading: loadingTrips } = useQuery({
     queryKey: ['trips'],
-    queryFn: () => base44.entities.Trip.list()
+    queryFn: () => base44.entities.Trip.list(),
+    enabled: isAdmin
   });
 
   const { data: niwoPermits = [], isLoading: loadingNiwo } = useQuery({
     queryKey: ['niwoPermits'],
-    queryFn: () => base44.entities.NiwoPermit.list()
+    queryFn: () => base44.entities.NiwoPermit.list(),
+    enabled: isAdmin
   });
 
   const { data: managedDocuments = [] } = useQuery({
     queryKey: ['documents-dashboard'],
-    queryFn: () => base44.entities.Document.filter({ status: 'Actief' })
+    queryFn: () => base44.entities.Document.filter({ status: 'Actief' }),
+    enabled: isAdmin
   });
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
+  const user = currentUser;
 
   const { data: notifications = [], isLoading: loadingNotifications } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -89,8 +95,20 @@ export default function Dashboard() {
         n.user_ids && n.user_ids.includes(user.id)
       );
     },
-    enabled: !!user?.id,
+    enabled: isAdmin && !!user?.id,
   });
+
+  // Show loading while checking user role, then redirect non-admins
+  if (loadingUser || (!isAdmin && currentUser)) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-500">Laden...</p>
+        </div>
+      </div>
+    );
+  }
 
   const isLoading = loadingEmployees || loadingVehicles || loadingTimeEntries || loadingTrips || loadingNiwo;
 
