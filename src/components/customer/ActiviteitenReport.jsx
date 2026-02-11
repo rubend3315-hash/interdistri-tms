@@ -299,6 +299,7 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
             <tr>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Dag</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Ritnaam</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Starttijd shift</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Vrijgave</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">debrief</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">1ste stop</th>
@@ -330,6 +331,7 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
               <tr key={idx} className={`border-b hover:bg-slate-50 ${hasEdits ? 'bg-yellow-50/50' : ''}`}>
                 <td className="py-1.5 px-2 text-slate-600 whitespace-nowrap">{r._dayName || '-'}</td>
                 <td className="py-1.5 px-2 font-medium text-slate-800">{r['Ritnaam'] || '-'}</td>
+                <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Starttijd shift'])}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Vrijgegeven'])}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Afgehandeld'])}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Eerste stop'])}</td>
@@ -390,7 +392,7 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
           {totals && (
             <tfoot>
               <tr className="bg-slate-100 font-semibold border-t-2 border-slate-300">
-                <td className="py-2 px-2 text-slate-800" colSpan={2}>Totaal</td>
+                <td className="py-2 px-2 text-slate-800" colSpan={3}>Totaal</td>
                 <td className="py-2 px-2" colSpan={5}></td>
                 <td className="py-2 px-2 text-right text-slate-800">{totals.aantalPeriodesGeenScan}</td>
                 <td className="py-2 px-2" colSpan={4}></td>
