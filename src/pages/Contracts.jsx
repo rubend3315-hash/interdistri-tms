@@ -45,8 +45,6 @@ export default function Contracts() {
   const canvasRef = useRef(null);
   const [deleteContract, setDeleteContract] = useState(null);
 
-  
-
   const [generateForm, setGenerateForm] = useState({
     employee_id: "",
     contract_type: "Vast",
@@ -58,37 +56,51 @@ export default function Contracts() {
   const [previewHtml, setPreviewHtml] = useState(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
   });
 
+  const isAdmin = user?.role === 'admin';
+
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryFn: () => base44.entities.Employee.list(),
+    enabled: isAdmin
   });
 
+  // Admin: use backend function for light list; Employee: also uses it (it filters server-side)
   const { data: allContracts = [], isLoading: loadingContracts } = useQuery({
     queryKey: ['contracts'],
     queryFn: async () => {
-      // Use backend function to fetch contracts without heavy contract_content
       const response = await base44.functions.invoke('listContractsLight');
       return response.data?.contracts || [];
     }
   });
 
-  // Medewerkers zien alleen hun eigen contracten
-  const currentEmployee = user?.role !== 'admin' 
-    ? employees.find(e => e.email === user?.email) 
-    : null;
+  // For employee view: fetch their full contracts with content for reading & signing
+  const { data: employeeFullContracts = [], isLoading: loadingEmployeeContracts } = useQuery({
+    queryKey: ['employeeFullContracts'],
+    queryFn: async () => {
+      // allContracts already filtered server-side for non-admin
+      if (allContracts.length === 0) return [];
+      // Fetch full contracts with content
+      const fullContracts = await Promise.all(
+        allContracts
+          .filter(c => c.status === 'TerOndertekening')
+          .map(c => base44.entities.Contract.filter({ id: c.id }).then(res => res[0]))
+      );
+      return fullContracts.filter(Boolean);
+    },
+    enabled: !isAdmin && !loadingUser && allContracts.length > 0
+  });
 
-  const contracts = user?.role === 'admin' 
-    ? allContracts 
-    : allContracts.filter(c => currentEmployee && c.employee_id === currentEmployee.id);
+  const contracts = allContracts;
 
   const { data: templates = [] } = useQuery({
     queryKey: ['contractTemplates'],
-    queryFn: () => base44.entities.ContractTemplate.filter({ status: 'Actief' })
+    queryFn: () => base44.entities.ContractTemplate.filter({ status: 'Actief' }),
+    enabled: isAdmin
   });
 
   const generateContractMutation = useMutation({
