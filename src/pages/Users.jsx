@@ -101,7 +101,8 @@ export default function UsersPage() {
 
   const [inviteData, setInviteData] = useState({
     email: '',
-    role: 'user'
+    role: 'user',
+    selectedEmployeeId: ''
   });
 
   const inviteUserMutation = useMutation({
