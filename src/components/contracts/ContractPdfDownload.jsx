@@ -53,25 +53,43 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
       windowWidth: 794,
     });
 
-    // 5. Convert canvas to PDF (A4)
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    // 5. Convert canvas to PDF (A4) with proper page margins
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = 210;
     const pageHeight = 297;
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const marginTop = 10;
+    const marginBottom = 10;
+    const marginLeft = 8;
+    const marginRight = 8;
+    const printableWidth = pageWidth - marginLeft - marginRight;
+    const printableHeight = pageHeight - marginTop - marginBottom;
 
-    let heightLeft = imgHeight;
-    let position = 0;
+    // Calculate how the canvas maps to PDF
+    const imgWidthMM = printableWidth;
+    const pxPerMM = canvas.width / imgWidthMM;
+    const printableHeightPx = printableHeight * pxPerMM;
 
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    const totalPages = Math.ceil(canvas.height / printableHeightPx);
 
-    while (heightLeft > 0) {
-      position -= pageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    for (let page = 0; page < totalPages; page++) {
+      if (page > 0) pdf.addPage();
+
+      const srcY = page * printableHeightPx;
+      const srcH = Math.min(printableHeightPx, canvas.height - srcY);
+
+      // Create a sub-canvas for this page slice
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = srcH;
+      const pCtx = pageCanvas.getContext('2d');
+      pCtx.fillStyle = '#ffffff';
+      pCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      pCtx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+
+      const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+      const sliceHeightMM = srcH / pxPerMM;
+
+      pdf.addImage(pageImgData, 'JPEG', marginLeft, marginTop, printableWidth, sliceHeightMM);
     }
 
     pdf.save(`contract_${contractNumber || contractId}.pdf`);
