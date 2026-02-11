@@ -120,8 +120,8 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
                 backgroundColor: '#f8fafc',
                 border: '1px solid #e2e8f0',
                 borderRadius: '6px',
-                padding: '16px 20px',
-                marginBottom: '24px',
+                padding: '14px 18px',
+                marginBottom: '20px',
               }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                   <tbody>
