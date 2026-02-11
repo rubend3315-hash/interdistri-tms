@@ -285,6 +285,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const isMobilePage = currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay";
+  const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
 
   // While user is loading, show nothing to prevent flash/redirect issues
   if (loadingUser) {
@@ -297,7 +298,7 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
-  if (isMobilePage) {
+  if (isMobilePage || isEmployeeContractPage) {
     return <>{children}</>;
   }
 
