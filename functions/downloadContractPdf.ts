@@ -8,24 +8,46 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+// Fetch signature image and return as base64 JPEG data URI
 async function fetchSignatureAsJpeg(url) {
   try {
+    console.log('Fetching signature from:', url);
     const resp = await fetch(url);
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+      console.error('Signature fetch failed:', resp.status, resp.statusText);
+      return null;
+    }
     const arrayBuf = await resp.arrayBuffer();
     const uint8 = new Uint8Array(arrayBuf);
+    console.log('Signature fetched, size:', uint8.length, 'first bytes:', uint8[0], uint8[1], uint8[2]);
 
     const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
     const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
 
-    if (!isJpeg && !isPng) return null;
-
-    let binary = '';
-    for (let i = 0; i < uint8.length; i++) {
-      binary += String.fromCharCode(uint8[i]);
+    if (isJpeg) {
+      // Direct JPEG - convert to base64
+      let binary = '';
+      for (let i = 0; i < uint8.length; i++) {
+        binary += String.fromCharCode(uint8[i]);
+      }
+      const b64 = btoa(binary);
+      console.log('JPEG signature, base64 length:', b64.length);
+      return { data: b64, format: 'JPEG' };
     }
-    const b64 = btoa(binary);
-    return { data: b64, format: isJpeg ? 'JPEG' : 'PNG' };
+
+    if (isPng) {
+      // For PNG, we'll just use it as PNG - jsPDF supports PNG
+      let binary = '';
+      for (let i = 0; i < uint8.length; i++) {
+        binary += String.fromCharCode(uint8[i]);
+      }
+      const b64 = btoa(binary);
+      console.log('PNG signature, base64 length:', b64.length);
+      return { data: b64, format: 'PNG' };
+    }
+
+    console.error('Unknown image format, bytes:', uint8[0], uint8[1]);
+    return null;
   } catch (e) {
     console.error('fetchSignature error:', e.message);
     return null;
@@ -67,13 +89,16 @@ Deno.serve(async (req) => {
     }
 
     // Pre-fetch signature images
+    console.log('Manager sig URL:', contract.manager_signature_url);
+    console.log('Employee sig URL:', contract.employee_signature_url);
+
     const [managerSig, employeeSig] = await Promise.all([
       contract.manager_signature_url ? fetchSignatureAsJpeg(contract.manager_signature_url) : null,
       contract.employee_signature_url ? fetchSignatureAsJpeg(contract.employee_signature_url) : null,
     ]);
 
-    console.log('Manager sig:', managerSig ? `${managerSig.format}, ${managerSig.data.length} chars` : 'null');
-    console.log('Employee sig:', employeeSig ? `${employeeSig.format}, ${employeeSig.data.length} chars` : 'null');
+    console.log('Manager sig result:', managerSig ? `${managerSig.format}, ${managerSig.data.length} chars` : 'null');
+    console.log('Employee sig result:', employeeSig ? `${employeeSig.format}, ${employeeSig.data.length} chars` : 'null');
 
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.width;
@@ -131,6 +156,7 @@ Deno.serve(async (req) => {
     if (contract.contract_content) {
       let htmlContent = contract.contract_content;
 
+      // Remove the "Voor akkoord" signature block from the HTML content
       htmlContent = htmlContent
         .replace(/<div\s+style[^>]*>[\s\S]*?Voor akkoord[\s\S]*?<\/div>/gi, '')
         .replace(/<p[^>]*>\s*<strong>\s*Voor akkoord werkgever\s*<\/strong>\s*<\/p>[\s\S]*$/i, '')
@@ -160,6 +186,7 @@ Deno.serve(async (req) => {
         .replace(/&#39;/g, "'")
         .replace(/&euro;/gi, '\u20AC');
 
+      // Fix Unicode chars that jsPDF cannot render
       textContent = textContent
         .replace(/\u00e9/g, 'e').replace(/\u00eb/g, 'e').replace(/\u00e8/g, 'e')
         .replace(/\u00ef/g, 'i').replace(/\u00fc/g, 'u').replace(/\u00f6/g, 'o')
@@ -258,17 +285,23 @@ Deno.serve(async (req) => {
 
     if (managerSig) {
       try {
+        console.log('Adding manager signature image, format:', managerSig.format);
         pdf.addImage(
           'data:image/' + managerSig.format.toLowerCase() + ';base64,' + managerSig.data,
           managerSig.format,
-          margin, y, 60, 25
+          margin,
+          y,
+          60,
+          25
         );
+        console.log('Manager signature added successfully');
         y += 28;
       } catch (imgErr) {
-        console.error('Error adding manager signature:', imgErr.message);
+        console.error('Error adding manager signature image:', imgErr.message);
         y += 20;
       }
     } else {
+      console.log('No manager signature data available');
       y += 20;
     }
 
@@ -303,17 +336,23 @@ Deno.serve(async (req) => {
 
     if (employeeSig) {
       try {
+        console.log('Adding employee signature image, format:', employeeSig.format);
         pdf.addImage(
           'data:image/' + employeeSig.format.toLowerCase() + ';base64,' + employeeSig.data,
           employeeSig.format,
-          margin, y, 60, 25
+          margin,
+          y,
+          60,
+          25
         );
+        console.log('Employee signature added successfully');
         y += 28;
       } catch (imgErr) {
-        console.error('Error adding employee signature:', imgErr.message);
+        console.error('Error adding employee signature image:', imgErr.message);
         y += 20;
       }
     } else {
+      console.log('No employee signature data available');
       y += 20;
     }
 
@@ -344,18 +383,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Instead of returning raw bytes (which gets corrupted by Axios),
-    // upload the PDF as a file and return the URL
-    const pdfOutput = pdf.output('arraybuffer');
-    console.log('PDF generated, size:', pdfOutput.byteLength);
+    const pdfBytes = pdf.output('arraybuffer');
+    console.log('PDF generated, size:', pdfBytes.byteLength);
 
-    const fileName = `contract_${contract.contract_number || contract_id}.pdf`;
-    const pdfFile = new File([pdfOutput], fileName, { type: 'application/pdf' });
-    
-    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-    console.log('PDF uploaded to:', file_url);
-
-    return Response.json({ file_url, fileName });
+    return new Response(pdfBytes, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=contract_${contract.contract_number || contract_id}.pdf`
+      }
+    });
 
   } catch (error) {
     console.error('downloadContractPdf error:', error);
