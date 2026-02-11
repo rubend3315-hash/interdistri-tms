@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Users, Plus, Mail, Shield, User, Search, Edit, CheckSquare, Save, X, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import { logAuditEvent } from "../components/utils/auditLogger";
 
 const ROLES = {
   admin: {
@@ -96,12 +97,21 @@ export default function UsersPage() {
   const inviteUserMutation = useMutation({
     mutationFn: async (data) => {
       await base44.users.inviteUser(data.email, data.role);
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowInviteDialog(false);
       setInviteData({ email: '', role: 'user' });
       alert('Uitnodiging verstuurd!');
+      logAuditEvent({
+        action: 'user_invited',
+        category: 'Gebruikers',
+        description: `Gebruiker ${data.email} uitgenodigd met rol ${ROLES[data.role]?.label || data.role}`,
+        targetEntity: 'User',
+        targetName: data.email,
+        newValue: ROLES[data.role]?.label || data.role,
+      });
     },
     onError: (error) => {
       alert('Fout bij uitnodigen: ' + error.message);
@@ -109,14 +119,27 @@ export default function UsersPage() {
   });
 
   const updatePermissionsMutation = useMutation({
-    mutationFn: async ({ userId, permissions }) => {
-      return base44.entities.User.update(userId, { permissions });
+    mutationFn: async ({ userId, permissions, userName, oldPermissions }) => {
+      await base44.entities.User.update(userId, { permissions });
+      return { userId, permissions, userName, oldPermissions };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowPermissionsDialog(false);
       setSelectedUser(null);
       alert('Permissies bijgewerkt!');
+      const oldLabels = (data.oldPermissions || []).map(p => ALL_PERMISSIONS.find(a => a.id === p)?.label || p).join(', ');
+      const newLabels = (data.permissions || []).map(p => ALL_PERMISSIONS.find(a => a.id === p)?.label || p).join(', ');
+      logAuditEvent({
+        action: 'permissions_updated',
+        category: 'Permissies',
+        description: `Permissies van ${data.userName} bijgewerkt`,
+        targetEntity: 'User',
+        targetId: data.userId,
+        targetName: data.userName,
+        oldValue: oldLabels || 'Geen',
+        newValue: newLabels || 'Geen',
+      });
     },
     onError: (error) => {
       alert('Fout bij bijwerken: ' + error.message);
@@ -124,12 +147,23 @@ export default function UsersPage() {
   });
 
   const updateRoleMutation = useMutation({
-    mutationFn: async ({ userId, role }) => {
-      return base44.entities.User.update(userId, { role });
+    mutationFn: async ({ userId, role, userName, oldRole }) => {
+      await base44.entities.User.update(userId, { role });
+      return { userId, role, userName, oldRole };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       alert('Rol bijgewerkt!');
+      logAuditEvent({
+        action: 'role_changed',
+        category: 'Gebruikers',
+        description: `Rol van ${data.userName} gewijzigd van ${ROLES[data.oldRole]?.label || data.oldRole} naar ${ROLES[data.role]?.label || data.role}`,
+        targetEntity: 'User',
+        targetId: data.userId,
+        targetName: data.userName,
+        oldValue: ROLES[data.oldRole]?.label || data.oldRole,
+        newValue: ROLES[data.role]?.label || data.role,
+      });
     },
     onError: (error) => {
       alert('Fout bij bijwerken rol: ' + error.message);
@@ -151,15 +185,24 @@ export default function UsersPage() {
 
   const handleSavePermissions = () => {
     if (!selectedUser) return;
+    const originalUser = users.find(u => u.id === selectedUser.id);
     updatePermissionsMutation.mutate({
       userId: selectedUser.id,
-      permissions: selectedUser.permissions || []
+      permissions: selectedUser.permissions || [],
+      userName: selectedUser.full_name || selectedUser.email || 'Onbekend',
+      oldPermissions: originalUser?.permissions || []
     });
   };
 
   const handleRoleChange = (userId, newRole) => {
+    const targetUser = users.find(u => u.id === userId);
     if (confirm(`Wil je deze gebruiker de rol "${ROLES[newRole]?.label || newRole}" geven?`)) {
-      updateRoleMutation.mutate({ userId, role: newRole });
+      updateRoleMutation.mutate({ 
+        userId, 
+        role: newRole, 
+        userName: targetUser?.full_name || targetUser?.email || 'Onbekend',
+        oldRole: targetUser?.role || 'user'
+      });
     }
   };
 
