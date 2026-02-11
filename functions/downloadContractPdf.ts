@@ -189,12 +189,12 @@ Deno.serve(async (req) => {
       // Remove "oorspronkelijk in dienst getreden" line if it contains placeholder or is not a verlenging
       if (!contract.is_verlenging) {
         textContent = textContent
-          .replace(/De werknemer is oorspronkelijk bij werkgever in dienst getreden op.*?\./gi, '')
-          .replace(/Werknemer is oorspronkelijk bij werkgever in dienst getreden op.*?\./gi, '');
+          .replace(/De werknemer is oorspronkelijk bij werkgever in dienst getreden op[^\n.]*\.?/gi, '')
+          .replace(/Werknemer is oorspronkelijk bij werkgever in dienst getreden op[^\n.]*\.?/gi, '');
       }
-      // Also remove any lines with [NOG IN TE VULLEN] placeholder
+      // Remove lines with [NOG IN TE VULLEN] placeholder
       textContent = textContent
-        .replace(/.*\[NOG IN TE VULLEN\].*\n?/g, '')
+        .replace(/[^\n]*\[NOG IN TE VULLEN\][^\n]*\n?/g, '')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 
