@@ -77,13 +77,13 @@ function buildBepaaldetijdTemplate(emp, vars) {
 
 <p>De werknemer verklaart in te stemmen met toekomstige wijzigingen op de bij de werkgever geldende algemene voorwaarden uit dit reglement.</p>
 
-<p>Deze voorwaarden vormen één geheel met deze overeenkomst.</p>
+<p>Deze voorwaarden vormen een geheel met deze overeenkomst.</p>
 
 <h3>Artikel 2: ingangsdatum</h3>
 
 <p>Deze overeenkomst vangt aan op ${startDatum}.</p>
 
-<p>Werknemer is oorspronkelijk bij werkgever in dienst getreden op ${inDienstDatum}.</p>
+${inDienstDatum !== '[NOG IN TE VULLEN]' ? `<p>Werknemer is oorspronkelijk bij werkgever in dienst getreden op ${inDienstDatum}.</p>` : ''}
 
 <h3>Artikel 3: functie</h3>
 
@@ -113,7 +113,7 @@ function buildBepaaldetijdTemplate(emp, vars) {
 
 <h3>Artikel 7: arbeidstijd</h3>
 
-<p>De arbeidsovereenkomst wordt aangegaan voor [NOG IN TE VULLEN] basisuren per week. Een fulltime werkweek wordt gesteld op 40 uur per week.</p>
+<p>De arbeidsovereenkomst wordt aangegaan voor ${vars.urenPerWeek} basisuren per week. Een fulltime werkweek wordt gesteld op 40 uur per week.</p>
 
 <h3>Artikel 8: salaris</h3>
 
@@ -150,7 +150,7 @@ function buildOproepTemplate(emp, vars) {
 
 <p>Deze overeenkomst vangt aan op ${startDatum}.</p>
 
-<p>Werknemer is oorspronkelijk bij werkgever in dienst getreden op ${inDienstDatum}.</p>
+${inDienstDatum !== '[NOG IN TE VULLEN]' ? `<p>Werknemer is oorspronkelijk bij werkgever in dienst getreden op ${inDienstDatum}.</p>` : ''}
 
 <h3>Artikel 3: functie</h3>
 
@@ -201,7 +201,7 @@ function buildVastTemplate(emp, vars) {
 
 <p>Deze overeenkomst vangt aan op ${startDatum}.</p>
 
-<p>De werknemer is oorspronkelijk bij werkgever in dienst getreden op ${inDienstDatum}.</p>
+${inDienstDatum !== '[NOG IN TE VULLEN]' ? `<p>De werknemer is oorspronkelijk bij werkgever in dienst getreden op ${inDienstDatum}.</p>` : ''}
 
 <h3>Artikel 3: functie</h3>
 
@@ -219,7 +219,7 @@ function buildVastTemplate(emp, vars) {
 
 <h3>Artikel 7: arbeidstijd</h3>
 
-<p>De arbeidsovereenkomst wordt aangegaan voor [NOG IN TE VULLEN] basisuren per week. Een fulltime werkweek wordt gesteld op 40 uur per week.</p>
+<p>De arbeidsovereenkomst wordt aangegaan voor ${vars.urenPerWeek} basisuren per week. Een fulltime werkweek wordt gesteld op 40 uur per week.</p>
 
 <h3>Artikel 8: salaris</h3>
 
