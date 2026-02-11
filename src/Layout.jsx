@@ -233,9 +233,9 @@ export default function Layout({ children, currentPageName }) {
   // Non-admin users: only allow certain pages, redirect others to Contracts
   useEffect(() => {
     if (!user || user.role === 'admin') return;
-    const allowedPages = ["Contracts", "MobileEntry", "MobileEntryMultiDay"];
+    const allowedPages = ["MobileEntry", "MobileEntryMultiDay"];
     if (!allowedPages.includes(currentPageName)) {
-      navigate(createPageUrl("Contracts"));
+      navigate(createPageUrl("MobileEntry"));
     }
   }, [user, currentPageName, navigate]);
 
