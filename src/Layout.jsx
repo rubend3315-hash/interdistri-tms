@@ -230,51 +230,18 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
-  // Fetch employee data for mobile routing
-  const { data: allEmployees = [], isLoading: loadingEmployees } = useQuery({
-    queryKey: ['employeesForRouting'],
-    queryFn: () => base44.entities.Employee.list(),
-    enabled: !!user?.email && user?.role !== 'admin'
-  });
-
-  const currentEmployee = allEmployees.find(e => e.email === user?.email);
-
-  useEffect(() => {
-    if (!isMobile || !user) return;
-    
-    // Admin users on mobile: don't force redirect
-    if (user.role === 'admin') return;
-    
-    // Allow non-admin users to stay on Contracts page (for signing)
-    if (currentPageName === "Contracts") return;
-    
-    // Also allow MobileEntry pages
-    if (currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay") return;
-    
-    // Wait until employees are loaded before deciding redirect
-    if (loadingEmployees) return;
-    
-    // If no employee match found, send to Contracts page
-    if (!currentEmployee) {
-      navigate(createPageUrl("Contracts"));
-      return;
-    }
-    
-    const isMultiDay = currentEmployee.mobile_entry_type === "multi_day";
-    const targetPage = isMultiDay ? "MobileEntryMultiDay" : "MobileEntry";
-    navigate(createPageUrl(targetPage));
-  }, [isMobile, currentPageName, navigate, currentEmployee, user, loadingEmployees]);
-
-  // Non-admin users on desktop: redirect to Contracts page (they should only see their contracts)
+  // Non-admin users: redirect to allowed pages only
   useEffect(() => {
     if (!user || user.role === 'admin') return;
-    // On mobile, the mobile redirect above handles routing
-    if (isMobile) return;
+    
     const allowedPages = ["Contracts", "MobileEntry", "MobileEntryMultiDay"];
-    if (!allowedPages.includes(currentPageName)) {
-      navigate(createPageUrl("Contracts"));
-    }
-  }, [user, currentPageName, navigate, isMobile]);
+    
+    // Already on an allowed page - do nothing
+    if (allowedPages.includes(currentPageName)) return;
+    
+    // Redirect to Contracts (works on both mobile and desktop)
+    navigate(createPageUrl("Contracts"));
+  }, [user, currentPageName, navigate]);
 
   const hasPermission = (page) => {
     if (!user) return false;
