@@ -1,5 +1,43 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Helper: send email via Gmail API
+async function sendGmail(accessToken, to, subject, htmlBody) {
+  const boundary = 'boundary_' + Date.now() + Math.random();
+  const rawEmail = [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `MIME-Version: 1.0`,
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    ``,
+    `--${boundary}`,
+    `Content-Type: text/html; charset="UTF-8"`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    btoa(unescape(encodeURIComponent(htmlBody))),
+    `--${boundary}--`
+  ].join('\r\n');
+
+  const encodedMessage = btoa(unescape(encodeURIComponent(rawEmail)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ raw: encodedMessage })
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`Gmail send failed (${res.status}): ${errBody}`);
+  }
+  return await res.json();
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -106,36 +144,28 @@ Deno.serve(async (req) => {
       </div>
     `;
 
+    // Get Gmail access token
+    const gmailToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
+
     // Update contract status first
     await base44.asServiceRole.entities.Contract.update(contract_id, {
       status: 'TerOndertekening',
       reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
     });
 
-    // Send emails - employee email requires user to be in the app
-    // Send to employee (must be app user)
+    // Send emails via Gmail
+    // Send to employee
     try {
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: employee.email,
-        subject: `Arbeidsovereenkomst ter ondertekening - ${contract.contract_number}`,
-        from_name: 'Interdistri HR',
-        body: emailBody
-      });
+      await sendGmail(gmailToken, employee.email, `Arbeidsovereenkomst ter ondertekening - ${contract.contract_number}`, emailBody);
     } catch (emailErr) {
-      console.error('Failed to send employee email:', emailErr.message);
-      // Continue - contract status is already updated
+      console.error('Failed to send employee email via Gmail:', emailErr.message);
     }
 
     // Send copy to admin
     try {
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: user.email,
-        subject: `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`,
-        from_name: 'Interdistri HR',
-        body: `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`
-      });
+      await sendGmail(gmailToken, user.email, `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`, `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`);
     } catch (emailErr) {
-      console.error('Failed to send admin copy email:', emailErr.message);
+      console.error('Failed to send admin copy via Gmail:', emailErr.message);
     }
 
     // Fire-and-forget notification
