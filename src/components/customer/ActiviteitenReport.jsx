@@ -331,7 +331,7 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
               <tr key={idx} className={`border-b hover:bg-slate-50 ${hasEdits ? 'bg-yellow-50/50' : ''}`}>
                 <td className="py-1.5 px-2 text-slate-600 whitespace-nowrap">{r._dayName || '-'}</td>
                 <td className="py-1.5 px-2 font-medium text-slate-800">{r['Ritnaam'] || '-'}</td>
-                <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Starttijd shift'])}</td>
+                <td className="py-1.5 px-2 text-slate-600">{formatTime(r._starttijdShift)}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Vrijgegeven'])}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Afgehandeld'])}</td>
                 <td className="py-1.5 px-2 text-slate-600">{formatTime(r['Eerste stop'])}</td>
