@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { jsPDF } from 'npm:jspdf@2.5.1';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -18,55 +19,74 @@ function formatDateShort(dateStr) {
   }
 }
 
-// Fetch image and return as base64 data URI
-async function fetchImageAsDataUri(url) {
+// Fetch signature and add it to PDF directly
+// Returns true if signature was added, false otherwise
+async function addSignatureToPdf(pdf, url, x, y, w, h) {
   try {
-    console.log('Fetching image:', url);
+    console.log('Fetching signature from:', url);
     const resp = await fetch(url);
     if (!resp.ok) {
-      console.error('Image fetch failed:', resp.status);
-      return null;
+      console.error('Signature fetch failed:', resp.status);
+      return false;
     }
-    const buf = await resp.arrayBuffer();
-    const uint8 = new Uint8Array(buf);
-    console.log('Image size:', uint8.length, 'bytes');
     
+    const arrayBuf = await resp.arrayBuffer();
+    const uint8 = new Uint8Array(arrayBuf);
+    console.log('Fetched bytes:', uint8.length, 'first 4:', uint8[0], uint8[1], uint8[2], uint8[3]);
+    
+    if (uint8.length < 100) {
+      console.error('Image too small, likely not a valid image');
+      return false;
+    }
+
+    const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
+    const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
+    const format = isJpeg ? 'JPEG' : isPng ? 'PNG' : null;
+    
+    if (!format) {
+      console.error('Unknown image format');
+      return false;
+    }
+
+    // Convert to base64 in chunks to avoid stack overflow
     let binary = '';
-    // Process in chunks to avoid call stack issues
     const chunkSize = 8192;
     for (let i = 0; i < uint8.length; i += chunkSize) {
-      const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
-      binary += String.fromCharCode(...chunk);
+      const end = Math.min(i + chunkSize, uint8.length);
+      const chunk = uint8.subarray(i, end);
+      for (let j = 0; j < chunk.length; j++) {
+        binary += String.fromCharCode(chunk[j]);
+      }
     }
     const b64 = btoa(binary);
     
-    const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
-    const mime = isJpeg ? 'image/jpeg' : 'image/png';
-    console.log('Image converted to base64, mime:', mime, 'length:', b64.length);
-    return `data:${mime};base64,${b64}`;
+    console.log('Base64 length:', b64.length, 'format:', format);
+    
+    // Use the raw base64 data directly with format parameter
+    pdf.addImage(b64, format, x, y, w, h);
+    console.log('Signature added to PDF successfully');
+    return true;
   } catch (e) {
-    console.error('fetchImage error:', e.message);
-    return null;
+    console.error('addSignatureToPdf error:', e.message, e.stack);
+    return false;
   }
 }
 
-// Strip HTML tags but preserve structure
-function htmlToPlainSections(html) {
+// Strip HTML to plain text sections
+function parseContractContent(html) {
   if (!html) return [];
   
-  // Remove signature blocks from HTML
+  // Remove "Voor akkoord" blocks from the end
   let cleaned = html
     .replace(/Voor akkoord werkgever[\s\S]*$/gi, '')
-    .replace(/<div\s+style[^>]*>[\s\S]*?Voor akkoord[\s\S]*?<\/div>/gi, '');
+    .replace(/<div\s+style[^>]*>[\s\S]*?Voor akkoord[\s\S]*?<\/div>/gi, '')
+    .replace(/<p[^>]*>\s*<strong>\s*Voor akkoord werkgever\s*<\/strong>\s*<\/p>[\s\S]*$/i, '');
   
-  // Split into logical sections by headings
-  const sections = [];
+  // Mark headings
+  cleaned = cleaned.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '\n###H###$1\n');
+  cleaned = cleaned.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '\n###H###$1\n');
   
-  // Replace h3 tags with markers
-  cleaned = cleaned.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '\n§§HEADING§§$1\n');
-  cleaned = cleaned.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '\n§§HEADING§§$1\n');
-  
-  // Convert block elements to newlines
+  // Convert block elements
   cleaned = cleaned
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
@@ -79,22 +99,32 @@ function htmlToPlainSections(html) {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/&euro;/gi, '€')
-    .replace(/\n{3,}/g, '\n\n');
-  
-  const lines = cleaned.split('\n');
-  for (const line of lines) {
+    .replace(/&euro;/gi, 'EUR ')
+    .replace(/\u20AC/g, 'EUR ')
+    .replace(/\u00e9/g, 'e').replace(/\u00eb/g, 'e').replace(/\u00e8/g, 'e')
+    .replace(/\u00ef/g, 'i').replace(/\u00fc/g, 'u').replace(/\u00f6/g, 'o')
+    .replace(/\u00e4/g, 'a').replace(/\u00e0/g, 'a')
+    .replace(/ï¿½ï¿½n/g, 'een').replace(/ï¿½/g, 'EUR ')
+    .replace(/Ã«n/g, 'en').replace(/Ã«/g, 'e').replace(/Ã©/g, 'e')
+    .replace(/Ã¯/g, 'i').replace(/Ã¼/g, 'u').replace(/Ã¶/g, 'o')
+    .replace(/Ã /g, 'a').replace(/â‚¬/g, 'EUR ')
+    .replace(/be[^\w\s]{1,6}indig/g, 'beeindig')
+    .replace(/\.{10,}/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  const result = [];
+  for (const line of cleaned.split('\n')) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     
-    if (trimmed.startsWith('§§HEADING§§')) {
-      sections.push({ type: 'heading', text: trimmed.replace('§§HEADING§§', '').trim() });
+    if (trimmed.startsWith('###H###')) {
+      result.push({ heading: true, text: trimmed.replace('###H###', '').trim() });
     } else {
-      sections.push({ type: 'text', text: trimmed });
+      result.push({ heading: false, text: trimmed });
     }
   }
-  
-  return sections;
+  return result;
 }
 
 Deno.serve(async (req) => {
@@ -131,155 +161,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fetch signature images as base64 data URIs
-    const [managerSigUri, employeeSigUri] = await Promise.all([
-      contract.manager_signature_url ? fetchImageAsDataUri(contract.manager_signature_url) : null,
-      contract.employee_signature_url ? fetchImageAsDataUri(contract.employee_signature_url) : null,
-    ]);
-
-    console.log('Manager sig:', managerSigUri ? 'loaded' : 'none');
-    console.log('Employee sig:', employeeSigUri ? 'loaded' : 'none');
-
-    // Parse contract content into sections
-    const sections = htmlToPlainSections(contract.contract_content);
-    
-    // Build contract body HTML
-    let contractBodyHtml = '';
-    for (const section of sections) {
-      if (section.type === 'heading') {
-        contractBodyHtml += `<h3 style="font-size: 11pt; font-weight: bold; margin: 14px 0 4px 0; color: #1e293b;">${section.text}</h3>\n`;
-      } else {
-        contractBodyHtml += `<p style="font-size: 10pt; line-height: 1.5; margin: 2px 0; color: #1e293b;">${section.text}</p>\n`;
-      }
-    }
-
-    // Build signature blocks
-    const managerSignatureHtml = managerSigUri 
-      ? `<img src="${managerSigUri}" style="width: 200px; height: 80px; object-fit: contain; display: block; margin: 8px 0;" />`
-      : '<div style="height: 60px;"></div>';
-    
-    const employeeSignatureHtml = employeeSigUri
-      ? `<img src="${employeeSigUri}" style="width: 200px; height: 80px; object-fit: contain; display: block; margin: 8px 0;" />`
-      : '<div style="height: 60px;"></div>';
-
-    const managerDateStr = contract.manager_signed_date ? formatDateShort(contract.manager_signed_date) : '';
-    const employeeDateStr = contract.employee_signed_date ? formatDateShort(contract.employee_signed_date) : '';
-
-    // Complete HTML document for PDF
-    const fullHtml = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<style>
-  @page { margin: 15mm 20mm; size: A4; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1e293b; margin: 0; padding: 0; }
-  .header { background: #1e293b; color: white; padding: 16px 24px; margin: -15mm -20mm 20px -20mm; width: calc(100% + 40mm); }
-  .header h1 { font-size: 18pt; margin: 0 0 4px 0; }
-  .header p { font-size: 10pt; margin: 0; color: #94a3b8; }
-  .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; }
-  .info-table { width: 100%; border-collapse: collapse; }
-  .info-table td { padding: 4px 8px; font-size: 9pt; }
-  .info-label { color: #64748b; font-weight: bold; width: 120px; }
-  .info-value { color: #1e293b; }
-  .signature-section { margin-top: 30px; page-break-inside: avoid; }
-  .signature-block { margin-bottom: 24px; }
-  .signature-block h4 { font-size: 11pt; font-weight: bold; margin: 0 0 8px 0; }
-  .signature-line { border-bottom: 1px dotted #94a3b8; width: 250px; margin-bottom: 4px; }
-  .signature-info { font-size: 9pt; color: #475569; margin: 2px 0; }
-  .signature-date { font-size: 8pt; color: #94a3b8; }
-  .footer { font-size: 8pt; color: #94a3b8; text-align: center; margin-top: 30px; }
-</style>
-</head>
-<body>
-
-<div class="header">
-  <h1>Interdistri Transport</h1>
-  <p>Arbeidscontract</p>
-</div>
-
-<div class="info-box">
-  <table class="info-table">
-    <tr>
-      <td class="info-label">Medewerker:</td>
-      <td class="info-value">${employeeName}</td>
-      <td class="info-label">Contractnummer:</td>
-      <td class="info-value">${contract.contract_number || '-'}</td>
-    </tr>
-    <tr>
-      <td class="info-label">Contracttype:</td>
-      <td class="info-value">${contract.contract_type || '-'}</td>
-      <td class="info-label">Startdatum:</td>
-      <td class="info-value">${formatDate(contract.start_date) || '-'}</td>
-    </tr>
-    <tr>
-      <td class="info-label">Status:</td>
-      <td class="info-value">${contract.status || '-'}</td>
-      <td class="info-label">Uren/week:</td>
-      <td class="info-value">${contract.hours_per_week || '-'}</td>
-    </tr>
-  </table>
-</div>
-
-${contractBodyHtml}
-
-<div class="signature-section">
-  <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 20px;" />
-  
-  <div class="signature-block">
-    <h4>Voor akkoord werkgever</h4>
-    ${managerSignatureHtml}
-    <div class="signature-line"></div>
-    <p class="signature-info">Van Dooren Transport Zeeland B.V.</p>
-    <p class="signature-info">Namens deze:</p>
-    <p class="signature-info">De heer M. Schetters${managerDateStr ? `&nbsp;&nbsp;&nbsp;&nbsp;<span class="signature-date">Ondertekend op ${managerDateStr}</span>` : ''}</p>
-  </div>
-
-  <div class="signature-block">
-    <h4>Voor akkoord werknemer</h4>
-    ${employeeSignatureHtml}
-    <div class="signature-line"></div>
-    <p class="signature-info">De heer/mevrouw ${employeeName}${employeeDateStr ? `&nbsp;&nbsp;&nbsp;&nbsp;<span class="signature-date">Ondertekend op ${employeeDateStr}</span>` : ''}</p>
-  </div>
-</div>
-
-<div class="footer">
-  Gegenereerd op ${new Date().toLocaleDateString('nl-NL')}
-</div>
-
-</body>
-</html>`;
-
-    // Use a headless Chrome PDF API to convert HTML to PDF
-    // We'll use a free public API for this
-    const pdfResponse = await fetch('https://htmltopdf.paculino.com/api/v1/convert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        html: fullHtml,
-        options: {
-          format: 'A4',
-          margin: { top: '0', bottom: '10mm', left: '0', right: '0' }
-        }
-      })
-    });
-
-    if (pdfResponse.ok) {
-      const pdfBytes = await pdfResponse.arrayBuffer();
-      console.log('PDF generated via HTML API, size:', pdfBytes.byteLength);
-      
-      return new Response(pdfBytes, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename=contract_${contract.contract_number || contract_id}.pdf`
-        }
-      });
-    }
-
-    // Fallback: use jsPDF but with a different approach - embed signatures differently
-    console.log('HTML-to-PDF API failed, status:', pdfResponse.status, 'falling back to jsPDF');
-    
-    const { jsPDF } = await import('npm:jspdf@2.5.1');
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.width;
     const pageHeight = pdf.internal.pageSize.height;
@@ -287,7 +168,7 @@ ${contractBodyHtml}
     const usableWidth = pageWidth - margin * 2;
     let y = 20;
 
-    // Header
+    // ===== HEADER =====
     pdf.setFillColor(30, 41, 59);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -300,16 +181,17 @@ ${contractBodyHtml}
     pdf.setTextColor(0, 0, 0);
     y = 45;
 
-    // Info box
+    // ===== INFO BOX =====
     pdf.setFillColor(248, 250, 252);
     pdf.rect(margin, y, usableWidth, 40, 'F');
     pdf.setDrawColor(226, 232, 240);
     pdf.rect(margin, y, usableWidth, 40, 'S');
+
     const infoY = y + 8;
-    pdf.setFontSize(9);
     const col1 = margin + 5;
     const col2 = margin + usableWidth / 2 + 5;
-    
+
+    pdf.setFontSize(9);
     pdf.setFont(undefined, 'bold');
     pdf.setTextColor(100, 116, 139);
     pdf.text('Medewerker:', col1, infoY);
@@ -318,7 +200,7 @@ ${contractBodyHtml}
     pdf.text('Startdatum:', col2, infoY + 10);
     pdf.text('Status:', col1, infoY + 20);
     pdf.text('Uren/week:', col2, infoY + 20);
-    
+
     pdf.setFont(undefined, 'normal');
     pdf.setTextColor(15, 23, 42);
     pdf.text(employeeName, col1 + 30, infoY);
@@ -329,13 +211,12 @@ ${contractBodyHtml}
     pdf.text(String(contract.hours_per_week || '-'), col2 + 35, infoY + 20);
     y += 50;
 
-    // Contract content
-    pdf.setFontSize(10);
-    pdf.setTextColor(30, 41, 59);
+    // ===== CONTRACT CONTENT =====
+    const sections = parseContractContent(contract.contract_content);
     const lineHeight = 4.5;
 
     for (const section of sections) {
-      if (section.type === 'heading') {
+      if (section.heading) {
         y += 6;
         if (y + lineHeight > pageHeight - 30) { pdf.addPage(); y = 20; }
         pdf.setFont(undefined, 'bold');
@@ -344,19 +225,20 @@ ${contractBodyHtml}
         pdf.setFont(undefined, 'normal');
         pdf.setFontSize(10);
       }
-      
-      const lines = pdf.splitTextToSize(section.text, usableWidth);
-      for (const line of lines) {
+
+      pdf.setTextColor(30, 41, 59);
+      const wrappedLines = pdf.splitTextToSize(section.text, usableWidth);
+      for (const wLine of wrappedLines) {
         if (y + lineHeight > pageHeight - 30) { pdf.addPage(); y = 20; }
-        pdf.text(line, margin, y);
+        pdf.text(wLine, margin, y);
         y += lineHeight;
       }
     }
 
-    // Signatures
+    // ===== SIGNATURES =====
     y += 10;
     if (y > pageHeight - 90) { pdf.addPage(); y = 20; }
-    
+
     pdf.setDrawColor(226, 232, 240);
     pdf.line(margin, y, margin + usableWidth, y);
     y += 8;
@@ -364,17 +246,13 @@ ${contractBodyHtml}
     // Manager signature
     pdf.setFontSize(11);
     pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(30, 41, 59);
     pdf.text('Voor akkoord werkgever', margin, y);
-    y += 7;
+    y += 5;
 
-    if (managerSigUri) {
-      try {
-        pdf.addImage(managerSigUri, 'JPEG', margin, y, 60, 25);
-        y += 28;
-      } catch (e) {
-        console.error('jsPDF addImage manager failed:', e.message);
-        y += 20;
-      }
+    if (contract.manager_signature_url) {
+      const added = await addSignatureToPdf(pdf, contract.manager_signature_url, margin, y, 60, 25);
+      y += added ? 28 : 20;
     } else {
       y += 20;
     }
@@ -390,28 +268,24 @@ ${contractBodyHtml}
     pdf.text('Namens deze:', margin, y);
     y += 5;
     pdf.text('De heer M. Schetters', margin, y);
-    if (managerDateStr) {
+    if (contract.manager_signed_date) {
       pdf.setTextColor(100, 116, 139);
-      pdf.text(`Ondertekend op ${managerDateStr}`, margin + 50, y);
+      pdf.text(`Ondertekend op ${formatDateShort(contract.manager_signed_date)}`, margin + 50, y);
     }
     y += 12;
 
     // Employee signature
     if (y > pageHeight - 60) { pdf.addPage(); y = 20; }
+
     pdf.setTextColor(30, 41, 59);
     pdf.setFontSize(11);
     pdf.setFont(undefined, 'bold');
     pdf.text('Voor akkoord werknemer', margin, y);
-    y += 7;
+    y += 5;
 
-    if (employeeSigUri) {
-      try {
-        pdf.addImage(employeeSigUri, 'JPEG', margin, y, 60, 25);
-        y += 28;
-      } catch (e) {
-        console.error('jsPDF addImage employee failed:', e.message);
-        y += 20;
-      }
+    if (contract.employee_signature_url) {
+      const added = await addSignatureToPdf(pdf, contract.employee_signature_url, margin, y, 60, 25);
+      y += added ? 28 : 20;
     } else {
       y += 20;
     }
@@ -423,12 +297,12 @@ ${contractBodyHtml}
     y += 5;
     pdf.setTextColor(30, 41, 59);
     pdf.text(`De heer/mevrouw ${employeeName}`, margin, y);
-    if (employeeDateStr) {
+    if (contract.employee_signed_date) {
       pdf.setTextColor(100, 116, 139);
-      pdf.text(`Ondertekend op ${employeeDateStr}`, margin + 60, y);
+      pdf.text(`Ondertekend op ${formatDateShort(contract.employee_signed_date)}`, margin + 60, y);
     }
 
-    // Footer
+    // ===== FOOTER =====
     const pageCount = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
@@ -440,10 +314,10 @@ ${contractBodyHtml}
       );
     }
 
-    const pdfBytes2 = pdf.output('arraybuffer');
-    console.log('jsPDF fallback PDF, size:', pdfBytes2.byteLength);
+    const pdfBytes = pdf.output('arraybuffer');
+    console.log('PDF generated, size:', pdfBytes.byteLength);
 
-    return new Response(pdfBytes2, {
+    return new Response(pdfBytes, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
