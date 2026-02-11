@@ -68,10 +68,19 @@ export default function Contracts() {
     queryFn: () => base44.entities.Employee.list()
   });
 
-  const { data: contracts = [], isLoading: loadingContracts } = useQuery({
+  const { data: allContracts = [], isLoading: loadingContracts } = useQuery({
     queryKey: ['contracts'],
     queryFn: () => base44.entities.Contract.list('-created_date')
   });
+
+  // Medewerkers zien alleen hun eigen contracten
+  const currentEmployee = user?.role !== 'admin' 
+    ? employees.find(e => e.email === user?.email) 
+    : null;
+
+  const contracts = user?.role === 'admin' 
+    ? allContracts 
+    : allContracts.filter(c => currentEmployee && c.employee_id === currentEmployee.id);
 
   const { data: templates = [] } = useQuery({
     queryKey: ['contractTemplates'],
