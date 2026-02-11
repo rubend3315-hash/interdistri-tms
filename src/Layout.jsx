@@ -262,7 +262,9 @@ export default function Layout({ children, currentPageName }) {
 
   // Non-admin users on desktop: redirect to Contracts page (they should only see their contracts)
   useEffect(() => {
-    if (!user || user.role === 'admin' || isMobile) return;
+    if (!user || user.role === 'admin') return;
+    // On mobile, the mobile redirect above handles routing (except Contracts page is always allowed)
+    if (isMobile) return;
     const allowedPages = ["Contracts", "MobileEntry", "MobileEntryMultiDay"];
     if (!allowedPages.includes(currentPageName)) {
       navigate(createPageUrl("Contracts"));
