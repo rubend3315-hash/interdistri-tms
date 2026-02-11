@@ -624,12 +624,23 @@ export default function ContractEditDialog({
                     {contract.contract_content ? (
                       <div dangerouslySetInnerHTML={{ __html: (() => {
                         let html = ensureHtml(contract.contract_content);
+                        // Fix "Invalid Date" with actual start date
+                        if (contract.start_date) {
+                          const d = new Date(contract.start_date + 'T12:00:00');
+                          if (!isNaN(d.getTime())) {
+                            const formatted = d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+                            html = html.replace(/Invalid Date/g, formatted);
+                          }
+                        }
+                        // Remove "oorspronkelijk in dienst" line with [NOG IN TE VULLEN] or if not verlenging
+                        if (!contract.is_verlenging) {
+                          html = html.replace(/<p[^>]*>[^<]*oorspronkelijk[^<]*in dienst[^<]*<\/p>/gi, '');
+                        }
+                        html = html.replace(/<p[^>]*>[^<]*\[NOG IN TE VULLEN\][^<]*<\/p>/gi, '');
                         // Remove template signature block if real signatures exist
                         if (contract.employee_signature_url || contract.manager_signature_url) {
-                          // Remove everything from "Voor akkoord werkgever" onwards
                           html = html.replace(/<p[^>]*>\s*<strong>\s*Voor akkoord werkgever\s*<\/strong>\s*<\/p>[\s\S]*$/i, '');
                           html = html.replace(/<p[^>]*>\s*<b>\s*Voor akkoord werkgever\s*<\/b>\s*<\/p>[\s\S]*$/i, '');
-                          // Also plain text bold
                           html = html.replace(/<strong>\s*Voor akkoord werkgever\s*<\/strong>[\s\S]*$/i, '');
                         }
                         return html;
