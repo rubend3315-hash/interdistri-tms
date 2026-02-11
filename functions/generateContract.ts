@@ -52,6 +52,7 @@ function replacePlaceholders(html, vars) {
     '{{functie}}': vars.functie,
     '{{afdeling}}': vars.afdeling,
     '{{proeftijd}}': vars.proeftijd === 'Geen proeftijd' ? 'Er geldt geen proeftijd.' : 'Er geldt één maand proeftijd.',
+    '{{inDienstDatum}}': vars.inDienstDatum,
     '{{urenPerWeek}}': vars.urenPerWeek || '[NOG IN TE VULLEN]',
     '{{handtekeningBlok}}': signatureBlock(vars.fullName),
   };
