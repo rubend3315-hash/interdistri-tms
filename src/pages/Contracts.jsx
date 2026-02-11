@@ -71,13 +71,9 @@ export default function Contracts() {
   const { data: allContracts = [], isLoading: loadingContracts } = useQuery({
     queryKey: ['contracts'],
     queryFn: async () => {
-      const all = await base44.entities.Contract.list('-created_date');
-      // Strip heavy contract_content from list to avoid oversized page data
-      return all.map(c => {
-        const copy = { ...c };
-        delete copy.contract_content;
-        return copy;
-      });
+      // Use backend function to fetch contracts without heavy contract_content
+      const response = await base44.functions.invoke('listContractsLight');
+      return response.data?.contracts || [];
     }
   });
 
