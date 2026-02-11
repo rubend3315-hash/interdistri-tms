@@ -247,9 +247,18 @@ export default function ContractEditDialog({
       }
     }
 
-    // Proeftijd replacement
+    // Proeftijd replacement - use the actual editFields.proeftijd value
+    const proeftijdTekst = editFields.proeftijd === 'Geen proeftijd' 
+      ? 'Er geldt geen proeftijd.' 
+      : 'Er geldt één maand proeftijd.';
+    
+    // Replace the entire proeftijd article content
+    updated = updated.replace(
+      /Er geldt [^<.]*(proeftijd)[^<.]*/gi,
+      proeftijdTekst
+    );
+    // Also handle [NOG IN TE VULLEN] placeholders
     if (editFields.is_verlenging) {
-      // Remove proeftijd clause or replace with "geen proeftijd"
       updated = updated.replace(
         /proeftijd[:\s]*\[NOG IN TE VULLEN\]/gi,
         `geen proeftijd (verlenging)`
@@ -261,11 +270,11 @@ export default function ContractEditDialog({
     } else {
       updated = updated.replace(
         /proeftijd[:\s]*\[NOG IN TE VULLEN\]/gi,
-        `proeftijd 1 maand`
+        editFields.proeftijd === 'Geen proeftijd' ? 'geen proeftijd' : 'proeftijd 1 maand'
       );
       updated = updated.replace(
         /De\s+proeftijd\s+bedraagt\s+\[NOG IN TE VULLEN\]/gi,
-        `De proeftijd bedraagt 1 maand`
+        editFields.proeftijd === 'Geen proeftijd' ? 'Er geldt geen proeftijd.' : 'De proeftijd bedraagt 1 maand'
       );
     }
     return updated;
