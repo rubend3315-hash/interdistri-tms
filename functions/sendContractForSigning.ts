@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
           </div>
           <p style="color: #475569; line-height: 1.6;">Log in op het Interdistri portaal om het contract te bekijken en digitaal te ondertekenen.</p>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="${appBaseUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">Contract bekijken &amp; ondertekenen</a>
+            <a href="${appBaseUrl}/Contracts" style="display: inline-block; background: #2563eb; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">Contract bekijken &amp; ondertekenen</a>
           </div>
         </div>
         <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
