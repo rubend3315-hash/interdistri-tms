@@ -54,6 +54,7 @@ import Bedrijfsreglement from './pages/Bedrijfsreglement';
 import CaoRules from './pages/CaoRules';
 import Charters from './pages/Charters';
 import CompletedContracts from './pages/CompletedContracts';
+import ContractAnalytics from './pages/ContractAnalytics';
 import ContractTemplates from './pages/ContractTemplates';
 import ContractWijzigingen from './pages/ContractWijzigingen';
 import Contracts from './pages/Contracts';
@@ -86,7 +87,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import ContractAnalytics from './pages/ContractAnalytics';
 import __Layout from './Layout.jsx';
 
 
@@ -98,6 +98,7 @@ export const PAGES = {
     "CaoRules": CaoRules,
     "Charters": Charters,
     "CompletedContracts": CompletedContracts,
+    "ContractAnalytics": ContractAnalytics,
     "ContractTemplates": ContractTemplates,
     "ContractWijzigingen": ContractWijzigingen,
     "Contracts": Contracts,
@@ -130,7 +131,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "ContractAnalytics": ContractAnalytics,
 }
 
 export const pagesConfig = {

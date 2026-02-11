@@ -436,7 +436,7 @@ export default function MobileEntry() {
 
       // Open Bumper link if damage occurred
       if (hasDamage) {
-        window.open('https://www.mijn.bumper.nl', '_blank');
+        window.open('https://mijn.bumper.nl', '_blank');
       }
 
       // Go back to home
@@ -1748,7 +1748,7 @@ export default function MobileEntry() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <a 
-                  href="https://www.mijn.bumper.nl" 
+                  href="https://mijn.bumper.nl" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100"
