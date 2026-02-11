@@ -145,6 +145,8 @@ Deno.serve(async (req) => {
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
         .replace(/&euro;/gi, '\u20AC')
+        // Fix "Invalid Date" in content
+        .replace(/Invalid Date/g, formatDate(contract.start_date))
         // Fix common UTF-8 mojibake patterns - comprehensive
         .replace(/\u00ef\u00bf\u00bd\u00ef\u00bf\u00bdn/g, 'een')
         .replace(/ï¿½ï¿½n/g, 'een')
