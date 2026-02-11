@@ -1,87 +1,113 @@
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { UserCheck, Loader2 } from "lucide-react";
 
 export default function SignatureCanvas({ onSign, signing }) {
   const canvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(false);
 
-  // Initialize canvas with white background when mounted
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Set canvas resolution to match display size
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+
     const ctx = canvas.getContext('2d');
-    // Set white background
+    ctx.scale(dpr, dpr);
+
+    // White background
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // Set drawing style
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    // Drawing style - BLACK pen
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-  }, []);
 
-  const getPos = useCallback((e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY
+    // Touch/mouse handlers
+    function getPos(e) {
+      const r = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - r.left, y: clientY - r.top };
+    }
+
+    function onStart(e) {
+      e.preventDefault();
+      isDrawingRef.current = true;
+      setHasDrawn(true);
+      const ctx2 = canvas.getContext('2d');
+      // Always enforce black stroke before drawing
+      ctx2.strokeStyle = '#000000';
+      ctx2.lineWidth = 2.5;
+      ctx2.lineCap = 'round';
+      ctx2.lineJoin = 'round';
+      const pos = getPos(e);
+      ctx2.beginPath();
+      ctx2.moveTo(pos.x, pos.y);
+    }
+
+    function onMove(e) {
+      if (!isDrawingRef.current) return;
+      e.preventDefault();
+      const ctx2 = canvas.getContext('2d');
+      const pos = getPos(e);
+      ctx2.lineTo(pos.x, pos.y);
+      ctx2.stroke();
+      ctx2.beginPath();
+      ctx2.moveTo(pos.x, pos.y);
+    }
+
+    function onEnd(e) {
+      if (e) e.preventDefault();
+      isDrawingRef.current = false;
+    }
+
+    canvas.addEventListener('mousedown', onStart);
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('mouseup', onEnd);
+    canvas.addEventListener('mouseleave', onEnd);
+    canvas.addEventListener('touchstart', onStart, { passive: false });
+    canvas.addEventListener('touchmove', onMove, { passive: false });
+    canvas.addEventListener('touchend', onEnd);
+
+    return () => {
+      canvas.removeEventListener('mousedown', onStart);
+      canvas.removeEventListener('mousemove', onMove);
+      canvas.removeEventListener('mouseup', onEnd);
+      canvas.removeEventListener('mouseleave', onEnd);
+      canvas.removeEventListener('touchstart', onStart);
+      canvas.removeEventListener('touchmove', onMove);
+      canvas.removeEventListener('touchend', onEnd);
     };
   }, []);
 
-  const startDrawing = useCallback((e) => {
-    e.preventDefault();
+  const clearCanvas = () => {
     const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    const pos = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-    setIsDrawing(true);
-    setHasDrawn(true);
-  }, [getPos]);
-
-  const draw = useCallback((e) => {
-    if (!isDrawing) return;
-    e.preventDefault();
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const pos = getPos(e);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-  }, [isDrawing, getPos]);
-
-  const stopDrawing = useCallback(() => {
-    setIsDrawing(false);
-  }, []);
-
-  const clearCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, rect.width, rect.height);
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     setHasDrawn(false);
-  }, []);
+  };
 
-  const handleSign = useCallback(async () => {
+  const handleSign = () => {
     const canvas = canvasRef.current;
-    // Export as JPEG directly from the canvas (already has white bg)
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     onSign(dataUrl);
-  }, [onSign]);
+  };
 
   return (
     <div className="space-y-3">
@@ -91,16 +117,13 @@ export default function SignatureCanvas({ onSign, signing }) {
       <div className="border-2 border-dashed border-slate-300 rounded-lg bg-white">
         <canvas
           ref={canvasRef}
-          width={400}
-          height={200}
-          style={{ touchAction: 'none', width: '100%', height: 'auto', display: 'block' }}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
+          style={{
+            touchAction: 'none',
+            width: '100%',
+            height: '200px',
+            display: 'block',
+            cursor: 'crosshair'
+          }}
         />
       </div>
       <div className="flex gap-2">
