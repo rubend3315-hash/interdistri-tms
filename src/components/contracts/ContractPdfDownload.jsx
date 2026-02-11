@@ -53,29 +53,22 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
       windowWidth: 794,
     });
 
-    // 5. Convert canvas to PDF (A4) with proper page margins
+    // 5. Convert canvas to PDF (A4) - full width, margins are in the HTML
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = 210;
     const pageHeight = 297;
-    const marginTop = 15;
-    const marginBottom = 15;
-    const marginLeft = 15;
-    const marginRight = 15;
-    const printableWidth = pageWidth - marginLeft - marginRight;
-    const printableHeight = pageHeight - marginTop - marginBottom;
 
-    // Calculate how the canvas maps to PDF
-    const imgWidthMM = printableWidth;
-    const pxPerMM = canvas.width / imgWidthMM;
-    const printableHeightPx = printableHeight * pxPerMM;
+    // Map canvas to full page width
+    const pxPerMM = canvas.width / pageWidth;
+    const pageHeightPx = pageHeight * pxPerMM;
 
-    const totalPages = Math.ceil(canvas.height / printableHeightPx);
+    const totalPages = Math.ceil(canvas.height / pageHeightPx);
 
     for (let page = 0; page < totalPages; page++) {
       if (page > 0) pdf.addPage();
 
-      const srcY = page * printableHeightPx;
-      const srcH = Math.min(printableHeightPx, canvas.height - srcY);
+      const srcY = page * pageHeightPx;
+      const srcH = Math.min(pageHeightPx, canvas.height - srcY);
 
       // Create a sub-canvas for this page slice
       const pageCanvas = document.createElement('canvas');
@@ -89,7 +82,7 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
       const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
       const sliceHeightMM = srcH / pxPerMM;
 
-      pdf.addImage(pageImgData, 'JPEG', marginLeft, marginTop, printableWidth, sliceHeightMM);
+      pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidth, sliceHeightMM);
     }
 
     pdf.save(`contract_${contractNumber || contractId}.pdf`);
