@@ -52,19 +52,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Use the app_url from the frontend (most reliable), fallback to headers
-    let appBaseUrl = app_url || req.headers.get('origin') || '';
-    
-    // Remove trailing slashes
-    appBaseUrl = appBaseUrl.replace(/\/+$/, '');
-    
-    // Log the URL for debugging
-    console.log('App base URL for email:', appBaseUrl);
-    console.log('Origin header:', req.headers.get('origin'));
-    console.log('app_url param:', app_url);
-
-    const contractUrl = `${appBaseUrl}/Contracts`;
-
     const emailBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
@@ -83,11 +70,16 @@ Deno.serve(async (req) => {
               <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Functie:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.function_title || '-'}</td></tr>
             </table>
           </div>
-          <p style="color: #475569; line-height: 1.6;">Log in op het Interdistri portaal om het contract te bekijken en digitaal te ondertekenen.</p>
-          <div style="text-align: center; margin: 24px 0;">
-            <a href="${contractUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">Contract bekijken &amp; ondertekenen</a>
+          <p style="color: #475569; line-height: 1.6;">Je kunt het contract bekijken en digitaal ondertekenen via de <strong>Interdistri TMS app</strong>. Open de app op je telefoon en ga naar <strong>"Mijn Contracten"</strong> in het menu.</p>
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <p style="color: #1e40af; font-size: 14px; margin: 0; font-weight: 600;">📱 Stappen:</p>
+            <ol style="color: #1e40af; font-size: 13px; margin: 8px 0 0; padding-left: 20px; line-height: 1.8;">
+              <li>Open de Interdistri TMS app</li>
+              <li>Tik op het menu (☰) rechtsboven</li>
+              <li>Kies "Mijn Contracten"</li>
+              <li>Lees het contract en onderteken digitaal</li>
+            </ol>
           </div>
-          <p style="color: #94a3b8; font-size: 12px;">Werkt de knop niet? Kopieer deze link: ${contractUrl}</p>
         </div>
         <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
           <p style="color: #94a3b8; font-size: 12px; margin: 0;">Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle</p>
