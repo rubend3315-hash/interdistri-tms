@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.1';
+import { decode as decodePng } from 'npm:upng-js@2.1.0';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -8,20 +9,60 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-// Decode PNG manually and draw onto a raw JPEG-compatible bitmap
-// This avoids jsPDF's broken PNG alpha handling
-async function fetchSignatureAsJpegDataUri(url) {
+// Create a minimal valid BMP file from raw RGB pixel data (no alpha)
+function createBMP(width, height, rgbData) {
+  const rowSize = Math.ceil((width * 3) / 4) * 4; // rows must be 4-byte aligned
+  const pixelDataSize = rowSize * height;
+  const fileSize = 54 + pixelDataSize;
+  const bmp = new Uint8Array(fileSize);
+  const view = new DataView(bmp.buffer);
+
+  // BMP Header
+  bmp[0] = 0x42; bmp[1] = 0x4D; // 'BM'
+  view.setUint32(2, fileSize, true);
+  view.setUint32(10, 54, true); // pixel data offset
+
+  // DIB Header (BITMAPINFOHEADER)
+  view.setUint32(14, 40, true); // header size
+  view.setInt32(18, width, true);
+  view.setInt32(22, -height, true); // negative = top-down
+  view.setUint16(26, 1, true); // planes
+  view.setUint16(28, 24, true); // bits per pixel
+  view.setUint32(30, 0, true); // no compression
+  view.setUint32(34, pixelDataSize, true);
+
+  // Write pixel data (BMP uses BGR order)
+  let offset = 54;
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const srcIdx = (row * width + col) * 3;
+      bmp[offset++] = rgbData[srcIdx + 2]; // B
+      bmp[offset++] = rgbData[srcIdx + 1]; // G
+      bmp[offset++] = rgbData[srcIdx];     // R
+    }
+    // Pad row to 4 bytes
+    const padding = rowSize - width * 3;
+    for (let p = 0; p < padding; p++) {
+      bmp[offset++] = 0;
+    }
+  }
+
+  return bmp;
+}
+
+// Fetch signature and convert to BMP (no alpha channel issues)
+async function fetchSignatureAsBmpDataUri(url) {
   try {
     const resp = await fetch(url);
-    if (!resp.ok) return null;
+    if (!resp.ok) { console.error('Fetch failed:', resp.status); return null; }
     const arrayBuf = await resp.arrayBuffer();
     const uint8 = new Uint8Array(arrayBuf);
-    
-    // Check if PNG
+
     const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
-    
-    if (!isPng) {
-      // If already JPEG, just return as-is
+    const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
+
+    if (isJpeg) {
+      // JPEG has no alpha, use directly
       let binary = '';
       for (let i = 0; i < uint8.length; i += 8192) {
         const chunk = uint8.subarray(i, Math.min(i + 8192, uint8.length));
@@ -30,13 +71,34 @@ async function fetchSignatureAsJpegDataUri(url) {
       return { dataUri: `data:image/jpeg;base64,${btoa(binary)}`, format: 'JPEG' };
     }
 
-    // For PNG: we'll use a different approach - add as PNG but with explicit white background
-    // by creating a simple BMP/raw image
-    // Actually, the real fix: jsPDF handles PNG fine IF we strip the alpha channel
-    // Let's decode the PNG to raw RGBA, composite onto white, then re-encode as uncompressed BMP
-    
-    // Simpler approach: just pass the PNG bytes directly and let jsPDF handle it
-    // but force it by telling jsPDF it's PNG format explicitly
+    if (isPng) {
+      // Decode PNG to get raw RGBA pixels, composite onto white background, output as BMP
+      const png = decodePng(arrayBuf);
+      const width = png.width;
+      const height = png.height;
+      // toRGBA8 returns array of frames, each frame is ArrayBuffer of RGBA pixels
+      const frames = decodePng.toRGBA8(png);
+      const rgba = new Uint8Array(frames[0]);
+
+      // Composite RGBA onto white background -> RGB
+      const rgb = new Uint8Array(width * height * 3);
+      for (let i = 0; i < width * height; i++) {
+        const a = rgba[i * 4 + 3] / 255;
+        rgb[i * 3]     = Math.round(rgba[i * 4]     * a + 255 * (1 - a)); // R
+        rgb[i * 3 + 1] = Math.round(rgba[i * 4 + 1] * a + 255 * (1 - a)); // G
+        rgb[i * 3 + 2] = Math.round(rgba[i * 4 + 2] * a + 255 * (1 - a)); // B
+      }
+
+      const bmpBytes = createBMP(width, height, rgb);
+      let binary = '';
+      for (let i = 0; i < bmpBytes.length; i += 8192) {
+        const chunk = bmpBytes.subarray(i, Math.min(i + 8192, bmpBytes.length));
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      return { dataUri: `data:image/bmp;base64,${btoa(binary)}`, format: 'BMP', width, height };
+    }
+
+    // Unknown format, try as-is
     let binary = '';
     for (let i = 0; i < uint8.length; i += 8192) {
       const chunk = uint8.subarray(i, Math.min(i + 8192, uint8.length));
@@ -44,7 +106,7 @@ async function fetchSignatureAsJpegDataUri(url) {
     }
     return { dataUri: `data:image/png;base64,${btoa(binary)}`, format: 'PNG' };
   } catch (e) {
-    console.error('fetchSignature error:', e.message);
+    console.error('fetchSignature error:', e.message, e.stack);
     return null;
   }
 }
