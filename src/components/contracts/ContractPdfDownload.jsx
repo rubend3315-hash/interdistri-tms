@@ -114,7 +114,7 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
               </div>
             </div>
 
-            <div style={{ padding: '24px 40px' }}>
+            <div style={{ padding: '30px 50px' }}>
               {/* Info box */}
               <div style={{
                 backgroundColor: '#f8fafc',
