@@ -42,14 +42,15 @@ function DownloadContractButton({ contractId, contractNumber }) {
   const handleDownload = async () => {
     setDownloading(true);
     const response = await base44.functions.invoke('downloadContractPdf', { contract_id: contractId });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
+    const { file_url, fileName } = response.data;
+    
+    // Open the uploaded PDF URL - this preserves binary integrity
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `contract_${contractNumber || contractId}.pdf`;
+    a.href = file_url;
+    a.download = fileName || `contract_${contractNumber || contractId}.pdf`;
+    a.target = '_blank';
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
     a.remove();
     setDownloading(false);
   };
