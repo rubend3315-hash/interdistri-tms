@@ -230,18 +230,40 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
-  // Non-admin users: redirect to allowed pages only
+  // Fetch employee data for mobile routing (only for non-admin)
+  const { data: allEmployees = [], isLoading: loadingEmployees } = useQuery({
+    queryKey: ['employeesForRouting'],
+    queryFn: () => base44.entities.Employee.list(),
+    enabled: !!user?.email && user?.role !== 'admin'
+  });
+
+  const currentEmployee = !user || user.role === 'admin' ? null : allEmployees.find(e => e.email === user?.email);
+
+  // Non-admin mobile: redirect to correct mobile page (but never away from Contracts)
   useEffect(() => {
-    if (!user || user.role === 'admin') return;
+    if (!user || user.role === 'admin' || !isMobile) return;
     
     const allowedPages = ["Contracts", "MobileEntry", "MobileEntryMultiDay"];
-    
-    // Already on an allowed page - do nothing
     if (allowedPages.includes(currentPageName)) return;
     
-    // Redirect to Contracts (works on both mobile and desktop)
-    navigate(createPageUrl("Contracts"));
-  }, [user, currentPageName, navigate]);
+    if (loadingEmployees) return;
+    
+    if (currentEmployee) {
+      const targetPage = currentEmployee.mobile_entry_type === "multi_day" ? "MobileEntryMultiDay" : "MobileEntry";
+      navigate(createPageUrl(targetPage));
+    } else {
+      navigate(createPageUrl("Contracts"));
+    }
+  }, [isMobile, currentPageName, navigate, currentEmployee, user, loadingEmployees]);
+
+  // Non-admin desktop: only allow certain pages
+  useEffect(() => {
+    if (!user || user.role === 'admin' || isMobile) return;
+    const allowedPages = ["Contracts", "MobileEntry", "MobileEntryMultiDay"];
+    if (!allowedPages.includes(currentPageName)) {
+      navigate(createPageUrl("Contracts"));
+    }
+  }, [user, currentPageName, navigate, isMobile]);
 
   const hasPermission = (page) => {
     if (!user) return false;
