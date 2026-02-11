@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     pdf.text(employeeName, col1 + 30, infoY);
     pdf.text(contract.contract_number || '-', col2 + 35, infoY);
     pdf.text(contract.contract_type || '-', col1 + 30, infoY + 10);
-    pdf.text(contract.start_date ? new Date(contract.start_date).toLocaleDateString('nl-NL') : '-', col2 + 35, infoY + 10);
+    pdf.text(contract.start_date ? new Date(contract.start_date + 'T12:00:00').toLocaleDateString('nl-NL') : '-', col2 + 35, infoY + 10);
     pdf.text(contract.status || '-', col1 + 30, infoY + 20);
     pdf.text(contract.hours_per_week ? String(contract.hours_per_week) : '-', col2 + 35, infoY + 20);
 
