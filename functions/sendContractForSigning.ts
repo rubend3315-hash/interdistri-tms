@@ -5,63 +5,44 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    if (!user || user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { contract_id, auto_invite } = await req.json();
-
     if (!contract_id) {
       return Response.json({ error: 'Missing contract_id' }, { status: 400 });
     }
 
-    // Fetch contract and employee
-    const contract = await base44.asServiceRole.entities.Contract.get(contract_id);
+    // Fetch contract, employee, and users in parallel
+    const [contract, allUsers] = await Promise.all([
+      base44.asServiceRole.entities.Contract.get(contract_id),
+      base44.asServiceRole.entities.User.list()
+    ]);
+
     if (!contract) {
       return Response.json({ error: 'Contract niet gevonden' }, { status: 404 });
     }
 
     const employee = await base44.asServiceRole.entities.Employee.get(contract.employee_id);
-    if (!employee) {
-      return Response.json({ error: 'Medewerker niet gevonden' }, { status: 404 });
-    }
-
-    if (!employee.email) {
-      return Response.json({ 
-        error: 'Medewerker heeft geen e-mailadres. Voeg eerst een e-mailadres toe aan het medewerkersprofiel.',
-        error_type: 'no_email'
-      }, { status: 400 });
+    if (!employee || !employee.email) {
+      return Response.json({ error: 'Medewerker niet gevonden of heeft geen e-mailadres' }, { status: 400 });
     }
 
     const employeeName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
-
-    // Check if employee is a registered app user
-    const allUsers = await base44.asServiceRole.entities.User.list();
-    const employeeUser = allUsers.find(u => u.email === employee.email);
+    let employeeUser = allUsers.find(u => u.email === employee.email);
 
     if (!employeeUser) {
-      // Employee is not a registered app user
       if (auto_invite) {
-        // Invite the employee as app user with role "user"
         try {
           await base44.users.inviteUser(employee.email, "user");
         } catch (inviteError) {
-          // If already invited, continue with sending
           if (!inviteError.message?.includes('already')) {
-            return Response.json({ 
-              error: `Kon medewerker niet uitnodigen: ${inviteError.message}`,
-              error_type: 'invite_failed'
-            }, { status: 500 });
+            return Response.json({ error: `Kon niet uitnodigen: ${inviteError.message}` }, { status: 500 });
           }
         }
-        // After inviting, proceed to send the contract email anyway
-        // (the user account exists now as invited)
+        // Don't re-fetch users, just continue - email will work via service role
       } else {
-        // Return error with clear message
         return Response.json({ 
           error: `${employeeName} (${employee.email}) is geen geregistreerde app-gebruiker. De e-mail kan alleen worden verstuurd naar gebruikers die in de app zijn uitgenodigd.`,
           error_type: 'not_app_user',
@@ -71,12 +52,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Re-fetch user list after potential invite to get updated user
-    const updatedUsers = auto_invite && !employeeUser ? await base44.asServiceRole.entities.User.list() : allUsers;
-    const finalEmployeeUser = updatedUsers.find(u => u.email === employee.email);
-
-    // Proceed with sending
-    const appBaseUrl = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
+    const appBaseUrl = req.headers.get('origin') || '';
 
     const emailBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -86,63 +62,33 @@ Deno.serve(async (req) => {
         </div>
         <div style="background: white; padding: 24px; border: 1px solid #e2e8f0; border-top: none;">
           <p style="font-size: 16px; color: #1e293b;">Beste ${employeeName},</p>
-          <p style="color: #475569; line-height: 1.6;">
-            Er staat een nieuw arbeidscontract klaar ter ondertekening. Hieronder vind je de details:
-          </p>
+          <p style="color: #475569; line-height: 1.6;">Er staat een nieuw arbeidscontract klaar ter ondertekening.</p>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
             <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Contractnummer:</td>
-                <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_number}</td>
-              </tr>
-              <tr>
-                <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Type:</td>
-                <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_type}</td>
-              </tr>
-              <tr>
-                <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Startdatum:</td>
-                <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.start_date ? new Date(contract.start_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</td>
-              </tr>
-              ${contract.end_date ? `<tr>
-                <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Einddatum:</td>
-                <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${new Date(contract.end_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
-              </tr>` : ''}
-              <tr>
-                <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Functie:</td>
-                <td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.function_title || '-'}</td>
-              </tr>
+              <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Contractnummer:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_number}</td></tr>
+              <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Type:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_type}</td></tr>
+              <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Startdatum:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.start_date ? new Date(contract.start_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</td></tr>
+              ${contract.end_date ? `<tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Einddatum:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${new Date(contract.end_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</td></tr>` : ''}
+              <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Functie:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.function_title || '-'}</td></tr>
             </table>
           </div>
-          <p style="color: #475569; line-height: 1.6;">
-            Je kunt het contract bekijken en digitaal ondertekenen via het Interdistri portaal. 
-            Log in met je e-mailadres en ga naar de contractenpagina.
-          </p>
+          <p style="color: #475569; line-height: 1.6;">Log in op het Interdistri portaal om het contract te bekijken en digitaal te ondertekenen.</p>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="${appBaseUrl}" 
-               style="display: inline-block; background: #2563eb; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
-              Contract bekijken &amp; ondertekenen
-            </a>
+            <a href="${appBaseUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">Contract bekijken &amp; ondertekenen</a>
           </div>
-          <p style="color: #94a3b8; font-size: 13px; margin-top: 24px;">
-            Heb je vragen? Neem contact op met HR via je leidinggevende of het kantoor.
-          </p>
         </div>
         <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
-          <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-            Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle
-          </p>
+          <p style="color: #94a3b8; font-size: 12px; margin: 0;">Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle</p>
         </div>
       </div>
     `;
 
-    // Update contract status
-    await base44.asServiceRole.entities.Contract.update(contract_id, {
-      status: 'TerOndertekening',
-      reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
-    });
-
-    // Send employee email and admin copy in parallel via service role
+    // Do contract update + both emails all in parallel
     await Promise.all([
+      base44.asServiceRole.entities.Contract.update(contract_id, {
+        status: 'TerOndertekening',
+        reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
+      }),
       base44.asServiceRole.integrations.Core.SendEmail({
         to: employee.email,
         subject: `Arbeidsovereenkomst ter ondertekening - ${contract.contract_number}`,
@@ -157,25 +103,22 @@ Deno.serve(async (req) => {
       })
     ]);
 
-    // Fire-and-forget: notification (only if user exists)
-    if (finalEmployeeUser) {
+    // Fire-and-forget notification
+    if (employeeUser) {
       base44.asServiceRole.entities.Notification.create({
         title: 'Contract ter ondertekening',
-        description: `Je arbeidscontract ${contract.contract_number} is verzonden ter ondertekening. Bekijk en onderteken het contract.`,
+        description: `Je arbeidscontract ${contract.contract_number} staat klaar ter ondertekening.`,
         type: 'general',
         target_page: 'Contracts',
-        user_ids: [finalEmployeeUser.id],
+        user_ids: [employeeUser.id],
         priority: 'high'
-      }).catch(e => console.error('Notification creation failed:', e));
+      }).catch(() => {});
     }
 
-    return Response.json({
-      success: true,
-      message: `Contract is verzonden naar ${employeeName} (${employee.email})`
-    });
+    return Response.json({ success: true, message: `Contract is verzonden naar ${employeeName} (${employee.email})` });
 
   } catch (error) {
-    console.error('Send contract for signing error:', error);
+    console.error('Send contract error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
