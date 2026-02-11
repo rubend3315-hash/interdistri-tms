@@ -97,9 +97,38 @@ Deno.serve(async (req) => {
 
     y += 50;
 
+    // Helper to embed signature image
+    const addSignatureImage = async (url, x, currentY) => {
+      try {
+        const resp = await fetch(url);
+        const arrayBuf = await resp.arrayBuffer();
+        const uint8 = new Uint8Array(arrayBuf);
+        let binary = '';
+        for (let i = 0; i < uint8.length; i++) {
+          binary += String.fromCharCode(uint8[i]);
+        }
+        const base64 = btoa(binary);
+        const dataUri = `data:image/png;base64,${base64}`;
+        pdf.addImage(dataUri, 'PNG', x, currentY, 40, 20);
+        return 22;
+      } catch (e) {
+        console.error('Signature image error:', e);
+        return 0;
+      }
+    };
+
     // Contract content - strip HTML tags and render as text
     if (contract.contract_content) {
-      let textContent = contract.contract_content
+      let htmlContent = contract.contract_content;
+
+      // Remove the "Voor akkoord" signature block from the HTML content
+      // These are template placeholders that should be replaced by actual digital signatures
+      htmlContent = htmlContent
+        .replace(/<div\s+style[^>]*>[\s\S]*?Voor akkoord[\s\S]*?<\/div>/gi, '')
+        .replace(/Voor akkoord werkgever[\s\S]*?Voor akkoord werknemer[\s\S]*?$/gi, '')
+        .replace(/Voor akkoord werkgever[\s\S]*$/gi, '');
+
+      let textContent = htmlContent
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<\/p>/gi, '\n\n')
         .replace(/<\/div>/gi, '\n')
@@ -113,7 +142,25 @@ Deno.serve(async (req) => {
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
+        .replace(/&euro;/gi, '\u20AC')
+        // Fix common UTF-8 mojibake patterns
+        .replace(/ï¿½ï¿½n/g, 'een')
+        .replace(/ï¿½/g, '\u20AC')
+        .replace(/Ã«/g, 'e')
+        .replace(/Ã©/g, 'e')
+        .replace(/Ã¯/g, 'i')
+        .replace(/Ã¼/g, 'u')
+        .replace(/Ã¶/g, 'o')
+        .replace(/Ã /g, 'a')
+        .replace(/â‚¬/g, '\u20AC')
+        // Remove leftover dotted signature lines
+        .replace(/\.{10,}/g, '')
         .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+      // Remove trailing "Voor akkoord" block from plain text too
+      textContent = textContent
+        .replace(/Voor akkoord werkgever[\s\S]*$/i, '')
         .trim();
 
       pdf.setFontSize(10);
@@ -144,61 +191,68 @@ Deno.serve(async (req) => {
     pdf.line(margin, y, margin + usableWidth, y);
     y += 8;
 
-    pdf.setFontSize(12);
+    // --- Voor akkoord werkgever ---
+    pdf.setFontSize(11);
     pdf.setFont(undefined, 'bold');
-    pdf.text('Ondertekening', margin, y);
-    y += 10;
+    pdf.setTextColor(30, 41, 59);
+    pdf.text('Voor akkoord werkgever', margin, y);
+    y += 7;
 
-    pdf.setFontSize(9);
-
-    // Helper to embed signature image
-    const addSignatureImage = async (url, x, currentY) => {
-      try {
-        const resp = await fetch(url);
-        const arrayBuf = await resp.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
-        const dataUri = `data:image/png;base64,${base64}`;
-        pdf.addImage(dataUri, 'PNG', x, currentY, 40, 20);
-        return 22;
-      } catch (e) {
-        console.error('Signature image error:', e);
-        return 0;
-      }
-    };
-
-    // Employee signature
-    pdf.setFont(undefined, 'bold');
-    pdf.text('Medewerker:', margin, y);
-    pdf.setFont(undefined, 'normal');
-    if (contract.employee_signed_date) {
-      pdf.text(`Ondertekend op ${new Date(contract.employee_signed_date).toLocaleDateString('nl-NL')}`, margin + 30, y);
-      if (contract.employee_signature_url) {
-        y += 3;
-        const sigH = await addSignatureImage(contract.employee_signature_url, margin, y);
-        y += sigH || 2;
-      }
+    if (contract.manager_signature_url) {
+      const sigH = await addSignatureImage(contract.manager_signature_url, margin, y);
+      y += sigH || 2;
     } else {
-      pdf.text('Nog niet ondertekend', margin + 30, y);
+      y += 20; // empty space for manual signature
     }
-    y += 8;
 
-    // Manager signature
-    if (y > pdf.internal.pageSize.height - 40) {
+    // Dotted line
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, 'normal');
+    pdf.setTextColor(100, 116, 139);
+    pdf.text('................................................................', margin, y);
+    y += 5;
+    pdf.setTextColor(30, 41, 59);
+    pdf.text('Van Dooren Transport Zeeland B.V.', margin, y);
+    y += 5;
+    pdf.text('Namens deze:', margin, y);
+    y += 5;
+    pdf.text('De heer M. Schetters', margin, y);
+    if (contract.manager_signed_date) {
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(`Ondertekend op ${new Date(contract.manager_signed_date).toLocaleDateString('nl-NL')}`, margin + 50, y);
+      pdf.setTextColor(30, 41, 59);
+    }
+    y += 12;
+
+    // --- Voor akkoord werknemer ---
+    if (y > pdf.internal.pageSize.height - 60) {
       pdf.addPage();
       y = 20;
     }
+
+    pdf.setFontSize(11);
     pdf.setFont(undefined, 'bold');
-    pdf.text('Management:', margin, y);
-    pdf.setFont(undefined, 'normal');
-    if (contract.manager_signed_date) {
-      pdf.text(`Ondertekend op ${new Date(contract.manager_signed_date).toLocaleDateString('nl-NL')} door ${contract.manager_signed_by || '-'}`, margin + 30, y);
-      if (contract.manager_signature_url) {
-        y += 3;
-        const sigH = await addSignatureImage(contract.manager_signature_url, margin, y);
-        y += sigH || 2;
-      }
+    pdf.text('Voor akkoord werknemer', margin, y);
+    y += 7;
+
+    if (contract.employee_signature_url) {
+      const sigH = await addSignatureImage(contract.employee_signature_url, margin, y);
+      y += sigH || 2;
     } else {
-      pdf.text('Nog niet ondertekend', margin + 30, y);
+      y += 20;
+    }
+
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, 'normal');
+    pdf.setTextColor(100, 116, 139);
+    pdf.text('................................................................', margin, y);
+    y += 5;
+    pdf.setTextColor(30, 41, 59);
+    pdf.text(`De heer/mevrouw ${employeeName}`, margin, y);
+    if (contract.employee_signed_date) {
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(`Ondertekend op ${new Date(contract.employee_signed_date).toLocaleDateString('nl-NL')}`, margin + 60, y);
+      pdf.setTextColor(30, 41, 59);
     }
 
     // Footer
