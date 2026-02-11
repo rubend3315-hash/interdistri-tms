@@ -296,13 +296,42 @@ export default function UsersPage() {
                 <DialogTitle>Nieuwe Gebruiker Uitnodigen</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
+                {uninvitedEmployees.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Selecteer medewerker</Label>
+                    <Select
+                      value={inviteData.selectedEmployeeId}
+                      onValueChange={(empId) => {
+                        const emp = employees.find(e => e.id === empId);
+                        if (emp) {
+                          setInviteData({ ...inviteData, selectedEmployeeId: empId, email: emp.email, role: 'user' });
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Kies een medewerker..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {uninvitedEmployees.map(emp => (
+                          <SelectItem key={emp.id} value={emp.id}>
+                            {emp.first_name} {emp.prefix ? emp.prefix + ' ' : ''}{emp.last_name} — {emp.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500">
+                      Alleen medewerkers zonder gebruikersaccount worden getoond
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>Email *</Label>
                   <Input
                     type="email"
                     placeholder="gebruiker@voorbeeld.nl"
                     value={inviteData.email}
-                    onChange={(e) => setInviteData({ ...inviteData, email: e.target.value })}
+                    onChange={(e) => setInviteData({ ...inviteData, email: e.target.value, selectedEmployeeId: '' })}
                   />
                 </div>
 
