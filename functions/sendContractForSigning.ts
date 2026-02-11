@@ -56,12 +56,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing contract_id' }, { status: 400 });
     }
 
-    // Fetch contract, employee, and users in parallel
-    const [contract, allUsers] = await Promise.all([
-      base44.asServiceRole.entities.Contract.get(contract_id),
-      base44.asServiceRole.entities.User.list()
-    ]);
-
+    const contract = await base44.asServiceRole.entities.Contract.get(contract_id);
     if (!contract) {
       return Response.json({ error: 'Contract niet gevonden' }, { status: 404 });
     }
@@ -72,7 +67,6 @@ Deno.serve(async (req) => {
     }
 
     const employeeName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
-    const employeeUser = allUsers.find(u => u.email === employee.email);
 
     const emailBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
