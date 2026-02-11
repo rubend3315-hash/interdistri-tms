@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.1';
-import { decode as decodePng } from 'npm:upng-js@2.1.0';
+import UPNG from 'npm:upng-js@2.1.0';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -98,10 +98,10 @@ Deno.serve(async (req) => {
 
     y += 50;
 
-    // Helper to flatten PNG transparency to white background, then encode as JPEG for jsPDF
-    const flattenPngToJpegDataUri = (pngArrayBuffer) => {
-      const img = decodePng(pngArrayBuffer);
-      const rgba = new Uint8Array(decodePng.toRGBA8(img)[0]);
+    // Helper to flatten PNG transparency to white background
+    const flattenPngToRgb = (pngArrayBuffer) => {
+      const img = UPNG.decode(pngArrayBuffer);
+      const rgba = new Uint8Array(UPNG.toRGBA8(img)[0]);
       const w = img.width;
       const h = img.height;
 
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
         }
 
         // PNG: flatten alpha to white background, then use raw pixel data
-        const { rgb, w, h } = flattenPngToJpegDataUri(arrayBuf);
+        const { rgb, w, h } = flattenPngToRgb(arrayBuf);
 
         // Create a minimal BMP in memory to feed to jsPDF
         // BMP header: 14 bytes file header + 40 bytes DIB header
