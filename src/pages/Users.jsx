@@ -113,7 +113,7 @@ export default function UsersPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowInviteDialog(false);
-      setInviteData({ email: '', role: 'user' });
+      setInviteData({ email: '', role: 'user', selectedEmployeeId: '' });
       alert('Uitnodiging verstuurd!');
       logAuditEvent({
         action: 'user_invited',
