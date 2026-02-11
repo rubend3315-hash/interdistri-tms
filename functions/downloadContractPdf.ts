@@ -262,7 +262,7 @@ Deno.serve(async (req) => {
       pdf.setFontSize(8);
       pdf.setTextColor(148, 163, 184);
       pdf.text(
-        `Gegenereerd op ${new Date().toLocaleDateString('nl-NL')} — Pagina ${i} van ${pageCount}`,
+        `Gegenereerd op ${new Date().toLocaleDateString('nl-NL')} - Pagina ${i} van ${pageCount}`,
         pageWidth / 2,
         pdf.internal.pageSize.height - 10,
         { align: 'center' }
