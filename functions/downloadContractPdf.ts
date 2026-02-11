@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import { jsPDF } from 'npm:jspdf@2.5.1';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -8,50 +7,94 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-// Fetch signature image and return as base64 JPEG data URI
-async function fetchSignatureAsJpeg(url) {
+function formatDateShort(dateStr) {
+  if (!dateStr) return '';
   try {
-    console.log('Fetching signature from:', url);
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('nl-NL');
+  } catch {
+    return '';
+  }
+}
+
+// Fetch image and return as base64 data URI
+async function fetchImageAsDataUri(url) {
+  try {
+    console.log('Fetching image:', url);
     const resp = await fetch(url);
     if (!resp.ok) {
-      console.error('Signature fetch failed:', resp.status, resp.statusText);
+      console.error('Image fetch failed:', resp.status);
       return null;
     }
-    const arrayBuf = await resp.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuf);
-    console.log('Signature fetched, size:', uint8.length, 'first bytes:', uint8[0], uint8[1], uint8[2]);
-
+    const buf = await resp.arrayBuffer();
+    const uint8 = new Uint8Array(buf);
+    console.log('Image size:', uint8.length, 'bytes');
+    
+    let binary = '';
+    // Process in chunks to avoid call stack issues
+    const chunkSize = 8192;
+    for (let i = 0; i < uint8.length; i += chunkSize) {
+      const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
+      binary += String.fromCharCode(...chunk);
+    }
+    const b64 = btoa(binary);
+    
     const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
-    const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
-
-    if (isJpeg) {
-      // Direct JPEG - convert to base64
-      let binary = '';
-      for (let i = 0; i < uint8.length; i++) {
-        binary += String.fromCharCode(uint8[i]);
-      }
-      const b64 = btoa(binary);
-      console.log('JPEG signature, base64 length:', b64.length);
-      return { data: b64, format: 'JPEG' };
-    }
-
-    if (isPng) {
-      // For PNG, we'll just use it as PNG - jsPDF supports PNG
-      let binary = '';
-      for (let i = 0; i < uint8.length; i++) {
-        binary += String.fromCharCode(uint8[i]);
-      }
-      const b64 = btoa(binary);
-      console.log('PNG signature, base64 length:', b64.length);
-      return { data: b64, format: 'PNG' };
-    }
-
-    console.error('Unknown image format, bytes:', uint8[0], uint8[1]);
-    return null;
+    const mime = isJpeg ? 'image/jpeg' : 'image/png';
+    console.log('Image converted to base64, mime:', mime, 'length:', b64.length);
+    return `data:${mime};base64,${b64}`;
   } catch (e) {
-    console.error('fetchSignature error:', e.message);
+    console.error('fetchImage error:', e.message);
     return null;
   }
+}
+
+// Strip HTML tags but preserve structure
+function htmlToPlainSections(html) {
+  if (!html) return [];
+  
+  // Remove signature blocks from HTML
+  let cleaned = html
+    .replace(/Voor akkoord werkgever[\s\S]*$/gi, '')
+    .replace(/<div\s+style[^>]*>[\s\S]*?Voor akkoord[\s\S]*?<\/div>/gi, '');
+  
+  // Split into logical sections by headings
+  const sections = [];
+  
+  // Replace h3 tags with markers
+  cleaned = cleaned.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '\n§§HEADING§§$1\n');
+  cleaned = cleaned.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '\n§§HEADING§§$1\n');
+  
+  // Convert block elements to newlines
+  cleaned = cleaned
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&euro;/gi, '€')
+    .replace(/\n{3,}/g, '\n\n');
+  
+  const lines = cleaned.split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    
+    if (trimmed.startsWith('§§HEADING§§')) {
+      sections.push({ type: 'heading', text: trimmed.replace('§§HEADING§§', '').trim() });
+    } else {
+      sections.push({ type: 'text', text: trimmed });
+    }
+  }
+  
+  return sections;
 }
 
 Deno.serve(async (req) => {
@@ -88,18 +131,155 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Pre-fetch signature images
-    console.log('Manager sig URL:', contract.manager_signature_url);
-    console.log('Employee sig URL:', contract.employee_signature_url);
-
-    const [managerSig, employeeSig] = await Promise.all([
-      contract.manager_signature_url ? fetchSignatureAsJpeg(contract.manager_signature_url) : null,
-      contract.employee_signature_url ? fetchSignatureAsJpeg(contract.employee_signature_url) : null,
+    // Fetch signature images as base64 data URIs
+    const [managerSigUri, employeeSigUri] = await Promise.all([
+      contract.manager_signature_url ? fetchImageAsDataUri(contract.manager_signature_url) : null,
+      contract.employee_signature_url ? fetchImageAsDataUri(contract.employee_signature_url) : null,
     ]);
 
-    console.log('Manager sig result:', managerSig ? `${managerSig.format}, ${managerSig.data.length} chars` : 'null');
-    console.log('Employee sig result:', employeeSig ? `${employeeSig.format}, ${employeeSig.data.length} chars` : 'null');
+    console.log('Manager sig:', managerSigUri ? 'loaded' : 'none');
+    console.log('Employee sig:', employeeSigUri ? 'loaded' : 'none');
 
+    // Parse contract content into sections
+    const sections = htmlToPlainSections(contract.contract_content);
+    
+    // Build contract body HTML
+    let contractBodyHtml = '';
+    for (const section of sections) {
+      if (section.type === 'heading') {
+        contractBodyHtml += `<h3 style="font-size: 11pt; font-weight: bold; margin: 14px 0 4px 0; color: #1e293b;">${section.text}</h3>\n`;
+      } else {
+        contractBodyHtml += `<p style="font-size: 10pt; line-height: 1.5; margin: 2px 0; color: #1e293b;">${section.text}</p>\n`;
+      }
+    }
+
+    // Build signature blocks
+    const managerSignatureHtml = managerSigUri 
+      ? `<img src="${managerSigUri}" style="width: 200px; height: 80px; object-fit: contain; display: block; margin: 8px 0;" />`
+      : '<div style="height: 60px;"></div>';
+    
+    const employeeSignatureHtml = employeeSigUri
+      ? `<img src="${employeeSigUri}" style="width: 200px; height: 80px; object-fit: contain; display: block; margin: 8px 0;" />`
+      : '<div style="height: 60px;"></div>';
+
+    const managerDateStr = contract.manager_signed_date ? formatDateShort(contract.manager_signed_date) : '';
+    const employeeDateStr = contract.employee_signed_date ? formatDateShort(contract.employee_signed_date) : '';
+
+    // Complete HTML document for PDF
+    const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { margin: 15mm 20mm; size: A4; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1e293b; margin: 0; padding: 0; }
+  .header { background: #1e293b; color: white; padding: 16px 24px; margin: -15mm -20mm 20px -20mm; width: calc(100% + 40mm); }
+  .header h1 { font-size: 18pt; margin: 0 0 4px 0; }
+  .header p { font-size: 10pt; margin: 0; color: #94a3b8; }
+  .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; }
+  .info-table { width: 100%; border-collapse: collapse; }
+  .info-table td { padding: 4px 8px; font-size: 9pt; }
+  .info-label { color: #64748b; font-weight: bold; width: 120px; }
+  .info-value { color: #1e293b; }
+  .signature-section { margin-top: 30px; page-break-inside: avoid; }
+  .signature-block { margin-bottom: 24px; }
+  .signature-block h4 { font-size: 11pt; font-weight: bold; margin: 0 0 8px 0; }
+  .signature-line { border-bottom: 1px dotted #94a3b8; width: 250px; margin-bottom: 4px; }
+  .signature-info { font-size: 9pt; color: #475569; margin: 2px 0; }
+  .signature-date { font-size: 8pt; color: #94a3b8; }
+  .footer { font-size: 8pt; color: #94a3b8; text-align: center; margin-top: 30px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Interdistri Transport</h1>
+  <p>Arbeidscontract</p>
+</div>
+
+<div class="info-box">
+  <table class="info-table">
+    <tr>
+      <td class="info-label">Medewerker:</td>
+      <td class="info-value">${employeeName}</td>
+      <td class="info-label">Contractnummer:</td>
+      <td class="info-value">${contract.contract_number || '-'}</td>
+    </tr>
+    <tr>
+      <td class="info-label">Contracttype:</td>
+      <td class="info-value">${contract.contract_type || '-'}</td>
+      <td class="info-label">Startdatum:</td>
+      <td class="info-value">${formatDate(contract.start_date) || '-'}</td>
+    </tr>
+    <tr>
+      <td class="info-label">Status:</td>
+      <td class="info-value">${contract.status || '-'}</td>
+      <td class="info-label">Uren/week:</td>
+      <td class="info-value">${contract.hours_per_week || '-'}</td>
+    </tr>
+  </table>
+</div>
+
+${contractBodyHtml}
+
+<div class="signature-section">
+  <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 20px;" />
+  
+  <div class="signature-block">
+    <h4>Voor akkoord werkgever</h4>
+    ${managerSignatureHtml}
+    <div class="signature-line"></div>
+    <p class="signature-info">Van Dooren Transport Zeeland B.V.</p>
+    <p class="signature-info">Namens deze:</p>
+    <p class="signature-info">De heer M. Schetters${managerDateStr ? `&nbsp;&nbsp;&nbsp;&nbsp;<span class="signature-date">Ondertekend op ${managerDateStr}</span>` : ''}</p>
+  </div>
+
+  <div class="signature-block">
+    <h4>Voor akkoord werknemer</h4>
+    ${employeeSignatureHtml}
+    <div class="signature-line"></div>
+    <p class="signature-info">De heer/mevrouw ${employeeName}${employeeDateStr ? `&nbsp;&nbsp;&nbsp;&nbsp;<span class="signature-date">Ondertekend op ${employeeDateStr}</span>` : ''}</p>
+  </div>
+</div>
+
+<div class="footer">
+  Gegenereerd op ${new Date().toLocaleDateString('nl-NL')}
+</div>
+
+</body>
+</html>`;
+
+    // Use a headless Chrome PDF API to convert HTML to PDF
+    // We'll use a free public API for this
+    const pdfResponse = await fetch('https://htmltopdf.paculino.com/api/v1/convert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        html: fullHtml,
+        options: {
+          format: 'A4',
+          margin: { top: '0', bottom: '10mm', left: '0', right: '0' }
+        }
+      })
+    });
+
+    if (pdfResponse.ok) {
+      const pdfBytes = await pdfResponse.arrayBuffer();
+      console.log('PDF generated via HTML API, size:', pdfBytes.byteLength);
+      
+      return new Response(pdfBytes, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename=contract_${contract.contract_number || contract_id}.pdf`
+        }
+      });
+    }
+
+    // Fallback: use jsPDF but with a different approach - embed signatures differently
+    console.log('HTML-to-PDF API failed, status:', pdfResponse.status, 'falling back to jsPDF');
+    
+    const { jsPDF } = await import('npm:jspdf@2.5.1');
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.width;
     const pageHeight = pdf.internal.pageSize.height;
@@ -120,27 +300,25 @@ Deno.serve(async (req) => {
     pdf.setTextColor(0, 0, 0);
     y = 45;
 
-    // Contract info block
+    // Info box
     pdf.setFillColor(248, 250, 252);
     pdf.rect(margin, y, usableWidth, 40, 'F');
     pdf.setDrawColor(226, 232, 240);
     pdf.rect(margin, y, usableWidth, 40, 'S');
-
     const infoY = y + 8;
     pdf.setFontSize(9);
-    pdf.setFont(undefined, 'bold');
-    pdf.setTextColor(100, 116, 139);
-
     const col1 = margin + 5;
     const col2 = margin + usableWidth / 2 + 5;
-
+    
+    pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(100, 116, 139);
     pdf.text('Medewerker:', col1, infoY);
     pdf.text('Contractnummer:', col2, infoY);
     pdf.text('Contracttype:', col1, infoY + 10);
     pdf.text('Startdatum:', col2, infoY + 10);
     pdf.text('Status:', col1, infoY + 20);
     pdf.text('Uren/week:', col2, infoY + 20);
-
+    
     pdf.setFont(undefined, 'normal');
     pdf.setTextColor(15, 23, 42);
     pdf.text(employeeName, col1 + 30, infoY);
@@ -148,160 +326,56 @@ Deno.serve(async (req) => {
     pdf.text(contract.contract_type || '-', col1 + 30, infoY + 10);
     pdf.text(formatDate(contract.start_date) || '-', col2 + 35, infoY + 10);
     pdf.text(contract.status || '-', col1 + 30, infoY + 20);
-    pdf.text(contract.hours_per_week ? String(contract.hours_per_week) : '-', col2 + 35, infoY + 20);
-
+    pdf.text(String(contract.hours_per_week || '-'), col2 + 35, infoY + 20);
     y += 50;
 
     // Contract content
-    if (contract.contract_content) {
-      let htmlContent = contract.contract_content;
+    pdf.setFontSize(10);
+    pdf.setTextColor(30, 41, 59);
+    const lineHeight = 4.5;
 
-      // Remove the "Voor akkoord" signature block from the HTML content
-      htmlContent = htmlContent
-        .replace(/<div\s+style[^>]*>[\s\S]*?Voor akkoord[\s\S]*?<\/div>/gi, '')
-        .replace(/<p[^>]*>\s*<strong>\s*Voor akkoord werkgever\s*<\/strong>\s*<\/p>[\s\S]*$/i, '')
-        .replace(/<strong>\s*Voor akkoord werkgever\s*<\/strong>[\s\S]*$/i, '')
-        .replace(/Voor akkoord werkgever[\s\S]*$/gi, '');
-
-      const startDateFormatted = formatDate(contract.start_date);
-      if (startDateFormatted) {
-        htmlContent = htmlContent.replace(/Invalid Date/g, startDateFormatted);
+    for (const section of sections) {
+      if (section.type === 'heading') {
+        y += 6;
+        if (y + lineHeight > pageHeight - 30) { pdf.addPage(); y = 20; }
+        pdf.setFont(undefined, 'bold');
+        pdf.setFontSize(10.5);
+      } else {
+        pdf.setFont(undefined, 'normal');
+        pdf.setFontSize(10);
       }
-
-      let textContent = htmlContent
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/p>/gi, '\n')
-        .replace(/<\/div>/gi, '\n')
-        .replace(/<\/li>/gi, '\n')
-        .replace(/<\/h2>/gi, '\n\n')
-        .replace(/<h3[^>]*>/gi, '\n\n###ARTIKEL###')
-        .replace(/<\/h3>/gi, '\n')
-        .replace(/<h2[^>]*>/gi, '')
-        .replace(/<[^>]+>/g, '')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&euro;/gi, '\u20AC');
-
-      // Fix Unicode chars that jsPDF cannot render
-      textContent = textContent
-        .replace(/\u00e9/g, 'e').replace(/\u00eb/g, 'e').replace(/\u00e8/g, 'e')
-        .replace(/\u00ef/g, 'i').replace(/\u00fc/g, 'u').replace(/\u00f6/g, 'o')
-        .replace(/\u00e4/g, 'a').replace(/\u00e0/g, 'a')
-        .replace(/\u20AC/g, 'EUR ')
-        .replace(/\u00E9\u00E9n/g, 'een')
-        .replace(/\u00ef\u00bf\u00bd\u00ef\u00bf\u00bdn/g, 'een')
-        .replace(/\u00ef\u00bf\u00bd/g, 'EUR ')
-        .replace(/ï¿½ï¿½n/g, 'een').replace(/ï¿½/g, 'EUR ')
-        .replace(/Ã«n/g, 'en').replace(/Ã«/g, 'e').replace(/Ã©/g, 'e')
-        .replace(/Ã¯/g, 'i').replace(/Ã¼/g, 'u').replace(/Ã¶/g, 'o')
-        .replace(/Ã /g, 'a').replace(/â‚¬/g, 'EUR ')
-        .replace(/be[^\w\s]{1,6}indig/g, 'beeindig')
-        .replace(/\.{10,}/g, '')
-        .replace(/\u2026{3,}/g, '');
-
-      textContent = textContent
-        .replace(/Voor akkoord werkgever[\s\S]*$/i, '')
-        .trim();
-
-      if (!contract.is_verlenging) {
-        textContent = textContent
-          .replace(/De werknemer is oorspronkelijk bij werkgever in dienst getreden op[^\n.]*\.?/gi, '')
-          .replace(/Werknemer is oorspronkelijk bij werkgever in dienst getreden op[^\n.]*\.?/gi, '');
+      
+      const lines = pdf.splitTextToSize(section.text, usableWidth);
+      for (const line of lines) {
+        if (y + lineHeight > pageHeight - 30) { pdf.addPage(); y = 20; }
+        pdf.text(line, margin, y);
+        y += lineHeight;
       }
-
-      textContent = textContent
-        .replace(/[^\n]*\[NOG IN TE VULLEN\][^\n]*\n?/g, '')
-        .replace(/vangt aan op\s*\.\s*/gi, startDateFormatted ? `vangt aan op ${startDateFormatted}.` : '')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
-
-      pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
-      pdf.setTextColor(30, 41, 59);
-
-      const lineHeight = 4.5;
-      const artikelSpacing = 6;
-      const paragraphs = textContent.split('\n');
-
-      for (const para of paragraphs) {
-        const trimmed = para.trim();
-        if (!trimmed) continue;
-
-        const isArtikel = trimmed.startsWith('###ARTIKEL###');
-        const displayText = isArtikel ? trimmed.replace('###ARTIKEL###', '').trim() : trimmed;
-        if (!displayText) continue;
-
-        if (isArtikel) y += artikelSpacing;
-
-        if (y + lineHeight > pageHeight - 30) {
-          pdf.addPage();
-          y = 20;
-        }
-
-        if (isArtikel) {
-          pdf.setFont(undefined, 'bold');
-          pdf.setFontSize(10.5);
-        } else {
-          pdf.setFont(undefined, 'normal');
-          pdf.setFontSize(10);
-        }
-
-        const wrappedLines = pdf.splitTextToSize(displayText, usableWidth);
-        for (const wLine of wrappedLines) {
-          if (y + lineHeight > pageHeight - 30) {
-            pdf.addPage();
-            y = 20;
-          }
-          pdf.text(wLine, margin, y);
-          y += lineHeight;
-        }
-      }
-
-      pdf.setFont(undefined, 'normal');
-      pdf.setFontSize(10);
     }
 
-    // ===== SIGNATURES SECTION =====
+    // Signatures
     y += 10;
-    if (y > pageHeight - 90) {
-      pdf.addPage();
-      y = 20;
-    }
-
+    if (y > pageHeight - 90) { pdf.addPage(); y = 20; }
+    
     pdf.setDrawColor(226, 232, 240);
     pdf.line(margin, y, margin + usableWidth, y);
     y += 8;
 
-    // --- Voor akkoord werkgever ---
+    // Manager signature
     pdf.setFontSize(11);
     pdf.setFont(undefined, 'bold');
-    pdf.setTextColor(30, 41, 59);
     pdf.text('Voor akkoord werkgever', margin, y);
     y += 7;
 
-    if (managerSig) {
+    if (managerSigUri) {
       try {
-        console.log('Adding manager signature image, format:', managerSig.format);
-        pdf.addImage(
-          'data:image/' + managerSig.format.toLowerCase() + ';base64,' + managerSig.data,
-          managerSig.format,
-          margin,
-          y,
-          60,
-          25
-        );
-        console.log('Manager signature added successfully');
+        pdf.addImage(managerSigUri, 'JPEG', margin, y, 60, 25);
         y += 28;
-      } catch (imgErr) {
-        console.error('Error adding manager signature image:', imgErr.message);
+      } catch (e) {
+        console.error('jsPDF addImage manager failed:', e.message);
         y += 20;
       }
     } else {
-      console.log('No manager signature data available');
       y += 20;
     }
 
@@ -316,43 +390,29 @@ Deno.serve(async (req) => {
     pdf.text('Namens deze:', margin, y);
     y += 5;
     pdf.text('De heer M. Schetters', margin, y);
-    if (contract.manager_signed_date) {
+    if (managerDateStr) {
       pdf.setTextColor(100, 116, 139);
-      pdf.text(`Ondertekend op ${new Date(contract.manager_signed_date).toLocaleDateString('nl-NL')}`, margin + 50, y);
-      pdf.setTextColor(30, 41, 59);
+      pdf.text(`Ondertekend op ${managerDateStr}`, margin + 50, y);
     }
     y += 12;
 
-    // --- Voor akkoord werknemer ---
-    if (y > pageHeight - 60) {
-      pdf.addPage();
-      y = 20;
-    }
-
+    // Employee signature
+    if (y > pageHeight - 60) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(30, 41, 59);
     pdf.setFontSize(11);
     pdf.setFont(undefined, 'bold');
     pdf.text('Voor akkoord werknemer', margin, y);
     y += 7;
 
-    if (employeeSig) {
+    if (employeeSigUri) {
       try {
-        console.log('Adding employee signature image, format:', employeeSig.format);
-        pdf.addImage(
-          'data:image/' + employeeSig.format.toLowerCase() + ';base64,' + employeeSig.data,
-          employeeSig.format,
-          margin,
-          y,
-          60,
-          25
-        );
-        console.log('Employee signature added successfully');
+        pdf.addImage(employeeSigUri, 'JPEG', margin, y, 60, 25);
         y += 28;
-      } catch (imgErr) {
-        console.error('Error adding employee signature image:', imgErr.message);
+      } catch (e) {
+        console.error('jsPDF addImage employee failed:', e.message);
         y += 20;
       }
     } else {
-      console.log('No employee signature data available');
       y += 20;
     }
 
@@ -363,13 +423,12 @@ Deno.serve(async (req) => {
     y += 5;
     pdf.setTextColor(30, 41, 59);
     pdf.text(`De heer/mevrouw ${employeeName}`, margin, y);
-    if (contract.employee_signed_date) {
+    if (employeeDateStr) {
       pdf.setTextColor(100, 116, 139);
-      pdf.text(`Ondertekend op ${new Date(contract.employee_signed_date).toLocaleDateString('nl-NL')}`, margin + 60, y);
-      pdf.setTextColor(30, 41, 59);
+      pdf.text(`Ondertekend op ${employeeDateStr}`, margin + 60, y);
     }
 
-    // Footer on all pages
+    // Footer
     const pageCount = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
@@ -377,16 +436,14 @@ Deno.serve(async (req) => {
       pdf.setTextColor(148, 163, 184);
       pdf.text(
         `Gegenereerd op ${new Date().toLocaleDateString('nl-NL')} - Pagina ${i} van ${pageCount}`,
-        pageWidth / 2,
-        pageHeight - 10,
-        { align: 'center' }
+        pageWidth / 2, pageHeight - 10, { align: 'center' }
       );
     }
 
-    const pdfBytes = pdf.output('arraybuffer');
-    console.log('PDF generated, size:', pdfBytes.byteLength);
+    const pdfBytes2 = pdf.output('arraybuffer');
+    console.log('jsPDF fallback PDF, size:', pdfBytes2.byteLength);
 
-    return new Response(pdfBytes, {
+    return new Response(pdfBytes2, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
