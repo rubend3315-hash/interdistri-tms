@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { contract_id, auto_invite } = await req.json();
+    const { contract_id, auto_invite, app_url } = await req.json();
     if (!contract_id) {
       return Response.json({ error: 'Missing contract_id' }, { status: 400 });
     }
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const appBaseUrl = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
+    const appBaseUrl = app_url || req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
 
     const emailBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
