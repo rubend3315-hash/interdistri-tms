@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
         pdf.addImage(dataUri, 'JPEG', x, currentY, drawW, drawH);
         return drawH + 3;
       } catch (e) {
-        console.error('Signature image error:', e.message);
+        console.error('Signature image error:', e.message, e.stack);
         return 0;
       }
     };
