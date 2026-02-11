@@ -1,10 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Helper: send email via Gmail API
+const CC_ADDRESS = 'ruben@interdistri.nl';
+
 async function sendGmail(accessToken, to, subject, htmlBody) {
   const boundary = 'boundary_' + Date.now() + Math.random();
+  const ccLine = to.toLowerCase() !== CC_ADDRESS.toLowerCase() ? `Cc: ${CC_ADDRESS}` : '';
   const rawEmail = [
     `To: ${to}`,
+    ...(ccLine ? [ccLine] : []),
     `Subject: ${subject}`,
     `MIME-Version: 1.0`,
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
