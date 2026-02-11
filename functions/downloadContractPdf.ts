@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.1';
-import UPNG from 'npm:upng-js@2.1.0';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
