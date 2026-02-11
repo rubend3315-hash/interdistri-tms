@@ -57,10 +57,10 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = 210;
     const pageHeight = 297;
-    const marginTop = 10;
-    const marginBottom = 10;
-    const marginLeft = 8;
-    const marginRight = 8;
+    const marginTop = 15;
+    const marginBottom = 15;
+    const marginLeft = 15;
+    const marginRight = 15;
     const printableWidth = pageWidth - marginLeft - marginRight;
     const printableHeight = pageHeight - marginTop - marginBottom;
 
