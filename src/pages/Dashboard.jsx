@@ -1,7 +1,7 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, addDays, differenceInDays, startOfWeek, endOfWeek } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -28,9 +28,22 @@ import CharterOverview from "../components/dashboard/CharterOverview";
 import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUserDashboard'],
+    queryFn: () => base44.auth.me()
+  });
+
+  // Redirect non-admin users away from dashboard
+  React.useEffect(() => {
+    if (currentUser && currentUser.role !== 'admin') {
+      navigate(createPageUrl("Contracts"));
+    }
+  }, [currentUser, navigate]);
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
