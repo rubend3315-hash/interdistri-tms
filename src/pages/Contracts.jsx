@@ -313,7 +313,7 @@ export default function Contracts() {
     const otherContracts = contracts.filter(c => c.status !== 'TerOndertekening' && !c.employee_signature_url);
 
     return (
-      <div className="space-y-6 max-w-3xl mx-auto">
+      <div className="space-y-6 max-w-3xl mx-auto p-4 sm:p-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Mijn Contracten</h1>
           <p className="text-slate-500 mt-1">Bekijk en onderteken je arbeidscontracten</p>
