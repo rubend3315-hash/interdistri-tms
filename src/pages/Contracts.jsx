@@ -453,41 +453,9 @@ export default function Contracts() {
                   </p>
                 </div>
               )}
-              <p className="text-sm text-slate-600">
-                Teken hieronder om het contract te ondertekenen:
-              </p>
-              <div className="border-2 border-dashed border-slate-300 rounded-lg">
-                <canvas
-                  ref={canvasRef}
-                  width={400}
-                  height={200}
-                  className="touch-none w-full"
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={clearSignature}>
-                  Wissen
-                </Button>
-                <Button
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  onClick={handleSign}
-                  disabled={updateContractMutation.isPending}
-                >
-                  {updateContractMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <UserCheck className="w-4 h-4 mr-2" />
-                  )}
-                  Ondertekenen
-                </Button>
-              </div>
+              {showSignDialog && (
+                <SignatureCanvas onSign={handleSign} signing={updateContractMutation.isPending} />
+              )}
             </div>
           </DialogContent>
         </Dialog>
