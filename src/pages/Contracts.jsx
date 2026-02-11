@@ -70,7 +70,11 @@ export default function Contracts() {
 
   const { data: allContracts = [], isLoading: loadingContracts } = useQuery({
     queryKey: ['contracts'],
-    queryFn: () => base44.entities.Contract.list('-created_date')
+    queryFn: async () => {
+      const all = await base44.entities.Contract.list('-created_date');
+      // Strip heavy contract_content from list to avoid oversized page data
+      return all.map(({ contract_content, ...rest }) => rest);
+    }
   });
 
   // Medewerkers zien alleen hun eigen contracten
@@ -228,8 +232,11 @@ export default function Contracts() {
     );
   };
 
-  const handleOpenContract = (contract) => {
-    setSelectedContract(contract);
+  const handleOpenContract = async (contract) => {
+    // Fetch full contract with content only when opening
+    const fullContracts = await base44.entities.Contract.filter({ id: contract.id });
+    const fullContract = fullContracts.length > 0 ? fullContracts[0] : contract;
+    setSelectedContract(fullContract);
     setShowViewDialog(true);
   };
 
