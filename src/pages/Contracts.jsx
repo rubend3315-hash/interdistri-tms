@@ -73,7 +73,11 @@ export default function Contracts() {
     queryFn: async () => {
       const all = await base44.entities.Contract.list('-created_date');
       // Strip heavy contract_content from list to avoid oversized page data
-      return all.map(({ contract_content, ...rest }) => rest);
+      return all.map(c => {
+        const copy = { ...c };
+        delete copy.contract_content;
+        return copy;
+      });
     }
   });
 

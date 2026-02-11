@@ -48,6 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import Approvals from './pages/Approvals';
+import AuditLog from './pages/AuditLog';
 import Backups from './pages/Backups';
 import Bedrijfsreglement from './pages/Bedrijfsreglement';
 import CaoRules from './pages/CaoRules';
@@ -85,12 +86,12 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import AuditLog from './pages/AuditLog';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Approvals": Approvals,
+    "AuditLog": AuditLog,
     "Backups": Backups,
     "Bedrijfsreglement": Bedrijfsreglement,
     "CaoRules": CaoRules,
@@ -128,7 +129,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "AuditLog": AuditLog,
 }
 
 export const pagesConfig = {
