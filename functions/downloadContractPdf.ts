@@ -131,11 +131,17 @@ Deno.serve(async (req) => {
       let htmlContent = contract.contract_content;
 
       // Remove the "Voor akkoord" signature block from the HTML content
-      // These are template placeholders that should be replaced by actual digital signatures
       htmlContent = htmlContent
         .replace(/<div\s+style[^>]*>[\s\S]*?Voor akkoord[\s\S]*?<\/div>/gi, '')
-        .replace(/Voor akkoord werkgever[\s\S]*?Voor akkoord werknemer[\s\S]*?$/gi, '')
+        .replace(/<p[^>]*>\s*<strong>\s*Voor akkoord werkgever\s*<\/strong>\s*<\/p>[\s\S]*$/i, '')
+        .replace(/<strong>\s*Voor akkoord werkgever\s*<\/strong>[\s\S]*$/i, '')
         .replace(/Voor akkoord werkgever[\s\S]*$/gi, '');
+
+      // Fix "Invalid Date" in HTML before stripping tags
+      const startDateFormatted = formatDate(contract.start_date);
+      if (startDateFormatted) {
+        htmlContent = htmlContent.replace(/Invalid Date/g, startDateFormatted);
+      }
 
       let textContent = htmlContent
         .replace(/<br\s*\/?>/gi, '\n')
@@ -151,42 +157,46 @@ Deno.serve(async (req) => {
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
-        .replace(/&euro;/gi, '\u20AC')
-        // Fix "Invalid Date" in content
-        .replace(/Invalid Date/g, formatDate(contract.start_date))
-        // Fix common UTF-8 mojibake patterns - comprehensive
+        .replace(/&euro;/gi, '\u20AC');
+
+      // Fix Unicode/UTF-8 characters that jsPDF cannot render
+      // Replace actual Unicode chars with ASCII equivalents
+      textContent = textContent
+        .replace(/\u00e9/g, 'e')   // é → e
+        .replace(/\u00eb/g, 'e')   // ë → e
+        .replace(/\u00e8/g, 'e')   // è → e
+        .replace(/\u00ef/g, 'i')   // ï → i
+        .replace(/\u00fc/g, 'u')   // ü → u
+        .replace(/\u00f6/g, 'o')   // ö → o
+        .replace(/\u00e4/g, 'a')   // ä → a
+        .replace(/\u00e0/g, 'a')   // à → a
+        .replace(/\u20AC/g, 'EUR ')  // € → EUR (jsPDF can't render €)
+        .replace(/\u00E9\u00E9n/g, 'een')
+        // Fix mojibake patterns (double-encoded UTF-8)
         .replace(/\u00ef\u00bf\u00bd\u00ef\u00bf\u00bdn/g, 'een')
+        .replace(/\u00ef\u00bf\u00bd/g, 'EUR ')
         .replace(/ï¿½ï¿½n/g, 'een')
-        .replace(/be\u00ef\u00bf\u00bd\u00ef\u00bf\u00bdindig/g, 'beeindig')
-        .replace(/beï¿½ï¿½indig/g, 'beeindig')
-        .replace(/beï¿½indig/g, 'beeindig')
-        .replace(/be.{1,4}indig/g, (match) => match.includes('ï') || match.includes('¿') || match.includes('½') ? 'beeindig' : match)
-        .replace(/\u00ef\u00bf\u00bd/g, (match, offset, str) => {
-          // Try to determine context
-          return '\u20AC'; // default to euro sign
-        })
-        .replace(/ï¿½/g, '\u20AC')
+        .replace(/ï¿½/g, 'EUR ')
+        .replace(/Ã«n/g, 'en')
         .replace(/Ã«/g, 'e')
         .replace(/Ã©/g, 'e')
         .replace(/Ã¯/g, 'i')
         .replace(/Ã¼/g, 'u')
         .replace(/Ã¶/g, 'o')
         .replace(/Ã /g, 'a')
-        .replace(/â‚¬/g, '\u20AC')
-        .replace(/Ã«n/g, 'en')
-        .replace(/Ã«/g, 'e')
+        .replace(/â‚¬/g, 'EUR ')
+        // Fix "beëindig" variants
+        .replace(/be[^\w\s]{1,6}indig/g, 'beeindig')
         // Remove leftover dotted signature lines
         .replace(/\.{10,}/g, '')
-        .replace(/\u2026{3,}/g, '')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
+        .replace(/\u2026{3,}/g, '');
 
       // Remove trailing "Voor akkoord" block from plain text too
       textContent = textContent
         .replace(/Voor akkoord werkgever[\s\S]*$/i, '')
         .trim();
 
-      // Remove "oorspronkelijk in dienst getreden" line if it contains placeholder or is not a verlenging
+      // Remove "oorspronkelijk in dienst getreden" line if not a verlenging
       if (!contract.is_verlenging) {
         textContent = textContent
           .replace(/De werknemer is oorspronkelijk bij werkgever in dienst getreden op[^\n.]*\.?/gi, '')
@@ -195,6 +205,8 @@ Deno.serve(async (req) => {
       // Remove lines with [NOG IN TE VULLEN] placeholder
       textContent = textContent
         .replace(/[^\n]*\[NOG IN TE VULLEN\][^\n]*\n?/g, '')
+        // Clean up "vangt aan op ." (empty date after Invalid Date removal)
+        .replace(/vangt aan op\s*\.\s*/gi, startDateFormatted ? `vangt aan op ${startDateFormatted}.` : '')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 
