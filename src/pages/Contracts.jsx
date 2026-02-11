@@ -79,22 +79,21 @@ export default function Contracts() {
     }
   });
 
-  // For employee view: fetch their full contracts with content for reading & signing
-  const { data: employeeFullContracts = [], isLoading: loadingEmployeeContracts } = useQuery({
-    queryKey: ['employeeFullContracts'],
-    queryFn: async () => {
-      // allContracts already filtered server-side for non-admin
-      if (allContracts.length === 0) return [];
-      // Fetch full contracts with content
-      const fullContracts = await Promise.all(
-        allContracts
-          .filter(c => c.status === 'TerOndertekening')
-          .map(c => base44.entities.Contract.filter({ id: c.id }).then(res => res[0]))
-      );
-      return fullContracts.filter(Boolean);
-    },
-    enabled: !isAdmin && !loadingUser && allContracts.length > 0
-  });
+  // Track which contract content has been loaded (for employee view)
+  const [loadedContractContent, setLoadedContractContent] = useState({});
+  const [loadingContractId, setLoadingContractId] = useState(null);
+
+  const loadContractContent = async (contractId) => {
+    if (loadedContractContent[contractId]) return loadedContractContent[contractId];
+    setLoadingContractId(contractId);
+    const results = await base44.entities.Contract.filter({ id: contractId });
+    const fullContract = results[0] || null;
+    if (fullContract) {
+      setLoadedContractContent(prev => ({ ...prev, [contractId]: fullContract }));
+    }
+    setLoadingContractId(null);
+    return fullContract;
+  };
 
   const contracts = allContracts;
 
