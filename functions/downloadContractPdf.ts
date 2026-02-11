@@ -108,54 +108,22 @@ Deno.serve(async (req) => {
       return btoa(binary);
     };
 
-    // Helper to embed signature image
+    // Helper to embed signature image - pass raw Uint8Array to jsPDF
     const addSignatureImage = async (url, x, currentY) => {
       try {
-        console.log('Fetching signature:', url);
         const resp = await fetch(url);
-        console.log('Fetch response:', resp.status, resp.headers.get('content-type'));
         if (!resp.ok) throw new Error(`Failed to fetch: ${resp.status}`);
         const arrayBuf = await resp.arrayBuffer();
         const uint8 = new Uint8Array(arrayBuf);
-        console.log('Image bytes:', uint8.length, 'first 4:', uint8[0], uint8[1], uint8[2], uint8[3]);
         
         const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
-        const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
-        console.log('isPng:', isPng, 'isJpeg:', isJpeg);
+        const format = isPng ? 'PNG' : 'JPEG';
         
-        if (isPng) {
-          // Read PNG with Jimp, composite onto white, export as JPEG
-          const image = await Jimp.read(Buffer.from(arrayBuf));
-          console.log('Jimp loaded image:', image.width, 'x', image.height);
-          const w = image.width;
-          const h = image.height;
-          
-          const bg = new Jimp({ width: w, height: h, color: 0xFFFFFFFF });
-          bg.composite(image, 0, 0);
-          
-          const jpegBuf = await bg.getBuffer('image/jpeg', { quality: 95 });
-          console.log('JPEG buffer size:', jpegBuf.length);
-          const base64 = toBase64(new Uint8Array(jpegBuf));
-          const dataUri = `data:image/jpeg;base64,${base64}`;
-          
-          const maxW = 60;
-          const maxH = 20;
-          const aspect = w / h;
-          let drawW = maxW;
-          let drawH = drawW / aspect;
-          if (drawH > maxH) { drawH = maxH; drawW = drawH * aspect; }
-          
-          pdf.addImage(dataUri, 'JPEG', x, currentY, drawW, drawH);
-          console.log('Image added to PDF');
-          return drawH + 3;
-        } else {
-          // JPEG or other - embed directly
-          const base64 = toBase64(uint8);
-          pdf.addImage(`data:image/jpeg;base64,${base64}`, 'JPEG', x, currentY, 60, 20);
-          return 23;
-        }
+        // jsPDF handles raw Uint8Array directly (including PNG with transparency)
+        pdf.addImage(uint8, format, x, currentY, 60, 20);
+        return 23;
       } catch (e) {
-        console.error('Signature image error:', e.message, e.stack);
+        console.error('Signature image error:', e.message);
         return 0;
       }
     };
