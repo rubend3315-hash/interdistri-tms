@@ -514,7 +514,18 @@ export default function ContractEditDialog({
                       <div className="ml-7">
                         <div className="space-y-1 max-w-xs">
                           <Label className="text-xs">Proeftijd</Label>
-                          <Input value="1 maand proeftijd" disabled className="bg-slate-100 text-slate-500" />
+                          <Select
+                            value={editFields.proeftijd || "1 maand proeftijd"}
+                            onValueChange={(v) => setEditFields({ ...editFields, proeftijd: v })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1 maand proeftijd">1 maand proeftijd</SelectItem>
+                              <SelectItem value="Geen proeftijd">Geen proeftijd</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     )}
