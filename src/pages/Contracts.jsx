@@ -61,6 +61,7 @@ function DownloadContractButton({ contractId, contractNumber }) {
 }
 
 export default function Contracts() {
+  // v2
   const queryClient = useQueryClient();
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [showSignDialog, setShowSignDialog] = useState(false);
