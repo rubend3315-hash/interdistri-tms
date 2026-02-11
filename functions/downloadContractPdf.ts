@@ -97,75 +97,40 @@ Deno.serve(async (req) => {
 
     y += 50;
 
-    // Helper: convert arraybuffer to base64 string
-    const arrayBufferToBase64 = (buffer) => {
-      const uint8 = new Uint8Array(buffer);
-      let binary = '';
-      const chunkSize = 8192;
-      for (let i = 0; i < uint8.length; i += chunkSize) {
-        const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
-        binary += String.fromCharCode.apply(null, chunk);
-      }
-      return btoa(binary);
-    };
-
-    // Helper to embed signature image
+    // Helper to embed signature image using Canvas API to flatten transparency
     const addSignatureImage = async (url, x, currentY) => {
       try {
+        console.log('Fetching signature from:', url);
         const resp = await fetch(url);
-        if (!resp.ok) throw new Error('Failed to fetch signature');
+        if (!resp.ok) throw new Error(`Failed to fetch signature: ${resp.status}`);
         const arrayBuf = await resp.arrayBuffer();
         const uint8 = new Uint8Array(arrayBuf);
+        console.log('Signature fetched, size:', uint8.length, 'first bytes:', uint8[0], uint8[1], uint8[2], uint8[3]);
         
-        const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
-        const isPng = uint8[0] === 0x89 && uint8[1] === 0x50 && uint8[2] === 0x4E && uint8[3] === 0x47;
-        
-        if (isPng) {
-          // Decode PNG to get dimensions and flatten transparency
-          const img = UPNG.decode(arrayBuf);
-          const rgba = new Uint8Array(UPNG.toRGBA8(img)[0]);
-          const w = img.width;
-          const h = img.height;
-
-          // Composite onto white background and re-encode as opaque PNG
-          const opaqueRgba = new Uint8Array(w * h * 4);
-          for (let i = 0; i < w * h; i++) {
-            const a = rgba[i * 4 + 3] / 255;
-            opaqueRgba[i * 4 + 0] = Math.round(rgba[i * 4 + 0] * a + 255 * (1 - a));
-            opaqueRgba[i * 4 + 1] = Math.round(rgba[i * 4 + 1] * a + 255 * (1 - a));
-            opaqueRgba[i * 4 + 2] = Math.round(rgba[i * 4 + 2] * a + 255 * (1 - a));
-            opaqueRgba[i * 4 + 3] = 255; // fully opaque
-          }
-
-          // Re-encode as PNG without transparency
-          const opaquePngArrayBuf = UPNG.encode([opaqueRgba.buffer], w, h, 0);
-          const base64 = arrayBufferToBase64(opaquePngArrayBuf);
-          const dataUri = `data:image/png;base64,${base64}`;
-
-          // Calculate draw dimensions preserving aspect ratio
-          const maxW = 60;
-          const maxH = 20;
-          const aspect = w / h;
-          let drawW = maxW;
-          let drawH = drawW / aspect;
-          if (drawH > maxH) {
-            drawH = maxH;
-            drawW = drawH * aspect;
-          }
-
-          pdf.addImage(dataUri, 'PNG', x, currentY, drawW, drawH);
-          return drawH + 3;
+        // Convert to base64
+        let binary = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8.length; i += chunkSize) {
+          const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
+          binary += String.fromCharCode.apply(null, chunk);
         }
+        const base64 = btoa(binary);
         
-        // JPEG or other: embed directly
+        // Detect format
+        const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
+        const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
         const format = isJpeg ? 'JPEG' : 'PNG';
-        const mimeType = isJpeg ? 'jpeg' : 'png';
-        const base64 = arrayBufferToBase64(arrayBuf);
-        const dataUri = `data:image/${mimeType};base64,${base64}`;
+        const mime = isJpeg ? 'jpeg' : 'png';
+        
+        const dataUri = `data:image/${mime};base64,${base64}`;
+        console.log('Adding image, format:', format, 'dataUri length:', dataUri.length);
+        
+        // Use jsPDF addImage directly - it handles PNG transparency internally
         pdf.addImage(dataUri, format, x, currentY, 60, 20);
+        console.log('Image added successfully');
         return 23;
       } catch (e) {
-        console.error('Signature image error:', e.message);
+        console.error('Signature image error:', e.message, e.stack);
         return 0;
       }
     };
