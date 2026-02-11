@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
 
     y += 50;
 
-    // Helper to embed signature image
+    // Helper to embed signature image - larger and clearer
     const addSignatureImage = async (url, x, currentY) => {
       try {
         const resp = await fetch(url);
@@ -108,7 +108,6 @@ Deno.serve(async (req) => {
         // Detect format from magic bytes
         let format = 'PNG';
         if (uint8[0] === 0xFF && uint8[1] === 0xD8) format = 'JPEG';
-        // For data URLs or SVGs stored as text, skip
         
         let binary = '';
         const chunkSize = 8192;
@@ -118,8 +117,9 @@ Deno.serve(async (req) => {
         }
         const base64 = btoa(binary);
         const dataUri = `data:image/${format.toLowerCase()};base64,${base64}`;
-        pdf.addImage(dataUri, format, x, currentY, 50, 25);
-        return 28;
+        // Larger signature: 70mm wide, 35mm tall for readability
+        pdf.addImage(dataUri, format, x, currentY, 70, 35);
+        return 38;
       } catch (e) {
         console.error('Signature image error:', e.message);
         return 0;
@@ -143,13 +143,16 @@ Deno.serve(async (req) => {
         htmlContent = htmlContent.replace(/Invalid Date/g, startDateFormatted);
       }
 
+      // Convert HTML to text, using markers for article headers to add spacing later
       let textContent = htmlContent
         .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/p>/gi, '\n\n')
+        .replace(/<\/p>/gi, '\n')
         .replace(/<\/div>/gi, '\n')
         .replace(/<\/li>/gi, '\n')
-        .replace(/<\/h[1-6]>/gi, '\n\n')
-        .replace(/<h[1-6][^>]*>/gi, '')
+        .replace(/<\/h2>/gi, '\n\n')
+        .replace(/<h3[^>]*>/gi, '\n\n###ARTIKEL###')
+        .replace(/<\/h3>/gi, '\n')
+        .replace(/<h2[^>]*>/gi, '')
         .replace(/<[^>]+>/g, '')
         .replace(/&nbsp;/g, ' ')
         .replace(/&amp;/g, '&')
@@ -214,17 +217,55 @@ Deno.serve(async (req) => {
       pdf.setFont(undefined, 'normal');
       pdf.setTextColor(30, 41, 59);
 
-      const lines = pdf.splitTextToSize(textContent, usableWidth);
-      const lineHeight = 5;
+      const lineHeight = 4.5;
+      const artikelSpacing = 6; // extra space before each Artikel heading
 
-      for (const line of lines) {
+      // Split into paragraphs and process
+      const paragraphs = textContent.split('\n');
+
+      for (const para of paragraphs) {
+        const trimmed = para.trim();
+        if (!trimmed) continue;
+
+        const isArtikel = trimmed.startsWith('###ARTIKEL###');
+        const displayText = isArtikel ? trimmed.replace('###ARTIKEL###', '').trim() : trimmed;
+
+        if (!displayText) continue;
+
+        // Add extra spacing before article headings
+        if (isArtikel) {
+          y += artikelSpacing;
+        }
+
+        // Check page break
         if (y + lineHeight > pdf.internal.pageSize.height - 30) {
           pdf.addPage();
           y = 20;
         }
-        pdf.text(line, margin, y);
-        y += lineHeight;
+
+        if (isArtikel) {
+          pdf.setFont(undefined, 'bold');
+          pdf.setFontSize(10.5);
+        } else {
+          pdf.setFont(undefined, 'normal');
+          pdf.setFontSize(10);
+        }
+
+        // Word-wrap this paragraph
+        const wrappedLines = pdf.splitTextToSize(displayText, usableWidth);
+        for (const wLine of wrappedLines) {
+          if (y + lineHeight > pdf.internal.pageSize.height - 30) {
+            pdf.addPage();
+            y = 20;
+          }
+          pdf.text(wLine, margin, y);
+          y += lineHeight;
+        }
       }
+      
+      // Reset font after content
+      pdf.setFont(undefined, 'normal');
+      pdf.setFontSize(10);
     }
 
     // Signatures section
