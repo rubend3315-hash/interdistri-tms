@@ -250,7 +250,8 @@ export default function Contracts() {
     try {
       const response = await base44.functions.invoke('sendContractForSigning', { 
         contract_id: contract.id,
-        auto_invite: autoInvite
+        auto_invite: autoInvite,
+        app_url: window.location.origin
       });
       if (response.data?.invited) {
         setSendError({
