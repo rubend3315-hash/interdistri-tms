@@ -34,6 +34,7 @@ import {
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ContractEditDialog from "../components/contracts/ContractEditDialog";
 import ContractPreviewEditor from "../components/contracts/ContractPreviewEditor";
+import SignatureCanvas from "../components/contracts/SignatureCanvas";
 
 function DownloadContractButton({ contractId, contractNumber }) {
   const [downloading, setDownloading] = useState(false);
