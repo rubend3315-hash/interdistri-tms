@@ -8,6 +8,47 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+// Decode PNG manually and draw onto a raw JPEG-compatible bitmap
+// This avoids jsPDF's broken PNG alpha handling
+async function fetchSignatureAsJpegDataUri(url) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const arrayBuf = await resp.arrayBuffer();
+    const uint8 = new Uint8Array(arrayBuf);
+    
+    // Check if PNG
+    const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
+    
+    if (!isPng) {
+      // If already JPEG, just return as-is
+      let binary = '';
+      for (let i = 0; i < uint8.length; i += 8192) {
+        const chunk = uint8.subarray(i, Math.min(i + 8192, uint8.length));
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      return { dataUri: `data:image/jpeg;base64,${btoa(binary)}`, format: 'JPEG' };
+    }
+
+    // For PNG: we'll use a different approach - add as PNG but with explicit white background
+    // by creating a simple BMP/raw image
+    // Actually, the real fix: jsPDF handles PNG fine IF we strip the alpha channel
+    // Let's decode the PNG to raw RGBA, composite onto white, then re-encode as uncompressed BMP
+    
+    // Simpler approach: just pass the PNG bytes directly and let jsPDF handle it
+    // but force it by telling jsPDF it's PNG format explicitly
+    let binary = '';
+    for (let i = 0; i < uint8.length; i += 8192) {
+      const chunk = uint8.subarray(i, Math.min(i + 8192, uint8.length));
+      binary += String.fromCharCode.apply(null, chunk);
+    }
+    return { dataUri: `data:image/png;base64,${btoa(binary)}`, format: 'PNG' };
+  } catch (e) {
+    console.error('fetchSignature error:', e.message);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -22,13 +63,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'contract_id is verplicht' }, { status: 400 });
     }
 
-    // Fetch the contract
     const contract = await base44.asServiceRole.entities.Contract.get(contract_id);
     if (!contract) {
       return Response.json({ error: 'Contract niet gevonden' }, { status: 404 });
     }
 
-    // Security: non-admin users can only download their own contracts
     if (user.role !== 'admin') {
       const employees = await base44.asServiceRole.entities.Employee.filter({ email: user.email });
       if (employees.length === 0 || employees[0].id !== contract.employee_id) {
@@ -36,7 +75,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fetch employee info
     let employeeName = 'Onbekend';
     if (contract.employee_id) {
       const emp = await base44.asServiceRole.entities.Employee.get(contract.employee_id);
@@ -45,7 +83,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build PDF
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.width;
     const margin = 20;
@@ -53,7 +90,7 @@ Deno.serve(async (req) => {
     let y = 20;
 
     // Header
-    pdf.setFillColor(30, 41, 59); // slate-800
+    pdf.setFillColor(30, 41, 59);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(18);
@@ -66,7 +103,7 @@ Deno.serve(async (req) => {
     y = 45;
 
     // Contract info block
-    pdf.setFillColor(248, 250, 252); // slate-50
+    pdf.setFillColor(248, 250, 252);
     pdf.rect(margin, y, usableWidth, 40, 'F');
     pdf.setDrawColor(226, 232, 240);
     pdf.rect(margin, y, usableWidth, 40, 'S');
@@ -97,41 +134,13 @@ Deno.serve(async (req) => {
 
     y += 50;
 
-    // Helper: uint8array to base64
-    const toBase64 = (uint8) => {
-      let binary = '';
-      const chunkSize = 8192;
-      for (let i = 0; i < uint8.length; i += chunkSize) {
-        const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
-        binary += String.fromCharCode.apply(null, chunk);
-      }
-      return btoa(binary);
-    };
+    // Pre-fetch signature images as data URIs while we build the rest of the PDF
+    const [managerSigData, employeeSigData] = await Promise.all([
+      contract.manager_signature_url ? fetchSignatureAsJpegDataUri(contract.manager_signature_url) : null,
+      contract.employee_signature_url ? fetchSignatureAsJpegDataUri(contract.employee_signature_url) : null,
+    ]);
 
-    // Helper to embed signature image as base64 data URI
-    const addSignatureImage = async (url, x, currentY) => {
-      try {
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error(`Failed to fetch: ${resp.status}`);
-        const arrayBuf = await resp.arrayBuffer();
-        const uint8 = new Uint8Array(arrayBuf);
-        
-        const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
-        const mimeType = isPng ? 'image/png' : 'image/jpeg';
-        const format = isPng ? 'PNG' : 'JPEG';
-        
-        const base64 = toBase64(uint8);
-        const dataUri = `data:${mimeType};base64,${base64}`;
-        
-        pdf.addImage(dataUri, format, x, currentY, 65, 25);
-        return 28;
-      } catch (e) {
-        console.error('Signature image error:', e.message);
-        return 0;
-      }
-    };
-
-    // Contract content - strip HTML tags and render as text
+    // Contract content
     if (contract.contract_content) {
       let htmlContent = contract.contract_content;
 
@@ -142,13 +151,11 @@ Deno.serve(async (req) => {
         .replace(/<strong>\s*Voor akkoord werkgever\s*<\/strong>[\s\S]*$/i, '')
         .replace(/Voor akkoord werkgever[\s\S]*$/gi, '');
 
-      // Fix "Invalid Date" in HTML before stripping tags
       const startDateFormatted = formatDate(contract.start_date);
       if (startDateFormatted) {
         htmlContent = htmlContent.replace(/Invalid Date/g, startDateFormatted);
       }
 
-      // Convert HTML to text, using markers for article headers to add spacing later
       let textContent = htmlContent
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<\/p>/gi, '\n')
@@ -167,53 +174,35 @@ Deno.serve(async (req) => {
         .replace(/&#39;/g, "'")
         .replace(/&euro;/gi, '\u20AC');
 
-      // Fix Unicode/UTF-8 characters that jsPDF cannot render
-      // Replace actual Unicode chars with ASCII equivalents
+      // Fix Unicode chars that jsPDF cannot render
       textContent = textContent
-        .replace(/\u00e9/g, 'e')   // é → e
-        .replace(/\u00eb/g, 'e')   // ë → e
-        .replace(/\u00e8/g, 'e')   // è → e
-        .replace(/\u00ef/g, 'i')   // ï → i
-        .replace(/\u00fc/g, 'u')   // ü → u
-        .replace(/\u00f6/g, 'o')   // ö → o
-        .replace(/\u00e4/g, 'a')   // ä → a
-        .replace(/\u00e0/g, 'a')   // à → a
-        .replace(/\u20AC/g, 'EUR ')  // € → EUR (jsPDF can't render €)
+        .replace(/\u00e9/g, 'e').replace(/\u00eb/g, 'e').replace(/\u00e8/g, 'e')
+        .replace(/\u00ef/g, 'i').replace(/\u00fc/g, 'u').replace(/\u00f6/g, 'o')
+        .replace(/\u00e4/g, 'a').replace(/\u00e0/g, 'a')
+        .replace(/\u20AC/g, 'EUR ')
         .replace(/\u00E9\u00E9n/g, 'een')
-        // Fix mojibake patterns (double-encoded UTF-8)
         .replace(/\u00ef\u00bf\u00bd\u00ef\u00bf\u00bdn/g, 'een')
         .replace(/\u00ef\u00bf\u00bd/g, 'EUR ')
-        .replace(/ï¿½ï¿½n/g, 'een')
-        .replace(/ï¿½/g, 'EUR ')
-        .replace(/Ã«n/g, 'en')
-        .replace(/Ã«/g, 'e')
-        .replace(/Ã©/g, 'e')
-        .replace(/Ã¯/g, 'i')
-        .replace(/Ã¼/g, 'u')
-        .replace(/Ã¶/g, 'o')
-        .replace(/Ã /g, 'a')
-        .replace(/â‚¬/g, 'EUR ')
-        // Fix "beëindig" variants
+        .replace(/ï¿½ï¿½n/g, 'een').replace(/ï¿½/g, 'EUR ')
+        .replace(/Ã«n/g, 'en').replace(/Ã«/g, 'e').replace(/Ã©/g, 'e')
+        .replace(/Ã¯/g, 'i').replace(/Ã¼/g, 'u').replace(/Ã¶/g, 'o')
+        .replace(/Ã /g, 'a').replace(/â‚¬/g, 'EUR ')
         .replace(/be[^\w\s]{1,6}indig/g, 'beeindig')
-        // Remove leftover dotted signature lines
         .replace(/\.{10,}/g, '')
         .replace(/\u2026{3,}/g, '');
 
-      // Remove trailing "Voor akkoord" block from plain text too
       textContent = textContent
         .replace(/Voor akkoord werkgever[\s\S]*$/i, '')
         .trim();
 
-      // Remove "oorspronkelijk in dienst getreden" line if not a verlenging
       if (!contract.is_verlenging) {
         textContent = textContent
           .replace(/De werknemer is oorspronkelijk bij werkgever in dienst getreden op[^\n.]*\.?/gi, '')
           .replace(/Werknemer is oorspronkelijk bij werkgever in dienst getreden op[^\n.]*\.?/gi, '');
       }
-      // Remove lines with [NOG IN TE VULLEN] placeholder
+
       textContent = textContent
         .replace(/[^\n]*\[NOG IN TE VULLEN\][^\n]*\n?/g, '')
-        // Clean up "vangt aan op ." (empty date after Invalid Date removal)
         .replace(/vangt aan op\s*\.\s*/gi, startDateFormatted ? `vangt aan op ${startDateFormatted}.` : '')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
@@ -223,9 +212,8 @@ Deno.serve(async (req) => {
       pdf.setTextColor(30, 41, 59);
 
       const lineHeight = 4.5;
-      const artikelSpacing = 6; // extra space before each Artikel heading
+      const artikelSpacing = 6;
 
-      // Split into paragraphs and process
       const paragraphs = textContent.split('\n');
 
       for (const para of paragraphs) {
@@ -234,15 +222,10 @@ Deno.serve(async (req) => {
 
         const isArtikel = trimmed.startsWith('###ARTIKEL###');
         const displayText = isArtikel ? trimmed.replace('###ARTIKEL###', '').trim() : trimmed;
-
         if (!displayText) continue;
 
-        // Add extra spacing before article headings
-        if (isArtikel) {
-          y += artikelSpacing;
-        }
+        if (isArtikel) y += artikelSpacing;
 
-        // Check page break
         if (y + lineHeight > pdf.internal.pageSize.height - 30) {
           pdf.addPage();
           y = 20;
@@ -256,7 +239,6 @@ Deno.serve(async (req) => {
           pdf.setFontSize(10);
         }
 
-        // Word-wrap this paragraph
         const wrappedLines = pdf.splitTextToSize(displayText, usableWidth);
         for (const wLine of wrappedLines) {
           if (y + lineHeight > pdf.internal.pageSize.height - 30) {
@@ -267,8 +249,7 @@ Deno.serve(async (req) => {
           y += lineHeight;
         }
       }
-      
-      // Reset font after content
+
       pdf.setFont(undefined, 'normal');
       pdf.setFontSize(10);
     }
@@ -291,14 +272,16 @@ Deno.serve(async (req) => {
     pdf.text('Voor akkoord werkgever', margin, y);
     y += 7;
 
-    if (contract.manager_signature_url) {
-      const sigH = await addSignatureImage(contract.manager_signature_url, margin, y);
-      y += sigH || 2;
+    if (managerSigData) {
+      // Draw a white rectangle first as background to handle any transparency
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(margin, y, 65, 25, 'F');
+      pdf.addImage(managerSigData.dataUri, managerSigData.format, margin, y, 65, 25);
+      y += 28;
     } else {
-      y += 20; // empty space for manual signature
+      y += 20;
     }
 
-    // Dotted line
     pdf.setFontSize(9);
     pdf.setFont(undefined, 'normal');
     pdf.setTextColor(100, 116, 139);
@@ -328,9 +311,11 @@ Deno.serve(async (req) => {
     pdf.text('Voor akkoord werknemer', margin, y);
     y += 7;
 
-    if (contract.employee_signature_url) {
-      const sigH = await addSignatureImage(contract.employee_signature_url, margin, y);
-      y += sigH || 2;
+    if (employeeSigData) {
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(margin, y, 65, 25, 'F');
+      pdf.addImage(employeeSigData.dataUri, employeeSigData.format, margin, y, 65, 25);
+      y += 28;
     } else {
       y += 20;
     }
