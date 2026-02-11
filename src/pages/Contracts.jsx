@@ -28,7 +28,8 @@ import {
   Save,
   RotateCw,
   UserPlus,
-  XCircle
+  XCircle,
+  Download
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ContractEditDialog from "../components/contracts/ContractEditDialog";
@@ -410,13 +411,14 @@ export default function Contracts() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-medium text-slate-900">{contract.contract_number}</h3>
-                      <p className="text-sm text-slate-500">{contract.contract_type}</p>
+                      <p className="text-sm text-slate-500">{contract.contract_type} — Start: {contract.start_date ? format(new Date(contract.start_date), 'd MMM yyyy', { locale: nl }) : '-'}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(contract)}
                       {contract.employee_signature_url && !contract.manager_signature_url && (
                         <span className="text-xs text-amber-600">Wacht op management</span>
                       )}
+                      <DownloadContractButton contractId={contract.id} contractNumber={contract.contract_number} />
                     </div>
                   </div>
                 </CardContent>
@@ -437,7 +439,10 @@ export default function Contracts() {
                       <h3 className="font-medium text-slate-900">{contract.contract_number}</h3>
                       <p className="text-sm text-slate-500">{contract.contract_type}</p>
                     </div>
-                    {getStatusBadge(contract)}
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(contract)}
+                      <DownloadContractButton contractId={contract.id} contractNumber={contract.contract_number} />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
