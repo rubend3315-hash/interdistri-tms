@@ -314,10 +314,6 @@ export default function Contracts() {
   const pendingContracts = contracts.filter(c => c.status === 'TerOndertekening');
   const draftContracts = contracts.filter(c => c.status === 'Concept');
 
-  const activeContracts = contracts.filter(c => c.status === 'Actief' || c.status === 'Ondertekend');
-  const pendingContracts = contracts.filter(c => c.status === 'TerOndertekening');
-  const draftContracts = contracts.filter(c => c.status === 'Concept');
-
   // Loading state
   if (loadingUser || loadingContracts) {
     return (
