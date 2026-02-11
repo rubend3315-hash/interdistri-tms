@@ -20,30 +20,20 @@ const ROLES = {
     color: 'bg-purple-100 text-purple-700',
     description: 'Volledige toegang tot alle functies'
   },
-  supervisor: {
-    label: 'Supervisor',
-    color: 'bg-blue-100 text-blue-700',
-    description: 'Beheer en supervisie'
-  },
-  editor: {
-    label: 'Editor',
-    color: 'bg-amber-100 text-amber-700',
-    description: 'Gegevens aanpassen'
-  },
   user: {
     label: 'Medewerker',
     color: 'bg-slate-100 text-slate-700',
-    description: 'Basis toegang'
+    description: 'Toegang op basis van toegewezen permissies'
   }
 };
 
 const ROLE_PERMISSIONS = {
   admin: [
     'dashboard', 'timetracking', 'trips', 'planning', 'approvals', 'shifttime',
-    'employees', 'users', 'vehicles', 'niwo', 'customers', 'projects', 'cao', 'salary', 'holidays', 'reports', 'mobile'
+    'employees', 'users', 'vehicles', 'niwo', 'customers', 'projects', 'cao', 
+    'salary', 'holidays', 'reports', 'mobile', 'messages', 'charters', 
+    'hrmsettings', 'documents', 'contracts', 'hrimport'
   ],
-  supervisor: ['dashboard', 'timetracking', 'trips', 'planning', 'approvals', 'employees', 'vehicles', 'projects'],
-  editor: ['dashboard', 'timetracking', 'employees', 'vehicles', 'customers', 'projects'],
   user: ['dashboard', 'timetracking', 'trips', 'mobile']
 };
 
@@ -51,20 +41,26 @@ const ALL_PERMISSIONS = [
   { id: 'dashboard', label: 'Dashboard', category: 'Basis' },
   { id: 'timetracking', label: 'Tijdregistratie', category: 'Basis' },
   { id: 'trips', label: 'Ritten', category: 'Basis' },
-  { id: 'planning', label: 'Planning', category: 'Basis' },
+  { id: 'mobile', label: 'Mobiele App', category: 'Basis' },
+  { id: 'planning', label: 'Planning', category: 'Beheer' },
   { id: 'approvals', label: 'Goedkeuringen', category: 'Beheer' },
   { id: 'shifttime', label: 'Dienst-Shifttijd', category: 'Beheer' },
   { id: 'employees', label: 'Medewerkers', category: 'Beheer' },
-  { id: 'users', label: 'Gebruikers', category: 'Admin' },
   { id: 'vehicles', label: 'Voertuigen', category: 'Beheer' },
   { id: 'niwo', label: 'NIWO Vergunningen', category: 'Beheer' },
   { id: 'customers', label: 'Klanten', category: 'Beheer' },
   { id: 'projects', label: 'Projecten', category: 'Beheer' },
+  { id: 'messages', label: 'Berichten', category: 'Beheer' },
+  { id: 'charters', label: 'Charters', category: 'Beheer' },
+  { id: 'documents', label: 'Documentenbeheer', category: 'Beheer' },
+  { id: 'contracts', label: 'Contracten', category: 'HR' },
+  { id: 'hrimport', label: 'HR Import', category: 'HR' },
+  { id: 'hrmsettings', label: 'HRM-instellingen', category: 'HR' },
   { id: 'cao', label: 'CAO-regels', category: 'Admin' },
   { id: 'salary', label: 'Loontabellen', category: 'Admin' },
   { id: 'holidays', label: 'Feestdagen', category: 'Admin' },
   { id: 'reports', label: 'Loonrapporten', category: 'Rapportage' },
-  { id: 'mobile', label: 'Mobiele App', category: 'Basis' }
+  { id: 'users', label: 'Gebruikers', category: 'Admin' },
 ];
 
 export default function UsersPage() {
@@ -553,23 +549,44 @@ export default function UsersPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              {['supervisor', 'editor', 'user'].map(role => (
-                <Button
-                  key={role}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => applyRolePermissions(role)}
-                  className="justify-start"
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  {ROLES[role].label}
-                </Button>
-              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyRolePermissions('user')}
+                className="justify-start"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Standaard medewerker
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (!selectedUser) return;
+                  setSelectedUser({ ...selectedUser, permissions: [...ALL_PERMISSIONS.map(p => p.id)] });
+                }}
+                className="justify-start"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Alle permissies
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (!selectedUser) return;
+                  setSelectedUser({ ...selectedUser, permissions: [] });
+                }}
+                className="justify-start text-red-600 hover:text-red-700"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Alles verwijderen
+              </Button>
             </div>
 
             <div className="space-y-3">
               <Label className="text-base font-semibold">Modules per categorie</Label>
-              {['Basis', 'Beheer', 'Rapportage', 'Admin'].map(category => {
+              {['Basis', 'Beheer', 'HR', 'Rapportage', 'Admin'].map(category => {
                 const categoryPerms = ALL_PERMISSIONS.filter(p => p.category === category);
                 const filteredPerms = categoryPerms.filter(p => 
                   p.label.toLowerCase().includes(permissionSearchTerm.toLowerCase())
