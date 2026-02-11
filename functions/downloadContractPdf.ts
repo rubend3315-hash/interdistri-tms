@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
 
     // Signatures section
     y += 10;
-    if (y > pdf.internal.pageSize.height - 60) {
+    if (y > pdf.internal.pageSize.height - 80) {
       pdf.addPage();
       y = 20;
     }
@@ -151,23 +151,52 @@ Deno.serve(async (req) => {
 
     pdf.setFontSize(9);
 
+    // Helper to embed signature image
+    const addSignatureImage = async (url, x, currentY) => {
+      try {
+        const resp = await fetch(url);
+        const arrayBuf = await resp.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
+        const dataUri = `data:image/png;base64,${base64}`;
+        pdf.addImage(dataUri, 'PNG', x, currentY, 40, 20);
+        return 22;
+      } catch (e) {
+        console.error('Signature image error:', e);
+        return 0;
+      }
+    };
+
     // Employee signature
     pdf.setFont(undefined, 'bold');
     pdf.text('Medewerker:', margin, y);
     pdf.setFont(undefined, 'normal');
     if (contract.employee_signed_date) {
       pdf.text(`Ondertekend op ${new Date(contract.employee_signed_date).toLocaleDateString('nl-NL')}`, margin + 30, y);
+      if (contract.employee_signature_url) {
+        y += 3;
+        const sigH = await addSignatureImage(contract.employee_signature_url, margin, y);
+        y += sigH || 2;
+      }
     } else {
       pdf.text('Nog niet ondertekend', margin + 30, y);
     }
     y += 8;
 
     // Manager signature
+    if (y > pdf.internal.pageSize.height - 40) {
+      pdf.addPage();
+      y = 20;
+    }
     pdf.setFont(undefined, 'bold');
     pdf.text('Management:', margin, y);
     pdf.setFont(undefined, 'normal');
     if (contract.manager_signed_date) {
       pdf.text(`Ondertekend op ${new Date(contract.manager_signed_date).toLocaleDateString('nl-NL')} door ${contract.manager_signed_by || '-'}`, margin + 30, y);
+      if (contract.manager_signature_url) {
+        y += 3;
+        const sigH = await addSignatureImage(contract.manager_signature_url, margin, y);
+        y += sigH || 2;
+      }
     } else {
       pdf.text('Nog niet ondertekend', margin + 30, y);
     }

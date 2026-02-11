@@ -581,6 +581,31 @@ export default function ContractEditDialog({
                 </div>
               )}
 
+              {/* Handtekeningen */}
+              {!isEditing && (contract.employee_signature_url || contract.manager_signature_url) && (
+                <div className="bg-slate-50 rounded-lg p-4 space-y-4">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Handtekeningen</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {contract.employee_signature_url && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-slate-500">Medewerker — {contract.employee_signed_date ? new Date(contract.employee_signed_date).toLocaleDateString('nl-NL') : ''}</p>
+                        <div className="bg-white border rounded p-2 inline-block">
+                          <img src={contract.employee_signature_url} alt="Handtekening medewerker" className="h-16 object-contain" />
+                        </div>
+                      </div>
+                    )}
+                    {contract.manager_signature_url && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-slate-500">Management ({contract.manager_signed_by || '-'}) — {contract.manager_signed_date ? new Date(contract.manager_signed_date).toLocaleDateString('nl-NL') : ''}</p>
+                        <div className="bg-white border rounded p-2 inline-block">
+                          <img src={contract.manager_signature_url} alt="Handtekening management" className="h-16 object-contain" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Contract text */}
               {isEditing ? (
                 <div className="border rounded-lg bg-white">

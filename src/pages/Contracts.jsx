@@ -701,6 +701,7 @@ export default function Contracts() {
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        <DownloadContractButton contractId={contract.id} contractNumber={contract.contract_number} />
                         <Button
                           variant="outline"
                           size="sm"
