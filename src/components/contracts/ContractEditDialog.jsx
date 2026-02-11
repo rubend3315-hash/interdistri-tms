@@ -663,30 +663,38 @@ export default function ContractEditDialog({
                 </div>
               )}
 
-              {/* Handtekeningen - onderaan het contract */}
+              {/* Handtekeningen - onderaan het contract, in contract-stijl */}
               {!isEditing && (contract.employee_signature_url || contract.manager_signature_url) && (
-                <div className="bg-slate-50 rounded-lg p-4 space-y-4 mt-4">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Handtekeningen</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {contract.employee_signature_url && (
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-slate-700">
-                          {employee ? `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}` : 'Medewerker'}
-                        </p>
-                        <p className="text-xs text-slate-500">{contract.employee_signed_date ? new Date(contract.employee_signed_date).toLocaleDateString('nl-NL') : ''}</p>
-                        <div className="bg-white border rounded p-2 inline-block">
-                          <img src={contract.employee_signature_url} alt="Handtekening medewerker" className="h-16 object-contain" />
-                        </div>
+                <div className="border rounded-lg bg-white p-4 sm:p-6 lg:p-8 mt-0" style={{ fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: '1.8' }}>
+                  {/* Werkgever handtekening */}
+                  <div className="mb-6">
+                    <p className="font-bold text-slate-800">Voor akkoord werkgever</p>
+                    {contract.manager_signature_url && (
+                      <div className="my-2">
+                        <img src={contract.manager_signature_url} alt="Handtekening werkgever" className="h-16 object-contain" />
                       </div>
                     )}
-                    {contract.manager_signature_url && (
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-slate-700">{contract.manager_signed_by || 'Management'}</p>
-                        <p className="text-xs text-slate-500">{contract.manager_signed_date ? new Date(contract.manager_signed_date).toLocaleDateString('nl-NL') : ''}</p>
-                        <div className="bg-white border rounded p-2 inline-block">
-                          <img src={contract.manager_signature_url} alt="Handtekening management" className="h-16 object-contain" />
-                        </div>
+                    <p className="text-slate-500">................................................................</p>
+                    <p className="text-slate-700">Van Dooren Transport Zeeland B.V.</p>
+                    <p className="text-slate-700">Namens deze:</p>
+                    <p className="text-slate-700">De heer M. Schetters</p>
+                    {contract.manager_signed_date && (
+                      <p className="text-xs text-slate-400 mt-1">Ondertekend op {new Date(contract.manager_signed_date).toLocaleDateString('nl-NL')}</p>
+                    )}
+                  </div>
+
+                  {/* Werknemer handtekening */}
+                  <div>
+                    <p className="font-bold text-slate-800">Voor akkoord werknemer</p>
+                    {contract.employee_signature_url && (
+                      <div className="my-2">
+                        <img src={contract.employee_signature_url} alt="Handtekening werknemer" className="h-16 object-contain" />
                       </div>
+                    )}
+                    <p className="text-slate-500">................................................................</p>
+                    <p className="text-slate-700">De heer/mevrouw {employee ? `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}` : 'Medewerker'}</p>
+                    {contract.employee_signed_date && (
+                      <p className="text-xs text-slate-400 mt-1">Ondertekend op {new Date(contract.employee_signed_date).toLocaleDateString('nl-NL')}</p>
                     )}
                   </div>
                 </div>
