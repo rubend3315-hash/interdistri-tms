@@ -77,12 +77,7 @@ Deno.serve(async (req) => {
     pdf.text('Contracttype:', col1, infoY + 10);
     pdf.text('Startdatum:', col2, infoY + 10);
     pdf.text('Status:', col1, infoY + 20);
-    if (contract.end_date) {
-      pdf.text('Einddatum:', col2, infoY + 20);
-    }
-    if (contract.hours_per_week) {
-      pdf.text('Uren/week:', col2, infoY + 20 + (contract.end_date ? 10 : 0));
-    }
+    pdf.text('Uren/week:', col2, infoY + 20);
 
     pdf.setFont(undefined, 'normal');
     pdf.setTextColor(15, 23, 42);
@@ -91,9 +86,7 @@ Deno.serve(async (req) => {
     pdf.text(contract.contract_type || '-', col1 + 30, infoY + 10);
     pdf.text(contract.start_date ? new Date(contract.start_date).toLocaleDateString('nl-NL') : '-', col2 + 35, infoY + 10);
     pdf.text(contract.status || '-', col1 + 30, infoY + 20);
-    if (contract.end_date) {
-      pdf.text(new Date(contract.end_date).toLocaleDateString('nl-NL'), col2 + 35, infoY + 20);
-    }
+    pdf.text(contract.hours_per_week ? String(contract.hours_per_week) : '-', col2 + 35, infoY + 20);
 
     y += 50;
 
@@ -101,18 +94,27 @@ Deno.serve(async (req) => {
     const addSignatureImage = async (url, x, currentY) => {
       try {
         const resp = await fetch(url);
+        if (!resp.ok) throw new Error('Failed to fetch signature');
         const arrayBuf = await resp.arrayBuffer();
         const uint8 = new Uint8Array(arrayBuf);
+        
+        // Detect format from magic bytes
+        let format = 'PNG';
+        if (uint8[0] === 0xFF && uint8[1] === 0xD8) format = 'JPEG';
+        // For data URLs or SVGs stored as text, skip
+        
         let binary = '';
-        for (let i = 0; i < uint8.length; i++) {
-          binary += String.fromCharCode(uint8[i]);
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8.length; i += chunkSize) {
+          const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
+          binary += String.fromCharCode.apply(null, chunk);
         }
         const base64 = btoa(binary);
-        const dataUri = `data:image/png;base64,${base64}`;
-        pdf.addImage(dataUri, 'PNG', x, currentY, 40, 20);
-        return 22;
+        const dataUri = `data:image/${format.toLowerCase()};base64,${base64}`;
+        pdf.addImage(dataUri, format, x, currentY, 50, 25);
+        return 28;
       } catch (e) {
-        console.error('Signature image error:', e);
+        console.error('Signature image error:', e.message);
         return 0;
       }
     };
@@ -143,8 +145,17 @@ Deno.serve(async (req) => {
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
         .replace(/&euro;/gi, '\u20AC')
-        // Fix common UTF-8 mojibake patterns
+        // Fix common UTF-8 mojibake patterns - comprehensive
+        .replace(/\u00ef\u00bf\u00bd\u00ef\u00bf\u00bdn/g, 'een')
         .replace(/ï¿½ï¿½n/g, 'een')
+        .replace(/be\u00ef\u00bf\u00bd\u00ef\u00bf\u00bdindig/g, 'beeindig')
+        .replace(/beï¿½ï¿½indig/g, 'beeindig')
+        .replace(/beï¿½indig/g, 'beeindig')
+        .replace(/be.{1,4}indig/g, (match) => match.includes('ï') || match.includes('¿') || match.includes('½') ? 'beeindig' : match)
+        .replace(/\u00ef\u00bf\u00bd/g, (match, offset, str) => {
+          // Try to determine context
+          return '\u20AC'; // default to euro sign
+        })
         .replace(/ï¿½/g, '\u20AC')
         .replace(/Ã«/g, 'e')
         .replace(/Ã©/g, 'e')
@@ -153,14 +164,29 @@ Deno.serve(async (req) => {
         .replace(/Ã¶/g, 'o')
         .replace(/Ã /g, 'a')
         .replace(/â‚¬/g, '\u20AC')
+        .replace(/Ã«n/g, 'en')
+        .replace(/Ã«/g, 'e')
         // Remove leftover dotted signature lines
         .replace(/\.{10,}/g, '')
+        .replace(/\u2026{3,}/g, '')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 
       // Remove trailing "Voor akkoord" block from plain text too
       textContent = textContent
         .replace(/Voor akkoord werkgever[\s\S]*$/i, '')
+        .trim();
+
+      // Remove "oorspronkelijk in dienst getreden" line if it contains placeholder or is not a verlenging
+      if (!contract.is_verlenging) {
+        textContent = textContent
+          .replace(/De werknemer is oorspronkelijk bij werkgever in dienst getreden op.*?\./gi, '')
+          .replace(/Werknemer is oorspronkelijk bij werkgever in dienst getreden op.*?\./gi, '');
+      }
+      // Also remove any lines with [NOG IN TE VULLEN] placeholder
+      textContent = textContent
+        .replace(/.*\[NOG IN TE VULLEN\].*\n?/g, '')
+        .replace(/\n{3,}/g, '\n\n')
         .trim();
 
       pdf.setFontSize(10);
