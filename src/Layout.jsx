@@ -230,10 +230,10 @@ export default function Layout({ children, currentPageName }) {
   });
 
   // Fetch employee data for mobile routing
-  const { data: allEmployees = [] } = useQuery({
+  const { data: allEmployees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employeesForRouting'],
     queryFn: () => base44.entities.Employee.list(),
-    enabled: isMobile && !!user?.email
+    enabled: !!user?.email && user?.role !== 'admin'
   });
 
   const currentEmployee = allEmployees.find(e => e.email === user?.email);
