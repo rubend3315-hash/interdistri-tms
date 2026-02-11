@@ -529,6 +529,7 @@ export default function MobileEntry() {
     { id: "planning", label: "Planning", icon: CalendarDays },
     { id: "berichten", label: "Berichten", icon: Mail, badge: unreadCount },
     { id: "reglement", label: "Bedrijfsreglement", icon: FileText },
+    { id: "contracten", label: "Mijn Contracten", icon: FileText, isLink: true },
     { id: "links", label: "Links", icon: ExternalLink }
   ];
 
