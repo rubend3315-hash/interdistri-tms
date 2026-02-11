@@ -53,24 +53,67 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
       windowWidth: 794,
     });
 
-    // 5. Convert canvas to PDF (A4) - full width, margins are in the HTML
+    // 5. Convert canvas to multi-page PDF with margins
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = 210;
     const pageHeight = 297;
+    const margin = 15; // 15mm margins
+    const printW = pageWidth - margin * 2;
+    const printH = pageHeight - margin * 2;
 
-    // Map canvas to full page width
-    const pxPerMM = canvas.width / pageWidth;
-    const pageHeightPx = pageHeight * pxPerMM;
+    // How many canvas pixels per mm of print area
+    const pxPerMM = canvas.width / printW;
+    // How many canvas pixels fit in one page's printable height
+    const sliceHeightPx = Math.floor(printH * pxPerMM);
 
-    const totalPages = Math.ceil(canvas.height / pageHeightPx);
+    // Scan for "safe" cut points - look for rows that are mostly white
+    // This prevents cutting through text
+    function findSafeCutY(targetY) {
+      // Search within ±40px of target for the whitest horizontal line
+      const scanRange = 80;
+      const startY = Math.max(0, targetY - scanRange);
+      const endY = Math.min(canvas.height, targetY + scanRange);
+      
+      let bestY = targetY;
+      let bestWhiteness = -1;
+      
+      const ctx = canvas.getContext('2d');
+      
+      for (let y = startY; y < endY; y++) {
+        const row = ctx.getImageData(0, y, canvas.width, 1).data;
+        let whiteCount = 0;
+        for (let x = 0; x < canvas.width * 4; x += 4) {
+          // Check if pixel is near-white (R, G, B all > 240)
+          if (row[x] > 240 && row[x + 1] > 240 && row[x + 2] > 240) {
+            whiteCount++;
+          }
+        }
+        const whiteness = whiteCount / canvas.width;
+        if (whiteness > bestWhiteness) {
+          bestWhiteness = whiteness;
+          bestY = y;
+        }
+      }
+      return bestY;
+    }
 
-    for (let page = 0; page < totalPages; page++) {
-      if (page > 0) pdf.addPage();
+    // Build list of page cuts
+    const cuts = [0];
+    let nextCut = sliceHeightPx;
+    while (nextCut < canvas.height) {
+      const safeCut = findSafeCutY(nextCut);
+      cuts.push(safeCut);
+      nextCut = safeCut + sliceHeightPx;
+    }
+    cuts.push(canvas.height);
 
-      const srcY = page * pageHeightPx;
-      const srcH = Math.min(pageHeightPx, canvas.height - srcY);
+    for (let i = 0; i < cuts.length - 1; i++) {
+      if (i > 0) pdf.addPage();
 
-      // Create a sub-canvas for this page slice
+      const srcY = cuts[i];
+      const srcH = cuts[i + 1] - srcY;
+      if (srcH <= 0) continue;
+
       const pageCanvas = document.createElement('canvas');
       pageCanvas.width = canvas.width;
       pageCanvas.height = srcH;
@@ -80,9 +123,9 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
       pCtx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
 
       const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
-      const sliceHeightMM = srcH / pxPerMM;
+      const sliceH_MM = srcH / pxPerMM;
 
-      pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidth, sliceHeightMM);
+      pdf.addImage(pageImgData, 'JPEG', margin, margin, printW, sliceH_MM);
     }
 
     pdf.save(`contract_${contractNumber || contractId}.pdf`);
