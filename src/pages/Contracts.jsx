@@ -373,7 +373,7 @@ export default function Contracts() {
                       {contract.employee_signature_url && !contract.manager_signature_url && (
                         <span className="text-xs text-amber-600">Wacht op management</span>
                       )}
-                      <DownloadContractButton contractId={contract.id} contractNumber={contract.contract_number} />
+                      <ContractPdfDownload contractId={contract.id} contractNumber={contract.contract_number} />
                     </div>
                   </div>
                 </CardContent>
@@ -396,7 +396,7 @@ export default function Contracts() {
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(contract)}
-                      <DownloadContractButton contractId={contract.id} contractNumber={contract.contract_number} />
+                      <ContractPdfDownload contractId={contract.id} contractNumber={contract.contract_number} />
                     </div>
                   </div>
                 </CardContent>
