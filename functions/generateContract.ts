@@ -23,7 +23,16 @@ function calcDuration(start, end) {
 }
 
 function signatureBlock(fullName) {
-  return `<div style="display:flex;justify-content:space-between;margin-top:40px;"><div style="width:45%;text-align:center;"><p><strong>Voor akkoord werkgever</strong></p><br/><br/><p>…………………………………………</p><p>Van Dooren Transport Zeeland B.V.</p><p>Namens deze:</p><p>De heer M. Schetters</p></div><div style="width:45%;text-align:center;"><p><strong>Voor akkoord werknemer</strong></p><br/><br/><p>…………………………………………</p><p>De heer/mevrouw ${fullName}</p></div></div>`;
+  return `
+<p style="margin-top:40px;"><strong>Voor akkoord werkgever</strong></p>
+<br/>
+<p>Van Dooren Transport Zeeland B.V.</p>
+<p>Namens deze:</p>
+<p>De heer M. Schetters</p>
+
+<p style="margin-top:30px;"><strong>Voor akkoord werknemer</strong></p>
+<br/>
+<p>De heer/mevrouw ${fullName}</p>`;
 }
 
 function replacePlaceholders(html, vars) {
@@ -43,7 +52,6 @@ function replacePlaceholders(html, vars) {
     '{{functie}}': vars.functie,
     '{{afdeling}}': vars.afdeling,
     '{{proeftijd}}': vars.proeftijd === 'Geen proeftijd' ? 'Er geldt geen proeftijd.' : 'Er geldt één maand proeftijd.',
-    '{{inDienstDatum}}': vars.inDienstDatum,
     '{{urenPerWeek}}': vars.urenPerWeek || '[NOG IN TE VULLEN]',
     '{{handtekeningBlok}}': signatureBlock(vars.fullName),
   };
