@@ -127,17 +127,21 @@ Deno.serve(async (req) => {
       console.error('Failed to send admin copy via Gmail:', emailErr.message);
     }
 
-    // Fire-and-forget notification
-    if (employeeUser) {
-      base44.asServiceRole.entities.Notification.create({
-        title: 'Contract ter ondertekening',
-        description: `Je arbeidscontract ${contract.contract_number} staat klaar ter ondertekening.`,
-        type: 'general',
-        target_page: 'Contracts',
-        user_ids: [employeeUser.id],
-        priority: 'high'
-      }).catch(() => {});
-    }
+    // Fire-and-forget notification - find user if exists
+    try {
+      const allUsers = await base44.asServiceRole.entities.User.list();
+      const employeeUser = allUsers.find(u => u.email === employee.email);
+      if (employeeUser) {
+        await base44.asServiceRole.entities.Notification.create({
+          title: 'Contract ter ondertekening',
+          description: `Je arbeidscontract ${contract.contract_number} staat klaar ter ondertekening.`,
+          type: 'general',
+          target_page: 'Contracts',
+          user_ids: [employeeUser.id],
+          priority: 'high'
+        });
+      }
+    } catch (_) { /* notification is optional */ }
 
     return Response.json({ success: true, message: `Contract is verzonden naar ${employeeName} (${employee.email})` });
 
