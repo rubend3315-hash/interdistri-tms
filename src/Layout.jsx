@@ -275,8 +275,17 @@ export default function Layout({ children, currentPageName }) {
       'Holidays': 'holidays',
       'SalaryReports': 'reports',
       'MobileEntry': 'mobile',
+      'MobileEntryMultiDay': 'mobile',
       'Messages': 'messages',
-      'Charters': 'charters'
+      'Charters': 'charters',
+      'Contracts': 'contracts',
+      'ContractTemplates': 'contracts',
+      'ContractWijzigingen': 'contracts',
+      'CompletedContracts': 'contracts',
+      'HRImport': 'hrimport',
+      'CustomerDetail': 'customers',
+      'Bedrijfsreglement': 'employees',
+      'PerformanceReviews': 'employees',
       };
     
     const requiredPermission = pagePermissionMap[page];

@@ -779,7 +779,7 @@ function RolesTab() {
 
                           <div className="space-y-3">
                             <Label className="text-base font-semibold">Permissies</Label>
-                            {['Basis', 'Beheer', 'Rapportage', 'Admin'].map(category => (
+                            {['Basis', 'Beheer', 'HR', 'Rapportage', 'Admin'].map(category => (
                               <div key={category} className="space-y-2">
                                 <h4 className="text-sm font-medium text-slate-700">{category}</h4>
                                 <div className="grid grid-cols-2 gap-3">
