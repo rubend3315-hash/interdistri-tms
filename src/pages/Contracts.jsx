@@ -271,6 +271,7 @@ export default function Contracts() {
   const handleInviteAndRetry = async () => {
     if (!sendError?.contract) return;
     setInvitingEmployee(true);
+    setSendError(null);
     await handleSendForSigning(sendError.contract, true);
     setInvitingEmployee(false);
   };
