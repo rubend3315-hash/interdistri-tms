@@ -239,10 +239,16 @@ export default function Layout({ children, currentPageName }) {
   const currentEmployee = allEmployees.find(e => e.email === user?.email);
 
   useEffect(() => {
-    if (!isMobile || !currentEmployee) return;
+    if (!isMobile || !user) return;
+    
+    // Admin users on mobile: don't force redirect
+    if (user.role === 'admin') return;
     
     // Allow non-admin users to stay on Contracts page (for signing)
     if (currentPageName === "Contracts") return;
+    
+    // If no employee match found yet, don't redirect - let them stay
+    if (!currentEmployee) return;
     
     const isMultiDay = currentEmployee.mobile_entry_type === "multi_day";
     const targetPage = isMultiDay ? "MobileEntryMultiDay" : "MobileEntry";
@@ -252,7 +258,7 @@ export default function Layout({ children, currentPageName }) {
     if (currentPageName === wrongPage || (currentPageName !== "MobileEntry" && currentPageName !== "MobileEntryMultiDay")) {
       navigate(createPageUrl(targetPage));
     }
-  }, [isMobile, currentPageName, navigate, currentEmployee]);
+  }, [isMobile, currentPageName, navigate, currentEmployee, user]);
 
   // Non-admin users on desktop: redirect to Contracts page (they should only see their contracts)
   useEffect(() => {
