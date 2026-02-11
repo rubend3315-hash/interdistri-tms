@@ -106,25 +106,37 @@ Deno.serve(async (req) => {
       </div>
     `;
 
-    // Do contract update + both emails all in parallel
-    await Promise.all([
-      base44.asServiceRole.entities.Contract.update(contract_id, {
-        status: 'TerOndertekening',
-        reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
-      }),
-      base44.asServiceRole.integrations.Core.SendEmail({
+    // Update contract status first
+    await base44.asServiceRole.entities.Contract.update(contract_id, {
+      status: 'TerOndertekening',
+      reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
+    });
+
+    // Send emails - employee email requires user to be in the app
+    // Send to employee (must be app user)
+    try {
+      await base44.asServiceRole.integrations.Core.SendEmail({
         to: employee.email,
         subject: `Arbeidsovereenkomst ter ondertekening - ${contract.contract_number}`,
         from_name: 'Interdistri HR',
         body: emailBody
-      }),
-      base44.asServiceRole.integrations.Core.SendEmail({
+      });
+    } catch (emailErr) {
+      console.error('Failed to send employee email:', emailErr.message);
+      // Continue - contract status is already updated
+    }
+
+    // Send copy to admin
+    try {
+      await base44.asServiceRole.integrations.Core.SendEmail({
         to: user.email,
         subject: `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`,
         from_name: 'Interdistri HR',
         body: `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`
-      })
-    ]);
+      });
+    } catch (emailErr) {
+      console.error('Failed to send admin copy email:', emailErr.message);
+    }
 
     // Fire-and-forget notification
     if (employeeUser) {
