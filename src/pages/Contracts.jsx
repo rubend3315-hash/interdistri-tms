@@ -314,7 +314,220 @@ export default function Contracts() {
   const pendingContracts = contracts.filter(c => c.status === 'TerOndertekening');
   const draftContracts = contracts.filter(c => c.status === 'Concept');
 
-  const isAdmin = user?.role === 'admin';
+  const activeContracts = contracts.filter(c => c.status === 'Actief' || c.status === 'Ondertekend');
+  const pendingContracts = contracts.filter(c => c.status === 'TerOndertekening');
+  const draftContracts = contracts.filter(c => c.status === 'Concept');
+
+  // Loading state
+  if (loadingUser || loadingContracts) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-48" />
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}
+        </div>
+      </div>
+    );
+  }
+
+  // ===== EMPLOYEE VIEW: Simple contract reading + signing =====
+  if (!isAdmin) {
+    const pendingToSign = contracts.filter(c => c.status === 'TerOndertekening' && !c.employee_signature_url);
+    const alreadySigned = contracts.filter(c => c.employee_signature_url);
+    const otherContracts = contracts.filter(c => c.status !== 'TerOndertekening' && !c.employee_signature_url);
+
+    return (
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Mijn Contracten</h1>
+          <p className="text-slate-500 mt-1">Bekijk en onderteken je arbeidscontracten</p>
+        </div>
+
+        {/* Contracts to sign */}
+        {pendingToSign.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-amber-700 flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Te ondertekenen ({pendingToSign.length})
+            </h2>
+            {pendingToSign.map(contract => {
+              const fullContract = employeeFullContracts.find(fc => fc?.id === contract.id);
+              return (
+                <Card key={contract.id} className="border-amber-200 bg-amber-50/30">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg text-slate-900">{contract.contract_number}</h3>
+                        <p className="text-sm text-slate-500">{contract.contract_type} — Start: {contract.start_date ? format(new Date(contract.start_date), 'd MMM yyyy', { locale: nl }) : '-'}</p>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-700 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Ter ondertekening
+                      </Badge>
+                    </div>
+
+                    {/* Show contract content for reading */}
+                    {fullContract?.contract_content ? (
+                      <div className="bg-white border rounded-lg p-6 max-h-96 overflow-y-auto">
+                        <div dangerouslySetInnerHTML={{ __html: fullContract.contract_content }} className="prose prose-sm max-w-none" />
+                      </div>
+                    ) : loadingEmployeeContracts ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                        <span className="ml-2 text-sm text-slate-500">Contract laden...</span>
+                      </div>
+                    ) : (
+                      <Button variant="outline" onClick={() => handleOpenContract(contract)}>
+                        <Eye className="w-4 h-4 mr-2" />
+                        Contract bekijken
+                      </Button>
+                    )}
+
+                    {/* Sign button */}
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={() => {
+                        setSelectedContract(fullContract || contract);
+                        setShowSignDialog(true);
+                      }}
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Contract ondertekenen
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Already signed / waiting for management */}
+        {alreadySigned.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              Ondertekend ({alreadySigned.length})
+            </h2>
+            {alreadySigned.map(contract => (
+              <Card key={contract.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-slate-900">{contract.contract_number}</h3>
+                      <p className="text-sm text-slate-500">{contract.contract_type}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(contract)}
+                      {contract.employee_signature_url && !contract.manager_signature_url && (
+                        <span className="text-xs text-amber-600">Wacht op management</span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Other contracts */}
+        {otherContracts.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-slate-700">Overige contracten</h2>
+            {otherContracts.map(contract => (
+              <Card key={contract.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-slate-900">{contract.contract_number}</h3>
+                      <p className="text-sm text-slate-500">{contract.contract_type}</p>
+                    </div>
+                    {getStatusBadge(contract)}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {contracts.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center text-slate-500">
+              Er staan momenteel geen contracten voor je klaar.
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Sign Dialog (reused) */}
+        <Dialog open={showSignDialog} onOpenChange={setShowSignDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Contract Ondertekenen</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {selectedContract && (
+                <div className="bg-slate-50 rounded-lg p-3 text-sm space-y-1">
+                  <p className="font-medium text-slate-700">
+                    {selectedContract.contract_number} — {selectedContract.contract_type}
+                  </p>
+                  <p className="text-slate-500">
+                    Je tekent als: <strong>Medewerker</strong>
+                  </p>
+                </div>
+              )}
+              <p className="text-sm text-slate-600">
+                Teken hieronder om het contract te ondertekenen:
+              </p>
+              <div className="border-2 border-dashed border-slate-300 rounded-lg">
+                <canvas
+                  ref={canvasRef}
+                  width={400}
+                  height={200}
+                  className="touch-none w-full"
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={clearSignature}>
+                  Wissen
+                </Button>
+                <Button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  onClick={handleSign}
+                  disabled={updateContractMutation.isPending}
+                >
+                  {updateContractMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <UserCheck className="w-4 h-4 mr-2" />
+                  )}
+                  Ondertekenen
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Contract Dialog */}
+        <ContractEditDialog
+          open={showViewDialog}
+          onOpenChange={setShowViewDialog}
+          contract={selectedContract}
+          employee={null}
+          isAdmin={false}
+          onSave={() => {}}
+          saving={false}
+        />
+      </div>
+    );
+  }
+
+  // ===== ADMIN VIEW below =====
 
   return (
     <div className="space-y-6">
@@ -324,15 +537,13 @@ export default function Contracts() {
           <h1 className="text-3xl font-bold text-slate-900">Contracten</h1>
           <p className="text-slate-500 mt-1">Beheer arbeidscontracten en digitale handtekeningen</p>
         </div>
-        {isAdmin && (
-          <Button
-            onClick={() => setShowGenerateDialog(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nieuw Contract
-          </Button>
-        )}
+        <Button
+          onClick={() => setShowGenerateDialog(true)}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Nieuw Contract
+        </Button>
       </div>
 
       {/* Stats */}
@@ -393,11 +604,7 @@ export default function Contracts() {
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          {loadingContracts ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}
-            </div>
-          ) : contracts.length === 0 ? (
+          {contracts.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-slate-500">
                 Nog geen contracten. Genereer je eerste contract.
@@ -485,7 +692,7 @@ export default function Contracts() {
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {contract.status === 'Concept' && isAdmin && (
+                        {contract.status === 'Concept' && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -500,41 +707,37 @@ export default function Contracts() {
                             )}
                           </Button>
                         )}
-                        {contract.status === 'TerOndertekening' && isAdmin && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSendForSigning(contract)}
-                            disabled={sendingContract === contract.id}
-                            title="Herinnering versturen"
-                          >
-                            {sendingContract === contract.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <RotateCw className="w-4 h-4" />
-                            )}
-                          </Button>
-                        )}
                         {contract.status === 'TerOndertekening' && (
-                          <Button
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700"
-                            onClick={() => {
-                              setSelectedContract(contract);
-                              setShowSignDialog(true);
-                            }}
-                            disabled={
-                              (isAdmin && contract.manager_signature_url) ||
-                              (isAdmin && !contract.employee_signature_url) ||
-                              (!isAdmin && contract.employee_signature_url)
-                            }
-                            title={isAdmin && !contract.employee_signature_url ? 'Wacht tot medewerker eerst tekent' : ''}
-                          >
-                            <UserCheck className="w-4 h-4 mr-1" />
-                            Onderteken
-                          </Button>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSendForSigning(contract)}
+                              disabled={sendingContract === contract.id}
+                              title="Herinnering versturen"
+                            >
+                              {sendingContract === contract.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <RotateCw className="w-4 h-4" />
+                              )}
+                            </Button>
+                            {contract.employee_signature_url && !contract.manager_signature_url && (
+                              <Button
+                                size="sm"
+                                className="bg-blue-600 hover:bg-blue-700"
+                                onClick={() => {
+                                  setSelectedContract(contract);
+                                  setShowSignDialog(true);
+                                }}
+                              >
+                                <UserCheck className="w-4 h-4 mr-1" />
+                                Onderteken
+                              </Button>
+                            )}
+                          </>
                         )}
-                        {isAdmin && contract.status !== 'Actief' && (
+                        {contract.status !== 'Actief' && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -577,7 +780,6 @@ export default function Contracts() {
         <TabsContent value="pending" className="space-y-4">
           {pendingContracts.map(contract => {
             const employee = employees.find(e => e.id === contract.employee_id);
-            const canSign = (isAdmin && !contract.manager_signature_url) || (!isAdmin && !contract.employee_signature_url);
             return (
               <Card key={contract.id}>
                 <CardContent className="p-4">
@@ -599,18 +801,16 @@ export default function Contracts() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      {isAdmin && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSendForSigning(contract)}
-                          disabled={sendingContract === contract.id}
-                          title="Herinnering versturen"
-                        >
-                          {sendingContract === contract.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCw className="w-4 h-4" />}
-                        </Button>
-                      )}
-                      {canSign && !(isAdmin && !contract.employee_signature_url) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSendForSigning(contract)}
+                        disabled={sendingContract === contract.id}
+                        title="Herinnering versturen"
+                      >
+                        {sendingContract === contract.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCw className="w-4 h-4" />}
+                      </Button>
+                      {contract.employee_signature_url && !contract.manager_signature_url && (
                         <Button
                           size="sm"
                           className="bg-blue-600 hover:bg-blue-700"
@@ -644,21 +844,19 @@ export default function Contracts() {
                       </h3>
                       <p className="text-sm text-slate-500">{contract.contract_number}</p>
                     </div>
-                    {isAdmin && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSendForSigning(contract)}
-                        disabled={sendingContract === contract.id}
-                      >
-                        {sendingContract === contract.id ? (
-                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                        ) : (
-                          <Send className="w-4 h-4 mr-1" />
-                        )}
-                        Versturen
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSendForSigning(contract)}
+                      disabled={sendingContract === contract.id}
+                    >
+                      {sendingContract === contract.id ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4 mr-1" />
+                      )}
+                      Versturen
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
