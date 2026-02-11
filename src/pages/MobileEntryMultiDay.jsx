@@ -22,6 +22,8 @@ import {
   MessageSquare, ClipboardCheck, Plus, Trash2, CalendarDays,
   Menu, Home, X, Bell, Mail
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "../utils";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 import MobileReglementTab from "@/components/mobile/MobileReglementTab.jsx";
 import { determineShiftType } from "@/components/utils/shiftTypeUtils";
