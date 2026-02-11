@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.1';
+import { decode as decodePng } from 'npm:upng-js@2.1.0';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -97,7 +98,27 @@ Deno.serve(async (req) => {
 
     y += 50;
 
-    // Helper to embed signature image - larger and clearer
+    // Helper to flatten PNG transparency to white background, then encode as JPEG for jsPDF
+    const flattenPngToJpegDataUri = (pngArrayBuffer) => {
+      const img = decodePng(pngArrayBuffer);
+      const rgba = new Uint8Array(decodePng.toRGBA8(img)[0]);
+      const w = img.width;
+      const h = img.height;
+
+      // Create RGB array with white background
+      const rgb = new Uint8Array(w * h * 3);
+      for (let i = 0; i < w * h; i++) {
+        const a = rgba[i * 4 + 3] / 255;
+        rgb[i * 3 + 0] = Math.round(rgba[i * 4 + 0] * a + 255 * (1 - a)); // R
+        rgb[i * 3 + 1] = Math.round(rgba[i * 4 + 1] * a + 255 * (1 - a)); // G
+        rgb[i * 3 + 2] = Math.round(rgba[i * 4 + 2] * a + 255 * (1 - a)); // B
+      }
+
+      // Encode as simple BMP-style uncompressed data for jsPDF rawPixelData
+      return { rgb, w, h };
+    };
+
+    // Helper to embed signature image - handles transparency properly
     const addSignatureImage = async (url, x, currentY) => {
       try {
         const resp = await fetch(url);
@@ -105,21 +126,85 @@ Deno.serve(async (req) => {
         const arrayBuf = await resp.arrayBuffer();
         const uint8 = new Uint8Array(arrayBuf);
         
-        // Detect format from magic bytes
-        let format = 'PNG';
-        if (uint8[0] === 0xFF && uint8[1] === 0xD8) format = 'JPEG';
+        const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
+        
+        if (isJpeg) {
+          // JPEG: no transparency issues, embed directly
+          let binary = '';
+          const chunkSize = 8192;
+          for (let i = 0; i < uint8.length; i += chunkSize) {
+            const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
+            binary += String.fromCharCode.apply(null, chunk);
+          }
+          const base64 = btoa(binary);
+          const dataUri = `data:image/jpeg;base64,${base64}`;
+          pdf.addImage(dataUri, 'JPEG', x, currentY, 60, 20);
+          return 23;
+        }
+
+        // PNG: flatten alpha to white background, then use raw pixel data
+        const { rgb, w, h } = flattenPngToJpegDataUri(arrayBuf);
+
+        // Create a minimal BMP in memory to feed to jsPDF
+        // BMP header: 14 bytes file header + 40 bytes DIB header
+        const rowBytes = w * 3;
+        const rowPadding = (4 - (rowBytes % 4)) % 4;
+        const paddedRowBytes = rowBytes + rowPadding;
+        const pixelDataSize = paddedRowBytes * h;
+        const fileSize = 54 + pixelDataSize;
+        
+        const bmp = new Uint8Array(fileSize);
+        const dv = new DataView(bmp.buffer);
+        
+        // File header
+        bmp[0] = 0x42; bmp[1] = 0x4D; // 'BM'
+        dv.setUint32(2, fileSize, true);
+        dv.setUint32(10, 54, true); // pixel data offset
+        
+        // DIB header (BITMAPINFOHEADER)
+        dv.setUint32(14, 40, true); // header size
+        dv.setInt32(18, w, true);
+        dv.setInt32(22, -h, true); // negative = top-down
+        dv.setUint16(26, 1, true); // planes
+        dv.setUint16(28, 24, true); // bits per pixel
+        dv.setUint32(34, pixelDataSize, true);
+        
+        // Write pixel data (BMP uses BGR order)
+        let offset = 54;
+        for (let row = 0; row < h; row++) {
+          for (let col = 0; col < w; col++) {
+            const srcIdx = (row * w + col) * 3;
+            bmp[offset++] = rgb[srcIdx + 2]; // B
+            bmp[offset++] = rgb[srcIdx + 1]; // G
+            bmp[offset++] = rgb[srcIdx + 0]; // R
+          }
+          for (let p = 0; p < rowPadding; p++) {
+            bmp[offset++] = 0;
+          }
+        }
         
         let binary = '';
         const chunkSize = 8192;
-        for (let i = 0; i < uint8.length; i += chunkSize) {
-          const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
+        for (let i = 0; i < bmp.length; i += chunkSize) {
+          const chunk = bmp.subarray(i, Math.min(i + chunkSize, bmp.length));
           binary += String.fromCharCode.apply(null, chunk);
         }
         const base64 = btoa(binary);
-        const dataUri = `data:image/${format.toLowerCase()};base64,${base64}`;
-        // Larger signature: 70mm wide, 35mm tall for readability
-        pdf.addImage(dataUri, format, x, currentY, 70, 35);
-        return 38;
+        const dataUri = `data:image/bmp;base64,${base64}`;
+        
+        // Calculate aspect ratio to keep signature proportional
+        const maxW = 60; // mm
+        const maxH = 20; // mm
+        const aspect = w / h;
+        let drawW = maxW;
+        let drawH = drawW / aspect;
+        if (drawH > maxH) {
+          drawH = maxH;
+          drawW = drawH * aspect;
+        }
+        
+        pdf.addImage(dataUri, 'BMP', x, currentY, drawW, drawH);
+        return drawH + 3;
       } catch (e) {
         console.error('Signature image error:', e.message);
         return 0;
