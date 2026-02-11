@@ -280,9 +280,10 @@ Deno.serve(async (req) => {
     const actualHours = hours_per_week || employee.contract_hours || 40;
 
     const fullName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
-    const inDienstDatum = is_verlenging && oorspronkelijke_indienst_datum
-      ? formatDate(oorspronkelijke_indienst_datum)
-      : (employee.in_service_since ? formatDate(employee.in_service_since) : '[NOG IN TE VULLEN]');
+    // Only show "in dienst getreden" for verlengingen
+    const inDienstDatum = is_verlenging
+      ? (oorspronkelijke_indienst_datum ? formatDate(oorspronkelijke_indienst_datum) : (employee.in_service_since ? formatDate(employee.in_service_since) : '[NOG IN TE VULLEN]'))
+      : '[NOG IN TE VULLEN]';
 
     const vars = {
       fullName,
