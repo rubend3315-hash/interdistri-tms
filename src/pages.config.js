@@ -56,7 +56,6 @@ import Charters from './pages/Charters';
 import CompletedContracts from './pages/CompletedContracts';
 import ContractTemplates from './pages/ContractTemplates';
 import ContractWijzigingen from './pages/ContractWijzigingen';
-import Contracts from './pages/Contracts';
 import CustomerDetail from './pages/CustomerDetail';
 import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
@@ -86,6 +85,7 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
+import Contracts from './pages/Contracts';
 import __Layout from './Layout.jsx';
 
 
@@ -99,7 +99,6 @@ export const PAGES = {
     "CompletedContracts": CompletedContracts,
     "ContractTemplates": ContractTemplates,
     "ContractWijzigingen": ContractWijzigingen,
-    "Contracts": Contracts,
     "CustomerDetail": CustomerDetail,
     "Customers": Customers,
     "Dashboard": Dashboard,
@@ -129,6 +128,7 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
+    "Contracts": Contracts,
 }
 
 export const pagesConfig = {

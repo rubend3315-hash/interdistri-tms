@@ -35,31 +35,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ContractEditDialog from "../components/contracts/ContractEditDialog";
 import ContractPreviewEditor from "../components/contracts/ContractPreviewEditor";
 import SignatureCanvas from "../components/contracts/SignatureCanvas";
-
-function DownloadContractButton({ contractId, contractNumber }) {
-  const [downloading, setDownloading] = useState(false);
-
-  const handleDownload = async () => {
-    setDownloading(true);
-    const response = await base44.functions.invoke('downloadContractPdf', { contract_id: contractId });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `contract_${contractNumber || contractId}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    a.remove();
-    setDownloading(false);
-  };
-
-  return (
-    <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloading} title="Download PDF">
-      {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-    </Button>
-  );
-}
+import ContractPdfDownload from "../components/contracts/ContractPdfDownload";
 
 export default function Contracts() {
   // v2
