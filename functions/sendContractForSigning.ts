@@ -72,46 +72,7 @@ Deno.serve(async (req) => {
     }
 
     const employeeName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
-    let employeeUser = allUsers.find(u => u.email === employee.email);
-
-    if (!employeeUser) {
-      if (auto_invite) {
-        try {
-          await base44.users.inviteUser(employee.email, "user");
-          // Wait a moment for invitation to process, then re-fetch users
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          const updatedUsers = await base44.asServiceRole.entities.User.list();
-          employeeUser = updatedUsers.find(u => u.email === employee.email);
-        } catch (inviteError) {
-          if (!inviteError.message?.includes('already')) {
-            return Response.json({ error: `Kon niet uitnodigen: ${inviteError.message}` }, { status: 500 });
-          }
-          // If already exists, try to find the user again
-          const updatedUsers = await base44.asServiceRole.entities.User.list();
-          employeeUser = updatedUsers.find(u => u.email === employee.email);
-        }
-        
-        if (!employeeUser) {
-          // Invitation sent but user not yet active - update contract status but skip email
-          await base44.asServiceRole.entities.Contract.update(contract_id, {
-            status: 'TerOndertekening',
-            reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
-          });
-          return Response.json({ 
-            success: true,
-            invited: true,
-            message: `Uitnodiging verstuurd naar ${employeeName} (${employee.email}). De medewerker moet eerst de uitnodiging accepteren. Verstuur het contract daarna opnieuw.`
-          });
-        }
-      } else {
-        return Response.json({ 
-          error: `${employeeName} (${employee.email}) is geen geregistreerde app-gebruiker. De e-mail kan alleen worden verstuurd naar gebruikers die in de app zijn uitgenodigd.`,
-          error_type: 'not_app_user',
-          employee_name: employeeName,
-          employee_email: employee.email
-        }, { status: 400 });
-      }
-    }
+    const employeeUser = allUsers.find(u => u.email === employee.email);
 
     const emailBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
