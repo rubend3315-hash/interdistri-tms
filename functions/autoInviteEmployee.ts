@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
             </ul>
           </div>
           <p style="color: #475569; font-size: 14px; line-height: 1.6;">
-            Je ontvangt binnenkort een aparte e-mail met je inloggegevens. Gebruik je e-mailadres <strong>${employeeEmail}</strong> om in te loggen.
+            Je ontvangt een uitnodigingsmail waarmee je zelf een account kunt aanmaken. Gebruik hiervoor je e-mailadres <strong>${employeeEmail}</strong>.
           </p>
         </div>
         <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
