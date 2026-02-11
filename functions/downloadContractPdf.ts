@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.1';
-import { PNG } from 'npm:pngjs@7.0.0';
+import { encode as encodePng } from 'npm:fast-png@6.2.0';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -109,11 +109,117 @@ Deno.serve(async (req) => {
       return btoa(binary);
     };
 
-    // Helper to embed signature image - flatten PNG to JPEG to avoid transparency issues
+    // Minimal PNG decoder for getting RGBA pixel data
+    const decodePngRGBA = (buf) => {
+      const dv = new DataView(buf.buffer || buf);
+      // Skip 8-byte PNG signature
+      let pos = 8;
+      let width = 0, height = 0, bitDepth = 0, colorType = 0;
+      const idatChunks = [];
+      
+      while (pos < buf.length) {
+        const len = dv.getUint32(pos);
+        const type = String.fromCharCode(buf[pos+4], buf[pos+5], buf[pos+6], buf[pos+7]);
+        
+        if (type === 'IHDR') {
+          width = dv.getUint32(pos + 8);
+          height = dv.getUint32(pos + 12);
+          bitDepth = buf[pos + 16];
+          colorType = buf[pos + 17];
+        } else if (type === 'IDAT') {
+          idatChunks.push(buf.slice(pos + 8, pos + 8 + len));
+        }
+        pos += 12 + len;
+      }
+      
+      // Decompress IDAT data
+      const compressed = new Uint8Array(idatChunks.reduce((a, c) => a + c.length, 0));
+      let offset = 0;
+      for (const chunk of idatChunks) {
+        compressed.set(chunk, offset);
+        offset += chunk.length;
+      }
+      
+      const ds = new DecompressionStream('deflate');
+      const writer = ds.writable.getWriter();
+      const reader = ds.readable.getReader();
+      writer.write(compressed);
+      writer.close();
+      
+      return reader.read().then(async function collect({ done, value }) {
+        const chunks = value ? [value] : [];
+        if (!done) {
+          const next = await reader.read();
+          if (next.value) chunks.push(next.value);
+          while (!next.done) {
+            const n2 = await reader.read();
+            if (n2.value) chunks.push(n2.value);
+            if (n2.done) break;
+          }
+        }
+        const raw = new Uint8Array(chunks.reduce((a, c) => a + c.length, 0));
+        let o = 0;
+        for (const c of chunks) { raw.set(c, o); o += c.length; }
+        
+        // channels per pixel based on colorType
+        const channels = colorType === 6 ? 4 : colorType === 2 ? 3 : colorType === 4 ? 2 : 1;
+        const bpp = Math.ceil(bitDepth * channels / 8);
+        const rowLen = width * bpp;
+        
+        // Unfilter
+        const pixels = new Uint8Array(height * rowLen);
+        for (let row = 0; row < height; row++) {
+          const filterType = raw[row * (rowLen + 1)];
+          const rowStart = row * (rowLen + 1) + 1;
+          const outStart = row * rowLen;
+          const prevRow = row > 0 ? (row - 1) * rowLen : -1;
+          
+          for (let i = 0; i < rowLen; i++) {
+            const rawByte = raw[rowStart + i];
+            const a2 = i >= bpp ? pixels[outStart + i - bpp] : 0;
+            const b2 = prevRow >= 0 ? pixels[prevRow + i] : 0;
+            const c2 = (i >= bpp && prevRow >= 0) ? pixels[prevRow + i - bpp] : 0;
+            
+            if (filterType === 0) pixels[outStart + i] = rawByte;
+            else if (filterType === 1) pixels[outStart + i] = (rawByte + a2) & 0xFF;
+            else if (filterType === 2) pixels[outStart + i] = (rawByte + b2) & 0xFF;
+            else if (filterType === 3) pixels[outStart + i] = (rawByte + Math.floor((a2 + b2) / 2)) & 0xFF;
+            else if (filterType === 4) {
+              const p = a2 + b2 - c2;
+              const pa = Math.abs(p - a2);
+              const pb = Math.abs(p - b2);
+              const pc = Math.abs(p - c2);
+              const pr = pa <= pb && pa <= pc ? a2 : pb <= pc ? b2 : c2;
+              pixels[outStart + i] = (rawByte + pr) & 0xFF;
+            }
+          }
+        }
+        
+        // Convert to RGBA
+        const rgba = new Uint8Array(width * height * 4);
+        for (let i = 0; i < width * height; i++) {
+          if (channels === 4) {
+            rgba[i*4] = pixels[i*4]; rgba[i*4+1] = pixels[i*4+1];
+            rgba[i*4+2] = pixels[i*4+2]; rgba[i*4+3] = pixels[i*4+3];
+          } else if (channels === 3) {
+            rgba[i*4] = pixels[i*3]; rgba[i*4+1] = pixels[i*3+1];
+            rgba[i*4+2] = pixels[i*3+2]; rgba[i*4+3] = 255;
+          } else if (channels === 2) {
+            rgba[i*4] = rgba[i*4+1] = rgba[i*4+2] = pixels[i*2]; rgba[i*4+3] = pixels[i*2+1];
+          } else {
+            rgba[i*4] = rgba[i*4+1] = rgba[i*4+2] = pixels[i]; rgba[i*4+3] = 255;
+          }
+        }
+        
+        return { width, height, rgba };
+      });
+    };
+
+    // Helper to embed signature image - flatten PNG to opaque and embed
     const addSignatureImage = async (url, x, currentY) => {
       try {
         const resp = await fetch(url);
-        if (!resp.ok) throw new Error(`Failed to fetch signature: ${resp.status}`);
+        if (!resp.ok) throw new Error(`Failed to fetch: ${resp.status}`);
         const arrayBuf = await resp.arrayBuffer();
         const uint8 = new Uint8Array(arrayBuf);
         
@@ -125,24 +231,21 @@ Deno.serve(async (req) => {
           return 23;
         }
         
-        // PNG: use pngjs to decode, flatten alpha onto white, then create a raw RGB JPEG-like BMP
-        const png = PNG.sync.read(Buffer.from(arrayBuf));
-        const w = png.width;
-        const h = png.height;
-        const rgba = png.data; // Buffer with RGBA pixels
+        // PNG: decode, flatten alpha on white, re-encode as opaque PNG using fast-png
+        const { width: w, height: h, rgba } = await decodePngRGBA(uint8);
         
-        // Create new opaque PNG - composite on white background
-        const opaquePng = new PNG({ width: w, height: h, colorType: 2 }); // colorType 2 = RGB (no alpha)
+        // Flatten transparency onto white
+        const rgb = new Uint8Array(w * h * 3);
         for (let i = 0; i < w * h; i++) {
           const a = rgba[i * 4 + 3] / 255;
-          opaquePng.data[i * 4 + 0] = Math.round(rgba[i * 4 + 0] * a + 255 * (1 - a));
-          opaquePng.data[i * 4 + 1] = Math.round(rgba[i * 4 + 1] * a + 255 * (1 - a));
-          opaquePng.data[i * 4 + 2] = Math.round(rgba[i * 4 + 2] * a + 255 * (1 - a));
-          opaquePng.data[i * 4 + 3] = 255;
+          rgb[i * 3 + 0] = Math.round(rgba[i * 4 + 0] * a + 255 * (1 - a));
+          rgb[i * 3 + 1] = Math.round(rgba[i * 4 + 1] * a + 255 * (1 - a));
+          rgb[i * 3 + 2] = Math.round(rgba[i * 4 + 2] * a + 255 * (1 - a));
         }
         
-        const opaqueBuf = PNG.sync.write(opaquePng, { colorType: 6 });
-        const base64 = toBase64(new Uint8Array(opaqueBuf));
+        // Re-encode as opaque PNG (RGB, no alpha) using fast-png
+        const opaquePngBuf = encodePng({ width: w, height: h, data: rgb, channels: 3 });
+        const base64 = toBase64(new Uint8Array(opaquePngBuf));
         const dataUri = `data:image/png;base64,${base64}`;
         
         // Calculate aspect ratio
@@ -151,10 +254,7 @@ Deno.serve(async (req) => {
         const aspect = w / h;
         let drawW = maxW;
         let drawH = drawW / aspect;
-        if (drawH > maxH) {
-          drawH = maxH;
-          drawW = drawH * aspect;
-        }
+        if (drawH > maxH) { drawH = maxH; drawW = drawH * aspect; }
         
         pdf.addImage(dataUri, 'PNG', x, currentY, drawW, drawH);
         return drawH + 3;
