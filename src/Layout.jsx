@@ -224,9 +224,10 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: loadingUser, isError: userError } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    retry: false,
   });
 
   // Fetch employee data for mobile routing
@@ -320,7 +321,13 @@ export default function Layout({ children, currentPageName }) {
   const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
 
   // While user is loading, show nothing to prevent flash/redirect issues
-  if (!user) {
+  if (loadingUser) {
+    return null;
+  }
+
+  // If user is not logged in, redirect to login
+  if (userError || !user) {
+    base44.auth.redirectToLogin();
     return null;
   }
 
