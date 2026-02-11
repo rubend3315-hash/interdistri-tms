@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.1';
-import UPNG from 'npm:upng-js@2.1.0';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -9,104 +8,48 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-// Create a minimal valid BMP file from raw RGB pixel data (no alpha)
-function createBMP(width, height, rgbData) {
-  const rowSize = Math.ceil((width * 3) / 4) * 4; // rows must be 4-byte aligned
-  const pixelDataSize = rowSize * height;
-  const fileSize = 54 + pixelDataSize;
-  const bmp = new Uint8Array(fileSize);
-  const view = new DataView(bmp.buffer);
-
-  // BMP Header
-  bmp[0] = 0x42; bmp[1] = 0x4D; // 'BM'
-  view.setUint32(2, fileSize, true);
-  view.setUint32(10, 54, true); // pixel data offset
-
-  // DIB Header (BITMAPINFOHEADER)
-  view.setUint32(14, 40, true); // header size
-  view.setInt32(18, width, true);
-  view.setInt32(22, -height, true); // negative = top-down
-  view.setUint16(26, 1, true); // planes
-  view.setUint16(28, 24, true); // bits per pixel
-  view.setUint32(30, 0, true); // no compression
-  view.setUint32(34, pixelDataSize, true);
-
-  // Write pixel data (BMP uses BGR order)
-  let offset = 54;
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
-      const srcIdx = (row * width + col) * 3;
-      bmp[offset++] = rgbData[srcIdx + 2]; // B
-      bmp[offset++] = rgbData[srcIdx + 1]; // G
-      bmp[offset++] = rgbData[srcIdx];     // R
-    }
-    // Pad row to 4 bytes
-    const padding = rowSize - width * 3;
-    for (let p = 0; p < padding; p++) {
-      bmp[offset++] = 0;
-    }
-  }
-
-  return bmp;
-}
-
-// Fetch signature and convert to BMP (no alpha channel issues)
-async function fetchSignatureAsBmpDataUri(url) {
+// Fetch signature image and return as base64 JPEG data URI
+async function fetchSignatureAsJpeg(url) {
   try {
+    console.log('Fetching signature from:', url);
     const resp = await fetch(url);
-    if (!resp.ok) { console.error('Fetch failed:', resp.status); return null; }
+    if (!resp.ok) {
+      console.error('Signature fetch failed:', resp.status, resp.statusText);
+      return null;
+    }
     const arrayBuf = await resp.arrayBuffer();
     const uint8 = new Uint8Array(arrayBuf);
+    console.log('Signature fetched, size:', uint8.length, 'first bytes:', uint8[0], uint8[1], uint8[2]);
 
-    const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
     const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
+    const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
 
     if (isJpeg) {
-      // JPEG has no alpha, use directly
+      // Direct JPEG - convert to base64
       let binary = '';
-      for (let i = 0; i < uint8.length; i += 8192) {
-        const chunk = uint8.subarray(i, Math.min(i + 8192, uint8.length));
-        binary += String.fromCharCode.apply(null, chunk);
+      for (let i = 0; i < uint8.length; i++) {
+        binary += String.fromCharCode(uint8[i]);
       }
-      return { dataUri: `data:image/jpeg;base64,${btoa(binary)}`, format: 'JPEG' };
+      const b64 = btoa(binary);
+      console.log('JPEG signature, base64 length:', b64.length);
+      return { data: b64, format: 'JPEG' };
     }
 
     if (isPng) {
-      // Decode PNG to get raw RGBA pixels, composite onto white background, output as BMP
-      const png = UPNG.decode(arrayBuf);
-      const width = png.width;
-      const height = png.height;
-      // toRGBA8 returns array of frames, each frame is ArrayBuffer of RGBA pixels
-      const frames = UPNG.toRGBA8(png);
-      const rgba = new Uint8Array(frames[0]);
-
-      // Composite RGBA onto white background -> RGB
-      const rgb = new Uint8Array(width * height * 3);
-      for (let i = 0; i < width * height; i++) {
-        const a = rgba[i * 4 + 3] / 255;
-        rgb[i * 3]     = Math.round(rgba[i * 4]     * a + 255 * (1 - a)); // R
-        rgb[i * 3 + 1] = Math.round(rgba[i * 4 + 1] * a + 255 * (1 - a)); // G
-        rgb[i * 3 + 2] = Math.round(rgba[i * 4 + 2] * a + 255 * (1 - a)); // B
-      }
-
-      const bmpBytes = createBMP(width, height, rgb);
+      // For PNG, we'll just use it as PNG - jsPDF supports PNG
       let binary = '';
-      for (let i = 0; i < bmpBytes.length; i += 8192) {
-        const chunk = bmpBytes.subarray(i, Math.min(i + 8192, bmpBytes.length));
-        binary += String.fromCharCode.apply(null, chunk);
+      for (let i = 0; i < uint8.length; i++) {
+        binary += String.fromCharCode(uint8[i]);
       }
-      return { dataUri: `data:image/bmp;base64,${btoa(binary)}`, format: 'BMP', width, height };
+      const b64 = btoa(binary);
+      console.log('PNG signature, base64 length:', b64.length);
+      return { data: b64, format: 'PNG' };
     }
 
-    // Unknown format, try as-is
-    let binary = '';
-    for (let i = 0; i < uint8.length; i += 8192) {
-      const chunk = uint8.subarray(i, Math.min(i + 8192, uint8.length));
-      binary += String.fromCharCode.apply(null, chunk);
-    }
-    return { dataUri: `data:image/png;base64,${btoa(binary)}`, format: 'PNG' };
+    console.error('Unknown image format, bytes:', uint8[0], uint8[1]);
+    return null;
   } catch (e) {
-    console.error('fetchSignature error:', e.message, e.stack);
+    console.error('fetchSignature error:', e.message);
     return null;
   }
 }
@@ -145,8 +88,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Pre-fetch signature images
+    console.log('Manager sig URL:', contract.manager_signature_url);
+    console.log('Employee sig URL:', contract.employee_signature_url);
+
+    const [managerSig, employeeSig] = await Promise.all([
+      contract.manager_signature_url ? fetchSignatureAsJpeg(contract.manager_signature_url) : null,
+      contract.employee_signature_url ? fetchSignatureAsJpeg(contract.employee_signature_url) : null,
+    ]);
+
+    console.log('Manager sig result:', managerSig ? `${managerSig.format}, ${managerSig.data.length} chars` : 'null');
+    console.log('Employee sig result:', employeeSig ? `${employeeSig.format}, ${employeeSig.data.length} chars` : 'null');
+
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.width;
+    const pageHeight = pdf.internal.pageSize.height;
     const margin = 20;
     const usableWidth = pageWidth - margin * 2;
     let y = 20;
@@ -195,12 +151,6 @@ Deno.serve(async (req) => {
     pdf.text(contract.hours_per_week ? String(contract.hours_per_week) : '-', col2 + 35, infoY + 20);
 
     y += 50;
-
-    // Pre-fetch signature images as data URIs while we build the rest of the PDF
-    const [managerSigData, employeeSigData] = await Promise.all([
-      contract.manager_signature_url ? fetchSignatureAsBmpDataUri(contract.manager_signature_url) : null,
-      contract.employee_signature_url ? fetchSignatureAsBmpDataUri(contract.employee_signature_url) : null,
-    ]);
 
     // Contract content
     if (contract.contract_content) {
@@ -275,7 +225,6 @@ Deno.serve(async (req) => {
 
       const lineHeight = 4.5;
       const artikelSpacing = 6;
-
       const paragraphs = textContent.split('\n');
 
       for (const para of paragraphs) {
@@ -288,7 +237,7 @@ Deno.serve(async (req) => {
 
         if (isArtikel) y += artikelSpacing;
 
-        if (y + lineHeight > pdf.internal.pageSize.height - 30) {
+        if (y + lineHeight > pageHeight - 30) {
           pdf.addPage();
           y = 20;
         }
@@ -303,7 +252,7 @@ Deno.serve(async (req) => {
 
         const wrappedLines = pdf.splitTextToSize(displayText, usableWidth);
         for (const wLine of wrappedLines) {
-          if (y + lineHeight > pdf.internal.pageSize.height - 30) {
+          if (y + lineHeight > pageHeight - 30) {
             pdf.addPage();
             y = 20;
           }
@@ -316,9 +265,9 @@ Deno.serve(async (req) => {
       pdf.setFontSize(10);
     }
 
-    // Signatures section
+    // ===== SIGNATURES SECTION =====
     y += 10;
-    if (y > pdf.internal.pageSize.height - 80) {
+    if (y > pageHeight - 90) {
       pdf.addPage();
       y = 20;
     }
@@ -334,13 +283,25 @@ Deno.serve(async (req) => {
     pdf.text('Voor akkoord werkgever', margin, y);
     y += 7;
 
-    if (managerSigData) {
-      // Draw a white rectangle first as background to handle any transparency
-      pdf.setFillColor(255, 255, 255);
-      pdf.rect(margin, y, 65, 25, 'F');
-      pdf.addImage(managerSigData.dataUri, managerSigData.format, margin, y, 65, 25);
-      y += 28;
+    if (managerSig) {
+      try {
+        console.log('Adding manager signature image, format:', managerSig.format);
+        pdf.addImage(
+          'data:image/' + managerSig.format.toLowerCase() + ';base64,' + managerSig.data,
+          managerSig.format,
+          margin,
+          y,
+          60,
+          25
+        );
+        console.log('Manager signature added successfully');
+        y += 28;
+      } catch (imgErr) {
+        console.error('Error adding manager signature image:', imgErr.message);
+        y += 20;
+      }
     } else {
+      console.log('No manager signature data available');
       y += 20;
     }
 
@@ -363,7 +324,7 @@ Deno.serve(async (req) => {
     y += 12;
 
     // --- Voor akkoord werknemer ---
-    if (y > pdf.internal.pageSize.height - 60) {
+    if (y > pageHeight - 60) {
       pdf.addPage();
       y = 20;
     }
@@ -373,12 +334,25 @@ Deno.serve(async (req) => {
     pdf.text('Voor akkoord werknemer', margin, y);
     y += 7;
 
-    if (employeeSigData) {
-      pdf.setFillColor(255, 255, 255);
-      pdf.rect(margin, y, 65, 25, 'F');
-      pdf.addImage(employeeSigData.dataUri, employeeSigData.format, margin, y, 65, 25);
-      y += 28;
+    if (employeeSig) {
+      try {
+        console.log('Adding employee signature image, format:', employeeSig.format);
+        pdf.addImage(
+          'data:image/' + employeeSig.format.toLowerCase() + ';base64,' + employeeSig.data,
+          employeeSig.format,
+          margin,
+          y,
+          60,
+          25
+        );
+        console.log('Employee signature added successfully');
+        y += 28;
+      } catch (imgErr) {
+        console.error('Error adding employee signature image:', imgErr.message);
+        y += 20;
+      }
     } else {
+      console.log('No employee signature data available');
       y += 20;
     }
 
@@ -395,7 +369,7 @@ Deno.serve(async (req) => {
       pdf.setTextColor(30, 41, 59);
     }
 
-    // Footer
+    // Footer on all pages
     const pageCount = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
@@ -404,12 +378,13 @@ Deno.serve(async (req) => {
       pdf.text(
         `Gegenereerd op ${new Date().toLocaleDateString('nl-NL')} - Pagina ${i} van ${pageCount}`,
         pageWidth / 2,
-        pdf.internal.pageSize.height - 10,
+        pageHeight - 10,
         { align: 'center' }
       );
     }
 
     const pdfBytes = pdf.output('arraybuffer');
+    console.log('PDF generated, size:', pdfBytes.byteLength);
 
     return new Response(pdfBytes, {
       status: 200,
