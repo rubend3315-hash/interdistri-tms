@@ -12,11 +12,25 @@ Deno.serve(async (req) => {
     // Use service role to fetch all contracts
     const contracts = await base44.asServiceRole.entities.Contract.list('-created_date');
 
-    // Strip heavy contract_content field to keep response small
+    // Strip heavy fields to keep response small
     const lightContracts = contracts.map(c => {
-      const { contract_content, ...rest } = c;
+      const { contract_content, cao_rules_applied, notes, ...rest } = c;
       return rest;
     });
+
+    // For non-admin users, also fetch their employee record to filter contracts
+    if (user.role !== 'admin') {
+      const employees = await base44.asServiceRole.entities.Employee.filter({ email: user.email });
+      if (employees.length > 0) {
+        const employeeId = employees[0].id;
+        const filtered = lightContracts.filter(c => c.employee_id === employeeId);
+        return Response.json({ 
+          contracts: filtered,
+          currentEmployeeId: employeeId
+        });
+      }
+      return Response.json({ contracts: [], currentEmployeeId: null });
+    }
 
     return Response.json({ contracts: lightContracts });
   } catch (error) {
