@@ -299,7 +299,7 @@ export default function ActiviteitenReport({ weekData, onDataUpdated }) {
             <tr>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Dag</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Ritnaam</th>
-              <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Starttijd shift</th>
+              <th className="text-left py-2 px-1.5 font-medium text-slate-600 align-bottom min-w-[45px]">Starttijd<br/>shift</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">Vrijgave</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">debrief</th>
               <th className="text-left py-2 px-1.5 font-medium text-slate-600 whitespace-nowrap align-bottom">1ste stop</th>
