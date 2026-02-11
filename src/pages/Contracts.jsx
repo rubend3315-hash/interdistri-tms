@@ -221,12 +221,12 @@ export default function Contracts() {
     exportCtx.fillStyle = 'white';
     exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
     exportCtx.drawImage(canvas, 0, 0);
-    const dataUrl = exportCanvas.toDataURL('image/png');
+    const dataUrl = exportCanvas.toDataURL('image/jpeg', 0.95);
 
-    // Convert base64 to file and upload to avoid storing large data in entity fields
+    // Convert base64 to file and upload - JPEG has no alpha channel, avoids PDF rendering issues
     const response = await fetch(dataUrl);
     const blob = await response.blob();
-    const file = new File([blob], `signature_${Date.now()}.png`, { type: 'image/png' });
+    const file = new File([blob], `signature_${Date.now()}.jpg`, { type: 'image/jpeg' });
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
     const isManager = user?.role === 'admin';
