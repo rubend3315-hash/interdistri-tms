@@ -172,14 +172,20 @@ export default function Contracts() {
     const canvas = canvasRef.current;
     const dataUrl = canvas.toDataURL('image/png');
 
+    // Convert base64 to file and upload to avoid storing large data in entity fields
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    const file = new File([blob], `signature_${Date.now()}.png`, { type: 'image/png' });
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
     const isManager = user?.role === 'admin';
     const updateData = isManager ? {
-      manager_signature_url: dataUrl,
+      manager_signature_url: file_url,
       manager_signed_date: new Date().toISOString(),
       manager_signed_by: user.full_name,
       status: selectedContract.employee_signature_url ? 'Actief' : 'TerOndertekening'
     } : {
-      employee_signature_url: dataUrl,
+      employee_signature_url: file_url,
       employee_signed_date: new Date().toISOString(),
       status: selectedContract.manager_signature_url ? 'Actief' : 'TerOndertekening'
     };
