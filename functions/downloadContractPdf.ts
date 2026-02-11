@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.1';
-import { encode as encodePng } from 'npm:fast-png@6.2.0';
+import { Jimp } from 'npm:jimp@1.6.0';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
