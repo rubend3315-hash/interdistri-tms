@@ -149,9 +149,39 @@ export default function ContractPdfDownload({ contractId, contractNumber }) {
 
               {/* Contract content */}
               <div
-                style={{ fontSize: '11px', lineHeight: '1.6' }}
+                className="contract-pdf-content"
                 dangerouslySetInnerHTML={{ __html: renderData.contract_content_clean }}
               />
+              <style>{`
+                .contract-pdf-content {
+                  font-size: 10.5px;
+                  line-height: 1.55;
+                  color: #1e293b;
+                }
+                .contract-pdf-content h2 {
+                  font-size: 14px;
+                  font-weight: bold;
+                  margin: 18px 0 8px 0;
+                  color: #0f172a;
+                  text-transform: uppercase;
+                }
+                .contract-pdf-content h3 {
+                  font-size: 12px;
+                  font-weight: bold;
+                  margin: 14px 0 4px 0;
+                  color: #0f172a;
+                }
+                .contract-pdf-content p {
+                  margin: 0 0 6px 0;
+                }
+                .contract-pdf-content ul, .contract-pdf-content ol {
+                  margin: 4px 0 8px 20px;
+                  padding: 0;
+                }
+                .contract-pdf-content li {
+                  margin: 2px 0;
+                }
+              `}</style>
 
               {/* Signatures */}
               <div style={{ marginTop: '30px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
