@@ -198,8 +198,8 @@ Deno.serve(async (req) => {
 
     // Pre-fetch signature images as data URIs while we build the rest of the PDF
     const [managerSigData, employeeSigData] = await Promise.all([
-      contract.manager_signature_url ? fetchSignatureAsJpegDataUri(contract.manager_signature_url) : null,
-      contract.employee_signature_url ? fetchSignatureAsJpegDataUri(contract.employee_signature_url) : null,
+      contract.manager_signature_url ? fetchSignatureAsBmpDataUri(contract.manager_signature_url) : null,
+      contract.employee_signature_url ? fetchSignatureAsBmpDataUri(contract.employee_signature_url) : null,
     ]);
 
     // Contract content
