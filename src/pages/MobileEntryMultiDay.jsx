@@ -476,6 +476,19 @@ export default function MobileEntryMultiDay() {
             <div className="space-y-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
+                if (item.isLink) {
+                  return (
+                    <Link
+                      key={item.id}
+                      to={createPageUrl("Contracts")}
+                      onClick={() => setMenuOpen(false)}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-slate-600 hover:bg-slate-50"
+                    >
+                      <Icon className="w-5 h-5 text-slate-400" />
+                      <span className="text-sm">{item.label}</span>
+                    </Link>
+                  );
+                }
                 return (
                   <button
                     key={item.id}
