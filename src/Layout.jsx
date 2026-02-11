@@ -241,6 +241,9 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     if (!isMobile || !currentEmployee) return;
     
+    // Allow non-admin users to stay on Contracts page (for signing)
+    if (currentPageName === "Contracts") return;
+    
     const isMultiDay = currentEmployee.mobile_entry_type === "multi_day";
     const targetPage = isMultiDay ? "MobileEntryMultiDay" : "MobileEntry";
     const wrongPage = isMultiDay ? "MobileEntry" : "MobileEntryMultiDay";
