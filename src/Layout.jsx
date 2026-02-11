@@ -53,6 +53,7 @@ const menuItems = [
       { name: "Contracten", icon: FileText, page: "Contracts" },
       { name: "Contract Sjablonen", icon: FileText, page: "ContractTemplates" },
           { name: "Contractwijzigingen", icon: FileText, page: "ContractWijzigingen" },
+        { name: "Afgeronde Contracten", icon: CheckSquare, page: "CompletedContracts" },
       { name: "Bedrijfsreglement", icon: BookOpen, page: "Bedrijfsreglement" },
       { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
       { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
