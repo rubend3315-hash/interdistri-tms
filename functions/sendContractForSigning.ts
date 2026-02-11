@@ -50,17 +50,16 @@ Deno.serve(async (req) => {
         try {
           await base44.users.inviteUser(employee.email, "user");
         } catch (inviteError) {
-          return Response.json({ 
-            error: `Kon medewerker niet uitnodigen: ${inviteError.message}`,
-            error_type: 'invite_failed'
-          }, { status: 500 });
+          // If already invited, continue with sending
+          if (!inviteError.message?.includes('already')) {
+            return Response.json({ 
+              error: `Kon medewerker niet uitnodigen: ${inviteError.message}`,
+              error_type: 'invite_failed'
+            }, { status: 500 });
+          }
         }
-        // Return success but tell frontend to retry after invite
-        return Response.json({ 
-          success: true,
-          invited: true,
-          message: `${employeeName} is uitgenodigd als app-gebruiker op ${employee.email}. Zodra de medewerker de uitnodiging heeft geaccepteerd, kun je het contract opnieuw versturen.`
-        });
+        // After inviting, proceed to send the contract email anyway
+        // (the user account exists now as invited)
       } else {
         // Return error with clear message
         return Response.json({ 
