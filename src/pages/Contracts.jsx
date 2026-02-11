@@ -168,70 +168,8 @@ export default function Contracts() {
     }
   });
 
-  // Canvas drawing functions
-  const startDrawing = (e) => {
-    setIsDrawing(true);
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    // Always ensure pen is black and visible
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
-    const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
-
-  const draw = (e) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
-    const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => setIsDrawing(false);
-
-  const clearSignature = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-  };
-
-  React.useEffect(() => {
-    if (showSignDialog && canvasRef.current) {
-      clearSignature();
-    }
-  }, [showSignDialog]);
-
-  const handleSign = async () => {
-    const canvas = canvasRef.current;
-    // Create a new canvas with white background to ensure no transparency
-    const exportCanvas = document.createElement('canvas');
-    exportCanvas.width = canvas.width;
-    exportCanvas.height = canvas.height;
-    const exportCtx = exportCanvas.getContext('2d');
-    exportCtx.fillStyle = 'white';
-    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-    exportCtx.drawImage(canvas, 0, 0);
-    const dataUrl = exportCanvas.toDataURL('image/jpeg', 0.95);
-
-    // Convert base64 to file and upload - JPEG has no alpha channel, avoids PDF rendering issues
+  const handleSign = async (dataUrl) => {
+    // Convert base64 to file and upload
     const response = await fetch(dataUrl);
     const blob = await response.blob();
     const file = new File([blob], `signature_${Date.now()}.jpg`, { type: 'image/jpeg' });
@@ -261,9 +199,7 @@ export default function Contracts() {
     }).catch(err => console.error('Notificatie fout:', err));
 
     queryClient.invalidateQueries({ queryKey: ['contracts'] });
-
     setShowSignDialog(false);
-    setSignature(null);
   };
 
   const getStatusBadge = (contract) => {
