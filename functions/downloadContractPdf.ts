@@ -98,40 +98,68 @@ Deno.serve(async (req) => {
 
     y += 50;
 
-    // Helper to embed signature image using Canvas API to flatten transparency
+    // Helper: uint8array to base64
+    const toBase64 = (uint8) => {
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < uint8.length; i += chunkSize) {
+        const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      return btoa(binary);
+    };
+
+    // Helper to embed signature image - flatten PNG to JPEG to avoid transparency issues
     const addSignatureImage = async (url, x, currentY) => {
       try {
-        console.log('Fetching signature from:', url);
         const resp = await fetch(url);
         if (!resp.ok) throw new Error(`Failed to fetch signature: ${resp.status}`);
         const arrayBuf = await resp.arrayBuffer();
         const uint8 = new Uint8Array(arrayBuf);
-        console.log('Signature fetched, size:', uint8.length, 'first bytes:', uint8[0], uint8[1], uint8[2], uint8[3]);
         
-        // Convert to base64
-        let binary = '';
-        const chunkSize = 8192;
-        for (let i = 0; i < uint8.length; i += chunkSize) {
-          const chunk = uint8.subarray(i, Math.min(i + chunkSize, uint8.length));
-          binary += String.fromCharCode.apply(null, chunk);
-        }
-        const base64 = btoa(binary);
-        
-        // Detect format
         const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
-        const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
-        const format = isJpeg ? 'JPEG' : 'PNG';
-        const mime = isJpeg ? 'jpeg' : 'png';
         
-        const dataUri = `data:image/${mime};base64,${base64}`;
-        console.log('Adding image, format:', format, 'dataUri length:', dataUri.length);
+        if (isJpeg) {
+          const base64 = toBase64(uint8);
+          pdf.addImage(`data:image/jpeg;base64,${base64}`, 'JPEG', x, currentY, 60, 20);
+          return 23;
+        }
         
-        // Use jsPDF addImage directly - it handles PNG transparency internally
-        pdf.addImage(dataUri, format, x, currentY, 60, 20);
-        console.log('Image added successfully');
-        return 23;
+        // PNG: use pngjs to decode, flatten alpha onto white, then create a raw RGB JPEG-like BMP
+        const png = PNG.sync.read(Buffer.from(arrayBuf));
+        const w = png.width;
+        const h = png.height;
+        const rgba = png.data; // Buffer with RGBA pixels
+        
+        // Create new opaque PNG - composite on white background
+        const opaquePng = new PNG({ width: w, height: h, colorType: 2 }); // colorType 2 = RGB (no alpha)
+        for (let i = 0; i < w * h; i++) {
+          const a = rgba[i * 4 + 3] / 255;
+          opaquePng.data[i * 4 + 0] = Math.round(rgba[i * 4 + 0] * a + 255 * (1 - a));
+          opaquePng.data[i * 4 + 1] = Math.round(rgba[i * 4 + 1] * a + 255 * (1 - a));
+          opaquePng.data[i * 4 + 2] = Math.round(rgba[i * 4 + 2] * a + 255 * (1 - a));
+          opaquePng.data[i * 4 + 3] = 255;
+        }
+        
+        const opaqueBuf = PNG.sync.write(opaquePng, { colorType: 6 });
+        const base64 = toBase64(new Uint8Array(opaqueBuf));
+        const dataUri = `data:image/png;base64,${base64}`;
+        
+        // Calculate aspect ratio
+        const maxW = 60;
+        const maxH = 20;
+        const aspect = w / h;
+        let drawW = maxW;
+        let drawH = drawW / aspect;
+        if (drawH > maxH) {
+          drawH = maxH;
+          drawW = drawH * aspect;
+        }
+        
+        pdf.addImage(dataUri, 'PNG', x, currentY, drawW, drawH);
+        return drawH + 3;
       } catch (e) {
-        console.error('Signature image error:', e.message, e.stack);
+        console.error('Signature image error:', e.message);
         return 0;
       }
     };
