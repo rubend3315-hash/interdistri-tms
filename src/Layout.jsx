@@ -251,6 +251,15 @@ export default function Layout({ children, currentPageName }) {
     }
   }, [isMobile, currentPageName, navigate, currentEmployee]);
 
+  // Non-admin users on desktop: redirect to Contracts page (they should only see their contracts)
+  useEffect(() => {
+    if (!user || user.role === 'admin' || isMobile) return;
+    const allowedPages = ["Contracts", "MobileEntry", "MobileEntryMultiDay"];
+    if (!allowedPages.includes(currentPageName)) {
+      navigate(createPageUrl("Contracts"));
+    }
+  }, [user, currentPageName, navigate, isMobile]);
+
   const hasPermission = (page) => {
     if (!user) return false;
     if (user.role === 'admin') return true;
@@ -297,8 +306,9 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const isMobilePage = currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay";
+  const isEmployeeContractPage = !user || (user.role !== 'admin' && currentPageName === "Contracts");
 
-  if (isMobilePage) {
+  if (isMobilePage || isEmployeeContractPage) {
     return <>{children}</>;
   }
 
