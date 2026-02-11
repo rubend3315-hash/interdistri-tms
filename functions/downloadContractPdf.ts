@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
       return btoa(binary);
     };
 
-    // Helper to embed signature image - pass raw Uint8Array to jsPDF
+    // Helper to embed signature image as base64 data URI
     const addSignatureImage = async (url, x, currentY) => {
       try {
         const resp = await fetch(url);
@@ -117,11 +117,14 @@ Deno.serve(async (req) => {
         const uint8 = new Uint8Array(arrayBuf);
         
         const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
+        const mimeType = isPng ? 'image/png' : 'image/jpeg';
         const format = isPng ? 'PNG' : 'JPEG';
         
-        // jsPDF handles raw Uint8Array directly (including PNG with transparency)
-        pdf.addImage(uint8, format, x, currentY, 60, 20);
-        return 23;
+        const base64 = toBase64(uint8);
+        const dataUri = `data:${mimeType};base64,${base64}`;
+        
+        pdf.addImage(dataUri, format, x, currentY, 65, 25);
+        return 28;
       } catch (e) {
         console.error('Signature image error:', e.message);
         return 0;

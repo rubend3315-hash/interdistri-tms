@@ -200,8 +200,9 @@ export default function Contracts() {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
   };
 
   React.useEffect(() => {
@@ -212,7 +213,15 @@ export default function Contracts() {
 
   const handleSign = async () => {
     const canvas = canvasRef.current;
-    const dataUrl = canvas.toDataURL('image/png');
+    // Create a new canvas with white background to ensure no transparency
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = canvas.width;
+    exportCanvas.height = canvas.height;
+    const exportCtx = exportCanvas.getContext('2d');
+    exportCtx.fillStyle = 'white';
+    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    exportCtx.drawImage(canvas, 0, 0);
+    const dataUrl = exportCanvas.toDataURL('image/png');
 
     // Convert base64 to file and upload to avoid storing large data in entity fields
     const response = await fetch(dataUrl);
