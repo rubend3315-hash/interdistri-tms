@@ -1363,11 +1363,7 @@ export default function MobileEntry() {
                 </Button>
                 <Button 
                   className="w-full py-3 bg-blue-600 hover:bg-blue-700"
-                  onClick={() => {
-                    handleSaveDraft();
-                    setTimeout(() => setActiveTab("dienst"), 300);
-                  }}
-                  disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                  onClick={() => setActiveTab("dienst")}
                 >
                   <Clock className="w-4 h-4 mr-2" />
                   Volgende → Einde diensttijd invoeren
