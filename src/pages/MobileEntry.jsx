@@ -467,18 +467,25 @@ export default function MobileEntry() {
      status: "Concept"
    };
 
-   // Check if there's already a Concept entry for this employee + date
-   const existingConcept = myTimeEntries.find(
-     e => e.date === formData.date && e.status === 'Concept' && e.employee_id === currentEmployee?.id
-   );
+   // Fetch fresh data from server to avoid stale cache causing duplicates
+   const freshEntries = await base44.entities.TimeEntry.filter({
+     employee_id: currentEmployee?.id,
+     date: formData.date,
+     status: 'Concept'
+   });
 
-   if (existingConcept) {
-     updateTimeEntryMutation.mutate({ id: existingConcept.id, data: timeEntryPayload });
+   if (freshEntries.length > 0) {
+     // Update the first existing concept entry
+     await base44.entities.TimeEntry.update(freshEntries[0].id, timeEntryPayload);
+     // Clean up any extra duplicates that may have been created
+     for (let i = 1; i < freshEntries.length; i++) {
+       await base44.entities.TimeEntry.delete(freshEntries[i].id);
+     }
    } else {
-     createTimeEntryMutation.mutate(timeEntryPayload);
+     await base44.entities.TimeEntry.create(timeEntryPayload);
    }
 
-   // Note: trips are not saved as draft duplicates - they stay in local state until final submit
+   queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
 
    alert('✓ Concept opgeslagen');
 
