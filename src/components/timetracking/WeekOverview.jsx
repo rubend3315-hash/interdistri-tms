@@ -178,15 +178,7 @@ export default function WeekOverview({
             </Button>
           </div>
         </div>
-        {/* Employee navigation buttons */}
-        <div className="flex items-center justify-center gap-3 mt-3 print:hidden">
-          <Button variant="outline" size="sm" className="text-white border-slate-500 hover:bg-slate-700 bg-transparent" onClick={onPreviousEmployee}>
-            <ChevronLeft className="w-4 h-4 mr-1" /> Vorige medewerker
-          </Button>
-          <Button variant="outline" size="sm" className="text-white border-slate-500 hover:bg-slate-700 bg-transparent" onClick={onNextEmployee}>
-            Volgende medewerker <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </div>
+
       </div>
 
       {/* Week Table */}

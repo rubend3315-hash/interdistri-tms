@@ -464,11 +464,11 @@ export default function TimeTracking() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setCurrentDate(subWeeks(currentDate, 1))}>
-            <ChevronLeft className="w-4 h-4 mr-1" /> Vorige week
+          <Button variant="outline" size="sm" onClick={() => navigateEmployee('prev')} disabled={!selectedEmployeeId}>
+            <ChevronLeft className="w-4 h-4 mr-1" /> Vorige medewerker
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setCurrentDate(addWeeks(currentDate, 1))}>
-            Volgende week <ChevronRight className="w-4 h-4 ml-1" />
+          <Button variant="outline" size="sm" onClick={() => navigateEmployee('next')} disabled={!selectedEmployeeId}>
+            Volgende medewerker <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </div>
