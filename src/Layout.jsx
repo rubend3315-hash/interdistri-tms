@@ -231,14 +231,15 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
-  // Non-admin users: only allow certain pages, redirect others to Contracts
+  // Non-admin users: only allow certain pages, redirect others to MobileEntry
   useEffect(() => {
-    if (!user || user.role === 'admin') return;
+    if (loadingUser || !user) return;
+    if (user.role === 'admin') return;
     const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts"];
     if (!allowedPages.includes(currentPageName)) {
       navigate(createPageUrl("MobileEntry"));
     }
-  }, [user, currentPageName, navigate]);
+  }, [user, loadingUser, currentPageName, navigate]);
 
   const hasPermission = (page) => {
     if (!user) return false;
