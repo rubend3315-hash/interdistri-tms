@@ -425,12 +425,12 @@ export default function Layout({ children, currentPageName }) {
             {/* Mobile App Link */}
             <div className="mt-4 pt-4 border-t border-slate-100">
               <Link
-                to={createPageUrl("MobileEntry")}
+                to={createPageUrl(currentEmployee?.mobile_entry_type === 'multi_day' ? "MobileEntryMultiDay" : "MobileEntry")}
                 onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200"
               >
                 <Smartphone className="w-5 h-5 text-slate-400" />
-                <span className="text-sm">Mobiele Invoer</span>
+                <span className="text-sm">Mobiele Invoer ({currentEmployee?.mobile_entry_type === 'multi_day' ? 'Multi Day' : 'Single Day'})</span>
               </Link>
             </div>
           </nav>
