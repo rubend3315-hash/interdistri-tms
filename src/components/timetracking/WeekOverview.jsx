@@ -156,24 +156,35 @@ export default function WeekOverview({
   return (
     <div className="space-y-4">
       {/* Employee Header with Navigation */}
-      <div className="bg-slate-800 text-white rounded-xl p-4 flex items-center justify-between print:bg-slate-800 print:rounded-none">
-        <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onPreviousWeek} title="Vorige week">
-          <ChevronLeft className="w-5 h-5" />
-          <ChevronLeft className="w-5 h-5 -ml-3" />
-        </Button>
-        <div className="text-center">
-          <h2 className="text-lg font-bold">
-            ({employee.employee_number || '-'}) {employee.first_name} {employee.last_name}
-          </h2>
-          <p className="text-xs text-slate-300 hidden print:block">Week {weekNumber} - {year}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={handlePrint} title="Afdrukken">
-            <Printer className="w-5 h-5" />
+      <div className="bg-slate-800 text-white rounded-xl p-4 print:bg-slate-800 print:rounded-none">
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onPreviousWeek} title="Vorige week">
+            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5 -ml-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onNextWeek} title="Volgende week">
-            <ChevronRight className="w-5 h-5" />
-            <ChevronRight className="w-5 h-5 -ml-3" />
+          <div className="text-center">
+            <h2 className="text-lg font-bold">
+              ({employee.employee_number || '-'}) {employee.first_name} {employee.last_name}
+            </h2>
+            <p className="text-xs text-slate-300 hidden print:block">Week {weekNumber} - {year}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={handlePrint} title="Afdrukken">
+              <Printer className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-white hover:bg-slate-700 print:hidden" onClick={onNextWeek} title="Volgende week">
+              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-5 h-5 -ml-3" />
+            </Button>
+          </div>
+        </div>
+        {/* Employee navigation buttons */}
+        <div className="flex items-center justify-center gap-3 mt-3 print:hidden">
+          <Button variant="outline" size="sm" className="text-white border-slate-500 hover:bg-slate-700 bg-transparent" onClick={onPreviousEmployee}>
+            <ChevronLeft className="w-4 h-4 mr-1" /> Vorige medewerker
+          </Button>
+          <Button variant="outline" size="sm" className="text-white border-slate-500 hover:bg-slate-700 bg-transparent" onClick={onNextEmployee}>
+            Volgende medewerker <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </div>
