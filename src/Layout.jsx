@@ -11,6 +11,7 @@ import {
   CheckSquare,
   Users,
   Shield,
+  Link2,
   Car,
   FileText,
   Building2,
@@ -97,6 +98,7 @@ const menuItems = [
   {
     label: "Beheer",
     items: [
+      { name: "Integraties", icon: Link2, page: "Integrations" },
       { name: "Herberekeningen", icon: Shield, page: "Recalculations" },
       { name: "Documentenbeheer", icon: FileText, page: "Documents" },
       { name: "Gebruikers", icon: Settings, page: "Users" },
