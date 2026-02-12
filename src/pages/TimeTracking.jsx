@@ -445,7 +445,18 @@ export default function TimeTracking() {
     if (selectedEntry) {
       updateMutation.mutate({ id: selectedEntry.id, data: submitData });
     } else {
-      createMutation.mutate(submitData);
+      // Voorkom dubbele entries: controleer of er al een entry bestaat voor deze medewerker+datum+shifttype
+      const existingForDate = timeEntries.filter(e => 
+        e.employee_id === formData.employee_id && 
+        e.date === formData.date &&
+        e.shift_type === finalShiftType
+      );
+      if (existingForDate.length > 0) {
+        // Update de bestaande entry in plaats van een nieuwe aan te maken
+        updateMutation.mutate({ id: existingForDate[0].id, data: submitData });
+      } else {
+        createMutation.mutate(submitData);
+      }
     }
   };
 
