@@ -363,7 +363,7 @@ export default function MobileEntry() {
     submitAndReturn();
   };
 
-  const submitAndReturn = () => {
+  const submitAndReturn = async () => {
       // Check if any trip has damage
       const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
 
@@ -384,16 +384,43 @@ export default function MobileEntry() {
         signature_url: signature
       };
 
-      // If online, submit immediately; if offline, queue for sync
       if (isOnline) {
-        createTimeEntryMutation.mutate(timeEntryData);
+        // Check for existing draft entries to update instead of creating duplicates
+        const existingEntries = await base44.entities.TimeEntry.filter({
+          employee_id: currentEmployee?.id,
+          date: formData.date,
+          status: 'Concept'
+        });
+
+        if (existingEntries.length > 0) {
+          // Update the first existing entry
+          await base44.entities.TimeEntry.update(existingEntries[0].id, timeEntryData);
+          // Clean up any duplicates
+          for (let i = 1; i < existingEntries.length; i++) {
+            await base44.entities.TimeEntry.delete(existingEntries[i].id);
+          }
+        } else {
+          await base44.entities.TimeEntry.create(timeEntryData);
+        }
+
+        // Delete any existing draft trips for this employee+date before creating new ones
+        const existingTrips = await base44.entities.Trip.filter({
+          employee_id: currentEmployee?.id,
+          date: formData.date,
+          status: 'Gepland'
+        });
+        for (const et of existingTrips) {
+          await base44.entities.Trip.delete(et.id);
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
       } else {
         addToQueue('createTimeEntry', timeEntryData);
       }
 
       // Submit all trips
       if (trips.length > 0) {
-        trips.forEach(trip => {
+        for (const trip of trips) {
           const tripData = {
             employee_id: currentEmployee?.id,
             date: formData.date,
@@ -416,11 +443,11 @@ export default function MobileEntry() {
           };
 
           if (isOnline) {
-            createTripMutation.mutate(tripData);
+            await base44.entities.Trip.create(tripData);
           } else {
             addToQueue('createTrip', tripData);
           }
-        });
+        }
       }
 
       // Show success or offline message
