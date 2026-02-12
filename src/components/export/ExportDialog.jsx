@@ -36,7 +36,7 @@ export default function ExportDialog({ open, onOpenChange }) {
     const response = await base44.functions.invoke('exportTimeAndTrips', {
       start_date: startDate,
       end_date: endDate,
-    });
+    }, { responseType: 'arraybuffer' });
     
     const blob = new Blob([response.data], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
