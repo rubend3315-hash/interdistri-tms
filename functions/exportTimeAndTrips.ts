@@ -136,13 +136,12 @@ Deno.serve(async (req) => {
     const wb = XLSX.utils.book_new();
 
     const wsTime = XLSX.utils.json_to_sheet(timeRows.length > 0 ? timeRows : [{ 'Medewerker': '', 'Start registratie': '', 'Einde registratie': '', 'Uursoort': '', 'Uren': '' }]);
-    // Set column widths
     wsTime['!cols'] = [
-      { wch: 30 }, // Medewerker
-      { wch: 40 }, // Start registratie
-      { wch: 40 }, // Einde registratie
-      { wch: 20 }, // Uursoort
-      { wch: 10 }, // Uren
+      { wch: 30 },
+      { wch: 40 },
+      { wch: 40 },
+      { wch: 20 },
+      { wch: 10 },
     ];
     XLSX.utils.book_append_sheet(wb, wsTime, 'Tijdregistratie');
 
@@ -154,14 +153,12 @@ Deno.serve(async (req) => {
     ];
     XLSX.utils.book_append_sheet(wb, wsTrips, 'Ritten');
 
-    const xlsxBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    // Write as base64 to avoid binary corruption
+    const xlsxBase64 = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
 
-    return new Response(xlsxBuffer, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename=ExportInterdistriTMS.xlsx`,
-      },
+    return Response.json({ 
+      file_base64: xlsxBase64,
+      filename: `ExportInterdistriTMS_${start_date}_${end_date}.xlsx`
     });
   } catch (error) {
     console.error('Export error:', error.message);
