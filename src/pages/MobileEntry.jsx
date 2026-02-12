@@ -226,6 +226,70 @@ export default function MobileEntry() {
     notes: ""
   });
 
+  // Load existing draft entry and trips when app opens
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  useEffect(() => {
+    if (!currentEmployee?.id || draftLoaded) return;
+    
+    const loadDraft = async () => {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      // Load existing concept TimeEntry for today
+      const draftEntries = await base44.entities.TimeEntry.filter({
+        employee_id: currentEmployee.id,
+        date: today,
+        status: 'Concept'
+      });
+      
+      if (draftEntries.length > 0) {
+        const draft = draftEntries[0];
+        setFormData({
+          date: draft.date || today,
+          start_time: draft.start_time || "",
+          end_time: draft.end_time || "",
+          break_minutes: draft.break_minutes ?? 30,
+          notes: draft.notes || ""
+        });
+        if (draft.signature_url) {
+          setSignature(draft.signature_url);
+        }
+      }
+      
+      // Load existing trips for today (both Gepland and Voltooid that are drafts)
+      const existingTrips = await base44.entities.Trip.filter({
+        employee_id: currentEmployee.id,
+        date: today
+      });
+      
+      // Only load trips that are in "Gepland" status (draft trips)
+      const draftTrips = existingTrips.filter(t => t.status === 'Gepland');
+      if (draftTrips.length > 0) {
+        setTrips(draftTrips.map(t => ({
+          start_time: t.departure_time || "",
+          end_time: t.arrival_time || "",
+          departure_location: t.departure_location || "Standplaats",
+          vehicle_id: t.vehicle_id || "",
+          damage_occurred: "Nee",
+          start_km: t.start_km ? String(t.start_km) : "",
+          end_km: t.end_km ? String(t.end_km) : "",
+          fuel_liters: t.fuel_liters ? String(t.fuel_liters) : "",
+          adblue_liters: t.adblue_liters ? String(t.adblue_liters) : "",
+          fuel_km: t.fuel_km ? String(t.fuel_km) : "",
+          charging_kwh: t.charging_kwh ? String(t.charging_kwh) : "",
+          customer_id: t.customer_id || "",
+          route_name: t.route_name || "",
+          planned_stops: t.planned_stops ? String(t.planned_stops) : "",
+          notes: t.notes || "",
+          _existingId: t.id // track so we can update instead of recreate
+        })));
+      }
+      
+      setDraftLoaded(true);
+    };
+    
+    loadDraft();
+  }, [currentEmployee?.id, draftLoaded]);
+
   const [inspectionData, setInspectionData] = useState({
     vehicle_id: "",
     mileage: "",
