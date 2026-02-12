@@ -22,14 +22,17 @@ import {
   FileText,
   TrendingUp,
   Car,
-  Bell
+  Bell,
+  Download
 } from "lucide-react";
 import CharterOverview from "../components/dashboard/CharterOverview";
 import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
+import ExportDialog from "../components/export/ExportDialog";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const today = new Date();
+  const [showExport, setShowExport] = React.useState(false);
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
@@ -218,6 +221,10 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setShowExport(true)}>
+            <Download className="w-4 h-4 mr-2" />
+            Exporteer Excel
+          </Button>
           <Link to={createPageUrl("TimeTracking")}>
             <Button className="bg-blue-600 hover:bg-blue-700">
               <Clock className="w-4 h-4 mr-2" />
@@ -479,6 +486,8 @@ export default function Dashboard() {
         {/* Charter Overview */}
         <CharterOverview />
       </div>
+
+      <ExportDialog open={showExport} onOpenChange={setShowExport} />
     </div>
   );
 }
