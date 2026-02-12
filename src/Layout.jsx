@@ -231,13 +231,22 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
-  // Non-admin users: only allow certain pages, redirect others to MobileEntry
+  // Non-admin users: only allow certain pages, redirect to correct mobile entry type
   useEffect(() => {
     if (loadingUser || !user) return;
     if (user.role === 'admin') return;
     const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts"];
     if (!allowedPages.includes(currentPageName)) {
-      navigate(createPageUrl("MobileEntry"));
+      // Check employee's mobile_entry_type to redirect to correct page
+      const checkEmployeeType = async () => {
+        const emps = await base44.entities.Employee.filter({ email: user.email });
+        if (emps.length > 0 && emps[0].mobile_entry_type === 'multi_day') {
+          navigate(createPageUrl("MobileEntryMultiDay"));
+        } else {
+          navigate(createPageUrl("MobileEntry"));
+        }
+      };
+      checkEmployeeType();
     }
   }, [user, loadingUser, currentPageName, navigate]);
 
