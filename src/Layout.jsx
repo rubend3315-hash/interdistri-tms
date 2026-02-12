@@ -231,6 +231,15 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
+  const { data: currentEmployee } = useQuery({
+    queryKey: ['currentEmployee', user?.email],
+    queryFn: async () => {
+      const emps = await base44.entities.Employee.filter({ email: user.email });
+      return emps.length > 0 ? emps[0] : null;
+    },
+    enabled: !!user?.email,
+  });
+
   // Non-admin users: only allow certain pages, redirect to correct mobile entry type
   useEffect(() => {
     if (loadingUser || !user) return;
