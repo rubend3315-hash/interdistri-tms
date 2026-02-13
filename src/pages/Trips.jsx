@@ -21,7 +21,8 @@ import {
   Calendar,
   MapPin,
   Trash2,
-  Lock
+  Lock,
+  AlertTriangle
 } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
