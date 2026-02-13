@@ -13,7 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, Save, Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, Lock, Trash2 } from "lucide-react";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 import { determineShiftType } from "../components/utils/shiftTypeUtils";
 import EmployeeSidebar from "../components/timetracking/EmployeeSidebar";
@@ -152,6 +153,7 @@ export default function TimeTracking() {
   const [calculatedHours, setCalculatedHours] = useState(null);
   const [showHourDetails, setShowHourDetails] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   // Auto-calculate break
   useEffect(() => {
@@ -741,12 +743,14 @@ export default function TimeTracking() {
             </div>
 
             <div className="flex justify-between gap-3 pt-4">
-              <Button type="button" variant="destructive"
-                onClick={() => { if (selectedEntry && selectedEntry.status === 'Concept' && confirm('Weet je zeker dat je deze concept entry wilt verwijderen?')) deleteMutation.mutate(selectedEntry.id); }}
-                className={selectedEntry?.status === 'Concept' ? '' : 'hidden'}
-                disabled={deleteMutation.isPending}>
-                Verwijderen
-              </Button>
+              {selectedEntry && (
+                <Button type="button" variant="destructive"
+                  onClick={() => setConfirmDelete({ id: selectedEntry.id, type: 'timeentry' })}
+                  disabled={deleteMutation.isPending}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Verwijderen
+                </Button>
+              )}
               <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Annuleren</Button>
                 <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={createMutation.isPending || updateMutation.isPending}>
@@ -757,6 +761,17 @@ export default function TimeTracking() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}
+        title="Tijdregistratie verwijderen"
+        description="Weet je zeker dat je deze tijdregistratie wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        onConfirm={() => {
+          if (confirmDelete?.id) deleteMutation.mutate(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+      />
     </div>
   );
 }

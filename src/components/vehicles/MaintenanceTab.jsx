@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, Upload, FileText, Wrench, ArrowUpDown } from "lucide-react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const maintenanceTypes = [
   "Kleine beurt", "Grote beurt", "APK", "Bandenwissel",
@@ -36,6 +37,7 @@ export default function MaintenanceTab({ vehicle }) {
     invoice_url: "", notes: ""
   });
   const [uploading, setUploading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: records = [], isLoading } = useQuery({
@@ -225,9 +227,7 @@ export default function MaintenanceTab({ vehicle }) {
                   variant="ghost"
                   size="icon"
                   className="text-red-500 hover:text-red-700"
-                  onClick={() => {
-                    if (confirm('Onderhoudsbeurt verwijderen?')) deleteMutation.mutate(record.id);
-                  }}
+                  onClick={() => setConfirmDelete({ id: record.id })}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -236,6 +236,17 @@ export default function MaintenanceTab({ vehicle }) {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}
+        title="Onderhoudsbeurt verwijderen"
+        description="Weet je zeker dat je deze onderhoudsbeurt wilt verwijderen?"
+        onConfirm={() => {
+          if (confirmDelete?.id) deleteMutation.mutate(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+      />
     </div>
   );
 }

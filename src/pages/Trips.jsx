@@ -27,6 +27,7 @@ import {
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import { checkEmployeeActiveRules } from "@/components/utils/employeeContractCheck";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const statuses = ["Gepland", "Onderweg", "Voltooid", "Geannuleerd"];
 
@@ -116,6 +117,7 @@ export default function Trips() {
     notes: ""
   });
   const [kmWarning, setKmWarning] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const resetForm = () => {
     setFormData({
@@ -714,12 +716,7 @@ export default function Trips() {
                   variant="ghost"
                   size="icon"
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => {
-                    if (confirm('Weet je zeker dat je deze rit wilt verwijderen?')) {
-                      deleteMutation.mutate(selectedTrip.id);
-                      setIsDialogOpen(false);
-                    }
-                  }}
+                  onClick={() => setConfirmDelete({ id: selectedTrip.id })}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -973,6 +970,18 @@ export default function Trips() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}
+        title="Rit verwijderen"
+        description="Weet je zeker dat je deze rit wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        onConfirm={() => {
+          if (confirmDelete?.id) deleteMutation.mutate(confirmDelete.id);
+          setConfirmDelete(null);
+          setIsDialogOpen(false);
+        }}
+      />
     </div>
   );
 }

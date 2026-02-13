@@ -28,6 +28,7 @@ import {
 import MileageCalibrationDialog from "@/components/vehicles/MileageCalibrationDialog";
 import MaintenanceTab from "@/components/vehicles/MaintenanceTab";
 import LeaseTab from "@/components/vehicles/LeaseTab";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const vehicleTypes = ["Vrachtwagen", "Bestelbus", "Personenauto", "Aanhanger"];
 const fuelTypes = ["Diesel", "Benzine", "Elektrisch", "Hybride", "LNG", "CNG"];
@@ -41,6 +42,7 @@ export default function Vehicles() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [calibrationVehicle, setCalibrationVehicle] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
@@ -372,12 +374,7 @@ export default function Vehicles() {
                   variant="ghost"
                   size="icon"
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => {
-                    if (confirm('Weet je zeker dat je dit voertuig wilt verwijderen?')) {
-                      deleteMutation.mutate(selectedVehicle.id);
-                      setIsDialogOpen(false);
-                    }
-                  }}
+                  onClick={() => setConfirmDelete({ id: selectedVehicle.id })}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -891,6 +888,17 @@ export default function Vehicles() {
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}
+        title="Voertuig verwijderen"
+        description="Weet je zeker dat je dit voertuig wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        onConfirm={() => {
+          if (confirmDelete?.id) deleteMutation.mutate(confirmDelete.id);
+          setConfirmDelete(null);
+          setIsDialogOpen(false);
+        }}
+      />
       <MileageCalibrationDialog
         open={!!calibrationVehicle}
         onOpenChange={(open) => { if (!open) setCalibrationVehicle(null); }}

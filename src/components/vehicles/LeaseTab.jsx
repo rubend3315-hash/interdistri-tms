@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, FileText, FileUp } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { nl } from "date-fns/locale";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const statusColors = {
   "Actief": "bg-emerald-100 text-emerald-700",
@@ -19,6 +20,7 @@ const statusColors = {
 export default function LeaseTab({ vehicle }) {
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [formData, setFormData] = useState({
     lease_company: "", contract_number: "", start_date: "", end_date: "",
     monthly_cost: "", mileage_limit: "", excess_km_cost: "",
@@ -202,7 +204,7 @@ export default function LeaseTab({ vehicle }) {
                     </a>
                   )}
                   <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700"
-                    onClick={() => { if (confirm('Leasecontract verwijderen?')) deleteMutation.mutate(record.id); }}>
+                    onClick={() => setConfirmDelete({ id: record.id })}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -211,6 +213,17 @@ export default function LeaseTab({ vehicle }) {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}
+        title="Leasecontract verwijderen"
+        description="Weet je zeker dat je dit leasecontract wilt verwijderen?"
+        onConfirm={() => {
+          if (confirmDelete?.id) deleteMutation.mutate(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+      />
     </div>
   );
 }
