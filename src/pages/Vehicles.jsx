@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus,
   Search,
@@ -20,9 +21,11 @@ import {
   Fuel,
   Trash2,
   FileText,
-  Crosshair
+  Crosshair,
+  Wrench
 } from "lucide-react";
 import MileageCalibrationDialog from "@/components/vehicles/MileageCalibrationDialog";
+import MaintenanceTab from "@/components/vehicles/MaintenanceTab";
 
 const vehicleTypes = ["Vrachtwagen", "Bestelbus", "Personenauto", "Aanhanger"];
 const fuelTypes = ["Diesel", "Benzine", "Elektrisch", "Hybride", "LNG", "CNG"];
