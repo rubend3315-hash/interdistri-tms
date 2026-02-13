@@ -1522,6 +1522,167 @@ export default function HelpPage() {
               </AccordionContent>
             </AccordionItem>
 
+            {/* Onboarding Handleiding */}
+            <AccordionItem value="onboarding-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Users className="w-4 h-4 mr-2" />
+                Hoe werkt de Onboarding?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Overzicht</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      De onboarding wizard begeleidt je door alle stappen om een nieuwe medewerker volledig in het systeem op te nemen. Van persoonsgegevens tot contract en app-uitnodiging.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Stap 1 — Persoonsgegevens</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Voornaam, achternaam, tussenvoegsel, voorletters</li>
+                      <li>• E-mail, telefoon, geboortedatum, BSN</li>
+                      <li>• Adres, postcode, woonplaats</li>
+                      <li>• Afdeling en functie selecteren</li>
+                      <li>• Pasfoto uploaden</li>
+                      <li>• Verplichte velden worden gecontroleerd</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Stap 2 — Stamkaart</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Rijbewijsnummer, categorieën en vervaldatums</li>
+                      <li>• <strong>ID-document:</strong> Nummer én geldigheidsdatum (verplicht)</li>
+                      <li>• Code 95 vervaldatum</li>
+                      <li>• Contracttype, uren per week</li>
+                      <li>• <strong>Loonschaal:</strong> Kies uit loontabellen — uurloon wordt automatisch ingevuld</li>
+                      <li>• IBAN bankrekening</li>
+                      <li>• <strong>Loonheffingsverklaring:</strong> Ja/Nee met datum, conform officieel formulier</li>
+                      <li>• Digitale handtekening in handtekeningvak</li>
+                      <li>• LKV-beoordeling en financiële bijzonderheden</li>
+                      <li>• Stamkaart printen of e-mailen naar loonadministratie</li>
+                      <li>• <strong>Verplichte velden worden gecontroleerd</strong> bij "Volgende"</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Stap 3 — Verklaringen</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Pincode sleutelkast:</strong> Automatisch gegenereerde 4-cijferige pincode, ontvangstverklaring ondertekenen</li>
+                      <li>• <strong>Sleutelverklaring:</strong> Sleutelnummer en toegang vastleggen</li>
+                      <li>• <strong>GPS Buddy toestemming:</strong> Akkoord voor GPS-tracking</li>
+                      <li>• <strong>Verklaring dienstbetrekking:</strong> Bevestiging dienstverband</li>
+                      <li>• <strong>Bedrijfsreglement:</strong> Ontvangst bevestigen</li>
+                      <li>• Alle verklaringen moeten afgevinkt zijn om door te gaan</li>
+                      <li>• Digitale handtekening van de medewerker</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Stap 4 — Contract</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Contracttype selecteren (Vast, Tijdelijk, Nul Uren, etc.)</li>
+                      <li>• Start- en einddatum, proeftijd instellen</li>
+                      <li>• <strong>Sjabloon kiezen:</strong> Actieve sjablonen worden gefilterd op contracttype</li>
+                      <li>• Standaardsjabloon wordt automatisch voorgeselecteerd</li>
+                      <li>• <strong>Contract genereren:</strong> Medewerkergegevens uit stap 1 worden automatisch ingevuld</li>
+                      <li>• Contract bekijken in preview</li>
+                      <li>• Stap kan ook overgeslagen worden</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Stap 5 — Uitnodigen</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Medewerker uitnodigen voor de mobiele app</li>
+                      <li>• E-mail wordt automatisch verzonden</li>
+                      <li>• Type app (standaard of meerdaags) wordt getoond</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Stap 6 — Samenvatting</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Overzicht van alle ingevulde gegevens en voltooide stappen</li>
+                      <li>• Checklist met groene vinkjes per afgerond onderdeel</li>
+                      <li>• Handtekening preview</li>
+                      <li>• Knop "Onboarding Afronden" om het proces te voltooien</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>Tip:</strong> Je kunt altijd teruggaan naar eerdere stappen om gegevens aan te passen. De wizard onthoudt alle ingevulde gegevens.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Stamkaart Handleiding */}
+            <AccordionItem value="stamkaart-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <FileText className="w-4 h-4 mr-2" />
+                Hoe gebruik ik de Stamkaart?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Overzicht</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      De Stamkaart-pagina is een losstaande functie (buiten de onboarding) waarmee je de stamkaart van bestaande medewerkers kunt bekijken, bewerken en bijwerken. Handig bij wijzigingen in persoonsgegevens, vernieuwing van ID-documenten of nieuwe loonheffingsverklaring.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">1. Medewerker selecteren</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar <strong>"Stamkaart"</strong> in het menu onder HR & Beheer</li>
+                      <li>• Zoek op naam, e-mail of personeelsnummer</li>
+                      <li>• Filter op afdeling</li>
+                      <li>• Klik op een medewerker om de stamkaart te openen</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">2. Gegevens bewerken</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Alle velden zijn direct bewerkbaar</li>
+                      <li>• <strong>Verplichte velden</strong> worden aangegeven met * en gecontroleerd bij opslaan</li>
+                      <li>• Verplicht: voornaam, achternaam, geboortedatum, BSN, adres, postcode, woonplaats, e-mail, IBAN, afdeling, ID-documentnummer en geldigheid</li>
+                      <li>• Ontbrekende velden worden rood gemarkeerd</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">3. Loonheffingsverklaring</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Sectie "Loonheffingskorting toepassen" conform het officiële formulier</li>
+                      <li>• Keuze: <strong>Ja, vanaf [datum]</strong> of <strong>Nee, vanaf [datum]</strong></li>
+                      <li>• Digitale handtekening in het handtekeningvak</li>
+                      <li>• Zonder keuze: waarschuwing dat anoniementarief geldt</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">4. Opslaan en verzenden</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Opslaan:</strong> Slaat alle wijzigingen op bij de medewerker (incl. loonheffingsgegevens)</li>
+                      <li>• <strong>Printen:</strong> Print de stamkaart</li>
+                      <li>• <strong>Versturen naar Loonadministratie:</strong> Verstuurt een e-mail met alle stamkaartgegevens</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> Wijzigingen in de stamkaart worden direct opgeslagen bij de medewerker. Controleer de gegevens voordat je opslaat.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Contracten Handleiding */}
             <AccordionItem value="contracts-guide">
               <AccordionTrigger className="text-base font-semibold">
