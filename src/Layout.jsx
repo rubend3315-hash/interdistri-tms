@@ -51,6 +51,7 @@ const menuItems = [
     items: [
       { name: "Onboarding", icon: Users, page: "Onboarding" },
       { name: "Medewerkers", icon: Users, page: "Employees" },
+            { name: "Stamkaart", icon: FileText, page: "Stamkaart" },
       { name: "HR Import", icon: FileSpreadsheet, page: "HRImport" },
       { name: "Contracten", icon: FileText, page: "Contracts" },
       { name: "Contract Sjablonen", icon: FileText, page: "ContractTemplates" },
@@ -293,6 +294,7 @@ export default function Layout({ children, currentPageName }) {
               'ContractAnalytics': 'contracts',
               'CompletedContracts': 'contracts',
       'HRImport': 'hrimport',
+    'Stamkaart': 'employees',
       'CustomerDetail': 'customers',
       'Bedrijfsreglement': 'employees',
       'PerformanceReviews': 'employees',

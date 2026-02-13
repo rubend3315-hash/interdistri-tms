@@ -141,8 +141,12 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
             </div>
             <div className="grid grid-cols-2 gap-4 mt-3">
               <div className="space-y-2">
-                <Label>Nummer ID-kaart of paspoort</Label>
-                <Input value={employeeData.id_document_number || ""} onChange={(e) => update("id_document_number", e.target.value)} />
+                <Label>Nummer ID-kaart of paspoort *</Label>
+                <Input value={employeeData.id_document_number || ""} onChange={(e) => update("id_document_number", e.target.value)} className={!employeeData.id_document_number ? "border-amber-300" : ""} />
+              </div>
+              <div className="space-y-2">
+                <Label>Geldig tot (ID-kaart/paspoort) *</Label>
+                <Input type="date" value={employeeData.id_document_expiry || ""} onChange={(e) => update("id_document_expiry", e.target.value)} className={!employeeData.id_document_expiry ? "border-amber-300" : ""} />
               </div>
             </div>
           </div>
@@ -321,7 +325,26 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
         <Button variant="outline" onClick={onBack}>
           <ChevronLeft className="w-4 h-4 mr-1" /> Vorige
         </Button>
-        <Button onClick={onNext} className="bg-blue-600 hover:bg-blue-700">
+        <Button
+          onClick={() => {
+            const missing = [];
+            if (!employeeData.first_name) missing.push("Voornaam");
+            if (!employeeData.last_name) missing.push("Achternaam");
+            if (!employeeData.date_of_birth) missing.push("Geboortedatum");
+            if (!employeeData.bsn) missing.push("BSN");
+            if (!employeeData.email) missing.push("E-mail");
+            if (!employeeData.address) missing.push("Adres");
+            if (!employeeData.bank_account) missing.push("IBAN");
+            if (!employeeData.id_document_number) missing.push("Nr. ID-kaart/paspoort");
+            if (!employeeData.id_document_expiry) missing.push("Geldigheid ID-kaart/paspoort");
+            if (missing.length > 0) {
+              alert("Vul de volgende verplichte velden in:\n\n• " + missing.join("\n• "));
+              return;
+            }
+            onNext();
+          }}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
           Volgende: Verklaringen <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
