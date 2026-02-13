@@ -247,9 +247,9 @@ export default function TimeTracking() {
     if (weekIsDefinitief) return; // Geblokkeerd: periode is definitief
     
     // Check active contract/reiskosten rules
-    const emp = employees.find(e => e.id === employeeId);
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const ruleCheck = checkEmployeeActiveRules(emp, dateStr);
+    const checkEmp = employees.find(e => e.id === employeeId);
+    const checkDateStr = format(date, 'yyyy-MM-dd');
+    const ruleCheck = checkEmployeeActiveRules(checkEmp, checkDateStr);
     if (!ruleCheck.hasActiveContract) {
       alert(ruleCheck.warnings.join('\n'));
       return;
