@@ -49,6 +49,7 @@ const menuItems = [
   {
     label: "HR & Beheer",
     items: [
+      { name: "Onboarding", icon: Users, page: "Onboarding" },
       { name: "Medewerkers", icon: Users, page: "Employees" },
       { name: "HR Import", icon: FileSpreadsheet, page: "HRImport" },
       { name: "Contracten", icon: FileText, page: "Contracts" },
