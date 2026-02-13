@@ -178,6 +178,8 @@ export default function Onboarding() {
           <Step2Stamkaart
             employeeData={employeeData}
             onChange={setEmployeeData}
+            onboardingData={onboardingData}
+            onOnboardingChange={setOnboardingData}
             onNext={() => setCurrentStep(3)}
             onBack={() => setCurrentStep(1)}
           />
