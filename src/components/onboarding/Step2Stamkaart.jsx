@@ -195,27 +195,89 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
             </div>
           </div>
 
-          {/* Loonheffingsverklaring */}
+          {/* Loonheffingskorting toepassen */}
           <div className="border-t pt-4">
-            <h4 className="font-medium mb-3">Loonheffingsverklaring</h4>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-              <p className="text-sm text-slate-700">
-                Heeft de werknemer de loonheffingsverklaring ingevuld en ondertekend?
-              </p>
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox
-                    checked={onboardingData?.loonheffing_akkoord === true}
-                    onCheckedChange={(checked) => onOnboardingChange({ ...onboardingData, loonheffing_akkoord: checked ? true : false })}
-                  />
-                  <span className="text-sm font-medium">Ja, loonheffingsverklaring ontvangen en ondertekend</span>
-                </label>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-slate-800 text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center">2</span>
+              <h4 className="font-semibold">Loonheffingskorting toepassen</h4>
+            </div>
+
+            <div className="border rounded-lg p-4 space-y-4 bg-white">
+              <div>
+                <p className="text-sm text-slate-700 mb-1"><strong>2a</strong>&nbsp; Wilt u dat uw werkgever of uitkeringsinstantie rekening houdt met de loonheffingskorting?</p>
+                <p className="text-xs text-slate-500 italic mb-3">U kunt de loonheffingskorting maar door 1 werkgever of uitkeringsinstantie tegelijkertijd laten toepassen.</p>
+
+                <RadioGroup
+                  value={onboardingData?.loonheffing_toepassen || ""}
+                  onValueChange={(val) => onOnboardingChange({ ...onboardingData, loonheffing_toepassen: val })}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <RadioGroupItem value="ja" id="lh_ja" />
+                    <Label htmlFor="lh_ja" className="font-medium text-sm cursor-pointer">Ja, vanaf</Label>
+                    <Input
+                      type="date"
+                      className="w-40 h-8 text-sm"
+                      value={onboardingData?.loonheffing_ja_datum || ""}
+                      onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_ja_datum: e.target.value })}
+                      disabled={onboardingData?.loonheffing_toepassen !== "ja"}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <RadioGroupItem value="nee" id="lh_nee" />
+                    <Label htmlFor="lh_nee" className="font-medium text-sm cursor-pointer">Nee, vanaf</Label>
+                    <Input
+                      type="date"
+                      className="w-40 h-8 text-sm"
+                      value={onboardingData?.loonheffing_nee_datum || ""}
+                      onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_nee_datum: e.target.value })}
+                      disabled={onboardingData?.loonheffing_toepassen !== "nee"}
+                    />
+                  </div>
+                </RadioGroup>
+
+                {!onboardingData?.loonheffing_toepassen && (
+                  <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded mt-3">
+                    Let op: zonder keuze moet het anoniementarief worden toegepast.
+                  </p>
+                )}
               </div>
-              {onboardingData?.loonheffing_akkoord === false && (
-                <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded">
-                  Let op: zonder loonheffingsverklaring moet het anoniementarief worden toegepast.
-                </p>
-              )}
+
+              {/* Ondertekening */}
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-slate-800 text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center">3</span>
+                  <h4 className="font-semibold">Ondertekening</h4>
+                </div>
+                <p className="text-xs text-slate-500 italic mb-3">Lever dit formulier na ondertekening in bij uw werkgever of uitkeringsinstantie.</p>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div className="space-y-1">
+                    <Label className="text-sm">Datum</Label>
+                    <Input
+                      type="date"
+                      value={onboardingData?.loonheffing_datum || ""}
+                      onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_datum: e.target.value })}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-sm">Handtekening</Label>
+                  <p className="text-xs text-slate-500 mb-1">Schrijf binnen het vak.</p>
+                  <div className="border rounded-lg bg-slate-50 p-1" style={{ maxWidth: 400 }}>
+                    <SignatureCanvas
+                      onSave={(sigUrl) => onOnboardingChange({ ...onboardingData, loonheffing_handtekening_url: sigUrl })}
+                    />
+                  </div>
+                  {onboardingData?.loonheffing_handtekening_url && (
+                    <div className="mt-2">
+                      <img src={onboardingData.loonheffing_handtekening_url} alt="Handtekening" className="h-12 border rounded" />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
