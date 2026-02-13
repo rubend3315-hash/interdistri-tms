@@ -215,6 +215,15 @@ export default function Trips() {
     submitData.cargo_weight = formData.cargo_weight ? Number(formData.cargo_weight) : null;
     submitData.subsistence_allowance = subsistenceAllowance;
 
+    // Update vehicle current_mileage if end_km is provided
+    if (submitData.end_km && submitData.vehicle_id) {
+      const vehicle = vehicles.find(v => v.id === submitData.vehicle_id);
+      if (vehicle && (!vehicle.current_mileage || submitData.end_km > vehicle.current_mileage)) {
+        base44.entities.Vehicle.update(submitData.vehicle_id, { current_mileage: submitData.end_km });
+        queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      }
+    }
+
     if (selectedTrip) {
       updateMutation.mutate({ id: selectedTrip.id, data: submitData });
     } else {
