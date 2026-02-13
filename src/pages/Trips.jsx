@@ -731,7 +731,12 @@ export default function Trips() {
                 <Label>Voertuig *</Label>
                 <Select 
                   value={formData.vehicle_id} 
-                  onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}
+                  onValueChange={(v) => {
+                    const vehicle = vehicles.find(vh => vh.id === v);
+                    const prefillKm = vehicle?.current_mileage ? String(vehicle.current_mileage) : formData.start_km;
+                    setFormData({ ...formData, vehicle_id: v, start_km: prefillKm });
+                    validateKm(v, prefillKm);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecteer" />
@@ -739,7 +744,7 @@ export default function Trips() {
                   <SelectContent>
                     {vehicles.map(v => (
                       <SelectItem key={v.id} value={v.id}>
-                        {v.license_plate} - {v.brand}
+                        {v.license_plate} - {v.brand} {v.current_mileage ? `(${v.current_mileage} km)` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
