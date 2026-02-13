@@ -84,24 +84,26 @@ export default function Integrations() {
       return;
     }
     setSyncingId(integration.id);
-    // Simuleer een sync-poging — wanneer de echte API gekoppeld is wordt dit vervangen
-    await base44.entities.SyncLog.create({
-      integration_id: integration.id,
-      sync_type: integration.type === "loket_nl" ? "verlofdagen" : "projecten",
-      status: "error",
-      records_synced: 0,
-      records_failed: 0,
-      message: "Synchronisatie wordt beschikbaar zodra de API-koppeling is geconfigureerd.",
-    });
-    await base44.entities.Integration.update(integration.id, {
-      last_sync: new Date().toISOString(),
-      last_sync_status: "pending",
-      last_sync_message: "API-koppeling nog niet volledig geconfigureerd.",
-    });
+    toast.info("Synchronisatie gestart...");
+    try {
+      const response = await base44.functions.invoke('syncIntegration', {
+        integration_id: integration.id,
+        mode: 'manual',
+      });
+      const data = response.data;
+      if (data?.results?.[0]?.status === "success") {
+        toast.success(data.results[0].message || "Synchronisatie geslaagd");
+      } else if (data?.results?.[0]?.status === "partial") {
+        toast.warning(data.results[0].message || "Synchronisatie deels geslaagd");
+      } else {
+        toast.error(data?.results?.[0]?.message || "Synchronisatie mislukt");
+      }
+    } catch (err) {
+      toast.error("Synchronisatie mislukt: " + (err.message || "Onbekende fout"));
+    }
     queryClient.invalidateQueries({ queryKey: ["integrations"] });
     queryClient.invalidateQueries({ queryKey: ["syncLogs"] });
     setSyncingId(null);
-    toast.info("Synchronisatie wordt beschikbaar zodra de API volledig is geconfigureerd.");
   };
 
   const handleSave = async (id, data) => {

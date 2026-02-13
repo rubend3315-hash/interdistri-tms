@@ -70,6 +70,7 @@ import HRImport from './pages/HRImport';
 import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
 import Holidays from './pages/Holidays';
+import Integrations from './pages/Integrations';
 import Messages from './pages/Messages';
 import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import MobileEntry from './pages/MobileEntry';
@@ -87,7 +88,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Integrations from './pages/Integrations';
 import __Layout from './Layout.jsx';
 
 
@@ -115,6 +115,7 @@ export const PAGES = {
     "HRMSettings": HRMSettings,
     "HelpPage": HelpPage,
     "Holidays": Holidays,
+    "Integrations": Integrations,
     "Messages": Messages,
     "MobileBedrijfsreglement": MobileBedrijfsreglement,
     "MobileEntry": MobileEntry,
@@ -132,7 +133,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Integrations": Integrations,
 }
 
 export const pagesConfig = {

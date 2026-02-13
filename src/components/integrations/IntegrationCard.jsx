@@ -84,10 +84,15 @@ export default function IntegrationCard({ integration, onToggle, onSync, onEdit,
               className="bg-blue-600 hover:bg-blue-700"
             >
               <RefreshCw className={`w-4 h-4 mr-1 ${syncing ? "animate-spin" : ""}`} />
-              Synchroniseer
+              {syncing ? "Bezig..." : "Synchroniseer nu"}
             </Button>
           </div>
         </div>
+        {integration.is_active && integration.api_key && (
+          <p className="text-xs text-slate-500 mt-2">
+            ⏱ Automatische sync elke {integration.sync_interval_minutes || 60} minuten
+          </p>
+        )}
         {!integration.api_key && (
           <p className="text-xs text-amber-600 mt-2">
             ⚠️ API sleutel nog niet ingesteld. Ga naar Instellingen om je API sleutel toe te voegen.
