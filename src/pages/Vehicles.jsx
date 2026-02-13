@@ -175,9 +175,7 @@ export default function Vehicles() {
     const matchesStatus = filterStatus === "all" || v.status === filterStatus;
     return matchesSearch && matchesType && matchesStatus;
   }).sort((a, b) => {
-    const brandCompare = (b.brand || '').localeCompare(a.brand || '');
-    if (brandCompare !== 0) return brandCompare;
-    return (a.year || 0) - (b.year || 0);
+    return (a.key_cabinet_number || '').localeCompare(b.key_cabinet_number || '', undefined, { numeric: true });
   });
 
   const getExpiryBadge = (date, label) => {
