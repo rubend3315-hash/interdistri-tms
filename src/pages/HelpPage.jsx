@@ -152,6 +152,26 @@ export default function HelpPage() {
                 </div>
               </div>
 
+              {/* Automatische controles */}
+              <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                <h3 className="font-semibold text-red-900 mb-3 flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  Automatische Medewerkercontroles
+                </h3>
+                <div className="space-y-3 text-sm text-red-800">
+                  <p>
+                    <strong>Dagelijks om 06:00 wordt automatisch gecontroleerd:</strong>
+                  </p>
+                  <ul className="space-y-2 ml-4">
+                    <li>• Medewerkers waarvan het <strong>contract is verlopen</strong> worden automatisch op "Uit dienst" gezet</li>
+                    <li>• Bijbehorende <strong>contractregels en reiskostenregels</strong> worden automatisch afgesloten</li>
+                    <li>• Medewerkers met status "Inactief" of "Uit dienst" <strong>verliezen direct de toegang</strong> tot het systeem</li>
+                    <li>• <strong>30 dagen voor contractafloop</strong> ontvangen admins een waarschuwing (urgent bij ≤7 dagen)</li>
+                    <li>• Zonder actieve contractregel of reiskostenregel <strong>kunnen geen diensten of ritten worden ingevoerd</strong></li>
+                  </ul>
+                </div>
+              </div>
+
               {/* Rapportageregels */}
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                 <h3 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
@@ -413,9 +433,12 @@ export default function HelpPage() {
                 </p>
                 <ul className="text-sm space-y-2 text-slate-600">
                   <li>✓ Contractregels met start-/einddatum</li>
-                  <li>✓ Loonschaal en uren per week</li>
-                  <li>✓ Tweewekelijks roosterschema (week 1/week 2)</li>
-                  <li>✓ Reiskostenregels per medewerker</li>
+                      <li>✓ Loonschaal en uren per week</li>
+                      <li>✓ Tweewekelijks roosterschema (week 1/week 2)</li>
+                      <li>✓ Reiskostenregels per medewerker</li>
+                      <li>✓ <strong>Automatische waarschuwing</strong> 30 dagen voor contractafloop</li>
+                      <li>✓ <strong>Automatische uitdiensttreding</strong> bij verlopen contract (contractregels en reiskostenregels worden afgesloten)</li>
+                      <li>✓ <strong>Invoerblokkering</strong> bij ontbrekende actieve contractregel of reiskostenregel</li>
                   <li>✓ <strong>Contract genereren</strong> op basis van sjablonen — medewerkergegevens worden automatisch ingevuld</li>
                   <li>✓ <strong>Sjabloon selectie per contracttype</strong> — kies uit actieve sjablonen, standaardsjabloon wordt automatisch voorgeselecteerd</li>
                   <li>✓ <strong>Contractinhoud bewerken</strong> voor verzending</li>
@@ -694,6 +717,8 @@ export default function HelpPage() {
                   <li>✓ Voertuiginspecties met foto's</li>
                   <li>✓ NIWO vergunningen koppeling</li>
                   <li>✓ Status monitoring (Beschikbaar, In onderhoud, etc.)</li>
+                  <li>✓ <strong>Onderhoud:</strong> Onderhoudshistorie, kosten en facturen bijhouden</li>
+                  <li>✓ <strong>Leasecontracten:</strong> Leasemaatschappij, looptijd, maandbedrag, km-limiet en document-upload</li>
                 </ul>
               </CardContent>
             </Card>
@@ -1353,9 +1378,45 @@ export default function HelpPage() {
                       Status kan zijn: Actief, Inactief, of Uit dienst. Dit bepaalt of de medewerker zichtbaar is in planningen en tijdregistraties.
                     </p>
                   </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">4. Automatische uitdiensttreding</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Het systeem voert elke ochtend (06:00) automatisch de volgende controles uit:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Contract verlopen:</strong> Als de contracteinddatum is gepasseerd, wordt de medewerker automatisch op <strong>"Uit dienst"</strong> gezet</li>
+                      <li>• <strong>Contractregels afsluiten:</strong> Actieve contractregels worden automatisch beëindigd op de uitdienstdatum</li>
+                      <li>• <strong>Reiskostenregels afsluiten:</strong> Actieve reiskostenregels worden automatisch beëindigd op de uitdienstdatum</li>
+                      <li>• <strong>Toegang geblokkeerd:</strong> Medewerkers met status "Inactief" of "Uit dienst" worden automatisch uitgelogd en hebben geen toegang meer</li>
+                      <li>• <strong>Notificatie:</strong> Admins ontvangen een melding bij automatische uitdiensttreding</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">5. Tijdige waarschuwingen aflopende contracten</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>30 dagen voor afloop:</strong> Admins ontvangen een melding dat het contract binnenkort afloopt</li>
+                      <li>• <strong>≤ 7 dagen:</strong> Melding krijgt urgente prioriteit</li>
+                      <li>• Maximaal 1 waarschuwing per week per medewerker om spam te voorkomen</li>
+                      <li>• Bevat het aantal resterende dagen en de einddatum</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">6. Invoerblokkering bij verlopen contract/reiskosten</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Bij het invoeren van <strong>diensten</strong> (Tijdregistratie) wordt gecontroleerd of er een actieve contractregel bestaat voor de geselecteerde datum</li>
+                      <li>• Bij het invoeren van <strong>ritten</strong> wordt dezelfde controle uitgevoerd</li>
+                      <li>• Als er geen actieve contractregel is, wordt de invoer <strong>geblokkeerd</strong> met een duidelijke melding</li>
+                      <li>• Ook het ontbreken van een actieve reiskostenregel wordt gemeld</li>
+                    </ul>
+                  </div>
                   <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
                     <p className="text-sm text-purple-700">
                       💡 <strong>Tip:</strong> Vergeet niet rijbewijs en vervaldatum op te geven, deze worden gemonitord voor vervaldatums.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <p className="text-sm text-red-700">
+                      ⚠️ <strong>Belangrijk:</strong> Zorg ervoor dat contractregels en reiskostenregels tijdig worden verlengd. Zonder actieve regels kunnen er geen diensten of ritten worden ingevoerd voor de medewerker.
                     </p>
                   </div>
                 </div>
