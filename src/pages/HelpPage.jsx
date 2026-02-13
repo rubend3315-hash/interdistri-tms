@@ -831,7 +831,39 @@ export default function HelpPage() {
                     <AccordionTrigger>👤 Employee - Medewerkers</AccordionTrigger>
                     <AccordionContent>
                       <p className="text-sm text-slate-600">
-                        Persoonlijke gegevens, contracten, rijbewijs, loonschaal, afdeling, enzovoort.
+                        Persoonlijke gegevens, contracten, rijbewijs, loonschaal, afdeling, ID-document (nummer + geldigheidsdatum), loonheffingsverklaring (ja/nee + datum + handtekening).
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="onboarding-process">
+                    <AccordionTrigger>🚀 OnboardingProcess - Onboarding</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Vastlegging van het onboardingproces per medewerker: huidige stap, status, pincode sleutelkast, verklaringen, contract, uitnodiging en handtekening.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="contract">
+                    <AccordionTrigger>📝 Contract - Contracten</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Contractgegevens per medewerker: type, start-/einddatum, uurloon, afdeling, contractinhoud (HTML), ondertekeningen (medewerker + management), status (Concept → Ter Ondertekening → Actief).
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="contract-template">
+                    <AccordionTrigger>📋 ContractTemplate - Contract Sjablonen</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Sjablonen per contracttype met placeholders die automatisch worden ingevuld. Markeer één sjabloon als standaard per type.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="completed-contract">
+                    <AccordionTrigger>✅ CompletedContract - Afgeronde Contracten</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Archief van volledig ondertekende en geactiveerde contracten, met data van ondertekening door medewerker en management.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
