@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FileText, ChevronLeft, ChevronRight, Printer, Send, Loader2 } from "lucide-react";
+import SignatureCanvas from "../contracts/SignatureCanvas";
 
 export default function Step2Stamkaart({ employeeData, onboardingData, onOnboardingChange, onChange, onNext, onBack }) {
   const update = (field, value) => {
