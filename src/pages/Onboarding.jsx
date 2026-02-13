@@ -15,6 +15,7 @@ import Step1EmployeeDetails from "../components/onboarding/Step1EmployeeDetails"
 import Step2Stamkaart from "../components/onboarding/Step2Stamkaart";
 import Step3Declarations from "../components/onboarding/Step3Declarations";
 import Step4Contract from "../components/onboarding/Step4Contract";
+import Step5Invite from "../components/onboarding/Step5Invite";
 import Step5Summary from "../components/onboarding/Step5Summary";
 
 export default function Onboarding() {
@@ -36,7 +37,7 @@ export default function Onboarding() {
     sleutel_verklaring_signed: false, sleutel_nummer: "", sleutel_toegang: "",
     gps_buddy_toestemming: false, dienstbetrekking_signed: false,
     bedrijfsreglement_ontvangen: false, contract_generated: false,
-    employee_signature_url: "",
+    mobile_invite_sent: false, employee_signature_url: "",
   });
   const [createdEmployeeId, setCreatedEmployeeId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -85,7 +86,7 @@ export default function Onboarding() {
       employee_id: employee.id,
       employee_name: employeeName,
       status: "Afgerond",
-      current_step: 5,
+      current_step: 6,
       pincode_sleutelkast: onboardingData.pincode_sleutelkast,
       stamkaart_completed: true,
       pincode_verklaring_signed: onboardingData.pincode_verklaring_signed,
@@ -96,6 +97,7 @@ export default function Onboarding() {
       dienstbetrekking_signed: onboardingData.dienstbetrekking_signed,
       bedrijfsreglement_ontvangen: onboardingData.bedrijfsreglement_ontvangen,
       contract_generated: onboardingData.contract_generated,
+      mobile_invite_sent: onboardingData.mobile_invite_sent,
       employee_signature_url: onboardingData.employee_signature_url,
       completed_date: new Date().toISOString(),
     });
@@ -124,9 +126,9 @@ export default function Onboarding() {
       sleutel_verklaring_signed: false, sleutel_nummer: "", sleutel_toegang: "",
       gps_buddy_toestemming: false, dienstbetrekking_signed: false,
       bedrijfsreglement_ontvangen: false, contract_generated: false,
-      employee_signature_url: "",
-    });
-  };
+      mobile_invite_sent: false, employee_signature_url: "",
+      });
+      };
 
   if (wizardOpen) {
     return (
@@ -178,10 +180,19 @@ export default function Onboarding() {
           />
         )}
         {currentStep === 5 && (
+          <Step5Invite
+            employeeData={employeeData}
+            onboardingData={onboardingData}
+            onChange={setOnboardingData}
+            onNext={() => setCurrentStep(6)}
+            onBack={() => setCurrentStep(4)}
+          />
+        )}
+        {currentStep === 6 && (
           <Step5Summary
             employeeData={employeeData}
             onboardingData={onboardingData}
-            onBack={() => setCurrentStep(4)}
+            onBack={() => setCurrentStep(5)}
             onComplete={handleComplete}
             isSubmitting={submitting}
           />
