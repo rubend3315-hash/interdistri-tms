@@ -1,15 +1,96 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FileText, ChevronLeft, ChevronRight, Printer, Send, Loader2 } from "lucide-react";
 
-export default function Step2Stamkaart({ employeeData, onChange, onNext, onBack }) {
+export default function Step2Stamkaart({ employeeData, onboardingData, onOnboardingChange, onChange, onNext, onBack }) {
   const update = (field, value) => {
     onChange({ ...employeeData, [field]: value });
+  };
+
+  const { data: salaryTables = [], isLoading: loadingSalary } = useQuery({
+    queryKey: ['salaryTables_active'],
+    queryFn: () => base44.entities.SalaryTable.filter({ status: "Actief" }),
+  });
+
+  // Group salary tables by scale, picking unique scale+step combos
+  const scaleOptions = useMemo(() => {
+    const map = new Map();
+    salaryTables.forEach(st => {
+      const key = `${st.scale}|${st.step}`;
+      if (!map.has(key)) {
+        map.set(key, st);
+      }
+    });
+    // Sort by scale then step
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.scale < b.scale) return -1;
+      if (a.scale > b.scale) return 1;
+      return (a.step || 0) - (b.step || 0);
+    });
+  }, [salaryTables]);
+
+  const handleScaleChange = (val) => {
+    // val = "scale|step"
+    const [scale, step] = val.split('|');
+    const match = salaryTables.find(st => st.scale === scale && String(st.step) === step);
+    update("salary_scale", `${scale} trede ${step}`);
+    if (match) {
+      onChange({ ...employeeData, salary_scale: `${scale} trede ${step}`, hourly_rate: match.hourly_rate });
+    }
+  };
+
+  const currentScaleKey = useMemo(() => {
+    // Try to find matching scale key from current employeeData
+    const match = scaleOptions.find(st => {
+      const label = `${st.scale} trede ${st.step}`;
+      return label === employeeData.salary_scale;
+    });
+    return match ? `${match.scale}|${match.step}` : "";
+  }, [employeeData.salary_scale, scaleOptions]);
+
+  const [sendingEmail, setSendingEmail] = React.useState(false);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleSendToPayroll = async () => {
+    setSendingEmail(true);
+    const fullName = `${employeeData.first_name} ${employeeData.prefix ? employeeData.prefix + ' ' : ''}${employeeData.last_name}`;
+    const body = `
+      <h2>Stamkaart - ${fullName}</h2>
+      <table style="border-collapse:collapse;width:100%;">
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Naam</td><td style="padding:4px;border:1px solid #ddd;">${fullName}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Geboortedatum</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.date_of_birth || '—'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">BSN</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.bsn || '—'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Adres</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.address || '—'}, ${employeeData.postal_code || ''} ${employeeData.city || ''}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">IBAN</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.bank_account || '—'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Afdeling</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.department || '—'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Functie</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.function || '—'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Contract type</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.contract_type || '—'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Uren/week</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.contract_hours || '—'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Loonschaal</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.salary_scale || '—'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Uurloon</td><td style="padding:4px;border:1px solid #ddd;">€ ${employeeData.hourly_rate || '—'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Loonheffingsverklaring</td><td style="padding:4px;border:1px solid #ddd;">${onboardingData?.loonheffing_akkoord ? 'Ja' : 'Nee'}</td></tr>
+        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">LKV uitkering</td><td style="padding:4px;border:1px solid #ddd;">${employeeData.lkv_uitkering === 'ja' ? 'Ja' : 'Nee'}</td></tr>
+      </table>
+    `;
+    const user = await base44.auth.me();
+    await base44.integrations.Core.SendEmail({
+      to: user.email,
+      subject: `Stamkaart - ${fullName}`,
+      body,
+    });
+    setSendingEmail(false);
+    alert("Stamkaart verzonden naar " + user.email);
   };
 
   return (
