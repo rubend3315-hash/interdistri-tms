@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, ChevronLeft, Loader2, UserPlus, Key, DoorOpen, Satellite, FileText, BookOpen, Shield } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronLeft, Loader2, UserPlus, Key, DoorOpen, Satellite, FileText, BookOpen, Shield, Smartphone } from "lucide-react";
 
 const CHECKLIST = [
   { key: "employee_created", label: "Medewerker aangemaakt", icon: UserPlus },
@@ -14,6 +14,7 @@ const CHECKLIST = [
   { key: "bedrijfsreglement_ontvangen", label: "Ontvangst bedrijfsreglement", icon: BookOpen },
   { key: "employee_signature_url", label: "Handtekening medewerker", icon: Shield },
   { key: "contract_generated", label: "Contract afgehandeld", icon: FileText },
+  { key: "mobile_invite_sent", label: "Uitnodiging Mobile Entry", icon: Smartphone },
 ];
 
 export default function Step5Summary({ employeeData, onboardingData, onBack, onComplete, isSubmitting }) {
