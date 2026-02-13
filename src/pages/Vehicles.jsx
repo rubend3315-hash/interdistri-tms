@@ -87,6 +87,7 @@ export default function Vehicles() {
     chassis_number: "",
     emission_class: "",
     factory_consumption_per_100km: "",
+    key_cabinet_number: "",
     notes: ""
   });
 
@@ -108,6 +109,7 @@ export default function Vehicles() {
       chassis_number: "",
       emission_class: "",
       factory_consumption_per_100km: "",
+      key_cabinet_number: "",
       notes: ""
     });
   };
@@ -121,7 +123,8 @@ export default function Vehicles() {
       max_weight: vehicle.max_weight || "",
       chassis_number: vehicle.chassis_number || "",
       emission_class: vehicle.emission_class || "",
-      factory_consumption_per_100km: vehicle.factory_consumption_per_100km || ""
+      factory_consumption_per_100km: vehicle.factory_consumption_per_100km || "",
+      key_cabinet_number: vehicle.key_cabinet_number || ""
     });
     setIsDialogOpen(true);
   };
@@ -433,13 +436,23 @@ export default function Vehicles() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Chassisnummer (VIN)</Label>
-              <Input
-                value={formData.chassis_number}
-                onChange={(e) => setFormData({ ...formData, chassis_number: e.target.value.toUpperCase() })}
-                placeholder="bijv. WF0XXXGCDX1234567"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Chassisnummer (VIN)</Label>
+                <Input
+                  value={formData.chassis_number}
+                  onChange={(e) => setFormData({ ...formData, chassis_number: e.target.value.toUpperCase() })}
+                  placeholder="bijv. WF0XXXGCDX1234567"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Sleutelkast nr.</Label>
+                <Input
+                  value={formData.key_cabinet_number}
+                  onChange={(e) => setFormData({ ...formData, key_cabinet_number: e.target.value })}
+                  placeholder="bijv. 12"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
