@@ -79,9 +79,31 @@ export default function Onboarding() {
       if (empPayload[k] === '' || empPayload[k] === undefined) empPayload[k] = null;
     });
 
-    const employee = await base44.entities.Employee.create(empPayload);
+    let employee;
 
-    // 2. Create onboarding process record
+    // If a temp employee was created for preview, reuse it
+    if (onboardingData._temp_employee_id) {
+      await base44.entities.Employee.update(onboardingData._temp_employee_id, empPayload);
+      employee = { id: onboardingData._temp_employee_id };
+    } else {
+      employee = await base44.entities.Employee.create(empPayload);
+    }
+
+    // 2a. Generate contract if settings were saved
+    if (onboardingData.contract_generated && onboardingData.contract_settings) {
+      const cs = onboardingData.contract_settings;
+      await base44.functions.invoke('generateContract', {
+        employee_id: employee.id,
+        contract_type: cs.contract_type,
+        start_date: cs.start_date,
+        end_date: cs.end_date || undefined,
+        hours_per_week: employeeData.contract_hours || 40,
+        proeftijd: cs.proeftijd,
+        template_id: cs.template_id || undefined,
+      });
+    }
+
+    // 3. Create onboarding process record
     await base44.entities.OnboardingProcess.create({
       employee_id: employee.id,
       employee_name: employeeName,
