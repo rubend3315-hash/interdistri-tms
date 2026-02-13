@@ -167,12 +167,28 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
             </div>
             <div className="grid grid-cols-2 gap-4 mt-3">
               <div className="space-y-2">
-                <Label>Loonschaal</Label>
-                <Input value={employeeData.salary_scale || ""} onChange={(e) => update("salary_scale", e.target.value)} placeholder="bijv. C trede 1" />
+                <Label>Loonschaal (uit loontabellen)</Label>
+                {loadingSalary ? (
+                  <div className="flex items-center gap-2 text-sm text-slate-500 h-9"><Loader2 className="w-4 h-4 animate-spin" /> Laden...</div>
+                ) : (
+                  <Select value={currentScaleKey} onValueChange={handleScaleChange}>
+                    <SelectTrigger><SelectValue placeholder="Kies loonschaal" /></SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {scaleOptions.map(st => {
+                        const key = `${st.scale}|${st.step}`;
+                        const label = `${st.scale} trede ${st.step}${st.name ? ` — ${st.name}` : ''} (€${st.hourly_rate?.toFixed(2)})`;
+                        return <SelectItem key={key} value={key}>{label}</SelectItem>;
+                      })}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Bruto uurloon (€)</Label>
                 <Input type="number" step="0.01" value={employeeData.hourly_rate || ""} onChange={(e) => update("hourly_rate", Number(e.target.value))} />
+                {employeeData.hourly_rate > 0 && (
+                  <p className="text-xs text-slate-500">Automatisch ingevuld vanuit loontabel. Handmatig aanpasbaar.</p>
+                )}
               </div>
             </div>
           </div>
