@@ -46,6 +46,11 @@ export default function Onboarding() {
     queryFn: () => base44.entities.OnboardingProcess.list('-created_date', 50),
   });
 
+  const { data: allEmployees = [] } = useQuery({
+    queryKey: ['employees_for_number'],
+    queryFn: () => base44.entities.Employee.list('-created_date'),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.OnboardingProcess.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['onboarding_processes'] }),
@@ -199,7 +204,15 @@ export default function Onboarding() {
           <h1 className="text-3xl font-bold text-slate-900">Onboarding</h1>
           <p className="text-slate-500 mt-1">Onboarding wizard voor nieuwe medewerkers</p>
         </div>
-        <Button onClick={() => setWizardOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => {
+          // Auto-generate next employee number
+          const numbers = allEmployees
+            .map(e => parseInt(e.employee_number, 10))
+            .filter(n => !isNaN(n));
+          const nextNumber = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
+          setEmployeeData(prev => ({ ...prev, employee_number: String(nextNumber) }));
+          setWizardOpen(true);
+        }} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" /> Nieuwe Onboarding Starten
         </Button>
       </div>
