@@ -832,8 +832,17 @@ export default function Trips() {
                 <Input
                   type="number"
                   value={formData.start_km}
-                  onChange={(e) => setFormData({ ...formData, start_km: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, start_km: e.target.value });
+                    validateKm(formData.vehicle_id, e.target.value);
+                  }}
                 />
+                {formData.vehicle_id && (() => {
+                  const v = vehicles.find(vh => vh.id === formData.vehicle_id);
+                  return v?.current_mileage ? (
+                    <p className="text-xs text-slate-500">Verwacht: {v.current_mileage} km ({v.license_plate})</p>
+                  ) : null;
+                })()}
               </div>
               <div className="space-y-2">
                 <Label>Eind km-stand</Label>
@@ -843,6 +852,13 @@ export default function Trips() {
                   onChange={(e) => setFormData({ ...formData, end_km: e.target.value })}
                 />
               </div>
+            </div>
+            {kmWarning && (
+              <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <p className="text-sm text-amber-800">{kmWarning}</p>
+              </div>
+            )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
