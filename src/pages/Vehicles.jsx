@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,10 +22,12 @@ import {
   Trash2,
   FileText,
   Crosshair,
-  Wrench
+  Wrench,
+  FileText as FileTextIcon
 } from "lucide-react";
 import MileageCalibrationDialog from "@/components/vehicles/MileageCalibrationDialog";
 import MaintenanceTab from "@/components/vehicles/MaintenanceTab";
+import LeaseTab from "@/components/vehicles/LeaseTab";
 
 const vehicleTypes = ["Vrachtwagen", "Bestelbus", "Personenauto", "Aanhanger"];
 const fuelTypes = ["Diesel", "Benzine", "Elektrisch", "Hybride", "LNG", "CNG"];
@@ -392,6 +393,10 @@ export default function Vehicles() {
                   <Wrench className="w-3.5 h-3.5" />
                   Onderhoud
                 </TabsTrigger>
+                <TabsTrigger value="lease" className="flex-1 gap-1">
+                  <FileTextIcon className="w-3.5 h-3.5" />
+                  Leasecontracten
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="gegevens">
                 <form onSubmit={handleSubmit} className="space-y-6 pt-4">
@@ -643,6 +648,11 @@ export default function Vehicles() {
               <TabsContent value="onderhoud">
                 <div className="pt-4">
                   <MaintenanceTab vehicle={selectedVehicle} />
+                </div>
+              </TabsContent>
+              <TabsContent value="lease">
+                <div className="pt-4">
+                  <LeaseTab vehicle={selectedVehicle} />
                 </div>
               </TabsContent>
             </Tabs>
