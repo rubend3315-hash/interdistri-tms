@@ -240,6 +240,19 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
         </CardContent>
       </Card>
 
+      {/* Print / Send */}
+      <Card>
+        <CardContent className="pt-4 flex flex-wrap items-center gap-3">
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="w-4 h-4 mr-2" /> Stamkaart Printen
+          </Button>
+          <Button variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail}>
+            {sendingEmail ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+            Versturen naar Loonadministratie
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
           <ChevronLeft className="w-4 h-4 mr-1" /> Vorige
