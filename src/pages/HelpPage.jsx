@@ -414,7 +414,8 @@ export default function HelpPage() {
                   <li>✓ Loonschaal en uren per week</li>
                   <li>✓ Tweewekelijks roosterschema (week 1/week 2)</li>
                   <li>✓ Reiskostenregels per medewerker</li>
-                  <li>✓ <strong>Contract genereren</strong> op basis van sjablonen</li>
+                  <li>✓ <strong>Contract genereren</strong> op basis van sjablonen — medewerkergegevens worden automatisch ingevuld</li>
+                  <li>✓ <strong>Sjabloon selectie per contracttype</strong> — kies uit actieve sjablonen, standaardsjabloon wordt automatisch voorgeselecteerd</li>
                   <li>✓ <strong>Contractinhoud bewerken</strong> voor verzending</li>
                   <li>✓ <strong>Verzenden ter ondertekening</strong> met automatische e-mail</li>
                   <li>✓ <strong>Digitale handtekening</strong> door medewerker en management</li>
@@ -422,6 +423,65 @@ export default function HelpPage() {
                   <li>✓ Ondertekeningsflow: Medewerker eerst → Management → Actief</li>
                   <li>✓ Herinneringen versturen voor openstaande contracten</li>
                   <li>✓ Contract sjablonen per contracttype beheren</li>
+                  <li>✓ <strong>Contract Analytics:</strong> Statistieken, verdeling per type, proeftijden, verloopdatums en sjabloongebruik</li>
+                  <li>✓ <strong>Afgeronde Contracten:</strong> Archief van volledig ondertekende en geactiveerde contracten</li>
+                  <li>✓ <strong>Contractwijzigingen:</strong> Wijzigingsaanvragen bijhouden en doorvoeren</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Onboarding */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-teal-600" />
+                  Onboarding
+                </CardTitle>
+                <CardDescription>Nieuwe medewerkers inwerkproces</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Volledige onboarding wizard voor nieuwe medewerkers in 6 stappen:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ <strong>Stap 1 — Persoonsgegevens:</strong> Naam, adres, contact, afdeling, functie en pasfoto invoeren</li>
+                  <li>✓ <strong>Stap 2 — Stamkaart:</strong> Rijbewijs, ID-document (incl. geldigheidsdatum), loonschaal uit loontabellen, uurloon, IBAN</li>
+                  <li>✓ <strong>Loonheffingsverklaring:</strong> Ja/Nee keuze met datum, digitale handtekening — conform officieel formulier</li>
+                  <li>✓ <strong>Stap 3 — Verklaringen:</strong> Pincode sleutelkast, sleutelverklaring, GPS Buddy, dienstbetrekking, bedrijfsreglement</li>
+                  <li>✓ <strong>Stap 4 — Contract:</strong> Contracttype selecteren, sjabloon kiezen, contract automatisch genereren met medewerkergegevens</li>
+                  <li>✓ <strong>Stap 5 — Uitnodigen:</strong> Medewerker uitnodigen voor de mobiele app (e-mail)</li>
+                  <li>✓ <strong>Stap 6 — Samenvatting:</strong> Overzicht alle stappen, checklist, handtekening en afronden</li>
+                  <li>✓ Stamkaart printen of mailen naar loonadministratie</li>
+                  <li>✓ Validatie van verplichte velden per stap</li>
+                  <li>✓ Overzicht van alle lopende en afgeronde onboardings</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Stamkaart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-cyan-600" />
+                  Stamkaart
+                </CardTitle>
+                <CardDescription>Medewerker stamkaart apart beheren</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  De stamkaart is ook los beschikbaar (buiten de onboarding) voor bestaande medewerkers:
+                </p>
+                <ul className="text-sm space-y-2 text-slate-600">
+                  <li>✓ Selecteer een medewerker uit het overzicht</li>
+                  <li>✓ Alle persoonsgegevens, BSN, IBAN, adres bewerken</li>
+                  <li>✓ <strong>ID-document:</strong> Nummer én geldigheidsdatum</li>
+                  <li>✓ Rijbewijs, Code 95 en categorieën</li>
+                  <li>✓ Loonschaal selectie uit loontabellen met automatisch uurloon</li>
+                  <li>✓ <strong>Loonheffingsverklaring:</strong> Ja/Nee met datum en digitale handtekening</li>
+                  <li>✓ LKV-beoordeling en financiële situatie</li>
+                  <li>✓ <strong>Validatie verplichte velden</strong> (naam, BSN, adres, IBAN, ID-document, etc.)</li>
+                  <li>✓ Stamkaart opslaan, printen of e-mailen naar loonadministratie</li>
+                  <li>✓ Handig bij wijzigingen in persoonlijke gegevens of verlenging ID-documenten</li>
                 </ul>
               </CardContent>
             </Card>
