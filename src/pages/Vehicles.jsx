@@ -255,9 +255,9 @@ export default function Vehicles() {
 
       {/* Vehicle List */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Skeleton key={i} className="h-48 rounded-xl" />
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} className="h-24 rounded-xl" />
           ))}
         </div>
       ) : filteredVehicles.length === 0 ? (
@@ -267,7 +267,7 @@ export default function Vehicles() {
           <p className="text-slate-500 mt-1">Pas je zoekcriteria aan of voeg een nieuw voertuig toe.</p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-3">
           {filteredVehicles.map(vehicle => {
             const VehicleIcon = getVehicleIcon(vehicle.type);
             const niwoPermit = niwoPermits.find(p => p.id === vehicle.niwo_permit_id);
@@ -279,48 +279,72 @@ export default function Vehicles() {
                 onClick={() => openEditDialog(vehicle)}
               >
                 <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center">
-                      <VehicleIcon className="w-7 h-7 text-slate-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <VehicleIcon className="w-7 h-7 text-slate-600" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
                           <h3 className="font-bold text-slate-900 text-lg">
                             {vehicle.license_plate}
                           </h3>
-                          <p className="text-sm text-slate-500">
-                            {vehicle.brand} {vehicle.model}
-                          </p>
+                          <Badge className={getStatusColor(vehicle.status)}>
+                            {vehicle.status}
+                          </Badge>
+                          {getExpiryBadge(vehicle.apk_expiry, "APK")}
+                          {getExpiryBadge(vehicle.insurance_expiry, "Verzekering")}
                         </div>
-                        <Badge className={getStatusColor(vehicle.status)}>
-                          {vehicle.status}
-                        </Badge>
+                        <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
+                          <span>{vehicle.brand} {vehicle.model}</span>
+                          {vehicle.type && (
+                            <span className="text-slate-400">|</span>
+                          )}
+                          {vehicle.type && <span>{vehicle.type}</span>}
+                          {vehicle.fuel_type && (
+                            <>
+                              <span className="text-slate-400">|</span>
+                              <span className="flex items-center gap-1">
+                                <Fuel className="w-3.5 h-3.5 text-slate-400" />
+                                {vehicle.fuel_type}
+                              </span>
+                            </>
+                          )}
+                          {vehicle.year && (
+                            <>
+                              <span className="text-slate-400">|</span>
+                              <span>{vehicle.year}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      
-                      <div className="mt-3 space-y-1.5">
-                        <p className="text-xs text-slate-500 flex items-center gap-2">
-                          <Fuel className="w-3.5 h-3.5" />
-                          {vehicle.fuel_type || '-'}
-                        </p>
-                        {vehicle.current_mileage && (
-                          <p className="text-xs text-slate-500 flex items-center gap-2">
-                            <Gauge className="w-3.5 h-3.5" />
-                            {vehicle.current_mileage.toLocaleString()} km
-                          </p>
-                        )}
-                        {niwoPermit && (
-                          <p className="text-xs text-slate-500 flex items-center gap-2">
-                            <FileText className="w-3.5 h-3.5" />
-                            NIWO: {niwoPermit.permit_number}
-                          </p>
-                        )}
-                      </div>
+                    </div>
 
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {getExpiryBadge(vehicle.apk_expiry, "APK")}
-                        {getExpiryBadge(vehicle.insurance_expiry, "Verzekering")}
-                      </div>
+                    <div className="flex flex-wrap gap-6 text-sm">
+                      {vehicle.current_mileage != null && (
+                        <div className="text-center">
+                          <p className="text-slate-500">Km-stand</p>
+                          <p className="font-semibold text-slate-900">{vehicle.current_mileage.toLocaleString()} km</p>
+                        </div>
+                      )}
+                      {vehicle.key_cabinet_number && (
+                        <div className="text-center">
+                          <p className="text-slate-500">Sleutelkast</p>
+                          <p className="font-semibold text-slate-900">{vehicle.key_cabinet_number}</p>
+                        </div>
+                      )}
+                      {niwoPermit && (
+                        <div className="text-center">
+                          <p className="text-slate-500">NIWO</p>
+                          <p className="font-semibold text-slate-900">{niwoPermit.permit_number}</p>
+                        </div>
+                      )}
+                      {vehicle.max_weight && (
+                        <div className="text-center">
+                          <p className="text-slate-500">Laadvermogen</p>
+                          <p className="font-semibold text-slate-900">{vehicle.max_weight.toLocaleString()} kg</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
