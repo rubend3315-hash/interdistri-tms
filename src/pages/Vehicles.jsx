@@ -19,8 +19,10 @@ import {
   Gauge,
   Fuel,
   Trash2,
-  FileText
+  FileText,
+  Crosshair
 } from "lucide-react";
+import MileageCalibrationDialog from "@/components/vehicles/MileageCalibrationDialog";
 
 const vehicleTypes = ["Vrachtwagen", "Bestelbus", "Personenauto", "Aanhanger"];
 const fuelTypes = ["Diesel", "Benzine", "Elektrisch", "Hybride", "LNG", "CNG"];
@@ -33,7 +35,14 @@ export default function Vehicles() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [calibrationVehicle, setCalibrationVehicle] = useState(null);
   const queryClient = useQueryClient();
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    retry: false,
+  });
 
   const { data: vehicles = [], isLoading } = useQuery({
     queryKey: ['vehicles'],
@@ -495,11 +504,28 @@ export default function Vehicles() {
 
             <div className="space-y-2">
               <Label>Kilometerstand</Label>
-              <Input
-                type="number"
-                value={formData.current_mileage}
-                onChange={(e) => setFormData({ ...formData, current_mileage: e.target.value })}
-              />
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  value={formData.current_mileage}
+                  onChange={(e) => setFormData({ ...formData, current_mileage: e.target.value })}
+                  className="flex-1"
+                />
+                {selectedVehicle && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                    onClick={() => {
+                      setCalibrationVehicle(selectedVehicle);
+                    }}
+                  >
+                    <Crosshair className="w-4 h-4" />
+                    IJken
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -575,6 +601,12 @@ export default function Vehicles() {
           </form>
         </DialogContent>
       </Dialog>
+      <MileageCalibrationDialog
+        open={!!calibrationVehicle}
+        onOpenChange={(open) => { if (!open) setCalibrationVehicle(null); }}
+        vehicle={calibrationVehicle}
+        userName={currentUser?.full_name}
+      />
     </div>
   );
 }
