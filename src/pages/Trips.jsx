@@ -114,6 +114,7 @@ export default function Trips() {
     status: "Gepland",
     notes: ""
   });
+  const [kmWarning, setKmWarning] = useState("");
 
   const resetForm = () => {
     setFormData({
