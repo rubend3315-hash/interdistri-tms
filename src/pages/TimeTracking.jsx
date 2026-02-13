@@ -20,6 +20,7 @@ import EmployeeSidebar from "../components/timetracking/EmployeeSidebar";
 import WeekCalendar from "../components/timetracking/WeekCalendar";
 import WeekOverview from "../components/timetracking/WeekOverview";
 import { isWeekInDefinitiefPeriode } from "../components/utils/loonperiodeUtils";
+import { checkEmployeeActiveRules } from "../components/utils/employeeContractCheck";
 
 
 
@@ -244,6 +245,15 @@ export default function TimeTracking() {
 
   const openEntryDialog = (employeeId, date, categoryKey = "gewerkt") => {
     if (weekIsDefinitief) return; // Geblokkeerd: periode is definitief
+    
+    // Check active contract/reiskosten rules
+    const emp = employees.find(e => e.id === employeeId);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const ruleCheck = checkEmployeeActiveRules(emp, dateStr);
+    if (!ruleCheck.hasActiveContract) {
+      alert(ruleCheck.warnings.join('\n'));
+      return;
+    }
     const dateStr = format(date, 'yyyy-MM-dd');
     setDialogCategory(categoryKey);
 

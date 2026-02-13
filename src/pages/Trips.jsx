@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
+import { checkEmployeeActiveRules } from "@/components/utils/employeeContractCheck";
 
 const statuses = ["Gepland", "Onderweg", "Voltooid", "Geannuleerd"];
 
@@ -189,6 +190,16 @@ export default function Trips() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Check active contract/reiskosten rules for the selected employee
+    if (formData.employee_id && formData.date) {
+      const emp = employees.find(em => em.id === formData.employee_id);
+      const ruleCheck = checkEmployeeActiveRules(emp, formData.date);
+      if (!ruleCheck.hasActiveContract) {
+        alert(ruleCheck.warnings.join('\n'));
+        return;
+      }
+    }
     
     // Calculate subsistence allowance
     const subsistenceAllowance = calculateSubsistenceAllowance(
