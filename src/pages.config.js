@@ -76,6 +76,7 @@ import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import MobileEntry from './pages/MobileEntry';
 import MobileEntryMultiDay from './pages/MobileEntryMultiDay';
 import NiwoPermits from './pages/NiwoPermits';
+import Onboarding from './pages/Onboarding';
 import PerformanceReviews from './pages/PerformanceReviews';
 import Planning from './pages/Planning';
 import Projects from './pages/Projects';
@@ -83,13 +84,12 @@ import Recalculations from './pages/Recalculations';
 import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
 import ShiftTime from './pages/ShiftTime';
+import Stamkaart from './pages/Stamkaart';
 import TIRekenmodule from './pages/TIRekenmodule';
 import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Onboarding from './pages/Onboarding';
-import Stamkaart from './pages/Stamkaart';
 import __Layout from './Layout.jsx';
 
 
@@ -123,6 +123,7 @@ export const PAGES = {
     "MobileEntry": MobileEntry,
     "MobileEntryMultiDay": MobileEntryMultiDay,
     "NiwoPermits": NiwoPermits,
+    "Onboarding": Onboarding,
     "PerformanceReviews": PerformanceReviews,
     "Planning": Planning,
     "Projects": Projects,
@@ -130,13 +131,12 @@ export const PAGES = {
     "SalaryReports": SalaryReports,
     "SalaryTables": SalaryTables,
     "ShiftTime": ShiftTime,
+    "Stamkaart": Stamkaart,
     "TIRekenmodule": TIRekenmodule,
     "TimeTracking": TimeTracking,
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Onboarding": Onboarding,
-    "Stamkaart": Stamkaart,
 }
 
 export const pagesConfig = {

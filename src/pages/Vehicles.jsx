@@ -25,6 +25,7 @@ import {
 const vehicleTypes = ["Vrachtwagen", "Bestelbus", "Personenauto", "Aanhanger"];
 const fuelTypes = ["Diesel", "Benzine", "Elektrisch", "Hybride", "LNG", "CNG"];
 const statuses = ["Beschikbaar", "In gebruik", "In onderhoud", "Defect", "Uit dienst"];
+const emissionClasses = ["Euro 1", "Euro 2", "Euro 3", "Euro 4", "Euro 5", "Euro 6", "Euro 6d", "Zero Emissie"];
 
 export default function Vehicles() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -83,6 +84,9 @@ export default function Vehicles() {
     niwo_permit_id: "",
     status: "Beschikbaar",
     max_weight: "",
+    chassis_number: "",
+    emission_class: "",
+    factory_consumption_per_100km: "",
     notes: ""
   });
 
@@ -101,6 +105,9 @@ export default function Vehicles() {
       niwo_permit_id: "",
       status: "Beschikbaar",
       max_weight: "",
+      chassis_number: "",
+      emission_class: "",
+      factory_consumption_per_100km: "",
       notes: ""
     });
   };
@@ -111,7 +118,10 @@ export default function Vehicles() {
       ...vehicle,
       year: vehicle.year || "",
       current_mileage: vehicle.current_mileage || "",
-      max_weight: vehicle.max_weight || ""
+      max_weight: vehicle.max_weight || "",
+      chassis_number: vehicle.chassis_number || "",
+      emission_class: vehicle.emission_class || "",
+      factory_consumption_per_100km: vehicle.factory_consumption_per_100km || ""
     });
     setIsDialogOpen(true);
   };
@@ -135,6 +145,7 @@ export default function Vehicles() {
     submitData.year = formData.year ? Number(formData.year) : null;
     submitData.current_mileage = formData.current_mileage ? Number(formData.current_mileage) : null;
     submitData.max_weight = formData.max_weight ? Number(formData.max_weight) : null;
+    submitData.factory_consumption_per_100km = formData.factory_consumption_per_100km ? Number(formData.factory_consumption_per_100km) : null;
 
     if (selectedVehicle) {
       updateMutation.mutate({ id: selectedVehicle.id, data: submitData });
@@ -422,13 +433,41 @@ export default function Vehicles() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Chassisnummer (VIN)</Label>
+              <Input
+                value={formData.chassis_number}
+                onChange={(e) => setFormData({ ...formData, chassis_number: e.target.value.toUpperCase() })}
+                placeholder="bijv. WF0XXXGCDX1234567"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Kilometerstand</Label>
+                <Label>Emissieklasse</Label>
+                <Select
+                  value={formData.emission_class || "none"}
+                  onValueChange={(v) => setFormData({ ...formData, emission_class: v === "none" ? "" : v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecteer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Geen</SelectItem>
+                    {emissionClasses.map(e => (
+                      <SelectItem key={e} value={e}>{e}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Verbruik / 100 km</Label>
                 <Input
                   type="number"
-                  value={formData.current_mileage}
-                  onChange={(e) => setFormData({ ...formData, current_mileage: e.target.value })}
+                  step="0.1"
+                  value={formData.factory_consumption_per_100km}
+                  onChange={(e) => setFormData({ ...formData, factory_consumption_per_100km: e.target.value })}
+                  placeholder="L of kWh"
                 />
               </div>
               <div className="space-y-2">
@@ -439,6 +478,15 @@ export default function Vehicles() {
                   onChange={(e) => setFormData({ ...formData, max_weight: e.target.value })}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Kilometerstand</Label>
+              <Input
+                type="number"
+                value={formData.current_mileage}
+                onChange={(e) => setFormData({ ...formData, current_mileage: e.target.value })}
+              />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
