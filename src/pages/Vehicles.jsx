@@ -174,6 +174,10 @@ export default function Vehicles() {
     const matchesType = filterType === "all" || v.type === filterType;
     const matchesStatus = filterStatus === "all" || v.status === filterStatus;
     return matchesSearch && matchesType && matchesStatus;
+  }).sort((a, b) => {
+    const brandCompare = (a.brand || '').localeCompare(b.brand || '');
+    if (brandCompare !== 0) return brandCompare;
+    return (a.year || 0) - (b.year || 0);
   });
 
   const getExpiryBadge = (date, label) => {
