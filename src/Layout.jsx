@@ -62,13 +62,7 @@ const menuItems = [
       { name: "Resultaat & Ontwikkeling", icon: FileText, page: "PerformanceReviews" },
     ]
   },
-  {
-    label: "HRM-instellingen",
-    items: [
-      { name: "Urensoort & Uurcode", icon: BookOpen, page: "HRMSettings" },
-      { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
-    ]
-  },
+
   {
     label: "Loon & Rapportage",
     items: [
@@ -98,6 +92,8 @@ const menuItems = [
   {
     label: "Beheer",
     items: [
+      { name: "Urensoort & Uurcode", icon: BookOpen, page: "HRMSettings" },
+      { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
       { name: "Integraties", icon: Link2, page: "Integrations" },
       { name: "Herberekeningen", icon: Shield, page: "Recalculations" },
       { name: "Documentenbeheer", icon: FileText, page: "Documents" },
