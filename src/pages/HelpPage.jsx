@@ -334,6 +334,7 @@ export default function HelpPage() {
                 </p>
                 <ul className="text-sm space-y-2 text-slate-600">
                   <li>✓ Medewerkergegevens en contracten</li>
+                  <li>✓ <strong>ID-document:</strong> Nummer en geldigheidsdatum (paspoort/ID-kaart)</li>
                   <li>✓ Voertuigen en onderhoudstermijnen</li>
                   <li>✓ CAO-regels en toeslagen</li>
                   <li>✓ Loontabellen</li>
@@ -341,6 +342,7 @@ export default function HelpPage() {
                   <li>✓ <strong>Chauffeur-toggle:</strong> Bepaalt of nachttoeslag (21:00-05:00) wordt berekend</li>
                   <li>✓ <strong>Tonen in planner:</strong> Bepaalt of medewerker zichtbaar is in de planning</li>
                   <li>✓ <strong>Opnemen in loonrapport:</strong> Bepaalt of er een loonrapport wordt gegenereerd</li>
+                  <li>✓ <strong>Audit Log:</strong> Volledig overzicht van alle systeemwijzigingen</li>
                 </ul>
               </CardContent>
             </Card>
