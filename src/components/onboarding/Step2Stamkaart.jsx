@@ -193,6 +193,30 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
             </div>
           </div>
 
+          {/* Loonheffingsverklaring */}
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-3">Loonheffingsverklaring</h4>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+              <p className="text-sm text-slate-700">
+                Heeft de werknemer de loonheffingsverklaring ingevuld en ondertekend?
+              </p>
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={onboardingData?.loonheffing_akkoord === true}
+                    onCheckedChange={(checked) => onOnboardingChange({ ...onboardingData, loonheffing_akkoord: checked ? true : false })}
+                  />
+                  <span className="text-sm font-medium">Ja, loonheffingsverklaring ontvangen en ondertekend</span>
+                </label>
+              </div>
+              {onboardingData?.loonheffing_akkoord === false && (
+                <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded">
+                  Let op: zonder loonheffingsverklaring moet het anoniementarief worden toegepast.
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* LKV en financiële situatie */}
           <div className="border-t pt-4">
             <h4 className="font-medium mb-3">Beoordeling LKV & Financiële situatie</h4>
