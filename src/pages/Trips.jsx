@@ -136,6 +136,29 @@ export default function Trips() {
       status: "Gepland",
       notes: ""
     });
+    setKmWarning("");
+  };
+
+  // Validate km against vehicle's current_mileage
+  const validateKm = (vehicleId, startKm) => {
+    if (!vehicleId || !startKm) {
+      setKmWarning("");
+      return;
+    }
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (!vehicle || !vehicle.current_mileage) {
+      setKmWarning("");
+      return;
+    }
+    const startKmNum = Number(startKm);
+    const expectedKm = vehicle.current_mileage;
+    if (startKmNum < expectedKm) {
+      setKmWarning(`Begin km-stand (${startKmNum}) is lager dan de verwachte km-stand van ${vehicle.license_plate}: ${expectedKm} km`);
+    } else if (startKmNum > expectedKm + 500) {
+      setKmWarning(`Begin km-stand (${startKmNum}) wijkt sterk af van de verwachte km-stand van ${vehicle.license_plate}: ${expectedKm} km`);
+    } else {
+      setKmWarning("");
+    }
   };
 
   const openEditDialog = (trip) => {
