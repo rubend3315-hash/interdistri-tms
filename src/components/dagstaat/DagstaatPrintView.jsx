@@ -296,16 +296,10 @@ export default function DagstaatPrintView({
             <div style={{ flex: 1 }}>
               <p className="text-xs font-semibold mb-1">Handtekening medewerker:</p>
               <div className="signature-box rounded" style={{ minHeight: "15mm" }}></div>
-              <p className="text-xs mt-1" style={{ color: "#94a3b8" }}>
-                Naam: {employee ? getFullName(employee) : "___________________________"}
-              </p>
             </div>
             <div style={{ flex: 1 }}>
               <p className="text-xs font-semibold mb-1">Handtekening leidinggevende:</p>
               <div className="signature-box rounded" style={{ minHeight: "15mm" }}></div>
-              <p className="text-xs mt-1" style={{ color: "#94a3b8" }}>
-                Naam: ___________________________
-              </p>
             </div>
           </div>
         </div>
