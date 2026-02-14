@@ -243,88 +243,113 @@ export default function Employees() {
           <p className="text-slate-500">Geen medewerkers gevonden</p>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredEmployees.map((employee) => {
-            const driverLicenseStatus = checkExpiry(employee.drivers_license_expiry);
-            const code95Status = checkExpiry(employee.code95_expiry);
+        <div className="space-y-6">
+          {(() => {
+            // Group by department, sort employees by employee_number within each group
+            const grouped = {};
+            const departmentOrder = ['Management', 'Transport', 'PakketDistributie', 'Charters'];
+            filteredEmployees.forEach(emp => {
+              const dept = emp.department || 'Overig';
+              if (!grouped[dept]) grouped[dept] = [];
+              grouped[dept].push(emp);
+            });
+            // Sort each group by employee_number
+            Object.keys(grouped).forEach(dept => {
+              grouped[dept].sort((a, b) => 
+                (a.employee_number || '').localeCompare(b.employee_number || '', undefined, { numeric: true })
+              );
+            });
+            // Order departments
+            const sortedDepts = [...departmentOrder.filter(d => grouped[d]), ...Object.keys(grouped).filter(d => !departmentOrder.includes(d))];
 
-            return (
-              <Card key={employee.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-blue-900/10 p-2 rounded-lg">
-                        <Users className="w-5 h-5 text-blue-900" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">
-                          {getFullName(employee)}
-                        </CardTitle>
-                        <p className="text-sm text-slate-500">{employee.function}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Badge className={getStatusBadge(employee.status)}>
-                        {employee.status}
-                      </Badge>
-                      <Button variant="ghost" size="icon" onClick={() => openViewDialog(employee)}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    {employee.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-3 h-3 text-slate-400" />
-                        <span className="text-slate-700">{employee.email}</span>
-                      </div>
-                    )}
-                    {employee.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-3 h-3 text-slate-400" />
-                        <span className="text-slate-700">{employee.phone}</span>
-                      </div>
-                    )}
-                  </div>
+            return sortedDepts.map(dept => (
+              <div key={dept}>
+                <div className="flex items-center gap-3 mb-3">
+                  <h2 className="text-lg font-semibold text-slate-800">{dept}</h2>
+                  <Badge variant="secondary" className="text-xs">{grouped[dept].length}</Badge>
+                </div>
+                <div className="space-y-2">
+                  {grouped[dept].map(employee => (
+                    <Card
+                      key={employee.id}
+                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => openViewDialog(employee)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-blue-900/10 rounded-lg flex items-center justify-center shrink-0">
+                              {employee.photo_url ? (
+                                <img src={employee.photo_url} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                              ) : (
+                                <Users className="w-5 h-5 text-blue-900" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-slate-900">
+                                  {getFullName(employee)}
+                                </h3>
+                                <Badge className={getStatusBadge(employee.status)}>
+                                  {employee.status}
+                                </Badge>
+                              </div>
+                              <div className="flex flex-wrap gap-3 mt-1 text-sm text-slate-600">
+                                {employee.employee_number && (
+                                  <span className="font-medium text-slate-500">#{employee.employee_number}</span>
+                                )}
+                                {employee.function && <span>{employee.function}</span>}
+                                {employee.email && (
+                                  <>
+                                    <span className="text-slate-300">|</span>
+                                    <span className="flex items-center gap-1">
+                                      <Mail className="w-3 h-3 text-slate-400" />
+                                      {employee.email}
+                                    </span>
+                                  </>
+                                )}
+                                {employee.phone && (
+                                  <>
+                                    <span className="text-slate-300">|</span>
+                                    <span className="flex items-center gap-1">
+                                      <Phone className="w-3 h-3 text-slate-400" />
+                                      {employee.phone}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
 
-                  {employee.department === 'Transport' && (
-                    <div className="space-y-2 pt-2 border-t">
-                      {employee.drivers_license_expiry && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-500 flex items-center gap-1">
-                            <Calendar className="w-3 h-3" /> Rijbewijs:
-                          </span>
-                          <span className={`flex items-center gap-1 ${
-                            driverLicenseStatus === 'expired' ? 'text-red-600 font-medium' :
-                            driverLicenseStatus === 'warning' ? 'text-yellow-600 font-medium' :
-                            'text-slate-700'
-                          }`}>
-                            {driverLicenseStatus === 'expired' && <AlertCircle className="w-3 h-3" />}
-                            {format(new Date(employee.drivers_license_expiry), 'dd-MM-yyyy')}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-4 text-sm shrink-0">
+                            {employee.drivers_license_expiry && (() => {
+                              const status = checkExpiry(employee.drivers_license_expiry);
+                              if (status === 'expired') return <Badge variant="destructive">Rijbewijs verlopen</Badge>;
+                              if (status === 'warning') return <Badge className="bg-amber-500">Rijbewijs verloopt</Badge>;
+                              return null;
+                            })()}
+                            {employee.code95_expiry && (() => {
+                              const status = checkExpiry(employee.code95_expiry);
+                              if (status === 'expired') return <Badge variant="destructive">Code 95 verlopen</Badge>;
+                              if (status === 'warning') return <Badge className="bg-amber-500">Code 95 verloopt</Badge>;
+                              return null;
+                            })()}
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={(e) => { e.stopPropagation(); openViewDialog(employee); }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                      )}
-                      {employee.code95_expiry && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-500">Code 95:</span>
-                          <span className={`flex items-center gap-1 ${
-                            code95Status === 'expired' ? 'text-red-600 font-medium' :
-                            code95Status === 'warning' ? 'text-yellow-600 font-medium' :
-                            'text-slate-700'
-                          }`}>
-                            {code95Status === 'expired' && <AlertCircle className="w-3 h-3" />}
-                            {format(new Date(employee.code95_expiry), 'dd-MM-yyyy')}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       )}
     </div>
