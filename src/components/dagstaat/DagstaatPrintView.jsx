@@ -280,22 +280,25 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Opmerkingen + Handtekeningen naast elkaar */}
-        <div style={{ display: "flex", gap: "20px", marginTop: "8mm" }}>
+        <div style={{ display: "flex", gap: "20px", marginTop: "8mm", alignItems: "stretch" }}>
           {/* Links: Opmerkingen */}
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
             <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
               Opmerkingen
             </h2>
-            <div className="signature-box rounded" style={{ minHeight: "30mm" }}></div>
+            <div className="signature-box rounded" style={{ flex: 1 }}></div>
           </div>
 
           {/* Rechts: Handtekeningen boven elkaar */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
-            <div className="signature-box rounded" style={{ minHeight: "14mm", display: "flex", alignItems: "flex-start", padding: "3px 6px" }}>
-              <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening medewerker</span>
-            </div>
-            <div className="signature-box rounded" style={{ minHeight: "14mm", display: "flex", alignItems: "flex-start", padding: "3px 6px" }}>
-              <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening leidinggevende</span>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>&nbsp;</h2>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div className="signature-box rounded" style={{ flex: 1, display: "flex", alignItems: "flex-start", padding: "3px 6px" }}>
+                <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening medewerker</span>
+              </div>
+              <div className="signature-box rounded" style={{ flex: 1, display: "flex", alignItems: "flex-start", padding: "3px 6px" }}>
+                <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening leidinggevende</span>
+              </div>
             </div>
           </div>
         </div>
