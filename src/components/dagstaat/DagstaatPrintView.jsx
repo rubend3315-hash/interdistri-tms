@@ -271,12 +271,20 @@ export default function DagstaatPrintView({
           </table>
         </div>
 
-        {/* Verklaring met checkbox */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4mm", marginBottom: "2mm" }}>
-          <div style={{ width: "12px", height: "12px", border: "1.5px solid #334155", borderRadius: "2px", flexShrink: 0 }} />
-          <span className="text-xs" style={{ color: "#1e293b" }}>
-            <strong>Verplicht invullen:</strong> Ik verklaar dat ik geen schade aan mijn voertuig heb veroorzaakt en deze schoon en opgeruimd heb geparkeerd.
-          </span>
+        {/* Verklaringen met checkbox */}
+        <div style={{ marginTop: "4mm", marginBottom: "2mm", display: "flex", flexDirection: "column", gap: "3px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
+            <span className="text-xs" style={{ color: "#1e293b" }}>
+              Ik verklaar dat ik geen schade aan mijn voertuig heb veroorzaakt en deze schoon en opgeruimd heb geparkeerd.
+            </span>
+            <div style={{ width: "12px", height: "12px", border: "1.5px solid #334155", borderRadius: "2px", flexShrink: 0 }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
+            <span className="text-xs" style={{ color: "#1e293b" }}>
+              Ik verklaar de dagstaat volledig en naar waarheid te hebben ingevuld.
+            </span>
+            <div style={{ width: "12px", height: "12px", border: "1.5px solid #334155", borderRadius: "2px", flexShrink: 0 }} />
+          </div>
         </div>
 
         {/* Opmerkingen + Handtekeningen naast elkaar */}
@@ -288,8 +296,9 @@ export default function DagstaatPrintView({
 
           {/* Rechts: Handtekeningen boven elkaar */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
-            <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px" }}>
+            <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening medewerker</span>
+              <span style={{ fontSize: "6pt", color: "#94a3b8", lineHeight: "1.3" }}>Zonder uw handtekening kunnen wij uw dagstaat niet verwerken. Totdat de handtekening is geplaatst, heeft u slechts aanspraak op uw basisloon.</span>
             </div>
             <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px" }}>
               <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening leidinggevende</span>
