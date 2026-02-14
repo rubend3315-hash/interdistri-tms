@@ -377,6 +377,9 @@ function ProfielTab({ employee, viewOnly }) {
             <h2 className="text-2xl font-bold text-slate-900">
               {getFullName(employee)}
             </h2>
+            {employee.employee_number && (
+              <p className="text-sm text-slate-500 font-medium">Personeelsnummer: {employee.employee_number}</p>
+            )}
             <p className="text-lg text-slate-600">{employee.function || 'Geen functie'}</p>
             <p className="text-sm text-slate-500">{employee.department}</p>
           </div>
