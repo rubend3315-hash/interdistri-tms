@@ -245,20 +245,31 @@ export default function DagstaatPrintView({
               </tr>
             </thead>
             <tbody>
-              {trips.length > 0 ? trips.map((trip, idx) => (
-                <tr key={idx}>
-                  <td>{trip.date ? format(new Date(trip.date), "dd-MM-yyyy") : "-"}</td>
-                  <td>{getVehicleName(trip.vehicle_id)}</td>
-                  <td>{getCustomerName(trip.customer_id)}</td>
-                  <td>{trip.route_name || "-"}</td>
-                  <td>{trip.departure_time || "-"}</td>
-                  <td>{trip.arrival_time || "-"}</td>
-                  <td>{trip.start_km ?? "-"}</td>
-                  <td>{trip.end_km ?? "-"}</td>
-                  <td>{trip.total_km ?? "-"}</td>
-                </tr>
-              )) : (
-                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              {trips.length > 0 ? (
+                <>
+                  {trips.map((trip, idx) => (
+                    <tr key={idx}>
+                      <td>{trip.date ? format(new Date(trip.date), "dd-MM-yyyy") : "-"}</td>
+                      <td>{getVehicleName(trip.vehicle_id)}</td>
+                      <td>{getCustomerName(trip.customer_id)}</td>
+                      <td>{trip.route_name || "-"}</td>
+                      <td>{trip.departure_time || "-"}</td>
+                      <td>{trip.arrival_time || "-"}</td>
+                      <td>{trip.start_km ?? "-"}</td>
+                      <td>{trip.end_km ?? "-"}</td>
+                      <td>{trip.total_km ?? "-"}</td>
+                    </tr>
+                  ))}
+                  {Array.from({ length: Math.max(0, 4 - trips.length) }).map((_, idx) => (
+                    <tr key={`empty-${idx}`}><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {[0,1,2,3].map(i => (
+                    <tr key={`empty-${i}`}><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                  ))}
+                </>
               )}
               <tr>
                 <td colSpan={8} className="font-bold text-right">Totaal km:</td>
