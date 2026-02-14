@@ -256,6 +256,35 @@ export default function DagstaatPrintView({
               </tr>
             </tbody>
           </table>
+
+          {/* Tankregistratie */}
+          <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse", marginTop: "2px" }}>
+            <thead>
+              <tr>
+                <th className="text-left" style={{ width: "25%" }}>Kenteken</th>
+                <th className="text-left" style={{ width: "25%" }}>Brandstof (liter)</th>
+                <th className="text-left" style={{ width: "25%" }}>AdBlue (liter)</th>
+                <th className="text-left" style={{ width: "25%" }}>Km stand bij tanken</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trips.length > 0 && trips.some(t => t.fuel_liters || t.adblue_liters || t.fuel_km) ? (
+                trips.filter(t => t.fuel_liters || t.adblue_liters || t.fuel_km).map((trip, idx) => {
+                  const v = vehicles.find(v => v.id === trip.vehicle_id);
+                  return (
+                    <tr key={idx}>
+                      <td>{v?.license_plate || "-"}</td>
+                      <td>{trip.fuel_liters ?? ""}</td>
+                      <td>{trip.adblue_liters ?? ""}</td>
+                      <td>{trip.fuel_km ?? ""}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
         {/* Verklaringen met checkbox */}
