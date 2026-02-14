@@ -1690,18 +1690,23 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) 
     startdatum: '',
     einddatum: '',
     afstand_km: 0,
+    berekende_vergoeding: 0,
     vergoeding_per_dag: 0,
     status: 'Actief'
   });
 
   useEffect(() => {
     if (reiskosten) {
-      setFormData(reiskosten);
+      setFormData({
+        ...reiskosten,
+        berekende_vergoeding: reiskosten.berekende_vergoeding ?? reiskosten.vergoeding_per_dag ?? 0
+      });
     } else if (open) {
       setFormData({
         startdatum: '',
         einddatum: '',
         afstand_km: 0,
+        berekende_vergoeding: 0,
         vergoeding_per_dag: 0,
         status: 'Actief'
       });
@@ -1711,15 +1716,19 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) 
   const berekenVergoeding = () => {
     const afstand = Number(formData.afstand_km) || 0;
     const tarief = 0.23; // €0.23 per km
-    const berekend = afstand * tarief; // Enkele reis
-    setFormData({ ...formData, vergoeding_per_dag: Number(berekend.toFixed(2)) });
+    const berekend = Number((afstand * tarief).toFixed(2));
+    setFormData({ 
+      ...formData, 
+      berekende_vergoeding: berekend,
+      vergoeding_per_dag: berekend 
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Nieuwe Reiskostenregel</DialogTitle>
+          <DialogTitle>{reiskosten ? 'Reiskostenregel Bewerken' : 'Nieuwe Reiskostenregel'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="bg-slate-50 p-3 rounded-lg space-y-1">
@@ -1779,10 +1788,11 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) 
             <Input
               type="number"
               step="0.01"
-              value={formData.vergoeding_per_dag}
+              value={formData.berekende_vergoeding || 0}
               readOnly
-              className="bg-slate-50"
+              className="bg-slate-100 text-slate-500 cursor-not-allowed"
             />
+            <p className="text-xs text-slate-500">Read-only — wordt alleen bijgewerkt via de "Bereken" knop</p>
           </div>
 
           <div className="space-y-2">
@@ -1793,7 +1803,7 @@ function ReiskostenDialog({ open, onOpenChange, reiskosten, employee, onSave }) 
               value={formData.vergoeding_per_dag}
               onChange={(e) => setFormData({ ...formData, vergoeding_per_dag: e.target.value })}
             />
-            <p className="text-xs text-slate-500">Dit is de eindvergoeding die gebruikt wordt voor berekeningen</p>
+            <p className="text-xs text-slate-500">Dit is de eindvergoeding die gebruikt wordt voor uitbetaling</p>
           </div>
 
           <div className="space-y-2">
