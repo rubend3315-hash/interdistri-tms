@@ -132,7 +132,7 @@ export default function DagstaatPrintView({
               <p className="text-sm opacity-80" style={{ color: "#cbd5e1" }}>Interdistri Transport Management</p>
             </div>
             <div className="text-right text-sm">
-              <p style={{ color: "white" }}>{formattedDate}</p>
+              <p style={{ color: "white" }}>{isEmpty ? "" : formattedDate}</p>
             </div>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function DagstaatPrintView({
               </tr>
               <tr>
                 <td className="font-semibold">Datum</td>
-                <td colSpan={3}>{formattedDate}</td>
+                <td colSpan={3}>{isEmpty ? "" : formattedDate}</td>
               </tr>
             </tbody>
           </table>
