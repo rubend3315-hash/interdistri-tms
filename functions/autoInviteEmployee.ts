@@ -80,20 +80,32 @@ Deno.serve(async (req) => {
       return Response.json({ status: 'skipped', reason: 'user already exists' });
     }
 
-    // Debug: log available methods
-    logAvailableMethods(base44, 'base44.');
-    logAvailableMethods(base44.auth || {}, 'base44.auth.');
-    logAvailableMethods(base44.asServiceRole || {}, 'base44.asServiceRole.');
-    if (base44.asServiceRole) {
-      logAvailableMethods(base44.asServiceRole.auth || {}, 'base44.asServiceRole.auth.');
-      logAvailableMethods(base44.asServiceRole.users || {}, 'base44.asServiceRole.users.');
-    }
-    if (base44.users) {
-      logAvailableMethods(base44.users, 'base44.users.');
-    }
-    
     // Invite the employee as a user with role 'user' (Medewerker)
-    await base44.asServiceRole.auth.inviteUser(employeeEmail, 'user');
+    // Try multiple paths to find inviteUser
+    let invited = false;
+    
+    if (base44.asServiceRole?.auth?.inviteUser) {
+      await base44.asServiceRole.auth.inviteUser(employeeEmail, 'user');
+      invited = true;
+    } else if (base44.auth?.inviteUser) {
+      await base44.auth.inviteUser(employeeEmail, 'user');
+      invited = true;
+    } else if (base44.asServiceRole?.users?.inviteUser) {
+      await base44.asServiceRole.users.inviteUser(employeeEmail, 'user');
+      invited = true;
+    } else if (base44.users?.inviteUser) {
+      await base44.users.inviteUser(employeeEmail, 'user');
+      invited = true;
+    } else {
+      // Fallback: use the integrations to send invite via API
+      const keys = Object.keys(base44).join(', ');
+      const srKeys = base44.asServiceRole ? Object.keys(base44.asServiceRole).join(', ') : 'N/A';
+      const authKeys = base44.auth ? Object.keys(base44.auth).join(', ') : 'N/A';
+      return Response.json({ 
+        error: 'inviteUser not found',
+        debug: { base44_keys: keys, serviceRole_keys: srKeys, auth_keys: authKeys }
+      }, { status: 500 });
+    }
 
     const employeeName = `${data.first_name || ''} ${data.prefix ? data.prefix + ' ' : ''}${data.last_name || ''}`.trim();
     console.log(`Medewerker ${employeeName} (${employeeEmail}) uitgenodigd als gebruiker.`);
