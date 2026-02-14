@@ -14,9 +14,10 @@ export default function DagstaatPrintView({
   customers,
   onBack,
 }) {
-  const formattedDate = format(new Date(date), "EEEE d MMMM yyyy", { locale: nl });
+  const formattedDate = date ? format(new Date(date), "EEEE d MMMM yyyy", { locale: nl }) : "";
   const totalHours = timeEntries.reduce((sum, te) => sum + (te.total_hours || 0), 0);
   const totalTrips = trips.length;
+  const isEmpty = !employee;
 
   const getVehicleName = (id) => {
     const v = vehicles.find((v) => v.id === id);
@@ -145,15 +146,15 @@ export default function DagstaatPrintView({
             <tbody>
               <tr>
                 <td className="font-semibold w-1/4">Naam</td>
-                <td className="w-1/4">{getFullName(employee)}</td>
+                <td className="w-1/4">{employee ? getFullName(employee) : ""}</td>
                 <td className="font-semibold w-1/4">Personeelsnr.</td>
-                <td className="w-1/4">{employee.employee_number || "-"}</td>
+                <td className="w-1/4">{employee?.employee_number || ""}</td>
               </tr>
               <tr>
                 <td className="font-semibold">Afdeling</td>
-                <td>{employee.department || "-"}</td>
+                <td>{employee?.department || ""}</td>
                 <td className="font-semibold">Functie</td>
-                <td>{employee.function || "-"}</td>
+                <td>{employee?.function || ""}</td>
               </tr>
               <tr>
                 <td className="font-semibold">Datum</td>
@@ -168,39 +169,41 @@ export default function DagstaatPrintView({
           <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
             Tijdregistratie
           </h2>
-          {timeEntries.length === 0 ? (
-            <p className="text-sm italic" style={{ color: "#94a3b8" }}>Geen tijdregistraties</p>
-          ) : (
-            <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th className="text-left">Starttijd</th>
-                  <th className="text-left">Eindtijd</th>
-                  <th className="text-left">Pauze (min)</th>
-                  <th className="text-left">Totaal uren</th>
-                  <th className="text-left">Diensttype</th>
-                  <th className="text-left">Status</th>
+          <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th className="text-left">Starttijd</th>
+                <th className="text-left">Eindtijd</th>
+                <th className="text-left">Pauze (min)</th>
+                <th className="text-left">Totaal uren</th>
+                <th className="text-left">Diensttype</th>
+                <th className="text-left">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {timeEntries.length > 0 ? timeEntries.map((te, idx) => (
+                <tr key={idx}>
+                  <td>{te.start_time || "-"}</td>
+                  <td>{te.end_time || "-"}</td>
+                  <td>{te.break_minutes ?? 0}</td>
+                  <td className="font-semibold">{te.total_hours ?? "-"}</td>
+                  <td>{te.shift_type || "-"}</td>
+                  <td>{te.status || "-"}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {timeEntries.map((te, idx) => (
-                  <tr key={idx}>
-                    <td>{te.start_time || "-"}</td>
-                    <td>{te.end_time || "-"}</td>
-                    <td>{te.break_minutes ?? 0}</td>
-                    <td className="font-semibold">{te.total_hours ?? "-"}</td>
-                    <td>{te.shift_type || "-"}</td>
-                    <td>{te.status || "-"}</td>
-                  </tr>
-                ))}
-                <tr>
-                  <td colSpan={3} className="font-bold text-right">Totaal gewerkte uren:</td>
-                  <td className="font-bold">{totalHours.toFixed(2)}</td>
-                  <td colSpan={2}></td>
-                </tr>
-              </tbody>
-            </table>
-          )}
+              )) : (
+                <>
+                  {[1, 2, 3].map(i => (
+                    <tr key={i}><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+                  ))}
+                </>
+              )}
+              <tr>
+                <td colSpan={3} className="font-bold text-right">Totaal gewerkte uren:</td>
+                <td className="font-bold">{isEmpty ? "" : totalHours.toFixed(2)}</td>
+                <td colSpan={2}></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         {/* Ritten */}
@@ -208,38 +211,40 @@ export default function DagstaatPrintView({
           <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
             Rittenregistratie
           </h2>
-          {trips.length === 0 ? (
-            <p className="text-sm italic" style={{ color: "#94a3b8" }}>Geen ritten</p>
-          ) : (
-            <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th className="text-left">Voertuig</th>
-                  <th className="text-left">Klant</th>
-                  <th className="text-left">Route</th>
-                  <th className="text-left">Vertrek</th>
-                  <th className="text-left">Aankomst</th>
-                  <th className="text-left">Km</th>
+          <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th className="text-left">Voertuig</th>
+                <th className="text-left">Klant</th>
+                <th className="text-left">Route</th>
+                <th className="text-left">Vertrek</th>
+                <th className="text-left">Aankomst</th>
+                <th className="text-left">Km</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trips.length > 0 ? trips.map((trip, idx) => (
+                <tr key={idx}>
+                  <td>{getVehicleName(trip.vehicle_id)}</td>
+                  <td>{getCustomerName(trip.customer_id)}</td>
+                  <td>{trip.route_name || "-"}</td>
+                  <td>{trip.departure_time || "-"}</td>
+                  <td>{trip.arrival_time || "-"}</td>
+                  <td>{trip.total_km ?? "-"}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {trips.map((trip, idx) => (
-                  <tr key={idx}>
-                    <td>{getVehicleName(trip.vehicle_id)}</td>
-                    <td>{getCustomerName(trip.customer_id)}</td>
-                    <td>{trip.route_name || "-"}</td>
-                    <td>{trip.departure_time || "-"}</td>
-                    <td>{trip.arrival_time || "-"}</td>
-                    <td>{trip.total_km ?? "-"}</td>
-                  </tr>
-                ))}
-                <tr>
-                  <td colSpan={5} className="font-bold text-right">Totaal ritten:</td>
-                  <td className="font-bold">{totalTrips}</td>
-                </tr>
-              </tbody>
-            </table>
-          )}
+              )) : (
+                <>
+                  {[1, 2, 3].map(i => (
+                    <tr key={i}><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+                  ))}
+                </>
+              )}
+              <tr>
+                <td colSpan={5} className="font-bold text-right">Totaal ritten:</td>
+                <td className="font-bold">{isEmpty ? "" : totalTrips}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         {/* Correctievelden */}
@@ -273,7 +278,7 @@ export default function DagstaatPrintView({
               <p className="text-xs font-semibold mb-1">Handtekening medewerker:</p>
               <div className="signature-box rounded" style={{ minHeight: "25mm" }}></div>
               <p className="text-xs mt-1" style={{ color: "#94a3b8" }}>
-                Naam: {getFullName(employee)}
+                Naam: {employee ? getFullName(employee) : "___________________________"}
               </p>
             </div>
             <div style={{ flex: 1 }}>
