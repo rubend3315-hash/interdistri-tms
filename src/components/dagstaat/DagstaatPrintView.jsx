@@ -201,6 +201,13 @@ export default function DagstaatPrintView({
                 <td className="font-bold">{isEmpty ? "" : totalHours.toFixed(2)}</td>
                 <td colSpan={2}></td>
               </tr>
+              <tr>
+                <td className="text-xs" style={{ borderTop: "2px solid #475569" }}>Correctie:</td>
+                <td style={{ borderTop: "2px solid #475569" }}></td>
+                <td style={{ borderTop: "2px solid #475569" }}></td>
+                <td style={{ borderTop: "2px solid #475569" }}></td>
+                <td colSpan={2} style={{ borderTop: "2px solid #475569" }}><span className="text-xs">Reden:</span></td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -273,25 +280,12 @@ export default function DagstaatPrintView({
           </table>
         </div>
 
-        {/* Correctievelden */}
+        {/* Opmerkingen */}
         <div className="mb-6">
           <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
-            Correcties (handmatig invullen)
+            Opmerkingen
           </h2>
-          <div className="space-y-3">
-            <div>
-              <p className="text-xs font-semibold mb-1">Correctie werktijden:</p>
-              <div className="correction-field"></div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold mb-1">Correctie ritten:</p>
-              <div className="correction-field"></div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold mb-1">Opmerkingen:</p>
-              <div className="correction-field" style={{ minHeight: "12mm" }}></div>
-            </div>
-          </div>
+          <div className="correction-field" style={{ minHeight: "15mm" }}></div>
         </div>
 
         {/* Handtekeningen */}
