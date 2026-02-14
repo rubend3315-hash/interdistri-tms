@@ -273,13 +273,13 @@ export default function DagstaatPrintView({
 
         {/* Verklaringen met checkbox */}
         <div style={{ marginTop: "4mm", marginBottom: "2mm", display: "flex", flexDirection: "column", gap: "3px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span className="text-xs" style={{ color: "#1e293b" }}>
               Ik verklaar dat ik geen schade aan mijn voertuig heb veroorzaakt en deze schoon en opgeruimd heb geparkeerd.
             </span>
             <div style={{ width: "12px", height: "12px", border: "1.5px solid #334155", borderRadius: "2px", flexShrink: 0 }} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span className="text-xs" style={{ color: "#1e293b" }}>
               Ik verklaar de dagstaat volledig en naar waarheid te hebben ingevuld.
             </span>
