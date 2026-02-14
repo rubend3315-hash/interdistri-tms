@@ -1,14 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Debug helper
-function logAvailableMethods(obj, prefix = '') {
-  const methods = [];
-  for (const key of Object.keys(obj || {})) {
-    methods.push(prefix + key);
-  }
-  console.log('Available at ' + prefix + ':', methods.join(', '));
-}
-
 // Helper: send email via Gmail API
 const CC_ADDRESS = 'ruben@interdistri.nl';
 
@@ -81,30 +72,12 @@ Deno.serve(async (req) => {
     }
 
     // Invite the employee as a user with role 'user' (Medewerker)
-    // Try multiple paths to find inviteUser
-    let invited = false;
-    
     if (base44.asServiceRole?.auth?.inviteUser) {
       await base44.asServiceRole.auth.inviteUser(employeeEmail, 'user');
-      invited = true;
     } else if (base44.auth?.inviteUser) {
       await base44.auth.inviteUser(employeeEmail, 'user');
-      invited = true;
-    } else if (base44.asServiceRole?.users?.inviteUser) {
-      await base44.asServiceRole.users.inviteUser(employeeEmail, 'user');
-      invited = true;
-    } else if (base44.users?.inviteUser) {
-      await base44.users.inviteUser(employeeEmail, 'user');
-      invited = true;
     } else {
-      // Fallback: use the integrations to send invite via API
-      const keys = Object.keys(base44).join(', ');
-      const srKeys = base44.asServiceRole ? Object.keys(base44.asServiceRole).join(', ') : 'N/A';
-      const authKeys = base44.auth ? Object.keys(base44.auth).join(', ') : 'N/A';
-      return Response.json({ 
-        error: 'inviteUser not found',
-        debug: { base44_keys: keys, serviceRole_keys: srKeys, auth_keys: authKeys }
-      }, { status: 500 });
+      throw new Error('inviteUser method not available on SDK');
     }
 
     const employeeName = `${data.first_name || ''} ${data.prefix ? data.prefix + ' ' : ''}${data.last_name || ''}`.trim();
