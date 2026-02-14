@@ -33,18 +33,19 @@ export default function DagstaatPrintView({
     <>
       {/* Print stylesheet */}
       <style>{`
+        @page { size: landscape; margin: 10mm; }
         @media print {
           /* Hide non-print elements */
           .no-print { display: none !important; }
           /* Reset page */
           body, html { margin: 0; padding: 0; }
-          /* A4 sizing */
+          /* Landscape A4 sizing */
           .dagstaat-page {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 15mm 20mm;
+            width: 277mm;
+            min-height: 190mm;
+            padding: 8mm 12mm;
             margin: 0 auto;
-            font-size: 10pt;
+            font-size: 9pt;
             color: #000 !important;
             background: white !important;
           }
@@ -88,13 +89,13 @@ export default function DagstaatPrintView({
         /* Screen preview */
         @media screen {
           .dagstaat-page {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 15mm 20mm;
+            width: 297mm;
+            min-height: 210mm;
+            padding: 10mm 15mm;
             margin: 20px auto;
             background: white;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            font-size: 10pt;
+            font-size: 9pt;
           }
           .dagstaat-table th, .dagstaat-table td {
             border: 1px solid #334155;
@@ -212,10 +213,10 @@ export default function DagstaatPrintView({
           </table>
         </div>
 
-        {/* Ritten */}
+        {/* Ritten & Kilometerstanden */}
         <div className="mb-6">
           <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
-            Rittenregistratie
+            Rittenregistratie & Kilometerstanden
           </h2>
           <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
@@ -225,7 +226,9 @@ export default function DagstaatPrintView({
                 <th className="text-left">Route</th>
                 <th className="text-left">Vertrek</th>
                 <th className="text-left">Aankomst</th>
-                <th className="text-left">Km</th>
+                <th className="text-left">Begin km</th>
+                <th className="text-left">Eind km</th>
+                <th className="text-left">Totaal km</th>
               </tr>
             </thead>
             <tbody>
@@ -236,46 +239,17 @@ export default function DagstaatPrintView({
                   <td>{trip.route_name || "-"}</td>
                   <td>{trip.departure_time || "-"}</td>
                   <td>{trip.arrival_time || "-"}</td>
+                  <td>{trip.start_km ?? "-"}</td>
+                  <td>{trip.end_km ?? "-"}</td>
                   <td>{trip.total_km ?? "-"}</td>
                 </tr>
               )) : (
-                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               )}
               <tr>
-                <td colSpan={5} className="font-bold text-right">Totaal ritten:</td>
-                <td className="font-bold">{isEmpty ? "" : totalTrips}</td>
+                <td colSpan={7} className="font-bold text-right">Totaal km:</td>
+                <td className="font-bold">{isEmpty ? "" : trips.reduce((sum, t) => sum + (t.total_km || 0), 0) || ""}</td>
               </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Kilometerstanden */}
-        <div className="mb-6">
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
-            Kilometerstanden
-          </h2>
-          <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th className="text-left">Begin km-stand</th>
-                <th className="text-left">Eind km-stand</th>
-                <th className="text-left">Totaal km</th>
-              </tr>
-            </thead>
-            <tbody>
-              {trips.length > 0 && trips[0].start_km ? (
-                <tr>
-                  <td>{trips[0].start_km ?? ""}</td>
-                  <td>{trips[trips.length - 1]?.end_km ?? ""}</td>
-                  <td className="font-semibold">
-                    {trips[0].start_km && trips[trips.length - 1]?.end_km
-                      ? trips[trips.length - 1].end_km - trips[0].start_km
-                      : ""}
-                  </td>
-                </tr>
-              ) : (
-                <tr><td>&nbsp;</td><td></td><td></td></tr>
-              )}
             </tbody>
           </table>
         </div>
