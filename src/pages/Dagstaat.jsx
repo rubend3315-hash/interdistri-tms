@@ -58,20 +58,22 @@ export default function Dagstaat() {
     getFullName(a).localeCompare(getFullName(b))
   );
 
-  const handlePrint = () => {
-    setShowPrint(true);
-    setTimeout(() => {
-      window.print();
-    }, 300);
+  const handlePrint = (empty = false) => {
+    if (empty) {
+      setShowPrint("empty");
+    } else {
+      setShowPrint("filled");
+    }
   };
 
   if (showPrint) {
+    const isEmptyForm = showPrint === "empty";
     return (
       <DagstaatPrintView
-        employee={selectedEmployee || null}
-        date={selectedDate}
-        timeEntries={selectedEmployee ? timeEntries : []}
-        trips={selectedEmployee ? trips : []}
+        employee={isEmptyForm ? null : selectedEmployee}
+        date={isEmptyForm ? null : selectedDate}
+        timeEntries={isEmptyForm ? [] : timeEntries}
+        trips={isEmptyForm ? [] : trips}
         vehicles={vehicles}
         customers={customers}
         onBack={() => setShowPrint(false)}
@@ -132,7 +134,7 @@ export default function Dagstaat() {
                   </p>
                 </div>
                 <Button
-                  onClick={handlePrint}
+                  onClick={() => handlePrint(false)}
                   disabled={timeEntries.length === 0 && trips.length === 0}
                   className="bg-blue-900 hover:bg-blue-800"
                 >
@@ -152,7 +154,7 @@ export default function Dagstaat() {
             <div className="flex justify-end">
               <Button
                 variant="outline"
-                onClick={handlePrint}
+                onClick={() => handlePrint(true)}
               >
                 <Printer className="w-4 h-4 mr-2" />
                 Leeg Formulier Printen
