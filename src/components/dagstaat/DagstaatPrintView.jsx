@@ -275,14 +275,14 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Opmerkingen + Handtekeningen naast elkaar */}
-        <div style={{ display: "flex", gap: "8px", marginTop: "2mm", alignItems: "stretch", height: "28mm" }}>
+        <div style={{ display: "flex", gap: "8px", marginTop: "2mm" }}>
           {/* Links: Opmerkingen */}
-          <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px" }}>
+          <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px", minHeight: "35mm" }}>
             <span className="text-xs" style={{ color: "#94a3b8" }}>Opmerkingen</span>
           </div>
 
-          {/* Rechts: Handtekeningen boven elkaar */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+          {/* Rechts: Handtekeningen boven elkaar, samen zelfde hoogte als opmerkingen */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px", minHeight: "35mm" }}>
             <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening medewerker</span>
               <span style={{ fontSize: "6pt", color: "#94a3b8", lineHeight: "1.3" }}>Zonder uw handtekening kunnen wij uw dagstaat niet verwerken. Totdat de handtekening is geplaatst, heeft u slechts aanspraak op uw basisloon.</span>
