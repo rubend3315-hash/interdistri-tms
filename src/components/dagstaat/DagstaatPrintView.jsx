@@ -8,13 +8,18 @@ import { getFullName } from "@/components/utils/employeeUtils";
 export default function DagstaatPrintView({
   employee,
   date,
+  endDate,
   timeEntries,
   trips,
   vehicles,
   customers,
   onBack,
 }) {
-  const formattedDate = date ? format(new Date(date), "EEEE d MMMM yyyy", { locale: nl }) : "";
+  const formattedDate = date ? format(new Date(date), "d MMMM yyyy", { locale: nl }) : "";
+  const formattedEndDate = endDate ? format(new Date(endDate), "d MMMM yyyy", { locale: nl }) : "";
+  const periodLabel = date && endDate && date !== endDate
+    ? `${formattedDate} t/m ${formattedEndDate}`
+    : formattedDate;
   const totalHours = timeEntries.reduce((sum, te) => sum + (te.total_hours || 0), 0);
   const totalBreak = timeEntries.reduce((sum, te) => sum + (te.break_minutes || 0), 0);
   const totalTrips = trips.length;
@@ -137,7 +142,7 @@ export default function DagstaatPrintView({
               <p className="text-sm opacity-80" style={{ color: "#cbd5e1" }}>Interdistri Transport Management</p>
             </div>
             <div className="text-right text-sm">
-              <p style={{ color: "white" }}>{isEmpty ? "" : formattedDate}</p>
+              <p style={{ color: "white" }}>{isEmpty ? "" : periodLabel}</p>
             </div>
           </div>
         </div>
@@ -162,8 +167,8 @@ export default function DagstaatPrintView({
                 <td>{employee?.function || ""}</td>
               </tr>
               <tr>
-                <td className="font-semibold">Datum</td>
-                <td colSpan={3}>{isEmpty ? "" : formattedDate}</td>
+                <td className="font-semibold">Periode</td>
+                <td colSpan={3}>{isEmpty ? "" : periodLabel}</td>
               </tr>
             </tbody>
           </table>
