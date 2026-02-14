@@ -144,8 +144,8 @@ export default function Layout({ children, currentPageName }) {
         width: 100% !important;
       }
       main > div {
-        padding: 8px !important;
-      }
+          padding: 0 !important;
+        }
       /* Page break utilities */
       .print\\:break-before-page {
         break-before: page !important;
