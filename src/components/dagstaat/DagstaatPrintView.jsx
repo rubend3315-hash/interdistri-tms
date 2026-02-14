@@ -271,6 +271,14 @@ export default function DagstaatPrintView({
           </table>
         </div>
 
+        {/* Verklaring met checkbox */}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4mm", marginBottom: "2mm" }}>
+          <div style={{ width: "12px", height: "12px", border: "1.5px solid #334155", borderRadius: "2px", flexShrink: 0 }} />
+          <span className="text-xs" style={{ color: "#1e293b" }}>
+            <strong>Verplicht invullen:</strong> Ik verklaar dat ik geen schade aan mijn voertuig heb veroorzaakt en deze schoon en opgeruimd heb geparkeerd.
+          </span>
+        </div>
+
         {/* Opmerkingen + Handtekeningen naast elkaar */}
         <div style={{ display: "flex", gap: "12px", marginTop: "4mm", alignItems: "stretch" }}>
           {/* Links: Opmerkingen */}
