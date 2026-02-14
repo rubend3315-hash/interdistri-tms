@@ -16,6 +16,7 @@ export default function DagstaatPrintView({
 }) {
   const formattedDate = date ? format(new Date(date), "EEEE d MMMM yyyy", { locale: nl }) : "";
   const totalHours = timeEntries.reduce((sum, te) => sum + (te.total_hours || 0), 0);
+  const totalBreak = timeEntries.reduce((sum, te) => sum + (te.break_minutes || 0), 0);
   const totalTrips = trips.length;
   const isEmpty = !employee;
 
@@ -176,6 +177,7 @@ export default function DagstaatPrintView({
           <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr>
+                <th className="text-left">Datum</th>
                 <th className="text-left">Starttijd</th>
                 <th className="text-left">Eindtijd</th>
                 <th className="text-left">Pauze (min)</th>
@@ -187,6 +189,7 @@ export default function DagstaatPrintView({
             <tbody>
               {timeEntries.length > 0 ? timeEntries.map((te, idx) => (
                 <tr key={idx}>
+                  <td>{te.date ? format(new Date(te.date), "dd-MM-yyyy") : "-"}</td>
                   <td>{te.start_time || "-"}</td>
                   <td>{te.end_time || "-"}</td>
                   <td>{te.break_minutes ?? 0}</td>
@@ -195,19 +198,20 @@ export default function DagstaatPrintView({
                   <td>{te.status || "-"}</td>
                 </tr>
               )) : (
-                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               )}
               <tr>
-                <td colSpan={3} className="font-bold text-right">Totaal gewerkte uren:</td>
+                <td colSpan={4} className="font-bold text-right">Totaal:</td>
                 <td className="font-bold">{isEmpty ? "" : totalHours.toFixed(2)}</td>
                 <td colSpan={2}></td>
               </tr>
               <tr>
                 <td className="text-xs" style={{ borderTop: "2px solid #475569" }}>Correctie:</td>
-                <td style={{ borderTop: "2px solid #475569" }}></td>
-                <td style={{ borderTop: "2px solid #475569" }}></td>
-                <td style={{ borderTop: "2px solid #475569" }}></td>
-                <td colSpan={2} style={{ borderTop: "2px solid #475569" }}><span className="text-xs">Reden:</span></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td colSpan={2}><span className="text-xs">Reden:</span></td>
               </tr>
             </tbody>
           </table>
