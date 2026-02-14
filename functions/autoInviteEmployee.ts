@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     }
 
     // Invite the employee as a user with role 'user' (Medewerker)
-    await base44.users.inviteUser(employeeEmail, 'user');
+    await base44.asServiceRole.users.inviteUser(employeeEmail, 'user');
 
     const employeeName = `${data.first_name || ''} ${data.prefix ? data.prefix + ' ' : ''}${data.last_name || ''}`.trim();
     console.log(`Medewerker ${employeeName} (${employeeEmail}) uitgenodigd als gebruiker.`);
