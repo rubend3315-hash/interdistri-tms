@@ -63,6 +63,9 @@ export default function DagstaatPrintView({
           /* Hide sidebar and layout */
           aside, nav, .lg\\:hidden { display: none !important; }
           main { margin-left: 0 !important; padding: 0 !important; }
+          /* Override layout print rule that hides first child */
+          main > div > .dagstaat-print-wrapper { display: block !important; }
+          main > div > .dagstaat-print-wrapper * { visibility: visible !important; }
           /* Table borders */
           .dagstaat-table th, .dagstaat-table td {
             border: 1px solid #000 !important;
@@ -123,7 +126,7 @@ export default function DagstaatPrintView({
       </div>
 
       {/* A4 Dagstaat */}
-      <div className="dagstaat-page">
+      <div className="dagstaat-print-wrapper dagstaat-page">
         {/* Header */}
         <div className="dagstaat-header-bar rounded-lg px-6 py-4 mb-6" style={{ backgroundColor: "#1e293b", color: "white" }}>
           <div className="flex justify-between items-start">
