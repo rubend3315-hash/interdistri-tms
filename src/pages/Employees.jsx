@@ -667,7 +667,11 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-5 gap-4">
+          <div className="space-y-2">
+            <Label>Personeelsnr.</Label>
+            <Input value={formData.employee_number || '-'} readOnly className="bg-slate-50 font-semibold" />
+          </div>
           <div className="space-y-2">
             <Label>Voorletter(s)</Label>
             <Input value={formData.initials} readOnly />
