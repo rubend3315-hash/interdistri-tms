@@ -182,8 +182,9 @@ export default function DagstaatPrintView({
           <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th className="text-left">Datum</th>
+                <th className="text-left">Begin datum</th>
                 <th className="text-left">Starttijd</th>
+                <th className="text-left">Eind datum</th>
                 <th className="text-left">Eindtijd</th>
                 <th className="text-left">Pauze (min)</th>
                 <th className="text-left">Totaal uren</th>
@@ -196,6 +197,7 @@ export default function DagstaatPrintView({
                 <tr key={idx}>
                   <td>{te.date ? format(new Date(te.date), "dd-MM-yyyy") : "-"}</td>
                   <td>{te.start_time || "-"}</td>
+                  <td>{(te.end_date || te.date) ? format(new Date(te.end_date || te.date), "dd-MM-yyyy") : "-"}</td>
                   <td>{te.end_time || "-"}</td>
                   <td>{te.break_minutes ?? 0}</td>
                   <td className="font-semibold">{te.total_hours ?? "-"}</td>
@@ -203,15 +205,16 @@ export default function DagstaatPrintView({
                   <td>{te.status || "-"}</td>
                 </tr>
               )) : (
-                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               )}
               <tr>
-                <td colSpan={4} className="font-bold text-right">Totaal:</td>
+                <td colSpan={5} className="font-bold text-right">Totaal:</td>
                 <td className="font-bold">{isEmpty ? "" : totalHours.toFixed(2)}</td>
                 <td colSpan={2}></td>
               </tr>
               <tr>
                 <td className="text-xs" style={{ borderTop: "2px solid #475569" }}>Correctie:</td>
+                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
