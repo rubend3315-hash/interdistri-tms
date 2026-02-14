@@ -29,8 +29,12 @@ export default function Dagstaat() {
       const all = await base44.entities.TimeEntry.filter({
         employee_id: selectedEmployeeId,
       });
-      return all.filter(te => te.date >= selectedStartDate && te.date <= selectedEndDate)
-        .sort((a, b) => a.date.localeCompare(b.date));
+      return all.filter(te => {
+        const startDate = te.date;
+        const endDate = te.end_date || te.date;
+        // Entry overlaps with selected period
+        return startDate <= selectedEndDate && endDate >= selectedStartDate;
+      }).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
     },
     enabled: !!selectedEmployeeId && !!selectedStartDate && !!selectedEndDate,
   });
