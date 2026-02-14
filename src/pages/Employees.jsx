@@ -278,16 +278,19 @@ export default function Employees() {
                       <CardContent className="p-4">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-blue-900/10 rounded-lg flex items-center justify-center shrink-0">
+                            <div className="w-14 h-14 bg-blue-900/10 rounded-xl flex items-center justify-center shrink-0">
                               {employee.photo_url ? (
-                                <img src={employee.photo_url} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                                <img src={employee.photo_url} alt="" className="w-14 h-14 rounded-xl object-cover" />
                               ) : (
-                                <Users className="w-5 h-5 text-blue-900" />
+                                <Users className="w-6 h-6 text-blue-900" />
                               )}
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-slate-900">
+                                <h3 className="font-bold text-slate-900 text-lg">
+                                  {employee.employee_number && (
+                                    <span className="text-slate-500 font-semibold mr-2">{employee.employee_number}</span>
+                                  )}
                                   {getFullName(employee)}
                                 </h3>
                                 <Badge className={getStatusBadge(employee.status)}>
@@ -295,13 +298,10 @@ export default function Employees() {
                                 </Badge>
                               </div>
                               <div className="flex flex-wrap gap-3 mt-1 text-sm text-slate-600">
-                                {employee.employee_number && (
-                                  <span className="font-medium text-slate-500">#{employee.employee_number}</span>
-                                )}
                                 {employee.function && <span>{employee.function}</span>}
                                 {employee.email && (
                                   <>
-                                    <span className="text-slate-300">|</span>
+                                    {employee.function && <span className="text-slate-300">|</span>}
                                     <span className="flex items-center gap-1">
                                       <Mail className="w-3 h-3 text-slate-400" />
                                       {employee.email}
