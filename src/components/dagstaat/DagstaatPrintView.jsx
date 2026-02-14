@@ -39,19 +39,16 @@ export default function DagstaatPrintView({
     <>
       {/* Print stylesheet */}
       <style>{`
-        @page { size: A4 landscape; margin: 8mm; }
+        @page { size: A4 landscape; margin: 6mm; }
         @media print {
-          /* Hide non-print elements */
           .no-print { display: none !important; }
-          /* Reset page */
           body, html { margin: 0; padding: 0; }
-          /* Landscape A4 sizing */
           .dagstaat-page {
-            width: 277mm;
-            max-height: 190mm;
-            padding: 5mm 8mm;
+            width: 283mm;
+            max-height: 193mm;
+            padding: 4mm 6mm;
             margin: 0 auto;
-            font-size: 8pt;
+            font-size: 7pt;
             color: #000 !important;
             background: white !important;
           }
@@ -64,32 +61,24 @@ export default function DagstaatPrintView({
             background-color: transparent !important;
             border-bottom: 2px solid #000 !important;
           }
-          .dagstaat-header-bar * {
-            color: #000 !important;
-          }
-          /* Hide sidebar and layout */
+          .dagstaat-header-bar * { color: #000 !important; }
           aside, nav, .lg\\:hidden { display: none !important; }
           main { margin-left: 0 !important; padding: 0 !important; }
-          /* Override layout print rule that hides first child */
+          main > div { padding: 0 !important; }
           main > div > .dagstaat-print-wrapper { display: block !important; }
           main > div > .dagstaat-print-wrapper * { visibility: visible !important; }
-          /* Table borders */
           .dagstaat-table th, .dagstaat-table td {
             border: 1px solid #000 !important;
-            padding: 4px 8px !important;
+            padding: 2px 4px !important;
           }
-          .dagstaat-table th {
-            background-color: #f1f5f9 !important;
-          }
-          /* Signature boxes */
+          .dagstaat-table th { background-color: #f1f5f9 !important; }
           .signature-box {
             border: 1px solid #000 !important;
-            min-height: 25mm;
+            min-height: 15mm;
           }
-          /* Correction fields */
           .correction-field {
             border-bottom: 1px solid #000 !important;
-            min-height: 8mm;
+            min-height: 6mm;
           }
         }
         /* Screen preview */
@@ -97,26 +86,24 @@ export default function DagstaatPrintView({
           .dagstaat-page {
             width: 297mm;
             min-height: 190mm;
-            padding: 8mm 10mm;
+            padding: 6mm 8mm;
             margin: 20px auto;
             background: white;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            font-size: 8pt;
+            font-size: 7pt;
           }
           .dagstaat-table th, .dagstaat-table td {
             border: 1px solid #334155;
-            padding: 4px 8px;
+            padding: 2px 4px;
           }
-          .dagstaat-table th {
-            background-color: #f1f5f9;
-          }
+          .dagstaat-table th { background-color: #f1f5f9; }
           .signature-box {
             border: 1px solid #334155;
-            min-height: 25mm;
+            min-height: 15mm;
           }
           .correction-field {
             border-bottom: 1px solid #94a3b8;
-            min-height: 8mm;
+            min-height: 6mm;
           }
         }
       `}</style>
@@ -135,7 +122,7 @@ export default function DagstaatPrintView({
       {/* A4 Dagstaat */}
       <div className="dagstaat-print-wrapper dagstaat-page">
         {/* Header */}
-        <div className="dagstaat-header-bar px-2 py-2 mb-4" style={{ borderBottom: "2px solid #1e293b" }}>
+        <div className="dagstaat-header-bar px-1 py-1 mb-2" style={{ borderBottom: "2px solid #1e293b" }}>
           <div className="flex justify-between items-center">
             <h1 className="text-base font-bold" style={{ color: "#1e293b" }}>
               DAGSTAAT — Interdistri Transport Management
@@ -145,8 +132,8 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Medewerker gegevens */}
-        <div className="mb-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
+        <div className="mb-2">
+          <h2 style={{ fontSize: "7pt", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px", color: "#475569" }}>
             Medewerkergegevens
           </h2>
           <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
@@ -172,8 +159,8 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Tijdregistratie */}
-        <div className="mb-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
+        <div className="mb-2">
+          <h2 style={{ fontSize: "7pt", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px", color: "#475569" }}>
             Tijdregistratie
           </h2>
           <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
@@ -218,8 +205,8 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Ritten & Kilometerstanden */}
-        <div className="mb-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
+        <div className="mb-2">
+          <h2 style={{ fontSize: "7pt", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px", color: "#475569" }}>
             Rittenregistratie & Kilometerstanden
           </h2>
           <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
@@ -272,7 +259,7 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Verklaringen met checkbox */}
-        <div style={{ marginTop: "4mm", marginBottom: "2mm", display: "flex", flexDirection: "column", gap: "3px" }}>
+        <div style={{ marginTop: "2mm", marginBottom: "1mm", display: "flex", flexDirection: "column", gap: "1px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span className="text-xs" style={{ color: "#1e293b" }}>
               Ik verklaar dat ik geen schade aan mijn voertuig heb veroorzaakt en deze schoon en opgeruimd heb geparkeerd.
@@ -288,7 +275,7 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Opmerkingen + Handtekeningen naast elkaar */}
-        <div style={{ display: "flex", gap: "12px", marginTop: "4mm", alignItems: "stretch" }}>
+        <div style={{ display: "flex", gap: "8px", marginTop: "2mm", alignItems: "stretch", height: "28mm" }}>
           {/* Links: Opmerkingen */}
           <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px" }}>
             <span className="text-xs" style={{ color: "#94a3b8" }}>Opmerkingen</span>
@@ -306,10 +293,9 @@ export default function DagstaatPrintView({
           </div>
         </div>
 
-        {/* Footer - only show on filled form */}
         {!isEmpty && (
-          <div className="mt-6 pt-2" style={{ borderTop: "1px solid #e2e8f0" }}>
-            <p className="text-xs" style={{ color: "#94a3b8" }}>
+          <div style={{ marginTop: "2mm", paddingTop: "1mm", borderTop: "1px solid #e2e8f0" }}>
+            <p style={{ fontSize: "6pt", color: "#94a3b8" }}>
               Dagstaat gegenereerd op {format(new Date(), "d MMMM yyyy 'om' HH:mm", { locale: nl })} — Interdistri TMS
             </p>
           </div>
