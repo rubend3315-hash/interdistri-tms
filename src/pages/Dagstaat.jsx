@@ -14,7 +14,8 @@ import DagstaatPrintView from "@/components/dagstaat/DagstaatPrintView";
 
 export default function Dagstaat() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [selectedStartDate, setSelectedStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [selectedEndDate, setSelectedEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [showPrint, setShowPrint] = useState(false);
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
@@ -23,23 +24,27 @@ export default function Dagstaat() {
   });
 
   const { data: timeEntries = [], isLoading: loadingTime } = useQuery({
-    queryKey: ["dagstaat-time", selectedEmployeeId, selectedDate],
-    queryFn: () =>
-      base44.entities.TimeEntry.filter({
+    queryKey: ["dagstaat-time", selectedEmployeeId, selectedStartDate, selectedEndDate],
+    queryFn: async () => {
+      const all = await base44.entities.TimeEntry.filter({
         employee_id: selectedEmployeeId,
-        date: selectedDate,
-      }),
-    enabled: !!selectedEmployeeId && !!selectedDate,
+      });
+      return all.filter(te => te.date >= selectedStartDate && te.date <= selectedEndDate)
+        .sort((a, b) => a.date.localeCompare(b.date));
+    },
+    enabled: !!selectedEmployeeId && !!selectedStartDate && !!selectedEndDate,
   });
 
   const { data: trips = [], isLoading: loadingTrips } = useQuery({
-    queryKey: ["dagstaat-trips", selectedEmployeeId, selectedDate],
-    queryFn: () =>
-      base44.entities.Trip.filter({
+    queryKey: ["dagstaat-trips", selectedEmployeeId, selectedStartDate, selectedEndDate],
+    queryFn: async () => {
+      const all = await base44.entities.Trip.filter({
         employee_id: selectedEmployeeId,
-        date: selectedDate,
-      }),
-    enabled: !!selectedEmployeeId && !!selectedDate,
+      });
+      return all.filter(t => t.date >= selectedStartDate && t.date <= selectedEndDate)
+        .sort((a, b) => a.date.localeCompare(b.date));
+    },
+    enabled: !!selectedEmployeeId && !!selectedStartDate && !!selectedEndDate,
   });
 
   const { data: vehicles = [] } = useQuery({
@@ -71,7 +76,8 @@ export default function Dagstaat() {
     return (
       <DagstaatPrintView
         employee={isEmptyForm ? null : selectedEmployee}
-        date={isEmptyForm ? null : selectedDate}
+        date={isEmptyForm ? null : selectedStartDate}
+        endDate={isEmptyForm ? null : selectedEndDate}
         timeEntries={isEmptyForm ? [] : timeEntries}
         trips={isEmptyForm ? [] : trips}
         vehicles={vehicles}
@@ -113,17 +119,25 @@ export default function Dagstaat() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Datum</Label>
+              <Label>Startdatum</Label>
               <Input
                 type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                value={selectedStartDate}
+                onChange={(e) => setSelectedStartDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Einddatum</Label>
+              <Input
+                type="date"
+                value={selectedEndDate}
+                onChange={(e) => setSelectedEndDate(e.target.value)}
               />
             </div>
           </div>
 
           <div className="pt-4 border-t space-y-3">
-            {selectedEmployeeId && selectedDate && (
+            {selectedEmployeeId && selectedStartDate && selectedEndDate && (
               <div className="flex items-center justify-between">
                 <div className="text-sm text-slate-600">
                   <p>
@@ -144,7 +158,7 @@ export default function Dagstaat() {
               </div>
             )}
 
-            {selectedEmployeeId && selectedDate && timeEntries.length === 0 && trips.length === 0 && (
+            {selectedEmployeeId && selectedStartDate && selectedEndDate && timeEntries.length === 0 && trips.length === 0 && (
               <p className="text-sm text-amber-600 flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Geen gegevens gevonden voor deze medewerker op deze datum.
