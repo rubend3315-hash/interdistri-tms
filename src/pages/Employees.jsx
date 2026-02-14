@@ -49,7 +49,7 @@ export default function Employees() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('Actief');
   const queryClient = useQueryClient();
 
   const { data: employees = [], isLoading } = useQuery({
