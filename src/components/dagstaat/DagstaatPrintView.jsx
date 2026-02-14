@@ -230,6 +230,7 @@ export default function DagstaatPrintView({
           <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr>
+                <th className="text-left">Datum</th>
                 <th className="text-left">Voertuig</th>
                 <th className="text-left">Klant</th>
                 <th className="text-left">Route</th>
@@ -243,6 +244,7 @@ export default function DagstaatPrintView({
             <tbody>
               {trips.length > 0 ? trips.map((trip, idx) => (
                 <tr key={idx}>
+                  <td>{trip.date ? format(new Date(trip.date), "dd-MM-yyyy") : "-"}</td>
                   <td>{getVehicleName(trip.vehicle_id)}</td>
                   <td>{getCustomerName(trip.customer_id)}</td>
                   <td>{trip.route_name || "-"}</td>
@@ -253,10 +255,10 @@ export default function DagstaatPrintView({
                   <td>{trip.total_km ?? "-"}</td>
                 </tr>
               )) : (
-                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               )}
               <tr>
-                <td colSpan={7} className="font-bold text-right">Totaal km:</td>
+                <td colSpan={8} className="font-bold text-right">Totaal km:</td>
                 <td className="font-bold">{isEmpty ? "" : trips.reduce((sum, t) => sum + (t.total_km || 0), 0) || ""}</td>
               </tr>
             </tbody>
