@@ -284,7 +284,7 @@ export default function DagstaatPrintView({
           <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
             Opmerkingen
           </h2>
-          <div className="correction-field" style={{ minHeight: "15mm" }}></div>
+          <div className="correction-field" style={{ minHeight: "8mm" }}></div>
         </div>
 
         {/* Handtekeningen */}
@@ -295,33 +295,29 @@ export default function DagstaatPrintView({
           <div style={{ display: "flex", gap: "20px" }}>
             <div style={{ flex: 1 }}>
               <p className="text-xs font-semibold mb-1">Handtekening medewerker:</p>
-              <div className="signature-box rounded" style={{ minHeight: "25mm" }}></div>
+              <div className="signature-box rounded" style={{ minHeight: "15mm" }}></div>
               <p className="text-xs mt-1" style={{ color: "#94a3b8" }}>
                 Naam: {employee ? getFullName(employee) : "___________________________"}
               </p>
             </div>
             <div style={{ flex: 1 }}>
               <p className="text-xs font-semibold mb-1">Handtekening leidinggevende:</p>
-              <div className="signature-box rounded" style={{ minHeight: "25mm" }}></div>
+              <div className="signature-box rounded" style={{ minHeight: "15mm" }}></div>
               <p className="text-xs mt-1" style={{ color: "#94a3b8" }}>
                 Naam: ___________________________
               </p>
             </div>
           </div>
-          <div className="mt-3">
-            <p className="text-xs">
-              <span className="font-semibold">Datum ondertekening:</span>{" "}
-              ______ / ______ / ____________
-            </p>
-          </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-8 pt-3" style={{ borderTop: "1px solid #e2e8f0" }}>
-          <p className="text-xs" style={{ color: "#94a3b8" }}>
-            Dagstaat gegenereerd op {format(new Date(), "d MMMM yyyy 'om' HH:mm", { locale: nl })} — Interdistri TMS
-          </p>
-        </div>
+        {/* Footer - only show on filled form */}
+        {!isEmpty && (
+          <div className="mt-6 pt-2" style={{ borderTop: "1px solid #e2e8f0" }}>
+            <p className="text-xs" style={{ color: "#94a3b8" }}>
+              Dagstaat gegenereerd op {format(new Date(), "d MMMM yyyy 'om' HH:mm", { locale: nl })} — Interdistri TMS
+            </p>
+          </div>
+        )}
       </div>
     </>
   );
