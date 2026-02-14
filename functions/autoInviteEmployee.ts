@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Debug helper
+function logAvailableMethods(obj, prefix = '') {
+  const methods = [];
+  for (const key of Object.keys(obj || {})) {
+    methods.push(prefix + key);
+  }
+  console.log('Available at ' + prefix + ':', methods.join(', '));
+}
+
 // Helper: send email via Gmail API
 const CC_ADDRESS = 'ruben@interdistri.nl';
 
@@ -71,6 +80,18 @@ Deno.serve(async (req) => {
       return Response.json({ status: 'skipped', reason: 'user already exists' });
     }
 
+    // Debug: log available methods
+    logAvailableMethods(base44, 'base44.');
+    logAvailableMethods(base44.auth || {}, 'base44.auth.');
+    logAvailableMethods(base44.asServiceRole || {}, 'base44.asServiceRole.');
+    if (base44.asServiceRole) {
+      logAvailableMethods(base44.asServiceRole.auth || {}, 'base44.asServiceRole.auth.');
+      logAvailableMethods(base44.asServiceRole.users || {}, 'base44.asServiceRole.users.');
+    }
+    if (base44.users) {
+      logAvailableMethods(base44.users, 'base44.users.');
+    }
+    
     // Invite the employee as a user with role 'user' (Medewerker)
     await base44.asServiceRole.auth.inviteUser(employeeEmail, 'user');
 
