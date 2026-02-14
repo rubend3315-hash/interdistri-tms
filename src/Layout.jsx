@@ -44,6 +44,7 @@ const menuItems = [
       { name: "Planning", icon: CalendarDays, page: "Planning" },
       { name: "Goedkeuringen", icon: CheckSquare, page: "Approvals" },
       { name: "Dienst-Shifttijd", icon: CircleDot, page: "ShiftTime" },
+      { name: "Dagstaat", icon: FileText, page: "Dagstaat" },
     ]
   },
   {
