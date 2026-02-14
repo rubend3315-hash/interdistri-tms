@@ -836,6 +836,13 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
         </div>
       </div>
 
+      {formData.employee_number && (
+        <div className="space-y-2">
+          <Label>Personeelsnummer</Label>
+          <Input value={formData.employee_number} readOnly className="bg-slate-50 font-semibold w-40" />
+        </div>
+      )}
+
       <div className="grid grid-cols-4 gap-4">
         <div className="space-y-2">
           <Label>Voorletter(s)</Label>
