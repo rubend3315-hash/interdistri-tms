@@ -194,11 +194,7 @@ export default function DagstaatPrintView({
                   <td>{te.status || "-"}</td>
                 </tr>
               )) : (
-                <>
-                  {[1, 2, 3].map(i => (
-                    <tr key={i}><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
-                  ))}
-                </>
+                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
               )}
               <tr>
                 <td colSpan={3} className="font-bold text-right">Totaal gewerkte uren:</td>
@@ -236,16 +232,43 @@ export default function DagstaatPrintView({
                   <td>{trip.total_km ?? "-"}</td>
                 </tr>
               )) : (
-                <>
-                  {[1, 2, 3].map(i => (
-                    <tr key={i}><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
-                  ))}
-                </>
+                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
               )}
               <tr>
                 <td colSpan={5} className="font-bold text-right">Totaal ritten:</td>
                 <td className="font-bold">{isEmpty ? "" : totalTrips}</td>
               </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Kilometerstanden */}
+        <div className="mb-6">
+          <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
+            Kilometerstanden
+          </h2>
+          <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th className="text-left">Begin km-stand</th>
+                <th className="text-left">Eind km-stand</th>
+                <th className="text-left">Totaal km</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trips.length > 0 && trips[0].start_km ? (
+                <tr>
+                  <td>{trips[0].start_km ?? ""}</td>
+                  <td>{trips[trips.length - 1]?.end_km ?? ""}</td>
+                  <td className="font-semibold">
+                    {trips[0].start_km && trips[trips.length - 1]?.end_km
+                      ? trips[trips.length - 1].end_km - trips[0].start_km
+                      : ""}
+                  </td>
+                </tr>
+              ) : (
+                <tr><td>&nbsp;</td><td></td><td></td></tr>
+              )}
             </tbody>
           </table>
         </div>
