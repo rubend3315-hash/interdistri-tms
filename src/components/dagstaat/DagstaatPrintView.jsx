@@ -279,27 +279,23 @@ export default function DagstaatPrintView({
           </table>
         </div>
 
-        {/* Opmerkingen */}
-        <div className="mb-6">
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
-            Opmerkingen
-          </h2>
-          <div className="correction-field" style={{ minHeight: "8mm" }}></div>
-        </div>
+        {/* Opmerkingen + Handtekeningen naast elkaar */}
+        <div style={{ display: "flex", gap: "20px", marginTop: "8mm" }}>
+          {/* Links: Opmerkingen */}
+          <div style={{ flex: 1 }}>
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
+              Opmerkingen
+            </h2>
+            <div className="signature-box rounded" style={{ minHeight: "30mm" }}></div>
+          </div>
 
-        {/* Handtekeningen */}
-        <div className="mt-8">
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: "#475569" }}>
-            Ondertekening
-          </h2>
-          <div style={{ display: "flex", gap: "20px" }}>
-            <div style={{ flex: 1 }}>
-              <p className="text-xs font-semibold mb-1">Handtekening medewerker:</p>
-              <div className="signature-box rounded" style={{ minHeight: "15mm" }}></div>
+          {/* Rechts: Handtekeningen boven elkaar */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div className="signature-box rounded" style={{ minHeight: "14mm", display: "flex", alignItems: "flex-start", padding: "3px 6px" }}>
+              <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening medewerker</span>
             </div>
-            <div style={{ flex: 1 }}>
-              <p className="text-xs font-semibold mb-1">Handtekening leidinggevende:</p>
-              <div className="signature-box rounded" style={{ minHeight: "15mm" }}></div>
+            <div className="signature-box rounded" style={{ minHeight: "14mm", display: "flex", alignItems: "flex-start", padding: "3px 6px" }}>
+              <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening leidinggevende</span>
             </div>
           </div>
         </div>
