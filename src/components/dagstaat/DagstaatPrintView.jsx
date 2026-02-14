@@ -39,7 +39,7 @@ export default function DagstaatPrintView({
     <>
       {/* Print stylesheet */}
       <style>{`
-        @page { size: landscape; margin: 10mm; }
+        @page { size: A4 landscape; margin: 8mm; }
         @media print {
           /* Hide non-print elements */
           .no-print { display: none !important; }
@@ -48,10 +48,10 @@ export default function DagstaatPrintView({
           /* Landscape A4 sizing */
           .dagstaat-page {
             width: 277mm;
-            min-height: 190mm;
-            padding: 8mm 12mm;
+            max-height: 190mm;
+            padding: 5mm 8mm;
             margin: 0 auto;
-            font-size: 9pt;
+            font-size: 8pt;
             color: #000 !important;
             background: white !important;
           }
@@ -61,11 +61,11 @@ export default function DagstaatPrintView({
             print-color-adjust: exact !important;
           }
           .dagstaat-header-bar {
-            background-color: #1e293b !important;
-            color: white !important;
+            background-color: transparent !important;
+            border-bottom: 2px solid #000 !important;
           }
           .dagstaat-header-bar * {
-            color: white !important;
+            color: #000 !important;
           }
           /* Hide sidebar and layout */
           aside, nav, .lg\\:hidden { display: none !important; }
@@ -96,12 +96,12 @@ export default function DagstaatPrintView({
         @media screen {
           .dagstaat-page {
             width: 297mm;
-            min-height: 210mm;
-            padding: 10mm 15mm;
+            min-height: 190mm;
+            padding: 8mm 10mm;
             margin: 20px auto;
             background: white;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            font-size: 9pt;
+            font-size: 8pt;
           }
           .dagstaat-table th, .dagstaat-table td {
             border: 1px solid #334155;
@@ -135,20 +135,17 @@ export default function DagstaatPrintView({
       {/* A4 Dagstaat */}
       <div className="dagstaat-print-wrapper dagstaat-page">
         {/* Header */}
-        <div className="dagstaat-header-bar rounded-lg px-6 py-4 mb-6" style={{ backgroundColor: "#1e293b", color: "white" }}>
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-xl font-bold" style={{ color: "white" }}>DAGSTAAT</h1>
-              <p className="text-sm opacity-80" style={{ color: "#cbd5e1" }}>Interdistri Transport Management</p>
-            </div>
-            <div className="text-right text-sm">
-              <p style={{ color: "white" }}>{isEmpty ? "" : periodLabel}</p>
-            </div>
+        <div className="dagstaat-header-bar px-2 py-2 mb-4" style={{ borderBottom: "2px solid #1e293b" }}>
+          <div className="flex justify-between items-center">
+            <h1 className="text-base font-bold" style={{ color: "#1e293b" }}>
+              DAGSTAAT — Interdistri Transport Management
+            </h1>
+            <span className="text-sm" style={{ color: "#475569" }}>{isEmpty ? "" : periodLabel}</span>
           </div>
         </div>
 
         {/* Medewerker gegevens */}
-        <div className="mb-6">
+        <div className="mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
             Medewerkergegevens
           </h2>
@@ -175,7 +172,7 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Tijdregistratie */}
-        <div className="mb-6">
+        <div className="mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
             Tijdregistratie
           </h2>
@@ -208,11 +205,6 @@ export default function DagstaatPrintView({
                 <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               )}
               <tr>
-                <td colSpan={5} className="font-bold text-right">Totaal:</td>
-                <td className="font-bold">{isEmpty ? "" : totalHours.toFixed(2)}</td>
-                <td colSpan={2}></td>
-              </tr>
-              <tr>
                 <td className="text-xs" style={{ borderTop: "2px solid #475569" }}>Correctie:</td>
                 <td></td>
                 <td></td>
@@ -226,7 +218,7 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Ritten & Kilometerstanden */}
-        <div className="mb-6">
+        <div className="mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
             Rittenregistratie & Kilometerstanden
           </h2>
@@ -260,13 +252,13 @@ export default function DagstaatPrintView({
                       <td>{trip.total_km ?? "-"}</td>
                     </tr>
                   ))}
-                  {Array.from({ length: Math.max(0, 4 - trips.length) }).map((_, idx) => (
+                  {Array.from({ length: Math.max(0, 5 - trips.length) }).map((_, idx) => (
                     <tr key={`empty-${idx}`}><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
                   ))}
                 </>
               ) : (
                 <>
-                  {[0,1,2,3].map(i => (
+                  {[0,1,2,3,4].map(i => (
                     <tr key={`empty-${i}`}><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
                   ))}
                 </>
@@ -280,25 +272,19 @@ export default function DagstaatPrintView({
         </div>
 
         {/* Opmerkingen + Handtekeningen naast elkaar */}
-        <div style={{ display: "flex", gap: "20px", marginTop: "8mm", alignItems: "stretch" }}>
+        <div style={{ display: "flex", gap: "12px", marginTop: "4mm", alignItems: "stretch" }}>
           {/* Links: Opmerkingen */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>
-              Opmerkingen
-            </h2>
-            <div className="signature-box rounded" style={{ flex: 1 }}></div>
+          <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px" }}>
+            <span className="text-xs" style={{ color: "#94a3b8" }}>Opmerkingen</span>
           </div>
 
           {/* Rechts: Handtekeningen boven elkaar */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <h2 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>&nbsp;</h2>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
-              <div className="signature-box rounded" style={{ flex: 1, display: "flex", alignItems: "flex-start", padding: "3px 6px" }}>
-                <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening medewerker</span>
-              </div>
-              <div className="signature-box rounded" style={{ flex: 1, display: "flex", alignItems: "flex-start", padding: "3px 6px" }}>
-                <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening leidinggevende</span>
-              </div>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px" }}>
+              <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening medewerker</span>
+            </div>
+            <div className="signature-box rounded" style={{ flex: 1, padding: "3px 6px" }}>
+              <span className="text-xs" style={{ color: "#94a3b8" }}>Handtekening leidinggevende</span>
             </div>
           </div>
         </div>
