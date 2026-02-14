@@ -65,13 +65,13 @@ export default function Dagstaat() {
     }, 300);
   };
 
-  if (showPrint && selectedEmployee) {
+  if (showPrint) {
     return (
       <DagstaatPrintView
-        employee={selectedEmployee}
+        employee={selectedEmployee || null}
         date={selectedDate}
-        timeEntries={timeEntries}
-        trips={trips}
+        timeEntries={selectedEmployee ? timeEntries : []}
+        trips={selectedEmployee ? trips : []}
         vehicles={vehicles}
         customers={customers}
         onBack={() => setShowPrint(false)}
@@ -120,8 +120,8 @@ export default function Dagstaat() {
             </div>
           </div>
 
-          {selectedEmployeeId && selectedDate && (
-            <div className="pt-4 border-t space-y-3">
+          <div className="pt-4 border-t space-y-3">
+            {selectedEmployeeId && selectedDate && (
               <div className="flex items-center justify-between">
                 <div className="text-sm text-slate-600">
                   <p>
@@ -140,15 +140,25 @@ export default function Dagstaat() {
                   Dagstaat Printen
                 </Button>
               </div>
+            )}
 
-              {timeEntries.length === 0 && trips.length === 0 && (
-                <p className="text-sm text-amber-600 flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  Geen gegevens gevonden voor deze medewerker op deze datum.
-                </p>
-              )}
+            {selectedEmployeeId && selectedDate && timeEntries.length === 0 && trips.length === 0 && (
+              <p className="text-sm text-amber-600 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Geen gegevens gevonden voor deze medewerker op deze datum.
+              </p>
+            )}
+
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                onClick={handlePrint}
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Leeg Formulier Printen
+              </Button>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     </div>
