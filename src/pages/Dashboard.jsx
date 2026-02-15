@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import CharterOverview from "../components/dashboard/CharterOverview";
 import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
+import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
 
 export default function Dashboard() {
@@ -301,6 +302,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Contract Warnings */}
+      {!isLoading && <ContractWarnings employees={employees} />}
 
       {/* Revenue per Customer */}
       <RevenuePerCustomer />
