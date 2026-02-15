@@ -139,6 +139,9 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error in autoInviteEmployee:', error.message);
+    if (error.response) {
+      console.error('Error data:', JSON.stringify(error.response.data || {}));
+    }
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
