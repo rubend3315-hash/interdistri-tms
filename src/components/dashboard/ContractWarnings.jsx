@@ -14,10 +14,9 @@ export default function ContractWarnings({ employees }) {
     .filter(emp => {
       const regels = emp.contractregels || [];
       if (regels.length === 0) return true;
-      // Check if there's at least one active rule that covers today
+      // Check if there's at least one rule whose date range covers today
       const hasValid = regels.some(r => {
-        if (r.status !== "Actief") return false;
-        if (r.startdatum && r.startdatum > today) return false;
+        if (!r.startdatum || r.startdatum > today) return false;
         if (r.einddatum && r.einddatum !== "" && r.einddatum < today) return false;
         return true;
       });
