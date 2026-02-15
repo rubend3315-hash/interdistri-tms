@@ -68,8 +68,9 @@ export default function BulkInviteButton() {
     setProgress("");
   };
 
-  const invited = results?.results?.filter(r => r.status === 'success' || r.status === 'invited_no_email') || [];
+  const invited = results?.results?.filter(r => r.status === 'success') || [];
   const skipped = results?.results?.filter(r => r.status === 'skipped') || [];
+  const failed = results?.results?.filter(r => r.status === 'error') || [];
 
   return (
     <>
@@ -100,7 +101,7 @@ export default function BulkInviteButton() {
           {loading && (
             <div className="flex flex-col items-center py-8 gap-3">
               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-              <p className="text-sm text-slate-500">Uitnodigingen worden verzonden...</p>
+              <p className="text-sm text-slate-500">{progress || "Uitnodigingen worden verzonden..."}</p>
             </div>
           )}
 
@@ -138,6 +139,23 @@ export default function BulkInviteButton() {
                       <div key={i} className="flex justify-between items-center text-sm bg-slate-50 rounded px-3 py-1.5">
                         <span className="text-slate-500">{r.name}</span>
                         <Badge variant="secondary" className="text-xs">{r.reason}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {failed.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-500" />
+                    Mislukt ({failed.length})
+                  </h4>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {failed.map((r, i) => (
+                      <div key={i} className="flex justify-between items-center text-sm bg-red-50 rounded px-3 py-1.5">
+                        <span className="text-slate-700">{r.name}</span>
+                        <Badge variant="destructive" className="text-xs">{r.reason}</Badge>
                       </div>
                     ))}
                   </div>
