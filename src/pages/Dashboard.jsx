@@ -29,7 +29,6 @@ import CharterOverview from "../components/dashboard/CharterOverview";
 import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
 import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
-import BulkInviteButton from "../components/dashboard/BulkInviteButton";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -223,7 +222,6 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <BulkInviteButton />
           <Button variant="outline" onClick={() => setShowExport(true)}>
             <Download className="w-4 h-4 mr-2" />
             Exporteer Excel
