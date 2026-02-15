@@ -44,8 +44,8 @@ async function sendGmail(accessToken, to, subject, htmlBody) {
 
 Deno.serve(async (req) => {
   try {
-    // Clone request before SDK consumes the body
-    const clonedReq = req.clone();
+    // Read body first, then create SDK client
+    const body = await req.json();
     const base44 = createClientFromRequest(req);
     
     // Verify the caller is an authenticated admin
@@ -53,8 +53,6 @@ Deno.serve(async (req) => {
     if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
-
-    const body = await clonedReq.json();
     
     // Support both single employee and bulk mode
     // Single: { employee_id, email, first_name, prefix, last_name }
