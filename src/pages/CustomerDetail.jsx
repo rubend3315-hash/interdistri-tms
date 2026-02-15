@@ -96,6 +96,15 @@ export default function CustomerDetail() {
     queryFn: () => base44.entities.Project.list()
   });
 
+  const { data: featureConfigs = [] } = useQuery({
+    queryKey: ['client-features', customerId],
+    queryFn: () => customerId ? base44.entities.ClientFeatureConfig.filter({ customer_id: customerId, is_active: true }) : [],
+    enabled: !!customerId
+  });
+
+  const hasFeature = (featureKey) => featureConfigs.some(f => f.feature_key === featureKey);
+  const getFeatureLabel = (featureKey) => featureConfigs.find(f => f.feature_key === featureKey)?.feature_label || featureKey;
+
   React.useEffect(() => {
     if (customer) {
       setFormData({
@@ -152,9 +161,7 @@ export default function CustomerDetail() {
     });
   };
 
-  const isPostNL = customer?.company_name === 'PostNL';
-  const isSpotta = customer?.company_name === 'Spotta';
-  const isDPGMedia = customer?.company_name === 'DPG Media';
+  // Feature visibility is now driven by ClientFeatureConfig records
 
   if (isLoading) {
     return (
