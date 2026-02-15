@@ -29,6 +29,7 @@ import CharterOverview from "../components/dashboard/CharterOverview";
 import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
 import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
+import BulkInviteButton from "../components/dashboard/BulkInviteButton";
 
 export default function Dashboard() {
   const navigate = useNavigate();
