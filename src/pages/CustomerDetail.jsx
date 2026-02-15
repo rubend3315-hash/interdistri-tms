@@ -17,6 +17,7 @@ import ImportHistory from "@/components/customer/ImportHistory";
 import ArticleList from "@/components/customer/ArticleList";
 import TIModelRoutesTab from "@/components/customer/TIModelRoutesTab";
 import RoutesTab from "@/components/customer/RoutesTab";
+import InvoicesTab from "@/components/customer/InvoicesTab";
 import ReportGenerator from "@/components/reports/ReportGenerator";
 import DataDashboard from "@/components/reports/DataDashboard";
 import ProjectExcelImport from "@/components/projecten/ProjectExcelImport";
@@ -271,11 +272,17 @@ export default function CustomerDetail() {
           )}
           {hasFeature('routes') && (
            <TabsTrigger value="routes" className="gap-2">
-             <Truck className="w-4 h-4" />
-             {getFeatureLabel('routes')}
+              <Truck className="w-4 h-4" />
+              {getFeatureLabel('routes')}
            </TabsTrigger>
           )}
-        </TabsList>
+          {hasFeature('invoices') && (
+           <TabsTrigger value="invoices" className="gap-2">
+              <FileText className="w-4 h-4" />
+              {getFeatureLabel('invoices')}
+           </TabsTrigger>
+          )}
+          </TabsList>
 
         {/* Informatie Tab */}
         <TabsContent value="info">
@@ -611,6 +618,11 @@ export default function CustomerDetail() {
         {/* Routes Tab (Spotta, DPG Media, etc.) */}
         <TabsContent value="routes">
           <RoutesTab customerId={customerId} />
+        </TabsContent>
+
+        {/* Facturen Tab */}
+        <TabsContent value="invoices">
+          <InvoicesTab customerId={customerId} />
         </TabsContent>
       </Tabs>
 
