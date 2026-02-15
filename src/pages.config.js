@@ -60,6 +60,7 @@ import ContractWijzigingen from './pages/ContractWijzigingen';
 import Contracts from './pages/Contracts';
 import CustomerDetail from './pages/CustomerDetail';
 import Customers from './pages/Customers';
+import Dagstaat from './pages/Dagstaat';
 import Dashboard from './pages/Dashboard';
 import DataMigration from './pages/DataMigration';
 import Documents from './pages/Documents';
@@ -90,7 +91,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Dagstaat from './pages/Dagstaat';
 import __Layout from './Layout.jsx';
 
 
@@ -108,6 +108,7 @@ export const PAGES = {
     "Contracts": Contracts,
     "CustomerDetail": CustomerDetail,
     "Customers": Customers,
+    "Dagstaat": Dagstaat,
     "Dashboard": Dashboard,
     "DataMigration": DataMigration,
     "Documents": Documents,
@@ -138,7 +139,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Dagstaat": Dagstaat,
 }
 
 export const pagesConfig = {

@@ -19,11 +19,16 @@ import {
   Eye,
   Plus,
   Users,
-  Bell
+  Bell,
+  FileText
 } from "lucide-react";
+import EmailTemplateManager from "../components/email/EmailTemplateManager";
+import SendEmailDialog from "../components/email/SendEmailDialog";
 
 export default function Messages() {
   const [showNewMessageDialog, setShowNewMessageDialog] = useState(false);
+  const [showSendEmailDialog, setShowSendEmailDialog] = useState(false);
+  const [activeMainTab, setActiveMainTab] = useState("berichten");
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [newMessage, setNewMessage] = useState({
     to_employee_id: "",
@@ -105,17 +110,63 @@ export default function Messages() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Berichten</h1>
-          <p className="text-slate-500 mt-1">Communicatie met medewerkers</p>
+          <h1 className="text-3xl font-bold text-slate-900">Communicatie</h1>
+          <p className="text-slate-500 mt-1">Berichten & e-mails naar medewerkers</p>
         </div>
-        <Button 
-          onClick={() => setShowNewMessageDialog(true)}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nieuw bericht
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowSendEmailDialog(true)}
+            variant="outline"
+            className="border-blue-200 text-blue-700 hover:bg-blue-50"
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            E-mail versturen
+          </Button>
+          <Button 
+            onClick={() => setShowNewMessageDialog(true)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nieuw bericht
+          </Button>
+        </div>
       </div>
+
+      {/* Main Tabs */}
+      <Tabs value={activeMainTab} onValueChange={setActiveMainTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="berichten" className="gap-2">
+            <Mail className="w-4 h-4" /> Berichten
+          </TabsTrigger>
+          <TabsTrigger value="email" className="gap-2">
+            <Send className="w-4 h-4" /> E-mail
+          </TabsTrigger>
+          <TabsTrigger value="sjablonen" className="gap-2">
+            <FileText className="w-4 h-4" /> Sjablonen
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="sjablonen" className="mt-6">
+          <EmailTemplateManager />
+        </TabsContent>
+
+        <TabsContent value="email" className="mt-6">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Mail className="w-16 h-16 text-blue-200 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">E-mail verzenden</h3>
+              <p className="text-slate-500 mb-4">
+                Verstuur e-mails naar individuele medewerkers of in bulk per afdeling via Gmail.
+              </p>
+              <Button onClick={() => setShowSendEmailDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+                <Send className="w-4 h-4 mr-2" />
+                E-mail opstellen
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="berichten" className="mt-6">
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -304,6 +355,12 @@ export default function Messages() {
           )}
         </TabsContent>
       </Tabs>
+
+      </TabsContent>
+      </Tabs>
+
+      {/* Send Email Dialog */}
+      <SendEmailDialog open={showSendEmailDialog} onOpenChange={setShowSendEmailDialog} />
 
       {/* New Message Dialog */}
       <Dialog open={showNewMessageDialog} onOpenChange={setShowNewMessageDialog}>
