@@ -653,25 +653,30 @@ export default function HelpPage() {
               </CardContent>
             </Card>
 
-            {/* Berichten */}
+            {/* Communicatie */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Mail className="w-5 h-5 text-sky-600" />
-                  Berichten
+                  Communicatie
                 </CardTitle>
-                <CardDescription>Interne communicatie</CardDescription>
+                <CardDescription>Berichten, e-mails & sjablonen</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-slate-600">
-                  Communiceer met medewerkers:
+                  Communiceer met medewerkers via interne berichten en e-mail:
                 </p>
                 <ul className="text-sm space-y-2 text-slate-600">
-                  <li>✓ Berichten sturen naar medewerkers</li>
+                  <li>✓ Interne berichten sturen naar medewerkers</li>
                   <li>✓ Prioriteit instellen (Normaal, Hoog, Urgent)</li>
                   <li>✓ Gelezen/ongelezen status</li>
                   <li>✓ Welkomstberichten per afdeling</li>
                   <li>✓ Zichtbaar in mobiele app</li>
+                  <li>✓ <strong>E-mail verzenden:</strong> Stuur e-mails naar individuele medewerkers of in bulk per afdeling via Gmail</li>
+                  <li>✓ <strong>Reply-To adres:</strong> Stel een antwoordadres in (bijv. info@interdistri.nl) zodat antwoorden naar het juiste adres gaan</li>
+                  <li>✓ <strong>E-mail sjablonen:</strong> Maak herbruikbare sjablonen aan met onderwerp, inhoud en standaard Reply-To adres</li>
+                  <li>✓ <strong>Sjabloon categorieën:</strong> Organiseer sjablonen per categorie (Algemeen, HR, Planning, Contract, Overig)</li>
+                  <li>✓ <strong>Rich text editor:</strong> Maak e-mails op met opmaak (vet, cursief, lijsten, etc.)</li>
                 </ul>
               </CardContent>
             </Card>
@@ -1001,6 +1006,14 @@ export default function HelpPage() {
                     <AccordionContent>
                       <p className="text-sm text-slate-600">
                         Interne berichten tussen medewerkers met onderwerp, inhoud, prioriteit en gelezen-status.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="email-template">
+                    <AccordionTrigger>📧 EmailTemplate - E-mail Sjablonen</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Herbruikbare e-mailsjablonen met naam, onderwerp, HTML-inhoud, Reply-To adres en categorie. Sjablonen kunnen worden gebruikt bij het verzenden van e-mails naar medewerkers.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -2166,6 +2179,92 @@ export default function HelpPage() {
                   <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
                     <p className="text-sm text-amber-700">
                       ⚠️ <strong>Let op:</strong> Deze toggles zijn onafhankelijk van de medewerkerstatus (Actief/Inactief). Een medewerker kan Actief zijn maar toch niet in de planner staan of geen loonrapport krijgen.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* E-mail verzenden */}
+            <AccordionItem value="email-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Mail className="w-4 h-4 mr-2" />
+                Hoe verstuur ik e-mails naar medewerkers?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Overzicht</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Via de Communicatie-pagina kun je e-mails versturen naar individuele medewerkers of in bulk per afdeling. E-mails worden verzonden via de gekoppelde Gmail-connector.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">1. E-mail versturen</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar <strong>"Communicatie"</strong> (voorheen Berichten) in het menu</li>
+                      <li>• Klik op <strong>"E-mail versturen"</strong> of ga naar het tabblad "E-mail"</li>
+                      <li>• Kies tussen <strong>Individueel</strong> (medewerkers selecteren) of <strong>Per afdeling</strong> (hele afdeling)</li>
+                      <li>• Optioneel: selecteer een <strong>sjabloon</strong> om onderwerp en inhoud automatisch in te vullen</li>
+                      <li>• Vul het onderwerp en de e-mailinhoud in (met rich text editor)</li>
+                      <li>• Stel het <strong>antwoordadres (Reply-To)</strong> in — standaard info@interdistri.nl</li>
+                      <li>• Klik op <strong>"Verzenden"</strong></li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">2. Individueel verzenden</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Kies het tabblad <strong>"Individueel"</strong></li>
+                      <li>• Vink een of meer medewerkers aan in de lijst</li>
+                      <li>• Alleen actieve medewerkers met een e-mailadres worden getoond</li>
+                      <li>• Je ziet het aantal geselecteerde ontvangers</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">3. Bulk verzenden per afdeling</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Kies het tabblad <strong>"Per afdeling"</strong></li>
+                      <li>• Selecteer een afdeling (Management, Transport, PakketDistributie, Charters)</li>
+                      <li>• Alle actieve medewerkers van die afdeling ontvangen de e-mail</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">4. Reply-To adres</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Het Reply-To adres bepaalt waar antwoorden naartoe gaan:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• De e-mail wordt verstuurd vanaf het gekoppelde Gmail-account</li>
+                      <li>• Als de ontvanger op <strong>"Beantwoorden"</strong> klikt, gaat het antwoord naar het opgegeven Reply-To adres</li>
+                      <li>• Standaard: <strong>info@interdistri.nl</strong></li>
+                      <li>• Je kunt dit per e-mail aanpassen (bijv. ruben@interdistri.nl)</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">5. E-mail sjablonen</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar het tabblad <strong>"Sjablonen"</strong> op de Communicatie-pagina</li>
+                      <li>• Klik op <strong>"Nieuw sjabloon"</strong> om een sjabloon aan te maken</li>
+                      <li>• Vul naam, onderwerp, inhoud en Reply-To adres in</li>
+                      <li>• Kies een categorie (Algemeen, HR, Planning, Contract, Overig)</li>
+                      <li>• Sjablonen kunnen worden <strong>bewerkt en verwijderd</strong></li>
+                      <li>• Bij het versturen van een e-mail kun je een sjabloon selecteren — de velden worden automatisch ingevuld</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>Tip:</strong> Maak sjablonen aan voor terugkerende e-mails zoals welkomstberichten, contractverlengingen of afdelingsupdates. Dit bespaart tijd en zorgt voor consistente communicatie.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> E-mails worden alleen verstuurd naar medewerkers met een ingevuld e-mailadres. Medewerkers zonder e-mail worden overgeslagen.
                     </p>
                   </div>
                 </div>
