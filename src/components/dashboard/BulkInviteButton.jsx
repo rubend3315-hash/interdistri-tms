@@ -30,28 +30,50 @@ export default function BulkInviteButton() {
     const allUsers = await base44.entities.User.list('-created_date', 500);
     const existingEmails = new Set(allUsers.map(u => u.email?.toLowerCase()));
 
-    let count = 0;
-    for (const emp of allEmployees) {
-      const email = emp.email;
-      if (!email) {
+    const toInvite = allEmployees.filter(emp => {
+      if (!emp.email) {
         inviteResults.push({ name: `${emp.first_name} ${emp.last_name}`, status: 'skipped', reason: 'geen e-mail' });
-        continue;
+        return false;
       }
-      if (existingEmails.has(email.toLowerCase())) {
-        inviteResults.push({ name: `${emp.first_name} ${emp.last_name}`, email, status: 'skipped', reason: 'heeft al account' });
-        continue;
+      if (existingEmails.has(emp.email.toLowerCase())) {
+        inviteResults.push({ name: `${emp.first_name} ${emp.last_name}`, email: emp.email, status: 'skipped', reason: 'heeft al account' });
+        return false;
       }
+      return true;
+    });
 
-      count++;
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    for (let i = 0; i < toInvite.length; i++) {
+      const emp = toInvite[i];
       const employeeName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
-      setProgress(`Uitnodigen: ${employeeName} (${count})...`);
+      setProgress(`Uitnodigen: ${employeeName} (${i + 1}/${toInvite.length})...`);
 
       try {
-        await base44.users.inviteUser(email, 'user');
-        existingEmails.add(email.toLowerCase());
-        inviteResults.push({ name: employeeName, email, status: 'success' });
+        await base44.users.inviteUser(emp.email, 'user');
+        existingEmails.add(emp.email.toLowerCase());
+        inviteResults.push({ name: employeeName, email: emp.email, status: 'success' });
       } catch (err) {
-        inviteResults.push({ name: employeeName, email, status: 'error', reason: err.message || 'Uitnodiging mislukt' });
+        const msg = err?.response?.data?.detail || err?.response?.data?.error || err.message || 'Uitnodiging mislukt';
+        if (msg.toLowerCase().includes('rate limit')) {
+          // Wait longer and retry once
+          setProgress(`Rate limit — even wachten... (${i + 1}/${toInvite.length})`);
+          await delay(5000);
+          try {
+            await base44.users.inviteUser(emp.email, 'user');
+            existingEmails.add(emp.email.toLowerCase());
+            inviteResults.push({ name: employeeName, email: emp.email, status: 'success' });
+          } catch (retryErr) {
+            inviteResults.push({ name: employeeName, email: emp.email, status: 'error', reason: 'Rate limit na retry' });
+          }
+        } else {
+          inviteResults.push({ name: employeeName, email: emp.email, status: 'error', reason: msg });
+        }
+      }
+
+      // 1.5 second delay between invites to avoid rate limiting
+      if (i < toInvite.length - 1) {
+        await delay(1500);
       }
     }
 
