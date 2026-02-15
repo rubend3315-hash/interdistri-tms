@@ -16,21 +16,56 @@ export default function BulkInviteButton() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const [progress, setProgress] = useState("");
 
   const handleBulkInvite = async () => {
     setLoading(true);
     setResults(null);
-    try {
-      const response = await base44.functions.invoke('autoInviteEmployee', { bulk: true });
-      setResults(response.data);
-    } catch (err) {
-      setResults({ 
-        status: 'error', 
-        summary: err?.response?.data?.error || err.message || 'Onbekende fout',
-        results: [] 
-      });
+    setProgress("Medewerkers en gebruikers ophalen...");
+
+    const inviteResults = [];
+
+    // Fetch all active employees and existing users from frontend
+    const allEmployees = await base44.entities.Employee.filter({ status: 'Actief' });
+    const allUsers = await base44.entities.User.list('-created_date', 500);
+    const existingEmails = new Set(allUsers.map(u => u.email?.toLowerCase()));
+
+    let count = 0;
+    for (const emp of allEmployees) {
+      const email = emp.email;
+      if (!email) {
+        inviteResults.push({ name: `${emp.first_name} ${emp.last_name}`, status: 'skipped', reason: 'geen e-mail' });
+        continue;
+      }
+      if (existingEmails.has(email.toLowerCase())) {
+        inviteResults.push({ name: `${emp.first_name} ${emp.last_name}`, email, status: 'skipped', reason: 'heeft al account' });
+        continue;
+      }
+
+      count++;
+      const employeeName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
+      setProgress(`Uitnodigen: ${employeeName} (${count})...`);
+
+      try {
+        await base44.users.inviteUser(email, 'user');
+        existingEmails.add(email.toLowerCase());
+        inviteResults.push({ name: employeeName, email, status: 'success' });
+      } catch (err) {
+        inviteResults.push({ name: employeeName, email, status: 'error', reason: err.message || 'Uitnodiging mislukt' });
+      }
     }
+
+    const invited = inviteResults.filter(r => r.status === 'success').length;
+    const skipped = inviteResults.filter(r => r.status === 'skipped').length;
+    const failed = inviteResults.filter(r => r.status === 'error').length;
+
+    setResults({
+      status: 'success',
+      summary: `${invited} uitgenodigd, ${skipped} overgeslagen${failed > 0 ? `, ${failed} mislukt` : ''}`,
+      results: inviteResults,
+    });
     setLoading(false);
+    setProgress("");
   };
 
   const invited = results?.results?.filter(r => r.status === 'success' || r.status === 'invited_no_email') || [];
