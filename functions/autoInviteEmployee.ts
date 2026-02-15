@@ -72,13 +72,7 @@ Deno.serve(async (req) => {
     }
 
     // Invite the employee as a user with role 'user' (Medewerker)
-    if (base44.asServiceRole?.auth?.inviteUser) {
-      await base44.asServiceRole.auth.inviteUser(employeeEmail, 'user');
-    } else if (base44.auth?.inviteUser) {
-      await base44.auth.inviteUser(employeeEmail, 'user');
-    } else {
-      throw new Error('inviteUser method not available on SDK');
-    }
+    await base44.asServiceRole.users.inviteUser(employeeEmail, 'user');
 
     const employeeName = `${data.first_name || ''} ${data.prefix ? data.prefix + ' ' : ''}${data.last_name || ''}`.trim();
     console.log(`Medewerker ${employeeName} (${employeeEmail}) uitgenodigd als gebruiker.`);
