@@ -53,16 +53,31 @@ export default function BulkInviteButton() {
         await base44.users.inviteUser(emp.email, 'user');
         existingEmails.add(emp.email.toLowerCase());
         inviteResults.push({ name: employeeName, email: emp.email, status: 'success' });
+
+        // Send welcome email via backend (Gmail with CC)
+        try {
+          await base44.functions.invoke('sendWelcomeEmail', {
+            email: emp.email,
+            name: employeeName,
+          });
+        } catch (_emailErr) {
+          // Don't fail the invite if email fails
+        }
       } catch (err) {
         const msg = err?.response?.data?.detail || err?.response?.data?.error || err.message || 'Uitnodiging mislukt';
         if (msg.toLowerCase().includes('rate limit')) {
-          // Wait longer and retry once
           setProgress(`Rate limit — even wachten... (${i + 1}/${toInvite.length})`);
           await delay(5000);
           try {
             await base44.users.inviteUser(emp.email, 'user');
             existingEmails.add(emp.email.toLowerCase());
             inviteResults.push({ name: employeeName, email: emp.email, status: 'success' });
+            try {
+              await base44.functions.invoke('sendWelcomeEmail', {
+                email: emp.email,
+                name: employeeName,
+              });
+            } catch (_emailErr) {}
           } catch (retryErr) {
             inviteResults.push({ name: employeeName, email: emp.email, status: 'error', reason: 'Rate limit na retry' });
           }
