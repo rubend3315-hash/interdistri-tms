@@ -225,60 +225,54 @@ export default function CustomerDetail() {
             <Package className="w-4 h-4" />
             Artikelen
           </TabsTrigger>
-          {isPostNL && (
+          {hasFeature('imports') && (
             <TabsTrigger value="imports" className="gap-2">
               <Upload className="w-4 h-4" />
-              Imports
+              {getFeatureLabel('imports')}
             </TabsTrigger>
           )}
-          {isPostNL && (
+          {hasFeature('import_reports') && (
            <TabsTrigger value="import-reports" className="gap-2">
              <BarChart3 className="w-4 h-4" />
-             Import Rapportage
+             {getFeatureLabel('import_reports')}
            </TabsTrigger>
           )}
           <TabsTrigger value="history" className="gap-2">
             <History className="w-4 h-4" />
             Geschiedenis
           </TabsTrigger>
-          {isPostNL && (
+          {hasFeature('calculations') && (
             <TabsTrigger value="calculations" className="gap-2">
               <Calculator className="w-4 h-4" />
-              Berekeningen
+              {getFeatureLabel('calculations')}
             </TabsTrigger>
           )}
           <TabsTrigger value="notes" className="gap-2">
             <FileText className="w-4 h-4" />
             Opmerkingen
           </TabsTrigger>
-          {isPostNL && (
+          {hasFeature('dashboard') && (
            <TabsTrigger value="dashboard" className="gap-2">
              <BarChart3 className="w-4 h-4" />
-             Dashboard
+             {getFeatureLabel('dashboard')}
            </TabsTrigger>
           )}
-          {isPostNL && (
+          {hasFeature('ai_reports') && (
            <TabsTrigger value="reports" className="gap-2">
              <TrendingUp className="w-4 h-4" />
-             AI Rapporten
+             {getFeatureLabel('ai_reports')}
            </TabsTrigger>
           )}
-          {isPostNL && (
+          {hasFeature('ti_model_routes') && (
            <TabsTrigger value="ti-model" className="gap-2">
              <Package className="w-4 h-4" />
-             TI Model Ritten
+             {getFeatureLabel('ti_model_routes')}
            </TabsTrigger>
           )}
-          {isSpotta && (
-           <TabsTrigger value="spotta-routes" className="gap-2">
+          {hasFeature('routes') && (
+           <TabsTrigger value="routes" className="gap-2">
              <Truck className="w-4 h-4" />
-             Spotta Ritten
-           </TabsTrigger>
-          )}
-          {isDPGMedia && (
-           <TabsTrigger value="dpg-routes" className="gap-2">
-             <Truck className="w-4 h-4" />
-             DPG Media Ritten
+             {getFeatureLabel('routes')}
            </TabsTrigger>
           )}
         </TabsList>
@@ -614,13 +608,8 @@ export default function CustomerDetail() {
           <TIModelRoutesTab customerId={customerId} />
         </TabsContent>
 
-        {/* Spotta Ritten Tab */}
-        <TabsContent value="spotta-routes">
-          <RoutesTab customerId={customerId} />
-        </TabsContent>
-
-        {/* DPG Media Ritten Tab */}
-        <TabsContent value="dpg-routes">
+        {/* Routes Tab (Spotta, DPG Media, etc.) */}
+        <TabsContent value="routes">
           <RoutesTab customerId={customerId} />
         </TabsContent>
       </Tabs>
