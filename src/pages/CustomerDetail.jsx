@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CalculationsTab from "@/components/customer/CalculationsTab";
-import ImportHistory from "@/components/customer/ImportHistory";
+
 import ArticleList from "@/components/customer/ArticleList";
 import TIModelRoutesTab from "@/components/customer/TIModelRoutesTab";
 import RoutesTab from "@/components/customer/RoutesTab";
@@ -35,7 +35,7 @@ import {
   Trash2,
   Upload,
   Calculator,
-  History,
+
   X,
   Edit2,
   Calendar,
@@ -61,18 +61,7 @@ export default function CustomerDetail() {
     enabled: !!customerId
   });
 
-  const { data: imports = [] } = useQuery({
-    queryKey: ['customer-imports', customerId],
-    queryFn: () => customerId ? base44.entities.CustomerImport.filter({ customer_id: customerId }) : [],
-    enabled: !!customerId
-  });
 
-  const deleteImportMutation = useMutation({
-    mutationFn: (importId) => base44.entities.CustomerImport.delete(importId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customer-imports', customerId] });
-    }
-  });
 
   const [formData, setFormData] = useState({
     company_name: "",
@@ -238,20 +227,14 @@ export default function CustomerDetail() {
              {getFeatureLabel('import_reports')}
            </TabsTrigger>
           )}
-          <TabsTrigger value="history" className="gap-2">
-            <History className="w-4 h-4" />
-            Geschiedenis
-          </TabsTrigger>
+  
           {hasFeature('calculations') && (
             <TabsTrigger value="calculations" className="gap-2">
               <Calculator className="w-4 h-4" />
               {getFeatureLabel('calculations')}
             </TabsTrigger>
           )}
-          <TabsTrigger value="notes" className="gap-2">
-            <FileText className="w-4 h-4" />
-            Opmerkingen
-          </TabsTrigger>
+
           {hasFeature('dashboard') && (
            <TabsTrigger value="dashboard" className="gap-2">
              <BarChart3 className="w-4 h-4" />
@@ -554,46 +537,14 @@ export default function CustomerDetail() {
           <ProjectExcelImport projectFilter={true} customerId={customerId} />
         </TabsContent>
 
-        {/* Geschiedenis Tab */}
-        <TabsContent value="history">
-          <ImportHistory
-            imports={imports}
-            onView={(imp) => {}}
-            onDelete={deleteImportMutation.mutate}
-          />
-        </TabsContent>
+
 
         {/* Berekeningen Tab */}
         <TabsContent value="calculations">
           <CalculationsTab customerId={customerId} />
         </TabsContent>
 
-        {/* Opmerkingen Tab */}
-        <TabsContent value="notes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Opmerkingen</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={8}
-                placeholder="Voeg opmerkingen toe..."
-              />
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleSubmit}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={updateMutation.isPending}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Opslaan
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         {/* Dashboard Tab */}
         <TabsContent value="dashboard">
