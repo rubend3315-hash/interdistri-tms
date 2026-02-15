@@ -95,6 +95,13 @@ Deno.serve(async (req) => {
       );
 
       if (!activeContract) {
+        // Check if employee has active contractregels (internal rules)
+        const hasActiveContractRegel = employee.contractregels && employee.contractregels.length > 0 &&
+          employee.contractregels.some(cr => {
+            const todayStr = today.toISOString().split('T')[0];
+            return cr.status === 'Actief' && cr.startdatum <= todayStr && (!cr.einddatum || cr.einddatum >= todayStr);
+          });
+
         // Check if notification already exists
         const existingNotifications = await base44.asServiceRole.entities.Notification.filter({
           type: 'driver_no_contract',
@@ -104,14 +111,22 @@ Deno.serve(async (req) => {
         const hasUnreadNotification = existingNotifications.some(n => !n.is_read);
 
         if (!hasUnreadNotification) {
+          const description = hasActiveContractRegel
+            ? `${employee.first_name} ${employee.last_name} heeft wel actieve contractregels, maar nog geen formeel contractdocument in het systeem. Genereer een contractdocument via Contracten.`
+            : `${employee.first_name} ${employee.last_name} heeft geen actief contractdocument én geen actieve contractregels. Maak een contractregel aan bij de medewerker en genereer een contractdocument.`;
+
+          const title = hasActiveContractRegel
+            ? 'Chauffeur zonder contractdocument'
+            : 'Chauffeur zonder contract én contractregels';
+
           await base44.asServiceRole.entities.Notification.create({
-            title: 'Chauffeur zonder actief contract',
-            description: `${employee.first_name} ${employee.last_name} heeft geen actief contract. Genereer een nieuw contract.`,
+            title,
+            description,
             type: 'driver_no_contract',
             target_page: 'Contracts',
             target_entity_id: employee.id,
             user_ids: adminUserIds,
-            priority: 'high'
+            priority: hasActiveContractRegel ? 'medium' : 'high'
           });
 
           remindersCount++;

@@ -17,34 +17,37 @@ Deno.serve(async (req) => {
       .filter(u => u.role === 'admin')
       .map(u => u.id);
 
-    // 1. Check for active drivers without contract
+    // 1. Check for active drivers without contractregels
     const employees = await base44.asServiceRole.entities.Employee.list();
-    const activeDriversWithoutContract = employees.filter(emp => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const activeDriversWithoutContractregels = employees.filter(emp => {
       if (emp.status !== 'Actief') return false;
       if (emp.department !== 'Transport') return false;
       
-      // Check if employee has a valid contract
-      const hasValidContract = emp.contractregels && emp.contractregels.length > 0 && 
+      // Check if employee has a valid contractregel
+      const hasValidContractregel = emp.contractregels && emp.contractregels.length > 0 && 
         emp.contractregels.some(cr => {
-          const today = new Date().toISOString().split('T')[0];
           return cr.status === 'Actief' && 
-                 (!cr.einddatum || cr.einddatum >= today);
+                 cr.startdatum <= todayStr &&
+                 (!cr.einddatum || cr.einddatum >= todayStr);
         });
       
-      return !hasValidContract;
+      return !hasValidContractregel;
     });
 
-    if (activeDriversWithoutContract.length > 0) {
+    if (activeDriversWithoutContractregels.length > 0) {
       // Check if this notification already exists
       const existingNotifications = await base44.asServiceRole.entities.Notification.filter({
         type: 'driver_no_contract',
         is_read: false
       });
 
-      if (existingNotifications.length === 0) {
+      // Only create if no unread notification of this type exists
+      const hasGroupNotification = existingNotifications.some(n => !n.target_entity_id);
+      if (!hasGroupNotification) {
         notifications.push({
-          title: '⚠️ Actieve chauffeurs zonder contract',
-          description: `${activeDriversWithoutContract.length} actieve chauffeur(s) hebben geen geldig contract: ${activeDriversWithoutContract.map(e => `${e.first_name} ${e.last_name}`).join(', ')}`,
+          title: '⚠️ Actieve chauffeurs zonder contractregels',
+          description: `${activeDriversWithoutContractregels.length} actieve chauffeur(s) hebben geen geldige contractregel: ${activeDriversWithoutContractregels.map(e => `${e.first_name} ${e.last_name}`).join(', ')}. Voeg contractregels toe bij de medewerker.`,
           type: 'driver_no_contract',
           target_page: 'Employees',
           user_ids: adminUserIds,
