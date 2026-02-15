@@ -548,12 +548,12 @@ export default function CustomerDetail() {
 
         {/* Dashboard Tab */}
         <TabsContent value="dashboard">
-          <DataDashboard imports={imports} />
+          <DataDashboard imports={[]} />
         </TabsContent>
 
         {/* AI Reports Tab */}
         <TabsContent value="reports">
-          <ReportGenerator imports={imports} articles={formData.articles} />
+          <ReportGenerator imports={[]} articles={formData.articles} />
         </TabsContent>
 
         {/* Import Rapportage Tab */}
