@@ -44,12 +44,26 @@ async function sendGmail(accessToken, to, subject, htmlBody) {
 
 Deno.serve(async (req) => {
   try {
-    // Read body first, then create SDK client
-    const body = await req.json();
     const base44 = createClientFromRequest(req);
     
+    let body = {};
+    try {
+      body = await req.json();
+    } catch (_e) {
+      // No body provided
+    }
+
+    console.log('Body received:', JSON.stringify(body));
+    
     // Verify the caller is an authenticated admin
-    const user = await base44.auth.me();
+    let user;
+    try {
+      user = await base44.auth.me();
+      console.log('User authenticated:', user?.email, user?.role);
+    } catch (authErr) {
+      console.error('Auth failed:', authErr.message);
+      return Response.json({ error: 'Authentication failed: ' + authErr.message }, { status: 401 });
+    }
     if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
