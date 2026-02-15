@@ -20,8 +20,16 @@ export default function BulkInviteButton() {
   const handleBulkInvite = async () => {
     setLoading(true);
     setResults(null);
-    const response = await base44.functions.invoke('autoInviteEmployee', { bulk: true });
-    setResults(response.data);
+    try {
+      const response = await base44.functions.invoke('autoInviteEmployee', { bulk: true });
+      setResults(response.data);
+    } catch (err) {
+      setResults({ 
+        status: 'error', 
+        summary: err?.response?.data?.error || err.message || 'Onbekende fout',
+        results: [] 
+      });
+    }
     setLoading(false);
   };
 
