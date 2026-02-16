@@ -173,13 +173,8 @@ export default function DriverAvailabilityCalendar({ employees }) {
       setFillingSchedule(false);
       return;
     }
-    // Bulk create in small batches with delay to avoid rate limiting
-    const delay = (ms) => new Promise(r => setTimeout(r, ms));
-    for (let i = 0; i < toCreate.length; i += 3) {
-      const batch = toCreate.slice(i, i + 3);
-      await base44.entities.DriverAvailability.bulkCreate(batch);
-      await delay(1500);
-    }
+    // Bulk create in one call
+    await base44.entities.DriverAvailability.bulkCreate(toCreate);
     queryClient.invalidateQueries({ queryKey: ['driverAvailability'] });
     toast.success(`${toCreate.length} weekrooster-dagen ingevuld`);
     setFillingSchedule(false);
