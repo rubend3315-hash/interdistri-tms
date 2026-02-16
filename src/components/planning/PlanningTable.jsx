@@ -186,7 +186,7 @@ export default function PlanningTable({
                   )}
                   {isScheduledElsewhere && currentDepartment === employee.department && (
                     <div className="text-xs text-blue-600 font-semibold truncate w-full">
-                      gepland op afd. {currentPlannedDepartment}
+                      gepland op afd. {currentPlannedDepartment.replace(/_/g, ' ')}
                     </div>
                   )}
                   {showDetails && currentRoute && (
