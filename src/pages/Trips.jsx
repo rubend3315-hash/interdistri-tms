@@ -22,7 +22,9 @@ import {
   MapPin,
   Trash2,
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
