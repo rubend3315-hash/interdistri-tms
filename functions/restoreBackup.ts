@@ -17,10 +17,11 @@ Deno.serve(async (req) => {
     }
 
     // Fetch the backup
-    const backup = await base44.asServiceRole.entities.Backup.read(backup_id);
-    if (!backup) {
+    const backups = await base44.asServiceRole.entities.Backup.filter({ id: backup_id });
+    if (!backups || backups.length === 0) {
       return Response.json({ error: 'Backup not found' }, { status: 404 });
     }
+    const backup = backups[0];
 
     const backupData = JSON.parse(backup.json_data);
     const restoreResult = {
