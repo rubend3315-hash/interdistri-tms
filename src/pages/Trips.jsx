@@ -61,6 +61,16 @@ export default function Trips() {
     queryFn: () => base44.entities.Customer.list()
   });
 
+  const { data: tiModelRoutes = [] } = useQuery({
+    queryKey: ['tiModelRoutes'],
+    queryFn: () => base44.entities.TIModelRoute.list()
+  });
+
+  const { data: dbRoutes = [] } = useQuery({
+    queryKey: ['routesList'],
+    queryFn: () => base44.entities.Route.list()
+  });
+
   const { data: caoRules = [] } = useQuery({
     queryKey: ['caoRules'],
     queryFn: () => base44.entities.CaoRule.filter({ 
