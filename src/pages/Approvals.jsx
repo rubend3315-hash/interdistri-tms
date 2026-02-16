@@ -473,9 +473,14 @@ export default function Approvals() {
               <h3 className="text-lg font-medium text-slate-900">Nog geen goedkeuringen</h3>
             </Card>
           ) : (
-            approvedEntries.slice(0, 20).map(entry => (
-              <EntryCard key={entry.id} entry={entry} />
-            ))
+            <>
+              {approvedEntries.slice(0, 20).map(entry => renderEntryCard(entry, false))}
+              {approvedEntries.length > 20 && (
+                <p className="text-sm text-slate-500 text-center py-2">
+                  Toont 20 van {approvedEntries.length} vermeldingen
+                </p>
+              )}
+            </>
           )}
         </TabsContent>
 
