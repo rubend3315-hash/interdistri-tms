@@ -172,6 +172,13 @@ export default function MobileEntry() {
   const currentEmployee = employees.find(e => e.email === user?.email);
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
+  // Track page load
+  useEffect(() => {
+    if (currentEmployee?.id) {
+      base44.analytics.track({ eventName: "mobile_entry_page_loaded", properties: { employeeId: currentEmployee.id, entryType: "single_day" } });
+    }
+  }, [currentEmployee?.id]);
+
   const { data: myMessages = [] } = useQuery({
     queryKey: ['myMessages', currentEmployee?.id],
     queryFn: () => base44.entities.Message.filter({ to_employee_id: currentEmployee?.id }),
@@ -374,7 +381,10 @@ export default function MobileEntry() {
   };
 
   const handleSubmitEntry = async () => {
+    base44.analytics.track({ eventName: "mobile_entry_submit_start", properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length, hasSignature: !!signature } });
+
     if (trips.length === 0) {
+      base44.analytics.track({ eventName: "mobile_entry_validation_fail", properties: { employeeId: currentEmployee?.id, reason: "no_trips" } });
       toast.error('Je moet minimaal één rit invoeren voordat je kunt indienen.');
       setActiveTab("ritten");
       return;
@@ -502,6 +512,8 @@ export default function MobileEntry() {
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
 
+      base44.analytics.track({ eventName: "mobile_entry_submit_success", properties: { employeeId: currentEmployee?.id, date: formData.date, totalHours: hours, tripCount: trips.length, isOnline } });
+
       if (isOnline) {
         toast.success('Dienst en ritten succesvol ingediend!');
       } else {
@@ -525,6 +537,7 @@ export default function MobileEntry() {
       setActiveTab("home");
     } catch (error) {
       console.error('Indienen mislukt:', error);
+      base44.analytics.track({ eventName: "mobile_entry_submit_fail", properties: { employeeId: currentEmployee?.id, date: formData.date, error: error?.message || "unknown" } });
       toast.error('Er is een fout opgetreden bij het indienen. Probeer opnieuw.');
     } finally {
       setIsSubmitting(false);
@@ -602,10 +615,12 @@ export default function MobileEntry() {
 
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
+      base44.analytics.track({ eventName: "mobile_entry_draft_saved", properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length } });
       toast.success('Concept opgeslagen');
       setTimeout(() => setActiveTab("home"), 300);
     } catch (error) {
       console.error('Opslaan mislukt:', error);
+      base44.analytics.track({ eventName: "mobile_entry_draft_fail", properties: { employeeId: currentEmployee?.id, error: error?.message || "unknown" } });
       toast.error('Concept opslaan mislukt. Controleer je verbinding.');
     } finally {
       setIsSubmitting(false);

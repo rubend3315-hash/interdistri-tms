@@ -137,6 +137,13 @@ export default function MobileEntryMultiDay() {
   const currentEmployee = employees.find(e => e.email === user?.email);
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
+  // Track page load
+  useEffect(() => {
+    if (currentEmployee?.id) {
+      base44.analytics.track({ eventName: "mobile_entry_page_loaded", properties: { employeeId: currentEmployee.id, entryType: "multi_day" } });
+    }
+  }, [currentEmployee?.id]);
+
   const { data: myMessages = [] } = useQuery({
     queryKey: ['myMessages', currentEmployee?.id],
     queryFn: () => base44.entities.Message.filter({ to_employee_id: currentEmployee?.id }),
@@ -267,7 +274,10 @@ export default function MobileEntryMultiDay() {
   };
 
   const handleSubmitEntry = async () => {
+    base44.analytics.track({ eventName: "mobile_entry_submit_start", properties: { employeeId: currentEmployee?.id, date: formData.date, endDate: formData.end_date, tripCount: trips.length, hasSignature: !!signature, entryType: "multi_day" } });
+
     if (trips.length === 0) {
+      base44.analytics.track({ eventName: "mobile_entry_validation_fail", properties: { employeeId: currentEmployee?.id, reason: "no_trips", entryType: "multi_day" } });
       toast.error('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen.');
       setActiveTab("ritten");
       return;
@@ -359,6 +369,8 @@ export default function MobileEntryMultiDay() {
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
 
+      base44.analytics.track({ eventName: "mobile_entry_submit_success", properties: { employeeId: currentEmployee?.id, date: formData.date, endDate: formData.end_date, totalHours: hours, tripCount: trips.length, isOnline, entryType: "multi_day" } });
+
       if (isOnline) {
         toast.success('Dienst en ritten succesvol ingediend!');
       } else {
@@ -381,6 +393,7 @@ export default function MobileEntryMultiDay() {
       setActiveTab("home");
     } catch (error) {
       console.error('Indienen mislukt:', error);
+      base44.analytics.track({ eventName: "mobile_entry_submit_fail", properties: { employeeId: currentEmployee?.id, date: formData.date, error: error?.message || "unknown", entryType: "multi_day" } });
       toast.error('Er is een fout opgetreden bij het indienen. Probeer opnieuw.');
     } finally {
       setIsSubmitting(false);
@@ -435,10 +448,12 @@ export default function MobileEntryMultiDay() {
 
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
+      base44.analytics.track({ eventName: "mobile_entry_draft_saved", properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length, entryType: "multi_day" } });
       toast.success('Concept opgeslagen');
       setTimeout(() => setActiveTab("home"), 300);
     } catch (error) {
       console.error('Opslaan mislukt:', error);
+      base44.analytics.track({ eventName: "mobile_entry_draft_fail", properties: { employeeId: currentEmployee?.id, error: error?.message || "unknown", entryType: "multi_day" } });
       toast.error('Concept opslaan mislukt. Controleer je verbinding.');
     } finally {
       setIsSubmitting(false);
