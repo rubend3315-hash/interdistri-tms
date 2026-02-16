@@ -28,6 +28,8 @@ import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import { checkEmployeeActiveRules } from "@/components/utils/employeeContractCheck";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 const statuses = ["Gepland", "Onderweg", "Voltooid", "Geannuleerd"];
 
