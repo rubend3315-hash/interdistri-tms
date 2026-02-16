@@ -786,9 +786,10 @@ export default function MobileEntry() {
           </div>
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-1.5 hover:bg-white/20 rounded-lg"
+            className="p-3 -m-1 hover:bg-white/20 rounded-lg active:bg-white/30 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Menu openen"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-6 h-6" />
           </button>
         </div>
 
