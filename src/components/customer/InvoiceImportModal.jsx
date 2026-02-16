@@ -10,8 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Loader2, CheckCircle2, FileText, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-function parseLineType(description) {
+function parseLineType(description, productCode) {
   const desc = (description || "").toLowerCase();
+  const code = (productCode || "").trim();
+
+  // Spotta-specifieke types
   if (desc.includes("basis:")) return "basis";
   if (desc.includes("staffel:")) return "staffel";
   if (desc.includes("filiaalexemplaren")) return "filiaalexemplaren";
@@ -19,6 +22,15 @@ function parseLineType(description) {
   if (desc.includes("losse verspreiding")) return "losse_verspreiding";
   if (desc.includes("correctie")) return "correctie";
   if (desc.includes("display")) return "display";
+
+  // DPG Media-specifieke types (op basis van product code + omschrijving)
+  if (code === "123" || desc.includes("beschik. hub")) return "beschikbaarheid_hub";
+  if (code === "165" || desc.includes("materiaal kosten")) return "materiaalkosten";
+  if (code === "155" || desc.includes("compens. brandstof")) return "brandstofcompensatie";
+  if (code === "170" || desc.includes("nt verg vervoer")) return "nt_vervoer_per_dag";
+  if (code === "160" || desc.includes("verg vervoer per dag")) return "vervoer_per_dag";
+  if (code === "910" || desc.includes("km verg")) return "km_vergoeding";
+
   return "overig";
 }
 
