@@ -192,7 +192,7 @@ export default function InvoiceWeekDashboard({ customerId }) {
       <YearRevenueChart invoices={invoices} allLines={allLines} />
 
       {/* KPI's */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
@@ -206,19 +206,7 @@ export default function InvoiceWeekDashboard({ customerId }) {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">Totaal incl. BTW</p>
-                <p className="text-lg font-bold text-slate-900">€ {totalIncl.toFixed(2)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
@@ -332,8 +320,7 @@ export default function InvoiceWeekDashboard({ customerId }) {
                   <th className="pb-2 pr-4 font-medium text-slate-500 text-right">Artikelprijs</th>
                   <th className="pb-2 pr-4 font-medium text-slate-500 text-right">Regels</th>
                   <th className="pb-2 pr-4 font-medium text-slate-500 text-right">Dagen</th>
-                  <th className="pb-2 pr-4 font-medium text-slate-500 text-right">Excl. BTW</th>
-                  <th className="pb-2 font-medium text-slate-500 text-right">Incl. BTW</th>
+                  <th className="pb-2 font-medium text-slate-500 text-right">Excl. BTW</th>
                 </tr>
               </thead>
               <tbody>
@@ -362,8 +349,7 @@ export default function InvoiceWeekDashboard({ customerId }) {
                       </td>
                       <td className="py-2 pr-4 text-right text-slate-600">{r.lines}</td>
                       <td className="py-2 pr-4 text-right text-slate-600">{r.quantity}</td>
-                      <td className="py-2 pr-4 text-right font-semibold text-slate-900">€ {r.total_excl.toFixed(2)}</td>
-                      <td className="py-2 text-right text-slate-600">€ {r.total_incl.toFixed(2)}</td>
+                      <td className="py-2 text-right font-semibold text-slate-900">€ {r.total_excl.toFixed(2)}</td>
                     </tr>
                   );
                 })}
@@ -371,8 +357,7 @@ export default function InvoiceWeekDashboard({ customerId }) {
               <tfoot>
                 <tr className="border-t font-semibold">
                   <td className="py-2 pr-4" colSpan={6}>Totaal</td>
-                  <td className="py-2 pr-4 text-right">€ {totalExcl.toFixed(2)}</td>
-                  <td className="py-2 text-right">€ {totalIncl.toFixed(2)}</td>
+                  <td className="py-2 text-right">€ {totalExcl.toFixed(2)}</td>
                 </tr>
               </tfoot>
             </table>
