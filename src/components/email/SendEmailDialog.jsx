@@ -226,7 +226,9 @@ export default function SendEmailDialog({ open, onOpenChange }) {
           {/* Body */}
           <div className="space-y-2">
             <Label>Inhoud *</Label>
-            <ReactQuill value={body} onChange={setBody} style={{ minHeight: 180 }} />
+            <div className="[&_.ql-container]:min-h-[180px] [&_.ql-editor]:min-h-[180px]">
+              <ReactQuill value={body} onChange={setBody} theme="snow" />
+            </div>
           </div>
 
           {/* Actions */}
