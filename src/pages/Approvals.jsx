@@ -620,7 +620,7 @@ export default function Approvals() {
                     <Input
                       type="number"
                       value={editData.break_minutes}
-                      onChange={(e) => setEditData({ ...editData, break_minutes: e.target.value })}
+                      onChange={(e) => setEditData({ ...editData, break_minutes: parseInt(e.target.value, 10) || 0 })}
                       disabled={!isManualBreak}
                       className={!isManualBreak ? 'bg-slate-50 text-slate-500' : ''}
                     />
