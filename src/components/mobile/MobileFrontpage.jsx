@@ -23,12 +23,15 @@ export default function MobileFrontpage({ onNavigate }) {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+  const { data: currentEmployee } = useQuery({
+    queryKey: ['currentEmployee', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return null;
+      const byEmail = await base44.entities.Employee.filter({ email: user.email });
+      return byEmail.length > 0 ? byEmail[0] : null;
+    },
+    enabled: !!user?.email
   });
-
-  const currentEmployee = employees.find(e => e.email === user?.email);
 
   const { data: shiftTimes = [] } = useQuery({
     queryKey: ['shiftTimes', currentEmployee?.id],
