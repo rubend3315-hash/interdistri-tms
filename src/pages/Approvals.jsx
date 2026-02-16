@@ -558,9 +558,10 @@ export default function Approvals() {
                 <div>
                   <Label className="text-xs text-slate-500">Medewerker</Label>
                   <p className="font-medium">
-                    {getEmployee(selectedEntry.employee_id) ? 
-                      `${getEmployee(selectedEntry.employee_id).first_name} ${getEmployee(selectedEntry.employee_id).last_name}` : 
-                      'Onbekend'}
+                    {(() => {
+                      const emp = getEmployee(selectedEntry.employee_id);
+                      return emp ? `${emp.first_name} ${emp.last_name}` : 'Onbekend';
+                    })()}
                   </p>
                 </div>
                 <div>
