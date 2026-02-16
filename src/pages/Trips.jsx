@@ -497,11 +497,9 @@ export default function Trips() {
       const teStartMinutes = teStartH * 60 + teStartM;
       const teEndMinutes = teEndH * 60 + teEndM;
 
-      // Allow 5 min tolerance
-      const tolerance = 5;
-      const depOk = tripDepMinutes >= teStartMinutes - tolerance;
+      const depOk = tripDepMinutes >= teStartMinutes;
       const arrOk = teEndMinutes >= teStartMinutes 
-        ? tripArrMinutes <= teEndMinutes + tolerance  // same day
+        ? tripArrMinutes <= teEndMinutes  // same day
         : true; // overnight shift, arrival always ok
 
       if (depOk && arrOk) {
