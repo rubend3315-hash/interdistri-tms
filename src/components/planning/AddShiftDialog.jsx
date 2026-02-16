@@ -23,6 +23,7 @@ export default function AddShiftDialog({
 }) {
   const [formData, setFormData] = useState({
     planned_department: "",
+    pakket_shift: "",
     is_standby: false,
     is_training: false,
     route_id: "",
@@ -38,9 +39,11 @@ export default function AddShiftDialog({
 
   React.useEffect(() => {
     if (open && employee) {
+      const dept = employee.department || "";
       setFormData(prev => ({
         ...prev,
-        planned_department: employee.department || ""
+        planned_department: dept === "PakketDistributie" ? "PakketDistributie" : dept,
+        pakket_shift: dept === "PakketDistributie" ? "Shift3" : ""
       }));
     }
   }, [open, employee]);
@@ -88,17 +91,30 @@ export default function AddShiftDialog({
     return true;
   };
 
+  const getEffectiveDepartment = () => {
+    if (formData.planned_department === "PakketDistributie" && formData.pakket_shift) {
+      return `PakketDistributie_${formData.pakket_shift}`;
+    }
+    return formData.planned_department;
+  };
+
   const handleSave = () => {
     if (!validateShift()) {
       return;
     }
-    onSave(formData);
+    const saveData = {
+      ...formData,
+      planned_department: getEffectiveDepartment()
+    };
+    onSave(saveData);
     onOpenChange(false);
   };
 
   const handleClose = () => {
+    const dept = employee?.department || "";
     setFormData({
-      planned_department: employee?.department || "",
+      planned_department: dept === "PakketDistributie" ? "PakketDistributie" : dept,
+      pakket_shift: dept === "PakketDistributie" ? "Shift3" : "",
       is_standby: false,
       is_training: false,
       route_id: "",
@@ -170,7 +186,7 @@ export default function AddShiftDialog({
           {/* Geplande afdeling */}
           <div className="grid grid-cols-[120px_1fr] items-center gap-4">
             <Label>Geplande afdeling:</Label>
-            <Select value={formData.planned_department} onValueChange={(v) => setFormData({ ...formData, planned_department: v })}>
+            <Select value={formData.planned_department} onValueChange={(v) => setFormData({ ...formData, planned_department: v, pakket_shift: v === "PakketDistributie" ? "Shift3" : "" })}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecteer afdeling" />
               </SelectTrigger>
@@ -182,6 +198,23 @@ export default function AddShiftDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Shift keuze (alleen bij PakketDistributie) */}
+          {formData.planned_department === "PakketDistributie" && (
+            <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+              <Label>Shift:</Label>
+              <Select value={formData.pakket_shift} onValueChange={(v) => setFormData({ ...formData, pakket_shift: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer shift" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Shift3">Shift 3</SelectItem>
+                  <SelectItem value="Shift4">Shift 4</SelectItem>
+                  <SelectItem value="Shift5">Shift 5</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Aangepaste dienst */}
           <div className="grid grid-cols-[120px_1fr] items-start gap-4">
