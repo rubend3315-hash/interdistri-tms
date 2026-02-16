@@ -173,9 +173,9 @@ export default function DriverAvailabilityCalendar({ employees }) {
       setFillingSchedule(false);
       return;
     }
-    // Bulk create in batches of 20
-    for (let i = 0; i < toCreate.length; i += 20) {
-      const batch = toCreate.slice(i, i + 20);
+    // Bulk create in small batches to avoid 502 errors
+    for (let i = 0; i < toCreate.length; i += 5) {
+      const batch = toCreate.slice(i, i + 5);
       await base44.entities.DriverAvailability.bulkCreate(batch);
     }
     queryClient.invalidateQueries({ queryKey: ['driverAvailability'] });
