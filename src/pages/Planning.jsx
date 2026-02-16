@@ -587,6 +587,12 @@ export default function Planning() {
               const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
               return dayKeys.some(day => s.employee_id === e.id && s[`${day}_planned_department`] === dept);
             });
+          }).sort((a, b) => {
+            const hoursA = getWeekScheduleHours(a);
+            const hoursB = getWeekScheduleHours(b);
+            const totalA = hoursA ? Object.values(hoursA).reduce((sum, h) => sum + h, 0) : 0;
+            const totalB = hoursB ? Object.values(hoursB).reduce((sum, h) => sum + h, 0) : 0;
+            return totalB - totalA;
           });
 
           return (
