@@ -101,8 +101,8 @@ export default function RouteHistorie({ employees = [] }) {
             const route = allRoutes.find(r => r.id === routeId);
             return {
               routeId,
-              routeCode: route?.route_code || '?',
-              routeName: route?.route_name || 'Onbekend',
+              routeCode: route?.route_code || (data.tripRouteName || '?'),
+              routeName: route?.route_name || (data.tripRouteName || 'Onbekend'),
               count: data.count,
               uniqueWeeks: data.weeks.size
             };
