@@ -9,7 +9,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { TrendingUp, Truck, Package, DollarSign } from "lucide-react";
 import PeriodSelector from "./PeriodSelector";
 import YearRevenueChart from "./YearRevenueChart";
-import InvoiceAIAnalysis from "./InvoiceAIAnalysis";
 
 const COLORS = [
   "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
@@ -188,9 +187,6 @@ export default function InvoiceWeekDashboard({ customerId }) {
 
       {/* Periode selector */}
       <PeriodSelector onPeriodChange={setPeriod} invoices={invoices} />
-
-      {/* AI Analyse */}
-      <InvoiceAIAnalysis invoices={invoices} allLines={allLines} />
 
       {/* Jaaromzet grafiek */}
       <YearRevenueChart invoices={invoices} allLines={allLines} />

@@ -23,6 +23,7 @@ import DataDashboard from "@/components/reports/DataDashboard";
 import ProjectExcelImport from "@/components/projecten/ProjectExcelImport";
 import PostNLDashboard from "@/components/rapportage/PostNLDashboard";
 import InvoiceWeekDashboard from "@/components/customer/InvoiceWeekDashboard";
+import InvoiceAITab from "@/components/customer/InvoiceAITab";
 import {
   ArrowLeft,
   Save,
@@ -42,7 +43,8 @@ import {
   Calendar,
   BarChart3,
   TrendingUp,
-  Truck
+  Truck,
+  Brain
 } from "lucide-react";
 
 
@@ -270,6 +272,12 @@ export default function CustomerDetail() {
            <TabsTrigger value="invoice-dashboard" className="gap-2">
               <BarChart3 className="w-4 h-4" />
               Weekdashboard
+           </TabsTrigger>
+          )}
+          {hasFeature('invoices') && (
+           <TabsTrigger value="invoice-ai" className="gap-2">
+              <Brain className="w-4 h-4" />
+              AI Analyse
            </TabsTrigger>
           )}
           </TabsList>
@@ -586,6 +594,11 @@ export default function CustomerDetail() {
         {/* Weekdashboard Factuur Tab */}
         <TabsContent value="invoice-dashboard">
           <InvoiceWeekDashboard customerId={customerId} />
+        </TabsContent>
+
+        {/* AI Analyse Tab */}
+        <TabsContent value="invoice-ai">
+          <InvoiceAITab customerId={customerId} />
         </TabsContent>
       </Tabs>
 
