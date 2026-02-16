@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOfflineSync } from "@/components/utils/useOfflineSync";
@@ -77,7 +77,6 @@ export default function MobileEntry() {
   const [signature, setSignature] = useState(null);
   const [trips, setTrips] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const canvasRef = useRef(null);
   const queryClient = useQueryClient();
   const { isOnline, syncStatus, addToQueue } = useOfflineSync();
 
