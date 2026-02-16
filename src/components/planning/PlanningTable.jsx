@@ -143,7 +143,7 @@ export default function PlanningTable({
             const currentNotes2 = schedule?.[`${dayKey}_notes_2`] || "";
             const currentPlannedDepartment = schedule?.[`${dayKey}_planned_department`] || "";
             const holiday = isHoliday(day);
-            const currentRoute = routes.find(r => r.id === currentRouteId);
+            const currentRoute = routes.find(r => r.id === currentRouteId) || tiModelRoutes.find(r => r.id === currentRouteId);
             const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
             const dayHours = weekScheduleHours ? weekScheduleHours[dayKey] : null;
 
