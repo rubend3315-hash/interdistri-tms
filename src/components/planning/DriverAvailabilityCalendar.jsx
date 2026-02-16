@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, addWeeks, subWeeks, getWeek, getYear, isWeekend } from "date-fns";
+import { format, eachDayOfInterval, startOfWeek, addWeeks, subWeeks, getWeek, getYear, isWeekend } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,14 +24,32 @@ export default function DriverAvailabilityCalendar({ employees }) {
   const [editingCell, setEditingCell] = useState(null);
   const queryClient = useQueryClient();
 
+  const NUM_WEEKS = 6;
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-  const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  const periodEnd = addWeeks(weekStart, NUM_WEEKS);
+  const days = eachDayOfInterval({ start: weekStart, end: new Date(periodEnd.getTime() - 86400000) }); // 6 weeks = 42 days
   const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
   const year = getYear(currentDate);
 
   const dateFrom = format(weekStart, "yyyy-MM-dd");
-  const dateTo = format(weekEnd, "yyyy-MM-dd");
+  const dateTo = format(days[days.length - 1], "yyyy-MM-dd");
+
+  // Group days by week for header rendering
+  const weeks = useMemo(() => {
+    const w = [];
+    for (let i = 0; i < NUM_WEEKS; i++) {
+      const wStart = addWeeks(weekStart, i);
+      const wDays = days.filter(d => {
+        const dWeek = getWeek(d, { weekStartsOn: 1 });
+        const dYear = getYear(d);
+        const wWeek = getWeek(wStart, { weekStartsOn: 1 });
+        const wYear = getYear(wStart);
+        return dWeek === wWeek && dYear === wYear;
+      });
+      w.push({ weekNum: getWeek(wStart, { weekStartsOn: 1 }), year: getYear(wStart), days: wDays });
+    }
+    return w;
+  }, [weekStart, days]);
 
   const { data: availabilities = [], isLoading } = useQuery({
     queryKey: ['driverAvailability', dateFrom, dateTo],
@@ -125,8 +143,8 @@ export default function DriverAvailabilityCalendar({ employees }) {
               <Button variant="outline" size="icon" onClick={() => setCurrentDate(subWeeks(currentDate, 1))}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="text-sm font-medium min-w-[140px] text-center">
-                Week {weekNumber} — {year}
+              <span className="text-sm font-medium min-w-[200px] text-center">
+                Week {weekNumber} t/m {getWeek(addWeeks(weekStart, NUM_WEEKS - 1), { weekStartsOn: 1 })} — {year}
               </span>
               <Button variant="outline" size="icon" onClick={() => setCurrentDate(addWeeks(currentDate, 1))}>
                 <ChevronRight className="w-4 h-4" />
@@ -148,12 +166,21 @@ export default function DriverAvailabilityCalendar({ employees }) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
+              {/* Week number header row */}
+              <tr className="border-b bg-slate-100">
+                <th rowSpan={2} className="text-left p-3 font-medium text-slate-600 min-w-[180px] sticky left-0 bg-slate-100 z-10">Chauffeur</th>
+                {weeks.map((w) => (
+                  <th key={`wk-${w.weekNum}-${w.year}`} colSpan={w.days.length} className="p-1 text-center font-semibold text-xs text-blue-700 border-l border-slate-200">
+                    Wk {w.weekNum}
+                  </th>
+                ))}
+              </tr>
+              {/* Day headers */}
               <tr className="border-b bg-slate-50">
-                <th className="text-left p-3 font-medium text-slate-600 min-w-[180px] sticky left-0 bg-slate-50 z-10">Chauffeur</th>
                 {days.map((day, i) => (
-                  <th key={i} className={cn("p-2 text-center min-w-[100px] font-medium", isWeekend(day) && "bg-slate-100")}>
-                    <div className="text-slate-600">{format(day, "EEE", { locale: nl })}</div>
-                    <div className="text-xs text-slate-400">{format(day, "d MMM", { locale: nl })}</div>
+                  <th key={i} className={cn("p-1 text-center min-w-[56px] font-medium", isWeekend(day) && "bg-slate-100")}>
+                    <div className="text-slate-600 text-xs">{format(day, "EEE", { locale: nl })}</div>
+                    <div className="text-[10px] text-slate-400">{format(day, "d/M")}</div>
                   </th>
                 ))}
               </tr>
@@ -188,9 +215,9 @@ export default function DriverAvailabilityCalendar({ employees }) {
                 ))}
               </tr>
               {isLoading ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">Laden...</td></tr>
+                <tr><td colSpan={days.length + 1} className="p-8 text-center text-slate-400">Laden...</td></tr>
               ) : activeDrivers.length === 0 ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">Geen chauffeurs gevonden</td></tr>
+                <tr><td colSpan={days.length + 1} className="p-8 text-center text-slate-400">Geen chauffeurs gevonden</td></tr>
               ) : (
                 activeDrivers.map(driver => {
                   const prefix = driver.prefix ? `${driver.prefix} ` : '';
@@ -244,10 +271,9 @@ export default function DriverAvailabilityCalendar({ employees }) {
                                 </button>
                               </div>
                             ) : cfg ? (
-                              <Badge variant="outline" className={cn("text-xs gap-1", cfg.color)}>
-                                <cfg.icon className="w-3 h-3" />
-                                {cfg.label}
-                              </Badge>
+                              <div className={cn("inline-flex items-center justify-center w-6 h-6 rounded-full", cfg.dotColor)} title={cfg.label}>
+                                <cfg.icon className="w-3 h-3 text-white" />
+                              </div>
                             ) : (
                               <span className="text-slate-300">—</span>
                             )}
