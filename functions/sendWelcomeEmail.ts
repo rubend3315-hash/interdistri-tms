@@ -3,24 +3,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 const CC_ADDRESS = 'ruben@interdistri.nl';
 
 async function sendGmail(accessToken, to, subject, htmlBody) {
-  const boundary = 'boundary_' + Date.now();
-  const ccLine = to.toLowerCase() !== CC_ADDRESS.toLowerCase() ? `Cc: ${CC_ADDRESS}` : '';
-  const rawEmail = [
-    `To: ${to}`,
-    ...(ccLine ? [ccLine] : []),
-    `Subject: ${subject}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    ``,
-    `--${boundary}`,
-    `Content-Type: text/html; charset="UTF-8"`,
-    `Content-Transfer-Encoding: base64`,
-    ``,
-    btoa(unescape(encodeURIComponent(htmlBody))),
-    `--${boundary}--`
-  ].join('\r\n');
+  const ccLine = to.toLowerCase() !== CC_ADDRESS.toLowerCase() ? `Cc: ${CC_ADDRESS}\r\n` : '';
+  const rawEmail = 
+    `To: ${to}\r\n` +
+    ccLine +
+    `Subject: ${subject}\r\n` +
+    `MIME-Version: 1.0\r\n` +
+    `Content-Type: text/html; charset="UTF-8"\r\n` +
+    `\r\n` +
+    htmlBody;
 
-  const encodedMessage = btoa(unescape(encodeURIComponent(rawEmail)))
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(rawEmail);
+  let binary = '';
+  for (const b of bytes) binary += String.fromCharCode(b);
+  const encodedMessage = btoa(binary)
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
