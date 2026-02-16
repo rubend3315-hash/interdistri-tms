@@ -10,16 +10,52 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { backup_id, entities_to_restore } = body;
+    const { backup_id, entities_to_restore, debug } = body;
 
     if (!backup_id) {
       return Response.json({ error: 'backup_id required' }, { status: 400 });
     }
 
-    // Fetch the backup by ID using .get()
-    const backup = await base44.asServiceRole.entities.Backup.get(backup_id);
+    // Try multiple methods to fetch the backup
+    let backup = null;
+    let method = '';
+
+    // Method 1: .get()
+    try {
+      backup = await base44.asServiceRole.entities.Backup.get(backup_id);
+      method = 'get';
+    } catch (e) {
+      console.log('get() failed:', e.message);
+    }
+
+    // Method 2: entities SDK .get() without service role
     if (!backup || !backup.json_data) {
-      return Response.json({ error: 'Backup not found or has no data' }, { status: 404 });
+      try {
+        backup = await base44.entities.Backup.get(backup_id);
+        method = 'get_user';
+      } catch (e) {
+        console.log('get_user() failed:', e.message);
+      }
+    }
+
+    if (debug) {
+      return Response.json({ 
+        backup_found: !!backup,
+        method,
+        has_json_data: !!backup?.json_data,
+        backup_keys: backup ? Object.keys(backup) : null,
+        backup_type: typeof backup,
+        backup_preview: backup ? JSON.stringify(backup).substring(0, 500) : null
+      });
+    }
+
+    if (!backup || !backup.json_data) {
+      return Response.json({ 
+        error: 'Backup not found or has no json_data',
+        method,
+        has_backup: !!backup,
+        keys: backup ? Object.keys(backup) : null
+      }, { status: 404 });
     }
 
     const backupData = JSON.parse(backup.json_data);
@@ -30,7 +66,6 @@ Deno.serve(async (req) => {
       errors: []
     };
 
-    // If specific entities requested, only restore those; otherwise restore all
     const entitiesToProcess = entities_to_restore 
       ? Object.entries(backupData.entities).filter(([name]) => entities_to_restore.includes(name))
       : Object.entries(backupData.entities);
@@ -47,7 +82,6 @@ Deno.serve(async (req) => {
           return data;
         });
 
-        // Bulk create in batches of 50
         const batchSize = 50;
         let totalCreated = 0;
         for (let i = 0; i < cleanedRecords.length; i += batchSize) {
