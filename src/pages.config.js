@@ -76,6 +76,7 @@ import Messages from './pages/Messages';
 import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import MobileEntry from './pages/MobileEntry';
 import MobileEntryMultiDay from './pages/MobileEntryMultiDay';
+import MobileHandleiding from './pages/MobileHandleiding';
 import NiwoPermits from './pages/NiwoPermits';
 import Onboarding from './pages/Onboarding';
 import PerformanceReviews from './pages/PerformanceReviews';
@@ -91,7 +92,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import MobileHandleiding from './pages/MobileHandleiding';
 import __Layout from './Layout.jsx';
 
 
@@ -125,6 +125,7 @@ export const PAGES = {
     "MobileBedrijfsreglement": MobileBedrijfsreglement,
     "MobileEntry": MobileEntry,
     "MobileEntryMultiDay": MobileEntryMultiDay,
+    "MobileHandleiding": MobileHandleiding,
     "NiwoPermits": NiwoPermits,
     "Onboarding": Onboarding,
     "PerformanceReviews": PerformanceReviews,
@@ -140,7 +141,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "MobileHandleiding": MobileHandleiding,
 }
 
 export const pagesConfig = {

@@ -47,6 +47,7 @@ import { createPageUrl } from "../utils";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 import MobileReglementTab from "@/components/mobile/MobileReglementTab.jsx";
 import MobileHandleidingTab from "@/components/mobile/MobileHandleidingTab.jsx";
+import MobileSignatureDialog from "@/components/mobile/MobileSignatureDialog.jsx";
 
 const STATIC_MENU_ITEMS = [
   { id: "home", label: "Home", icon: Home },
@@ -343,8 +344,6 @@ export default function MobileEntry() {
     receipt_url: ""
   });
 
-  // Drawing on canvas
-  const [isDrawing, setIsDrawing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -360,56 +359,9 @@ export default function MobileEntry() {
       item.id === 'berichten' ? { ...item, badge: unreadCount } : item
     ), [unreadCount]);
 
-  useEffect(() => {
-    if (showSignatureDialog && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-    }
-  }, [showSignatureDialog]);
-
-  const startDrawing = (e) => {
-    setIsDrawing(true);
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
-
-  const draw = (e) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
-
-  const clearSignature = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  };
-
-  const saveSignature = () => {
-    const canvas = canvasRef.current;
-    const dataUrl = canvas.toDataURL('image/png');
+  // Signature save handler for MobileSignatureDialog
+  const handleSignatureSave = (dataUrl) => {
     setSignature(dataUrl);
-    setShowSignatureDialog(false);
   };
 
   const handleSubmitEntry = async () => {
@@ -1929,41 +1881,11 @@ export default function MobileEntry() {
       </motion.div>
 
       {/* Signature Dialog */}
-      <Dialog open={showSignatureDialog} onOpenChange={setShowSignatureDialog}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Handtekening</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="border-2 border-dashed border-slate-300 rounded-lg">
-              <canvas
-                ref={canvasRef}
-                width={280}
-                height={150}
-                className="touch-none w-full"
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-              />
-            </div>
-            <p className="text-xs text-slate-500 text-center">
-              Teken je handtekening hierboven
-            </p>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={clearSignature}>
-                Wissen
-              </Button>
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={saveSignature}>
-                Opslaan
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <MobileSignatureDialog
+        open={showSignatureDialog}
+        onOpenChange={setShowSignatureDialog}
+        onSave={handleSignatureSave}
+      />
     </div>
   );
 }
