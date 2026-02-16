@@ -590,9 +590,20 @@ export default function Planning() {
         </TabsList>
 
         {planningTabs.map(tab => {
+          const isPakketShiftTab = tab.key.startsWith("PakketDistributie_Shift");
           const deptEmployees = employees.filter(e => {
             if (e.status !== 'Actief') return false;
             if (e.tonen_in_planner === false) return false;
+            
+            if (isPakketShiftTab) {
+              // Show PakketDistributie employees + anyone scheduled on this specific shift
+              if (e.department === "PakketDistributie") return true;
+              return schedules.some(s => {
+                const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                return dayKeys.some(day => s.employee_id === e.id && s[`${day}_planned_department`] === tab.key);
+              });
+            }
+            
             if (e.department === tab.department) return true;
             return schedules.some(s => {
               const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -624,7 +635,7 @@ export default function Planning() {
                     routes={routes}
                     vehicles={vehicles}
                     customers={customers}
-                    filterDepartment={tab.department}
+                    filterDepartment={isPakketShiftTab ? tab.key : tab.department}
                     getWeekScheduleHours={getWeekScheduleHours}
                     onDragDrop={handleDragDrop}
                   />
