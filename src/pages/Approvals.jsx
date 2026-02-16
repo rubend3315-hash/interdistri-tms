@@ -157,12 +157,17 @@ export default function Approvals() {
     // Calculate automatic break for submitted entries if not already set
     let breakMinutes = entry.break_minutes;
     if (entry.status === 'Ingediend' && entry.start_time && entry.end_time && !entry.break_minutes) {
-      const [startH, startM] = entry.start_time.split(':').map(Number);
-      const [endH, endM] = entry.end_time.split(':').map(Number);
-      let totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
-      if (totalMinutes < 0) totalMinutes += 24 * 60;
-      const totalHours = totalMinutes / 60;
-      breakMinutes = await getBreakMinutesForHours(totalHours);
+      try {
+        const [startH, startM] = entry.start_time.split(':').map(Number);
+        const [endH, endM] = entry.end_time.split(':').map(Number);
+        let totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+        if (totalMinutes < 0) totalMinutes += 24 * 60;
+        const totalHours = totalMinutes / 60;
+        breakMinutes = await getBreakMinutesForHours(totalHours);
+      } catch (error) {
+        console.error('Break berekening mislukt:', error);
+        breakMinutes = 0;
+      }
     }
     
     setEditData({
