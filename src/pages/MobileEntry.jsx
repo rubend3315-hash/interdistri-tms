@@ -1417,13 +1417,13 @@ export default function MobileEntry() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">Selecteer route</SelectItem>
-                              {[...tiModelRoutes].sort((a, b) => (a.route_code || '').localeCompare(b.route_code || '', undefined, { numeric: true })).map(r => (
+                              {[...tiModelRoutes].filter(r => !trip.customer_id || r.customer_id === trip.customer_id).sort((a, b) => (a.route_code || '').localeCompare(b.route_code || '', undefined, { numeric: true })).map(r => (
                                 <SelectItem key={`ti-${r.id}`} value={r.route_code || r.route_name}>
                                   {r.route_code} - {r.route_name}
                                 </SelectItem>
                               ))}
                               <SelectItem value="__custom__">✏️ Vrije invoer</SelectItem>
-                              {[...routes].sort((a, b) => (a.route_code || '').localeCompare(b.route_code || '', undefined, { numeric: true })).map(r => (
+                              {[...routes].filter(r => !trip.customer_id || r.customer_id === trip.customer_id).sort((a, b) => (a.route_code || '').localeCompare(b.route_code || '', undefined, { numeric: true })).map(r => (
                                 <SelectItem key={`rt-${r.id}`} value={r.route_code || r.route_name}>
                                   {r.route_code} - {r.route_name}
                                 </SelectItem>
