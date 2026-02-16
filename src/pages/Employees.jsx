@@ -1234,11 +1234,13 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                 </thead>
                 <tbody>
                   {contractregels && contractregels.length > 0 && contractregels.filter(c => c.status !== 'Inactief').sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum)).map((contract, index) => {
-                    const isExpired = contract.einddatum && isBefore(new Date(contract.einddatum), new Date());
-                    const isBeëindigd = contract.status === 'Beëindigd';
-                    const isInactive = isExpired || isBeëindigd;
+                    const statusValue = contract.status || 'Actief';
+                    const isBeëindigd = statusValue === 'Beëindigd';
+                    const isExpired = !isBeëindigd && contract.einddatum && isBefore(new Date(contract.einddatum), new Date());
+                    const isActief = statusValue === 'Actief' && !isExpired;
+                    const isInactive = !isActief;
                     const textColor = isInactive ? 'text-slate-400' : 'text-slate-900';
-                    const bgColor = !isInactive && index === 0 ? 'bg-blue-50' : '';
+                    const bgColor = isActief ? 'bg-emerald-50/50' : '';
 
                     return (
                       <React.Fragment key={index}>
@@ -1254,7 +1256,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                           <td className={`py-2 px-3 ${textColor}`}>{contract.uren_per_week}</td>
                           <td className="py-2 px-3">
                             {isBeëindigd ? (
-                              <Badge className="bg-red-100 text-red-700 text-xs">Beëindigd</Badge>
+                              <Badge className="bg-slate-100 text-slate-600 text-xs">Beëindigd</Badge>
                             ) : isExpired ? (
                               <Badge className="bg-amber-100 text-amber-700 text-xs">Verlopen</Badge>
                             ) : (
