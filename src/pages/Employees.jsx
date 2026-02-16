@@ -1288,7 +1288,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                                     const isWorking = contract.week1?.[day];
                                     const dayLabel = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'][idx];
                                     const hoursPerDay = contract.uren_per_week && contract.week1 
-                                      ? (contract.uren_per_week / Object.values(contract.week1).filter(Boolean).length).toFixed(1)
+                                      ? (contract.uren_per_week / Object.values(contract.week1).filter(Boolean).length).toFixed(4)
                                       : 0;
                                     return (
                                       <div key={idx} className={`px-2 py-1 rounded text-xs font-medium ${
@@ -1309,7 +1309,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                                     const isWorking = contract.week2?.[day];
                                     const dayLabel = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'][idx];
                                     const hoursPerDay = contract.uren_per_week && contract.week2 
-                                      ? (contract.uren_per_week / Object.values(contract.week2).filter(Boolean).length).toFixed(1)
+                                      ? (contract.uren_per_week / Object.values(contract.week2).filter(Boolean).length).toFixed(4)
                                       : 0;
                                     return (
                                       <div key={idx} className={`px-2 py-1 rounded text-xs font-medium ${
@@ -1541,13 +1541,13 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
 
   const calculateHoursPerDayWeek = (week) => {
     const daysChecked = Object.values(week).filter(Boolean).length;
-    return daysChecked > 0 ? (formData.uren_per_week / daysChecked).toFixed(1) : 0;
+    return daysChecked > 0 ? (formData.uren_per_week / daysChecked).toFixed(4) : 0;
   };
 
   const calculateWeekTotal = (week) => {
     const daysChecked = Object.values(week).filter(Boolean).length;
     const hoursPerDay = parseFloat(calculateHoursPerDayWeek(week));
-    return (daysChecked * hoursPerDay).toFixed(1);
+    return (daysChecked * hoursPerDay).toFixed(4);
   };
 
   return (
