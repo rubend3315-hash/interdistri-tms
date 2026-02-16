@@ -177,8 +177,11 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
               <p className="text-sm text-slate-500">Geen prijsregels toegevoegd</p>
             ) : (
               <div className="space-y-2">
-                {formData.price_rules.map((rule, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 bg-white rounded-lg border">
+                {[...formData.price_rules]
+                  .map((rule, origIdx) => ({ ...rule, _origIdx: origIdx }))
+                  .sort((a, b) => (b.start_date || "").localeCompare(a.start_date || ""))
+                  .map((rule) => (
+                  <div key={rule._origIdx} className="flex items-center justify-between p-2 bg-white rounded-lg border">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900">€ {rule.price?.toFixed(2)}</p>
                       <p className="text-xs text-slate-500">
@@ -190,7 +193,7 @@ export default function ArticleForm({ article, onSave, onCancel, isLoading }) {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => removePriceRule(idx)}
+                      onClick={() => removePriceRule(rule._origIdx)}
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
