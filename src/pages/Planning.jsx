@@ -31,6 +31,7 @@ import CopyDayDialog from "../components/planning/CopyDayDialog";
 import CapacityOverview from "../components/planning/CapacityOverview";
 import RouteHistorie from "../components/planning/RouteHistorie";
 import AvailableResources from "../components/planning/AvailableResources";
+import DriverAvailabilityCalendar from "../components/planning/DriverAvailabilityCalendar";
 
 const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
 
@@ -594,6 +595,7 @@ export default function Planning() {
           ))}
           <TabsTrigger value="capaciteit">Capaciteit & Bezetting</TabsTrigger>
           <TabsTrigger value="routehistorie">Routehistorie</TabsTrigger>
+          <TabsTrigger value="beschikbaarheid">Beschikbaarheid</TabsTrigger>
         </TabsList>
 
         {planningTabs.map(tab => {
@@ -672,6 +674,10 @@ export default function Planning() {
 
         <TabsContent value="routehistorie" className="mt-4">
           <RouteHistorie employees={employees} />
+        </TabsContent>
+
+        <TabsContent value="beschikbaarheid" className="mt-4">
+          <DriverAvailabilityCalendar employees={employees} />
         </TabsContent>
       </Tabs>
 
