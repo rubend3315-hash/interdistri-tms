@@ -28,6 +28,7 @@ export default function PlanningTable({
   getScheduleForEmployee,
   uurcodes = [],
   routes = [],
+  tiModelRoutes = [],
   vehicles = [],
   customers = [],
   filterDepartment = 'all',
@@ -218,6 +219,7 @@ export default function PlanningTable({
         employee={selectedEmployee}
         date={selectedDate}
         routes={routes}
+        tiModelRoutes={tiModelRoutes}
         vehicles={vehicles}
         onSave={handleSaveShift}
         existingSchedules={schedules}

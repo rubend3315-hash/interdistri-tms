@@ -100,6 +100,11 @@ export default function Planning() {
     queryFn: () => base44.entities.Route.filter({ is_active: true })
   });
 
+  const { data: tiModelRoutes = [] } = useQuery({
+    queryKey: ['tiModelRoutes'],
+    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true })
+  });
+
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
@@ -633,6 +638,7 @@ export default function Planning() {
                     getScheduleForEmployee={getScheduleForEmployee}
                     uurcodes={uurcodes}
                     routes={routes}
+                    tiModelRoutes={tiModelRoutes}
                     vehicles={vehicles}
                     customers={customers}
                     filterDepartment={isPakketShiftTab ? tab.key : tab.department}

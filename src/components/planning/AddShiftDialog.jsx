@@ -15,6 +15,7 @@ export default function AddShiftDialog({
   date, 
   uurcodes = [],
   routes = [],
+  tiModelRoutes = [],
   vehicles = [],
   customers = [],
   departments = [],
@@ -251,11 +252,18 @@ export default function AddShiftDialog({
                 <SelectValue placeholder="Maak een keuze ..." />
               </SelectTrigger>
               <SelectContent>
-                {routes.map(route => (
-                  <SelectItem key={route.id} value={route.id}>
-                    {route.route_code} - {route.route_name}
-                  </SelectItem>
-                ))}
+                {formData.planned_department === "PakketDistributie"
+                  ? tiModelRoutes.map(route => (
+                      <SelectItem key={route.id} value={route.id}>
+                        {route.route_code} - {route.route_name}
+                      </SelectItem>
+                    ))
+                  : routes.map(route => (
+                      <SelectItem key={route.id} value={route.id}>
+                        {route.route_code} - {route.route_name}
+                      </SelectItem>
+                    ))
+                }
               </SelectContent>
             </Select>
           </div>
