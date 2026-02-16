@@ -147,11 +147,26 @@ export default function PlanningTable({
             const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
             const dayHours = weekScheduleHours ? weekScheduleHours[dayKey] : null;
 
-            const isScheduledElsewhere = currentPlannedDepartment && currentPlannedDepartment !== employee.department && !currentPlannedDepartment.startsWith(employee.department);
             const isPakketShiftTab = currentDepartment && currentDepartment.startsWith("PakketDistributie_Shift");
-            const shouldShowShift = isPakketShiftTab
-              ? currentPlannedDepartment === currentDepartment
-              : (!currentPlannedDepartment && employee.department === currentDepartment) || currentPlannedDepartment === currentDepartment;
+            
+            // Determine if this shift belongs to the current tab
+            let shouldShowShift = false;
+            if (isPakketShiftTab) {
+              // Shift tab: only show if planned_department matches exactly
+              shouldShowShift = currentPlannedDepartment === currentDepartment;
+            } else {
+              // Regular department tab
+              if (currentPlannedDepartment === currentDepartment) {
+                shouldShowShift = true;
+              } else if (!currentPlannedDepartment && employee.department === currentDepartment) {
+                shouldShowShift = true;
+              }
+            }
+            
+            // Check if employee is scheduled elsewhere (for showing "gepland op afd." message)
+            const isScheduledElsewhere = currentPlannedDepartment 
+              && currentPlannedDepartment !== currentDepartment 
+              && currentPlannedDepartment !== employee.department;
             const showDetails = shouldShowShift;
             const displayText = shouldShowShift ? (currentValue || "-") : "-";
 

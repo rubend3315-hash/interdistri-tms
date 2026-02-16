@@ -596,6 +596,7 @@ export default function Planning() {
 
         {planningTabs.map(tab => {
           const isPakketShiftTab = tab.key.startsWith("PakketDistributie_Shift");
+          const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
           const deptEmployees = employees.filter(e => {
             if (e.status !== 'Actief') return false;
             if (e.tonen_in_planner === false) return false;
@@ -604,15 +605,23 @@ export default function Planning() {
               // Show PakketDistributie employees + anyone scheduled on this specific shift
               if (e.department === "PakketDistributie") return true;
               return schedules.some(s => {
-                const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
                 return dayKeys.some(day => s.employee_id === e.id && s[`${day}_planned_department`] === tab.key);
               });
             }
             
+            // Home department matches
             if (e.department === tab.department) return true;
+            
+            // Check if employee is scheduled on this department (exact or any PakketDistributie shift)
             return schedules.some(s => {
-              const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-              return dayKeys.some(day => s.employee_id === e.id && s[`${day}_planned_department`] === tab.department);
+              return dayKeys.some(day => {
+                if (s.employee_id !== e.id) return false;
+                const pd = s[`${day}_planned_department`] || '';
+                if (pd === tab.department) return true;
+                // For non-pakket tabs, also match PakketDistributie_ShiftX values
+                if (tab.department === "PakketDistributie" && pd.startsWith("PakketDistributie_Shift")) return true;
+                return false;
+              });
             });
           }).sort((a, b) => {
             const hoursA = getWeekScheduleHours(a);
