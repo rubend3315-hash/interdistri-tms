@@ -16,11 +16,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'backup_id required' }, { status: 400 });
     }
 
-    // Fetch the backup using list and find by id
-    const allBackups = await base44.asServiceRole.entities.Backup.list('-created_date', 10);
-    const backup = allBackups.find(b => b.id === backup_id);
+    // Fetch the backup - filter returns array-like object
+    const backupResults = await base44.asServiceRole.entities.Backup.filter({});
+    const backupsArray = Array.from(backupResults);
+    const backup = backupsArray.find(b => b.id === backup_id);
     if (!backup) {
-      return Response.json({ error: 'Backup not found', ids: allBackups.map(b => b.id) }, { status: 404 });
+      return Response.json({ error: 'Backup not found', count: backupsArray.length }, { status: 404 });
     }
 
     const dataField = backup.json_data;
