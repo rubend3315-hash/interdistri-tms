@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       </div>
     `;
 
-    await sendGmail(gmailToken, employeeEmail, `Welkom bij Interdistri — Je account is aangemaakt`, welcomeBody);
+    await sendGmail(gmailToken, employeeEmail, `Welkom bij Interdistri - Je account is aangemaakt`, welcomeBody);
 
     return Response.json({ success: true, message: `Welkomstmail verzonden naar ${employeeName} (${employeeEmail}) met CC naar ${CC_ADDRESS}` });
   } catch (error) {
