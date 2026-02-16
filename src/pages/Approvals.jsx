@@ -128,7 +128,15 @@ export default function Approvals() {
   });
 
   const handleApprove = (entry) => {
-    approveMutation.mutate(entry);
+    if (approvingIds.has(entry.id)) return;
+    setApprovingIds(prev => new Set(prev).add(entry.id));
+    approveMutation.mutate(entry, {
+      onSettled: () => setApprovingIds(prev => {
+        const next = new Set(prev);
+        next.delete(entry.id);
+        return next;
+      })
+    });
   };
 
   const openRejectDialog = (entry) => {
