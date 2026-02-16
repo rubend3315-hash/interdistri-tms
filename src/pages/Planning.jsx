@@ -673,14 +673,16 @@ export default function Planning() {
 
       <ShiftLegendCompact />
 
-      <AvailableResources
-        employees={employees}
-        vehicles={vehicles}
-        customers={customers}
-        schedules={schedules}
-        currentWeek={weekNumber}
-        days={days}
-      />
+      {activeTab !== "capaciteit" && activeTab !== "routehistorie" && activeTab !== "beschikbaarheid" && (
+        <AvailableResources
+          employees={employees}
+          vehicles={vehicles}
+          customers={customers}
+          schedules={schedules}
+          currentWeek={weekNumber}
+          days={days}
+        />
+      )}
 
       <CopyWeekDialog
         open={showCopyDialog}
