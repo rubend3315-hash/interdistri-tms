@@ -82,7 +82,7 @@ function parseMindeeJson(jsonData) {
       tax_amount: f.tax_amount?.value || 0,
       total_incl_tax: (f.total_price?.value || 0) + (f.tax_amount?.value || 0),
       route_code: parseRouteCode(f.product_code?.value),
-      line_type: parseLineType(desc),
+      line_type: parseLineType(desc, f.product_code?.value),
     };
   });
 
@@ -160,7 +160,7 @@ export default function InvoiceImportModal({ open, onOpenChange, customerId }) {
         ...item,
         total_incl_tax: (item.total_price || 0) + (item.tax_amount || 0),
         route_code: parseRouteCode(item.product_code),
-        line_type: parseLineType(item.description),
+        line_type: parseLineType(item.description, item.product_code),
       }));
 
       return {
