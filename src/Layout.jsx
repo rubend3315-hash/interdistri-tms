@@ -25,7 +25,6 @@ import {
   LogOut,
   ChevronDown,
   Settings,
-  Bell,
   CircleDot,
   Mail
 } from "lucide-react";
@@ -33,6 +32,33 @@ import NotificationBell from "./components/NotificationBell";
 import { cn } from "@/lib/utils";
 
 // Service worker registration removed to prevent errors
+
+const printStyles = `
+  @page { margin: 10mm; }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body, html { margin: 0; padding: 0; width: 100%; height: auto; }
+    aside { display: none !important; }
+    .lg\\:hidden { display: none !important; }
+    main { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
+    main > div { padding: 0 !important; }
+    .print\\:break-before-page { break-before: page !important; page-break-before: always !important; }
+    .print\\:hidden { display: none !important; }
+    .print\\:block { display: block !important; }
+    .print\\:bg-slate-800 { background-color: #1e293b !important; color: white !important; }
+    .print\\:rounded-none { border-radius: 0 !important; }
+    table { font-size: 9pt !important; border-collapse: collapse !important; width: 100% !important; }
+    th, td { padding: 3px 4px !important; }
+    .bg-green-500, .bg-orange-500 { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .print\\:hidden button { display: none !important; }
+    [role="dialog"] { position: relative !important; inset: auto !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 5px !important; border: none !important; box-shadow: none !important; overflow: visible !important; transform: none !important; background: white !important; }
+    [role="dialog"] > div:first-child { display: none !important; }
+    [role="dialog"] + div { display: none !important; }
+    .overflow-x-auto { overflow: visible !important; }
+    h1, h2, h3, h4 { page-break-after: avoid !important; }
+    .rounded-xl { border-radius: 4px !important; }
+  }
+`;
 
 const menuItems = [
   {
@@ -112,109 +138,10 @@ const menuItems = [
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const printStyles = `
-    @page {
-      margin: 10mm;
-    }
-    @media print {
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      body, html {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: auto;
-      }
-      /* Hide sidebar and mobile header */
-      aside {
-        display: none !important;
-      }
-      .lg\\:hidden {
-        display: none !important;
-      }
-      /* Main content full width */
-      main {
-        margin-left: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-      }
-      main > div {
-          padding: 0 !important;
-        }
-      /* Page break utilities */
-      .print\\:break-before-page {
-        break-before: page !important;
-        page-break-before: always !important;
-      }
-      .print\\:hidden {
-        display: none !important;
-      }
-      .print\\:block {
-        display: block !important;
-      }
-      /* Preserve dark header */
-      .print\\:bg-slate-800 {
-        background-color: #1e293b !important;
-        color: white !important;
-      }
-      .print\\:rounded-none {
-        border-radius: 0 !important;
-      }
-      /* Tables: keep readable */
-      table {
-        font-size: 9pt !important;
-        border-collapse: collapse !important;
-        width: 100% !important;
-      }
-      th, td {
-        padding: 3px 4px !important;
-      }
-      /* Badges print nicely */
-      .bg-green-500, .bg-orange-500 {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      /* Hide interactive elements only in non-print areas */
-      .print\\:hidden button {
-        display: none !important;
-      }
-      /* Dialog print */
-      [role="dialog"] {
-        position: relative !important;
-        inset: auto !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 5px !important;
-        border: none !important;
-        box-shadow: none !important;
-        overflow: visible !important;
-        transform: none !important;
-        background: white !important;
-      }
-      [role="dialog"] > div:first-child {
-        display: none !important;
-      }
-      [role="dialog"] + div {
-        display: none !important;
-      }
-      /* Prevent content overflow */
-      .overflow-x-auto {
-        overflow: visible !important;
-      }
-      /* Spacing fixes */
-      h1, h2, h3, h4 {
-        page-break-after: avoid !important;
-      }
-      .rounded-xl {
-        border-radius: 4px !important;
-      }
-    }
-  `;
-  const [expandedGroups, setExpandedGroups] = useState([]);
+  const [expandedGroups, setExpandedGroups] = useState(() => {
+    const activeGroup = menuItems.find(g => g.items.some(i => i.page === currentPageName));
+    return activeGroup ? [activeGroup.label] : [];
+  });
   const navigate = useNavigate();
 
   const { data: user, isLoading: loadingUser, isError: userError } = useQuery({
@@ -295,12 +222,14 @@ export default function Layout({ children, currentPageName }) {
       'Backups': 'admin_only',
       'DataMigration': 'admin_only',
       'Recalculations': 'admin_only',
+      'Integrations': 'admin_only',
       'Dagstaat': 'dagstaat',
       'HelpPage': 'helppage',
     };
     
     const requiredPermission = pagePermissionMap[page];
-    if (!requiredPermission) return true; // If a page has no defined permission, assume accessible
+    if (!requiredPermission) return true;
+    if (requiredPermission === 'admin_only') return false;
     
     return user.permissions?.includes(requiredPermission) || false;
   };
