@@ -1720,13 +1720,20 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
             </Select>
           </div>
 
+          {overlapError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-700">{overlapError}</p>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Annuleren
             </Button>
             <Button 
               className="flex-1 bg-blue-900" 
-              onClick={() => onSave(formData)}
+              onClick={handleSaveWithValidation}
               disabled={!formData.startdatum || !formData.type_contract}
             >
               Opslaan
