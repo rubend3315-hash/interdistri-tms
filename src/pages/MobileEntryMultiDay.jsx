@@ -40,7 +40,8 @@ const STATIC_MENU_ITEMS = [
   { id: "berichten", label: "Berichten", icon: Mail },
   { id: "reglement", label: "Bedrijfsreglement", icon: FileText },
   { id: "contracten", label: "Mijn Contracten", icon: FileText, isLink: true },
-  { id: "links", label: "Links", icon: ExternalLink }
+  { id: "links", label: "Links", icon: ExternalLink },
+  { id: "handleiding", label: "Handleiding", icon: FileText }
 ];
 
 const timeToMinutes = (time) => {
