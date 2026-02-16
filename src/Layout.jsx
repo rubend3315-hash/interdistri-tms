@@ -89,13 +89,13 @@ const menuItems = [
       { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
       { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
       { name: "Resultaat & Ontwikkeling", icon: FileText, page: "PerformanceReviews" },
-    ]
-  },
-  {
-    label: "Loon & Rapportage",
-    items: [
-      { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
       { name: "KPI rapportage PostNL", icon: Users, page: "EmployeeReport" },
+      ]
+      },
+      {
+      label: "Loon & Rapportage",
+      items: [
+      { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
       { name: "PayChecked Audit", icon: Shield, page: "PayCheckedAudit" },
       ]
       },
