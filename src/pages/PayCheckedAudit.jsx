@@ -8,12 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Printer, Shield, Users, FileText, Truck, Euro, ChevronDown, ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Printer, Shield, Users, FileText, Truck, Euro, ChevronDown, ChevronRight, ClipboardCheck } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { getDefaultPeriodes } from "@/components/salary/LoonperiodeConfig";
 import AuditTimeEntries from "@/components/audit/AuditTimeEntries";
 import AuditTrips from "@/components/audit/AuditTrips";
 import AuditLoonrapport from "@/components/audit/AuditLoonrapport";
+import AuditNormenset from "@/components/audit/AuditNormenset";
 
 export default function PayCheckedAudit() {
   const currentYear = new Date().getFullYear();
