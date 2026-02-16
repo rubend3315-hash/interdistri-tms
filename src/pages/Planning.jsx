@@ -561,47 +561,62 @@ export default function Planning() {
         onCopyWeek={() => setShowCopyDialog(true)}
       />
 
-      <Tabs defaultValue="planning" className="w-full">
-        <TabsList>
-          <TabsTrigger value="planning">Planning</TabsTrigger>
+      <AvailableResources
+        employees={employees}
+        vehicles={vehicles}
+        customers={customers}
+        schedules={schedules}
+        currentWeek={weekNumber}
+        days={days}
+      />
+
+      <Tabs defaultValue="Transport" className="w-full">
+        <TabsList className="flex-wrap h-auto">
+          {departments.map(dept => (
+            <TabsTrigger key={dept} value={dept}>{dept}</TabsTrigger>
+          ))}
           <TabsTrigger value="capaciteit">Capaciteit & Bezetting</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="planning" className="space-y-6 mt-4">
-          <AvailableResources
-            employees={employees}
-            vehicles={vehicles}
-            customers={customers}
-            schedules={schedules}
-            currentWeek={weekNumber}
-            days={days}
-          />
+        {departments.map(dept => {
+          const deptEmployees = employees.filter(e => {
+            if (e.status !== 'Actief') return false;
+            if (e.tonen_in_planner === false) return false;
+            if (e.department === dept) return true;
+            return schedules.some(s => {
+              const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+              return dayKeys.some(day => s.employee_id === e.id && s[`${day}_planned_department`] === dept);
+            });
+          });
 
-          <ShiftLegend />
-
-          <Card>
-            <CardContent className="p-0">
-              <PlanningTable
-                isLoading={isLoading}
-                employees={activeEmployees}
-                days={days}
-                schedules={schedules}
-                holidays={holidays}
-                colorMode={colorMode}
-                onShiftChange={handleShiftChange}
-                getDayKey={getDayKey}
-                getScheduleForEmployee={getScheduleForEmployee}
-                uurcodes={uurcodes}
-                routes={routes}
-                vehicles={vehicles}
-                customers={customers}
-                filterDepartment={filterDepartment}
-                getWeekScheduleHours={getWeekScheduleHours}
-                onDragDrop={handleDragDrop}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          return (
+            <TabsContent key={dept} value={dept} className="space-y-6 mt-4">
+              <ShiftLegend />
+              <Card>
+                <CardContent className="p-0">
+                  <PlanningTable
+                    isLoading={isLoading}
+                    employees={deptEmployees}
+                    days={days}
+                    schedules={schedules}
+                    holidays={holidays}
+                    colorMode={colorMode}
+                    onShiftChange={handleShiftChange}
+                    getDayKey={getDayKey}
+                    getScheduleForEmployee={getScheduleForEmployee}
+                    uurcodes={uurcodes}
+                    routes={routes}
+                    vehicles={vehicles}
+                    customers={customers}
+                    filterDepartment={dept}
+                    getWeekScheduleHours={getWeekScheduleHours}
+                    onDragDrop={handleDragDrop}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          );
+        })}
 
         <TabsContent value="capaciteit" className="mt-4">
           <CapacityOverview
