@@ -252,8 +252,8 @@ export default function Layout({ children, currentPageName }) {
       const emps = await base44.entities.Employee.filter({ email: user.email });
       const emp = emps.length > 0 ? emps[0] : null;
       
-      // Block access for inactive or out-of-service employees
-      if (emp && (emp.status === 'Inactief' || emp.status === 'Uit dienst')) {
+      // Block access for out-of-service employees
+      if (emp && emp.status === 'Uit dienst') {
         base44.auth.logout();
         return;
       }
