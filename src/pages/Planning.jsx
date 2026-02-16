@@ -52,6 +52,7 @@ export default function Planning() {
   const [showCopyDialog, setShowCopyDialog] = useState(false);
   const [showCopyDayDialog, setShowCopyDayDialog] = useState(false);
   const [sourceCopyDay, setSourceCopyDay] = useState(null);
+  const [activeTab, setActiveTab] = useState("Transport");
   const queryClient = useQueryClient();
 
   const periodStart = viewMode === "week"
