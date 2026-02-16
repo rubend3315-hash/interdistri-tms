@@ -1057,7 +1057,11 @@ export default function MobileEntryMultiDay() {
                             value={trip.route_name || "none"}
                             onValueChange={(v) => {
                               const newTrips = [...trips];
-                              newTrips[index] = { ...trip, route_name: v === "none" ? "" : v };
+                              if (v === "__custom__") {
+                                newTrips[index] = { ...trip, route_name: "", _showCustomRoute: true };
+                              } else {
+                                newTrips[index] = { ...trip, route_name: v === "none" ? "" : v, _showCustomRoute: false };
+                              }
                               setTrips(newTrips);
                             }}
                           >
@@ -1066,18 +1070,32 @@ export default function MobileEntryMultiDay() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">Selecteer route</SelectItem>
-                              {routes.length > 0 && routes.map(r => (
-                                <SelectItem key={r.id} value={r.route_code || r.route_name}>
+                              {[...tiModelRoutes].sort((a, b) => (a.route_code || '').localeCompare(b.route_code || '', undefined, { numeric: true })).map(r => (
+                                <SelectItem key={`ti-${r.id}`} value={r.route_code || r.route_name}>
                                   {r.route_code} - {r.route_name}
                                 </SelectItem>
                               ))}
-                              {tiModelRoutes.length > 0 && tiModelRoutes.map(r => (
-                                <SelectItem key={r.id} value={r.route_code || r.route_name}>
+                              <SelectItem value="__custom__">✏️ Vrije invoer</SelectItem>
+                              {[...routes].sort((a, b) => (a.route_code || '').localeCompare(b.route_code || '', undefined, { numeric: true })).map(r => (
+                                <SelectItem key={`rt-${r.id}`} value={r.route_code || r.route_name}>
                                   {r.route_code} - {r.route_name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                          {trip._showCustomRoute && (
+                            <Input
+                              className="mt-1"
+                              value={trip.route_name}
+                              onChange={(e) => {
+                                const newTrips = [...trips];
+                                newTrips[index] = { ...trip, route_name: e.target.value, _showCustomRoute: true };
+                                setTrips(newTrips);
+                              }}
+                              placeholder="Typ routenaam..."
+                              autoFocus
+                            />
+                          )}
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">Bestelde stops</Label>
