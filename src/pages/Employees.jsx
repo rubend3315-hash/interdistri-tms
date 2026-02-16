@@ -1234,8 +1234,10 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                 <tbody>
                   {contractregels && contractregels.length > 0 && contractregels.filter(c => c.status !== 'Inactief').sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum)).map((contract, index) => {
                     const isExpired = contract.einddatum && isBefore(new Date(contract.einddatum), new Date());
-                    const textColor = isExpired ? 'text-slate-400' : 'text-slate-900';
-                    const bgColor = index === 0 ? 'bg-blue-50' : '';
+                    const isBeëindigd = contract.status === 'Beëindigd';
+                    const isInactive = isExpired || isBeëindigd;
+                    const textColor = isInactive ? 'text-slate-400' : 'text-slate-900';
+                    const bgColor = !isInactive && index === 0 ? 'bg-blue-50' : '';
 
                     return (
                       <React.Fragment key={index}>
