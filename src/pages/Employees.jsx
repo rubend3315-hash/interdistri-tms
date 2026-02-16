@@ -1228,6 +1228,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                     <th className="text-left py-2 px-3 font-semibold text-slate-700">Contract</th>
                     <th className="text-left py-2 px-3 font-semibold text-slate-700">Loonschaal</th>
                     <th className="text-left py-2 px-3 font-semibold text-slate-700">Uren/week</th>
+                    <th className="text-left py-2 px-3 font-semibold text-slate-700">Status</th>
                     <th className="text-center py-2 px-3 font-semibold text-slate-700">Acties</th>
                   </tr>
                 </thead>
