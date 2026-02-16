@@ -1251,6 +1251,15 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                           <td className={`py-2 px-3 ${textColor}`}>{contract.type_contract}</td>
                           <td className={`py-2 px-3 ${textColor}`}>{contract.loonschaal || '-'}</td>
                           <td className={`py-2 px-3 ${textColor}`}>{contract.uren_per_week}</td>
+                          <td className="py-2 px-3">
+                            {isBeëindigd ? (
+                              <Badge className="bg-red-100 text-red-700 text-xs">Beëindigd</Badge>
+                            ) : isExpired ? (
+                              <Badge className="bg-amber-100 text-amber-700 text-xs">Verlopen</Badge>
+                            ) : (
+                              <Badge className="bg-emerald-100 text-emerald-700 text-xs">Actief</Badge>
+                            )}
+                          </td>
                           <td className="py-2 px-3 text-center">
                             {!viewOnly && (
                               <Button 
