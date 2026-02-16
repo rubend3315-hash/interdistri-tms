@@ -20,7 +20,9 @@ export default function AddShiftDialog({
   customers = [],
   departments = [],
   onSave,
-  existingSchedules = []
+  onDelete,
+  existingSchedules = [],
+  existingShiftData = null
 }) {
   const [formData, setFormData] = useState({
     planned_department: "",
@@ -38,16 +40,32 @@ export default function AddShiftDialog({
   });
   const [validationError, setValidationError] = useState("");
 
+  const isEditing = !!existingShiftData;
+
   React.useEffect(() => {
     if (open && employee) {
-      const dept = employee.department || "";
-      setFormData(prev => ({
-        ...prev,
-        planned_department: dept === "PakketDistributie" ? "PakketDistributie" : dept,
-        pakket_shift: dept === "PakketDistributie" ? "Shift3" : ""
-      }));
+      if (existingShiftData) {
+        setFormData(existingShiftData);
+      } else {
+        const dept = employee.department || "";
+        setFormData({
+          planned_department: dept === "PakketDistributie" ? "PakketDistributie" : dept,
+          pakket_shift: dept === "PakketDistributie" ? "Shift3" : "",
+          is_standby: false,
+          is_training: false,
+          route_id: "",
+          time_block_day: false,
+          time_block_evening: false,
+          time_block_night: false,
+          vehicle_id: "",
+          notes_1: "",
+          notes_2: "",
+          copy_to_days: []
+        });
+      }
+      setValidationError("");
     }
-  }, [open, employee]);
+  }, [open, employee, existingShiftData]);
 
   const validateShift = () => {
     const dayIndex = new Date(date).getDay();
@@ -143,7 +161,7 @@ export default function AddShiftDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nieuwe Dienst</DialogTitle>
+          <DialogTitle>{isEditing ? 'Dienst Bewerken' : 'Nieuwe Dienst'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -360,13 +378,22 @@ export default function AddShiftDialog({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={handleClose}>
-              Annuleren
-            </Button>
-            <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-              Opslaan
-            </Button>
+          <div className="flex justify-between pt-4 border-t">
+            <div>
+              {isEditing && onDelete && (
+                <Button variant="destructive" onClick={() => { onDelete(); }}>
+                  Verwijderen
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleClose}>
+                Annuleren
+              </Button>
+              <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+                Opslaan
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
