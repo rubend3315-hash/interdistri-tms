@@ -758,6 +758,7 @@ export default function Trips() {
                                   const vehicle = getVehicle(trip.vehicle_id);
                                   const customer = getCustomer(trip.customer_id);
                                   const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
+                                  const validation = validateTripAgainstTimeEntry(trip);
 
                                   return (
                                   <Card 
