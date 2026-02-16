@@ -182,10 +182,7 @@ export default function Planning() {
         });
       }
 
-      // Round all hours to 2 decimals
-      Object.keys(hours).forEach(day => {
-        hours[day] = Math.round(hours[day] * 100) / 100;
-      });
+      // Keep full precision per day - rounding happens only at display level
 
       return hours;
   };

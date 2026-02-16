@@ -158,7 +158,7 @@ export default function PlanningTable({
               <p className="text-xs text-slate-500">{employee.department}</p>
               {weekScheduleHours && (
                 <p className="text-xs text-blue-600 font-semibold mt-1">
-                  {Math.round(Object.values(weekScheduleHours).reduce((a, b) => a + b, 0) * 100) / 100} uur/week
+                  {parseFloat(Object.values(weekScheduleHours).reduce((a, b) => a + b, 0).toFixed(2))} uur/week
                 </p>
               )}
             </div>
@@ -227,7 +227,7 @@ export default function PlanningTable({
                     </div>
                   )}
                   {dayHours !== null && dayHours !== undefined && dayHours > 0 && (
-                    <div className="text-xs text-cyan-600 font-semibold">{dayHours}h</div>
+                    <div className="text-xs text-cyan-600 font-semibold">{parseFloat(dayHours.toFixed(2))}h</div>
                   )}
                   {isScheduledElsewhere && !shouldShowShift && (
                     <div className="text-xs text-blue-600 font-semibold truncate w-full">
