@@ -22,6 +22,7 @@ import ReportGenerator from "@/components/reports/ReportGenerator";
 import DataDashboard from "@/components/reports/DataDashboard";
 import ProjectExcelImport from "@/components/projecten/ProjectExcelImport";
 import PostNLDashboard from "@/components/rapportage/PostNLDashboard";
+import InvoiceWeekDashboard from "@/components/customer/InvoiceWeekDashboard";
 import {
   ArrowLeft,
   Save,
@@ -263,6 +264,12 @@ export default function CustomerDetail() {
            <TabsTrigger value="invoices" className="gap-2">
               <FileText className="w-4 h-4" />
               {getFeatureLabel('invoices')}
+           </TabsTrigger>
+          )}
+          {hasFeature('invoices') && (
+           <TabsTrigger value="invoice-dashboard" className="gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Weekdashboard
            </TabsTrigger>
           )}
           </TabsList>
@@ -574,6 +581,11 @@ export default function CustomerDetail() {
         {/* Facturen Tab */}
         <TabsContent value="invoices">
           <InvoicesTab customerId={customerId} />
+        </TabsContent>
+
+        {/* Weekdashboard Factuur Tab */}
+        <TabsContent value="invoice-dashboard">
+          <InvoiceWeekDashboard customerId={customerId} />
         </TabsContent>
       </Tabs>
 
