@@ -40,10 +40,39 @@ export default function PlanningTable({
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState(null);
 
+  const [existingShiftData, setExistingShiftData] = useState(null);
+
   const handleAddShift = (employee, date, dayIndex) => {
     setSelectedEmployee(employee);
     setSelectedDate(date);
     setSelectedDayIndex(dayIndex);
+
+    // Check if there's existing data for this cell
+    const schedule = getScheduleForEmployee(employee.id);
+    const dayKey = getDayKey(dayIndex);
+    const currentValue = schedule?.[dayKey] || "";
+    
+    if (schedule && currentValue && currentValue !== "-" && currentValue !== "") {
+      const plannedDept = schedule[`${dayKey}_planned_department`] || "";
+      const isPakketShift = plannedDept.startsWith("PakketDistributie_Shift");
+      setExistingShiftData({
+        planned_department: isPakketShift ? "PakketDistributie" : (plannedDept || employee.department || ""),
+        pakket_shift: isPakketShift ? plannedDept.replace("PakketDistributie_", "") : (plannedDept === "PakketDistributie" ? "Shift3" : ""),
+        is_standby: currentValue === "Stand-by",
+        is_training: currentValue === "Opleiding",
+        time_block_day: currentValue.includes("Dag"),
+        time_block_evening: currentValue.includes("Avond"),
+        time_block_night: currentValue.includes("Nacht"),
+        route_id: schedule[`${dayKey}_route_id`] || "",
+        vehicle_id: schedule[`${dayKey}_vehicle_id`] || "",
+        notes_1: schedule[`${dayKey}_notes_1`] || "",
+        notes_2: schedule[`${dayKey}_notes_2`] || "",
+        copy_to_days: []
+      });
+    } else {
+      setExistingShiftData(null);
+    }
+    
     setDialogOpen(true);
   };
 
@@ -240,7 +269,27 @@ export default function PlanningTable({
         tiModelRoutes={tiModelRoutes}
         vehicles={vehicles}
         onSave={handleSaveShift}
+        onDelete={() => {
+          if (selectedEmployee && selectedDayIndex !== null) {
+            onShiftChange(selectedEmployee.id, selectedDayIndex, {
+              planned_department: '',
+              is_standby: false,
+              is_training: false,
+              time_block_day: false,
+              time_block_evening: false,
+              time_block_night: false,
+              route_id: '',
+              vehicle_id: '',
+              notes_1: '',
+              notes_2: '',
+              copy_to_days: []
+            });
+            setDialogOpen(false);
+            toast.success('Dienst verwijderd');
+          }
+        }}
         existingSchedules={schedules}
+        existingShiftData={existingShiftData}
       />
       <div className="overflow-x-auto">
         <Table>
