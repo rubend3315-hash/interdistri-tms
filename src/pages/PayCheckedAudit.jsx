@@ -124,8 +124,26 @@ export default function PayCheckedAudit() {
         )}
       </div>
 
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="print:hidden">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="steekproef" className="gap-2">
+            <FileText className="w-4 h-4" />
+            Steekproef Rapport
+          </TabsTrigger>
+          <TabsTrigger value="normenset" className="gap-2">
+            <ClipboardCheck className="w-4 h-4" />
+            Normenset Checklist
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="normenset">
+          <AuditNormenset />
+        </TabsContent>
+
+        <TabsContent value="steekproef">
       {/* Selectie */}
-      <Card className="print:hidden">
+      <Card>
         <CardContent className="p-6 space-y-6">
           {/* Periode selectie */}
           <div className="flex flex-wrap gap-4 items-end">
@@ -190,27 +208,11 @@ export default function PayCheckedAudit() {
           </Button>
         </CardContent>
       </Card>
-
-      {/* Print header */}
-      {showReport && (
-        <div className="hidden print:block mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Shield className="w-8 h-8 text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold">PayChecked Audit Rapport</h1>
-              <p className="text-sm text-slate-500">
-                Periode {selectedPeriode} – {currentPeriode.maand} {selectedYear} (wk {currentPeriode.weken[0]}-{currentPeriode.weken[currentPeriode.weken.length - 1]})
-              </p>
-            </div>
-          </div>
-          <p className="text-xs text-slate-400">
-            Steekproef: {selectedEmployeeIds.length} medewerkers · Gegenereerd op {new Date().toLocaleDateString('nl-NL')}
-          </p>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
 
       {/* Rapport per medewerker */}
-      {showReport && selectedEmployeeIds.map(empId => {
+      {showReport && activeTab === "steekproef" && selectedEmployeeIds.map(empId => {
         const emp = employees.find(e => e.id === empId);
         if (!emp) return null;
 
