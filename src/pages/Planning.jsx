@@ -578,7 +578,7 @@ export default function Planning() {
         onCopyWeek={() => setShowCopyDialog(true)}
       />
 
-      <Tabs defaultValue="Transport" className="w-full">
+      <Tabs defaultValue="Transport" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex-wrap h-auto">
           {planningTabs.map(tab => (
             <TabsTrigger key={tab.key} value={tab.key}>{tab.label}</TabsTrigger>
