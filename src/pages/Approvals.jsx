@@ -462,9 +462,7 @@ export default function Approvals() {
               <p className="text-slate-500 mt-1">Er zijn geen uren ter goedkeuring.</p>
             </Card>
           ) : (
-            pendingEntries.map(entry => (
-              <EntryCard key={entry.id} entry={entry} showActions />
-            ))
+            pendingEntries.map(entry => renderEntryCard(entry, true))
           )}
         </TabsContent>
 
