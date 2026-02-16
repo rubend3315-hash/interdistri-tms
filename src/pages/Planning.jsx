@@ -670,6 +670,17 @@ export default function Planning() {
         </TabsContent>
       </Tabs>
 
+      <ShiftLegendCompact />
+
+      <AvailableResources
+        employees={employees}
+        vehicles={vehicles}
+        customers={customers}
+        schedules={schedules}
+        currentWeek={weekNumber}
+        days={days}
+      />
+
       <CopyWeekDialog
         open={showCopyDialog}
         onOpenChange={setShowCopyDialog}
