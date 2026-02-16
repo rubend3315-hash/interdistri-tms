@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, Briefcase, Palmtree, Thermometer } from "lucide-react";
+import { getDay } from "date-fns";
+import { ChevronLeft, ChevronRight, Briefcase, Palmtree, Thermometer, CalendarPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -108,6 +108,61 @@ export default function DriverAvailabilityCalendar({ employees }) {
 
   const departments = [...new Set(employees.filter(e => e.status === "Actief").map(e => e.department).filter(Boolean))];
 
+  const [fillingSchedule, setFillingSchedule] = useState(false);
+
+  // Map JS day (0=Sun) to contractregel day key
+  const dayKeyMap = { 1: 'maandag', 2: 'dinsdag', 3: 'woensdag', 4: 'donderdag', 5: 'vrijdag', 6: 'zaterdag', 0: 'zondag' };
+
+  const getActiveContractregel = (driver, dateStr) => {
+    if (!driver.contractregels?.length) return null;
+    return driver.contractregels.find(cr => {
+      if (cr.status !== 'Actief') return false;
+      if (cr.startdatum && dateStr < cr.startdatum) return false;
+      if (cr.einddatum && dateStr > cr.einddatum) return false;
+      return true;
+    });
+  };
+
+  const isScheduledDay = (driver, day) => {
+    const dateStr = format(day, "yyyy-MM-dd");
+    const cr = getActiveContractregel(driver, dateStr);
+    if (!cr) return false;
+    const jsDay = getDay(day);
+    const dayName = dayKeyMap[jsDay];
+    // Determine week1 or week2 based on the week number (odd=week1, even=week2)
+    const wk = getWeek(day, { weekStartsOn: 1 });
+    const schedule = wk % 2 === 1 ? cr.week1 : cr.week2;
+    return schedule?.[dayName] === true;
+  };
+
+  const handleFillSchedule = async () => {
+    setFillingSchedule(true);
+    const toCreate = [];
+    for (const driver of activeDrivers) {
+      for (const day of days) {
+        const dateStr = format(day, "yyyy-MM-dd");
+        const existing = getAvailability(driver.id, dateStr);
+        if (existing) continue; // don't overwrite existing entries
+        if (isScheduledDay(driver, day)) {
+          toCreate.push({ employee_id: driver.id, date: dateStr, status: "weekrooster" });
+        }
+      }
+    }
+    if (toCreate.length === 0) {
+      toast.info("Geen nieuwe weekrooster-dagen gevonden om in te vullen");
+      setFillingSchedule(false);
+      return;
+    }
+    // Bulk create in batches of 20
+    for (let i = 0; i < toCreate.length; i += 20) {
+      const batch = toCreate.slice(i, i + 20);
+      await base44.entities.DriverAvailability.bulkCreate(batch);
+    }
+    queryClient.invalidateQueries({ queryKey: ['driverAvailability'] });
+    toast.success(`${toCreate.length} weekrooster-dagen ingevuld`);
+    setFillingSchedule(false);
+  };
+
   // Summary counts per day
   const daySummary = useMemo(() => {
     return days.map(day => {
@@ -156,7 +211,19 @@ export default function DriverAvailabilityCalendar({ employees }) {
             </div>
           </div>
         </div>
-        {/* Legend */}
+        {/* Actions + Legend */}
+        <div className="flex items-center gap-3 mt-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleFillSchedule}
+            disabled={fillingSchedule}
+            className="gap-1"
+          >
+            {fillingSchedule ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarPlus className="w-4 h-4" />}
+            Vul weekrooster in
+          </Button>
+        </div>
         <div className="flex gap-3 mt-2">
           {Object.entries(statusConfig).map(([key, cfg]) => (
             <Badge key={key} variant="outline" className={cn("gap-1", cfg.color)}>
