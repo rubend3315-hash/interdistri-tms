@@ -146,8 +146,11 @@ export default function PlanningTable({
             const currentVehicle = vehicles.find(v => v.id === currentVehicleId);
             const dayHours = weekScheduleHours ? weekScheduleHours[dayKey] : null;
 
-            const isScheduledElsewhere = currentPlannedDepartment && currentPlannedDepartment !== employee.department;
-            const shouldShowShift = !currentPlannedDepartment && employee.department === currentDepartment || currentPlannedDepartment === currentDepartment;
+            const isScheduledElsewhere = currentPlannedDepartment && currentPlannedDepartment !== employee.department && !currentPlannedDepartment.startsWith(employee.department);
+            const isPakketShiftTab = currentDepartment && currentDepartment.startsWith("PakketDistributie_Shift");
+            const shouldShowShift = isPakketShiftTab
+              ? currentPlannedDepartment === currentDepartment
+              : (!currentPlannedDepartment && employee.department === currentDepartment) || currentPlannedDepartment === currentDepartment;
             const showDetails = shouldShowShift;
             const displayText = shouldShowShift ? (currentValue || "-") : "-";
 
