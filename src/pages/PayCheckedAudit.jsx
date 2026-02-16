@@ -24,6 +24,7 @@ export default function PayCheckedAudit() {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState([]);
   const [showReport, setShowReport] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
+  const [activeTab, setActiveTab] = useState("steekproef");
   const periodes = getDefaultPeriodes();
 
   const { data: employees = [], isLoading: loadingEmp } = useQuery({
