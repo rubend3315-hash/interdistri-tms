@@ -27,6 +27,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 import MobileReglementTab from "@/components/mobile/MobileReglementTab.jsx";
+import MobileHandleidingTab from "@/components/mobile/MobileHandleidingTab.jsx";
 import { determineShiftType } from "@/components/utils/shiftTypeUtils";
 
 const STATIC_MENU_ITEMS = [
@@ -1436,6 +1437,11 @@ export default function MobileEntryMultiDay() {
           {/* Reglement Tab */}
           <TabsContent value="reglement" className="space-y-4">
             <MobileReglementTab />
+          </TabsContent>
+
+          {/* Handleiding Tab */}
+          <TabsContent value="handleiding" className="space-y-4">
+            <MobileHandleidingTab />
           </TabsContent>
 
           {/* Links Tab */}
