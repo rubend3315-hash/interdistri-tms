@@ -104,6 +104,16 @@ export default function MobileEntryMultiDay() {
     queryFn: () => base44.entities.Customer.list()
   });
 
+  const { data: routes = [] } = useQuery({
+    queryKey: ['routesMobile'],
+    queryFn: () => base44.entities.Route.filter({ is_active: true })
+  });
+
+  const { data: tiModelRoutes = [] } = useQuery({
+    queryKey: ['tiModelRoutesMobile'],
+    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true })
+  });
+
   const createTimeEntryMutation = useMutation({
     mutationFn: (data) => base44.entities.TimeEntry.create(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] })
@@ -1043,11 +1053,31 @@ export default function MobileEntryMultiDay() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <Label className="text-xs">Selecteer route</Label>
-                          <Input value={trip.route_name} onChange={(e) => {
-                            const newTrips = [...trips];
-                            newTrips[index] = { ...trip, route_name: e.target.value };
-                            setTrips(newTrips);
-                          }} placeholder="Routenaam" />
+                          <Select
+                            value={trip.route_name || "none"}
+                            onValueChange={(v) => {
+                              const newTrips = [...trips];
+                              newTrips[index] = { ...trip, route_name: v === "none" ? "" : v };
+                              setTrips(newTrips);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecteer route" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Selecteer route</SelectItem>
+                              {routes.length > 0 && routes.map(r => (
+                                <SelectItem key={r.id} value={r.route_code || r.route_name}>
+                                  {r.route_code} - {r.route_name}
+                                </SelectItem>
+                              ))}
+                              {tiModelRoutes.length > 0 && tiModelRoutes.map(r => (
+                                <SelectItem key={r.id} value={r.route_code || r.route_name}>
+                                  {r.route_code} - {r.route_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">Bestelde stops</Label>
