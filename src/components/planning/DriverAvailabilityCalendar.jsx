@@ -21,12 +21,12 @@ const statusConfig = {
 export default function DriverAvailabilityCalendar({ employees }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filterDepartment, setFilterDepartment] = useState("all");
+  const [numWeeks, setNumWeeks] = useState(6);
   const [editingCell, setEditingCell] = useState(null);
   const queryClient = useQueryClient();
 
-  const NUM_WEEKS = 6;
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const periodEnd = addWeeks(weekStart, NUM_WEEKS);
+  const periodEnd = addWeeks(weekStart, numWeeks);
   const days = eachDayOfInterval({ start: weekStart, end: new Date(periodEnd.getTime() - 86400000) }); // 6 weeks = 42 days
   const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
   const year = getYear(currentDate);
@@ -37,7 +37,7 @@ export default function DriverAvailabilityCalendar({ employees }) {
   // Group days by week for header rendering
   const weeks = useMemo(() => {
     const w = [];
-    for (let i = 0; i < NUM_WEEKS; i++) {
+    for (let i = 0; i < numWeeks; i++) {
       const wStart = addWeeks(weekStart, i);
       const wDays = days.filter(d => {
         const dWeek = getWeek(d, { weekStartsOn: 1 });
@@ -49,7 +49,7 @@ export default function DriverAvailabilityCalendar({ employees }) {
       w.push({ weekNum: getWeek(wStart, { weekStartsOn: 1 }), year: getYear(wStart), days: wDays });
     }
     return w;
-  }, [weekStart, days]);
+  }, [weekStart, days, numWeeks]);
 
   const { data: availabilities = [], isLoading } = useQuery({
     queryKey: ['driverAvailability', dateFrom, dateTo],
@@ -127,7 +127,7 @@ export default function DriverAvailabilityCalendar({ employees }) {
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <CardTitle className="text-lg">Chauffeur Beschikbaarheid</CardTitle>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <Select value={filterDepartment} onValueChange={setFilterDepartment}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Alle afdelingen" />
@@ -139,12 +139,16 @@ export default function DriverAvailabilityCalendar({ employees }) {
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex items-center border rounded-md overflow-hidden">
+              <button onClick={() => setNumWeeks(1)} className={cn("px-3 py-1.5 text-xs font-medium transition-colors", numWeeks === 1 ? "bg-blue-600 text-white" : "bg-white text-slate-600 hover:bg-slate-50")}>1 week</button>
+              <button onClick={() => setNumWeeks(6)} className={cn("px-3 py-1.5 text-xs font-medium transition-colors border-l", numWeeks === 6 ? "bg-blue-600 text-white" : "bg-white text-slate-600 hover:bg-slate-50")}>6 weken</button>
+            </div>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="icon" onClick={() => setCurrentDate(subWeeks(currentDate, 1))}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="text-sm font-medium min-w-[200px] text-center">
-                Week {weekNumber} t/m {getWeek(addWeeks(weekStart, NUM_WEEKS - 1), { weekStartsOn: 1 })} — {year}
+                {numWeeks === 1 ? `Week ${weekNumber} — ${year}` : `Week ${weekNumber} t/m ${getWeek(addWeeks(weekStart, numWeeks - 1), { weekStartsOn: 1 })} — ${year}`}
               </span>
               <Button variant="outline" size="icon" onClick={() => setCurrentDate(addWeeks(currentDate, 1))}>
                 <ChevronRight className="w-4 h-4" />
