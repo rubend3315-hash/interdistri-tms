@@ -561,45 +561,56 @@ export default function Planning() {
         onCopyWeek={() => setShowCopyDialog(true)}
       />
 
-      <CapacityOverview
-        days={days}
-        employees={activeEmployees}
-        schedules={schedules}
-      />
+      <Tabs defaultValue="planning" className="w-full">
+        <TabsList>
+          <TabsTrigger value="planning">Planning</TabsTrigger>
+          <TabsTrigger value="capaciteit">Capaciteit & Bezetting</TabsTrigger>
+        </TabsList>
 
-      <AvailableResources
-        employees={employees}
-        vehicles={vehicles}
-        customers={customers}
-        schedules={schedules}
-        currentWeek={weekNumber}
-        days={days}
-      />
-
-      <ShiftLegend />
-
-      <Card>
-        <CardContent className="p-0">
-          <PlanningTable
-            isLoading={isLoading}
-            employees={activeEmployees}
-            days={days}
-            schedules={schedules}
-            holidays={holidays}
-            colorMode={colorMode}
-            onShiftChange={handleShiftChange}
-            getDayKey={getDayKey}
-            getScheduleForEmployee={getScheduleForEmployee}
-            uurcodes={uurcodes}
-            routes={routes}
+        <TabsContent value="planning" className="space-y-6 mt-4">
+          <AvailableResources
+            employees={employees}
             vehicles={vehicles}
             customers={customers}
-            filterDepartment={filterDepartment}
-            getWeekScheduleHours={getWeekScheduleHours}
-            onDragDrop={handleDragDrop}
+            schedules={schedules}
+            currentWeek={weekNumber}
+            days={days}
           />
-        </CardContent>
-      </Card>
+
+          <ShiftLegend />
+
+          <Card>
+            <CardContent className="p-0">
+              <PlanningTable
+                isLoading={isLoading}
+                employees={activeEmployees}
+                days={days}
+                schedules={schedules}
+                holidays={holidays}
+                colorMode={colorMode}
+                onShiftChange={handleShiftChange}
+                getDayKey={getDayKey}
+                getScheduleForEmployee={getScheduleForEmployee}
+                uurcodes={uurcodes}
+                routes={routes}
+                vehicles={vehicles}
+                customers={customers}
+                filterDepartment={filterDepartment}
+                getWeekScheduleHours={getWeekScheduleHours}
+                onDragDrop={handleDragDrop}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="capaciteit" className="mt-4">
+          <CapacityOverview
+            days={days}
+            employees={activeEmployees}
+            schedules={schedules}
+          />
+        </TabsContent>
+      </Tabs>
 
       <CopyWeekDialog
         open={showCopyDialog}
