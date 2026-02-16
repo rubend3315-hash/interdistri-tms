@@ -45,9 +45,10 @@ export default function Dashboard() {
   const isAdmin = currentUser?.role === 'admin';
 
   // Redirect non-admin users away from dashboard
+  // (Layout already handles redirecting non-admins to MobileEntry, this is just a safety net)
   React.useEffect(() => {
     if (currentUser && !isAdmin) {
-      navigate(createPageUrl("Contracts"));
+      // Do nothing - Layout will handle the redirect to MobileEntry
     }
   }, [currentUser, isAdmin, navigate]);
 
