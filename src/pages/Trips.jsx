@@ -472,6 +472,46 @@ export default function Trips() {
     return totalAllowance;
   };
 
+  // Validate trip times against time entries
+  const validateTripAgainstTimeEntry = (trip) => {
+    if (!trip.departure_time || !trip.arrival_time || !trip.employee_id || !trip.date) {
+      return { valid: null, message: "Geen rittijden" }; // can't validate
+    }
+    // Find matching time entry for this employee on this date
+    const matchingEntries = timeEntries.filter(te => 
+      te.employee_id === trip.employee_id && te.date === trip.date
+    );
+    if (matchingEntries.length === 0) {
+      return { valid: false, message: "Geen tijdregistratie gevonden voor deze datum" };
+    }
+    // Check if trip times fall within any matching time entry
+    const [tripDepH, tripDepM] = trip.departure_time.split(':').map(Number);
+    const [tripArrH, tripArrM] = trip.arrival_time.split(':').map(Number);
+    const tripDepMinutes = tripDepH * 60 + tripDepM;
+    const tripArrMinutes = tripArrH * 60 + tripArrM;
+
+    for (const te of matchingEntries) {
+      if (!te.start_time || !te.end_time) continue;
+      const [teStartH, teStartM] = te.start_time.split(':').map(Number);
+      const [teEndH, teEndM] = te.end_time.split(':').map(Number);
+      const teStartMinutes = teStartH * 60 + teStartM;
+      const teEndMinutes = teEndH * 60 + teEndM;
+
+      // Allow 5 min tolerance
+      const tolerance = 5;
+      const depOk = tripDepMinutes >= teStartMinutes - tolerance;
+      const arrOk = teEndMinutes >= teStartMinutes 
+        ? tripArrMinutes <= teEndMinutes + tolerance  // same day
+        : true; // overnight shift, arrival always ok
+
+      if (depOk && arrOk) {
+        return { valid: true, message: `Binnen tijdregistratie (${te.start_time} - ${te.end_time})` };
+      }
+    }
+    const te = matchingEntries[0];
+    return { valid: false, message: `Buiten tijdregistratie (${te.start_time || '?'} - ${te.end_time || '?'})` };
+  };
+
   const filteredTrips = trips.filter(t => {
     const matchesDate = !filterDate || t.date === filterDate;
     const employee = getEmployee(t.employee_id);
