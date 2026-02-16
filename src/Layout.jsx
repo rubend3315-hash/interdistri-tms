@@ -35,8 +35,8 @@ import { cn } from "@/lib/utils";
 // Service worker registration removed to prevent errors
 
 const menuItems = [
-  { 
-    label: "Kernsystemen", 
+  {
+    label: "Kernsystemen",
     items: [
       { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
       { name: "Tijdregistratie", icon: Clock, page: "TimeTracking" },
@@ -52,34 +52,33 @@ const menuItems = [
     items: [
       { name: "Onboarding", icon: Users, page: "Onboarding" },
       { name: "Medewerkers", icon: Users, page: "Employees" },
-            { name: "Stamkaart", icon: FileText, page: "Stamkaart" },
+      { name: "Stamkaart", icon: FileText, page: "Stamkaart" },
       { name: "HR Import", icon: FileSpreadsheet, page: "HRImport" },
       { name: "Contracten", icon: FileText, page: "Contracts" },
       { name: "Contract Sjablonen", icon: FileText, page: "ContractTemplates" },
-          { name: "Contractwijzigingen", icon: FileText, page: "ContractWijzigingen" },
-                { name: "Contract Analytics", icon: FileSpreadsheet, page: "ContractAnalytics" },
-                { name: "Afgeronde Contracten", icon: CheckSquare, page: "CompletedContracts" },
+      { name: "Contractwijzigingen", icon: FileText, page: "ContractWijzigingen" },
+      { name: "Contract Analytics", icon: FileSpreadsheet, page: "ContractAnalytics" },
+      { name: "Afgeronde Contracten", icon: CheckSquare, page: "CompletedContracts" },
       { name: "Bedrijfsreglement", icon: BookOpen, page: "Bedrijfsreglement" },
       { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
       { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
       { name: "Resultaat & Ontwikkeling", icon: FileText, page: "PerformanceReviews" },
     ]
   },
-
   {
     label: "Loon & Rapportage",
     items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
       { name: "Medewerkersrapport", icon: Users, page: "EmployeeReport" },
-      ]
+    ]
   },
   {
     label: "Charters",
     items: [
       { name: "Charters", icon: Truck, page: "Charters" },
     ]
-    },
-    {
+  },
+  {
     label: "Klanten",
     items: [
       { name: "Klanten", icon: Building2, page: "Customers" },
@@ -101,15 +100,14 @@ const menuItems = [
       { name: "Herberekeningen", icon: Shield, page: "Recalculations" },
       { name: "Documentenbeheer", icon: FileText, page: "Documents" },
       { name: "Gebruikers", icon: Settings, page: "Users" },
-          { name: "Audit Log", icon: Shield, page: "AuditLog" },
-          { name: "Voertuigen", icon: Car, page: "Vehicles" },
+      { name: "Audit Log", icon: Shield, page: "AuditLog" },
+      { name: "Voertuigen", icon: Car, page: "Vehicles" },
       { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
       { name: "Back-ups", icon: Shield, page: "Backups" },
       { name: "Datamigratie", icon: Shield, page: "DataMigration" },
       { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
     ]
   },
-
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -304,14 +302,14 @@ export default function Layout({ children, currentPageName }) {
       'Contracts': 'contracts',
       'ContractTemplates': 'contracts',
       'ContractWijzigingen': 'contracts',
-              'ContractAnalytics': 'contracts',
-              'CompletedContracts': 'contracts',
+      'ContractAnalytics': 'contracts',
+      'CompletedContracts': 'contracts',
       'HRImport': 'hrimport',
-    'Stamkaart': 'employees',
+      'Stamkaart': 'employees',
       'CustomerDetail': 'customers',
       'Bedrijfsreglement': 'employees',
       'PerformanceReviews': 'employees',
-      };
+    };
     
     const requiredPermission = pagePermissionMap[page];
     if (!requiredPermission) return true; // If a page has no defined permission, assume accessible
