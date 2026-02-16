@@ -202,7 +202,10 @@ export default function PlanningTable({
                   )}
                   {isScheduledElsewhere && !shouldShowShift && (
                     <div className="text-xs text-blue-600 font-semibold truncate w-full">
-                      gepland op afd. {currentPlannedDepartment.replace(/_/g, ' ')}
+                      {currentPlannedDepartment.startsWith("PakketDistributie_Shift")
+                        ? `gepland in ${currentPlannedDepartment.replace("PakketDistributie_", "")}`
+                        : `gepland op afd. ${currentPlannedDepartment.replace(/_/g, ' ')}`
+                      }
                     </div>
                   )}
                   {showDetails && currentRoute && (
