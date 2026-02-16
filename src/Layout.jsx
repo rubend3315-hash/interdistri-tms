@@ -247,26 +247,29 @@ export default function Layout({ children, currentPageName }) {
     if (loadingUser || !user) return;
     if (user.role === 'admin') return;
     const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts"];
-    
-    const checkAccess = async () => {
-      const emps = await base44.entities.Employee.filter({ email: user.email });
-      const emp = emps.length > 0 ? emps[0] : null;
-      
-      // Block access for out-of-service employees
-      if (emp && emp.status === 'Uit dienst') {
-        base44.auth.logout();
-        return;
-      }
-      
-      if (!allowedPages.includes(currentPageName)) {
-        if (emp && emp.mobile_entry_type === 'multi_day') {
-          navigate(createPageUrl("MobileEntryMultiDay"));
-        } else {
-          navigate(createPageUrl("MobileEntry"));
+
+      const checkAccess = async () => {
+        const emps = await base44.entities.Employee.filter({ email: user.email });
+        const emp = emps.length > 0 ? emps[0] : null;
+
+        // Block access for out-of-service employees
+        if (emp && emp.status === 'Uit dienst') {
+          base44.auth.logout();
+          return;
         }
+
+        if (!allowedPages.includes(currentPageName)) {
+          if (emp && emp.mobile_entry_type === 'multi_day') {
+            navigate(createPageUrl("MobileEntryMultiDay"));
+          } else {
+            navigate(createPageUrl("MobileEntry"));
+          }
+        }
+      };
+      // Only redirect if not already on an allowed page
+      if (!allowedPages.includes(currentPageName)) {
+        checkAccess();
       }
-    };
-    checkAccess();
   }, [user, loadingUser, currentPageName, navigate]);
 
   const hasPermission = (page) => {
