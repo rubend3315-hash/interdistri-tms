@@ -33,6 +33,107 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 
 const statuses = ["Gepland", "Onderweg", "Voltooid", "Geannuleerd"];
 
+function RouteSelector({ value, customerId, tiModelRoutes, dbRoutes, customers, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const allRoutes = useMemo(() => {
+    const routes = [];
+    // TIModelRoutes grouped by customer
+    tiModelRoutes.forEach(r => {
+      const customer = customers.find(c => c.id === r.customer_id);
+      routes.push({
+        id: r.id,
+        code: r.route_code,
+        name: r.route_name,
+        customerId: r.customer_id,
+        customerName: customer?.company_name || 'Onbekend',
+        label: `${r.route_code} - ${r.route_name}`,
+        source: 'ti'
+      });
+    });
+    // DB Routes grouped by customer
+    dbRoutes.forEach(r => {
+      const customer = customers.find(c => c.id === r.customer_id);
+      routes.push({
+        id: r.id,
+        code: r.route_code,
+        name: r.route_name,
+        customerId: r.customer_id,
+        customerName: customer?.company_name || 'Onbekend',
+        label: `${r.route_code} - ${r.route_name}`,
+        source: 'db'
+      });
+    });
+    return routes;
+  }, [tiModelRoutes, dbRoutes, customers]);
+
+  const filtered = allRoutes.filter(r => {
+    if (customerId && r.customerId !== customerId) return false;
+    if (!search) return true;
+    return r.label.toLowerCase().includes(search.toLowerCase()) || 
+           r.customerName.toLowerCase().includes(search.toLowerCase());
+  });
+
+  const grouped = filtered.reduce((acc, r) => {
+    if (!acc[r.customerName]) acc[r.customerName] = [];
+    acc[r.customerName].push(r);
+    return acc;
+  }, {});
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-full justify-between font-normal">
+          {value || "Selecteer route..."}
+          <MapPin className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[350px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Zoek route..." value={search} onValueChange={setSearch} />
+          <CommandList>
+            <CommandEmpty>Geen routes gevonden</CommandEmpty>
+            {Object.entries(grouped).map(([customerName, routes]) => (
+              <CommandGroup key={customerName} heading={customerName}>
+                {routes.map(r => (
+                  <CommandItem
+                    key={`${r.source}-${r.id}`}
+                    value={r.label}
+                    onSelect={() => {
+                      onChange(r.code, r.customerId);
+                      setOpen(false);
+                      setSearch("");
+                    }}
+                  >
+                    <span className="font-medium">{r.code}</span>
+                    <span className="ml-2 text-slate-500">{r.name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ))}
+            {/* Allow custom input */}
+            {search && !filtered.some(r => r.code === search) && (
+              <CommandGroup heading="Handmatig">
+                <CommandItem
+                  value={`custom-${search}`}
+                  onSelect={() => {
+                    onChange(search, "");
+                    setOpen(false);
+                    setSearch("");
+                  }}
+                >
+                  Gebruik "{search}" als routenaam
+                </CommandItem>
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function Trips() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDate, setFilterDate] = useState("");
