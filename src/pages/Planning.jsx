@@ -19,6 +19,7 @@ import {
 
 import { nl } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import PlanningHeader from "../components/planning/PlanningHeader";
