@@ -171,7 +171,7 @@ export default function Layout({ children, currentPageName }) {
       return;
     }
 
-    const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts"];
+    const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts", "EditTimeEntry"];
     if (!allowedPages.includes(currentPageName)) {
       navigate(createPageUrl(
         currentEmployee.mobile_entry_type === 'multi_day'
