@@ -256,14 +256,14 @@ export default function Approvals() {
     Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Afgekeurd') : []
   );
 
-  const EntryCard = ({ entry, showActions = false }) => {
+  const renderEntryCard = (entry, showActions = false) => {
     const employee = getEmployee(entry.employee_id);
     const vehicle = getVehicle(entry.vehicle_id);
     const entryYear = entry.date ? new Date(entry.date).getFullYear() : null;
     const entryLocked = entry.date && entryYear && isDateInDefinitiefPeriode(entry.date, entryYear, loonperiodeStatuses);
 
     return (
-      <Card className="hover:shadow-md transition-shadow">
+      <Card key={entry.id} className="hover:shadow-md transition-shadow">
         <CardContent className="p-5">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
@@ -355,7 +355,7 @@ export default function Approvals() {
                     size="sm"
                     className="bg-emerald-600 hover:bg-emerald-700"
                     onClick={() => handleApprove(entry)}
-                    disabled={approveMutation.isPending}
+                    disabled={approvingIds.has(entry.id) || approveMutation.isPending}
                   >
                     <CheckCircle className="w-4 h-4 mr-1" />
                     Goedkeuren
