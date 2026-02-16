@@ -309,6 +309,11 @@ export default function Layout({ children, currentPageName }) {
       'CustomerDetail': 'customers',
       'Bedrijfsreglement': 'employees',
       'PerformanceReviews': 'employees',
+      'Backups': 'admin_only',
+      'DataMigration': 'admin_only',
+      'Recalculations': 'admin_only',
+      'Dagstaat': 'dagstaat',
+      'HelpPage': 'helppage',
     };
     
     const requiredPermission = pagePermissionMap[page];
