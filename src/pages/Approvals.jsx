@@ -491,9 +491,14 @@ export default function Approvals() {
               <h3 className="text-lg font-medium text-slate-900">Geen afgewezen uren</h3>
             </Card>
           ) : (
-            rejectedEntries.slice(0, 20).map(entry => (
-              <EntryCard key={entry.id} entry={entry} />
-            ))
+            <>
+              {rejectedEntries.slice(0, 20).map(entry => renderEntryCard(entry, false))}
+              {rejectedEntries.length > 20 && (
+                <p className="text-sm text-slate-500 text-center py-2">
+                  Toont 20 van {rejectedEntries.length} vermeldingen
+                </p>
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>
