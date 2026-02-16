@@ -174,6 +174,11 @@ export default function Trips() {
     queryFn: () => base44.entities.Route.list()
   });
 
+  const { data: timeEntries = [] } = useQuery({
+    queryKey: ['timeEntriesForTrips'],
+    queryFn: () => base44.entities.TimeEntry.list('-date', 500)
+  });
+
   const { data: caoRules = [] } = useQuery({
     queryKey: ['caoRules'],
     queryFn: () => base44.entities.CaoRule.filter({ 
