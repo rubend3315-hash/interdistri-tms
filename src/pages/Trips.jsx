@@ -811,10 +811,14 @@ export default function Trips() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Route naam</Label>
-                <Input
+                <Label>Route</Label>
+                <RouteSelector
                   value={formData.route_name}
-                  onChange={(e) => setFormData({ ...formData, route_name: e.target.value })}
+                  customerId={formData.customer_id}
+                  tiModelRoutes={tiModelRoutes}
+                  dbRoutes={dbRoutes}
+                  customers={customers}
+                  onChange={(routeName, customerId) => setFormData({ ...formData, route_name: routeName, customer_id: customerId || formData.customer_id })}
                 />
               </div>
               <div className="space-y-2">
