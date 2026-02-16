@@ -29,6 +29,7 @@ import CopyWeekDialog from "../components/planning/CopyWeekDialog";
 import CopyDayDialog from "../components/planning/CopyDayDialog";
 
 import CapacityOverview from "../components/planning/CapacityOverview";
+import RouteHistorie from "../components/planning/RouteHistorie";
 import AvailableResources from "../components/planning/AvailableResources";
 
 const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
@@ -592,6 +593,7 @@ export default function Planning() {
             <TabsTrigger key={tab.key} value={tab.key}>{tab.label}</TabsTrigger>
           ))}
           <TabsTrigger value="capaciteit">Capaciteit & Bezetting</TabsTrigger>
+          <TabsTrigger value="routehistorie">Routehistorie</TabsTrigger>
         </TabsList>
 
         {planningTabs.map(tab => {
@@ -666,6 +668,10 @@ export default function Planning() {
             employees={activeEmployees}
             schedules={schedules}
           />
+        </TabsContent>
+
+        <TabsContent value="routehistorie" className="mt-4">
+          <RouteHistorie employees={employees} />
         </TabsContent>
       </Tabs>
 
