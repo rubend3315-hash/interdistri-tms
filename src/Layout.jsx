@@ -95,7 +95,7 @@ const menuItems = [
     label: "Loon & Rapportage",
     items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
-      { name: "Medewerkersrapport", icon: Users, page: "EmployeeReport" },
+      { name: "KPI rapportage PostNL", icon: Users, page: "EmployeeReport" },
       { name: "PayChecked Audit", icon: Shield, page: "PayCheckedAudit" },
       ]
       },
