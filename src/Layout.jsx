@@ -96,8 +96,9 @@ const menuItems = [
     items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
       { name: "Medewerkersrapport", icon: Users, page: "EmployeeReport" },
-    ]
-  },
+      { name: "PayChecked Audit", icon: Shield, page: "PayCheckedAudit" },
+      ]
+      },
   {
     label: "Charters",
     items: [
