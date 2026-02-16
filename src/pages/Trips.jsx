@@ -640,6 +640,16 @@ export default function Trips() {
                                   <Lock className="w-3 h-3" /> Vergrendeld
                                 </Badge>
                               )}
+                              {validation.valid === true && (
+                                <span title={validation.message}>
+                                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                </span>
+                              )}
+                              {validation.valid === false && (
+                                <span title={validation.message}>
+                                  <XCircle className="w-5 h-5 text-red-500" />
+                                </span>
+                              )}
                             </div>
                             <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
                                <span className="flex items-center gap-1">
