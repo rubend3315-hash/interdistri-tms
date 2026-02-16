@@ -235,33 +235,23 @@ export default function Layout({ children, currentPageName }) {
   // Non-admin users: only allow certain pages, redirect to correct mobile entry type
   // Also block access for inactive/out-of-service employees
   useEffect(() => {
-    if (loadingUser || !user) return;
-    if (user.role === 'admin') return;
+    if (loadingUser || !user || user.role === 'admin') return;
+    if (!currentEmployee) return; // wacht tot useQuery klaar is
+
+    if (currentEmployee.status === 'Uit dienst') {
+      base44.auth.logout();
+      return;
+    }
+
     const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts"];
-
-      const checkAccess = async () => {
-        const emps = await base44.entities.Employee.filter({ email: user.email });
-        const emp = emps.length > 0 ? emps[0] : null;
-
-        // Block access for out-of-service employees
-        if (emp && emp.status === 'Uit dienst') {
-          base44.auth.logout();
-          return;
-        }
-
-        if (!allowedPages.includes(currentPageName)) {
-          if (emp && emp.mobile_entry_type === 'multi_day') {
-            navigate(createPageUrl("MobileEntryMultiDay"));
-          } else {
-            navigate(createPageUrl("MobileEntry"));
-          }
-        }
-      };
-      // Only redirect if not already on an allowed page
-      if (!allowedPages.includes(currentPageName)) {
-        checkAccess();
-      }
-  }, [user, loadingUser, currentPageName, navigate]);
+    if (!allowedPages.includes(currentPageName)) {
+      navigate(createPageUrl(
+        currentEmployee.mobile_entry_type === 'multi_day'
+          ? "MobileEntryMultiDay"
+          : "MobileEntry"
+      ));
+    }
+  }, [user, loadingUser, currentEmployee, currentPageName, navigate]);
 
   const hasPermission = (page) => {
     if (!user) return false;
