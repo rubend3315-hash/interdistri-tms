@@ -613,6 +613,7 @@ export default function Trips() {
                 const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
                 const tripYear = trip.date ? new Date(trip.date).getFullYear() : null;
                 const tripLocked = trip.date && tripYear && isDateInDefinitiefPeriode(trip.date, tripYear, loonperiodeStatuses);
+                const validation = validateTripAgainstTimeEntry(trip);
                 
                 return (
                   <Card 
