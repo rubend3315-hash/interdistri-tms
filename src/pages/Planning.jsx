@@ -577,17 +577,6 @@ export default function Planning() {
         onCopyWeek={() => setShowCopyDialog(true)}
       />
 
-      <AvailableResources
-        employees={employees}
-        vehicles={vehicles}
-        customers={customers}
-        schedules={schedules}
-        currentWeek={weekNumber}
-        days={days}
-      />
-
-      <ShiftLegendCompact />
-
       <Tabs defaultValue="Transport" className="w-full">
         <TabsList className="flex-wrap h-auto">
           {planningTabs.map(tab => (
