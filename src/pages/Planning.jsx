@@ -23,7 +23,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import PlanningHeader from "../components/planning/PlanningHeader";
-import ShiftLegend from "../components/planning/ShiftLegend";
+import ShiftLegendCompact from "../components/planning/ShiftLegendCompact";
 import PlanningTable from "../components/planning/PlanningTable";
 import CopyWeekDialog from "../components/planning/CopyWeekDialog";
 import CopyDayDialog from "../components/planning/CopyDayDialog";
@@ -579,7 +579,7 @@ export default function Planning() {
         days={days}
       />
 
-      <ShiftLegend compact />
+      <ShiftLegendCompact />
 
       <Tabs defaultValue="Transport" className="w-full">
         <TabsList className="flex-wrap h-auto">
