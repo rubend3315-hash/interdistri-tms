@@ -12,10 +12,17 @@ export default function RouteHistorie({ employees = [] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("all");
 
-  const { data: allSchedules = [], isLoading } = useQuery({
+  const { data: allSchedules = [], isLoading: loadingSchedules } = useQuery({
     queryKey: ['allSchedulesForHistory'],
     queryFn: () => base44.entities.Schedule.list('-created_date', 500)
   });
+
+  const { data: allTrips = [], isLoading: loadingTrips } = useQuery({
+    queryKey: ['allTripsForHistory'],
+    queryFn: () => base44.entities.Trip.list('-date', 500)
+  });
+
+  const isLoading = loadingSchedules || loadingTrips;
 
   const { data: routes = [] } = useQuery({
     queryKey: ['routesHistory'],
@@ -33,6 +40,7 @@ export default function RouteHistorie({ employees = [] }) {
     const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const history = {};
 
+    // From schedules (planning)
     allSchedules.forEach(schedule => {
       const empId = schedule.employee_id;
       if (!history[empId]) history[empId] = {};
@@ -49,8 +57,33 @@ export default function RouteHistorie({ employees = [] }) {
       });
     });
 
+    // From trips (ritten) - match route_name to allRoutes
+    allTrips.forEach(trip => {
+      const empId = trip.employee_id;
+      if (!empId || !trip.route_name) return;
+      if (!history[empId]) history[empId] = {};
+
+      // Try to find matching route by route_code or route_name
+      const matchedRoute = allRoutes.find(r => 
+        r.route_code === trip.route_name || r.route_name === trip.route_name ||
+        `${r.route_code} - ${r.route_name}` === trip.route_name
+      );
+      
+      const routeKey = matchedRoute ? matchedRoute.id : `trip_route_${trip.route_name}`;
+      
+      if (!history[empId][routeKey]) {
+        history[empId][routeKey] = { count: 0, weeks: new Set(), tripRouteName: trip.route_name };
+      }
+      history[empId][routeKey].count += 1;
+      if (trip.date) {
+        const d = new Date(trip.date);
+        const weekNum = Math.ceil(((d - new Date(d.getFullYear(), 0, 1)) / 86400000 + new Date(d.getFullYear(), 0, 1).getDay() + 1) / 7);
+        history[empId][routeKey].weeks.add(`${d.getFullYear()}-W${weekNum}`);
+      }
+    });
+
     return history;
-  }, [allSchedules]);
+  }, [allSchedules, allTrips, allRoutes]);
 
   const employeeRouteData = useMemo(() => {
     return employees
