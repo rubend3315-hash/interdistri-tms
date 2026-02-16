@@ -1503,6 +1503,42 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
       return (a.step || 0) - (b.step || 0);
     });
 
+  const [overlapError, setOverlapError] = useState('');
+
+  const checkOverlap = (newContract) => {
+    const newStart = new Date(newContract.startdatum);
+    const newEnd = newContract.einddatum ? new Date(newContract.einddatum) : new Date('2999-12-31');
+    
+    // Filter out the contract being edited and inactive/beëindigd contracts
+    const otherContracts = contractList.filter((c, i) => {
+      if (contract?.index !== undefined && i === contract.index) return false;
+      if (c.status === 'Inactief' || c.status === 'Beëindigd') return false;
+      return true;
+    });
+
+    for (const other of otherContracts) {
+      const otherStart = new Date(other.startdatum);
+      const otherEnd = other.einddatum ? new Date(other.einddatum) : new Date('2999-12-31');
+      
+      // Overlap: newStart <= otherEnd AND newEnd >= otherStart
+      if (newStart <= otherEnd && newEnd >= otherStart) {
+        const otherLabel = `${format(otherStart, 'dd-MM-yyyy')} - ${other.einddatum ? format(otherEnd, 'dd-MM-yyyy') : 'doorlopend'}`;
+        return `Deze contractregel overlapt met een bestaande actieve contractregel (${otherLabel}). Pas de datums aan of beëindig eerst de andere regel.`;
+      }
+    }
+    return '';
+  };
+
+  const handleSaveWithValidation = () => {
+    const error = checkOverlap(formData);
+    if (error) {
+      setOverlapError(error);
+      return;
+    }
+    setOverlapError('');
+    onSave(formData);
+  };
+
   const calculateHoursPerDayWeek = (week) => {
     const daysChecked = Object.values(week).filter(Boolean).length;
     return daysChecked > 0 ? (formData.uren_per_week / daysChecked).toFixed(1) : 0;
