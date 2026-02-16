@@ -33,6 +33,15 @@ import AvailableResources from "../components/planning/AvailableResources";
 
 const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
 
+const planningTabs = [
+  { key: "Management", label: "Management", department: "Management" },
+  { key: "Transport", label: "Transport", department: "Transport" },
+  { key: "PakketDistributie_Shift3", label: "PakketDistributie Shift 3", department: "PakketDistributie" },
+  { key: "PakketDistributie_Shift4", label: "PakketDistributie Shift 4", department: "PakketDistributie" },
+  { key: "PakketDistributie_Shift5", label: "PakketDistributie Shift 5", department: "PakketDistributie" },
+  { key: "Charters", label: "Charters", department: "Charters" },
+];
+
 export default function Planning() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filterDepartment, setFilterDepartment] = useState("all");
