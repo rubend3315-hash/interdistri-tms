@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOfflineSync } from "@/components/utils/useOfflineSync";
 import OfflineSyncIndicator from "@/components/OfflineSyncIndicator";
 import { format, getWeek, getYear } from "date-fns";
 import { nl } from "date-fns/locale";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import {
   Truck,
   Clock,
@@ -45,6 +46,27 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 import MobileReglementTab from "@/components/mobile/MobileReglementTab.jsx";
+
+const STATIC_MENU_ITEMS = [
+  { id: "home", label: "Home", icon: Home },
+  { id: "dienst", label: "Diensttijd", icon: Clock },
+  { id: "ritten", label: "Ritten", icon: Truck },
+  { id: "inspectie", label: "Voertuiginspectie", icon: ClipboardCheck },
+  { id: "declaratie", label: "Declaratie", icon: FileText },
+  { id: "overzicht", label: "Overzicht", icon: CheckCircle },
+  { id: "planning", label: "Planning", icon: CalendarDays },
+  { id: "berichten", label: "Berichten", icon: Mail },
+  { id: "reglement", label: "Bedrijfsreglement", icon: FileText },
+  { id: "contracten", label: "Mijn Contracten", icon: FileText, isLink: true },
+  { id: "links", label: "Links", icon: ExternalLink }
+];
+
+const timeToMinutes = (time) => {
+  if (!time || time.length < 5) return null;
+  const [h, m] = time.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+};
 
 export default function MobileEntry() {
   const [activeTab, setActiveTab] = useState("home");
@@ -147,14 +169,13 @@ export default function MobileEntry() {
   const unreadCount = myMessages.filter(m => !m.is_read).length;
 
   const { data: shiftTimes = [] } = useQuery({
-    queryKey: ['shiftTimes', currentEmployee?.id, format(new Date(), 'yyyy-MM-dd-HH')],
+    queryKey: ['shiftTimes', currentEmployee?.id, format(new Date(), 'yyyy-MM-dd')],
     queryFn: async () => {
       if (!currentEmployee?.department) return [];
       
       const now = new Date();
       const currentHour = now.getHours();
       
-      // Na 12:00 uur tonen we de shifttijd van morgen, anders van vandaag
       let targetDate;
       if (currentHour >= 12) {
         const tomorrow = new Date(now);
@@ -164,19 +185,16 @@ export default function MobileEntry() {
         targetDate = format(now, 'yyyy-MM-dd');
       }
       
-      // Fetch only the specific target date
       const shifts = await base44.entities.ShiftTime.filter({ 
         department: currentEmployee.department,
         date: targetDate
       });
       
-      // Sort by service_start_time and return the earliest
       shifts.sort((a, b) => a.service_start_time.localeCompare(b.service_start_time));
       return shifts.slice(0, 1);
     },
     enabled: !!currentEmployee?.department,
-    staleTime: 0,
-    gcTime: 0
+    staleTime: 5 * 60 * 1000
   });
 
   const todayShift = shiftTimes[0];
@@ -232,59 +250,60 @@ export default function MobileEntry() {
     if (!currentEmployee?.id || draftLoaded) return;
     
     const loadDraft = async () => {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      
-      // Load existing concept TimeEntry for today
-      const draftEntries = await base44.entities.TimeEntry.filter({
-        employee_id: currentEmployee.id,
-        date: today,
-        status: 'Concept'
-      });
-      
-      if (draftEntries.length > 0) {
-        const draft = draftEntries[0];
-        setFormData({
-          date: draft.date || today,
-          start_time: draft.start_time || "",
-          end_time: draft.end_time || "",
-          break_minutes: draft.break_minutes ?? 30,
-          notes: draft.notes || ""
+      try {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        
+        const draftEntries = await base44.entities.TimeEntry.filter({
+          employee_id: currentEmployee.id,
+          date: today,
+          status: 'Concept'
         });
-        if (draft.signature_url) {
-          setSignature(draft.signature_url);
+        
+        if (draftEntries.length > 0) {
+          const draft = draftEntries[0];
+          setFormData({
+            date: draft.date || today,
+            start_time: draft.start_time || "",
+            end_time: draft.end_time || "",
+            break_minutes: draft.break_minutes ?? 30,
+            notes: draft.notes || ""
+          });
+          if (draft.signature_url) {
+            setSignature(draft.signature_url);
+          }
         }
+        
+        const existingTrips = await base44.entities.Trip.filter({
+          employee_id: currentEmployee.id,
+          date: today
+        });
+        
+        const draftTrips = existingTrips.filter(t => t.status === 'Gepland');
+        if (draftTrips.length > 0) {
+          setTrips(draftTrips.map(t => ({
+            start_time: t.departure_time || "",
+            end_time: t.arrival_time || "",
+            departure_location: t.departure_location || "Standplaats",
+            vehicle_id: t.vehicle_id || "",
+            damage_occurred: "Nee",
+            start_km: t.start_km ? String(t.start_km) : "",
+            end_km: t.end_km ? String(t.end_km) : "",
+            fuel_liters: t.fuel_liters ? String(t.fuel_liters) : "",
+            adblue_liters: t.adblue_liters ? String(t.adblue_liters) : "",
+            fuel_km: t.fuel_km ? String(t.fuel_km) : "",
+            charging_kwh: t.charging_kwh ? String(t.charging_kwh) : "",
+            customer_id: t.customer_id || "",
+            route_name: t.route_name || "",
+            planned_stops: t.planned_stops ? String(t.planned_stops) : "",
+            notes: t.notes || "",
+            _existingId: t.id
+          })));
+        }
+      } catch (error) {
+        console.error('Draft laden mislukt:', error);
+      } finally {
+        setDraftLoaded(true);
       }
-      
-      // Load existing trips for today (both Gepland and Voltooid that are drafts)
-      const existingTrips = await base44.entities.Trip.filter({
-        employee_id: currentEmployee.id,
-        date: today
-      });
-      
-      // Only load trips that are in "Gepland" status (draft trips)
-      const draftTrips = existingTrips.filter(t => t.status === 'Gepland');
-      if (draftTrips.length > 0) {
-        setTrips(draftTrips.map(t => ({
-          start_time: t.departure_time || "",
-          end_time: t.arrival_time || "",
-          departure_location: t.departure_location || "Standplaats",
-          vehicle_id: t.vehicle_id || "",
-          damage_occurred: "Nee",
-          start_km: t.start_km ? String(t.start_km) : "",
-          end_km: t.end_km ? String(t.end_km) : "",
-          fuel_liters: t.fuel_liters ? String(t.fuel_liters) : "",
-          adblue_liters: t.adblue_liters ? String(t.adblue_liters) : "",
-          fuel_km: t.fuel_km ? String(t.fuel_km) : "",
-          charging_kwh: t.charging_kwh ? String(t.charging_kwh) : "",
-          customer_id: t.customer_id || "",
-          route_name: t.route_name || "",
-          planned_stops: t.planned_stops ? String(t.planned_stops) : "",
-          notes: t.notes || "",
-          _existingId: t.id // track so we can update instead of recreate
-        })));
-      }
-      
-      setDraftLoaded(true);
     };
     
     loadDraft();
@@ -324,6 +343,20 @@ export default function MobileEntry() {
 
   // Drawing on canvas
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Live clock ticker
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Menu items with dynamic badge
+  const menuItems = useMemo(() =>
+    STATIC_MENU_ITEMS.map(item =>
+      item.id === 'berichten' ? { ...item, badge: unreadCount } : item
+    ), [unreadCount]);
 
   useEffect(() => {
     if (showSignatureDialog && canvasRef.current) {
@@ -378,43 +411,39 @@ export default function MobileEntry() {
   };
 
   const handleSubmitEntry = async () => {
-    // Validatie: er moet minimaal 1 rit zijn ingevoerd
     if (trips.length === 0) {
-      alert('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen. Ga naar het Ritten tabblad om een rit toe te voegen.');
+      toast.error('Je moet minimaal één rit invoeren voordat je kunt indienen.');
       setActiveTab("ritten");
       return;
     }
 
-    // Validatie: elke rit moet een begin- en eindtijd hebben
     for (let i = 0; i < trips.length; i++) {
       const trip = trips[i];
       if (!trip.start_time || !trip.end_time) {
-        alert(`Rit ${i + 1}: Zowel de start- als de eindtijd moeten zijn ingevuld voor deze rit.`);
+        toast.error(`Rit ${i + 1}: Vul zowel start- als eindtijd in.`);
         setActiveTab("ritten");
         return;
       }
     }
 
-    // Validatie: controleer of rit tijden binnen dienst tijden vallen
+    // Validate trip times against service times using numeric comparison
     for (let i = 0; i < trips.length; i++) {
       const trip = trips[i];
+      const tripStart = timeToMinutes(trip.start_time);
+      const tripEnd = timeToMinutes(trip.end_time);
+      const dienstStart = timeToMinutes(formData.start_time);
+      const dienstEnd = timeToMinutes(formData.end_time);
 
-      // Check start rit niet voor start dienst
-      if (trip.start_time && formData.start_time) {
-        if (trip.start_time < formData.start_time) {
-          alert(`Rit ${i + 1}: Start rit (${trip.start_time}) kan niet voor start dienst (${formData.start_time}) liggen.`);
-          setActiveTab("ritten");
-          return;
-        }
+      if (tripStart !== null && dienstStart !== null && tripStart < dienstStart) {
+        toast.error(`Rit ${i + 1}: starttijd rit (${trip.start_time}) ligt vóór start dienst (${formData.start_time}).`);
+        setActiveTab("ritten");
+        return;
       }
 
-      // Check einde rit niet na einde dienst
-      if (trip.end_time && formData.end_time) {
-        if (trip.end_time > formData.end_time) {
-          alert(`Rit ${i + 1}: Einde rit (${trip.end_time}) kan niet na einde dienst (${formData.end_time}) liggen.`);
-          setActiveTab("ritten");
-          return;
-        }
+      if (tripEnd !== null && dienstEnd !== null && tripEnd > dienstEnd) {
+        toast.error(`Rit ${i + 1}: eindtijd rit (${trip.end_time}) ligt na einde dienst (${formData.end_time}).`);
+        setActiveTab("ritten");
+        return;
       }
     }
 
@@ -423,14 +452,14 @@ export default function MobileEntry() {
       return;
     }
 
-    // If we reach here, proceed with submission
     submitAndReturn();
   };
 
   const submitAndReturn = async () => {
-      // Check if any trip has damage
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
       const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
-
       const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
 
       const timeEntryData = {
@@ -449,7 +478,6 @@ export default function MobileEntry() {
       };
 
       if (isOnline) {
-        // Check for existing draft entries to update instead of creating duplicates
         const existingEntries = await base44.entities.TimeEntry.filter({
           employee_id: currentEmployee?.id,
           date: formData.date,
@@ -457,9 +485,7 @@ export default function MobileEntry() {
         });
 
         if (existingEntries.length > 0) {
-          // Update the first existing entry
           await base44.entities.TimeEntry.update(existingEntries[0].id, timeEntryData);
-          // Clean up any duplicates
           for (let i = 1; i < existingEntries.length; i++) {
             await base44.entities.TimeEntry.delete(existingEntries[i].id);
           }
@@ -467,7 +493,6 @@ export default function MobileEntry() {
           await base44.entities.TimeEntry.create(timeEntryData);
         }
 
-        // Delete any existing draft trips for this employee+date before creating new ones
         const existingTrips = await base44.entities.Trip.filter({
           employee_id: currentEmployee?.id,
           date: formData.date,
@@ -476,13 +501,10 @@ export default function MobileEntry() {
         for (const et of existingTrips) {
           await base44.entities.Trip.delete(et.id);
         }
-
-        queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
       } else {
         addToQueue('createTimeEntry', timeEntryData);
       }
 
-      // Submit all trips
       if (trips.length > 0) {
         for (const trip of trips) {
           const tripData = {
@@ -514,14 +536,15 @@ export default function MobileEntry() {
         }
       }
 
-      // Show success or offline message
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+
       if (isOnline) {
-        alert('✓ Dienst en ritten succesvol ingediend!');
+        toast.success('Dienst en ritten succesvol ingediend!');
       } else {
-        alert('📱 Offline modus: Uw gegevens zijn opgeslagen en worden automatisch gesynchroniseerd wanneer de verbinding hersteld is.');
+        toast.info('Offline: gegevens worden gesynchroniseerd wanneer de verbinding hersteld is.');
       }
 
-      // Reset form
       setTrips([]);
       setSignature(null);
       setFormData({
@@ -532,95 +555,98 @@ export default function MobileEntry() {
         notes: ""
       });
 
-      // Open Bumper link if damage occurred
       if (hasDamage) {
         window.open('https://mijn.bumper.nl', '_blank');
       }
 
-      // Go back to home
       setActiveTab("home");
+    } catch (error) {
+      console.error('Indienen mislukt:', error);
+      toast.error('Er is een fout opgetreden bij het indienen. Probeer opnieuw.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSaveDraft = async () => {
-   const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
 
-   const timeEntryPayload = {
-     employee_id: currentEmployee?.id,
-     date: formData.date,
-     week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
-     year: getYear(new Date(formData.date)),
-     start_time: formData.start_time,
-     end_time: formData.end_time,
-     break_minutes: Number(formData.break_minutes) || 0,
-     total_hours: hours,
-     shift_type: "Dag",
-     notes: formData.notes,
-     status: "Concept"
-   };
+      const timeEntryPayload = {
+        employee_id: currentEmployee?.id,
+        date: formData.date,
+        week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
+        year: getYear(new Date(formData.date)),
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        break_minutes: Number(formData.break_minutes) || 0,
+        total_hours: hours,
+        shift_type: "Dag",
+        notes: formData.notes,
+        status: "Concept"
+      };
 
-   // Fetch fresh data from server to avoid stale cache causing duplicates
-   const freshEntries = await base44.entities.TimeEntry.filter({
-     employee_id: currentEmployee?.id,
-     date: formData.date,
-     status: 'Concept'
-   });
+      const freshEntries = await base44.entities.TimeEntry.filter({
+        employee_id: currentEmployee?.id,
+        date: formData.date,
+        status: 'Concept'
+      });
 
-   if (freshEntries.length > 0) {
-     // Update the first existing concept entry
-     await base44.entities.TimeEntry.update(freshEntries[0].id, timeEntryPayload);
-     // Clean up any extra duplicates that may have been created
-     for (let i = 1; i < freshEntries.length; i++) {
-       await base44.entities.TimeEntry.delete(freshEntries[i].id);
-     }
-   } else {
-     await base44.entities.TimeEntry.create(timeEntryPayload);
-   }
+      if (freshEntries.length > 0) {
+        await base44.entities.TimeEntry.update(freshEntries[0].id, timeEntryPayload);
+        for (let i = 1; i < freshEntries.length; i++) {
+          await base44.entities.TimeEntry.delete(freshEntries[i].id);
+        }
+      } else {
+        await base44.entities.TimeEntry.create(timeEntryPayload);
+      }
 
-   queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      if (trips.length > 0) {
+        const existingDraftTrips = await base44.entities.Trip.filter({
+          employee_id: currentEmployee?.id,
+          date: formData.date,
+          status: 'Gepland'
+        });
+        for (const et of existingDraftTrips) {
+          await base44.entities.Trip.delete(et.id);
+        }
 
-   // Also save draft trips
-   if (trips.length > 0) {
-     // Delete existing draft trips for this employee+date
-     const existingDraftTrips = await base44.entities.Trip.filter({
-       employee_id: currentEmployee?.id,
-       date: formData.date,
-       status: 'Gepland'
-     });
-     for (const et of existingDraftTrips) {
-       await base44.entities.Trip.delete(et.id);
-     }
+        for (const trip of trips) {
+          await base44.entities.Trip.create({
+            employee_id: currentEmployee?.id,
+            date: formData.date,
+            vehicle_id: trip.vehicle_id,
+            customer_id: trip.customer_id,
+            route_name: trip.route_name,
+            planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+            start_km: trip.start_km ? Number(trip.start_km) : null,
+            end_km: trip.end_km ? Number(trip.end_km) : null,
+            total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+            fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
+            adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
+            fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
+            charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
+            departure_time: trip.start_time,
+            arrival_time: trip.end_time,
+            departure_location: trip.departure_location,
+            notes: trip.notes,
+            status: "Gepland"
+          });
+        }
+      }
 
-     // Create new draft trips
-     for (const trip of trips) {
-       await base44.entities.Trip.create({
-         employee_id: currentEmployee?.id,
-         date: formData.date,
-         vehicle_id: trip.vehicle_id,
-         customer_id: trip.customer_id,
-         route_name: trip.route_name,
-         planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
-         start_km: trip.start_km ? Number(trip.start_km) : null,
-         end_km: trip.end_km ? Number(trip.end_km) : null,
-         total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
-         fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
-         adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
-         fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
-         charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
-         departure_time: trip.start_time,
-         arrival_time: trip.end_time,
-         departure_location: trip.departure_location,
-         notes: trip.notes,
-         status: "Gepland"
-       });
-     }
-   }
-
-   alert('✓ Concept opgeslagen');
-
-   // Go back to home after saving
-   setTimeout(() => {
-     setActiveTab("home");
-   }, 300);
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+      toast.success('Concept opgeslagen');
+      setTimeout(() => setActiveTab("home"), 300);
+    } catch (error) {
+      console.error('Opslaan mislukt:', error);
+      toast.error('Concept opslaan mislukt. Controleer je verbinding.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const calculateHours = (start, end, breakMinutes) => {
@@ -647,19 +673,7 @@ export default function MobileEntry() {
     );
   }
 
-  const menuItems = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "dienst", label: "Diensttijd", icon: Clock },
-    { id: "ritten", label: "Ritten", icon: Truck },
-    { id: "inspectie", label: "Voertuiginspectie", icon: ClipboardCheck },
-    { id: "declaratie", label: "Declaratie", icon: FileText },
-    { id: "overzicht", label: "Overzicht", icon: CheckCircle },
-    { id: "planning", label: "Planning", icon: CalendarDays },
-    { id: "berichten", label: "Berichten", icon: Mail, badge: unreadCount },
-    { id: "reglement", label: "Bedrijfsreglement", icon: FileText },
-    { id: "contracten", label: "Mijn Contracten", icon: FileText, isLink: true },
-    { id: "links", label: "Links", icon: ExternalLink }
-  ];
+  // menuItems is now computed via useMemo above
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -787,7 +801,7 @@ export default function MobileEntry() {
             </div>
             <div className="text-right">
               <p className="text-xs text-blue-100">Tijd</p>
-              <p className="font-semibold text-lg">{format(new Date(), "HH:mm")}</p>
+              <p className="font-semibold text-lg">{format(currentTime, "HH:mm")}</p>
             </div>
           </div>
         </div>
@@ -1083,20 +1097,23 @@ export default function MobileEntry() {
                           }}
                           onBlur={(e) => {
                             const newEndTime = e.target.value;
-                            // Valideer bij onBlur als tijd compleet is
-                            if (newEndTime && newEndTime.length === 5 && trips.length > 0) {
+                            const dienstEndMin = timeToMinutes(newEndTime);
+                            const dienstStartMin = timeToMinutes(formData.start_time);
+                            if (dienstEndMin !== null && trips.length > 0) {
                               const invalidTrips = [];
                               trips.forEach((trip, idx) => {
-                                if (trip.end_time && trip.end_time.length === 5 && trip.end_time > newEndTime) {
-                                  invalidTrips.push(`Rit ${idx + 1}: Eindtijd rit (${trip.end_time}) ligt na eindtijd dienst (${newEndTime})`);
+                                const tripEndMin = timeToMinutes(trip.end_time);
+                                const tripStartMin = timeToMinutes(trip.start_time);
+                                if (tripEndMin !== null && tripEndMin > dienstEndMin) {
+                                  invalidTrips.push(`Rit ${idx + 1}: eindtijd rit (${trip.end_time}) ligt na eindtijd dienst (${newEndTime})`);
                                 }
-                                if (trip.start_time && trip.start_time.length === 5 && formData.start_time && trip.start_time < formData.start_time) {
-                                  invalidTrips.push(`Rit ${idx + 1}: Starttijd rit (${trip.start_time}) ligt voor starttijd dienst (${formData.start_time})`);
+                                if (tripStartMin !== null && dienstStartMin !== null && tripStartMin < dienstStartMin) {
+                                  invalidTrips.push(`Rit ${idx + 1}: starttijd rit (${trip.start_time}) ligt vóór starttijd dienst (${formData.start_time})`);
                                 }
                               });
                               
                               if (invalidTrips.length > 0) {
-                                alert('Let op! Er zijn ritten die buiten de diensttijd vallen:\n\n' + invalidTrips.join('\n\n') + '\n\nPas de rit tijden aan in het Ritten tabblad.');
+                                toast.warning('Ritten buiten diensttijd: ' + invalidTrips.join('; '));
                               }
                             }
                           }}
@@ -1110,7 +1127,7 @@ export default function MobileEntry() {
                         <Input
                           type="number"
                           value={formData.break_minutes}
-                          onChange={(e) => setFormData({ ...formData, break_minutes: e.target.value })}
+                          onChange={(e) => setFormData({ ...formData, break_minutes: parseInt(e.target.value, 10) || 0 })}
                         />
                       </div>
                     </div>
@@ -1143,7 +1160,7 @@ export default function MobileEntry() {
                     <Button 
                       className="w-full bg-blue-600 hover:bg-blue-700"
                       onClick={handleSubmitEntry}
-                      disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                      disabled={isSubmitting}
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Met Handtekening Indienen
@@ -1204,9 +1221,10 @@ export default function MobileEntry() {
                         }}
                         onBlur={(e) => {
                           const newStartTime = e.target.value;
-                          
-                          if (newStartTime && newStartTime.length === 5 && formData.start_time && formData.start_time.length === 5 && newStartTime < formData.start_time) {
-                            alert(`Start rit (${newStartTime}) kan niet voor start dienst (${formData.start_time}) liggen.`);
+                          const tripMin = timeToMinutes(newStartTime);
+                          const dienstMin = timeToMinutes(formData.start_time);
+                          if (tripMin !== null && dienstMin !== null && tripMin < dienstMin) {
+                            toast.warning(`Start rit (${newStartTime}) ligt vóór start dienst (${formData.start_time}).`);
                           }
                         }}
                         placeholder="09:00"
@@ -1233,9 +1251,10 @@ export default function MobileEntry() {
                         }}
                         onBlur={(e) => {
                           const newEndTime = e.target.value;
-                          
-                          if (newEndTime && newEndTime.length === 5 && formData.end_time && formData.end_time.length === 5 && newEndTime > formData.end_time) {
-                            alert(`Einde rit (${newEndTime}) kan niet na einde dienst (${formData.end_time}) liggen.`);
+                          const tripMin = timeToMinutes(newEndTime);
+                          const dienstMin = timeToMinutes(formData.end_time);
+                          if (tripMin !== null && dienstMin !== null && tripMin > dienstMin) {
+                            toast.warning(`Einde rit (${newEndTime}) ligt na einde dienst (${formData.end_time}).`);
                           }
                         }}
                         placeholder="15:00"
@@ -1491,7 +1510,7 @@ export default function MobileEntry() {
                   variant="outline" 
                   className="w-full py-3 border-emerald-300 bg-emerald-50"
                   onClick={handleSaveDraft}
-                  disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                  disabled={isSubmitting}
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Tussentijds Opslaan & Terug naar Home
