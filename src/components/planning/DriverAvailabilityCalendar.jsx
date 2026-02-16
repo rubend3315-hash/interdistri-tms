@@ -78,8 +78,18 @@ export default function DriverAvailabilityCalendar({ employees }) {
     return employees
       .filter(e => e.status === "Actief" && e.is_chauffeur !== false)
       .filter(e => filterDepartment === "all" || e.department === filterDepartment)
+      .filter(e => {
+        // Must have at least one active contractregel that overlaps with the visible period
+        if (!e.contractregels?.length) return false;
+        return e.contractregels.some(cr => {
+          if (cr.status !== 'Actief') return false;
+          if (cr.einddatum && cr.einddatum < dateFrom) return false;
+          if (cr.startdatum && cr.startdatum > dateTo) return false;
+          return true;
+        });
+      })
       .sort((a, b) => `${a.last_name}`.localeCompare(`${b.last_name}`));
-  }, [employees, filterDepartment]);
+  }, [employees, filterDepartment, dateFrom, dateTo]);
 
   const getAvailability = (employeeId, dateStr) => {
     return availabilities.find(a => a.employee_id === employeeId && a.date === dateStr);
