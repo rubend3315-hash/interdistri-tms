@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { TrendingUp, Truck, Package, DollarSign } from "lucide-react";
+import PeriodSelector from "./PeriodSelector";
 
 const COLORS = [
   "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
@@ -15,6 +16,7 @@ const COLORS = [
 
 export default function InvoiceWeekDashboard({ customerId }) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState("all");
+  const [period, setPeriod] = useState(null);
 
   const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
     queryKey: ['spotta-invoices-dash', customerId],
@@ -40,11 +42,36 @@ export default function InvoiceWeekDashboard({ customerId }) {
     enabled: !!customerId,
   });
 
-  // Filter lines by selected invoice
+  // Build invoice date lookup for period filtering
+  const invoiceDateMap = useMemo(() => {
+    const map = {};
+    invoices.forEach(inv => {
+      map[inv.id] = inv.invoice_date; // "2026-01-25"
+    });
+    return map;
+  }, [invoices]);
+
+  // Filter lines by selected invoice AND period
   const lines = useMemo(() => {
-    if (selectedInvoiceId === "all") return allLines;
-    return allLines.filter(l => l.invoice_id === selectedInvoiceId);
-  }, [allLines, selectedInvoiceId]);
+    let filtered = allLines;
+    
+    // Filter by invoice
+    if (selectedInvoiceId !== "all") {
+      filtered = filtered.filter(l => l.invoice_id === selectedInvoiceId);
+    }
+    
+    // Filter by period (based on invoice date)
+    if (period) {
+      const invoiceIdsInPeriod = new Set(
+        invoices
+          .filter(inv => inv.invoice_date && inv.invoice_date >= period.startDate && inv.invoice_date <= period.endDate)
+          .map(inv => inv.id)
+      );
+      filtered = filtered.filter(l => invoiceIdsInPeriod.has(l.invoice_id));
+    }
+    
+    return filtered;
+  }, [allLines, selectedInvoiceId, period, invoices]);
 
   // Build article lookup by route_code (e.g. article_number "SPOTTA-R4431" => route_code "4431")
   const articleByRouteCode = useMemo(() => {
@@ -156,6 +183,9 @@ export default function InvoiceWeekDashboard({ customerId }) {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Periode selector */}
+      <PeriodSelector onPeriodChange={setPeriod} invoices={invoices} />
 
       {/* KPI's */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
