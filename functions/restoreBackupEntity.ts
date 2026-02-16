@@ -10,69 +10,75 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { backup_id, entity_name, offset, batch_size } = body;
+    const { backup_id, entity_name, offset, batch_size, list_only } = body;
 
-    if (!backup_id || !entity_name) {
-      return Response.json({ error: 'backup_id and entity_name required' }, { status: 400 });
+    if (!backup_id) {
+      return Response.json({ error: 'backup_id required' }, { status: 400 });
     }
 
-    const batchSz = batch_size || 25;
-    const startOffset = offset || 0;
-
-    // Use the raw API to fetch just the backup record
-    const appId = Deno.env.get("BASE44_APP_ID");
+    // Use filter to find the backup - filter returns data differently than get
+    const backups = await base44.asServiceRole.entities.Backup.filter({ id: backup_id });
     
-    // Use the SDK to fetch the backup
-    const backup = await base44.entities.Backup.get(backup_id);
-    
-    if (!backup || !backup.json_data) {
-      return Response.json({ error: 'No backup data found' }, { status: 404 });
+    if (!backups || backups.length === 0) {
+      return Response.json({ error: 'Backup not found via filter' }, { status: 404 });
     }
 
-    // Parse the json_data to get the entity records
-    const backupData = JSON.parse(backup.json_data);
+    const backup = backups[0];
+    const jsonStr = backup.json_data;
+
+    if (!jsonStr) {
+      return Response.json({ 
+        error: 'No json_data field', 
+        keys: Object.keys(backup),
+        preview: JSON.stringify(backup).substring(0, 300)
+      }, { status: 400 });
+    }
+
+    const backupData = JSON.parse(jsonStr);
+
+    // List mode
+    if (list_only || !entity_name) {
+      const summary = {};
+      for (const [name, recs] of Object.entries(backupData.entities || {})) {
+        summary[name] = Array.isArray(recs) ? recs.length : 0;
+      }
+      return Response.json({ summary, timestamp: backupData.timestamp });
+    }
+
     const records = backupData.entities?.[entity_name];
-
-    if (!records || !Array.isArray(records)) {
-      // Return list of available entities
+    if (!records || !Array.isArray(records) || records.length === 0) {
       const available = {};
       for (const [name, recs] of Object.entries(backupData.entities || {})) {
         available[name] = Array.isArray(recs) ? recs.length : 0;
       }
-      return Response.json({ error: `Entity ${entity_name} not found`, available });
+      return Response.json({ error: `No records for ${entity_name}`, available });
     }
 
-    // Get the batch to process
+    const batchSz = batch_size || 25;
+    const startOffset = offset || 0;
     const batch = records.slice(startOffset, startOffset + batchSz);
-    
+
     if (batch.length === 0) {
-      return Response.json({ 
-        done: true, 
-        entity_name,
-        total_records: records.length,
-        processed_up_to: startOffset
-      });
+      return Response.json({ done: true, total: records.length });
     }
 
-    // Clean records - remove system fields
-    const cleanedBatch = batch.map(record => {
-      const { id, created_date, updated_date, created_by, created_by_id, is_sample, entity_name: en, app_id, ...data } = record;
+    // Clean system fields
+    const cleaned = batch.map(r => {
+      const { id, created_date, updated_date, created_by, created_by_id, is_sample, entity_name: en, app_id, ...data } = r;
       return data;
     });
 
-    // Insert this batch
-    await base44.asServiceRole.entities[entity_name].bulkCreate(cleanedBatch);
+    await base44.asServiceRole.entities[entity_name].bulkCreate(cleaned);
 
     return Response.json({
       done: (startOffset + batchSz) >= records.length,
       entity_name,
-      total_records: records.length,
-      batch_inserted: cleanedBatch.length,
-      next_offset: startOffset + batchSz,
-      processed_up_to: startOffset + batch.length
+      total: records.length,
+      inserted: cleaned.length,
+      next_offset: startOffset + batchSz
     });
   } catch (error) {
-    console.error('Restore error:', error);
-    return Response.json({ error: error.message, stack: error.stack?.substring(0, 500) }, { status: 500 });
+    console.error('Error:', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
