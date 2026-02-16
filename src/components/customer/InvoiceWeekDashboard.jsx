@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { TrendingUp, Truck, Package, DollarSign } from "lucide-react";
 import PeriodSelector from "./PeriodSelector";
+import YearRevenueChart from "./YearRevenueChart";
 
 const COLORS = [
   "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
@@ -186,6 +187,9 @@ export default function InvoiceWeekDashboard({ customerId }) {
 
       {/* Periode selector */}
       <PeriodSelector onPeriodChange={setPeriod} invoices={invoices} />
+
+      {/* Jaaromzet grafiek */}
+      <YearRevenueChart invoices={invoices} allLines={allLines} />
 
       {/* KPI's */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
