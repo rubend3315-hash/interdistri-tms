@@ -183,19 +183,27 @@ export default function DriverAvailabilityCalendar({ employees }) {
     setFillingSchedule(false);
   };
 
-  // Summary counts per day
+  // Summary counts per day - filtered by active drivers (respects department filter)
   const daySummary = useMemo(() => {
+    const driverIds = new Set(activeDrivers.map(d => d.id));
+    const driverMap = Object.fromEntries(activeDrivers.map(d => [d.id, d]));
     return days.map(day => {
       const dateStr = format(day, "yyyy-MM-dd");
-      const dayAvails = availabilities.filter(a => a.date === dateStr);
+      const dayAvails = availabilities.filter(a => a.date === dateStr && driverIds.has(a.employee_id));
+      const weekroosterAvails = dayAvails.filter(a => a.status === "weekrooster");
+      const totalHours = weekroosterAvails.reduce((sum, a) => {
+        const driver = driverMap[a.employee_id];
+        return sum + (driver ? getScheduledHours(driver, day) : 0);
+      }, 0);
       return {
         date: dateStr,
-        weekrooster: dayAvails.filter(a => a.status === "weekrooster").length,
+        weekrooster: weekroosterAvails.length,
         verlof: dayAvails.filter(a => a.status === "verlof").length,
         ziek: dayAvails.filter(a => a.status === "ziek").length,
+        totalHours: Math.round(totalHours * 10) / 10,
       };
     });
-  }, [days, availabilities]);
+  }, [days, availabilities, activeDrivers]);
 
   return (
     <Card>
@@ -286,7 +294,7 @@ export default function DriverAvailabilityCalendar({ employees }) {
                       {summary.weekrooster > 0 && (
                         <span className="flex items-center gap-1 text-green-700">
                           <span className="w-2 h-2 rounded-full bg-green-500" />
-                          {summary.weekrooster}
+                          {summary.weekrooster} ({summary.totalHours}u)
                         </span>
                       )}
                       {summary.verlof > 0 && (
