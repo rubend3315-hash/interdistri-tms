@@ -579,6 +579,8 @@ export default function Planning() {
         days={days}
       />
 
+      <ShiftLegend compact />
+
       <Tabs defaultValue="Transport" className="w-full">
         <TabsList className="flex-wrap h-auto">
           {planningTabs.map(tab => (
@@ -606,7 +608,6 @@ export default function Planning() {
 
           return (
             <TabsContent key={tab.key} value={tab.key} className="space-y-6 mt-4">
-              <ShiftLegend />
               <Card>
                 <CardContent className="p-0">
                   <PlanningTable
