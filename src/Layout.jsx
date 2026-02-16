@@ -250,7 +250,7 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
-  if (isMobilePage || isEmployeeContractPage) {
+  if (isMobilePage || isEmployeeContractPage || isEmployeeEditTimeEntry) {
     return <>{children}</>;
   }
 
