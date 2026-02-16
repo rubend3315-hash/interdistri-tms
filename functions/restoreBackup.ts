@@ -23,7 +23,16 @@ Deno.serve(async (req) => {
     }
     const backup = backups[0];
 
-    const backupData = JSON.parse(backup.json_data);
+    // Debug: check what fields are available
+    const dataField = backup.json_data || backup.data?.json_data;
+    if (!dataField) {
+      return Response.json({ 
+        error: 'No json_data found in backup', 
+        available_keys: Object.keys(backup),
+        data_keys: backup.data ? Object.keys(backup.data) : null
+      }, { status: 400 });
+    }
+    const backupData = JSON.parse(dataField);
     const restoreResult = {
       timestamp: new Date().toISOString(),
       restored_entities: {},
