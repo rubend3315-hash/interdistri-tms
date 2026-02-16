@@ -16,36 +16,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'backup_id required' }, { status: 400 });
     }
 
-    // Direct API fetch of the backup entity by ID using the entities SDK
-    // Use a workaround: list all and find by id
-    let backup = null;
-    let page = 0;
-    const pageSize = 50;
-    
-    while (!backup) {
-      const batch = await base44.asServiceRole.entities.Backup.list('-created_date', pageSize, page * pageSize);
-      if (!batch || batch.length === 0) break;
-      
-      for (let i = 0; i < batch.length; i++) {
-        if (batch[i].id === backup_id) {
-          backup = batch[i];
-          break;
-        }
-      }
-      page++;
-      if (page > 20) break; // safety limit
-    }
-    
-    if (!backup) {
-      return Response.json({ error: 'Backup not found after scanning' }, { status: 404 });
+    // Fetch the backup by ID using .get()
+    const backup = await base44.asServiceRole.entities.Backup.get(backup_id);
+    if (!backup || !backup.json_data) {
+      return Response.json({ error: 'Backup not found or has no data' }, { status: 404 });
     }
 
-    const jsonData = backup.json_data;
-    if (!jsonData) {
-      return Response.json({ error: 'No json_data in backup' }, { status: 400 });
-    }
-
-    const backupData = JSON.parse(jsonData);
+    const backupData = JSON.parse(backup.json_data);
     const restoreResult = {
       timestamp: new Date().toISOString(),
       restored_entities: {},
@@ -53,7 +30,7 @@ Deno.serve(async (req) => {
       errors: []
     };
 
-    // If specific entities requested, only restore those
+    // If specific entities requested, only restore those; otherwise restore all
     const entitiesToProcess = entities_to_restore 
       ? Object.entries(backupData.entities).filter(([name]) => entities_to_restore.includes(name))
       : Object.entries(backupData.entities);
@@ -66,7 +43,7 @@ Deno.serve(async (req) => {
         }
 
         const cleanedRecords = records.map(record => {
-          const { id, created_date, updated_date, created_by, created_by_id, is_sample, entity_name, app_id, ...data } = record;
+          const { id, created_date, updated_date, created_by, created_by_id, is_sample, entity_name: en, app_id, ...data } = record;
           return data;
         });
 
