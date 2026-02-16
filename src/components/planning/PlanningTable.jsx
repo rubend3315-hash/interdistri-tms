@@ -152,10 +152,8 @@ export default function PlanningTable({
             // Determine if this shift belongs to the current tab
             let shouldShowShift = false;
             if (isPakketShiftTab) {
-              // Shift tab: only show if planned_department matches exactly
               shouldShowShift = currentPlannedDepartment === currentDepartment;
             } else {
-              // Regular department tab
               if (currentPlannedDepartment === currentDepartment) {
                 shouldShowShift = true;
               } else if (!currentPlannedDepartment && employee.department === currentDepartment) {
@@ -163,10 +161,12 @@ export default function PlanningTable({
               }
             }
             
-            // Check if employee is scheduled elsewhere (for showing "gepland op afd." message)
+            // Check if employee is scheduled elsewhere (show "gepland op afd." message)
+            // For shift tabs: show message if planned on a DIFFERENT shift tab
+            // For regular tabs: show message if planned on a different department
             const isScheduledElsewhere = currentPlannedDepartment 
-              && currentPlannedDepartment !== currentDepartment 
-              && currentPlannedDepartment !== employee.department;
+              && currentPlannedDepartment !== currentDepartment
+              && currentValue && currentValue !== '-' && currentValue !== '';
             const showDetails = shouldShowShift;
             const displayText = shouldShowShift ? (currentValue || "-") : "-";
 
@@ -200,7 +200,7 @@ export default function PlanningTable({
                   {dayHours !== null && dayHours !== undefined && dayHours > 0 && (
                     <div className="text-xs text-cyan-600 font-semibold">{dayHours}h</div>
                   )}
-                  {isScheduledElsewhere && currentDepartment === employee.department && (
+                  {isScheduledElsewhere && !shouldShowShift && (
                     <div className="text-xs text-blue-600 font-semibold truncate w-full">
                       gepland op afd. {currentPlannedDepartment.replace(/_/g, ' ')}
                     </div>
