@@ -98,8 +98,17 @@ export default function MobileEntry() {
   });
 
   const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryKey: ['employees', user?.email],
+    queryFn: async () => {
+      // Try filter by email first (works with RLS for own record)
+      if (user?.email) {
+        const byEmail = await base44.entities.Employee.filter({ email: user.email });
+        if (byEmail.length > 0) return byEmail;
+      }
+      // Fallback to list (works for admin)
+      return base44.entities.Employee.list();
+    },
+    enabled: !!user?.email
   });
 
   const { data: vehicles = [] } = useQuery({

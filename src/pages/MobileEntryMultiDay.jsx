@@ -79,8 +79,15 @@ export default function MobileEntryMultiDay() {
   });
 
   const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryKey: ['employees', user?.email],
+    queryFn: async () => {
+      if (user?.email) {
+        const byEmail = await base44.entities.Employee.filter({ email: user.email });
+        if (byEmail.length > 0) return byEmail;
+      }
+      return base44.entities.Employee.list();
+    },
+    enabled: !!user?.email
   });
 
   const { data: vehicles = [] } = useQuery({
