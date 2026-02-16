@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOfflineSync } from "@/components/utils/useOfflineSync";
@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import {
   Truck, Clock, MapPin, Package, Send, Save, User, LogOut,
   CheckCircle, FileText, AlertTriangle, Camera, ExternalLink,
@@ -27,6 +28,27 @@ import { createPageUrl } from "../utils";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 import MobileReglementTab from "@/components/mobile/MobileReglementTab.jsx";
 import { determineShiftType } from "@/components/utils/shiftTypeUtils";
+
+const STATIC_MENU_ITEMS = [
+  { id: "home", label: "Home", icon: Home },
+  { id: "dienst", label: "Diensttijd", icon: Clock },
+  { id: "ritten", label: "Ritten", icon: Truck },
+  { id: "inspectie", label: "Voertuiginspectie", icon: ClipboardCheck },
+  { id: "declaratie", label: "Declaratie", icon: FileText },
+  { id: "overzicht", label: "Overzicht", icon: CheckCircle },
+  { id: "planning", label: "Planning", icon: CalendarDays },
+  { id: "berichten", label: "Berichten", icon: Mail },
+  { id: "reglement", label: "Bedrijfsreglement", icon: FileText },
+  { id: "contracten", label: "Mijn Contracten", icon: FileText, isLink: true },
+  { id: "links", label: "Links", icon: ExternalLink }
+];
+
+const timeToMinutes = (time) => {
+  if (!time || time.length < 5) return null;
+  const [h, m] = time.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+};
 
 export default function MobileEntryMultiDay() {
   const [activeTab, setActiveTab] = useState("home");
@@ -112,7 +134,7 @@ export default function MobileEntryMultiDay() {
   const unreadCount = myMessages.filter(m => !m.is_read).length;
 
   const { data: shiftTimes = [] } = useQuery({
-    queryKey: ['shiftTimes', currentEmployee?.id, format(new Date(), 'yyyy-MM-dd-HH')],
+    queryKey: ['shiftTimes', currentEmployee?.id, format(new Date(), 'yyyy-MM-dd')],
     queryFn: async () => {
       if (!currentEmployee?.department) return [];
       const now = new Date();
@@ -133,8 +155,7 @@ export default function MobileEntryMultiDay() {
       return shifts.slice(0, 1);
     },
     enabled: !!currentEmployee?.department,
-    staleTime: 0,
-    gcTime: 0
+    staleTime: 5 * 60 * 1000
   });
 
   const todayShift = shiftTimes[0];
@@ -196,6 +217,20 @@ export default function MobileEntryMultiDay() {
   });
 
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Live clock ticker
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Menu items with dynamic badge
+  const menuItems = useMemo(() =>
+    STATIC_MENU_ITEMS.map(item =>
+      item.id === 'berichten' ? { ...item, badge: unreadCount } : item
+    ), [unreadCount]);
 
   useEffect(() => {
     if (showSignatureDialog && canvasRef.current) {
@@ -267,7 +302,7 @@ export default function MobileEntryMultiDay() {
 
   const handleSubmitEntry = async () => {
     if (trips.length === 0) {
-      alert('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen. Ga naar het Ritten tabblad om een rit toe te voegen.');
+      toast.error('Je moet minimaal één rit invoeren voordat je de diensttijd kunt indienen.');
       setActiveTab("ritten");
       return;
     }
@@ -275,7 +310,14 @@ export default function MobileEntryMultiDay() {
     for (let i = 0; i < trips.length; i++) {
       const trip = trips[i];
       if (!trip.start_time || !trip.end_time) {
-        alert(`Rit ${i + 1}: Zowel de start- als de eindtijd moeten zijn ingevuld voor deze rit.`);
+        toast.error(`Rit ${i + 1}: Vul zowel start- als eindtijd in.`);
+        setActiveTab("ritten");
+        return;
+      }
+      const tripStart = timeToMinutes(trip.start_time);
+      const dienstStart = timeToMinutes(formData.start_time);
+      if (tripStart !== null && dienstStart !== null && tripStart < dienstStart && formData.date === formData.end_date) {
+        toast.error(`Rit ${i + 1}: starttijd rit ligt vóór start dienst.`);
         setActiveTab("ritten");
         return;
       }
@@ -289,129 +331,152 @@ export default function MobileEntryMultiDay() {
     submitAndReturn();
   };
 
-  const submitAndReturn = () => {
-    const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
-    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
+  const submitAndReturn = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
+      const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
 
-    const timeEntryData = {
-      employee_id: currentEmployee?.id,
-      date: formData.date,
-      end_date: formData.end_date,
-      week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
-      year: getYear(new Date(formData.date)),
-      start_time: formData.start_time,
-      end_time: formData.end_time,
-      break_minutes: Number(formData.break_minutes) || 0,
-      total_hours: hours,
-      shift_type: determineShiftType(formData.start_time, formData.end_time),
-      notes: formData.notes,
-      status: isOnline ? "Ingediend" : "Concept",
-      signature_url: signature
-    };
+      const timeEntryData = {
+        employee_id: currentEmployee?.id,
+        date: formData.date,
+        end_date: formData.end_date,
+        week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
+        year: getYear(new Date(formData.date)),
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        break_minutes: Number(formData.break_minutes) || 0,
+        total_hours: hours,
+        shift_type: determineShiftType(formData.start_time, formData.end_time),
+        notes: formData.notes,
+        status: isOnline ? "Ingediend" : "Concept",
+        signature_url: signature
+      };
 
-    if (isOnline) {
-      createTimeEntryMutation.mutate(timeEntryData);
-    } else {
-      addToQueue('createTimeEntry', timeEntryData);
-    }
+      if (isOnline) {
+        await base44.entities.TimeEntry.create(timeEntryData);
+      } else {
+        addToQueue('createTimeEntry', timeEntryData);
+      }
 
-    if (trips.length > 0) {
-      trips.forEach(trip => {
-        const tripData = {
-          employee_id: currentEmployee?.id,
-          date: formData.date,
-          vehicle_id: trip.vehicle_id,
-          customer_id: trip.customer_id,
-          route_name: trip.route_name,
-          planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
-          start_km: trip.start_km ? Number(trip.start_km) : null,
-          end_km: trip.end_km ? Number(trip.end_km) : null,
-          total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
-          fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
-          adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
-          fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
-          charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
-          departure_time: trip.start_time,
-          arrival_time: trip.end_time,
-          departure_location: trip.departure_location,
-          notes: trip.notes,
-          status: "Voltooid"
-        };
-        if (isOnline) {
-          createTripMutation.mutate(tripData);
-        } else {
-          addToQueue('createTrip', tripData);
+      if (trips.length > 0) {
+        for (const trip of trips) {
+          const tripData = {
+            employee_id: currentEmployee?.id,
+            date: formData.date,
+            vehicle_id: trip.vehicle_id,
+            customer_id: trip.customer_id,
+            route_name: trip.route_name,
+            planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+            start_km: trip.start_km ? Number(trip.start_km) : null,
+            end_km: trip.end_km ? Number(trip.end_km) : null,
+            total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+            fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
+            adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
+            fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
+            charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
+            departure_time: trip.start_time,
+            arrival_time: trip.end_time,
+            departure_location: trip.departure_location,
+            notes: trip.notes,
+            status: "Voltooid"
+          };
+          if (isOnline) {
+            await base44.entities.Trip.create(tripData);
+          } else {
+            addToQueue('createTrip', tripData);
+          }
         }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+
+      if (isOnline) {
+        toast.success('Dienst en ritten succesvol ingediend!');
+      } else {
+        toast.info('Offline: gegevens worden gesynchroniseerd wanneer de verbinding hersteld is.');
+      }
+
+      setTrips([]);
+      setSignature(null);
+      setFormData({
+        date: format(new Date(), 'yyyy-MM-dd'),
+        end_date: format(new Date(), 'yyyy-MM-dd'),
+        start_time: "", end_time: "",
+        break_minutes: 30, notes: ""
       });
+
+      if (hasDamage) {
+        window.open('https://www.mijn.bumper.nl', '_blank');
+      }
+
+      setActiveTab("home");
+    } catch (error) {
+      console.error('Indienen mislukt:', error);
+      toast.error('Er is een fout opgetreden bij het indienen. Probeer opnieuw.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (isOnline) {
-      alert('✓ Dienst en ritten succesvol ingediend!');
-    } else {
-      alert('📱 Offline modus: Uw gegevens zijn opgeslagen en worden automatisch gesynchroniseerd wanneer de verbinding hersteld is.');
-    }
-
-    setTrips([]);
-    setSignature(null);
-    setFormData({
-      date: format(new Date(), 'yyyy-MM-dd'),
-      end_date: format(new Date(), 'yyyy-MM-dd'),
-      start_time: "", end_time: "",
-      break_minutes: 30, notes: ""
-    });
-
-    if (hasDamage) {
-      window.open('https://www.mijn.bumper.nl', '_blank');
-    }
-
-    setActiveTab("home");
   };
 
   const handleSaveDraft = async () => {
-    const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
 
-    createTimeEntryMutation.mutate({
-      employee_id: currentEmployee?.id,
-      date: formData.date,
-      end_date: formData.end_date,
-      week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
-      year: getYear(new Date(formData.date)),
-      start_time: formData.start_time,
-      end_time: formData.end_time,
-      break_minutes: Number(formData.break_minutes) || 0,
-      total_hours: hours,
-      shift_type: determineShiftType(formData.start_time, formData.end_time),
-      notes: formData.notes,
-      status: "Concept"
-    });
-
-    if (trips.length > 0) {
-      trips.forEach(trip => {
-        createTripMutation.mutate({
-          employee_id: currentEmployee?.id,
-          date: formData.date,
-          vehicle_id: trip.vehicle_id,
-          customer_id: trip.customer_id,
-          route_name: trip.route_name,
-          planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
-          start_km: trip.start_km ? Number(trip.start_km) : null,
-          end_km: trip.end_km ? Number(trip.end_km) : null,
-          total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
-          fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
-          adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
-          fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
-          charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
-          departure_time: trip.start_time,
-          arrival_time: trip.end_time,
-          departure_location: trip.departure_location,
-          notes: trip.notes,
-          status: "Gepland"
-        });
+      await base44.entities.TimeEntry.create({
+        employee_id: currentEmployee?.id,
+        date: formData.date,
+        end_date: formData.end_date,
+        week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
+        year: getYear(new Date(formData.date)),
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        break_minutes: Number(formData.break_minutes) || 0,
+        total_hours: hours,
+        shift_type: determineShiftType(formData.start_time, formData.end_time),
+        notes: formData.notes,
+        status: "Concept"
       });
-    }
 
-    alert('✓ Concept opgeslagen');
-    setTimeout(() => setActiveTab("home"), 300);
+      if (trips.length > 0) {
+        for (const trip of trips) {
+          await base44.entities.Trip.create({
+            employee_id: currentEmployee?.id,
+            date: formData.date,
+            vehicle_id: trip.vehicle_id,
+            customer_id: trip.customer_id,
+            route_name: trip.route_name,
+            planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+            start_km: trip.start_km ? Number(trip.start_km) : null,
+            end_km: trip.end_km ? Number(trip.end_km) : null,
+            total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+            fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
+            adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
+            fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
+            charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
+            departure_time: trip.start_time,
+            arrival_time: trip.end_time,
+            departure_location: trip.departure_location,
+            notes: trip.notes,
+            status: "Gepland"
+          });
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+      toast.success('Concept opgeslagen');
+      setTimeout(() => setActiveTab("home"), 300);
+    } catch (error) {
+      console.error('Opslaan mislukt:', error);
+      toast.error('Concept opslaan mislukt. Controleer je verbinding.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const approvedEntries = myTimeEntries.filter(e => e.status === 'Goedgekeurd');
@@ -426,19 +491,7 @@ export default function MobileEntryMultiDay() {
     );
   }
 
-  const menuItems = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "dienst", label: "Diensttijd", icon: Clock },
-    { id: "ritten", label: "Ritten", icon: Truck },
-    { id: "inspectie", label: "Voertuiginspectie", icon: ClipboardCheck },
-    { id: "declaratie", label: "Declaratie", icon: FileText },
-    { id: "overzicht", label: "Overzicht", icon: CheckCircle },
-    { id: "planning", label: "Planning", icon: CalendarDays },
-    { id: "berichten", label: "Berichten", icon: Mail, badge: unreadCount },
-    { id: "reglement", label: "Bedrijfsreglement", icon: FileText },
-    { id: "contracten", label: "Mijn Contracten", icon: FileText, isLink: true },
-    { id: "links", label: "Links", icon: ExternalLink }
-  ];
+  // menuItems is now computed via useMemo above
 
   // Calculate max end_date (e.g. max 7 days from start)
   const maxEndDate = formData.date ? format(addDays(new Date(formData.date), 6), 'yyyy-MM-dd') : undefined;
@@ -542,7 +595,7 @@ export default function MobileEntryMultiDay() {
             </div>
             <div className="text-right">
               <p className="text-xs text-blue-100">Tijd</p>
-              <p className="font-semibold text-lg">{format(new Date(), "HH:mm")}</p>
+              <p className="font-semibold text-lg">{format(currentTime, "HH:mm")}</p>
             </div>
           </div>
         </div>
@@ -805,7 +858,7 @@ export default function MobileEntryMultiDay() {
                         <Input
                           type="number"
                           value={formData.break_minutes}
-                          onChange={(e) => setFormData({ ...formData, break_minutes: e.target.value })}
+                          onChange={(e) => setFormData({ ...formData, break_minutes: parseInt(e.target.value, 10) || 0 })}
                         />
                       </div>
                     </div>
@@ -838,7 +891,7 @@ export default function MobileEntryMultiDay() {
                     <Button
                       className="w-full bg-blue-600 hover:bg-blue-700"
                       onClick={handleSubmitEntry}
-                      disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                      disabled={isSubmitting}
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Met Handtekening Indienen
@@ -1079,15 +1132,63 @@ export default function MobileEntryMultiDay() {
                   variant="outline"
                   className="w-full py-3 border-emerald-300 bg-emerald-50"
                   onClick={handleSaveDraft}
-                  disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                  disabled={isSubmitting}
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Tussentijds Opslaan & Terug naar Home
                 </Button>
                 <Button
                   className="w-full py-3 bg-blue-600 hover:bg-blue-700"
-                  onClick={() => { handleSaveDraft(); setTimeout(() => setActiveTab("dienst"), 300); }}
-                  disabled={createTimeEntryMutation.isPending || createTripMutation.isPending}
+                  onClick={async () => {
+                    if (isSubmitting) return;
+                    setIsSubmitting(true);
+                    try {
+                      const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
+                      await base44.entities.TimeEntry.create({
+                        employee_id: currentEmployee?.id,
+                        date: formData.date,
+                        end_date: formData.end_date,
+                        week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
+                        year: getYear(new Date(formData.date)),
+                        start_time: formData.start_time,
+                        end_time: formData.end_time,
+                        break_minutes: Number(formData.break_minutes) || 0,
+                        total_hours: hours,
+                        shift_type: determineShiftType(formData.start_time, formData.end_time),
+                        notes: formData.notes,
+                        status: "Concept"
+                      });
+                      if (trips.length > 0) {
+                        for (const trip of trips) {
+                          await base44.entities.Trip.create({
+                            employee_id: currentEmployee?.id, date: formData.date,
+                            vehicle_id: trip.vehicle_id, customer_id: trip.customer_id,
+                            route_name: trip.route_name,
+                            planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
+                            start_km: trip.start_km ? Number(trip.start_km) : null,
+                            end_km: trip.end_km ? Number(trip.end_km) : null,
+                            total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
+                            fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
+                            adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
+                            fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
+                            charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
+                            departure_time: trip.start_time, arrival_time: trip.end_time,
+                            departure_location: trip.departure_location, notes: trip.notes, status: "Gepland"
+                          });
+                        }
+                      }
+                      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+                      queryClient.invalidateQueries({ queryKey: ['trips'] });
+                      toast.success('Concept opgeslagen');
+                      setActiveTab("dienst");
+                    } catch (error) {
+                      console.error('Opslaan mislukt:', error);
+                      toast.error('Concept opslaan mislukt.');
+                    } finally {
+                      setIsSubmitting(false);
+                    }
+                  }}
+                  disabled={isSubmitting}
                 >
                   <Clock className="w-4 h-4 mr-2" />
                   Volgende → Einde diensttijd invoeren
