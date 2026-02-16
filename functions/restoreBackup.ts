@@ -16,20 +16,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'backup_id required' }, { status: 400 });
     }
 
-    // Fetch the backup
-    const backups = await base44.asServiceRole.entities.Backup.filter({ id: backup_id });
-    if (!backups || backups.length === 0) {
-      return Response.json({ error: 'Backup not found' }, { status: 404 });
+    // Fetch the backup using list and find by id
+    const allBackups = await base44.asServiceRole.entities.Backup.list('-created_date', 10);
+    const backup = allBackups.find(b => b.id === backup_id);
+    if (!backup) {
+      return Response.json({ error: 'Backup not found', ids: allBackups.map(b => b.id) }, { status: 404 });
     }
-    const backup = backups[0];
 
-    // Debug: check what fields are available
-    const dataField = backup.json_data || backup.data?.json_data;
+    const dataField = backup.json_data;
     if (!dataField) {
       return Response.json({ 
-        error: 'No json_data found in backup', 
-        available_keys: Object.keys(backup),
-        data_keys: backup.data ? Object.keys(backup.data) : null
+        error: 'No json_data found', 
+        keys: Object.keys(backup)
       }, { status: 400 });
     }
     const backupData = JSON.parse(dataField);
