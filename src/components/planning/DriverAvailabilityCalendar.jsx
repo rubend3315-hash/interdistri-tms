@@ -129,10 +129,30 @@ export default function DriverAvailabilityCalendar({ employees }) {
     if (!cr) return false;
     const jsDay = getDay(day);
     const dayName = dayKeyMap[jsDay];
-    // Determine week1 or week2 based on the week number (odd=week1, even=week2)
     const wk = getWeek(day, { weekStartsOn: 1 });
     const schedule = wk % 2 === 1 ? cr.week1 : cr.week2;
     return schedule?.[dayName] === true;
+  };
+
+  // Calculate scheduled hours per day for a driver
+  const getScheduledHours = (driver, day) => {
+    const dateStr = format(day, "yyyy-MM-dd");
+    const cr = getActiveContractregel(driver, dateStr);
+    if (!cr) return 0;
+    const jsDay = getDay(day);
+    const dayName = dayKeyMap[jsDay];
+    const wk = getWeek(day, { weekStartsOn: 1 });
+    const schedule = wk % 2 === 1 ? cr.week1 : cr.week2;
+    if (!schedule?.[dayName]) return 0;
+    // Count scheduled days in the two-week cycle to calculate hours per day
+    const scheduledDaysCount = [cr.week1, cr.week2].reduce((total, wSched) => {
+      if (!wSched) return total;
+      return total + Object.values(wSched).filter(v => v === true).length;
+    }, 0);
+    if (scheduledDaysCount === 0) return 0;
+    // uren_per_week is for 1 week, so total for 2 weeks = uren_per_week * 2
+    const totalHours2Weeks = (cr.uren_per_week || 0) * 2;
+    return Math.round((totalHours2Weeks / scheduledDaysCount) * 10) / 10;
   };
 
   const handleFillSchedule = async () => {
@@ -342,8 +362,8 @@ export default function DriverAvailabilityCalendar({ employees }) {
                                 </button>
                               </div>
                             ) : cfg ? (
-                              <div className={cn("inline-flex items-center justify-center w-6 h-6 rounded-full", cfg.dotColor)} title={cfg.label}>
-                                <cfg.icon className="w-3 h-3 text-white" />
+                              <div className={cn("inline-flex items-center justify-center rounded px-1.5 py-0.5 text-xs font-semibold", cfg.color)} title={cfg.label}>
+                                {avail.status === "weekrooster" ? (getScheduledHours(driver, day) || "✓") : cfg.label.charAt(0)}
                               </div>
                             ) : (
                               <span className="text-slate-300">—</span>
