@@ -12,45 +12,32 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { backup_id, entity_name } = body;
 
-    // Try fetching backup using the base44 internal fetch  
-    const appId = Deno.env.get("BASE44_APP_ID");
+    // The backup json_data is stored as a string field. 
+    // The SDK returns it as a raw string because it's too large.
+    // We need to use the raw API to fetch the backup by ID.
     
-    // Get auth token from request
+    const appId = Deno.env.get("BASE44_APP_ID");
     const authHeader = req.headers.get('authorization');
     
-    // Use the SDK to get the backup
-    const allBackups = await base44.asServiceRole.entities.Backup.list();
-    
-    // Log what we get
-    console.log("Type:", typeof allBackups);
-    console.log("Is array:", Array.isArray(allBackups));
-    
-    if (Array.isArray(allBackups)) {
-      console.log("Length:", allBackups.length);
-      if (allBackups.length > 0) {
-        console.log("First backup id:", allBackups[0].id);
-        console.log("First backup keys:", Object.keys(allBackups[0]));
+    // Fetch the backup record directly via REST API
+    const response = await fetch(`https://app.base44.com/api/entities/Backup/${backup_id}`, {
+      headers: {
+        'Authorization': authHeader,
+        'x-app-id': appId
       }
+    });
+    
+    if (!response.ok) {
+      return Response.json({ error: 'Failed to fetch backup', status: response.status }, { status: 400 });
     }
-
-    // Try to find backup
-    let targetBackup = null;
-    if (Array.isArray(allBackups)) {
-      targetBackup = allBackups.find(b => b.id === backup_id);
+    
+    const backup = await response.json();
+    
+    if (!backup || !backup.json_data) {
+      return Response.json({ error: 'No json_data', keys: backup ? Object.keys(backup) : null }, { status: 400 });
     }
-
-    if (!targetBackup) {
-      return Response.json({ 
-        error: 'Backup not found',
-        type: typeof allBackups,
-        isArray: Array.isArray(allBackups),
-        length: allBackups?.length,
-        sample: Array.isArray(allBackups) && allBackups.length > 0 ? { id: allBackups[0].id, keys: Object.keys(allBackups[0]) } : null
-      });
-    }
-
-    // Parse backup data
-    const backupData = JSON.parse(targetBackup.json_data);
+    
+    const backupData = JSON.parse(backup.json_data);
     const entityNames = Object.keys(backupData.entities);
     
     const summary = {};
@@ -67,7 +54,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    return Response.json({ summary });
+    return Response.json({ summary, total_entities: entityNames.length });
   } catch (error) {
     console.error('Error:', error);
     return Response.json({ error: error.message }, { status: 500 });
