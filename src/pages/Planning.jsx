@@ -581,20 +581,20 @@ export default function Planning() {
 
       <Tabs defaultValue="Transport" className="w-full">
         <TabsList className="flex-wrap h-auto">
-          {departments.map(dept => (
-            <TabsTrigger key={dept} value={dept}>{dept}</TabsTrigger>
+          {planningTabs.map(tab => (
+            <TabsTrigger key={tab.key} value={tab.key}>{tab.label}</TabsTrigger>
           ))}
           <TabsTrigger value="capaciteit">Capaciteit & Bezetting</TabsTrigger>
         </TabsList>
 
-        {departments.map(dept => {
+        {planningTabs.map(tab => {
           const deptEmployees = employees.filter(e => {
             if (e.status !== 'Actief') return false;
             if (e.tonen_in_planner === false) return false;
-            if (e.department === dept) return true;
+            if (e.department === tab.department) return true;
             return schedules.some(s => {
               const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-              return dayKeys.some(day => s.employee_id === e.id && s[`${day}_planned_department`] === dept);
+              return dayKeys.some(day => s.employee_id === e.id && s[`${day}_planned_department`] === tab.department);
             });
           }).sort((a, b) => {
             const hoursA = getWeekScheduleHours(a);
@@ -605,7 +605,7 @@ export default function Planning() {
           });
 
           return (
-            <TabsContent key={dept} value={dept} className="space-y-6 mt-4">
+            <TabsContent key={tab.key} value={tab.key} className="space-y-6 mt-4">
               <ShiftLegend />
               <Card>
                 <CardContent className="p-0">
@@ -623,7 +623,7 @@ export default function Planning() {
                     routes={routes}
                     vehicles={vehicles}
                     customers={customers}
-                    filterDepartment={dept}
+                    filterDepartment={tab.department}
                     getWeekScheduleHours={getWeekScheduleHours}
                     onDragDrop={handleDragDrop}
                   />
