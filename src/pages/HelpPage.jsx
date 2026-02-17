@@ -1178,40 +1178,66 @@ export default function HelpPage() {
                   <div>
                     <h4 className="font-medium text-slate-900 mb-2">1. Planning openen</h4>
                     <p className="text-sm text-slate-600 mb-3">
-                      Ga naar Planning en selecteer de week en jaar die je wilt plannen.
+                      Ga naar Planning en selecteer de week en jaar die je wilt plannen. Gebruik de tabs bovenaan om te schakelen tussen afdelingen: Management, Transport, PD Shift 3/4/5 en Charters.
                     </p>
                   </div>
                   <div>
                     <h4 className="font-medium text-slate-900 mb-2">2. Diensten toekennen</h4>
                     <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• Klik op een lege cel in de dagkolom</li>
-                      <li>• Selecteer een dienst type (Dag, Avond, Nacht, Vrij, Verlof, Ziek)</li>
-                      <li>• Wijs optioneel voertuig en route toe</li>
-                      <li>• Sla op</li>
+                      <li>• Klik op een cel in het planningscherm om de shift-dialoog te openen</li>
+                      <li>• Selecteer tijdblokken (Dag, Avond, Nacht) of speciale types (Stand-by, Opleiding)</li>
+                      <li>• Wijs een route en voertuig toe</li>
+                      <li>• Voeg opmerkingen toe (twee velden beschikbaar)</li>
+                      <li>• Kies optioneel een geplande afdeling als de medewerker op een andere afdeling wordt ingezet</li>
+                      <li>• Kopieer de dienst naar meerdere dagen in één keer</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">3. Week kopiëren</h4>
+                    <h4 className="font-medium text-slate-900 mb-2">3. Afwezigheid en vrije dagen</h4>
                     <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• Klik "Week kopiëren" knop</li>
-                      <li>• Kies naar welke week je het wilt kopiëren</li>
-                      <li>• Bevestig</li>
+                      <li>• <strong>Ziek, Verlof, ATV, Opleiding:</strong> Worden automatisch als gekleurde badge getoond wanneer een bijbehorende tijdregistratie bestaat</li>
+                      <li>• <strong>Feestdagen:</strong> Worden automatisch als paarse "Feestdag" badge weergegeven</li>
+                      <li>• <strong>Vrij:</strong> Dagen waarop de medewerker contractueel vrij is tonen een "Vrij" badge</li>
+                      <li>• Afwezigheidsbadges overrulen de geplande shift visueel — de shift blijft opgeslagen</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">4. Capaciteit controleren</h4>
-                    <p className="text-sm text-slate-600 mb-2">
-                      Zie het "Capaciteitsoverzicht" om:
-                    </p>
+                    <h4 className="font-medium text-slate-900 mb-2">4. Drag & drop</h4>
                     <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• Totale uren per medewerker te checken</li>
-                      <li>• Over- of onderwerk te signaleren</li>
-                      <li>• Vergelijking met contract uren</li>
+                      <li>• Versleep diensten tussen cellen via het grip-icoon links van de shift-badge</li>
+                      <li>• Sleep beschikbare voertuigen en routes vanuit het "Beschikbare middelen" paneel onder de planning</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">5. Voorplanning genereren</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Klik op <strong>"Voorplanning"</strong> om automatisch diensten in te vullen</li>
+                      <li>• Wijs per medewerker per dag een shift toe (Dag, Avond, Nacht, etc.)</li>
+                      <li>• PakketDistributie-medewerkers krijgen per dag een Shift-keuze (Shift 3/4/5)</li>
+                      <li>• De contractroosters (even/oneven week) worden getoond zodat je weet welke dagen werkdagen zijn</li>
+                      <li>• <strong>Templates opslaan:</strong> Bewaar je shift-keuzes als template voor hergebruik</li>
+                      <li>• <strong>Templates laden:</strong> Laad eerder opgeslagen templates voor snelle planning</li>
+                      <li>• Bestaande ingevulde cellen worden niet overschreven</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">6. Week en dag kopiëren</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Week kopiëren:</strong> Kopieer de hele planning naar een andere week (optioneel meerdere weken tegelijk, met keuze routes/voertuigen/opmerkingen)</li>
+                      <li>• <strong>Dag kopiëren:</strong> Kopieer één specifieke dag naar andere dagen in dezelfde week</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">7. Extra tabs</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Capaciteit & Bezetting:</strong> Visueel overzicht van bezettingsgraad, werkende/afwezige medewerkers per dag</li>
+                      <li>• <strong>Routehistorie:</strong> Zoek en filter welke routes een medewerker eerder heeft gereden</li>
+                      <li>• <strong>Beschikbaarheid:</strong> Weekkalender met beschikbaarheidsstatus per chauffeur</li>
                     </ul>
                   </div>
                   <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-sm text-green-700">
-                      💡 <strong>Tip:</strong> Gebruik de PDF export om planning af te drukken of te delen.
+                      💡 <strong>Tip:</strong> Gebruik de PDF export om planning af te drukken of te delen. Contract-uren worden per dag en per week getoond.
                     </p>
                   </div>
                 </div>
