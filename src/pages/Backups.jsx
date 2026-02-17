@@ -16,7 +16,9 @@ export default function BackupsPage() {
   const [confirmCode, setConfirmCode] = useState('');
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [restoreEntityName, setRestoreEntityName] = useState(null);
-  const queryClient = useQueryClient();
+    const [showSupabaseRestore, setShowSupabaseRestore] = useState(false);
+    const [supabaseConfirmCode, setSupabaseConfirmCode] = useState('');
+    const queryClient = useQueryClient();
 
   // Haal alleen metadata records op
   const { data: backupMetadata = [], isLoading } = useQuery({
