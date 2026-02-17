@@ -189,9 +189,17 @@ Deno.serve(async (req) => {
     for (const [entityName, tableName] of entitiesToExport) {
       try {
         await delay(300);
+
+        // Check if table exists and get its columns
+        const columns = await fetchTableColumnNames(tableName);
+        if (!columns) {
+          results[entityName] = { status: 'skipped', reason: 'table does not exist in Supabase', count: 0 };
+          continue;
+        }
+
         const data = await base44.asServiceRole.entities[entityName].list('', 10000);
         
-        if (!data || data.length === 0) {
+        if (!data || !Array.isArray(data) || data.length === 0) {
           results[entityName] = { status: 'skipped', reason: 'no data', count: 0 };
           continue;
         }
@@ -200,8 +208,12 @@ Deno.serve(async (req) => {
         await clearTable(tableName);
         await delay(100);
 
-        // Prepare and insert rows
-        const preparedRows = data.map(prepareRow);
+        // Prepare rows: stringify objects, then filter to only existing columns
+        const preparedRows = data.map(row => {
+          const prepared = prepareRow(row);
+          return filterToColumns(prepared, columns);
+        });
+        
         const inserted = await insertBatch(tableName, preparedRows);
         
         results[entityName] = { status: 'success', count: inserted };
