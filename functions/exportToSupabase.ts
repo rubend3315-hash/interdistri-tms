@@ -85,14 +85,33 @@ function filterToColumns(row, columns) {
   return filtered;
 }
 
+// Normalize rows so all have the same set of keys (PostgREST requirement)
+function normalizeRows(rows) {
+  if (rows.length === 0) return rows;
+  const allKeys = new Set();
+  for (const row of rows) {
+    for (const key of Object.keys(row)) {
+      allKeys.add(key);
+    }
+  }
+  return rows.map(row => {
+    const normalized = {};
+    for (const key of allKeys) {
+      normalized[key] = key in row ? row[key] : null;
+    }
+    return normalized;
+  });
+}
+
 // Insert rows in batches
 async function insertBatch(table, rows, batchSize = 500) {
   let inserted = 0;
-  for (let i = 0; i < rows.length; i += batchSize) {
-    const batch = rows.slice(i, i + batchSize);
+  const normalized = normalizeRows(rows);
+  for (let i = 0; i < normalized.length; i += batchSize) {
+    const batch = normalized.slice(i, i + batchSize);
     await supabaseRequest(table, 'POST', batch);
     inserted += batch.length;
-    if (i + batchSize < rows.length) await delay(200);
+    if (i + batchSize < normalized.length) await delay(200);
   }
   return inserted;
 }
