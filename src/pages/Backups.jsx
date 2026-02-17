@@ -32,14 +32,17 @@ export default function BackupsPage() {
     }
   });
 
+  const [confirmCode, setConfirmCode] = useState('');
+
   const restoreMutation = useMutation({
-    mutationFn: async (backup_id) => {
-      const response = await base44.functions.invoke('restoreBackup', { backup_id });
+    mutationFn: async ({ backup_id, confirmation_code }) => {
+      const response = await base44.functions.invoke('restoreBackup', { backup_id, confirmation_code });
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['backups'] });
       setShowConfirmRestore(null);
+      setConfirmCode('');
     }
   });
 
@@ -174,17 +177,32 @@ export default function BackupsPage() {
                                     <p className="text-sm text-red-700">
                                       Dit zal alle huidige gegevens overschrijven met de gegevens van deze back-up. Deze actie kan niet ongedaan worden gemaakt.
                                     </p>
+                                    <p className="text-sm text-red-700 mt-2 font-semibold">
+                                      User-accounts worden NIET hersteld. Gebruikers moeten opnieuw uitgenodigd worden.
+                                    </p>
                                   </div>
                                   <p className="text-sm text-slate-600">
                                     Back-up van {new Date(backup.backup_date).toLocaleString('nl-NL')}
                                   </p>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-700">
+                                      Typ <span className="font-mono bg-slate-100 px-1 rounded">HERSTEL-BEVESTIGD</span> om te bevestigen:
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={confirmCode}
+                                      onChange={(e) => setConfirmCode(e.target.value)}
+                                      placeholder="HERSTEL-BEVESTIGD"
+                                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                                    />
+                                  </div>
                                   <div className="flex gap-3 justify-end">
-                                    <Button variant="outline" onClick={() => setShowConfirmRestore(null)}>
+                                    <Button variant="outline" onClick={() => { setShowConfirmRestore(null); setConfirmCode(''); }}>
                                       Annuleren
                                     </Button>
                                     <Button
-                                      onClick={() => restoreMutation.mutate(backup.id)}
-                                      disabled={restoreMutation.isPending}
+                                      onClick={() => restoreMutation.mutate({ backup_id: backup.id, confirmation_code: confirmCode })}
+                                      disabled={restoreMutation.isPending || confirmCode !== 'HERSTEL-BEVESTIGD'}
                                       className="bg-red-600 hover:bg-red-700"
                                     >
                                       {restoreMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
