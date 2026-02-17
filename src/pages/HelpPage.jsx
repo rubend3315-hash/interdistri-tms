@@ -778,17 +778,20 @@ export default function HelpPage() {
                   <Shield className="w-5 h-5 text-red-600" />
                   Back-ups & Datamigratie
                 </CardTitle>
-                <CardDescription>Gegevensbeveiliging en migratie</CardDescription>
+                <CardDescription>Gegevensbeveiliging, Supabase sync en migratie</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-slate-600">
-                  Bescherm en migreer je data:
+                  Bescherm en migreer je data met meerdere backup-strategieën:
                 </p>
                 <ul className="text-sm space-y-2 text-slate-600">
-                  <li>✓ Handmatige en automatische back-ups</li>
-                  <li>✓ Back-up herstellen</li>
-                  <li>✓ Datamigratie tools</li>
-                  <li>✓ Test database ondersteuning</li>
+                  <li>✓ <strong>Handmatige back-ups:</strong> Per entity opgeslagen met download en per-entity herstel</li>
+                  <li>✓ <strong>Volledig herstel:</strong> Herstel alle data of één specifieke entity uit een backup</li>
+                  <li>✓ <strong>Export naar Supabase:</strong> Exporteer alle 42 entities naar een externe Supabase PostgreSQL database als tweede backup-laag</li>
+                  <li>✓ <strong>Herstel vanuit Supabase:</strong> Importeer data terug uit Supabase als primaire backup niet beschikbaar is</li>
+                  <li>✓ <strong>Genereer Supabase SQL:</strong> Automatisch CREATE TABLE statements genereren voor alle entities — kopieer en plak in Supabase SQL Editor</li>
+                  <li>✓ <strong>Datamigratie tools:</strong> Migreer data tussen omgevingen</li>
+                  <li>✓ <strong>Test database:</strong> Aparte productie- en testomgeving</li>
                 </ul>
               </CardContent>
             </Card>
