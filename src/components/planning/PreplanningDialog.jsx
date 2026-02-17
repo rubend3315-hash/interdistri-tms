@@ -12,6 +12,7 @@ import { toast } from "sonner";
 const SHIFTS = ["Dag", "Avond", "Nacht", "Dag en Avond", "Avond en Nacht"];
 const DAYS = ["ma", "di", "wo", "do", "vr", "za", "zo"];
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const PAKKET_SHIFTS = ["Shift3", "Shift4", "Shift5"];
 
 function ShiftSelect({ value, onChange, size = "normal" }) {
   const cls = size === "tiny" ? "w-[70px] h-6 text-[10px]" : "w-28 h-7 text-xs";
@@ -78,6 +79,8 @@ export default function PreplanningDialog({
   const [fallbackShift, setFallbackShift] = useState("Dag");
   // shiftOverrides: { [empId]: { monday: "Dag", tuesday: "Avond en Nacht", ... } }
   const [shiftOverrides, setShiftOverrides] = useState({});
+  // pakketShiftOverrides: { [empId]: "Shift3" | "Shift4" | "Shift5" }
+  const [pakketShiftOverrides, setPakketShiftOverrides] = useState({});
   const [search, setSearch] = useState("");
   const [expandedDepts, setExpandedDepts] = useState({});
 
@@ -87,6 +90,7 @@ export default function PreplanningDialog({
     if (open) {
       // Pre-fill: eerst shift_template (opgeslagen), dan default_shift, dan leeg
       const initial = {};
+      const initialPakket = {};
       employees.forEach(e => {
         if (e.shift_template && typeof e.shift_template === 'object' && Object.keys(e.shift_template).length > 0) {
           initial[e.id] = { ...e.shift_template };
@@ -95,8 +99,13 @@ export default function PreplanningDialog({
           DAY_KEYS.forEach(d => { days[d] = e.default_shift; });
           initial[e.id] = days;
         }
+        // Default pakket shift voor PakketDistributie medewerkers
+        if (e.department === 'PakketDistributie') {
+          initialPakket[e.id] = 'Shift3';
+        }
       });
       setShiftOverrides(initial);
+      setPakketShiftOverrides(initialPakket);
       setSearch("");
       setExpandedDepts({});
     }
@@ -185,7 +194,7 @@ export default function PreplanningDialog({
   };
 
   const handleGenerate = () => {
-    onGenerate({ fallbackShift, shiftOverrides });
+    onGenerate({ fallbackShift, shiftOverrides, pakketShiftOverrides });
   };
 
   const toggleDept = (dept) => {
