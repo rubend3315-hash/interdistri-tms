@@ -70,6 +70,20 @@ export default function BackupsPage() {
     }
   });
 
+  const generateSQLMutation = useMutation({
+    mutationFn: async () => {
+      const response = await base44.functions.invoke('generateSupabaseSQL');
+      return response.data;
+    },
+    onSuccess: (data) => {
+      setGeneratedSQL(data.sql);
+      setShowSQLDialog(true);
+    },
+    onError: (error) => {
+      alert('Fout bij genereren SQL: ' + (error?.response?.data?.error || error.message));
+    }
+  });
+
   const importFromSupabaseMutation = useMutation({
     mutationFn: async ({ confirmation_code }) => {
       const response = await base44.functions.invoke('importFromSupabase', { confirmation_code });
