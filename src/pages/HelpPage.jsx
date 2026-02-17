@@ -2274,6 +2274,107 @@ export default function HelpPage() {
               </AccordionContent>
             </AccordionItem>
 
+            {/* Back-ups & Supabase Handleiding */}
+            <AccordionItem value="backups-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Shield className="w-4 h-4 mr-2" />
+                Hoe werken Back-ups & Supabase Export?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Overzicht</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Het systeem biedt twee backup-strategieën: <strong>interne back-ups</strong> (opgeslagen als JSON in Base44) en <strong>Supabase export</strong> (externe PostgreSQL database). Samen zorgen ze voor maximale dataveiligheid.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">1. Handmatige Back-up (Intern)</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar <strong>"Back-ups"</strong> in het menu</li>
+                      <li>• Klik op <strong>"Handmatige Back-up"</strong></li>
+                      <li>• Alle 42 entities worden opgehaald en als JSON-bestand opgeslagen</li>
+                      <li>• De backup verschijnt in de lijst met datum, aantal records en bestandsgrootte</li>
+                      <li>• Klik op een backup om de <strong>details per entity</strong> te bekijken</li>
+                      <li>• Download de backup als JSON-bestand via het download-icoon</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">2. Back-up Herstellen</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Volledige herstel:</strong> Klik op het herstel-icoon naast een backup om <strong>alle data</strong> te herstellen</li>
+                      <li>• <strong>Per entity:</strong> Klik op een backup, open de details en klik "Herstel" naast een specifieke entity</li>
+                      <li>• Typ <strong>HERSTEL-BEVESTIGD</strong> als bevestigingscode</li>
+                      <li>• ⚠️ Alle huidige data wordt verwijderd en vervangen door de backup-versie</li>
+                      <li>• ⚠️ User-accounts worden NIET hersteld — nodig gebruikers opnieuw uit</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">3. Supabase SQL Genereren</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Voordat je data naar Supabase kunt exporteren, moeten de tabellen bestaan:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Klik op <strong>"Genereer Supabase SQL"</strong></li>
+                      <li>• Een dialoog toont de SQL met DROP TABLE + CREATE TABLE statements voor alle 42 tabellen</li>
+                      <li>• Klik <strong>"Kopieer SQL"</strong> om de SQL naar je klembord te kopiëren</li>
+                      <li>• Ga naar je <strong>Supabase Dashboard → SQL Editor</strong></li>
+                      <li>• Plak de SQL en voer het uit</li>
+                      <li>• Dit vervangt bestaande tabellen met dezelfde naam</li>
+                      <li>• ⚠️ Voer dit uit <strong>voordat</strong> je voor het eerst exporteert, of wanneer er entities zijn gewijzigd</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">4. Export naar Supabase</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Klik op <strong>"Export naar Supabase"</strong></li>
+                      <li>• Het systeem exporteert alle 42 entities naar de gekoppelde Supabase database</li>
+                      <li>• Bestaande data in Supabase wordt eerst verwijderd, daarna worden nieuwe records ingevoegd</li>
+                      <li>• Na afloop zie je hoeveel records zijn geëxporteerd en eventuele fouten</li>
+                      <li>• Base44 ID's worden opgeslagen als <strong>base44_id</strong> in Supabase (UUID-conflict voorkomen)</li>
+                      <li>• Complexe velden (arrays, objecten) worden als <strong>tekst</strong> opgeslagen</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">5. Herstel vanuit Supabase</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Klik op <strong>"Herstel vanuit Supabase"</strong></li>
+                      <li>• Typ <strong>SUPABASE-HERSTEL</strong> als bevestigingscode</li>
+                      <li>• Alle data wordt opgehaald uit Supabase en teruggezet in Base44</li>
+                      <li>• Gebruik dit alleen als de primaire Base44 backup niet beschikbaar is</li>
+                      <li>• ⚠️ Alle huidige data wordt vervangen</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">6. Aanbevolen werkwijze</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Maak <strong>dagelijks</strong> een handmatige back-up óf stel een automatische backup in</li>
+                      <li>• Exporteer <strong>wekelijks</strong> naar Supabase als extra vangnet</li>
+                      <li>• Na wijzigingen aan entities: genereer opnieuw SQL en voer uit in Supabase</li>
+                      <li>• Controleer of de export <strong>0 fouten</strong> meldt</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>Tip:</strong> De Supabase export dient als tweede backup-laag. Je kunt de data ook rechtstreeks in Supabase bekijken via de Table Editor.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> Bij "Export naar Supabase" worden alle tabellen eerst leeggemaakt. Zorg dat je niet per ongeluk exporteert met een lege database.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* HR Import */}
             <AccordionItem value="hr-import-guide">
               <AccordionTrigger className="text-base font-semibold">
