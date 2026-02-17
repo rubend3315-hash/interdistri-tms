@@ -300,6 +300,9 @@ export default function TIModelRoutesTab({ customerId }) {
                     </td>
                     <td className="px-4 py-3 text-slate-700 text-xs">
                       {route.start_date && new Date(route.start_date).toLocaleDateString("nl-NL")}
+                      {route.end_date && (
+                        <span className="text-slate-400"> t/m {new Date(route.end_date).toLocaleDateString("nl-NL")}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex justify-center gap-2">
