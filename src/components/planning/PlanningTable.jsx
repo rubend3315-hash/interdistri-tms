@@ -4,7 +4,7 @@ import { nl } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, GripVertical } from "lucide-react";
+import { User, GripVertical, AlertCircle } from "lucide-react";
 import { shiftTypes } from "./ShiftLegend";
 import AddShiftDialog from "./AddShiftDialog";
 import DraggableShiftBadge from "./DraggableShiftBadge";
