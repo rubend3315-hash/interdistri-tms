@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
     }
 
     // Create metadata record (overzicht)
+    await delay(300);
     await base44.asServiceRole.entities.Backup.create({
       backup_date: now,
       backup_group_id: backupGroupId,
