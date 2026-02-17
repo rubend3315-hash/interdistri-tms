@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
         out_of_service_date: 'date', address: 'text', postal_code: 'text', city: 'text',
         emergency_contact_name: 'text', emergency_contact_phone: 'text', emergency_contact_relation: 'text',
         department: 'text', "function": 'text', charter_company_id: 'text',
-        drivers_license_number: 'text', drivers_license_categories: 'jsonb', drivers_license_expiry: 'date',
+        drivers_license_number: 'text', drivers_license_categories: 'text', drivers_license_expiry: 'date',
         code95_expiry: 'date', id_document_number: 'text', id_document_expiry: 'date',
         contract_type: 'text', contract_start_date: 'date', contract_end_date: 'date',
         contract_hours: 'numeric', hourly_rate: 'numeric', salary_scale: 'text',
@@ -322,7 +322,7 @@ Deno.serve(async (req) => {
         action: 'text', category: 'text', description: 'text',
         performed_by_email: 'text', performed_by_name: 'text',
         target_entity: 'text', target_id: 'text', target_name: 'text',
-        old_value: 'text', new_value: 'text', details: 'jsonb'
+        old_value: 'text', new_value: 'text', details: 'text'
       },
       integration: {
         name: 'text', type: 'text', api_url: 'text', api_key: 'text',
