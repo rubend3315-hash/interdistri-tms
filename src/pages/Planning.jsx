@@ -754,6 +754,7 @@ export default function Planning() {
                     filterDepartment={isPakketShiftTab ? tab.key : tab.department}
                     getWeekScheduleHours={getWeekScheduleHours}
                     onDragDrop={handleDragDrop}
+                    timeEntries={timeEntries}
                   />
                 </CardContent>
               </Card>
