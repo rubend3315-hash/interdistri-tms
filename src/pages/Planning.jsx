@@ -392,6 +392,96 @@ export default function Planning() {
     }
   };
 
+  const handleGeneratePreplanning = async ({ defaultShift }) => {
+    setIsGeneratingPreplanning(true);
+    try {
+      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const dutchDayMap = {
+        'maandag': 'monday', 'dinsdag': 'tuesday', 'woensdag': 'wednesday',
+        'donderdag': 'thursday', 'vrijdag': 'friday', 'zaterdag': 'saturday', 'zondag': 'sunday'
+      };
+
+      const plannable = employees.filter(e => e.status === 'Actief' && e.tonen_in_planner !== false);
+      let createdCount = 0;
+      let skippedCount = 0;
+
+      for (const employee of plannable) {
+        // Zoek actief contractregel met weekrooster
+        const today = new Date();
+        let activeContract = employee.contractregels
+          ?.sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))
+          .find(cr => {
+            const startDate = new Date(cr.startdatum);
+            const endDate = cr.einddatum ? new Date(cr.einddatum) : null;
+            return startDate <= today && (!endDate || endDate >= today);
+          });
+        if (!activeContract) {
+          activeContract = employee.contractregels?.find(cr => cr.week1 || cr.week2);
+        }
+        if (!activeContract) continue;
+
+        const weekSchedule = (weekNumber % 2 === 1) ? activeContract.week1 : activeContract.week2;
+        if (!weekSchedule || typeof weekSchedule !== 'object') continue;
+
+        // Bereken uren per werkdag
+        const workingDays = Object.entries(weekSchedule).filter(([, val]) =>
+          val === true || val === 'true' || (typeof val === 'number' && val > 0) || (typeof val === 'string' && !isNaN(parseFloat(val)) && parseFloat(val) > 0 && val !== '-')
+        );
+
+        // Bouw werkdag-map: dutchDay -> isWorking
+        const workingDayMap = {};
+        Object.entries(dutchDayMap).forEach(([dutchDay, englishDay]) => {
+          const val = weekSchedule[dutchDay];
+          workingDayMap[englishDay] = val === true || val === 'true' || (typeof val === 'number' && val > 0) || (typeof val === 'string' && !isNaN(parseFloat(val)) && parseFloat(val) > 0 && val !== '-');
+        });
+
+        // Zoek bestaand schedule record voor deze week
+        const existingSchedule = schedules.find(s => s.employee_id === employee.id && s.week_number === weekNumber && s.year === year);
+
+        const updateData = {};
+        let hasChanges = false;
+
+        dayKeys.forEach(dayKey => {
+          const isWorkingDay = workingDayMap[dayKey];
+          if (!isWorkingDay) return; // Geen werkdag -> skip
+
+          // Check of er al iets ingepland staat
+          const existingValue = existingSchedule?.[dayKey] || '';
+          if (existingValue && existingValue !== '-' && existingValue !== '') {
+            skippedCount++;
+            return; // Al ingepland -> niet overschrijven
+          }
+
+          updateData[dayKey] = defaultShift;
+          updateData[`${dayKey}_planned_department`] = employee.department || '';
+          hasChanges = true;
+          createdCount++;
+        });
+
+        if (!hasChanges) continue;
+
+        if (existingSchedule) {
+          await base44.entities.Schedule.update(existingSchedule.id, updateData);
+        } else {
+          await base44.entities.Schedule.create({
+            employee_id: employee.id,
+            week_number: weekNumber,
+            year: year,
+            ...updateData
+          });
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      toast.success(`Voorplanning gegenereerd: ${createdCount} diensten ingevuld, ${skippedCount} overgeslagen (al ingepland)`);
+      setShowPreplanningDialog(false);
+    } catch (error) {
+      toast.error('Fout bij voorplanning: ' + error.message);
+    } finally {
+      setIsGeneratingPreplanning(false);
+    }
+  };
+
   const handleCopyDay = (sourceDay) => {
     setSourceCopyDay(sourceDay);
     setShowCopyDayDialog(true);
