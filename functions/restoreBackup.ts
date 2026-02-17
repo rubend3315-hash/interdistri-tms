@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -23,34 +25,41 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // Haal alle backup-delen op voor deze groep
-    const allParts = await base44.asServiceRole.entities.Backup.filter(
-      { backup_group_id: backup_group_id }
+    // Haal metadata op
+    const metadataRecords = await base44.asServiceRole.entities.Backup.filter(
+      { backup_group_id: backup_group_id, entity_name: '_metadata' }
     );
 
-    if (!allParts || allParts.length === 0) {
+    if (!metadataRecords || metadataRecords.length === 0) {
       return Response.json({ error: 'Backup niet gevonden' }, { status: 404 });
     }
 
+    const metadata = metadataRecords[0];
+
     // Check environment
-    const metadata = allParts.find(p => p.entity_name === '_metadata');
-    if (metadata?.environment && metadata.environment !== 'production') {
+    if (metadata.environment && metadata.environment !== 'production') {
       return Response.json({ 
         error: `GEBLOKKEERD: Backup uit "${metadata.environment}" omgeving.`
       }, { status: 403 });
     }
 
-    // Filter op specifieke entity als opgegeven, anders alles
-    const partsToRestore = allParts.filter(p => {
-      if (p.entity_name === '_metadata') return false;
-      if (p.entity_name === 'User') return false; // Users nooit automatisch herstellen
-      if (entity_name) {
-        // Match entity_name of entity_name__partXofY
-        const baseName = p.entity_name.split('__')[0];
-        return baseName === entity_name;
-      }
-      return true;
-    });
+    // Parse metadata to get file URL
+    const metaData = JSON.parse(metadata.json_data);
+    
+    if (!metaData.file_url) {
+      return Response.json({ error: 'Backup bestand niet gevonden (oud formaat?)' }, { status: 400 });
+    }
+
+    // Download backup file
+    const fileResponse = await fetch(metaData.file_url);
+    if (!fileResponse.ok) {
+      return Response.json({ error: 'Kon backup bestand niet downloaden' }, { status: 500 });
+    }
+    const backupContent = await fileResponse.json();
+
+    if (!backupContent.data) {
+      return Response.json({ error: 'Ongeldig backup bestand' }, { status: 400 });
+    }
 
     const restoreResult = {
       timestamp: new Date().toISOString(),
@@ -61,63 +70,56 @@ Deno.serve(async (req) => {
       errors: []
     };
 
-    // Groepeer parts per entity (voor chunked entities)
-    const entityParts = {};
-    for (const part of partsToRestore) {
-      const baseName = part.entity_name.split('__')[0];
-      if (!entityParts[baseName]) entityParts[baseName] = [];
-      entityParts[baseName].push(part);
-    }
+    // Determine which entities to restore
+    const entitiesToRestore = entity_name 
+      ? { [entity_name]: backupContent.data[entity_name] }
+      : backupContent.data;
 
-    for (const [entName, parts] of Object.entries(entityParts)) {
+    for (const [entName, records] of Object.entries(entitiesToRestore)) {
+      // Skip User entity
+      if (entName === 'User') {
+        restoreResult.skipped.push({
+          entity: 'User',
+          reason: 'User-accounts moeten handmatig uitgenodigd worden',
+          count: records?.length || 0
+        });
+        continue;
+      }
+
+      if (!records || records.length === 0) continue;
+
       try {
-        // Combineer alle records uit alle parts
-        let allRecords = [];
-        for (const part of parts) {
-          const records = JSON.parse(part.json_data);
-          allRecords = allRecords.concat(records);
-        }
-
-        if (allRecords.length === 0) continue;
-
-        // Verwijder bestaande data eerst
+        // Delete existing data
+        await delay(250);
         const existing = await base44.asServiceRole.entities[entName].list('', 10000);
         if (existing && existing.length > 0) {
           for (const record of existing) {
             try {
+              await delay(50);
               await base44.asServiceRole.entities[entName].delete(record.id);
             } catch (delErr) {
-              // skip delete errors
+              // skip
             }
           }
         }
 
-        // Herstel in batches van 50
-        const cleanedRecords = allRecords.map(record => {
+        // Clean records and restore in batches
+        const cleanedRecords = records.map(record => {
           const { id, created_date, updated_date, created_by, created_by_id, entity_name: en, app_id, is_sample, is_deleted, deleted_date, environment, ...data } = record;
           return data;
         });
 
         const batchSize = 50;
         for (let i = 0; i < cleanedRecords.length; i += batchSize) {
+          await delay(250);
           const batch = cleanedRecords.slice(i, i + batchSize);
           await base44.asServiceRole.entities[entName].bulkCreate(batch);
         }
 
-        restoreResult.restored_entities[entName] = allRecords.length;
+        restoreResult.restored_entities[entName] = records.length;
       } catch (err) {
         restoreResult.errors.push({ entity: entName, error: err.message });
       }
-    }
-
-    // Meld overgeslagen User entity
-    const userParts = allParts.filter(p => p.entity_name === 'User');
-    if (userParts.length > 0) {
-      restoreResult.skipped.push({
-        entity: 'User',
-        reason: 'User-accounts moeten handmatig uitgenodigd worden',
-        count: userParts.reduce((sum, p) => sum + (p.record_count || 0), 0)
-      });
     }
 
     return Response.json(restoreResult);
