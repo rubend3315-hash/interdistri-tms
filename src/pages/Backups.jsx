@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Download, RotateCcw, Plus, AlertCircle, ChevronDown, ChevronRight, CloudUpload, CloudDownload } from "lucide-react";
+import { Loader2, Download, RotateCcw, Plus, AlertCircle, ChevronDown, ChevronRight, CloudUpload, CloudDownload, Database, Copy, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
