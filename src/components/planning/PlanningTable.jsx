@@ -96,6 +96,30 @@ export default function PlanningTable({
     }
   };
 
+  // Build absence lookup: { "employeeId_yyyy-MM-dd": "Ziek" | "Verlof" | ... }
+  const ABSENCE_TYPES = new Set(["Ziek", "Verlof", "ATV", "Opleiding"]);
+  const absenceLookup = React.useMemo(() => {
+    const lookup = {};
+    timeEntries.forEach(te => {
+      if (te.shift_type && ABSENCE_TYPES.has(te.shift_type) && te.date && te.employee_id) {
+        lookup[`${te.employee_id}_${te.date}`] = te.shift_type;
+      }
+    });
+    return lookup;
+  }, [timeEntries]);
+
+  const getAbsence = (employeeId, date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return absenceLookup[`${employeeId}_${dateStr}`] || null;
+  };
+
+  const absenceColors = {
+    "Ziek": "bg-red-100 text-red-700 border-red-200",
+    "Verlof": "bg-amber-100 text-amber-700 border-amber-200",
+    "ATV": "bg-orange-100 text-orange-700 border-orange-200",
+    "Opleiding": "bg-indigo-100 text-indigo-700 border-indigo-200",
+  };
+
   const isHoliday = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return holidays.find(h => h.date === dateStr);
