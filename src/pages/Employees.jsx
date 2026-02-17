@@ -523,7 +523,7 @@ function ProfielTab({ employee, viewOnly }) {
   );
 }
 
-function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
+function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, departments = [], functionOptions = [] }) {
   const defaults = {
     employee_number: '',
     initials: '',
@@ -911,7 +911,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
             </SelectTrigger>
             <SelectContent>
               {departments.map(dept => (
-                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                <SelectItem key={dept.id} value={dept.name}>{dept.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -928,7 +928,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
             <SelectContent>
               <SelectItem value="_placeholder" disabled>Selecteer functie</SelectItem>
               {functionOptions.map(func => (
-                <SelectItem key={func} value={func}>{func}</SelectItem>
+                <SelectItem key={func.id} value={func.name}>{func.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
