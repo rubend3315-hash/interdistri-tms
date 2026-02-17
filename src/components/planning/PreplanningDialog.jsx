@@ -309,23 +309,7 @@ export default function PreplanningDialog({
                           <td className="px-2 py-1 truncate max-w-[160px]">
                             <span className="text-xs">{getFullName(emp)}</span>
                           </td>
-                          <td className="px-0.5 py-0.5 text-center">
-                            {emp.department === 'PakketDistributie' ? (
-                              <Select
-                                value={pakketShiftOverrides[emp.id] || 'Shift3'}
-                                onValueChange={(v) => setPakketShiftOverrides(prev => ({ ...prev, [emp.id]: v }))}
-                              >
-                                <SelectTrigger className="w-[62px] h-5 text-[9px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {PAKKET_SHIFTS.map(s => <SelectItem key={s} value={s}>{s.replace('Shift', 'S')}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <span className="text-[9px] text-slate-300">—</span>
-                            )}
-                          </td>
+                          {/* PD shift column removed - now per day */}
                           {DAY_KEYS.map((dayKey, i) => {
                             const isWorkDay = workDays[dayKey];
                             return (
