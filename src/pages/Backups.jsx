@@ -112,7 +112,7 @@ export default function BackupsPage() {
             </CardContent>
           </Card>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Button
               onClick={() => createBackupMutation.mutate()}
               disabled={createBackupMutation.isPending}
@@ -120,6 +120,24 @@ export default function BackupsPage() {
             >
               {createBackupMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {createBackupMutation.isPending ? 'Back-up maken...' : 'Handmatige Back-up'}
+            </Button>
+            <Button
+              onClick={() => exportToSupabaseMutation.mutate()}
+              disabled={exportToSupabaseMutation.isPending}
+              variant="outline"
+              className="border-green-300 text-green-700 hover:bg-green-50"
+            >
+              {exportToSupabaseMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              <CloudUpload className="w-4 h-4 mr-2" />
+              {exportToSupabaseMutation.isPending ? 'Exporteren...' : 'Export naar Supabase'}
+            </Button>
+            <Button
+              onClick={() => setShowSupabaseRestore(true)}
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+            >
+              <CloudDownload className="w-4 h-4 mr-2" />
+              Herstel vanuit Supabase
             </Button>
           </div>
 
