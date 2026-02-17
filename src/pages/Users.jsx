@@ -108,13 +108,23 @@ export default function UsersPage() {
   const inviteUserMutation = useMutation({
     mutationFn: async (data) => {
       await base44.users.inviteUser(data.email, data.role);
+      // Stuur welkomstmail via Gmail (met CC naar admin) als er een gekoppelde medewerker is
+      if (data.selectedEmployeeId) {
+        try {
+          await base44.functions.invoke('sendWelcomeEmail', { employee_id: data.selectedEmployeeId });
+        } catch (emailErr) {
+          console.warn('Welkomstmail kon niet verstuurd worden:', emailErr);
+        }
+      }
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowInviteDialog(false);
       setInviteData({ email: '', role: 'user', selectedEmployeeId: '' });
-      alert('Uitnodiging verstuurd!');
+      alert(data.selectedEmployeeId 
+        ? 'Uitnodiging verstuurd + welkomstmail verzonden (CC naar ruben@interdistri.nl)!' 
+        : 'Uitnodiging verstuurd!');
       logAuditEvent({
         action: 'user_invited',
         category: 'Gebruikers',
