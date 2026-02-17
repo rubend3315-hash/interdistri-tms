@@ -296,18 +296,6 @@ export default function StamkaartForm({ employee }) {
               <DepartmentSelect value={data.department || ""} onChange={(v) => update("department", v)} hasError={fieldError("department")} />
               <FunctionSelect value={data.function || ""} onChange={(v) => update("function", v)} />
               <div className="space-y-1">
-                <Label>Standaard shift (voorplanning)</Label>
-                <Select value={data.default_shift || "_none"} onValueChange={(v) => update("default_shift", v === "_none" ? "" : v)}>
-                  <SelectTrigger><SelectValue placeholder="Selecteer shift" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_none">Geen (fallback)</SelectItem>
-                    <SelectItem value="Dag">Dag</SelectItem>
-                    <SelectItem value="Avond">Avond</SelectItem>
-                    <SelectItem value="Nacht">Nacht</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
                 <Label>Contract type</Label>
                 <Select value={data.contract_type || "Tijdelijk"} onValueChange={(v) => update("contract_type", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
