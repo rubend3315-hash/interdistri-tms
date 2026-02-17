@@ -71,23 +71,13 @@ export default function BackupsPage() {
     }
   });
 
-  const handleDownloadGroup = async (groupId) => {
-    const parts = await base44.entities.Backup.filter({ backup_group_id: groupId });
-    const exportData = {};
-    for (const part of parts) {
-      if (part.entity_name === '_metadata') continue;
-      const baseName = part.entity_name.split('__')[0];
-      const records = JSON.parse(part.json_data);
-      if (!exportData[baseName]) exportData[baseName] = [];
-      exportData[baseName] = exportData[baseName].concat(records);
+  const handleDownloadGroup = (meta) => {
+    const fileUrl = getFileUrl(meta);
+    if (fileUrl) {
+      window.open(fileUrl, '_blank');
+    } else {
+      alert('Geen backup bestand beschikbaar (oud formaat)');
     }
-    const element = document.createElement("a");
-    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2)));
-    element.setAttribute("download", `backup-${groupId}.json`);
-    element.style.display = "none";
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
   };
 
   const formatBytes = (bytes) => {
