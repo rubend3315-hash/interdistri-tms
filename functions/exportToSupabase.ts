@@ -25,10 +25,64 @@ async function supabaseRequest(table, method, body = null, query = '') {
   return res;
 }
 
+// Get column names from a Supabase table (returns null if table doesn't exist)
+async function getTableColumns(table) {
+  const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&limit=0`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'count=exact'
+    }
+  });
+  if (!res.ok) return null; // table doesn't exist
+  // Parse columns from the response headers (content-profile) or use OPTIONS
+  // Simpler: do an OPTIONS/HEAD or just try reading one row
+  return true; // table exists
+}
+
+// Get actual columns via OpenAPI definition for a table
+async function fetchTableColumnNames(table) {
+  const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&limit=1`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (data.length > 0) {
+    return Object.keys(data[0]);
+  }
+  // If table is empty, try fetching columns from the OpenAPI spec
+  const defUrl = `${SUPABASE_URL}/rest/v1/?apikey=${SUPABASE_KEY}`;
+  const defRes = await fetch(defUrl);
+  if (!defRes.ok) return null;
+  const spec = await defRes.json();
+  const def = spec.definitions?.[table];
+  if (def?.properties) return Object.keys(def.properties);
+  return null;
+}
+
 // Delete all rows from a table
 async function clearTable(table) {
-  // Delete where id is not null (= all rows)
   await supabaseRequest(table, 'DELETE', null, '?id=not.is.null');
+}
+
+// Filter row to only include columns that exist in the table
+function filterToColumns(row, columns) {
+  const filtered = {};
+  for (const col of columns) {
+    if (col in row) {
+      filtered[col] = row[col];
+    }
+  }
+  return filtered;
 }
 
 // Insert rows in batches
