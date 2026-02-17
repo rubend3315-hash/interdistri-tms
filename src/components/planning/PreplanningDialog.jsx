@@ -314,15 +314,31 @@ export default function PreplanningDialog({
                             const isWorkDay = workDays[dayKey];
                             return (
                               <td key={dayKey} className={`px-0.5 py-0.5 text-center ${isWorkDay === false ? 'bg-slate-50' : ''}`}>
-                                <ShiftSelect
-                                  value={empDays[dayKey] || ''}
-                                  onChange={(v) => setEmployeeDay(emp.id, dayKey, v)}
-                                  size="tiny"
-                                />
-                                <div className={`text-[8px] leading-none mt-0.5 ${isWorkDay ? 'text-green-600' : 'text-slate-300'}`}>
-                                  {isWorkDay ? '●' : '○'}
-                                </div>
-                              </td>
+                                                <ShiftSelect
+                                                  value={empDays[dayKey] || ''}
+                                                  onChange={(v) => setEmployeeDay(emp.id, dayKey, v)}
+                                                  size="tiny"
+                                                />
+                                                {emp.department === 'PakketDistributie' && (
+                                                  <Select
+                                                    value={(pakketShiftOverrides[emp.id] || {})[dayKey] || 'Shift3'}
+                                                    onValueChange={(v) => setPakketShiftOverrides(prev => ({
+                                                      ...prev,
+                                                      [emp.id]: { ...(prev[emp.id] || {}), [dayKey]: v }
+                                                    }))}
+                                                  >
+                                                    <SelectTrigger className="w-[50px] h-4 text-[8px] mx-auto mt-0.5">
+                                                      <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                      {PAKKET_SHIFTS.map(s => <SelectItem key={s} value={s}>{s.replace('Shift', 'S')}</SelectItem>)}
+                                                    </SelectContent>
+                                                  </Select>
+                                                )}
+                                                <div className={`text-[8px] leading-none mt-0.5 ${isWorkDay ? 'text-green-600' : 'text-slate-300'}`}>
+                                                  {isWorkDay ? '●' : '○'}
+                                                </div>
+                                              </td>
                             );
                           })}
                           <td className="px-1">
