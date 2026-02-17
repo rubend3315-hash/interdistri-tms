@@ -186,6 +186,16 @@ export default function BackupsPage() {
               <CloudDownload className="w-4 h-4 mr-2" />
               Herstel vanuit Supabase
             </Button>
+            <Button
+              onClick={() => generateSQLMutation.mutate()}
+              disabled={generateSQLMutation.isPending}
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              {generateSQLMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              <Database className="w-4 h-4 mr-2" />
+              Genereer Supabase SQL
+            </Button>
           </div>
 
           <Card>
