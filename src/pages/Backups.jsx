@@ -335,6 +335,50 @@ export default function BackupsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+        {/* Supabase Restore Dialog */}
+        <Dialog open={showSupabaseRestore} onOpenChange={(open) => { if (!open) { setShowSupabaseRestore(false); setSupabaseConfirmCode(''); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Herstel vanuit Supabase</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <p className="text-sm text-orange-800 font-semibold mb-2">⚠️ Waarschuwing</p>
+                <p className="text-sm text-orange-700">
+                  Alle huidige data wordt verwijderd en vervangen door de data uit Supabase.
+                  Gebruik dit alleen als de primaire Base44 backup niet beschikbaar is.
+                </p>
+                <p className="text-sm text-orange-700 mt-2 font-semibold">
+                  User-accounts worden NIET hersteld — nodig gebruikers opnieuw uit.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Typ <span className="font-mono bg-slate-100 px-1 rounded">SUPABASE-HERSTEL</span> om te bevestigen:
+                </label>
+                <Input
+                  value={supabaseConfirmCode}
+                  onChange={(e) => setSupabaseConfirmCode(e.target.value)}
+                  placeholder="SUPABASE-HERSTEL"
+                />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" onClick={() => { setShowSupabaseRestore(false); setSupabaseConfirmCode(''); }}>
+                  Annuleren
+                </Button>
+                <Button
+                  onClick={() => importFromSupabaseMutation.mutate({ confirmation_code: supabaseConfirmCode })}
+                  disabled={importFromSupabaseMutation.isPending || supabaseConfirmCode !== 'SUPABASE-HERSTEL'}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  {importFromSupabaseMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Herstel vanuit Supabase
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
     </div>
   );
 }
