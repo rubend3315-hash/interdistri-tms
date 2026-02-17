@@ -363,6 +363,40 @@ export default function BackupsPage() {
         </DialogContent>
       </Dialog>
 
+        {/* SQL Generator Dialog */}
+        <Dialog open={showSQLDialog} onOpenChange={(open) => { if (!open) { setShowSQLDialog(false); setSqlCopied(false); } }}>
+          <DialogContent className="max-w-4xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Supabase SQL — Tabellen aanmaken</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <p className="text-sm text-purple-800">
+                  Kopieer onderstaande SQL en plak het in de <strong>Supabase SQL Editor</strong> om alle tabellen aan te maken.
+                  Dit vervangt bestaande tabellen met dezelfde naam.
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedSQL);
+                    setSqlCopied(true);
+                    setTimeout(() => setSqlCopied(false), 2000);
+                  }}
+                >
+                  {sqlCopied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                  {sqlCopied ? 'Gekopieerd!' : 'Kopieer SQL'}
+                </Button>
+              </div>
+              <pre className="bg-slate-900 text-slate-100 text-xs p-4 rounded-lg overflow-auto max-h-[50vh] whitespace-pre-wrap">
+                {generatedSQL}
+              </pre>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Supabase Restore Dialog */}
         <Dialog open={showSupabaseRestore} onOpenChange={(open) => { if (!open) { setShowSupabaseRestore(false); setSupabaseConfirmCode(''); } }}>
           <DialogContent>
