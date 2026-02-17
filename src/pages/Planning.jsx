@@ -32,6 +32,7 @@ import CapacityOverview from "../components/planning/CapacityOverview";
 import RouteHistorie from "../components/planning/RouteHistorie";
 import AvailableResources from "../components/planning/AvailableResources";
 import DriverAvailabilityCalendar from "../components/planning/DriverAvailabilityCalendar";
+import PreplanningDialog from "../components/planning/PreplanningDialog";
 
 const departments = ["Management", "Transport", "PakketDistributie", "Charters"];
 
@@ -53,6 +54,8 @@ export default function Planning() {
   const [showCopyDayDialog, setShowCopyDayDialog] = useState(false);
   const [sourceCopyDay, setSourceCopyDay] = useState(null);
   const [activeTab, setActiveTab] = useState("Transport");
+  const [showPreplanningDialog, setShowPreplanningDialog] = useState(false);
+  const [isGeneratingPreplanning, setIsGeneratingPreplanning] = useState(false);
   const queryClient = useQueryClient();
 
   const periodStart = viewMode === "week"
