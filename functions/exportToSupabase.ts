@@ -172,10 +172,16 @@ const entityToTable = {
 };
 
 // Flatten nested objects/arrays to JSON strings for Supabase columns that expect JSONB/TEXT
+// Also remap 'id' to 'base44_id' since Supabase uses UUID for 'id'
 function prepareRow(row) {
   const prepared = {};
   for (const [key, value] of Object.entries(row)) {
     if (value === undefined) continue;
+    // Remap Base44 id to base44_id (Supabase id column is auto-generated UUID)
+    if (key === 'id') {
+      prepared['base44_id'] = String(value);
+      continue;
+    }
     if (value !== null && typeof value === 'object') {
       prepared[key] = JSON.stringify(value);
     } else {
