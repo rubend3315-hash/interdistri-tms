@@ -618,6 +618,10 @@ export default function UsersPage() {
       )}
        </TabsContent>
 
+       <TabsContent value="koppelingen" className="space-y-4">
+         <UserEmployeeLinkTab />
+       </TabsContent>
+
        <TabsContent value="roles" className="space-y-4">
          <RolesTab />
        </TabsContent>
