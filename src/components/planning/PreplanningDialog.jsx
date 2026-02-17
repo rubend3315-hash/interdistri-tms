@@ -4,8 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Loader2, Zap, Search } from "lucide-react";
+import { Loader2, Zap, Search, ChevronDown, ChevronRight } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
+
+const SHIFTS = ["Dag", "Avond", "Nacht", "Dag en Avond", "Avond en Nacht"];
+const DAYS = ["ma", "di", "wo", "do", "vr", "za", "zo"];
+const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+function ShiftSelect({ value, onChange, size = "normal" }) {
+  const cls = size === "tiny" ? "w-[70px] h-6 text-[10px]" : "w-28 h-7 text-xs";
+  return (
+    <Select value={value || "_empty"} onValueChange={(v) => onChange(v === "_empty" ? "" : v)}>
+      <SelectTrigger className={cls}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="_empty"><span className="text-slate-400">—</span></SelectItem>
+        {SHIFTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
+}
 
 export default function PreplanningDialog({
   open,
@@ -15,35 +34,38 @@ export default function PreplanningDialog({
   employees = []
 }) {
   const [fallbackShift, setFallbackShift] = useState("Dag");
+  // shiftOverrides: { [empId]: { monday: "Dag", tuesday: "Avond en Nacht", ... } }
   const [shiftOverrides, setShiftOverrides] = useState({});
   const [search, setSearch] = useState("");
+  const [expandedDepts, setExpandedDepts] = useState({});
 
-  // Reset overrides when dialog opens
   React.useEffect(() => {
     if (open) {
-      // Pre-fill with saved default_shift from employee records
+      // Pre-fill from employee default_shift (same shift all days)
       const initial = {};
       employees.forEach(e => {
         if (e.default_shift) {
-          initial[e.id] = e.default_shift;
+          const days = {};
+          DAY_KEYS.forEach(d => { days[d] = e.default_shift; });
+          initial[e.id] = days;
         }
       });
       setShiftOverrides(initial);
       setSearch("");
+      setExpandedDepts({});
     }
   }, [open, employees]);
 
   const filteredEmployees = useMemo(() => {
     if (!search.trim()) return employees;
     const q = search.toLowerCase();
-    return employees.filter(e => 
-      getFullName(e).toLowerCase().includes(q) || 
+    return employees.filter(e =>
+      getFullName(e).toLowerCase().includes(q) ||
       (e.department || '').toLowerCase().includes(q) ||
       (e.employee_number || '').toLowerCase().includes(q)
     );
   }, [employees, search]);
 
-  // Group by department
   const grouped = useMemo(() => {
     const groups = {};
     filteredEmployees.forEach(e => {
@@ -54,18 +76,35 @@ export default function PreplanningDialog({
     return groups;
   }, [filteredEmployees]);
 
-  const handleSetAll = (shift) => {
+  const setEmployeeDay = (empId, dayKey, shift) => {
+    setShiftOverrides(prev => ({
+      ...prev,
+      [empId]: { ...(prev[empId] || {}), [dayKey]: shift }
+    }));
+  };
+
+  const setEmployeeAllDays = (empId, shift) => {
+    const days = {};
+    DAY_KEYS.forEach(d => { days[d] = shift; });
+    setShiftOverrides(prev => ({ ...prev, [empId]: days }));
+  };
+
+  const setDeptAllDays = (dept, shift) => {
     const newOverrides = { ...shiftOverrides };
-    employees.forEach(e => {
-      newOverrides[e.id] = shift;
+    employees.filter(e => (e.department || 'Overig') === dept).forEach(e => {
+      const days = {};
+      DAY_KEYS.forEach(d => { days[d] = shift; });
+      newOverrides[e.id] = days;
     });
     setShiftOverrides(newOverrides);
   };
 
-  const handleSetDepartment = (dept, shift) => {
-    const newOverrides = { ...shiftOverrides };
-    employees.filter(e => (e.department || 'Overig') === dept).forEach(e => {
-      newOverrides[e.id] = shift;
+  const setAllEmployeesAllDays = (shift) => {
+    const newOverrides = {};
+    employees.forEach(e => {
+      const days = {};
+      DAY_KEYS.forEach(d => { days[d] = shift; });
+      newOverrides[e.id] = days;
     });
     setShiftOverrides(newOverrides);
   };
@@ -74,41 +113,32 @@ export default function PreplanningDialog({
     onGenerate({ fallbackShift, shiftOverrides });
   };
 
-  const getShiftForEmployee = (empId) => shiftOverrides[empId] || '';
+  const toggleDept = (dept) => {
+    setExpandedDepts(prev => ({ ...prev, [dept]: !prev[dept] }));
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Voorplanning Genereren</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+        <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
           <p className="text-sm text-slate-600">
-            Wijs per medewerker een shift toe. Dagen die al ingepland zijn worden <strong>niet</strong> overschreven.
+            Wijs per medewerker <strong>per dag</strong> een shift toe. Dagen die al ingepland zijn worden niet overschreven.
           </p>
 
-          {/* Fallback + bulk actions */}
+          {/* Fallback + bulk */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
-              <Label className="text-xs whitespace-nowrap">Fallback shift:</Label>
-              <Select value={fallbackShift} onValueChange={setFallbackShift}>
-                <SelectTrigger className="w-28 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Dag">Dag</SelectItem>
-                  <SelectItem value="Avond">Avond</SelectItem>
-                  <SelectItem value="Nacht">Nacht</SelectItem>
-                  <SelectItem value="Dag en Avond">Dag en Avond</SelectItem>
-                  <SelectItem value="Avond en Nacht">Avond en Nacht</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label className="text-xs whitespace-nowrap">Fallback:</Label>
+              <ShiftSelect value={fallbackShift} onChange={setFallbackShift} />
             </div>
-            <div className="border-l pl-3 flex items-center gap-1">
-              <span className="text-xs text-slate-500">Iedereen op:</span>
-              {["Dag", "Avond", "Nacht", "Dag en Avond", "Avond en Nacht"].map(s => (
-                <Button key={s} variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => handleSetAll(s)}>
+            <div className="border-l pl-3 flex items-center gap-1 flex-wrap">
+              <span className="text-xs text-slate-500">Iedereen:</span>
+              {SHIFTS.map(s => (
+                <Button key={s} variant="outline" size="sm" className="h-6 text-[10px] px-1.5" onClick={() => setAllEmployeesAllDays(s)}>
                   {s}
                 </Button>
               ))}
@@ -118,62 +148,82 @@ export default function PreplanningDialog({
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-2.5 top-2 w-4 h-4 text-slate-400" />
-            <Input 
-              placeholder="Zoek medewerker..." 
-              value={search} 
-              onChange={(e) => setSearch(e.target.value)} 
-              className="pl-8 h-8 text-sm"
-            />
+            <Input placeholder="Zoek medewerker..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
           </div>
 
-          {/* Employee list */}
-          <div className="flex-1 overflow-y-auto border rounded-lg min-h-0">
-            {Object.entries(grouped).map(([dept, emps]) => (
-              <div key={dept}>
-                <div className="sticky top-0 bg-slate-100 px-3 py-1.5 flex items-center justify-between z-10">
-                  <span className="text-xs font-semibold text-slate-700">{dept} ({emps.length})</span>
-                  <div className="flex items-center gap-1">
-                    {["Dag", "Avond", "Nacht", "D+A", "A+N"].map(s => (
-                      <button
-                        key={s}
-                        onClick={() => handleSetDepartment(dept, s === "D+A" ? "Dag en Avond" : s === "A+N" ? "Avond en Nacht" : s)}
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                      >
-                        {s === "D+A" ? "Dag+Avond" : s === "A+N" ? "Avond+Nacht" : s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {emps.map(emp => (
-                  <div key={emp.id} className="flex items-center justify-between px-3 py-1.5 border-b border-slate-50 hover:bg-slate-50">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm truncate">{getFullName(emp)}</span>
-                      {emp.employee_number && (
-                        <span className="text-[10px] text-slate-400">#{emp.employee_number}</span>
-                      )}
-                    </div>
-                    <Select 
-                      value={getShiftForEmployee(emp.id) || '_fallback'} 
-                      onValueChange={(v) => setShiftOverrides(prev => ({ ...prev, [emp.id]: v === '_fallback' ? '' : v }))}
-                    >
-                      <SelectTrigger className="w-28 h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="_fallback">
-                          <span className="text-slate-400">Fallback ({fallbackShift})</span>
-                        </SelectItem>
-                        <SelectItem value="Dag">Dag</SelectItem>
-                        <SelectItem value="Avond">Avond</SelectItem>
-                        <SelectItem value="Nacht">Nacht</SelectItem>
-                        <SelectItem value="Dag en Avond">Dag en Avond</SelectItem>
-                        <SelectItem value="Avond en Nacht">Avond en Nacht</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+          {/* Employee list with day columns */}
+          <div className="flex-1 overflow-auto border rounded-lg min-h-0">
+            <table className="w-full text-xs">
+              <thead className="sticky top-0 bg-white z-20 border-b">
+                <tr>
+                  <th className="text-left px-2 py-1.5 font-medium text-slate-600 min-w-[160px]">Medewerker</th>
+                  {DAYS.map((d, i) => (
+                    <th key={d} className="text-center px-0.5 py-1.5 font-medium text-slate-600 w-[80px]">{d}</th>
+                  ))}
+                  <th className="w-[60px] px-1"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(grouped).map(([dept, emps]) => (
+                  <React.Fragment key={dept}>
+                    {/* Department header */}
+                    <tr className="bg-slate-100">
+                      <td colSpan={2} className="px-2 py-1.5">
+                        <button onClick={() => toggleDept(dept)} className="flex items-center gap-1 font-semibold text-slate-700">
+                          {expandedDepts[dept] === false ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          {dept} ({emps.length})
+                        </button>
+                      </td>
+                      <td colSpan={6} className="px-1 py-1">
+                        <div className="flex items-center gap-1 justify-end">
+                          {SHIFTS.map(s => (
+                            <button key={s} onClick={() => setDeptAllDays(dept, s)}
+                              className="text-[9px] px-1 py-0.5 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </td>
+                      <td></td>
+                    </tr>
+                    {/* Employee rows */}
+                    {expandedDepts[dept] !== false && emps.map(emp => {
+                      const empDays = shiftOverrides[emp.id] || {};
+                      return (
+                        <tr key={emp.id} className="border-b border-slate-50 hover:bg-slate-50">
+                          <td className="px-2 py-1 truncate max-w-[160px]">
+                            <span className="text-xs">{getFullName(emp)}</span>
+                          </td>
+                          {DAY_KEYS.map((dayKey, i) => (
+                            <td key={dayKey} className="px-0.5 py-0.5 text-center">
+                              <ShiftSelect
+                                value={empDays[dayKey] || ''}
+                                onChange={(v) => setEmployeeDay(emp.id, dayKey, v)}
+                                size="tiny"
+                              />
+                            </td>
+                          ))}
+                          <td className="px-1">
+                            <Select
+                              value="_bulk"
+                              onValueChange={(v) => { if (v !== "_bulk") setEmployeeAllDays(emp.id, v); }}
+                            >
+                              <SelectTrigger className="w-[50px] h-5 text-[9px] border-dashed">
+                                <span className="text-slate-400">Alle</span>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="_bulk" disabled><span className="text-slate-400">Stel alle dagen in</span></SelectItem>
+                                {SHIFTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </React.Fragment>
                 ))}
-              </div>
-            ))}
+              </tbody>
+            </table>
           </div>
 
           <div className="flex justify-end gap-2 pt-2 border-t">
@@ -182,15 +232,9 @@ export default function PreplanningDialog({
             </Button>
             <Button onClick={handleGenerate} disabled={isGenerating} className="bg-blue-600 hover:bg-blue-700">
               {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  Bezig...
-                </>
+                <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Bezig...</>
               ) : (
-                <>
-                  <Zap className="w-4 h-4 mr-1" />
-                  Genereer Voorplanning
-                </>
+                <><Zap className="w-4 h-4 mr-1" />Genereer Voorplanning</>
               )}
             </Button>
           </div>
