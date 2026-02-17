@@ -392,7 +392,7 @@ export default function Planning() {
     }
   };
 
-  const handleGeneratePreplanning = async ({ fallbackShift, shiftOverrides = {} }) => {
+  const handleGeneratePreplanning = async ({ fallbackShift, shiftOverrides = {}, pakketShiftOverrides = {} }) => {
     setIsGeneratingPreplanning(true);
     try {
       const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -451,7 +451,13 @@ export default function Planning() {
           }
 
           updateData[dayKey] = empOverrides[dayKey] || defaultShift;
-          updateData[`${dayKey}_planned_department`] = employee.department || '';
+          // Voor PakketDistributie: gebruik de geselecteerde shift (Shift3/4/5)
+          if (employee.department === 'PakketDistributie') {
+            const pakketShift = pakketShiftOverrides[employee.id] || 'Shift3';
+            updateData[`${dayKey}_planned_department`] = `PakketDistributie_${pakketShift}`;
+          } else {
+            updateData[`${dayKey}_planned_department`] = employee.department || '';
+          }
           hasChanges = true;
           createdCount++;
         });
