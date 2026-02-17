@@ -18,6 +18,9 @@ export default function BackupsPage() {
   const [restoreEntityName, setRestoreEntityName] = useState(null);
     const [showSupabaseRestore, setShowSupabaseRestore] = useState(false);
     const [supabaseConfirmCode, setSupabaseConfirmCode] = useState('');
+    const [showSQLDialog, setShowSQLDialog] = useState(false);
+    const [generatedSQL, setGeneratedSQL] = useState('');
+    const [sqlCopied, setSqlCopied] = useState(false);
     const queryClient = useQueryClient();
 
   // Haal alleen metadata records op
