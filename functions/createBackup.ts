@@ -28,94 +28,73 @@ Deno.serve(async (req) => {
       'PostNLImportResult', 'SpottaInvoice', 'SpottaInvoiceLine'
     ];
 
-    const results = {};
+    const backupData = {};
+    const entityStats = {};
     let totalRecords = 0;
-    let totalSize = 0;
 
-    // Backup each entity as a separate record, with rate limit handling
+    // Collect all data
     for (const entityName of entityNames) {
       try {
-        await delay(300); // prevent rate limiting
+        await delay(250);
         const data = await base44.asServiceRole.entities[entityName].list('', 10000);
         if (!data || data.length === 0) {
-          results[entityName] = 0;
+          entityStats[entityName] = 0;
           continue;
         }
-
-        const jsonData = JSON.stringify(data);
-        const size = jsonData.length;
-
-        // Als data te groot is voor één record (>500KB), splits in chunks
-        if (size > 500000) {
-          const chunkSize = 200; // records per chunk
-          const chunks = [];
-          for (let i = 0; i < data.length; i += chunkSize) {
-            chunks.push(data.slice(i, i + chunkSize));
-          }
-
-          for (let i = 0; i < chunks.length; i++) {
-            await delay(300);
-            const chunkJson = JSON.stringify(chunks[i]);
-            await base44.asServiceRole.entities.Backup.create({
-              backup_date: now,
-              backup_group_id: backupGroupId,
-              entity_name: `${entityName}__part${i + 1}of${chunks.length}`,
-              record_count: chunks[i].length,
-              backup_size: chunkJson.length,
-              status: 'Completed',
-              backup_type: 'Full',
-              environment: 'production',
-              json_data: chunkJson
-            });
-          }
-          results[entityName] = data.length;
-          totalRecords += data.length;
-          totalSize += size;
-        } else {
-          await delay(300);
-          await base44.asServiceRole.entities.Backup.create({
-            backup_date: now,
-            backup_group_id: backupGroupId,
-            entity_name: entityName,
-            record_count: data.length,
-            backup_size: size,
-            status: 'Completed',
-            backup_type: 'Full',
-            environment: 'production',
-            json_data: jsonData
-          });
-          results[entityName] = data.length;
-          totalRecords += data.length;
-          totalSize += size;
-        }
+        backupData[entityName] = data;
+        entityStats[entityName] = data.length;
+        totalRecords += data.length;
       } catch (err) {
         console.log(`Skipped entity: ${entityName} - ${err.message}`);
-        results[entityName] = `Error: ${err.message}`;
+        entityStats[entityName] = `Error: ${err.message}`;
       }
     }
 
-    // Create metadata record (overzicht)
-    await delay(300);
+    // Create JSON blob and upload as file
+    const fullBackup = {
+      version: '4.0',
+      timestamp: now,
+      backup_group_id: backupGroupId,
+      environment: 'production',
+      entity_stats: entityStats,
+      total_records: totalRecords,
+      data: backupData
+    };
+
+    const jsonString = JSON.stringify(fullBackup);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const file = new File([blob], `backup-${backupGroupId}.json`, { type: 'application/json' });
+
+    const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+    const fileUrl = uploadResult.file_url;
+
+    // Store only metadata + file URL in Backup entity
     await base44.asServiceRole.entities.Backup.create({
       backup_date: now,
       backup_group_id: backupGroupId,
       entity_name: '_metadata',
       record_count: 0,
-      backup_size: totalSize,
+      backup_size: jsonString.length,
       entity_count: totalRecords,
       status: 'Completed',
       backup_type: 'Full',
       environment: 'production',
-      json_data: JSON.stringify({ entities: results, timestamp: now, version: '3.0' })
+      json_data: JSON.stringify({
+        file_url: fileUrl,
+        entities: entityStats,
+        timestamp: now,
+        version: '4.0'
+      })
     });
 
     return Response.json({
       success: true,
       backup_group_id: backupGroupId,
+      file_url: fileUrl,
       timestamp: now,
       total_records: totalRecords,
-      total_size: totalSize,
-      entity_results: results
+      total_size_mb: Math.round(jsonString.length / 1024 / 1024 * 100) / 100,
+      entity_results: entityStats
     });
   } catch (error) {
     console.error('Backup error:', error);
