@@ -1647,7 +1647,7 @@ export default function HelpPage() {
                       <li>• <strong>Voertuiginspectie:</strong> Controleer je voertuig en maak foto's van schade</li>
                       <li>• <strong>Declaratie:</strong> Dien kosten in met bon/foto</li>
                       <li>• <strong>Overzicht:</strong> Bekijk goedgekeurde diensten</li>
-                      <li>• <strong>Planning:</strong> Zie je rooster voor deze week</li>
+                      <li>• <strong>Planning:</strong> Zie je weekrooster met shift, route, voertuig, opmerkingen, afwezigheid (Ziek/Verlof/ATV/Opleiding), feestdagen en vrije dagen</li>
                       <li>• <strong>Berichten:</strong> Ontvang berichten van je manager</li>
                       <li>• <strong>Links:</strong> Snelle toegang tot Bumper en Werknemersloket</li>
                     </ul>
