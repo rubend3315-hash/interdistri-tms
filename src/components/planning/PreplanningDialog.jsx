@@ -269,9 +269,8 @@ export default function PreplanningDialog({
                 </tr>
                 <tr className="bg-slate-50 border-b">
                   <td className="px-2 py-0.5 text-[9px] text-slate-400">
-                    Rooster ({weekNumber % 2 === 0 ? 'even' : 'oneven'} week): <span className="text-green-600">●</span> = werkdag
-                  </td>
-                  <td className="px-0.5 py-0.5 text-[9px] text-slate-400 text-center">PD shift</td>
+                      Rooster ({weekNumber % 2 === 0 ? 'even' : 'oneven'} week): <span className="text-green-600">●</span> = werkdag
+                    </td>
                   <td colSpan={7} className="px-2 py-0.5 text-[9px] text-slate-400"><span className="text-slate-300">○</span> = vrij</td>
                   <td></td>
                 </tr>
