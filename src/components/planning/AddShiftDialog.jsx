@@ -74,10 +74,13 @@ export default function AddShiftDialog({
     
     if (!scheduleForDay) return true;
 
-    // Controleer dubbele medewerker op dezelfde afdeling
-    if (scheduleForDay[dayKey] && scheduleForDay[dayKey] !== '-' && scheduleForDay[`${dayKey}_planned_department`] === formData.planned_department) {
-      setValidationError(`Deze medewerker is al ingepland op afdeling "${formData.planned_department}" op deze dag.`);
-      return false;
+    // Bij bewerken: sla dubbele-medewerker check over (we bewerken immers dezelfde dienst)
+    if (!isEditing) {
+      // Controleer dubbele medewerker op dezelfde afdeling
+      if (scheduleForDay[dayKey] && scheduleForDay[dayKey] !== '-' && scheduleForDay[`${dayKey}_planned_department`] === formData.planned_department) {
+        setValidationError(`Deze medewerker is al ingepland op afdeling "${formData.planned_department}" op deze dag.`);
+        return false;
+      }
     }
 
     // Controleer dubbele voertuig op dezelfde afdeling
