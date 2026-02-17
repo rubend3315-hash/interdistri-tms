@@ -121,7 +121,7 @@ const menuItems = [
   {
     label: "Beheer",
     items: [
-      { name: "Urensoort & Uurcode", icon: BookOpen, page: "HRMSettings" },
+      { name: "HR Instellingen", icon: BookOpen, page: "HRMSettings" },
       { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
       { name: "Integraties", icon: Link2, page: "Integrations" },
       { name: "Herberekeningen", icon: Shield, page: "Recalculations" },

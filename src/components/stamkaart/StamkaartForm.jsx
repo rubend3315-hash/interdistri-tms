@@ -12,6 +12,47 @@ import { FileText, Printer, Send, Loader2, Save, AlertCircle } from "lucide-reac
 import SignatureCanvas from "../contracts/SignatureCanvas";
 import { getFullName } from "@/components/utils/employeeUtils";
 
+function DepartmentSelect({ value, onChange, hasError }) {
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => base44.entities.Department.filter({ status: 'Actief' }, 'sort_order')
+  });
+  return (
+    <div className="space-y-1">
+      <Label>Afdeling *</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className={hasError ? "border-red-400" : ""}><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {departments.map(dept => (
+            <SelectItem key={dept.id} value={dept.name}>{dept.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function FunctionSelect({ value, onChange }) {
+  const { data: functions = [] } = useQuery({
+    queryKey: ['functions_list'],
+    queryFn: () => base44.entities.Function.filter({ status: 'Actief' }, 'sort_order')
+  });
+  return (
+    <div className="space-y-1">
+      <Label>Functie</Label>
+      <Select value={value || '_none'} onValueChange={(v) => onChange(v === '_none' ? '' : v)}>
+        <SelectTrigger><SelectValue placeholder="Selecteer functie" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="_none" disabled>Selecteer functie</SelectItem>
+          {functions.map(func => (
+            <SelectItem key={func.id} value={func.name}>{func.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 const REQUIRED_FIELDS = [
   { key: "first_name", label: "Voornaam" },
   { key: "last_name", label: "Achternaam" },
@@ -252,22 +293,8 @@ export default function StamkaartForm({ employee }) {
           <div className="border-t pt-4">
             <h4 className="font-medium mb-3">Gegevens dienstverband</h4>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Afdeling *</Label>
-                <Select value={data.department || ""} onValueChange={(v) => update("department", v)}>
-                  <SelectTrigger className={fieldError("department") ? "border-red-400" : ""}><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Management">Management</SelectItem>
-                    <SelectItem value="Transport">Transport</SelectItem>
-                    <SelectItem value="PakketDistributie">PakketDistributie</SelectItem>
-                    <SelectItem value="Charters">Charters</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>Functie</Label>
-                <Input value={data.function || ""} onChange={(e) => update("function", e.target.value)} />
-              </div>
+              <DepartmentSelect value={data.department || ""} onChange={(v) => update("department", v)} hasError={fieldError("department")} />
+              <FunctionSelect value={data.function || ""} onChange={(v) => update("function", v)} />
               <div className="space-y-1">
                 <Label>Contract type</Label>
                 <Select value={data.contract_type || "Tijdelijk"} onValueChange={(v) => update("contract_type", v)}>
