@@ -1,15 +1,48 @@
 import React, { useState } from "react";
-import { format } from "date-fns";
+import { format, getWeek } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, GripVertical, AlertCircle } from "lucide-react";
+import { User, GripVertical, AlertCircle, Home, Star } from "lucide-react";
 import { shiftTypes } from "./ShiftLegend";
 import AddShiftDialog from "./AddShiftDialog";
 import DraggableShiftBadge from "./DraggableShiftBadge";
 import DroppableCell from "./DroppableCell";
 import { toast } from "sonner";
+
+const DUTCH_DAY_MAP = {
+  'maandag': 'monday', 'dinsdag': 'tuesday', 'woensdag': 'wednesday',
+  'donderdag': 'thursday', 'vrijdag': 'friday', 'zaterdag': 'saturday', 'zondag': 'sunday'
+};
+
+function getWorkingDaysForEmployee(employee, weekNumber) {
+  if (!employee.contractregels || employee.contractregels.length === 0) return null;
+  const today = new Date();
+  let activeContract = employee.contractregels
+    .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))
+    .find(cr => {
+      const s = new Date(cr.startdatum);
+      const e = cr.einddatum ? new Date(cr.einddatum) : null;
+      return s <= today && (!e || e >= today);
+    });
+  if (!activeContract) activeContract = employee.contractregels.find(cr => cr.week1 || cr.week2);
+  if (!activeContract) return null;
+
+  const isEvenWeek = weekNumber % 2 === 0;
+  let weekSchedule = isEvenWeek ? activeContract.week2 : activeContract.week1;
+  if (!weekSchedule || typeof weekSchedule !== 'object') {
+    weekSchedule = isEvenWeek ? activeContract.week1 : activeContract.week2;
+  }
+  if (!weekSchedule || typeof weekSchedule !== 'object') return null;
+
+  const result = {};
+  Object.entries(DUTCH_DAY_MAP).forEach(([dutchDay, engDay]) => {
+    const val = weekSchedule[dutchDay];
+    result[engDay] = val === true || val === 'true' || (typeof val === 'number' && val > 0) || (typeof val === 'string' && !isNaN(parseFloat(val)) && parseFloat(val) > 0 && val !== '-');
+  });
+  return result;
+}
 
 const getShiftColor = (shiftValue) => {
   const shiftType = shiftTypes.find(s => s.value === shiftValue);
