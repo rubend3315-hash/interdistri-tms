@@ -406,8 +406,9 @@ export default function Planning() {
       let skippedCount = 0;
 
       for (const employee of plannable) {
-        // Bepaal shift: gebruik override uit dialoog, dan saved default_shift, dan fallback
-        const shiftForEmployee = shiftOverrides[employee.id] || employee.default_shift || fallbackShift;
+        // shiftOverrides[empId] is nu een object: { monday: "Dag", tuesday: "Avond en Nacht", ... }
+        const empOverrides = shiftOverrides[employee.id] || {};
+        const defaultShift = employee.default_shift || fallbackShift;
 
         // Zoek actief contractregel met weekrooster
         const today = new Date();
@@ -449,7 +450,7 @@ export default function Planning() {
             return;
           }
 
-          updateData[dayKey] = shiftForEmployee;
+          updateData[dayKey] = empOverrides[dayKey] || defaultShift;
           updateData[`${dayKey}_planned_department`] = employee.department || '';
           hasChanges = true;
           createdCount++;
