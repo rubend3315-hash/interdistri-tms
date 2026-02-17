@@ -260,6 +260,7 @@ export default function PreplanningDialog({
               <thead className="sticky top-0 bg-white z-20 border-b">
                 <tr>
                   <th className="text-left px-2 py-1.5 font-medium text-slate-600 min-w-[160px]">Medewerker</th>
+                  <th className="text-center px-0.5 py-1.5 font-medium text-slate-600 w-[70px]">Shift</th>
                   {DAYS.map((d, i) => (
                     <th key={d} className="text-center px-0.5 py-1.5 font-medium text-slate-600 w-[80px]">{d}</th>
                   ))}
@@ -269,6 +270,7 @@ export default function PreplanningDialog({
                   <td className="px-2 py-0.5 text-[9px] text-slate-400">
                     Rooster ({weekNumber % 2 === 0 ? 'even' : 'oneven'} week): <span className="text-green-600">●</span> = werkdag
                   </td>
+                  <td className="px-0.5 py-0.5 text-[9px] text-slate-400 text-center">PD shift</td>
                   <td colSpan={7} className="px-2 py-0.5 text-[9px] text-slate-400"><span className="text-slate-300">○</span> = vrij</td>
                   <td></td>
                 </tr>
@@ -278,7 +280,7 @@ export default function PreplanningDialog({
                   <React.Fragment key={dept}>
                     {/* Department header */}
                     <tr className="bg-slate-100">
-                      <td colSpan={2} className="px-2 py-1.5">
+                      <td colSpan={3} className="px-2 py-1.5">
                         <button onClick={() => toggleDept(dept)} className="flex items-center gap-1 font-semibold text-slate-700">
                           {expandedDepts[dept] === false ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                           {dept} ({emps.length})
@@ -304,6 +306,23 @@ export default function PreplanningDialog({
                         <tr key={emp.id} className="border-b border-slate-50 hover:bg-slate-50">
                           <td className="px-2 py-1 truncate max-w-[160px]">
                             <span className="text-xs">{getFullName(emp)}</span>
+                          </td>
+                          <td className="px-0.5 py-0.5 text-center">
+                            {emp.department === 'PakketDistributie' ? (
+                              <Select
+                                value={pakketShiftOverrides[emp.id] || 'Shift3'}
+                                onValueChange={(v) => setPakketShiftOverrides(prev => ({ ...prev, [emp.id]: v }))}
+                              >
+                                <SelectTrigger className="w-[62px] h-5 text-[9px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PAKKET_SHIFTS.map(s => <SelectItem key={s} value={s}>{s.replace('Shift', 'S')}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <span className="text-[9px] text-slate-300">—</span>
+                            )}
                           </td>
                           {DAY_KEYS.map((dayKey, i) => {
                             const isWorkDay = workDays[dayKey];
