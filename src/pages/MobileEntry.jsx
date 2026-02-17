@@ -47,6 +47,7 @@ import { createPageUrl } from "../utils";
 import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 import MobileReglementTab from "@/components/mobile/MobileReglementTab.jsx";
 import MobileHandleidingTab from "@/components/mobile/MobileHandleidingTab.jsx";
+import MobilePlanningTab from "@/components/mobile/MobilePlanningTab.jsx";
 import MobileSignatureDialog from "@/components/mobile/MobileSignatureDialog.jsx";
 
 const STATIC_MENU_ITEMS = [
