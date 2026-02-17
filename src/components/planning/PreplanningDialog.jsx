@@ -26,12 +26,43 @@ function ShiftSelect({ value, onChange, size = "normal" }) {
   );
 }
 
+const DUTCH_DAY_MAP = {
+  'maandag': 'monday', 'dinsdag': 'tuesday', 'woensdag': 'wednesday',
+  'donderdag': 'thursday', 'vrijdag': 'friday', 'zaterdag': 'saturday', 'zondag': 'sunday'
+};
+
+function getWorkingDays(employee, weekNumber) {
+  if (!employee.contractregels || employee.contractregels.length === 0) return {};
+  const today = new Date();
+  let activeContract = employee.contractregels
+    .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))
+    .find(cr => {
+      const s = new Date(cr.startdatum);
+      const e = cr.einddatum ? new Date(cr.einddatum) : null;
+      return s <= today && (!e || e >= today);
+    });
+  if (!activeContract) activeContract = employee.contractregels.find(cr => cr.week1 || cr.week2);
+  if (!activeContract) return {};
+
+  const weekSchedule = (weekNumber % 2 === 1) ? activeContract.week1 : activeContract.week2;
+  if (!weekSchedule || typeof weekSchedule !== 'object') return {};
+
+  const result = {};
+  Object.entries(DUTCH_DAY_MAP).forEach(([dutchDay, engDay]) => {
+    const val = weekSchedule[dutchDay];
+    const isWorking = val === true || val === 'true' || (typeof val === 'number' && val > 0) || (typeof val === 'string' && !isNaN(parseFloat(val)) && parseFloat(val) > 0 && val !== '-');
+    result[engDay] = isWorking;
+  });
+  return result;
+}
+
 export default function PreplanningDialog({
   open,
   onOpenChange,
   onGenerate,
   isGenerating,
-  employees = []
+  employees = [],
+  weekNumber = 1
 }) {
   const [fallbackShift, setFallbackShift] = useState("Dag");
   // shiftOverrides: { [empId]: { monday: "Dag", tuesday: "Avond en Nacht", ... } }
@@ -162,6 +193,11 @@ export default function PreplanningDialog({
                   ))}
                   <th className="w-[60px] px-1"></th>
                 </tr>
+                <tr className="bg-slate-50 border-b">
+                  <td className="px-2 py-0.5 text-[9px] text-slate-400">Rooster: <span className="text-green-600">●</span> = werkdag</td>
+                  <td colSpan={7} className="px-2 py-0.5 text-[9px] text-slate-400"><span className="text-slate-300">○</span> = vrij</td>
+                  <td></td>
+                </tr>
               </thead>
               <tbody>
                 {Object.entries(grouped).map(([dept, emps]) => (
@@ -189,20 +225,27 @@ export default function PreplanningDialog({
                     {/* Employee rows */}
                     {expandedDepts[dept] !== false && emps.map(emp => {
                       const empDays = shiftOverrides[emp.id] || {};
+                      const workDays = getWorkingDays(emp, weekNumber);
                       return (
                         <tr key={emp.id} className="border-b border-slate-50 hover:bg-slate-50">
                           <td className="px-2 py-1 truncate max-w-[160px]">
                             <span className="text-xs">{getFullName(emp)}</span>
                           </td>
-                          {DAY_KEYS.map((dayKey, i) => (
-                            <td key={dayKey} className="px-0.5 py-0.5 text-center">
-                              <ShiftSelect
-                                value={empDays[dayKey] || ''}
-                                onChange={(v) => setEmployeeDay(emp.id, dayKey, v)}
-                                size="tiny"
-                              />
-                            </td>
-                          ))}
+                          {DAY_KEYS.map((dayKey, i) => {
+                            const isWorkDay = workDays[dayKey];
+                            return (
+                              <td key={dayKey} className={`px-0.5 py-0.5 text-center ${isWorkDay === false ? 'bg-slate-50' : ''}`}>
+                                <ShiftSelect
+                                  value={empDays[dayKey] || ''}
+                                  onChange={(v) => setEmployeeDay(emp.id, dayKey, v)}
+                                  size="tiny"
+                                />
+                                <div className={`text-[8px] leading-none mt-0.5 ${isWorkDay ? 'text-green-600' : 'text-slate-300'}`}>
+                                  {isWorkDay ? '●' : '○'}
+                                </div>
+                              </td>
+                            );
+                          })}
                           <td className="px-1">
                             <Select
                               value="_bulk"
