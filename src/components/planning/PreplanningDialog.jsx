@@ -101,12 +101,13 @@ export default function PreplanningDialog({
                   <SelectItem value="Avond">Avond</SelectItem>
                   <SelectItem value="Nacht">Nacht</SelectItem>
                   <SelectItem value="Dag en Avond">Dag en Avond</SelectItem>
+                  <SelectItem value="Avond en Nacht">Avond en Nacht</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="border-l pl-3 flex items-center gap-1">
               <span className="text-xs text-slate-500">Iedereen op:</span>
-              {["Dag", "Avond", "Nacht", "Dag en Avond"].map(s => (
+              {["Dag", "Avond", "Nacht", "Dag en Avond", "Avond en Nacht"].map(s => (
                 <Button key={s} variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => handleSetAll(s)}>
                   {s}
                 </Button>
@@ -132,13 +133,13 @@ export default function PreplanningDialog({
                 <div className="sticky top-0 bg-slate-100 px-3 py-1.5 flex items-center justify-between z-10">
                   <span className="text-xs font-semibold text-slate-700">{dept} ({emps.length})</span>
                   <div className="flex items-center gap-1">
-                    {["Dag", "Avond", "Nacht", "D+A"].map(s => (
+                    {["Dag", "Avond", "Nacht", "D+A", "A+N"].map(s => (
                       <button
                         key={s}
-                        onClick={() => handleSetDepartment(dept, s === "D+A" ? "Dag en Avond" : s)}
+                        onClick={() => handleSetDepartment(dept, s === "D+A" ? "Dag en Avond" : s === "A+N" ? "Avond en Nacht" : s)}
                         className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                       >
-                        {s === "D+A" ? "Dag en Avond" : s}
+                        {s === "D+A" ? "Dag+Avond" : s === "A+N" ? "Avond+Nacht" : s}
                       </button>
                     ))}
                   </div>
@@ -166,6 +167,7 @@ export default function PreplanningDialog({
                         <SelectItem value="Avond">Avond</SelectItem>
                         <SelectItem value="Nacht">Nacht</SelectItem>
                         <SelectItem value="Dag en Avond">Dag en Avond</SelectItem>
+                        <SelectItem value="Avond en Nacht">Avond en Nacht</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
