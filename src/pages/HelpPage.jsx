@@ -2514,6 +2514,69 @@ export default function HelpPage() {
               </AccordionContent>
             </AccordionItem>
 
+            {/* E-mailadres wijzigen en herkoppelen */}
+            <AccordionItem value="email-change-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Users className="w-4 h-4 mr-2" />
+                E-mailadres wijzigen en medewerker herkoppelen
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Overzicht</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      De koppeling tussen een medewerker en een gebruikersaccount is gebaseerd op het <strong>e-mailadres</strong>. Als een medewerker een nieuw e-mailadres krijgt, moet het account opnieuw worden gekoppeld. <strong>Er gaan geen medewerkergegevens verloren</strong>, want contracten, tijdregistraties, ritten en overige data zijn gekoppeld aan het Employee-record via het ID, niet via het e-mailadres.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Stappen bij e-mailadres wijziging</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li><strong>Stap 1 — E-mail wijzigen:</strong> Ga naar Medewerkers, open het profiel en pas het e-mailadres aan naar het nieuwe adres. Sla op.</li>
+                      <li><strong>Stap 2 — Nieuw account uitnodigen:</strong> Ga naar Gebruikersbeheer en nodig de medewerker opnieuw uit met het nieuwe e-mailadres. De medewerker krijgt dan een nieuw gebruikersaccount.</li>
+                      <li><strong>Stap 3 — Oud account opruimen:</strong> Het oude gebruikersaccount (met het vorige e-mailadres) blijft bestaan. Dit verschijnt automatisch onder "Accounts zonder medewerker" in het tabblad <strong>Koppelingen</strong> op de Gebruikerspagina, zodat je het kunt identificeren en eventueel opruimen.</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Wat gebeurt er met de data?</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Contracten:</strong> Blijven behouden — gekoppeld aan Employee ID</li>
+                      <li>• <strong>Tijdregistraties:</strong> Blijven behouden — gekoppeld aan Employee ID</li>
+                      <li>• <strong>Ritten:</strong> Blijven behouden — gekoppeld aan Employee ID</li>
+                      <li>• <strong>Contractregels en reiskostenregels:</strong> Blijven behouden</li>
+                      <li>• <strong>Planning:</strong> Blijft behouden</li>
+                      <li>• <strong>Permissies:</strong> Het nieuwe account krijgt standaard permissies bij uitnodiging. Pas eventueel de permissies aan via Gebruikersbeheer.</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Koppelingen controleren</h4>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Gebruik het tabblad <strong>"Koppelingen"</strong> op de Gebruikerspagina om een overzicht te krijgen van:
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• <strong>Gekoppeld:</strong> Medewerkers die correct zijn gekoppeld aan een gebruikersaccount</li>
+                      <li>• <strong>Medewerkers zonder account:</strong> Medewerkers die nog geen gebruikersaccount hebben (na e-mailwijziging verschijnen ze hier)</li>
+                      <li>• <strong>Accounts zonder medewerker:</strong> Gebruikersaccounts die niet gekoppeld zijn aan een medewerker (het oude account verschijnt hier)</li>
+                      <li>• <strong>Status mismatch:</strong> Gevallen waarbij een medewerker inactief/uit dienst is maar het account nog actief</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>Tip:</strong> Controleer na het wijzigen van een e-mailadres altijd het Koppelingen-tabblad om te bevestigen dat de nieuwe koppeling correct is en het oude account zichtbaar is voor opruiming.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Belangrijk:</strong> Alleen het gebruikersaccount (inloggegevens en permissies) moet opnieuw worden aangemaakt. Alle medewerkergegevens in het systeem blijven volledig intact.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Algemene Tips */}
             <AccordionItem value="tips">
               <AccordionTrigger className="text-base font-semibold">
