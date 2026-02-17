@@ -418,7 +418,8 @@ export default function HelpPage() {
                   <li>✓ Diensttijd en ritten invoeren</li>
                   <li>✓ Voertuiginspectie met foto's</li>
                   <li>✓ Declaraties indienen</li>
-                  <li>✓ Planning bekijken</li>
+                  <li>✓ <strong>Planning:</strong> Weekoverzicht met shift, route, voertuig, opmerkingen en afwezigheid (Ziek, Verlof, ATV, Opleiding) per dag</li>
+                  <li>✓ <strong>Feestdagen en vrije dagen:</strong> Automatisch weergegeven in de planning</li>
                   <li>✓ Shifttijd weergave</li>
                   <li>✓ Offline synchronisatie</li>
                   <li>✓ Handtekening functionaliteit</li>
