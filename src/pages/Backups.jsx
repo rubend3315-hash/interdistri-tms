@@ -142,7 +142,10 @@ export default function BackupsPage() {
                 <div className="space-y-3">
                   {backupMetadata.map((meta) => {
                     const isExpanded = expandedGroup === meta.backup_group_id;
-                    const entityMeta = getEntityMeta(meta);
+                    const entityStats = getEntityStats(meta);
+                    const entityList = Object.entries(entityStats)
+                      .filter(([name, count]) => typeof count === 'number' && count > 0)
+                      .sort((a, b) => a[0].localeCompare(b[0]));
 
                     return (
                       <div key={meta.id} className="border rounded-lg overflow-hidden">
@@ -159,6 +162,7 @@ export default function BackupsPage() {
                               </p>
                               <p className="text-xs text-slate-500">
                                 {formatDistanceToNow(new Date(meta.backup_date), { locale: nl, addSuffix: true })}
+                                {' · '}{entityList.length} entities
                               </p>
                             </div>
                           </div>
@@ -171,7 +175,7 @@ export default function BackupsPage() {
                               {meta.environment || 'production'}
                             </Badge>
                             <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" title="Download" onClick={() => handleDownloadGroup(meta.backup_group_id)}>
+                              <Button variant="ghost" size="icon" title="Download" onClick={() => handleDownloadGroup(meta)}>
                                 <Download className="w-4 h-4" />
                               </Button>
                               <Button
@@ -189,47 +193,36 @@ export default function BackupsPage() {
                         {/* Detail rows */}
                         {isExpanded && (
                           <div className="border-t bg-slate-50">
-                            {groupParts.length === 0 ? (
-                              <div className="p-4 text-center">
-                                <Loader2 className="w-4 h-4 animate-spin mx-auto text-slate-400" />
-                              </div>
-                            ) : (
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead>Entity</TableHead>
-                                    <TableHead>Records</TableHead>
-                                    <TableHead>Grootte</TableHead>
-                                    <TableHead className="text-right">Acties</TableHead>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Entity</TableHead>
+                                  <TableHead>Records</TableHead>
+                                  <TableHead className="text-right">Acties</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {entityList.map(([entName, count]) => (
+                                  <TableRow key={entName}>
+                                    <TableCell className="font-medium">{entName}</TableCell>
+                                    <TableCell>{count}</TableCell>
+                                    <TableCell className="text-right">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setShowConfirmRestore(meta.backup_group_id);
+                                          setRestoreEntityName(entName);
+                                        }}
+                                      >
+                                        <RotateCcw className="w-3 h-3 mr-1" />
+                                        Herstel
+                                      </Button>
+                                    </TableCell>
                                   </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {groupParts
-                                    .sort((a, b) => a.entity_name.localeCompare(b.entity_name))
-                                    .map((part) => (
-                                    <TableRow key={part.id}>
-                                      <TableCell className="font-medium">{part.entity_name}</TableCell>
-                                      <TableCell>{part.record_count}</TableCell>
-                                      <TableCell>{formatBytes(part.backup_size)}</TableCell>
-                                      <TableCell className="text-right">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => {
-                                            const baseName = part.entity_name.split('__')[0];
-                                            setShowConfirmRestore(meta.backup_group_id);
-                                            setRestoreEntityName(baseName);
-                                          }}
-                                        >
-                                          <RotateCcw className="w-3 h-3 mr-1" />
-                                          Herstel
-                                        </Button>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            )}
+                                ))}
+                              </TableBody>
+                            </Table>
                           </div>
                         )}
                       </div>
