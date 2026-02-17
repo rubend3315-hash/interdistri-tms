@@ -171,10 +171,16 @@ const entityToTable = {
   'ClientFeatureConfig': 'clientfeatureconfig'
 };
 
-// Prepare a row for Supabase insertion:
-// - Remap 'id' to 'base44_id' (Supabase uses UUID for 'id')
-// - Convert empty strings to null for date/timestamptz/numeric columns
-// - Keep objects/arrays as-is for jsonb columns (PostgREST accepts native JSON)
+// Known jsonb columns per table — these must be sent as JSON strings for PostgREST
+const JSONB_COLUMNS = new Set([
+  'drivers_license_categories', 'week_schedule', 'contractregels', 'reiskostenregels',
+  'mileage_calibration_history', 'articles', 'column_mapping', 'data', 'calculated_data',
+  'applies_to_days', 'edit_history', 'damage_photos', 'permissions', 'user_ids',
+  'price_rules', 'reminder_sent_dates', 'cao_rules_applied', 'versie_geschiedenis',
+  'settings', 'details', 'artikelen'
+]);
+
+// Prepare a row for Supabase insertion
 function prepareRow(row) {
   const prepared = {};
   for (const [key, value] of Object.entries(row)) {
@@ -188,7 +194,11 @@ function prepareRow(row) {
       prepared[key] = null;
       continue;
     }
-    // Leave objects/arrays as native JS objects — PostgREST handles jsonb natively
+    // Stringify objects/arrays for jsonb columns
+    if (value !== null && typeof value === 'object') {
+      prepared[key] = JSON.stringify(value);
+      continue;
+    }
     prepared[key] = value;
   }
   return prepared;
