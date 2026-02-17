@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Download, RotateCcw, Plus, AlertCircle, ChevronDown, ChevronRight, CloudUpload, CloudDownload, Database, Copy, Check } from "lucide-react";
+import { Loader2, Download, RotateCcw, AlertCircle, ChevronDown, ChevronRight, CloudUpload, CloudDownload, Database, Copy, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -16,14 +16,13 @@ export default function BackupsPage() {
   const [confirmCode, setConfirmCode] = useState('');
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [restoreEntityName, setRestoreEntityName] = useState(null);
-    const [showSupabaseRestore, setShowSupabaseRestore] = useState(false);
-    const [supabaseConfirmCode, setSupabaseConfirmCode] = useState('');
-    const [showSQLDialog, setShowSQLDialog] = useState(false);
-    const [generatedSQL, setGeneratedSQL] = useState('');
-    const [sqlCopied, setSqlCopied] = useState(false);
-    const queryClient = useQueryClient();
+  const [showSupabaseRestore, setShowSupabaseRestore] = useState(false);
+  const [supabaseConfirmCode, setSupabaseConfirmCode] = useState('');
+  const [showSQLDialog, setShowSQLDialog] = useState(false);
+  const [generatedSQL, setGeneratedSQL] = useState('');
+  const [sqlCopied, setSqlCopied] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Haal alleen metadata records op
   const { data: backupMetadata = [], isLoading } = useQuery({
     queryKey: ['backups-metadata'],
     queryFn: async () => {
@@ -32,7 +31,6 @@ export default function BackupsPage() {
     }
   });
 
-  // Haal entity stats op uit metadata
   const getEntityStats = (meta) => {
     try {
       const data = JSON.parse(meta.json_data);
@@ -194,7 +192,7 @@ export default function BackupsPage() {
             >
               {generateSQLMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               <Database className="w-4 h-4 mr-2" />
-              Genereer Supabase SQL
+              {generateSQLMutation.isPending ? 'Genereren...' : 'Genereer Supabase SQL'}
             </Button>
           </div>
 
@@ -224,7 +222,6 @@ export default function BackupsPage() {
 
                     return (
                       <div key={meta.id} className="border rounded-lg overflow-hidden">
-                        {/* Header row */}
                         <div
                           className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50"
                           onClick={() => setExpandedGroup(isExpanded ? null : meta.backup_group_id)}
@@ -265,7 +262,6 @@ export default function BackupsPage() {
                           </div>
                         </div>
 
-                        {/* Detail rows */}
                         {isExpanded && (
                           <div className="border-t bg-slate-50">
                             <Table>
@@ -363,83 +359,83 @@ export default function BackupsPage() {
         </DialogContent>
       </Dialog>
 
-        {/* SQL Generator Dialog */}
-        <Dialog open={showSQLDialog} onOpenChange={(open) => { if (!open) { setShowSQLDialog(false); setSqlCopied(false); } }}>
-          <DialogContent className="max-w-4xl max-h-[80vh]">
-            <DialogHeader>
-              <DialogTitle>Supabase SQL — Tabellen aanmaken</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <p className="text-sm text-purple-800">
-                  Kopieer onderstaande SQL en plak het in de <strong>Supabase SQL Editor</strong> om alle tabellen aan te maken.
-                  Dit vervangt bestaande tabellen met dezelfde naam.
-                </p>
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(generatedSQL);
-                    setSqlCopied(true);
-                    setTimeout(() => setSqlCopied(false), 2000);
-                  }}
-                >
-                  {sqlCopied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
-                  {sqlCopied ? 'Gekopieerd!' : 'Kopieer SQL'}
-                </Button>
-              </div>
-              <pre className="bg-slate-900 text-slate-100 text-xs p-4 rounded-lg overflow-auto max-h-[50vh] whitespace-pre-wrap">
-                {generatedSQL}
-              </pre>
+      {/* SQL Generator Dialog */}
+      <Dialog open={showSQLDialog} onOpenChange={(open) => { if (!open) { setShowSQLDialog(false); setSqlCopied(false); } }}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Supabase SQL — Tabellen aanmaken</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <p className="text-sm text-purple-800">
+                Kopieer onderstaande SQL en plak het in de <strong>Supabase SQL Editor</strong> om alle tabellen aan te maken.
+                Dit vervangt bestaande tabellen met dezelfde naam.
+              </p>
             </div>
-          </DialogContent>
-        </Dialog>
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedSQL);
+                  setSqlCopied(true);
+                  setTimeout(() => setSqlCopied(false), 2000);
+                }}
+              >
+                {sqlCopied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                {sqlCopied ? 'Gekopieerd!' : 'Kopieer SQL'}
+              </Button>
+            </div>
+            <pre className="bg-slate-900 text-slate-100 text-xs p-4 rounded-lg overflow-auto max-h-[50vh] whitespace-pre-wrap">
+              {generatedSQL}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-        {/* Supabase Restore Dialog */}
-        <Dialog open={showSupabaseRestore} onOpenChange={(open) => { if (!open) { setShowSupabaseRestore(false); setSupabaseConfirmCode(''); } }}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Herstel vanuit Supabase</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <p className="text-sm text-orange-800 font-semibold mb-2">⚠️ Waarschuwing</p>
-                <p className="text-sm text-orange-700">
-                  Alle huidige data wordt verwijderd en vervangen door de data uit Supabase.
-                  Gebruik dit alleen als de primaire Base44 backup niet beschikbaar is.
-                </p>
-                <p className="text-sm text-orange-700 mt-2 font-semibold">
-                  User-accounts worden NIET hersteld — nodig gebruikers opnieuw uit.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Typ <span className="font-mono bg-slate-100 px-1 rounded">SUPABASE-HERSTEL</span> om te bevestigen:
-                </label>
-                <Input
-                  value={supabaseConfirmCode}
-                  onChange={(e) => setSupabaseConfirmCode(e.target.value)}
-                  placeholder="SUPABASE-HERSTEL"
-                />
-              </div>
-              <div className="flex gap-3 justify-end">
-                <Button variant="outline" onClick={() => { setShowSupabaseRestore(false); setSupabaseConfirmCode(''); }}>
-                  Annuleren
-                </Button>
-                <Button
-                  onClick={() => importFromSupabaseMutation.mutate({ confirmation_code: supabaseConfirmCode })}
-                  disabled={importFromSupabaseMutation.isPending || supabaseConfirmCode !== 'SUPABASE-HERSTEL'}
-                  className="bg-orange-600 hover:bg-orange-700"
-                >
-                  {importFromSupabaseMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Herstel vanuit Supabase
-                </Button>
-              </div>
+      {/* Supabase Restore Dialog */}
+      <Dialog open={showSupabaseRestore} onOpenChange={(open) => { if (!open) { setShowSupabaseRestore(false); setSupabaseConfirmCode(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Herstel vanuit Supabase</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <p className="text-sm text-orange-800 font-semibold mb-2">⚠️ Waarschuwing</p>
+              <p className="text-sm text-orange-700">
+                Alle huidige data wordt verwijderd en vervangen door de data uit Supabase.
+                Gebruik dit alleen als de primaire Base44 backup niet beschikbaar is.
+              </p>
+              <p className="text-sm text-orange-700 mt-2 font-semibold">
+                User-accounts worden NIET hersteld — nodig gebruikers opnieuw uit.
+              </p>
             </div>
-          </DialogContent>
-        </Dialog>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                Typ <span className="font-mono bg-slate-100 px-1 rounded">SUPABASE-HERSTEL</span> om te bevestigen:
+              </label>
+              <Input
+                value={supabaseConfirmCode}
+                onChange={(e) => setSupabaseConfirmCode(e.target.value)}
+                placeholder="SUPABASE-HERSTEL"
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => { setShowSupabaseRestore(false); setSupabaseConfirmCode(''); }}>
+                Annuleren
+              </Button>
+              <Button
+                onClick={() => importFromSupabaseMutation.mutate({ confirmation_code: supabaseConfirmCode })}
+                disabled={importFromSupabaseMutation.isPending || supabaseConfirmCode !== 'SUPABASE-HERSTEL'}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                {importFromSupabaseMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Herstel vanuit Supabase
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
