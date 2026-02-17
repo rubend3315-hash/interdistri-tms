@@ -99,9 +99,11 @@ export default function PreplanningDialog({
           DAY_KEYS.forEach(d => { days[d] = e.default_shift; });
           initial[e.id] = days;
         }
-        // Default pakket shift voor PakketDistributie medewerkers
+        // Default pakket shift per dag voor PakketDistributie medewerkers
         if (e.department === 'PakketDistributie') {
-          initialPakket[e.id] = 'Shift3';
+          const days = {};
+          DAY_KEYS.forEach(d => { days[d] = 'Shift3'; });
+          initialPakket[e.id] = days;
         }
       });
       setShiftOverrides(initial);
