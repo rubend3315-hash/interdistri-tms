@@ -54,6 +54,34 @@ export default function BackupsPage() {
     }
   });
 
+  const exportToSupabaseMutation = useMutation({
+    mutationFn: async () => {
+      const response = await base44.functions.invoke('exportToSupabase');
+      return response.data;
+    },
+    onSuccess: (data) => {
+      alert(`Export naar Supabase voltooid! ${data.total_exported} records geëxporteerd.${data.errors?.length ? ` ${data.errors.length} fouten.` : ''}`);
+    },
+    onError: (error) => {
+      alert('Fout bij export naar Supabase: ' + (error?.response?.data?.error || error.message));
+    }
+  });
+
+  const importFromSupabaseMutation = useMutation({
+    mutationFn: async ({ confirmation_code }) => {
+      const response = await base44.functions.invoke('importFromSupabase', { confirmation_code });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      setShowSupabaseRestore(false);
+      setSupabaseConfirmCode('');
+      alert(`Herstel vanuit Supabase voltooid! ${data.total_imported} records geïmporteerd.${data.errors?.length ? ` ${data.errors.length} fouten.` : ''}`);
+    },
+    onError: (error) => {
+      alert('Fout bij herstel vanuit Supabase: ' + (error?.response?.data?.error || error.message));
+    }
+  });
+
   const restoreMutation = useMutation({
     mutationFn: async ({ backup_group_id, confirmation_code, entity_name }) => {
       const payload = { backup_group_id, confirmation_code };
