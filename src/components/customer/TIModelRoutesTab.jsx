@@ -42,10 +42,24 @@ export default function TIModelRoutesTab({ customerId }) {
     },
   });
 
-  const handleSubmit = (data) => {
+  const handleSubmit = async (data) => {
     if (editingRoute) {
       updateMutation.mutate({ id: editingRoute.id, data });
     } else {
+      // Bij nieuwe rit: zoek bestaande actieve rit met zelfde route_code
+      // en stel automatisch de end_date in op de dag vóór de start_date van de nieuwe rit
+      if (data.start_date && data.route_code) {
+        const existingActive = routes.filter(
+          r => r.route_code === data.route_code && r.is_active && !r.end_date
+        );
+        for (const existing of existingActive) {
+          const newStart = new Date(data.start_date);
+          const dayBefore = new Date(newStart);
+          dayBefore.setDate(dayBefore.getDate() - 1);
+          const endDateStr = dayBefore.toISOString().split('T')[0];
+          await base44.entities.TIModelRoute.update(existing.id, { end_date: endDateStr });
+        }
+      }
       createMutation.mutate({ ...data, customer_id: customerId });
     }
   };
