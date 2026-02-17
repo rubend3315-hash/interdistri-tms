@@ -27,16 +27,20 @@ export default function BackupsPage() {
     }
   });
 
-  // Haal details op voor expanded group
-  const { data: groupParts = [] } = useQuery({
-    queryKey: ['backup-parts', expandedGroup],
-    queryFn: async () => {
-      if (!expandedGroup) return [];
-      const parts = await base44.entities.Backup.filter({ backup_group_id: expandedGroup });
-      return (parts || []).filter(p => p.entity_name !== '_metadata');
-    },
-    enabled: !!expandedGroup
-  });
+  // Haal entity stats op uit metadata
+  const getEntityStats = (meta) => {
+    try {
+      const data = JSON.parse(meta.json_data);
+      return data.entities || {};
+    } catch { return {}; }
+  };
+
+  const getFileUrl = (meta) => {
+    try {
+      const data = JSON.parse(meta.json_data);
+      return data.file_url || null;
+    } catch { return null; }
+  };
 
   const createBackupMutation = useMutation({
     mutationFn: async () => {
