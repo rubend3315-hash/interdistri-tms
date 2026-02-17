@@ -1236,8 +1236,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                   {contractregels && contractregels.length > 0 && contractregels.filter(c => c.status !== 'Inactief').sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum)).map((contract, index) => {
                     const statusValue = contract.status || 'Actief';
                     const isBeëindigd = statusValue === 'Beëindigd';
-                    const isExpired = !isBeëindigd && contract.einddatum && isBefore(new Date(contract.einddatum), new Date());
-                    const isActief = statusValue === 'Actief' && !isExpired;
+                    const isActief = statusValue === 'Actief' && !(contract.einddatum && isBefore(new Date(contract.einddatum), new Date()));
                     const isInactive = !isActief;
                     const textColor = isInactive ? 'text-slate-400' : 'text-slate-900';
                     const bgColor = isActief ? 'bg-emerald-50/50' : '';
@@ -1257,10 +1256,10 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
                           <td className="py-2 px-3">
                             {isBeëindigd ? (
                               <Badge className="bg-slate-100 text-slate-600 text-xs">Beëindigd</Badge>
-                            ) : isExpired ? (
-                              <Badge className="bg-amber-100 text-amber-700 text-xs">Verlopen</Badge>
-                            ) : (
+                            ) : isActief ? (
                               <Badge className="bg-emerald-100 text-emerald-700 text-xs">Actief</Badge>
+                            ) : (
+                              <Badge className="bg-amber-100 text-amber-700 text-xs">Beëindigd</Badge>
                             )}
                           </td>
                           <td className="py-2 px-3 text-center">
@@ -1753,6 +1752,7 @@ function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, c
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Actief">Actief</SelectItem>
+                <SelectItem value="Beëindigd">Beëindigd</SelectItem>
                 <SelectItem value="Inactief">Inactief</SelectItem>
               </SelectContent>
             </Select>
