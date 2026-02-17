@@ -8,20 +8,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit } from "lucide-react";
+import DepartmentTab from "../components/settings/DepartmentTab";
+import FunctionTab from "../components/settings/FunctionTab";
 
 export default function HRMSettings() {
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">HRM-instellingen</h1>
-        <p className="text-slate-500 mt-1">Beheer urensoorten en uurcodes</p>
+        <p className="text-slate-500 mt-1">Beheer afdelingen, functies, urensoorten en uurcodes</p>
       </div>
 
-      <Tabs defaultValue="uurcode" className="w-full">
+      <Tabs defaultValue="afdelingen" className="w-full">
         <TabsList>
+          <TabsTrigger value="afdelingen">Afdelingen</TabsTrigger>
+          <TabsTrigger value="functies">Functies</TabsTrigger>
           <TabsTrigger value="uurcode">Uurcode</TabsTrigger>
           <TabsTrigger value="urensoort">Urensoort</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="afdelingen" className="mt-6">
+          <DepartmentTab />
+        </TabsContent>
+
+        <TabsContent value="functies" className="mt-6">
+          <FunctionTab />
+        </TabsContent>
 
         <TabsContent value="uurcode" className="mt-6">
           <UurcodeTab />

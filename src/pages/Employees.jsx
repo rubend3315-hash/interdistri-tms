@@ -30,19 +30,7 @@ import {
 import { format, addMonths, isBefore } from 'date-fns';
 import { getFullName, getDisplayName } from '@/components/utils/employeeUtils';
 
-const departments = ['Management', 'Transport', 'PakketDistributie', 'Charters'];
 const statuses = ['Actief', 'Inactief', 'Uit dienst'];
-const functionOptions = [
-  'Chauffeur',
-  'Pakketbezorger',
-  'Pakketbezorger/Folderbezorger',
-  'Folderbezorger',
-  'Magazijnmedewerker',
-  'Planner',
-  'Manager',
-  'Administratie',
-  'Overig'
-];
 
 export default function Employees() {
   const [showDialog, setShowDialog] = useState(false);
@@ -55,6 +43,16 @@ export default function Employees() {
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees'],
     queryFn: () => base44.entities.Employee.list('-created_date')
+  });
+
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => base44.entities.Department.filter({ status: 'Actief' }, 'sort_order')
+  });
+
+  const { data: functionOptions = [] } = useQuery({
+    queryKey: ['functions_list'],
+    queryFn: () => base44.entities.Function.filter({ status: 'Actief' }, 'sort_order')
   });
 
   const createMutation = useMutation({
@@ -180,6 +178,8 @@ export default function Employees() {
                   onSubmit={handleSubmit}
                   isSubmitting={createMutation.isPending || updateMutation.isPending}
                   viewOnly={selectedEmployee?.viewOnly}
+                  departments={departments}
+                  functionOptions={functionOptions}
                 />
               </TabsContent>
               <TabsContent value="weekrooster">
@@ -215,7 +215,7 @@ export default function Employees() {
               <SelectContent>
                 <SelectItem value="all">Alle afdelingen</SelectItem>
                 {departments.map(dept => (
-                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  <SelectItem key={dept.id} value={dept.name}>{dept.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -247,7 +247,7 @@ export default function Employees() {
           {(() => {
             // Group by department, sort employees by employee_number within each group
             const grouped = {};
-            const departmentOrder = ['Management', 'Transport', 'PakketDistributie', 'Charters'];
+            const departmentOrder = departments.map(d => d.name);
             filteredEmployees.forEach(emp => {
               const dept = emp.department || 'Overig';
               if (!grouped[dept]) grouped[dept] = [];
