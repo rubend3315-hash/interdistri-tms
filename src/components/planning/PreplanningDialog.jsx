@@ -46,7 +46,13 @@ function getWorkingDays(employee, weekNumber) {
   if (!activeContract) activeContract = employee.contractregels.find(cr => cr.week1 || cr.week2);
   if (!activeContract) return {};
 
-  const weekSchedule = (weekNumber % 2 === 1) ? activeContract.week1 : activeContract.week2;
+  // Even weeknummer = week2, oneven = week1
+  const isEvenWeek = weekNumber % 2 === 0;
+  let weekSchedule = isEvenWeek ? activeContract.week2 : activeContract.week1;
+  // Fallback: als de gekozen week niet bestaat, gebruik de andere
+  if (!weekSchedule || typeof weekSchedule !== 'object') {
+    weekSchedule = isEvenWeek ? activeContract.week1 : activeContract.week2;
+  }
   if (!weekSchedule || typeof weekSchedule !== 'object') return {};
 
   const result = {};
@@ -251,7 +257,9 @@ export default function PreplanningDialog({
                   <th className="w-[60px] px-1"></th>
                 </tr>
                 <tr className="bg-slate-50 border-b">
-                  <td className="px-2 py-0.5 text-[9px] text-slate-400">Rooster: <span className="text-green-600">●</span> = werkdag</td>
+                  <td className="px-2 py-0.5 text-[9px] text-slate-400">
+                    Rooster ({weekNumber % 2 === 0 ? 'even' : 'oneven'} week): <span className="text-green-600">●</span> = werkdag
+                  </td>
                   <td colSpan={7} className="px-2 py-0.5 text-[9px] text-slate-400"><span className="text-slate-300">○</span> = vrij</td>
                   <td></td>
                 </tr>
