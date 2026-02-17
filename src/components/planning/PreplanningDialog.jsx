@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Loader2, Zap, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, Zap, Search, ChevronDown, ChevronRight, Save, Download } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 const SHIFTS = ["Dag", "Avond", "Nacht", "Dag en Avond", "Avond en Nacht"];
 const DAYS = ["ma", "di", "wo", "do", "vr", "za", "zo"];
@@ -73,12 +75,16 @@ export default function PreplanningDialog({
   const [search, setSearch] = useState("");
   const [expandedDepts, setExpandedDepts] = useState({});
 
+  const [isSaving, setIsSaving] = useState(false);
+
   React.useEffect(() => {
     if (open) {
-      // Pre-fill from employee default_shift (same shift all days)
+      // Pre-fill: eerst shift_template (opgeslagen), dan default_shift, dan leeg
       const initial = {};
       employees.forEach(e => {
-        if (e.default_shift) {
+        if (e.shift_template && typeof e.shift_template === 'object' && Object.keys(e.shift_template).length > 0) {
+          initial[e.id] = { ...e.shift_template };
+        } else if (e.default_shift) {
           const days = {};
           DAY_KEYS.forEach(d => { days[d] = e.default_shift; });
           initial[e.id] = days;
@@ -89,6 +95,35 @@ export default function PreplanningDialog({
       setExpandedDepts({});
     }
   }, [open, employees]);
+
+  const handleSaveTemplate = async () => {
+    setIsSaving(true);
+    let count = 0;
+    for (const emp of employees) {
+      const template = shiftOverrides[emp.id] || {};
+      const hasValues = Object.values(template).some(v => v);
+      // Alleen opslaan als er iets is ingevuld
+      if (hasValues) {
+        await base44.entities.Employee.update(emp.id, { shift_template: template });
+        count++;
+      }
+    }
+    setIsSaving(false);
+    toast.success(`Template opgeslagen voor ${count} medewerkers`);
+  };
+
+  const handleLoadTemplate = () => {
+    const loaded = {};
+    let count = 0;
+    employees.forEach(e => {
+      if (e.shift_template && typeof e.shift_template === 'object' && Object.keys(e.shift_template).length > 0) {
+        loaded[e.id] = { ...e.shift_template };
+        count++;
+      }
+    });
+    setShiftOverrides(prev => ({ ...prev, ...loaded }));
+    toast.success(`Template geladen voor ${count} medewerkers`);
+  };
 
   const filteredEmployees = useMemo(() => {
     if (!search.trim()) return employees;
@@ -173,9 +208,18 @@ export default function PreplanningDialog({
             Wijs per medewerker <strong>per dag</strong> een shift toe. Dagen die al ingepland zijn worden niet overschreven.
           </p>
 
-          {/* Fallback + bulk */}
+          {/* Template + Fallback + bulk */}
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={handleLoadTemplate}>
+                <Download className="w-3.5 h-3.5" />Laad template
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={handleSaveTemplate} disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                Opslaan als template
+              </Button>
+            </div>
+            <div className="border-l pl-3 flex items-center gap-2">
               <Label className="text-xs whitespace-nowrap">Fallback:</Label>
               <ShiftSelect value={fallbackShift} onChange={setFallbackShift} />
             </div>
