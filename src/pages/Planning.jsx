@@ -666,6 +666,7 @@ export default function Planning() {
         setColorMode={setColorMode}
         onExportPDF={handleExportPDF}
         onCopyWeek={() => setShowCopyDialog(true)}
+        onPreplanning={() => setShowPreplanningDialog(true)}
       />
 
       <Tabs defaultValue="Transport" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -788,6 +789,13 @@ export default function Planning() {
         sourceDay={sourceCopyDay}
         availableDays={days}
         onCopy={handleCopyDayConfirm}
+      />
+
+      <PreplanningDialog
+        open={showPreplanningDialog}
+        onOpenChange={setShowPreplanningDialog}
+        onGenerate={handleGeneratePreplanning}
+        isGenerating={isGeneratingPreplanning}
       />
     </div>
   );
