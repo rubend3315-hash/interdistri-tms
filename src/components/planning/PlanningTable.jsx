@@ -277,6 +277,16 @@ export default function PlanningTable({
                       <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
                       {absence}
                     </div>
+                  ) : holiday && displayText === "-" ? (
+                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-semibold w-full justify-center bg-purple-100 text-purple-700 border-purple-200">
+                      <Star className="w-3.5 h-3.5 flex-shrink-0" />
+                      Feestdag
+                    </div>
+                  ) : displayText === "-" && workingDays && workingDays[dayKey] === false ? (
+                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-medium w-full justify-center bg-slate-100 text-slate-500 border-slate-200">
+                      <Home className="w-3.5 h-3.5 flex-shrink-0" />
+                      Vrij
+                    </div>
                   ) : displayText !== "-" ? (
                     <DraggableShiftBadge
                       shift={currentValue}
