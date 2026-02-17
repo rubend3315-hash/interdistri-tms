@@ -11,13 +11,14 @@ Deno.serve(async (req) => {
 
     const backup = {
       timestamp: new Date().toISOString(),
-      version: '1.0',
+      version: '2.0',
+      environment: 'production',
       entities: {}
     };
 
-    // List of all entities to backup
+    // List of all entities to backup - including User
     const entityNames = [
-      'Employee', 'Vehicle', 'Customer', 'Project', 'TimeEntry', 'Trip',
+      'User', 'Employee', 'Vehicle', 'Customer', 'Project', 'TimeEntry', 'Trip',
       'Schedule', 'CaoRule', 'SalaryTable', 'Holiday', 'ShiftTime',
       'VehicleInspection', 'Expense', 'Message', 'SupervisorMessage',
       'NiwoPermit', 'Urensoort', 'Uurcode', 'Article', 'Route', 'TIModelRoute',
