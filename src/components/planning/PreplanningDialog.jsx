@@ -62,7 +62,10 @@ export default function PreplanningDialog({
   onGenerate,
   isGenerating,
   employees = [],
-  weekNumber = 1
+  weekNumber = 1,
+  year = new Date().getFullYear(),
+  periodStart,
+  periodEnd
 }) {
   const [fallbackShift, setFallbackShift] = useState("Dag");
   // shiftOverrides: { [empId]: { monday: "Dag", tuesday: "Avond en Nacht", ... } }
@@ -152,7 +155,17 @@ export default function PreplanningDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Voorplanning Genereren</DialogTitle>
+          <DialogTitle className="flex items-center gap-3">
+            Voorplanning Genereren
+            <span className="text-sm font-normal bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full">
+              Week {weekNumber} — {year}
+              {periodStart && periodEnd && (
+                <span className="text-blue-500 ml-1">
+                  ({periodStart} t/m {periodEnd})
+                </span>
+              )}
+            </span>
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
