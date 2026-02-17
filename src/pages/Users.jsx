@@ -389,8 +389,12 @@ export default function UsersPage() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="users">Gebruikers</TabsTrigger>
+          <TabsTrigger value="koppelingen" className="gap-1">
+            <Link2 className="w-4 h-4" />
+            Koppelingen
+          </TabsTrigger>
           <TabsTrigger value="roles">Rollen</TabsTrigger>
         </TabsList>
 
