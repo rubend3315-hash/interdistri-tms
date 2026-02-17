@@ -534,6 +534,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
     phone: '',
     date_of_birth: '',
     in_service_since: '',
+    out_of_service_date: '',
     address: '',
     postal_code: '',
     city: '',
@@ -716,7 +717,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Geboortedatum</Label>
             <Input type="date" value={formData.date_of_birth} readOnly />
@@ -724,6 +725,10 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
           <div className="space-y-2">
             <Label>In dienst sinds</Label>
             <Input type="date" value={formData.in_service_since} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>Uit dienst datum</Label>
+            <Input type="date" value={formData.out_of_service_date} readOnly />
           </div>
         </div>
 
@@ -950,7 +955,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>Geboortedatum</Label>
           <Input
@@ -965,6 +970,14 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false }) {
             type="date"
             value={formData.in_service_since}
             onChange={(e) => setFormData({ ...formData, in_service_since: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Uit dienst datum</Label>
+          <Input
+            type="date"
+            value={formData.out_of_service_date}
+            onChange={(e) => setFormData({ ...formData, out_of_service_date: e.target.value })}
           />
         </div>
       </div>
