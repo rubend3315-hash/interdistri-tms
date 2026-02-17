@@ -33,7 +33,8 @@ export default function PlanningTable({
   customers = [],
   filterDepartment = 'all',
   getWeekScheduleHours,
-  onDragDrop
+  onDragDrop,
+  timeEntries = []
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
