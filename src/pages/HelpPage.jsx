@@ -285,9 +285,20 @@ export default function HelpPage() {
                 </p>
                 <ul className="text-sm space-y-2 text-slate-600">
                   <li>✓ Per-dag planning (per medewerker)</li>
-                  <li>✓ Route- en voertuigtoewijzing</li>
+                  <li>✓ <strong>Tabs per afdeling:</strong> Management, Transport, PD Shift 3/4/5, Charters</li>
+                  <li>✓ Route- en voertuigtoewijzing per cel</li>
+                  <li>✓ <strong>Opmerkingen:</strong> Twee notitievelden per dag per medewerker</li>
+                  <li>✓ <strong>Drag & drop:</strong> Diensten verslepen tussen medewerkers en dagen</li>
+                  <li>✓ <strong>Afwezigheid:</strong> Ziek, Verlof, ATV en Opleiding worden automatisch als gekleurde badge getoond in de planningcel (op basis van tijdregistratie)</li>
+                  <li>✓ <strong>Feestdagen:</strong> Worden automatisch als paarse badge weergegeven</li>
+                  <li>✓ <strong>Vrij-status:</strong> Dagen waarop een medewerker contractueel vrij is tonen "Vrij" badge</li>
+                  <li>✓ <strong>Contract-uren:</strong> Uren per dag en totaal per week worden getoond op basis van het actieve contractrooster (week 1/week 2)</li>
+                  <li>✓ <strong>Voorplanning:</strong> Genereer automatisch een weekplanning op basis van shift-templates, contractroosters en per-dag shift-keuze</li>
+                  <li>✓ <strong>Shift-templates:</strong> Sla per medewerker een voorkeursshift per dag op, laad en bewaar templates</li>
                   <li>✓ Capaciteitsoverzicht per week</li>
-                  <li>✓ Weken kopiëren naar andere periodes</li>
+                  <li>✓ Routehistorie per medewerker</li>
+                  <li>✓ Beschikbaarheidskalender</li>
+                  <li>✓ Weken en dagen kopiëren naar andere periodes</li>
                   <li>✓ Export naar PDF</li>
                 </ul>
               </CardContent>
