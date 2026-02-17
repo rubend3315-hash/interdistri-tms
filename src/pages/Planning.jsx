@@ -796,6 +796,9 @@ export default function Planning() {
         isGenerating={isGeneratingPreplanning}
         employees={employees.filter(e => e.status === 'Actief' && e.tonen_in_planner !== false)}
         weekNumber={weekNumber}
+        year={year}
+        periodStart={format(periodStart, "d MMM", { locale: nl })}
+        periodEnd={format(periodEnd, "d MMM", { locale: nl })}
       />
     </div>
   );
