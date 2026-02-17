@@ -203,10 +203,14 @@ export default function PlanningTable({
       })()
     : null;
 
+  // Determine weekNumber from first day
+  const currentWeekNumber = days.length > 0 ? getWeek(days[0], { weekStartsOn: 1 }) : 1;
+
   const renderEmployeeRows = (empsToRender, startIndex = 0, currentDepartment = null) => {
     return empsToRender.map((employee, idx) => {
       const schedule = getScheduleForEmployee(employee.id);
       const weekScheduleHours = getWeekScheduleHours ? getWeekScheduleHours(employee) : null;
+      const workingDays = getWorkingDaysForEmployee(employee, currentWeekNumber);
 
       return (
         <TableRow key={employee.id}>
