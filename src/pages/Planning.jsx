@@ -392,7 +392,7 @@ export default function Planning() {
     }
   };
 
-  const handleGeneratePreplanning = async ({ defaultShift }) => {
+  const handleGeneratePreplanning = async ({ fallbackShift }) => {
     setIsGeneratingPreplanning(true);
     try {
       const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -406,6 +406,9 @@ export default function Planning() {
       let skippedCount = 0;
 
       for (const employee of plannable) {
+        // Bepaal shift: gebruik standaard shift van medewerker, anders fallback
+        const shiftForEmployee = employee.default_shift || fallbackShift;
+
         // Zoek actief contractregel met weekrooster
         const today = new Date();
         let activeContract = employee.contractregels
@@ -423,11 +426,6 @@ export default function Planning() {
         const weekSchedule = (weekNumber % 2 === 1) ? activeContract.week1 : activeContract.week2;
         if (!weekSchedule || typeof weekSchedule !== 'object') continue;
 
-        // Bereken uren per werkdag
-        const workingDays = Object.entries(weekSchedule).filter(([, val]) =>
-          val === true || val === 'true' || (typeof val === 'number' && val > 0) || (typeof val === 'string' && !isNaN(parseFloat(val)) && parseFloat(val) > 0 && val !== '-')
-        );
-
         // Bouw werkdag-map: dutchDay -> isWorking
         const workingDayMap = {};
         Object.entries(dutchDayMap).forEach(([dutchDay, englishDay]) => {
@@ -443,16 +441,15 @@ export default function Planning() {
 
         dayKeys.forEach(dayKey => {
           const isWorkingDay = workingDayMap[dayKey];
-          if (!isWorkingDay) return; // Geen werkdag -> skip
+          if (!isWorkingDay) return;
 
-          // Check of er al iets ingepland staat
           const existingValue = existingSchedule?.[dayKey] || '';
           if (existingValue && existingValue !== '-' && existingValue !== '') {
             skippedCount++;
-            return; // Al ingepland -> niet overschrijven
+            return;
           }
 
-          updateData[dayKey] = defaultShift;
+          updateData[dayKey] = shiftForEmployee;
           updateData[`${dayKey}_planned_department`] = employee.department || '';
           hasChanges = true;
           createdCount++;
@@ -796,6 +793,7 @@ export default function Planning() {
         onOpenChange={setShowPreplanningDialog}
         onGenerate={handleGeneratePreplanning}
         isGenerating={isGeneratingPreplanning}
+        employeesWithoutShift={employees.filter(e => e.status === 'Actief' && e.tonen_in_planner !== false && !e.default_shift)}
       />
     </div>
   );
