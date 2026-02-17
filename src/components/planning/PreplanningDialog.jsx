@@ -262,7 +262,6 @@ export default function PreplanningDialog({
               <thead className="sticky top-0 bg-white z-20 border-b">
                 <tr>
                   <th className="text-left px-2 py-1.5 font-medium text-slate-600 min-w-[160px]">Medewerker</th>
-                  <th className="text-center px-0.5 py-1.5 font-medium text-slate-600 w-[70px]">Shift</th>
                   {DAYS.map((d, i) => (
                     <th key={d} className="text-center px-0.5 py-1.5 font-medium text-slate-600 w-[80px]">{d}</th>
                   ))}
