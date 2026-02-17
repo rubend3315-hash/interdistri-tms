@@ -79,7 +79,7 @@ export default function PreplanningDialog({
   const [fallbackShift, setFallbackShift] = useState("Dag");
   // shiftOverrides: { [empId]: { monday: "Dag", tuesday: "Avond en Nacht", ... } }
   const [shiftOverrides, setShiftOverrides] = useState({});
-  // pakketShiftOverrides: { [empId]: "Shift3" | "Shift4" | "Shift5" }
+  // pakketShiftOverrides: { [empId]: { monday: "Shift3", tuesday: "Shift4", ... } }
   const [pakketShiftOverrides, setPakketShiftOverrides] = useState({});
   const [search, setSearch] = useState("");
   const [expandedDepts, setExpandedDepts] = useState({});
