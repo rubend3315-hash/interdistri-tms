@@ -88,13 +88,6 @@ export default function BackupsPage() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const getEntityMeta = (meta) => {
-    try {
-      const data = JSON.parse(meta.json_data);
-      return data.entities || {};
-    } catch { return {}; }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-6xl mx-auto">
