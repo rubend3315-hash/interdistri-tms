@@ -32,9 +32,10 @@ Deno.serve(async (req) => {
     let totalRecords = 0;
     let totalSize = 0;
 
-    // Backup each entity as a separate record
+    // Backup each entity as a separate record, with rate limit handling
     for (const entityName of entityNames) {
       try {
+        await delay(300); // prevent rate limiting
         const data = await base44.asServiceRole.entities[entityName].list('', 10000);
         if (!data || data.length === 0) {
           results[entityName] = 0;
@@ -53,6 +54,7 @@ Deno.serve(async (req) => {
           }
 
           for (let i = 0; i < chunks.length; i++) {
+            await delay(300);
             const chunkJson = JSON.stringify(chunks[i]);
             await base44.asServiceRole.entities.Backup.create({
               backup_date: now,
@@ -70,6 +72,7 @@ Deno.serve(async (req) => {
           totalRecords += data.length;
           totalSize += size;
         } else {
+          await delay(300);
           await base44.asServiceRole.entities.Backup.create({
             backup_date: now,
             backup_group_id: backupGroupId,
