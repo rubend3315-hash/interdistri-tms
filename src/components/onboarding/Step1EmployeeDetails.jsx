@@ -7,15 +7,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { User, ChevronRight, Upload, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-
-const departments = ['Management', 'Transport', 'PakketDistributie', 'Charters'];
-const functionOptions = [
-  'Chauffeur', 'Pakketbezorger', 'Pakketbezorger/Folderbezorger',
-  'Folderbezorger', 'Magazijnmedewerker', 'Planner', 'Manager', 'Administratie', 'Overig'
-];
+import { useQuery } from "@tanstack/react-query";
 
 export default function Step1EmployeeDetails({ employeeData, onChange, onNext }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => base44.entities.Department.filter({ status: 'Actief' }, 'sort_order')
+  });
+
+  const { data: functionOptions = [] } = useQuery({
+    queryKey: ['functions_list'],
+    queryFn: () => base44.entities.Function.filter({ status: 'Actief' }, 'sort_order')
+  });
 
   const update = (field, value) => {
     onChange({ ...employeeData, [field]: value });
@@ -136,7 +141,7 @@ export default function Step1EmployeeDetails({ employeeData, onChange, onNext })
               <Select value={employeeData.department || ""} onValueChange={(v) => update("department", v)}>
                 <SelectTrigger><SelectValue placeholder="Kies afdeling" /></SelectTrigger>
                 <SelectContent>
-                  {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -145,7 +150,7 @@ export default function Step1EmployeeDetails({ employeeData, onChange, onNext })
               <Select value={employeeData.function || ""} onValueChange={(v) => update("function", v)}>
                 <SelectTrigger><SelectValue placeholder="Kies functie" /></SelectTrigger>
                 <SelectContent>
-                  {functionOptions.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                  {functionOptions.map(f => <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
