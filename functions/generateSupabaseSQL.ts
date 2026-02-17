@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
         contract_hours: 'numeric', hourly_rate: 'numeric', salary_scale: 'text',
         travel_allowance_per_km: 'numeric', travel_distance_km: 'numeric',
         travel_allowance_start_date: 'date', travel_allowance_end_date: 'date',
-        week_schedule: 'jsonb', contractregels: 'jsonb', reiskostenregels: 'jsonb',
+        week_schedule: 'text', contractregels: 'text', reiskostenregels: 'text',
         supervisor_notities: 'text', status: 'text', bsn: 'text', bank_account: 'text',
         mobile_entry_type: 'text', is_chauffeur: 'boolean', tonen_in_planner: 'boolean',
         opnemen_in_loonrapport: 'boolean', loonheffing_toepassen: 'text', loonheffing_datum: 'date',
@@ -33,14 +33,14 @@ Deno.serve(async (req) => {
         year: 'numeric', chassis_number: 'text', emission_class: 'text',
         factory_consumption_per_100km: 'numeric', key_cabinet_number: 'text',
         apk_expiry: 'date', insurance_expiry: 'date', tachograph_calibration_date: 'date',
-        current_mileage: 'numeric', mileage_calibration_history: 'jsonb',
+        current_mileage: 'numeric', mileage_calibration_history: 'text',
         niwo_permit_id: 'text', status: 'text', notes: 'text', photo_url: 'text', max_weight: 'numeric'
       },
       customer: {
         company_name: 'text', logo_url: 'text', contact_person: 'text', email: 'text', phone: 'text',
         address: 'text', postal_code: 'text', city: 'text', country: 'text',
         kvk_number: 'text', btw_number: 'text', payment_terms: 'numeric',
-        articles: 'jsonb', status: 'text', notes: 'text'
+        articles: 'text', status: 'text', notes: 'text'
       },
       project: {
         name: 'text', customer_id: 'text', description: 'text',
@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
         subsistence_allowance: 'numeric', advanced_costs: 'numeric', meals: 'numeric', wkr: 'numeric',
         notes: 'text', status: 'text', signature_url: 'text',
         approved_by: 'text', approved_date: 'timestamptz', rejection_reason: 'text',
-        edit_history: 'jsonb', travel_allowance_multiplier: 'numeric'
+        edit_history: 'text', travel_allowance_multiplier: 'numeric'
       },
       trip: {
         employee_id: 'text', time_entry_id: 'text', date: 'date', vehicle_id: 'text',
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       caorule: {
         name: 'text', description: 'text', category: 'text', rule_type: 'text',
         calculation_type: 'text', value: 'numeric', percentage: 'numeric', fixed_amount: 'numeric',
-        start_time: 'text', end_time: 'text', applies_to_days: 'jsonb',
+        start_time: 'text', end_time: 'text', applies_to_days: 'text',
         start_date: 'date', end_date: 'date', priority: 'numeric', status: 'text'
       },
       salarytable: {
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
         windshield_ok: 'boolean', mirrors_ok: 'boolean', horn_working: 'boolean',
         first_aid_kit: 'boolean', fire_extinguisher: 'boolean', warning_triangle: 'boolean', safety_vest: 'boolean',
         battery_level: 'numeric', charging_cable_present: 'boolean', fuel_level: 'numeric',
-        damage_present: 'boolean', damage_description: 'text', damage_photos: 'jsonb',
+        damage_present: 'boolean', damage_description: 'text', damage_photos: 'text',
         notes: 'text', signature_url: 'text', status: 'text'
       },
       expense: {
@@ -127,16 +127,16 @@ Deno.serve(async (req) => {
       notification: {
         title: 'text', description: 'text', type: 'text',
         target_entity_id: 'text', target_page: 'text',
-        is_read: 'boolean', user_ids: 'jsonb', priority: 'text'
+        is_read: 'boolean', user_ids: 'text', priority: 'text'
       },
       role: {
         name: 'text', label: 'text', description: 'text',
-        permissions: 'jsonb', color: 'text', is_system: 'boolean'
+        permissions: 'text', color: 'text', is_system: 'boolean'
       },
       customerimport: {
         customer_id: 'text', import_name: 'text', import_date: 'timestamptz',
-        file_name: 'text', column_mapping: 'jsonb', data: 'jsonb',
-        total_rows: 'numeric', calculated_data: 'jsonb', status: 'text', notes: 'text'
+        file_name: 'text', column_mapping: 'text', data: 'text',
+        total_rows: 'numeric', calculated_data: 'text', status: 'text', notes: 'text'
       },
       urensoort: {
         code: 'text', name: 'text', description: 'text', toeslag_percentage: 'numeric', status: 'text'
@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
       },
       article: {
         customer_id: 'text', article_number: 'text', description: 'text',
-        unit: 'text', price_rules: 'jsonb', status: 'text'
+        unit: 'text', price_rules: 'text', status: 'text'
       },
       route: {
         customer_id: 'text', route_code: 'text', route_name: 'text',
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
         verlenging_nummer: 'text', proeftijd: 'text', contract_content: 'text',
         status: 'text', employee_signature_url: 'text', employee_signed_date: 'timestamptz',
         manager_signature_url: 'text', manager_signed_date: 'timestamptz', manager_signed_by: 'text',
-        pdf_url: 'text', reminder_sent_dates: 'jsonb', cao_rules_applied: 'jsonb', notes: 'text'
+        pdf_url: 'text', reminder_sent_dates: 'text', cao_rules_applied: 'text', notes: 'text'
       },
       completedcontract: {
         contract_id: 'text', contract_number: 'text', employee_name: 'text', employee_id: 'text',
@@ -251,7 +251,7 @@ Deno.serve(async (req) => {
       },
       bedrijfsreglementartikel: {
         artikel_nummer: 'numeric', hoofdstuk: 'text', titel: 'text', inhoud: 'text',
-        versie: 'numeric', versie_geschiedenis: 'jsonb', status: 'text'
+        versie: 'numeric', versie_geschiedenis: 'text', status: 'text'
       },
       contracttemplate: {
         name: 'text', contract_type: 'text', description: 'text',
@@ -298,12 +298,12 @@ Deno.serve(async (req) => {
         aantal_vrijgave_stops: 'numeric', aantal_vrijgave_stuks: 'numeric',
         aantal_afgeleverd_stuks: 'numeric', aantal_afgeleverd_stops: 'numeric',
         aantal_afgehaald_collecteerd: 'numeric', aantal_pba_bezorgd: 'numeric',
-        artikelen: 'jsonb', status: 'text'
+        artikelen: 'text', status: 'text'
       },
       postnlimportresult: {
         project_id: 'text', project_naam: 'text', klant_naam: 'text',
         ritnaam: 'text', datum: 'text', starttijd_shift: 'text',
-        import_datum: 'date', bestandsnaam: 'text', data: 'jsonb'
+        import_datum: 'date', bestandsnaam: 'text', data: 'text'
       },
       spottainvoice: {
         customer_id: 'text', invoice_number: 'text', invoice_date: 'date', due_date: 'date',
@@ -328,12 +328,12 @@ Deno.serve(async (req) => {
         name: 'text', type: 'text', api_url: 'text', api_key: 'text',
         sync_interval_minutes: 'numeric', last_sync: 'timestamptz',
         last_sync_status: 'text', last_sync_message: 'text',
-        settings: 'jsonb', is_active: 'boolean'
+        settings: 'text', is_active: 'boolean'
       },
       synclog: {
         integration_id: 'text', sync_type: 'text', status: 'text',
         records_synced: 'numeric', records_failed: 'numeric',
-        message: 'text', details: 'jsonb'
+        message: 'text', details: 'text'
       },
       backup: {
         backup_date: 'timestamptz', backup_group_id: 'text', entity_name: 'text',
