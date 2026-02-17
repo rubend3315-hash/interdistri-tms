@@ -116,6 +116,17 @@ export default function Planning() {
     queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
   });
 
+  const { data: timeEntries = [] } = useQuery({
+    queryKey: ['timeEntries', viewMode === "week" ? weekNumber : monthNumber, year, viewMode],
+    queryFn: async () => {
+      if (viewMode === "week") {
+        return base44.entities.TimeEntry.filter({ week_number: weekNumber, year });
+      } else {
+        return base44.entities.TimeEntry.filter({ year });
+      }
+    }
+  });
+
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
