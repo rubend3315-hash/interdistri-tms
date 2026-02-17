@@ -9,48 +9,107 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const backup = {
-      timestamp: new Date().toISOString(),
-      version: '2.0',
-      environment: 'production',
-      entities: {}
-    };
+    const now = new Date().toISOString();
+    const backupGroupId = `backup_${Date.now()}`;
 
-    // List of all entities to backup - including User
     const entityNames = [
       'User', 'Employee', 'Vehicle', 'Customer', 'Project', 'TimeEntry', 'Trip',
       'Schedule', 'CaoRule', 'SalaryTable', 'Holiday', 'ShiftTime',
       'VehicleInspection', 'Expense', 'Message', 'SupervisorMessage',
       'NiwoPermit', 'Urensoort', 'Uurcode', 'Article', 'Route', 'TIModelRoute',
-      'CustomerImport', 'Role'
+      'CustomerImport', 'Role', 'Notification', 'Document', 'Contract',
+      'CompletedContract', 'ContractWijziging', 'BreakSchedule',
+      'PerformanceReview', 'PerformanceNote', 'EmployeeKPI', 'KPIDoel',
+      'LoonperiodeStatus', 'BedrijfsreglementArtikel', 'CharterCompany',
+      'VehicleMaintenance', 'LeaseContract', 'EmailTemplate',
+      'OnboardingProcess', 'DriverAvailability', 'RapportageRit',
+      'PostNLImportResult', 'SpottaInvoice', 'SpottaInvoiceLine'
     ];
 
-    // Backup each entity
+    const results = {};
+    let totalRecords = 0;
+    let totalSize = 0;
+
+    // Backup each entity as a separate record
     for (const entityName of entityNames) {
       try {
         const data = await base44.asServiceRole.entities[entityName].list('', 10000);
-        backup.entities[entityName] = data || [];
+        if (!data || data.length === 0) {
+          results[entityName] = 0;
+          continue;
+        }
+
+        const jsonData = JSON.stringify(data);
+        const size = jsonData.length;
+
+        // Als data te groot is voor één record (>500KB), splits in chunks
+        if (size > 500000) {
+          const chunkSize = 200; // records per chunk
+          const chunks = [];
+          for (let i = 0; i < data.length; i += chunkSize) {
+            chunks.push(data.slice(i, i + chunkSize));
+          }
+
+          for (let i = 0; i < chunks.length; i++) {
+            const chunkJson = JSON.stringify(chunks[i]);
+            await base44.asServiceRole.entities.Backup.create({
+              backup_date: now,
+              backup_group_id: backupGroupId,
+              entity_name: `${entityName}__part${i + 1}of${chunks.length}`,
+              record_count: chunks[i].length,
+              backup_size: chunkJson.length,
+              status: 'Completed',
+              backup_type: 'Full',
+              environment: 'production',
+              json_data: chunkJson
+            });
+          }
+          results[entityName] = data.length;
+          totalRecords += data.length;
+          totalSize += size;
+        } else {
+          await base44.asServiceRole.entities.Backup.create({
+            backup_date: now,
+            backup_group_id: backupGroupId,
+            entity_name: entityName,
+            record_count: data.length,
+            backup_size: size,
+            status: 'Completed',
+            backup_type: 'Full',
+            environment: 'production',
+            json_data: jsonData
+          });
+          results[entityName] = data.length;
+          totalRecords += data.length;
+          totalSize += size;
+        }
       } catch (err) {
-        // Entity might not exist or have permission issues, continue
-        console.log(`Skipped entity: ${entityName}`);
+        console.log(`Skipped entity: ${entityName} - ${err.message}`);
+        results[entityName] = `Error: ${err.message}`;
       }
     }
 
-    // Save backup metadata
-    const backupRecord = await base44.asServiceRole.entities.Backup.create({
-      backup_date: new Date().toISOString(),
-      backup_size: JSON.stringify(backup).length,
-      entity_count: Object.keys(backup.entities).reduce((sum, key) => sum + (backup.entities[key]?.length || 0), 0),
+    // Create metadata record (overzicht)
+    await base44.asServiceRole.entities.Backup.create({
+      backup_date: now,
+      backup_group_id: backupGroupId,
+      entity_name: '_metadata',
+      record_count: 0,
+      backup_size: totalSize,
+      entity_count: totalRecords,
       status: 'Completed',
       backup_type: 'Full',
-      json_data: JSON.stringify(backup)
+      environment: 'production',
+      json_data: JSON.stringify({ entities: results, timestamp: now, version: '3.0' })
     });
 
     return Response.json({
       success: true,
-      backup_id: backupRecord.id,
-      timestamp: backup.timestamp,
-      entity_count: backup.entities
+      backup_group_id: backupGroupId,
+      timestamp: now,
+      total_records: totalRecords,
+      total_size: totalSize,
+      entity_results: results
     });
   } catch (error) {
     console.error('Backup error:', error);

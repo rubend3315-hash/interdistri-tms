@@ -10,72 +10,114 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { backup_id, confirmation_code } = body;
+    const { backup_group_id, entity_name, confirmation_code } = body;
 
-    if (!backup_id) {
-      return Response.json({ error: 'backup_id is verplicht' }, { status: 400 });
+    if (!backup_group_id) {
+      return Response.json({ error: 'backup_group_id is verplicht' }, { status: 400 });
     }
 
-    // VEILIGHEID: Bevestigingscode vereist
     if (!confirmation_code || confirmation_code !== 'HERSTEL-BEVESTIGD') {
       return Response.json({ 
-        error: 'Bevestigingscode ontbreekt of is onjuist. Typ exact: HERSTEL-BEVESTIGD',
+        error: 'Typ exact: HERSTEL-BEVESTIGD om te bevestigen',
         requires_confirmation: true
       }, { status: 400 });
     }
 
-    // Fetch the backup
-    const backup = await base44.asServiceRole.entities.Backup.read(backup_id);
-    if (!backup) {
+    // Haal alle backup-delen op voor deze groep
+    const allParts = await base44.asServiceRole.entities.Backup.filter(
+      { backup_group_id: backup_group_id }
+    );
+
+    if (!allParts || allParts.length === 0) {
       return Response.json({ error: 'Backup niet gevonden' }, { status: 404 });
     }
 
-    const backupData = JSON.parse(backup.json_data);
-
-    // VEILIGHEID: Check of backup van productie is (niet test)
-    if (backupData.environment && backupData.environment !== 'production') {
+    // Check environment
+    const metadata = allParts.find(p => p.entity_name === '_metadata');
+    if (metadata?.environment && metadata.environment !== 'production') {
       return Response.json({ 
-        error: `GEBLOKKEERD: Deze backup komt uit de "${backupData.environment}" omgeving. Alleen productie-backups kunnen hersteld worden naar productie.`
+        error: `GEBLOKKEERD: Backup uit "${metadata.environment}" omgeving.`
       }, { status: 403 });
     }
+
+    // Filter op specifieke entity als opgegeven, anders alles
+    const partsToRestore = allParts.filter(p => {
+      if (p.entity_name === '_metadata') return false;
+      if (p.entity_name === 'User') return false; // Users nooit automatisch herstellen
+      if (entity_name) {
+        // Match entity_name of entity_name__partXofY
+        const baseName = p.entity_name.split('__')[0];
+        return baseName === entity_name;
+      }
+      return true;
+    });
 
     const restoreResult = {
       timestamp: new Date().toISOString(),
       restored_by: user.email,
+      backup_group_id,
       restored_entities: {},
-      skipped_entities: [],
+      skipped: [],
       errors: []
     };
 
-    // Restore each entity EXCEPT User (users moeten handmatig uitgenodigd worden)
-    for (const [entityName, records] of Object.entries(backupData.entities)) {
-      // Skip User entity - user accounts kunnen niet via bulkCreate hersteld worden
-      if (entityName === 'User') {
-        restoreResult.skipped_entities.push({
-          entity: 'User',
-          reason: 'User-accounts worden niet automatisch hersteld. Nodig gebruikers opnieuw uit via Gebruikersbeheer.',
-          count: records?.length || 0
-        });
-        continue;
-      }
+    // Groepeer parts per entity (voor chunked entities)
+    const entityParts = {};
+    for (const part of partsToRestore) {
+      const baseName = part.entity_name.split('__')[0];
+      if (!entityParts[baseName]) entityParts[baseName] = [];
+      entityParts[baseName].push(part);
+    }
 
+    for (const [entName, parts] of Object.entries(entityParts)) {
       try {
-        if (records && records.length > 0) {
-          // Bulk create restored records
-          const cleanedRecords = records.map(record => {
-            const { id, created_date, updated_date, created_by, created_by_id, entity_name, app_id, is_sample, is_deleted, deleted_date, environment, ...data } = record;
-            return data;
-          });
-
-          await base44.asServiceRole.entities[entityName].bulkCreate(cleanedRecords);
-          restoreResult.restored_entities[entityName] = records.length;
+        // Combineer alle records uit alle parts
+        let allRecords = [];
+        for (const part of parts) {
+          const records = JSON.parse(part.json_data);
+          allRecords = allRecords.concat(records);
         }
-      } catch (err) {
-        restoreResult.errors.push({
-          entity: entityName,
-          error: err.message
+
+        if (allRecords.length === 0) continue;
+
+        // Verwijder bestaande data eerst
+        const existing = await base44.asServiceRole.entities[entName].list('', 10000);
+        if (existing && existing.length > 0) {
+          for (const record of existing) {
+            try {
+              await base44.asServiceRole.entities[entName].delete(record.id);
+            } catch (delErr) {
+              // skip delete errors
+            }
+          }
+        }
+
+        // Herstel in batches van 50
+        const cleanedRecords = allRecords.map(record => {
+          const { id, created_date, updated_date, created_by, created_by_id, entity_name: en, app_id, is_sample, is_deleted, deleted_date, environment, ...data } = record;
+          return data;
         });
+
+        const batchSize = 50;
+        for (let i = 0; i < cleanedRecords.length; i += batchSize) {
+          const batch = cleanedRecords.slice(i, i + batchSize);
+          await base44.asServiceRole.entities[entName].bulkCreate(batch);
+        }
+
+        restoreResult.restored_entities[entName] = allRecords.length;
+      } catch (err) {
+        restoreResult.errors.push({ entity: entName, error: err.message });
       }
+    }
+
+    // Meld overgeslagen User entity
+    const userParts = allParts.filter(p => p.entity_name === 'User');
+    if (userParts.length > 0) {
+      restoreResult.skipped.push({
+        entity: 'User',
+        reason: 'User-accounts moeten handmatig uitgenodigd worden',
+        count: userParts.reduce((sum, p) => sum + (p.record_count || 0), 0)
+      });
     }
 
     return Response.json(restoreResult);
