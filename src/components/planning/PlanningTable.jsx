@@ -252,6 +252,12 @@ export default function PlanningTable({
                       —
                     </div>
                   )}
+                  {absence && (
+                    <div className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-[10px] font-semibold w-full justify-center ${absenceColors[absence] || "bg-gray-100 text-gray-600 border-gray-200"}`}>
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {absence}
+                    </div>
+                  )}
                   {dayHours !== null && dayHours !== undefined && dayHours > 0 && (
                     <div className="text-xs text-cyan-600 font-semibold">{parseFloat(dayHours.toFixed(2))}h</div>
                   )}
