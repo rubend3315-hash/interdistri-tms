@@ -75,7 +75,8 @@ export default function Planning() {
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryFn: () => base44.entities.Employee.list(),
+    staleTime: 0,
   });
 
   const { data: schedules = [], isLoading: loadingSchedules } = useQuery({
