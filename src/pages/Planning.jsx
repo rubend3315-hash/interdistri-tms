@@ -451,9 +451,10 @@ export default function Planning() {
           }
 
           updateData[dayKey] = empOverrides[dayKey] || defaultShift;
-          // Voor PakketDistributie: gebruik de geselecteerde shift (Shift3/4/5)
+          // Voor PakketDistributie: gebruik de geselecteerde shift per dag (Shift3/4/5)
           if (employee.department === 'PakketDistributie') {
-            const pakketShift = pakketShiftOverrides[employee.id] || 'Shift3';
+            const empPakketOverrides = pakketShiftOverrides[employee.id] || {};
+            const pakketShift = empPakketOverrides[dayKey] || 'Shift3';
             updateData[`${dayKey}_planned_department`] = `PakketDistributie_${pakketShift}`;
           } else {
             updateData[`${dayKey}_planned_department`] = employee.department || '';
