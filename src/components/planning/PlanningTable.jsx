@@ -235,7 +235,12 @@ export default function PlanningTable({
                   onClick={() => handleAddShift(employee, day, dayIndex)}
                   className="w-full min-h-20 border border-slate-200 rounded-md px-2 py-2 text-xs flex flex-col gap-0.5 cursor-pointer hover:bg-slate-50"
                 >
-                  {displayText !== "-" ? (
+                  {absence ? (
+                    <div className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-semibold w-full justify-center ${absenceColors[absence] || "bg-gray-100 text-gray-600 border-gray-200"}`}>
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                      {absence}
+                    </div>
+                  ) : displayText !== "-" ? (
                     <DraggableShiftBadge
                       shift={currentValue}
                       employeeId={employee.id}
@@ -250,12 +255,6 @@ export default function PlanningTable({
                   ) : (
                     <div className="font-medium text-slate-400 text-center py-1">
                       —
-                    </div>
-                  )}
-                  {absence && (
-                    <div className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-[10px] font-semibold w-full justify-center ${absenceColors[absence] || "bg-gray-100 text-gray-600 border-gray-200"}`}>
-                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                      {absence}
                     </div>
                   )}
                   {dayHours !== null && dayHours !== undefined && dayHours > 0 && (
