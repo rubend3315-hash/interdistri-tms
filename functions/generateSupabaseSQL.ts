@@ -9,14 +9,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // All entity definitions with their properties
     const entities = {
       employee: {
         employee_number: 'text', initials: 'text', first_name: 'text', prefix: 'text', last_name: 'text',
         photo_url: 'text', email: 'text', phone: 'text', date_of_birth: 'date', in_service_since: 'date',
         out_of_service_date: 'date', address: 'text', postal_code: 'text', city: 'text',
         emergency_contact_name: 'text', emergency_contact_phone: 'text', emergency_contact_relation: 'text',
-        department: 'text', function: 'text', charter_company_id: 'text',
+        department: 'text', "function": 'text', charter_company_id: 'text',
         drivers_license_number: 'text', drivers_license_categories: 'jsonb', drivers_license_expiry: 'date',
         code95_expiry: 'date', id_document_number: 'text', id_document_expiry: 'date',
         contract_type: 'text', contract_start_date: 'date', contract_end_date: 'date',
@@ -347,7 +346,6 @@ Deno.serve(async (req) => {
       }
     };
 
-    // Built-in fields for every table
     const builtInFields = {
       id: 'uuid DEFAULT gen_random_uuid() PRIMARY KEY',
       base44_id: 'text',
@@ -360,21 +358,28 @@ Deno.serve(async (req) => {
     sql += '-- Gegenereerd op: ' + new Date().toISOString() + '\n';
     sql += '-- BELANGRIJK: Voer dit uit in de Supabase SQL Editor\n\n';
 
-    // Disable RLS for all tables
     sql += '-- ====================================\n';
-    sql += '-- STAP 1: TABELLEN AANMAKEN\n';
+    sql += '-- STAP 1: BESTAANDE TABELLEN VERWIJDEREN\n';
+    sql += '-- ====================================\n\n';
+
+    for (const tableName of Object.keys(entities)) {
+      sql += `DROP TABLE IF EXISTS "${tableName}" CASCADE;\n`;
+    }
+
+    sql += '\n-- ====================================\n';
+    sql += '-- STAP 2: TABELLEN AANMAKEN\n';
     sql += '-- ====================================\n\n';
 
     for (const [tableName, columns] of Object.entries(entities)) {
       sql += `-- ${tableName}\n`;
-      sql += `CREATE TABLE IF NOT EXISTS ${tableName} (\n`;
+      sql += `CREATE TABLE "${tableName}" (\n`;
       
       const allCols = [];
       for (const [colName, colType] of Object.entries(builtInFields)) {
-        allCols.push(`  ${colName} ${colType}`);
+        allCols.push(`  "${colName}" ${colType}`);
       }
       for (const [colName, colType] of Object.entries(columns)) {
-        allCols.push(`  ${colName} ${colType}`);
+        allCols.push(`  "${colName}" ${colType}`);
       }
       
       sql += allCols.join(',\n');
@@ -382,14 +387,14 @@ Deno.serve(async (req) => {
     }
 
     sql += '-- ====================================\n';
-    sql += '-- STAP 2: RLS UITSCHAKELEN (service role)\n';
+    sql += '-- STAP 3: RLS UITSCHAKELEN (service role)\n';
     sql += '-- ====================================\n\n';
 
     for (const tableName of Object.keys(entities)) {
-      sql += `ALTER TABLE ${tableName} DISABLE ROW LEVEL SECURITY;\n`;
+      sql += `ALTER TABLE "${tableName}" DISABLE ROW LEVEL SECURITY;\n`;
     }
 
-    sql += '\n-- Klaar! Alle tabellen zijn aangemaakt.\n';
+    sql += '\n-- Klaar! Alle ' + Object.keys(entities).length + ' tabellen zijn aangemaakt.\n';
 
     return Response.json({ 
       success: true, 
