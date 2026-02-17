@@ -814,6 +814,9 @@ export default function HelpPage() {
                   <li>✓ Rollen: Admin en Gebruiker</li>
                   <li>✓ Permissies per pagina/module</li>
                   <li>✓ Mobiele app type toewijzing (standaard/meerdaags)</li>
+                  <li>✓ <strong>Welkomstmail via Gmail:</strong> Bij uitnodigen van een medewerker via de Gebruikers-pagina wordt automatisch een Interdistri welkomstmail verzonden via Gmail</li>
+                  <li>✓ <strong>CC naar admin:</strong> Elke welkomstmail bevat een CC naar ruben@interdistri.nl zodat je een kopie ontvangt</li>
+                  <li>✓ <strong>Voorwaarde:</strong> De welkomstmail wordt alleen verstuurd als je een medewerker selecteert uit de lijst (niet bij handmatig ingevoerd e-mailadres zonder gekoppelde medewerker)</li>
                 </ul>
               </CardContent>
             </Card>
