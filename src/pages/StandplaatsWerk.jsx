@@ -23,7 +23,8 @@ import {
   Building2,
   Lock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  AlertTriangle
 } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
@@ -244,6 +245,30 @@ export default function StandplaatsWerk() {
     return true;
   });
 
+  // Detect overlap between standplaatswerk records for same employee+date
+  const getOverlaps = (record) => {
+    if (!record.start_time || !record.end_time || !record.employee_id || !record.date) return [];
+    const [sH, sM] = record.start_time.split(':').map(Number);
+    const [eH, eM] = record.end_time.split(':').map(Number);
+    const startMin = sH * 60 + sM;
+    const endMin = eH * 60 + eM;
+
+    const siblings = records.filter(
+      (r) => r.id !== record.id && r.employee_id === record.employee_id && r.date === record.date && r.start_time && r.end_time
+    );
+    const overlapping = [];
+    for (const sib of siblings) {
+      const [s2H, s2M] = sib.start_time.split(':').map(Number);
+      const [e2H, e2M] = sib.end_time.split(':').map(Number);
+      const s2 = s2H * 60 + s2M;
+      const e2 = e2H * 60 + e2M;
+      if (startMin < e2 && endMin > s2) {
+        overlapping.push(sib);
+      }
+    }
+    return overlapping;
+  };
+
   const uniqueEmployees = [...new Set(records.map((r) => r.employee_id).filter(Boolean))];
 
   return (
@@ -322,6 +347,7 @@ export default function StandplaatsWerk() {
             const recYear = record.date ? new Date(record.date).getFullYear() : null;
             const isLocked = record.date && recYear && isDateInDefinitiefPeriode(record.date, recYear, loonperiodeStatuses);
             const validation = validateAgainstTimeEntry(record);
+            const overlaps = getOverlaps(record);
             return (
               <Card
                 key={record.id}
@@ -355,6 +381,11 @@ export default function StandplaatsWerk() {
                               <XCircle className="w-5 h-5 text-red-500" />
                             </span>
                           )}
+                          {overlaps.length > 0 && (
+                            <span title={`Overlap met ${overlaps.length} ander(e) standplaatswerk record(s)`}>
+                              <AlertTriangle className="w-5 h-5 text-amber-500" />
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
                           <span className="flex items-center gap-1">
@@ -377,7 +408,21 @@ export default function StandplaatsWerk() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-sm">
+                    <div className="flex flex-col gap-2">
+                      {overlaps.length > 0 && (
+                        <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                          <div className="text-xs text-amber-800">
+                            <p className="font-medium">Tijdoverlap gedetecteerd:</p>
+                            {overlaps.map((o) => (
+                              <p key={o.id}>
+                                {o.activity_id ? getActiviteitName(o.activity_id) : 'Standplaatswerk'} — {o.start_time} - {o.end_time}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-4 text-sm">
                       {(record.start_time || record.end_time) && (
                         <div className="text-center">
                           <p className="text-slate-500">Tijd</p>
@@ -398,6 +443,7 @@ export default function StandplaatsWerk() {
                           <p className="font-semibold text-slate-900 truncate">{record.notes}</p>
                         </div>
                       )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
