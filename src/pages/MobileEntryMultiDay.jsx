@@ -1203,7 +1203,8 @@ export default function MobileEntryMultiDay() {
                   <Save className="w-4 h-4 mr-2" />
                   Tussentijds Opslaan & Terug naar Home
                 </Button>
-                {trips.length > 0 && <Button
+                {trips.length > 0 && (
+                  <Button
                   className="w-full py-3 bg-blue-600 hover:bg-blue-700"
                   onClick={async () => {
                     if (isSubmitting) return;
@@ -1258,7 +1259,8 @@ export default function MobileEntryMultiDay() {
                 >
                   <Clock className="w-4 h-4 mr-2" />
                   Volgende → Einde diensttijd invoeren
-                </Button>}
+                </Button>
+                )}
               </div>
             )}
           </TabsContent>
