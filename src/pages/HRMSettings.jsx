@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit } from "lucide-react";
 import DepartmentTab from "../components/settings/DepartmentTab";
 import FunctionTab from "../components/settings/FunctionTab";
+import ActiviteitTab from "../components/settings/ActiviteitTab";
 
 export default function HRMSettings() {
   return (
