@@ -23,7 +23,8 @@ import {
   FileText,
   Eye,
   Edit,
-  Lock
+  Lock,
+  AlertTriangle
 } from "lucide-react";
 import { getBreakMinutesForHours } from "@/components/utils/breakScheduleUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
@@ -256,11 +257,31 @@ export default function Approvals() {
     Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Afgekeurd') : []
   );
 
+  // Detect overlap between time entries for same employee+date
+  const getEntryOverlaps = (entry) => {
+    if (!entry.start_time || !entry.end_time || !entry.employee_id || !entry.date) return [];
+    const [sH, sM] = entry.start_time.split(':').map(Number);
+    const [eH, eM] = entry.end_time.split(':').map(Number);
+    const startMin = sH * 60 + sM;
+    const endMin = eH * 60 + eM;
+
+    return timeEntries.filter((te) => {
+      if (te.id === entry.id || te.employee_id !== entry.employee_id || te.date !== entry.date) return false;
+      if (!te.start_time || !te.end_time) return false;
+      const [s2H, s2M] = te.start_time.split(':').map(Number);
+      const [e2H, e2M] = te.end_time.split(':').map(Number);
+      const s2 = s2H * 60 + s2M;
+      const e2 = e2H * 60 + e2M;
+      return startMin < e2 && endMin > s2;
+    });
+  };
+
   const renderEntryCard = (entry, showActions = false) => {
     const employee = getEmployee(entry.employee_id);
     const vehicle = getVehicle(entry.vehicle_id);
     const entryYear = entry.date ? new Date(entry.date).getFullYear() : null;
     const entryLocked = entry.date && entryYear && isDateInDefinitiefPeriode(entry.date, entryYear, loonperiodeStatuses);
+    const overlaps = getEntryOverlaps(entry);
 
     return (
       <Card key={entry.id} className="hover:shadow-md transition-shadow">
@@ -306,6 +327,23 @@ export default function Approvals() {
                     </div>
                   )}
                 </div>
+
+                {overlaps.length > 0 && (
+                  <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-amber-800">
+                      <p className="font-medium">Tijdoverlap met andere dienst(en):</p>
+                      {overlaps.map((o) => {
+                        const oEmp = getEmployee(o.employee_id);
+                        return (
+                          <p key={o.id}>
+                            {o.start_time} - {o.end_time} ({o.status})
+                          </p>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {entry.notes && (
                   <p className="mt-3 text-sm text-slate-500 bg-slate-50 p-2 rounded-lg">
