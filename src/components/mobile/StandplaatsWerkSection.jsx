@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Package } from "lucide-react";
+import { Plus, Trash2, Package, ChevronDown, ChevronRight } from "lucide-react";
 
 export default function StandplaatsWerkSection({
   standplaatsWerk,
@@ -35,7 +35,32 @@ export default function StandplaatsWerkSection({
     setStandplaatsWerk(standplaatsWerk.filter((_, i) => i !== index));
   };
 
+  const [collapsedRegels, setCollapsedRegels] = useState({});
   const activeActiviteiten = activiteiten.filter(a => a.status !== "Inactief");
+
+  const toggleCollapse = (index) => {
+    setCollapsedRegels(prev => ({ ...prev, [index]: !prev[index] }));
+  };
+
+  const isFilled = (regel) => {
+    return regel.customer_id || regel.activity_id || regel.start_time || regel.notes;
+  };
+
+  const getRegelSummary = (regel) => {
+    const parts = [];
+    if (regel.start_time || regel.end_time) parts.push(`${regel.start_time || '?'} - ${regel.end_time || '?'}`);
+    if (regel.customer_id) {
+      const c = customers.find(c => c.id === regel.customer_id);
+      if (c) parts.push(c.company_name);
+    }
+    if (regel.activity_id) {
+      const a = activiteiten.find(a => a.id === regel.activity_id);
+      if (a) parts.push(a.name);
+    } else if (regel.custom_activity) {
+      parts.push(regel.custom_activity);
+    }
+    return parts.length > 0 ? parts.join(' • ') : 'Niet ingevuld';
+  };
 
   return (
     <div className="space-y-4">
@@ -56,17 +81,34 @@ export default function StandplaatsWerkSection({
         const filteredProjects = regel.customer_id
           ? projects.filter(p => p.customer_id === regel.customer_id && p.status === "Actief")
           : [];
+        const isCollapsed = collapsedRegels[index] && isFilled(regel);
 
         return (
           <Card key={index} className="border-2 border-amber-200">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-slate-900 text-sm">Regel {index + 1}</h3>
+                <button
+                  type="button"
+                  onClick={() => isFilled(regel) && toggleCollapse(index)}
+                  className="flex items-center gap-2 flex-1 text-left"
+                >
+                  {isFilled(regel) && (
+                    isCollapsed
+                      ? <ChevronRight className="w-4 h-4 text-amber-600" />
+                      : <ChevronDown className="w-4 h-4 text-amber-600" />
+                  )}
+                  <h3 className="font-semibold text-slate-900 text-sm">Regel {index + 1}</h3>
+                  {isCollapsed && (
+                    <span className="text-xs text-slate-500 truncate ml-1">{getRegelSummary(regel)}</span>
+                  )}
+                </button>
                 <Button variant="ghost" size="icon" onClick={() => removeRegel(index)}>
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </Button>
               </div>
 
+              {!isCollapsed && (
+              <>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Begintijd</Label>
@@ -183,6 +225,8 @@ export default function StandplaatsWerkSection({
                   placeholder="Bijzonderheden..."
                 />
               </div>
+              </>
+              )}
             </CardContent>
           </Card>
         );
