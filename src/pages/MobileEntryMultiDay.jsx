@@ -1258,7 +1258,7 @@ export default function MobileEntryMultiDay() {
                 >
                   <Clock className="w-4 h-4 mr-2" />
                   Volgende → Einde diensttijd invoeren
-                </Button>
+                </Button>}
               </div>
             )}
           </TabsContent>
