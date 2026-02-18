@@ -392,6 +392,7 @@ export default function MobileEntry() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Live clock ticker
