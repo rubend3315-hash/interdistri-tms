@@ -155,11 +155,12 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
-  const { data: currentEmployee } = useQuery({
+  const { data: currentEmployee, isLoading: loadingEmployee } = useQuery({
     queryKey: ['currentEmployee', user?.email],
-    queryFn: async () => {
-      const emps = await base44.entities.Employee.filter({ email: user.email });
-      return emps.length > 0 ? emps[0] : null;
+    queryFn: async ({ queryKey }) => {
+      const [, email] = queryKey;
+      const emps = await base44.entities.Employee.filter({ email });
+      return emps[0] ?? null;
     },
     enabled: !!user?.email,
   });

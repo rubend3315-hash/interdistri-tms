@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Activiteiten from './pages/Activiteiten';
 import Approvals from './pages/Approvals';
 import AuditLog from './pages/AuditLog';
 import Backups from './pages/Backups';
@@ -88,17 +89,17 @@ import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
 import ShiftTime from './pages/ShiftTime';
 import Stamkaart from './pages/Stamkaart';
+import StandplaatsWerk from './pages/StandplaatsWerk';
 import TIRekenmodule from './pages/TIRekenmodule';
 import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import StandplaatsWerk from './pages/StandplaatsWerk';
-import Activiteiten from './pages/Activiteiten';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "Activiteiten": Activiteiten,
     "Approvals": Approvals,
     "AuditLog": AuditLog,
     "Backups": Backups,
@@ -140,13 +141,12 @@ export const PAGES = {
     "SalaryTables": SalaryTables,
     "ShiftTime": ShiftTime,
     "Stamkaart": Stamkaart,
+    "StandplaatsWerk": StandplaatsWerk,
     "TIRekenmodule": TIRekenmodule,
     "TimeTracking": TimeTracking,
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "StandplaatsWerk": StandplaatsWerk,
-    "Activiteiten": Activiteiten,
 }
 
 export const pagesConfig = {
