@@ -13,7 +13,6 @@ export default function StandplaatsWerkSection({
   customers,
   projects,
   activiteiten,
-  disabled = false,
 }) {
   const addRegel = () => {
     setStandplaatsWerk([
@@ -103,11 +102,9 @@ export default function StandplaatsWerkSection({
                     <span className="text-xs text-slate-500 truncate ml-1">{getRegelSummary(regel)}</span>
                   )}
                 </button>
-                {!disabled && (
-                  <Button variant="ghost" size="icon" onClick={() => removeRegel(index)}>
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
-                )}
+                <Button variant="ghost" size="icon" onClick={() => removeRegel(index)}>
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
               </div>
 
               {!isCollapsed && (
@@ -235,16 +232,14 @@ export default function StandplaatsWerkSection({
         );
       })}
 
-      {!disabled && (
-        <Button
-          variant="outline"
-          className="w-full border-dashed border-2 border-amber-300 py-6"
-          onClick={addRegel}
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Standplaatswerk toevoegen
-        </Button>
-      )}
+      <Button
+        variant="outline"
+        className="w-full border-dashed border-2 border-amber-300 py-6"
+        onClick={addRegel}
+      >
+        <Plus className="w-5 h-5 mr-2" />
+        Standplaatswerk toevoegen
+      </Button>
     </div>
   );
 }
