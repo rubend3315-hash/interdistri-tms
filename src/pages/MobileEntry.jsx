@@ -718,6 +718,7 @@ export default function MobileEntry() {
       base44.analytics.track({ eventName: "mobile_entry_draft_fail", properties: { employeeId: currentEmployee?.id, error: error?.message || "unknown" } });
       toast.error('Concept opslaan mislukt. Controleer je verbinding.');
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
