@@ -114,28 +114,6 @@ export default function MobileFrontpage({ onNavigate }) {
 
   return (
     <div className="space-y-1.5">
-      {/* Shifttijd kaart */}
-      {todayShift && (
-        <Card className="border-l-4 border-l-indigo-600 bg-indigo-50/50">
-          <CardContent className="p-2">
-            <div className="flex items-center gap-2 mb-0.5">
-              <CircleDot className="w-4 h-4 text-indigo-600" />
-              <h2 className="font-bold text-sm text-indigo-900">
-                Shifttijd {shiftDepartment}
-              </h2>
-            </div>
-            <div className="text-xs text-indigo-800 space-y-0.5 ml-6">
-              <p><span className="font-medium">Datum:</span> {format(new Date(todayShift.date), 'EEEE d MMMM', { locale: nl })}</p>
-              <p><span className="font-medium">Start dienst:</span> {todayShift.service_start_time || '-'}</p>
-              <p><span className="font-medium">Shift:</span> {todayShift.start_time || '-'} - {todayShift.end_time || '-'}</p>
-              {todayShift.message && (
-                <p className="mt-1 text-indigo-700 italic">{todayShift.message}</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <Card className="border-l-4 border-l-blue-600">
         <CardContent className="p-2">
           <h2 className="font-bold text-sm text-slate-900 mb-0.5">
