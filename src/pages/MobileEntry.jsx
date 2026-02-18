@@ -1103,14 +1103,14 @@ export default function MobileEntry() {
 
       {activeTab === "dienst" && (
         <div className="space-y-4">
-            {isSubmittedAndSigned && (
-              <div className="p-3 bg-emerald-100 rounded-lg border border-emerald-300">
-                <p className="text-sm text-emerald-800 font-medium">✅ De dienst van vandaag is al ingediend en ondertekend. Wijzigingen zijn niet meer mogelijk.</p>
+            {submittedTodayCount > 0 && !formData.start_time && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800 font-medium">ℹ️ Er {submittedTodayCount === 1 ? 'is' : 'zijn'} al {submittedTodayCount} dienst{submittedTodayCount > 1 ? 'en' : ''} ingediend vandaag. Je kunt een nieuwe dienst starten.</p>
               </div>
             )}
             <ProgressSteps
               steps={["Start dienst", "Ritten", "Eindtijd", "Indienen"]}
-              currentStep={isSubmittedAndSigned ? 4 : progressStep}
+              currentStep={progressStep}
             />
             <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
             <Card>
@@ -1312,14 +1312,9 @@ export default function MobileEntry() {
 
       {activeTab === "ritten" && (
         <div className="space-y-4">
-            {isSubmittedAndSigned && (
-              <div className="p-3 bg-emerald-100 rounded-lg border border-emerald-300">
-                <p className="text-sm text-emerald-800 font-medium">✅ De dienst van vandaag is al ingediend en ondertekend. Wijzigingen zijn niet meer mogelijk.</p>
-              </div>
-            )}
             <ProgressSteps
               steps={["Start dienst", "Ritten", "Eindtijd", "Indienen"]}
-              currentStep={isSubmittedAndSigned ? 4 : progressStep}
+              currentStep={progressStep}
             />
             <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
             <Card className="bg-blue-900 text-white">
