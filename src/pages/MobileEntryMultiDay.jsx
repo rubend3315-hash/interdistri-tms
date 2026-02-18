@@ -923,6 +923,15 @@ export default function MobileEntryMultiDay() {
 
           {/* Ritten Tab - identical to original */}
           <TabsContent value="ritten" className="space-y-4">
+            {/* Standplaatswerk sectie - boven Rit Informatie */}
+            <StandplaatsWerkSection
+              standplaatsWerk={standplaatsWerk}
+              setStandplaatsWerk={setStandplaatsWerk}
+              customers={customers}
+              projects={projects}
+              activiteiten={activiteiten}
+            />
+
             <Card className="bg-blue-900 text-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1168,15 +1177,6 @@ export default function MobileEntryMultiDay() {
                 </CardContent>
               </Card>
             ))}
-
-            {/* Standplaatswerk sectie */}
-            <StandplaatsWerkSection
-              standplaatsWerk={standplaatsWerk}
-              setStandplaatsWerk={setStandplaatsWerk}
-              customers={customers}
-              projects={projects}
-              activiteiten={activiteiten}
-            />
 
             <Button
               variant="outline"
