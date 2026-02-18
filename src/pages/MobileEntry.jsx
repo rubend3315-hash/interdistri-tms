@@ -920,7 +920,7 @@ export default function MobileEntry() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
 
       {/* Home/Frontpage Tab */}
-      <TabsContent value="home">
+      {activeTab === "home" && <TabsContent value="home" forceMount>
             {/* Welcome Message */}
             <div className="bg-white rounded-lg p-2.5 text-slate-900 mb-2 border-2 border-blue-200">
               <h2 className="font-bold text-base mb-1">
