@@ -29,6 +29,7 @@ import MobileFrontpage from "@/components/mobile/MobileFrontpage";
 import MobileReglementTab from "@/components/mobile/MobileReglementTab.jsx";
 import MobileHandleidingTab from "@/components/mobile/MobileHandleidingTab.jsx";
 import MobileSignatureDialog from "@/components/mobile/MobileSignatureDialog.jsx";
+import StandplaatsWerkSection from "@/components/mobile/StandplaatsWerkSection.jsx";
 import { determineShiftType } from "@/components/utils/shiftTypeUtils";
 
 const STATIC_MENU_ITEMS = [
@@ -58,6 +59,7 @@ export default function MobileEntryMultiDay() {
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [signature, setSignature] = useState(null);
   const [trips, setTrips] = useState([]);
+  const [standplaatsWerk, setStandplaatsWerk] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isOnline, syncStatus, addToQueue } = useOfflineSync();
@@ -112,6 +114,16 @@ export default function MobileEntryMultiDay() {
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutesMobile'],
     queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true })
+  });
+
+  const { data: activiteiten = [] } = useQuery({
+    queryKey: ['activiteiten'],
+    queryFn: () => base44.entities.Activiteit.list()
+  });
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projectsMobile'],
+    queryFn: () => base44.entities.Project.list()
   });
 
   const createTimeEntryMutation = useMutation({
@@ -371,6 +383,27 @@ export default function MobileEntryMultiDay() {
 
       base44.analytics.track({ eventName: "mobile_entry_submit_success", properties: { employeeId: currentEmployee?.id, date: formData.date, endDate: formData.end_date, totalHours: hours, tripCount: trips.length, isOnline, entryType: "multi_day" } });
 
+      // Save standplaatsWerk records if any
+      if (standplaatsWerk.length > 0) {
+        for (const spw of standplaatsWerk) {
+          if (spw.customer_id || spw.activity_id) {
+            const spwData = {
+              employee_id: currentEmployee?.id,
+              date: formData.date,
+              customer_id: spw.customer_id || null,
+              project_id: spw.project_id || null,
+              activity_id: spw.activity_id || null,
+              notes: spw.notes || null,
+            };
+            if (isOnline) {
+              await base44.entities.StandplaatsWerk.create(spwData);
+            } else {
+              addToQueue('createStandplaatsWerk', spwData);
+            }
+          }
+        }
+      }
+
       if (isOnline) {
         toast.success('Dienst en ritten succesvol ingediend!');
       } else {
@@ -378,6 +411,7 @@ export default function MobileEntryMultiDay() {
       }
 
       setTrips([]);
+      setStandplaatsWerk([]);
       setSignature(null);
       setFormData({
         date: format(new Date(), 'yyyy-MM-dd'),
@@ -1134,6 +1168,15 @@ export default function MobileEntryMultiDay() {
                 </CardContent>
               </Card>
             ))}
+
+            {/* Standplaatswerk sectie */}
+            <StandplaatsWerkSection
+              standplaatsWerk={standplaatsWerk}
+              setStandplaatsWerk={setStandplaatsWerk}
+              customers={customers}
+              projects={projects}
+              activiteiten={activiteiten}
+            />
 
             <Button
               variant="outline"
