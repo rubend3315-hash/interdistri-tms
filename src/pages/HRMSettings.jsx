@@ -26,6 +26,7 @@ export default function HRMSettings() {
           <TabsTrigger value="functies">Functies</TabsTrigger>
           <TabsTrigger value="uurcode">Uurcode</TabsTrigger>
           <TabsTrigger value="urensoort">Urensoort</TabsTrigger>
+          <TabsTrigger value="activiteiten">Activiteiten</TabsTrigger>
         </TabsList>
 
         <TabsContent value="afdelingen" className="mt-6">
