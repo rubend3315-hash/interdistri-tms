@@ -941,10 +941,10 @@ export default function MobileEntry() {
             </div>
 
             <MobileFrontpage onNavigate={setActiveTab} />
-          </TabsContent>
+          </TabsContent>}
 
           {/* Berichten Tab */}
-          <TabsContent value="berichten" className="space-y-4">
+          {activeTab === "berichten" && <TabsContent value="berichten" className="space-y-4" forceMount>
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
