@@ -606,12 +606,13 @@ export default function MobileEntry() {
       base44.analytics.track({ eventName: "mobile_entry_submit_fail", properties: { employeeId: currentEmployee?.id, date: formData.date, error: error?.message || "unknown" } });
       toast.error('Er is een fout opgetreden bij het indienen. Probeer opnieuw.');
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
 
   const handleSaveDraft = async () => {
-    if (isSubmitting) return;
+    if (submittingRef.current) return;
     if (!currentEmployee?.id) {
       toast.error('Medewerker niet gevonden. Probeer de pagina te herladen.');
       return;
