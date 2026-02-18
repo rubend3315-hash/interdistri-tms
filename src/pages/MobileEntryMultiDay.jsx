@@ -754,8 +754,8 @@ export default function MobileEntryMultiDay() {
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.2}
         onDragEnd={(e, info) => {
-          if (info.offset.x < -50) handleSwipe("left");
-          if (info.offset.x > 50) handleSwipe("right");
+          if (info.offset.x < -80 && info.velocity.x < -300) handleSwipe("left");
+          if (info.offset.x > 80 && info.velocity.x > 300) handleSwipe("right");
         }}
       >
         <Tabs value={activeTab} onValueChange={setActiveTab}>
