@@ -1209,53 +1209,8 @@ export default function MobileEntryMultiDay() {
                   <Button
                   className="w-full py-3 bg-blue-600 hover:bg-blue-700"
                   onClick={async () => {
-                    if (isSubmitting) return;
-                    setIsSubmitting(true);
-                    try {
-                      const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
-                      await base44.entities.TimeEntry.create({
-                        employee_id: currentEmployee?.id,
-                        date: formData.date,
-                        end_date: formData.end_date,
-                        week_number: getWeek(new Date(formData.date), { weekStartsOn: 1 }),
-                        year: getYear(new Date(formData.date)),
-                        start_time: formData.start_time,
-                        end_time: formData.end_time,
-                        break_minutes: Number(formData.break_minutes) || 0,
-                        total_hours: hours,
-                        shift_type: determineShiftType(formData.start_time, formData.end_time),
-                        notes: formData.notes,
-                        status: "Concept"
-                      });
-                      if (trips.length > 0) {
-                        for (const trip of trips) {
-                          await base44.entities.Trip.create({
-                            employee_id: currentEmployee?.id, date: formData.date,
-                            vehicle_id: trip.vehicle_id, customer_id: trip.customer_id,
-                            route_name: trip.route_name,
-                            planned_stops: trip.planned_stops ? Number(trip.planned_stops) : null,
-                            start_km: trip.start_km ? Number(trip.start_km) : null,
-                            end_km: trip.end_km ? Number(trip.end_km) : null,
-                            total_km: trip.start_km && trip.end_km ? Number(trip.end_km) - Number(trip.start_km) : null,
-                            fuel_liters: trip.fuel_liters ? Number(trip.fuel_liters) : null,
-                            adblue_liters: trip.adblue_liters ? Number(trip.adblue_liters) : null,
-                            fuel_km: trip.fuel_km ? Number(trip.fuel_km) : null,
-                            charging_kwh: trip.charging_kwh ? Number(trip.charging_kwh) : null,
-                            departure_time: trip.start_time, arrival_time: trip.end_time,
-                            departure_location: trip.departure_location, notes: trip.notes, status: "Gepland"
-                          });
-                        }
-                      }
-                      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
-                      queryClient.invalidateQueries({ queryKey: ['trips'] });
-                      toast.success('Concept opgeslagen');
-                      setActiveTab("dienst");
-                    } catch (error) {
-                      console.error('Opslaan mislukt:', error);
-                      toast.error('Concept opslaan mislukt.');
-                    } finally {
-                      setIsSubmitting(false);
-                    }
+                    await handleSaveDraft();
+                    setActiveTab("dienst");
                   }}
                   disabled={isSubmitting}
                 >
