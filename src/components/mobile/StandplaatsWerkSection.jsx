@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Package } from "lucide-react";
 
 export default function StandplaatsWerkSection({
@@ -107,8 +108,17 @@ export default function StandplaatsWerkSection({
               <div className="space-y-1">
                 <Label className="text-xs">Activiteit</Label>
                 <Select
-                  value={regel.activity_id || "none"}
-                  onValueChange={(v) => updateRegel(index, "activity_id", v === "none" ? "" : v)}
+                  value={regel._showCustomActivity ? "__custom__" : (regel.activity_id || "none")}
+                  onValueChange={(v) => {
+                    if (v === "__custom__") {
+                      updateRegel(index, "_showCustomActivity", true);
+                      updateRegel(index, "activity_id", "");
+                    } else {
+                      const updated = [...standplaatsWerk];
+                      updated[index] = { ...updated[index], activity_id: v === "none" ? "" : v, _showCustomActivity: false, custom_activity: "" };
+                      setStandplaatsWerk(updated);
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecteer activiteit" />
@@ -118,8 +128,18 @@ export default function StandplaatsWerkSection({
                     {activeActiviteiten.map(a => (
                       <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                     ))}
+                    <SelectItem value="__custom__">✏️ Vrije invoer</SelectItem>
                   </SelectContent>
                 </Select>
+                {regel._showCustomActivity && (
+                  <Input
+                    className="mt-1"
+                    value={regel.custom_activity || ""}
+                    onChange={(e) => updateRegel(index, "custom_activity", e.target.value)}
+                    placeholder="Typ activiteit..."
+                    autoFocus
+                  />
+                )}
               </div>
 
               <div className="space-y-1">
