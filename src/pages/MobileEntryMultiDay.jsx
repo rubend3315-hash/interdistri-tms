@@ -1192,7 +1192,7 @@ export default function MobileEntryMultiDay() {
               Regel Toevoegen
             </Button>
 
-            {trips.length > 0 && (
+            {(trips.length > 0 || standplaatsWerk.length > 0) && (
               <div className="space-y-2 pt-4 border-t mt-4">
                 <Button
                   variant="outline"
@@ -1203,7 +1203,7 @@ export default function MobileEntryMultiDay() {
                   <Save className="w-4 h-4 mr-2" />
                   Tussentijds Opslaan & Terug naar Home
                 </Button>
-                <Button
+                {trips.length > 0 && <Button
                   className="w-full py-3 bg-blue-600 hover:bg-blue-700"
                   onClick={async () => {
                     if (isSubmitting) return;
