@@ -526,6 +526,13 @@ export default function MobileEntry() {
     submitAndReturn();
   };
 
+  // Auto-submit after signature is saved (avoids extra tap)
+  const handleSignatureAndSubmit = (dataUrl) => {
+    setSignature(dataUrl);
+    // Use ref to trigger submit after state update
+    setTimeout(() => submitAndReturn(), 100);
+  };
+
   const submitAndReturn = async () => {
     if (submittingRef.current) return;
     submittingRef.current = true;
@@ -2086,11 +2093,11 @@ export default function MobileEntry() {
       )}
       </motion.div>
 
-      {/* Signature Dialog */}
+      {/* Signature Dialog - auto-submits after signing */}
       <MobileSignatureDialog
         open={showSignatureDialog}
         onOpenChange={setShowSignatureDialog}
-        onSave={handleSignatureSave}
+        onSave={handleSignatureAndSubmit}
       />
     </div>
   );
