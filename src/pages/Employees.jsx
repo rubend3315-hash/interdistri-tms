@@ -1431,12 +1431,13 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
             newContracts = [...contractregels];
             newContracts[editingContract.index] = contract;
           } else {
-            // Voor nieuw contract: update vorig contract met einddatum
+            // Voor nieuw contract: update vorig contract met einddatum + status Beëindigd
             if (typeof showContractDialog === 'object' && showContractDialog.prevContractIndex !== undefined) {
               newContracts = [...contractregels];
               newContracts[showContractDialog.prevContractIndex] = {
                 ...newContracts[showContractDialog.prevContractIndex],
-                einddatum: contract.startdatum
+                einddatum: contract.startdatum,
+                status: 'Beëindigd'
               };
               newContracts.push(contract);
             } else {
