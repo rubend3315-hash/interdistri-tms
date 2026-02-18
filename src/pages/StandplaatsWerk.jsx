@@ -123,7 +123,46 @@ export default function StandplaatsWerk() {
     });
   };
 
+  // Validate standplaatswerk times against time entries
+  const validateAgainstTimeEntry = (record) => {
+    if (!record.start_time || !record.end_time || !record.employee_id || !record.date) {
+      return { valid: null, message: "Geen tijden ingevuld" };
+    }
+    const matchingEntries = timeEntries.filter(
+      (te) => te.employee_id === record.employee_id && te.date === record.date
+    );
+    if (matchingEntries.length === 0) {
+      return { valid: false, message: "Geen tijdregistratie gevonden voor deze datum" };
+    }
+    const [swStartH, swStartM] = record.start_time.split(":").map(Number);
+    const [swEndH, swEndM] = record.end_time.split(":").map(Number);
+    const swStartMin = swStartH * 60 + swStartM;
+    const swEndMin = swEndH * 60 + swEndM;
+
+    for (const te of matchingEntries) {
+      if (!te.start_time || !te.end_time) continue;
+      const [teStartH, teStartM] = te.start_time.split(":").map(Number);
+      const [teEndH, teEndM] = te.end_time.split(":").map(Number);
+      const teStartMin = teStartH * 60 + teStartM;
+      const teEndMin = teEndH * 60 + teEndM;
+
+      const startOk = swStartMin >= teStartMin;
+      const endOk = teEndMin >= teStartMin ? swEndMin <= teEndMin : true;
+
+      if (startOk && endOk) {
+        return { valid: true, message: `Binnen tijdregistratie (${te.start_time} - ${te.end_time})` };
+      }
+    }
+    const te = matchingEntries[0];
+    return { valid: false, message: `Buiten tijdregistratie (${te.start_time || "?"} - ${te.end_time || "?"})` };
+  };
+
   const openEditDialog = (record) => {
+    // Check of record in definitieve periode valt
+    if (record.date) {
+      const recYear = new Date(record.date).getFullYear();
+      if (isDateInDefinitiefPeriode(record.date, recYear, loonperiodeStatuses)) return;
+    }
     setSelectedRecord(record);
     setFormData({
       employee_id: record.employee_id || "",
