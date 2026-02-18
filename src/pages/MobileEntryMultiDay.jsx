@@ -173,16 +173,17 @@ export default function MobileEntryMultiDay() {
   const currentEmployee = Array.isArray(employees) ? employees.find(e => e.email === user?.email) : undefined;
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
-  // Count how many submitted+signed entries exist for today
-  const submittedTodayCount = useMemo(() => {
-    if (!currentEmployee?.id || !myTimeEntries.length) return 0;
+  // Get submitted+signed entries for today with their times
+  const submittedTodayEntries = useMemo(() => {
+    if (!currentEmployee?.id || !myTimeEntries.length) return [];
     return myTimeEntries.filter(e => 
       e.employee_id === currentEmployee.id &&
       e.date === todayStr &&
       (e.status === 'Ingediend' || e.status === 'Goedgekeurd') &&
       e.signature_url
-    ).length;
+    );
   }, [myTimeEntries, currentEmployee?.id, todayStr]);
+  const submittedTodayCount = submittedTodayEntries.length;
 
   // Track page load
   useEffect(() => {
@@ -1025,9 +1026,17 @@ export default function MobileEntryMultiDay() {
 
       {activeTab === "dienst" && (
         <div className="space-y-4">
-            {submittedTodayCount > 0 && !formData.start_time && (
-              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-blue-800 font-medium">ℹ️ Er {submittedTodayCount === 1 ? 'is' : 'zijn'} al {submittedTodayCount} dienst{submittedTodayCount > 1 ? 'en' : ''} ingediend vandaag. Je kunt een nieuwe dienst starten.</p>
+            {submittedTodayEntries.length > 0 && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-1">
+                <p className="text-sm text-blue-800 font-medium">ℹ️ Al ingediende diensten vandaag:</p>
+                {submittedTodayEntries.map((entry, idx) => (
+                  <div key={entry.id} className="flex items-center gap-2 text-xs text-blue-700">
+                    <span className="font-semibold">Dienst {idx + 1}:</span>
+                    <span>{entry.start_time || '?'} — {entry.end_time || '?'}</span>
+                    <Badge className="bg-blue-100 text-blue-700 text-xs py-0">{entry.status}</Badge>
+                  </div>
+                ))}
+                <p className="text-xs text-blue-600 mt-1">Let op: vermijd overlap met bovenstaande tijden.</p>
               </div>
             )}
             <ProgressSteps
