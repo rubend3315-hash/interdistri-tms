@@ -168,8 +168,8 @@ export default function Layout({ children, currentPageName }) {
   // Non-admin users: only allow certain pages, redirect to correct mobile entry type
   // Also block access for inactive/out-of-service employees
   useEffect(() => {
-    if (loadingUser || !user || user.role === 'admin') return;
-    if (!currentEmployee) return; // wacht tot useQuery klaar is
+    if (loadingUser || loadingEmployee || !user || user.role === 'admin') return;
+    if (!currentEmployee) return;
 
     if (currentEmployee.status === 'Uit dienst' && currentEmployee.out_of_service_date) {
       base44.auth.logout();
@@ -178,13 +178,12 @@ export default function Layout({ children, currentPageName }) {
 
     const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts", "EditTimeEntry"];
     if (!allowedPages.includes(currentPageName)) {
-      navigate(createPageUrl(
-        currentEmployee.mobile_entry_type === 'multi_day'
-          ? "MobileEntryMultiDay"
-          : "MobileEntry"
-      ));
+      const targetPage = currentEmployee.mobile_entry_type === 'multi_day'
+        ? "MobileEntryMultiDay"
+        : "MobileEntry";
+      navigate(createPageUrl(targetPage), { replace: true });
     }
-  }, [user, loadingUser, currentEmployee, currentPageName, navigate]);
+  }, [user?.role, user?.email, loadingUser, loadingEmployee, currentEmployee?.status, currentEmployee?.mobile_entry_type, currentPageName, navigate]);
 
   const hasPermission = (page) => {
     if (!user) return false;
