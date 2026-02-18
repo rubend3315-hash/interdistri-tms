@@ -2001,7 +2001,7 @@ export default function MobileEntry() {
                 </a>
               </CardContent>
               </Card>
-              </TabsContent>
+              </TabsContent>}
               </Tabs>
       </motion.div>
 
