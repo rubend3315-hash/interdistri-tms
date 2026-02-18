@@ -173,6 +173,17 @@ export default function MobileEntryMultiDay() {
   const currentEmployee = Array.isArray(employees) ? employees.find(e => e.email === user?.email) : undefined;
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
+  // Check if today's entry is already submitted and signed
+  const isSubmittedAndSigned = useMemo(() => {
+    if (!currentEmployee?.id || !myTimeEntries.length) return false;
+    return myTimeEntries.some(e => 
+      e.employee_id === currentEmployee.id &&
+      e.date === todayStr &&
+      (e.status === 'Ingediend' || e.status === 'Goedgekeurd') &&
+      e.signature_url
+    );
+  }, [myTimeEntries, currentEmployee?.id, todayStr]);
+
   // Track page load
   useEffect(() => {
     if (currentEmployee?.id) {
