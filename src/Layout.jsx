@@ -20,6 +20,7 @@ import {
   DollarSign,
   FileSpreadsheet,
   Smartphone,
+  Package,
   Menu,
   X,
   LogOut,
