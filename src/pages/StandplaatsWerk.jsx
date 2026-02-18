@@ -64,6 +64,16 @@ export default function StandplaatsWerk() {
     queryFn: () => base44.entities.Activiteit.list(),
   });
 
+  const { data: timeEntries = [] } = useQuery({
+    queryKey: ["timeEntriesForStandplaats"],
+    queryFn: () => base44.entities.TimeEntry.list("-date", 500),
+  });
+
+  const { data: loonperiodeStatuses = [] } = useQuery({
+    queryKey: ["loonperiodeStatuses"],
+    queryFn: () => base44.entities.LoonperiodeStatus.list(),
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.StandplaatsWerk.create(data),
     onSuccess: () => {
