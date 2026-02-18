@@ -263,6 +263,13 @@ export default function Layout({ children, currentPageName }) {
     return <>{children}</>;
   }
 
+  const filteredMenu = useMemo(() => {
+    return menuItems.map(group => ({
+      ...group,
+      items: group.items.filter(item => hasPermission(item.page))
+    })).filter(group => group.items.length > 0);
+  }, [user?.role, user?.permissions]);
+
   const toggleGroup = (label) => {
     setExpandedGroups(prev => 
       prev.includes(label) 
