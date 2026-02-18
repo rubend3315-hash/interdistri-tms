@@ -214,7 +214,7 @@ export default function DagstaatPrintView({
               <tr>
                 <th className="text-left">Datum</th>
                 <th className="text-left">Voertuig/kenteken</th>
-                <th className="text-left">Klant</th>
+                <th className="text-left">Klant/project</th>
                 <th className="text-left">Route/activiteit</th>
                 <th className="text-left">Vertrek</th>
                 <th className="text-left">Aankomst</th>
