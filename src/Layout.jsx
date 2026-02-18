@@ -244,7 +244,7 @@ export default function Layout({ children, currentPageName }) {
   const isEmployeeEditTimeEntry = user && user.role !== 'admin' && currentPageName === "EditTimeEntry";
 
   // While user is loading, show nothing to prevent flash/redirect issues
-  if (loadingUser) {
+  if (loadingUser || (user && user.role !== 'admin' && loadingEmployee)) {
     return null;
   }
 
