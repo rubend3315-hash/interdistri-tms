@@ -1966,10 +1966,10 @@ export default function MobileEntry() {
           {/* Handleiding Tab */}
           {activeTab === "handleiding" && <TabsContent value="handleiding" className="space-y-4" forceMount>
             <MobileHandleidingTab />
-          </TabsContent>
+          </TabsContent>}
 
           {/* Links Tab */}
-          <TabsContent value="links" className="space-y-4">
+          {activeTab === "links" && <TabsContent value="links" className="space-y-4" forceMount>
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Snelle links</CardTitle>
