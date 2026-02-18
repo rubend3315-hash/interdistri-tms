@@ -1604,10 +1604,10 @@ export default function MobileEntry() {
                 )}
               </div>
             )}
-              </TabsContent>
+              </TabsContent>}
 
           {/* Inspectie Tab */}
-          <TabsContent value="inspectie" className="space-y-4">
+          {activeTab === "inspectie" && <TabsContent value="inspectie" className="space-y-4" forceMount>
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
