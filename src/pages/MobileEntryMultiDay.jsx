@@ -488,8 +488,9 @@ export default function MobileEntryMultiDay() {
       }
 
       for (const trip of trips) {
+        if (!trip.vehicle_id) continue;
         await base44.entities.Trip.create({
-          employee_id: currentEmployee?.id,
+          employee_id: currentEmployee.id,
           date: formData.date,
           vehicle_id: trip.vehicle_id,
           customer_id: trip.customer_id,
