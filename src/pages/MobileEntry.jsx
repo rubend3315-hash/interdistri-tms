@@ -1790,10 +1790,10 @@ export default function MobileEntry() {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent>}
 
           {/* Declaratie Tab */}
-          <TabsContent value="declaratie" className="space-y-4">
+          {activeTab === "declaratie" && <TabsContent value="declaratie" className="space-y-4" forceMount>
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
