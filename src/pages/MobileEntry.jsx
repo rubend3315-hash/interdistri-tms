@@ -123,8 +123,8 @@ export default function MobileEntry() {
   });
 
   const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list()
+    queryKey: ['activeCustomers'],
+    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
   });
 
   const { data: routes = [] } = useQuery({
