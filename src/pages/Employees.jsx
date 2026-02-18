@@ -1059,6 +1059,24 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
             </Select>
             <p className="text-xs text-slate-500">Bepaalt welke mobiele app de medewerker ziet</p>
           </div>
+          <div className="space-y-2">
+            <Label>Shifttijden van andere afdeling tonen</Label>
+            <Select 
+              value={formData.mobile_shift_department || '_none'} 
+              onValueChange={(v) => setFormData({ ...formData, mobile_shift_department: v === '_none' ? null : v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Eigen afdeling" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Eigen afdeling</SelectItem>
+                {departments.map(dept => (
+                  <SelectItem key={dept.id} value={dept.name}>{dept.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500">Indien ingesteld, ziet deze medewerker de shifttijden van de gekozen afdeling in de mobiele app</p>
+          </div>
         </div>
       </div>
 

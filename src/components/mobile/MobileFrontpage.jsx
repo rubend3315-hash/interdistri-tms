@@ -31,22 +31,24 @@ export default function MobileFrontpage({ onNavigate }) {
 
   const currentEmployee = employees.find(e => e.email === user?.email);
 
+  const shiftDepartment = currentEmployee?.mobile_shift_department || currentEmployee?.department;
+
   const { data: shiftTimes = [] } = useQuery({
-    queryKey: ['shiftTimes', currentEmployee?.id],
+    queryKey: ['shiftTimes', currentEmployee?.id, shiftDepartment],
     queryFn: async () => {
-      if (!currentEmployee?.department) return [];
+      if (!shiftDepartment) return [];
       
       const allShifts = await base44.entities.ShiftTime.list();
       const today = format(new Date(), 'yyyy-MM-dd');
       
       const filteredShifts = allShifts.filter(shift => 
-        shift.department === currentEmployee.department && shift.date >= today
+        shift.department === shiftDepartment && shift.date >= today
       );
       
       const sortedShifts = filteredShifts.sort((a, b) => a.date.localeCompare(b.date));
       return sortedShifts.slice(0, 1);
     },
-    enabled: !!currentEmployee?.department
+    enabled: !!shiftDepartment
   });
 
   const todayShift = shiftTimes.length > 0 ? shiftTimes[0] : null;
