@@ -323,6 +323,7 @@ export default function HelpPage() {
                   <li>✓ Reden afkeuring vastleggen</li>
                   <li>✓ Uren corrigeren met audit trail</li>
                   <li>✓ Historiek van wijzigingen</li>
+                  <li>✓ <strong>Tijdoverlap detectie:</strong> Waarschuwing bij overlappende diensten van dezelfde medewerker op dezelfde dag</li>
                 </ul>
               </CardContent>
             </Card>
@@ -346,6 +347,7 @@ export default function HelpPage() {
                   <li>✓ Brandstof en laadgegevens</li>
                   <li>✓ Status volgen (gepland, onderweg, voltooid)</li>
                   <li>✓ Koppeling met klanten en projecten</li>
+                  <li>✓ <strong>Tijdoverlap detectie:</strong> Waarschuwing bij overlappende ritten van dezelfde medewerker op dezelfde dag</li>
                 </ul>
               </CardContent>
             </Card>
@@ -416,6 +418,8 @@ export default function HelpPage() {
                 </p>
                 <ul className="text-sm space-y-2 text-slate-600">
                   <li>✓ Diensttijd en ritten invoeren</li>
+                  <li>✓ <strong>Meerdere diensten per dag:</strong> Na het indienen en ondertekenen van een dienst kun je een nieuwe dienst op dezelfde dag starten</li>
+                  <li>✓ <strong>Overzicht ingediende diensten:</strong> Banner met eerder ingediende diensten van dezelfde dag (tijden en status)</li>
                   <li>✓ Voertuiginspectie met foto's</li>
                   <li>✓ Declaraties indienen</li>
                   <li>✓ <strong>Planning:</strong> Weekoverzicht met shift, route, voertuig, opmerkingen en afwezigheid (Ziek, Verlof, ATV, Opleiding) per dag</li>
@@ -1379,6 +1383,7 @@ export default function HelpPage() {
                       <li>• Alle wijzigingen door managers worden <strong>gelogd in de audit trail</strong></li>
                       <li>• Een reden opgeven bij afkeuren of corrigeren is <strong>verplicht</strong></li>
                       <li>• De correctie geschiedenis is <strong>altijd zichtbaar</strong> voor controle en naleving</li>
+                      <li>• <strong>Tijdoverlap detectie:</strong> Bij overlappende diensten van dezelfde medewerker op dezelfde dag wordt een oranje waarschuwing getoond met de tijden van de conflicterende dienst(en)</li>
                     </ul>
                   </div>
 
@@ -1639,6 +1644,7 @@ export default function HelpPage() {
                       <li>• Elke rit moet een start- én eindtijd hebben</li>
                       <li>• Rit tijden moeten binnen dienst tijden vallen</li>
                       <li>• Handtekening is verplicht bij indienen</li>
+                      <li>• <strong>Tijdoverlap detectie:</strong> Waarschuwing als standplaatswerk of ritten overlappen met eerder ingediende diensten</li>
                     </ul>
                   </div>
                   <div>
