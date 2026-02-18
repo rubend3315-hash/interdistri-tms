@@ -67,6 +67,39 @@ export default function StandplaatsWerkSection({
                 </Button>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Begintijd</Label>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength="5"
+                    value={regel.start_time || ""}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^0-9]/g, '');
+                      if (value.length >= 3) value = value.slice(0, 2) + ':' + value.slice(2, 4);
+                      updateRegel(index, "start_time", value);
+                    }}
+                    placeholder="08:00"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Eindtijd</Label>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength="5"
+                    value={regel.end_time || ""}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^0-9]/g, '');
+                      if (value.length >= 3) value = value.slice(0, 2) + ':' + value.slice(2, 4);
+                      updateRegel(index, "end_time", value);
+                    }}
+                    placeholder="16:00"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <Label className="text-xs">Klant</Label>
                 <Select
