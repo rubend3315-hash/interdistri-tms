@@ -72,6 +72,7 @@ const menuItems = [
       { name: "Goedkeuringen", icon: CheckSquare, page: "Approvals" },
       { name: "Dienst-Shifttijd", icon: CircleDot, page: "ShiftTime" },
       { name: "Dagstaat", icon: FileText, page: "Dagstaat" },
+      { name: "Standplaatswerk", icon: Package, page: "StandplaatsWerk" },
     ]
   },
   {
