@@ -230,6 +230,11 @@ export default function Layout({ children, currentPageName }) {
       'Integrations': 'admin_only',
       'Dagstaat': 'dagstaat',
       'HelpPage': 'helppage',
+      'Onboarding': 'employees',
+      'MobileHandleiding': 'helppage',
+      'Activiteiten': 'customers',
+      'StandplaatsWerk': 'timetracking',
+      'PayCheckedAudit': 'reports',
     };
     
     const requiredPermission = pagePermissionMap[page];
