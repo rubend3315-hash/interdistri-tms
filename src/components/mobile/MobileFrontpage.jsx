@@ -67,6 +67,13 @@ export default function MobileFrontpage({ onNavigate }) {
       color: "from-emerald-500 to-emerald-600"
     },
     {
+      id: "standplaats",
+      title: "Standplaatswerk",
+      description: "Loodswerk registreren",
+      icon: Package,
+      color: "from-amber-600 to-amber-700"
+    },
+    {
       id: "inspectie",
       title: "Voertuiginspectie",
       description: "Controleer je voertuig",
