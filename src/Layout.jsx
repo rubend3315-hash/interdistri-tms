@@ -112,10 +112,11 @@ const menuItems = [
     items: [
       { name: "Klanten", icon: Building2, page: "Customers" },
       { name: "Projecten", icon: FolderKanban, page: "Projects" },
-    ]
-  },
-  {
-    label: "Communicatie",
+      { name: "Activiteiten", icon: Package, page: "Activiteiten" },
+      ]
+      },
+      {
+      label: "Communicatie",
     items: [
       { name: "Berichten", icon: Mail, page: "Messages" },
     ]
