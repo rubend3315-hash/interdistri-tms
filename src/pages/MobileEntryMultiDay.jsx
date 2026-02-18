@@ -758,10 +758,8 @@ export default function MobileEntryMultiDay() {
           if (info.offset.x > 80 && info.velocity.x > 300) handleSwipe("right");
         }}
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-
-          {/* Home Tab */}
-          <TabsContent value="home">
+      {activeTab === "home" && (
+        <div className="space-y-4">
             <div className="bg-white rounded-lg p-2.5 text-slate-900 mb-2 border-2 border-blue-200">
               <h2 className="font-bold text-base mb-1">Welkom in de Interdistri TMS app</h2>
               {welcomeMessage ? (
@@ -774,10 +772,11 @@ export default function MobileEntryMultiDay() {
               )}
             </div>
             <MobileFrontpage onNavigate={setActiveTab} />
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Berichten Tab */}
-          <TabsContent value="berichten" className="space-y-4">
+      {activeTab === "berichten" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -820,10 +819,11 @@ export default function MobileEntryMultiDay() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Planning Tab */}
-          <TabsContent value="planning" className="space-y-4">
+      {activeTab === "planning" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -869,10 +869,11 @@ export default function MobileEntryMultiDay() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Dienst Tab - MULTI-DAY VERSION */}
-          <TabsContent value="dienst" className="space-y-4">
+      {activeTab === "dienst" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1027,11 +1028,11 @@ export default function MobileEntryMultiDay() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Ritten Tab - identical to original */}
-          <TabsContent value="ritten" className="space-y-4">
-            {/* Standplaatswerk sectie - boven Rit Informatie */}
+      {activeTab === "ritten" && (
+        <div className="space-y-4">
             <StandplaatsWerkSection
               standplaatsWerk={standplaatsWerk}
               setStandplaatsWerk={setStandplaatsWerk}
@@ -1231,9 +1232,7 @@ export default function MobileEntryMultiDay() {
                               setTrips(newTrips);
                             }}
                           >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecteer route" />
-                            </SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder="Selecteer route" /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">Selecteer route</SelectItem>
                               {[...tiModelRoutes].filter(r => !trip.customer_id || r.customer_id === trip.customer_id).sort((a, b) => (a.route_code || '').localeCompare(b.route_code || '', undefined, { numeric: true })).map(r => (
@@ -1326,10 +1325,11 @@ export default function MobileEntryMultiDay() {
                 )}
               </div>
             )}
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Inspectie Tab */}
-          <TabsContent value="inspectie" className="space-y-4">
+      {activeTab === "inspectie" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1446,10 +1446,11 @@ export default function MobileEntryMultiDay() {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Declaratie Tab */}
-          <TabsContent value="declaratie" className="space-y-4">
+      {activeTab === "declaratie" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1519,10 +1520,11 @@ export default function MobileEntryMultiDay() {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Overzicht Tab */}
-          <TabsContent value="overzicht" className="space-y-4">
+      {activeTab === "overzicht" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1557,20 +1559,23 @@ export default function MobileEntryMultiDay() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Reglement Tab */}
-          <TabsContent value="reglement" className="space-y-4">
+      {activeTab === "reglement" && (
+        <div className="space-y-4">
             <MobileReglementTab />
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Handleiding Tab */}
-          <TabsContent value="handleiding" className="space-y-4">
+      {activeTab === "handleiding" && (
+        <div className="space-y-4">
             <MobileHandleidingTab />
-          </TabsContent>
+        </div>
+      )}
 
-          {/* Links Tab */}
-          <TabsContent value="links" className="space-y-4">
+      {activeTab === "links" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Snelle links</CardTitle>
@@ -1592,8 +1597,8 @@ export default function MobileEntryMultiDay() {
                 </a>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+        </div>
+      )}
       </motion.div>
 
       {/* Signature Dialog */}
