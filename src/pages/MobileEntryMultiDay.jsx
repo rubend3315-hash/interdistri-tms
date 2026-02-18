@@ -103,13 +103,14 @@ export default function MobileEntryMultiDay() {
   });
 
   const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryKey: ['currentEmployee', user?.email],
+    queryFn: () => base44.entities.Employee.filter({ email: user.email }),
+    enabled: !!user?.email
   });
 
   const { data: vehicles = [] } = useQuery({
-    queryKey: ['vehicles'],
-    queryFn: () => base44.entities.Vehicle.list()
+    queryKey: ['activeVehicles'],
+    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
   });
 
   const { data: supervisorMessages = [] } = useQuery({
@@ -124,8 +125,8 @@ export default function MobileEntryMultiDay() {
   });
 
   const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list()
+    queryKey: ['activeCustomers'],
+    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
   });
 
   const { data: routes = [] } = useQuery({
@@ -144,13 +145,13 @@ export default function MobileEntryMultiDay() {
   });
 
   const { data: projects = [] } = useQuery({
-    queryKey: ['projectsMobile'],
-    queryFn: () => base44.entities.Project.list()
+    queryKey: ['activeProjectsMobile'],
+    queryFn: () => base44.entities.Project.filter({ status: 'Actief' })
   });
 
   const createTimeEntryMutation = useMutation({
     mutationFn: (data) => base44.entities.TimeEntry.create(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myTimeEntries', user?.email] })
   });
 
   const createInspectionMutation = useMutation({
@@ -330,7 +331,7 @@ export default function MobileEntryMultiDay() {
     } else if (totalMinutes < 0) {
       totalMinutes += 24 * 60;
     }
-    totalMinutes -= breakMinutes || 0;
+    totalMinutes = Math.max(0, totalMinutes - (breakMinutes || 0));
     return Math.round(totalMinutes / 60 * 100) / 100;
   };
 
@@ -428,7 +429,7 @@ export default function MobileEntryMultiDay() {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries', user?.email] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
 
       base44.analytics.track({ eventName: "mobile_entry_submit_success", properties: { employeeId: currentEmployee?.id, date: formData.date, endDate: formData.end_date, totalHours: hours, tripCount: trips.length, isOnline, entryType: "multi_day" } });
@@ -587,7 +588,7 @@ export default function MobileEntryMultiDay() {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries', user?.email] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
       base44.analytics.track({ eventName: "mobile_entry_draft_saved", properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length, entryType: "multi_day" } });
       toast.success('Concept opgeslagen');
