@@ -101,13 +101,14 @@ export default function MobileEntry() {
   });
 
   const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryKey: ['currentEmployee', user?.email],
+    queryFn: () => base44.entities.Employee.filter({ email: user.email }),
+    enabled: !!user?.email
   });
 
   const { data: vehicles = [] } = useQuery({
-    queryKey: ['vehicles'],
-    queryFn: () => base44.entities.Vehicle.list()
+    queryKey: ['activeVehicles'],
+    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
   });
 
   const { data: supervisorMessages = [] } = useQuery({
