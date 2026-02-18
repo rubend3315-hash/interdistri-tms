@@ -556,6 +556,7 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
     photo_url: '',
     supervisor_notities: '',
     mobile_entry_type: 'single_day',
+    mobile_shift_department: '',
     is_chauffeur: true,
     tonen_in_planner: true,
     opnemen_in_loonrapport: true
