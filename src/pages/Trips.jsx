@@ -525,6 +525,30 @@ export default function Trips() {
   const voltooideTrips = filteredTrips.filter(t => t.status === "Voltooid");
   const conceptTrips = filteredTrips.filter(t => t.status === "Gepland");
 
+  // Detect overlap between trips for same employee+date
+  const getTripOverlaps = (trip) => {
+    if (!trip.departure_time || !trip.arrival_time || !trip.employee_id || !trip.date) return [];
+    const [sH, sM] = trip.departure_time.split(':').map(Number);
+    const [eH, eM] = trip.arrival_time.split(':').map(Number);
+    const startMin = sH * 60 + sM;
+    const endMin = eH * 60 + eM;
+
+    const siblings = trips.filter(
+      (t) => t.id !== trip.id && t.employee_id === trip.employee_id && t.date === trip.date && t.departure_time && t.arrival_time
+    );
+    const overlapping = [];
+    for (const sib of siblings) {
+      const [s2H, s2M] = sib.departure_time.split(':').map(Number);
+      const [e2H, e2M] = sib.arrival_time.split(':').map(Number);
+      const s2 = s2H * 60 + s2M;
+      const e2 = e2H * 60 + e2M;
+      if (startMin < e2 && endMin > s2) {
+        overlapping.push(sib);
+      }
+    }
+    return overlapping;
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "Gepland": return "bg-blue-100 text-blue-700";
@@ -612,6 +636,7 @@ export default function Trips() {
                 const tripYear = trip.date ? new Date(trip.date).getFullYear() : null;
                 const tripLocked = trip.date && tripYear && isDateInDefinitiefPeriode(trip.date, tripYear, loonperiodeStatuses);
                 const validation = validateTripAgainstTimeEntry(trip);
+                const tripOverlaps = getTripOverlaps(trip);
                 
                 return (
                   <Card 
@@ -648,6 +673,11 @@ export default function Trips() {
                                   <XCircle className="w-5 h-5 text-red-500" />
                                 </span>
                               )}
+                              {tripOverlaps.length > 0 && (
+                                <span title={`Overlap met ${tripOverlaps.length} andere rit(ten)`}>
+                                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                                </span>
+                              )}
                             </div>
                             <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
                                <span className="flex items-center gap-1">
@@ -667,6 +697,17 @@ export default function Trips() {
                                   </span>
                                   )}
                                   </div>
+                                  {tripOverlaps.length > 0 && (
+                                    <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                                      <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                                      <div className="text-xs text-amber-800">
+                                        <p className="font-medium">Tijdoverlap met andere rit(ten):</p>
+                                        {tripOverlaps.map((o) => (
+                                          <p key={o.id}>{o.route_name || 'Rit'} — {o.departure_time} - {o.arrival_time}</p>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                   </div>
                                   </div>
 
@@ -757,6 +798,7 @@ export default function Trips() {
                                   const customer = getCustomer(trip.customer_id);
                                   const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
                                   const validation = validateTripAgainstTimeEntry(trip);
+                                  const tripOverlaps = getTripOverlaps(trip);
 
                                   return (
                                   <Card 
@@ -788,6 +830,11 @@ export default function Trips() {
                                       <XCircle className="w-5 h-5 text-red-500" />
                                     </span>
                                   )}
+                                  {tripOverlaps.length > 0 && (
+                                    <span title={`Overlap met ${tripOverlaps.length} andere rit(ten)`}>
+                                      <AlertTriangle className="w-5 h-5 text-amber-500" />
+                                    </span>
+                                  )}
                                   </div>
                                   <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
                                   <span className="flex items-center gap-1">
@@ -807,6 +854,17 @@ export default function Trips() {
                             </span>
                           )}
                         </div>
+                        {tripOverlaps.length > 0 && (
+                          <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                            <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                            <div className="text-xs text-amber-800">
+                              <p className="font-medium">Tijdoverlap met andere rit(ten):</p>
+                              {tripOverlaps.map((o) => (
+                                <p key={o.id}>{o.route_name || 'Rit'} — {o.departure_time} - {o.arrival_time}</p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
