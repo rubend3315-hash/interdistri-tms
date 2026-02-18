@@ -244,6 +244,13 @@ export default function Layout({ children, currentPageName }) {
     return user.permissions?.includes(requiredPermission) || false;
   };
 
+  const filteredMenu = useMemo(() => {
+    return menuItems.map(group => ({
+      ...group,
+      items: group.items.filter(item => hasPermission(item.page))
+    })).filter(group => group.items.length > 0);
+  }, [user?.role, user?.permissions]);
+
   const isMobilePage = currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay";
   const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
   const isEmployeeEditTimeEntry = user && user.role !== 'admin' && currentPageName === "EditTimeEntry";
@@ -262,13 +269,6 @@ export default function Layout({ children, currentPageName }) {
   if (isMobilePage || isEmployeeContractPage || isEmployeeEditTimeEntry) {
     return <>{children}</>;
   }
-
-  const filteredMenu = useMemo(() => {
-    return menuItems.map(group => ({
-      ...group,
-      items: group.items.filter(item => hasPermission(item.page))
-    })).filter(group => group.items.length > 0);
-  }, [user?.role, user?.permissions]);
 
   const toggleGroup = (label) => {
     setExpandedGroups(prev => 
