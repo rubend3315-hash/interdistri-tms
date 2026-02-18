@@ -511,6 +511,29 @@ export default function MobileEntryMultiDay() {
         });
       }
 
+      // Bestaande standplaatswerk opruimen en opnieuw aanmaken
+      const existingSpw = await base44.entities.StandplaatsWerk.filter({
+        employee_id: currentEmployee.id,
+        date: formData.date
+      });
+      for (const s of existingSpw) {
+        await base44.entities.StandplaatsWerk.delete(s.id);
+      }
+      for (const spw of standplaatsWerk) {
+        if (spw.customer_id || spw.activity_id || spw.notes) {
+          await base44.entities.StandplaatsWerk.create({
+            employee_id: currentEmployee.id,
+            date: formData.date,
+            start_time: spw.start_time || null,
+            end_time: spw.end_time || null,
+            customer_id: spw.customer_id || null,
+            project_id: spw.project_id || null,
+            activity_id: spw.activity_id || null,
+            notes: spw.notes || null,
+          });
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
       base44.analytics.track({ eventName: "mobile_entry_draft_saved", properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length, entryType: "multi_day" } });

@@ -331,6 +331,23 @@ export default function MobileEntry() {
             _existingId: t.id
           })));
         }
+
+        // Laad bestaande standplaatswerk
+        const existingSpw = await base44.entities.StandplaatsWerk.filter({
+          employee_id: currentEmployee.id,
+          date: today
+        });
+        if (existingSpw.length > 0) {
+          setStandplaatsWerk(existingSpw.map(s => ({
+            start_time: s.start_time || "",
+            end_time: s.end_time || "",
+            customer_id: s.customer_id || "",
+            project_id: s.project_id || "",
+            activity_id: s.activity_id || "",
+            notes: s.notes || "",
+            _existingId: s.id
+          })));
+        }
       } catch (error) {
         console.error('Draft laden mislukt:', error);
       } finally {
@@ -652,6 +669,29 @@ export default function MobileEntry() {
           notes: trip.notes,
           status: "Gepland"
         });
+      }
+
+      // Bestaande standplaatswerk opruimen en opnieuw aanmaken
+      const existingSpw = await base44.entities.StandplaatsWerk.filter({
+        employee_id: currentEmployee.id,
+        date: formData.date
+      });
+      for (const s of existingSpw) {
+        await base44.entities.StandplaatsWerk.delete(s.id);
+      }
+      for (const spw of standplaatsWerk) {
+        if (spw.customer_id || spw.activity_id || spw.notes) {
+          await base44.entities.StandplaatsWerk.create({
+            employee_id: currentEmployee.id,
+            date: formData.date,
+            start_time: spw.start_time || null,
+            end_time: spw.end_time || null,
+            customer_id: spw.customer_id || null,
+            project_id: spw.project_id || null,
+            activity_id: spw.activity_id || null,
+            notes: spw.notes || null,
+          });
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
