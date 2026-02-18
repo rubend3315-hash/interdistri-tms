@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -266,6 +265,89 @@ export default function MobileEntryMultiDay() {
     };
   });
 
+  // Load existing draft entry and trips when app opens
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  useEffect(() => {
+    if (!currentEmployee?.id || draftLoaded) return;
+    
+    const loadDraft = async () => {
+      try {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        
+        const draftEntries = await base44.entities.TimeEntry.filter({
+          employee_id: currentEmployee.id,
+          date: today,
+          status: 'Concept'
+        });
+        
+        if (draftEntries.length > 0) {
+          const draft = draftEntries[0];
+          setFormData({
+            date: draft.date || today,
+            end_date: draft.end_date || today,
+            start_time: draft.start_time || "",
+            end_time: draft.end_time || "",
+            break_minutes: draft.break_minutes ?? 30,
+            notes: draft.notes || ""
+          });
+          if (draft.signature_url) {
+            setSignature(draft.signature_url);
+          }
+        }
+        
+        const existingTrips = await base44.entities.Trip.filter({
+          employee_id: currentEmployee.id,
+          date: today
+        });
+        
+        const draftTrips = existingTrips.filter(t => t.status === 'Gepland');
+        if (draftTrips.length > 0) {
+          setTrips(draftTrips.map(t => ({
+            start_time: t.departure_time || "",
+            end_time: t.arrival_time || "",
+            departure_location: t.departure_location || "Standplaats",
+            vehicle_id: t.vehicle_id || "",
+            damage_occurred: "Nee",
+            start_km: t.start_km ? String(t.start_km) : "",
+            end_km: t.end_km ? String(t.end_km) : "",
+            fuel_liters: t.fuel_liters ? String(t.fuel_liters) : "",
+            adblue_liters: t.adblue_liters ? String(t.adblue_liters) : "",
+            fuel_km: t.fuel_km ? String(t.fuel_km) : "",
+            charging_kwh: t.charging_kwh ? String(t.charging_kwh) : "",
+            customer_id: t.customer_id || "",
+            route_name: t.route_name || "",
+            planned_stops: t.planned_stops ? String(t.planned_stops) : "",
+            notes: t.notes || "",
+            _existingId: t.id
+          })));
+        }
+
+        // Laad bestaande standplaatswerk
+        const existingSpw = await base44.entities.StandplaatsWerk.filter({
+          employee_id: currentEmployee.id,
+          date: today
+        });
+        if (existingSpw.length > 0) {
+          setStandplaatsWerk(existingSpw.map(s => ({
+            start_time: s.start_time || "",
+            end_time: s.end_time || "",
+            customer_id: s.customer_id || "",
+            project_id: s.project_id || "",
+            activity_id: s.activity_id || "",
+            notes: s.notes || "",
+            _existingId: s.id
+          })));
+        }
+      } catch (error) {
+        console.error('Draft laden mislukt:', error);
+      } finally {
+        setDraftLoaded(true);
+      }
+    };
+    
+    loadDraft();
+  }, [currentEmployee?.id, draftLoaded]);
+
   const [inspectionData, setInspectionData] = useState({
     vehicle_id: "", mileage: "",
     exterior_clean: true, interior_clean: true, lights_working: true,
@@ -394,7 +476,30 @@ export default function MobileEntryMultiDay() {
       };
 
       if (isOnline) {
-        await base44.entities.TimeEntry.create(timeEntryData);
+        // Ruim bestaande concepten op om duplicaten te voorkomen
+        const existingEntries = await base44.entities.TimeEntry.filter({
+          employee_id: currentEmployee?.id,
+          date: formData.date,
+          status: 'Concept'
+        });
+        if (existingEntries.length > 0) {
+          await base44.entities.TimeEntry.update(existingEntries[0].id, timeEntryData);
+          for (let i = 1; i < existingEntries.length; i++) {
+            await base44.entities.TimeEntry.delete(existingEntries[i].id);
+          }
+        } else {
+          await base44.entities.TimeEntry.create(timeEntryData);
+        }
+
+        // Ruim bestaande draft trips op
+        const existingDraftTrips = await base44.entities.Trip.filter({
+          employee_id: currentEmployee?.id,
+          date: formData.date,
+          status: 'Gepland'
+        });
+        for (const et of existingDraftTrips) {
+          await base44.entities.Trip.delete(et.id);
+        }
       } else {
         addToQueue('createTimeEntry', timeEntryData);
       }
@@ -434,6 +539,16 @@ export default function MobileEntryMultiDay() {
 
       base44.analytics.track({ eventName: "mobile_entry_submit_success", properties: { employeeId: currentEmployee?.id, date: formData.date, endDate: formData.end_date, totalHours: hours, tripCount: trips.length, isOnline, entryType: "multi_day" } });
 
+      // Ruim bestaande standplaatsWerk op om duplicaten te voorkomen
+      if (isOnline) {
+        const existingSpw = await base44.entities.StandplaatsWerk.filter({
+          employee_id: currentEmployee?.id,
+          date: formData.date
+        });
+        for (const s of existingSpw) {
+          await base44.entities.StandplaatsWerk.delete(s.id);
+        }
+      }
       // Save standplaatsWerk records if any
       if (standplaatsWerk.length > 0) {
         for (const spw of standplaatsWerk) {

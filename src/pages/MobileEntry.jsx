@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,6 +50,7 @@ import MobileHandleidingTab from "@/components/mobile/MobileHandleidingTab.jsx";
 import MobilePlanningTab from "@/components/mobile/MobilePlanningTab.jsx";
 import MobileSignatureDialog from "@/components/mobile/MobileSignatureDialog.jsx";
 import StandplaatsWerkSection from "@/components/mobile/StandplaatsWerkSection.jsx";
+import { determineShiftType } from "@/components/utils/shiftTypeUtils";
 
 const STATIC_MENU_ITEMS = [
   { id: "home", label: "Home", icon: Home },
@@ -525,7 +526,7 @@ export default function MobileEntry() {
         end_time: formData.end_time,
         break_minutes: Number(formData.break_minutes) || 0,
         total_hours: hours,
-        shift_type: "Dag",
+        shift_type: determineShiftType(formData.start_time, formData.end_time),
         notes: formData.notes,
         status: isOnline ? "Ingediend" : "Concept",
         signature_url: signature
@@ -680,7 +681,7 @@ export default function MobileEntry() {
         end_time: formData.end_time,
         break_minutes: Number(formData.break_minutes) || 0,
         total_hours: hours,
-        shift_type: "Dag",
+        shift_type: determineShiftType(formData.start_time, formData.end_time),
         notes: formData.notes,
         status: "Concept"
       };
