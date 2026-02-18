@@ -77,8 +77,30 @@ export default function MobileEntry() {
   const [activeTab, setActiveTab] = useState("home");
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [signature, setSignature] = useState(null);
-  const [trips, setTrips] = useState([]);
-  const [standplaatsWerk, setStandplaatsWerk] = useState([]);
+  const [trips, setTrips] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mobile-entry-draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.formData?.date === format(new Date(), 'yyyy-MM-dd') && parsed.trips?.length) {
+          return parsed.trips;
+        }
+      }
+    } catch {}
+    return [];
+  });
+  const [standplaatsWerk, setStandplaatsWerk] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mobile-entry-draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.formData?.date === format(new Date(), 'yyyy-MM-dd') && parsed.standplaatsWerk?.length) {
+          return parsed.standplaatsWerk;
+        }
+      }
+    } catch {}
+    return [];
+  });
   const [menuOpen, setMenuOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isOnline, syncStatus, addToQueue } = useOfflineSync();
