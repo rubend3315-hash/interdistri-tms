@@ -1187,10 +1187,10 @@ export default function MobileEntry() {
                 )}
                 </CardContent>
                 </Card>
-                </TabsContent>
+                </TabsContent>}
 
           {/* Standplaatswerk Tab */}
-          <TabsContent value="standplaats" className="space-y-4">
+          {activeTab === "standplaats" && <TabsContent value="standplaats" className="space-y-4" forceMount>
             <StandplaatsWerkSection
               standplaatsWerk={standplaatsWerk}
               setStandplaatsWerk={setStandplaatsWerk}
