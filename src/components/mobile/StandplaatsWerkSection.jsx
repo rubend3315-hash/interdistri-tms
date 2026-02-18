@@ -110,14 +110,13 @@ export default function StandplaatsWerkSection({
                 <Select
                   value={regel._showCustomActivity ? "__custom__" : (regel.activity_id || "none")}
                   onValueChange={(v) => {
+                    const updated = [...standplaatsWerk];
                     if (v === "__custom__") {
-                      updateRegel(index, "_showCustomActivity", true);
-                      updateRegel(index, "activity_id", "");
+                      updated[index] = { ...updated[index], activity_id: "", _showCustomActivity: true, custom_activity: "" };
                     } else {
-                      const updated = [...standplaatsWerk];
                       updated[index] = { ...updated[index], activity_id: v === "none" ? "" : v, _showCustomActivity: false, custom_activity: "" };
-                      setStandplaatsWerk(updated);
                     }
+                    setStandplaatsWerk(updated);
                   }}
                 >
                   <SelectTrigger>
