@@ -617,6 +617,7 @@ export default function MobileEntry() {
       toast.error('Medewerker niet gevonden. Probeer de pagina te herladen.');
       return;
     }
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
