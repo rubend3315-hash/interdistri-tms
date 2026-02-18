@@ -1266,15 +1266,15 @@ export default function MobileEntry() {
 
                     <Button 
                       className={`w-full py-4 text-base font-semibold transition-all duration-300 ${
-                        formData.end_time && trips.length > 0 && !isSubmittedAndSigned
+                        formData.end_time && trips.length > 0
                           ? 'bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-300 ring-offset-2'
                           : 'bg-blue-600 hover:bg-blue-700'
                       }`}
                       onClick={handleSubmitEntry}
-                      disabled={isSubmitting || isSubmittedAndSigned}
+                      disabled={isSubmitting}
                     >
                       <Send className="w-5 h-5 mr-2" />
-                      {isSubmittedAndSigned ? 'Dienst al ingediend' : signature ? 'Dienst Indienen' : 'Met Handtekening Indienen'}
+                      {signature ? 'Dienst Indienen' : 'Met Handtekening Indienen'}
                     </Button>
                   </>
                 )}
@@ -1285,11 +1285,6 @@ export default function MobileEntry() {
 
       {activeTab === "standplaats" && (
         <div className="space-y-4">
-            {isSubmittedAndSigned && (
-              <div className="p-3 bg-emerald-100 rounded-lg border border-emerald-300">
-                <p className="text-sm text-emerald-800 font-medium">✅ De dienst van vandaag is al ingediend en ondertekend. Standplaatswerk kan niet meer worden gewijzigd.</p>
-              </div>
-            )}
             <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
             <StandplaatsWerkSection
               standplaatsWerk={standplaatsWerk}
@@ -1297,10 +1292,9 @@ export default function MobileEntry() {
               customers={customers}
               projects={projects}
               activiteiten={activiteiten}
-              disabled={isSubmittedAndSigned}
             />
 
-            {standplaatsWerk.length > 0 && !isSubmittedAndSigned && (
+            {standplaatsWerk.length > 0 && (
               <div className="space-y-2 pt-4 border-t mt-4">
                 <Button 
                   variant="outline" 
@@ -1696,7 +1690,7 @@ export default function MobileEntry() {
               Regel Toevoegen
             </Button>
 
-            {trips.length > 0 && !isSubmittedAndSigned && (
+            {trips.length > 0 && (
               <div className="space-y-2 pt-4 border-t mt-4">
                 <Button 
                   variant="outline" 
