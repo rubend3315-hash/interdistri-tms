@@ -14,7 +14,8 @@ import {
   CalendarDays,
   ExternalLink,
   ArrowRight,
-  CircleDot
+  CircleDot,
+  Package
 } from "lucide-react";
 
 export default function MobileFrontpage({ onNavigate }) {
