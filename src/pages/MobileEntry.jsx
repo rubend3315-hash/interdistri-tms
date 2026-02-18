@@ -1175,9 +1175,8 @@ export default function MobileEntry() {
                 </Card>
                 </TabsContent>
 
-          {/* Ritten Tab */}
-          <TabsContent value="ritten" className="space-y-4">
-            {/* Standplaatswerk sectie - boven Rit Informatie */}
+          {/* Standplaatswerk Tab */}
+          <TabsContent value="standplaats" className="space-y-4">
             <StandplaatsWerkSection
               standplaatsWerk={standplaatsWerk}
               setStandplaatsWerk={setStandplaatsWerk}
@@ -1186,6 +1185,23 @@ export default function MobileEntry() {
               activiteiten={activiteiten}
             />
 
+            {standplaatsWerk.length > 0 && (
+              <div className="space-y-2 pt-4 border-t mt-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full py-3 border-emerald-300 bg-emerald-50"
+                  onClick={handleSaveDraft}
+                  disabled={isSubmitting}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Tussentijds Opslaan & Terug naar Home
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Ritten Tab */}
+          <TabsContent value="ritten" className="space-y-4">
             <Card className="bg-blue-900 text-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
