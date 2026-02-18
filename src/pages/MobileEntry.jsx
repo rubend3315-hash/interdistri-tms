@@ -529,14 +529,14 @@ export default function MobileEntry() {
   // Auto-submit after signature is saved (avoids extra tap)
   const handleSignatureAndSubmit = (dataUrl) => {
     setSignature(dataUrl);
-    // Use ref to trigger submit after state update
-    setTimeout(() => submitAndReturn(), 100);
+    submitAndReturn(dataUrl);
   };
 
-  const submitAndReturn = async () => {
+  const submitAndReturn = async (signatureOverride) => {
     if (submittingRef.current) return;
     submittingRef.current = true;
     setIsSubmitting(true);
+    const finalSignature = signatureOverride || signature;
     try {
       const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
       const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes);
@@ -553,7 +553,7 @@ export default function MobileEntry() {
         shift_type: determineShiftType(formData.start_time, formData.end_time),
         notes: formData.notes,
         status: isOnline ? "Ingediend" : "Concept",
-        signature_url: signature
+        signature_url: finalSignature
       };
 
       if (isOnline) {
