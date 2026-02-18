@@ -461,7 +461,8 @@ export default function MobileEntry() {
   };
 
   const submitAndReturn = async () => {
-    if (isSubmitting) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
