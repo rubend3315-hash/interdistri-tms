@@ -1568,7 +1568,7 @@ export default function MobileEntry() {
               Regel Toevoegen
             </Button>
 
-            {(trips.length > 0 || standplaatsWerk.length > 0) && (
+            {trips.length > 0 && (
               <div className="space-y-2 pt-4 border-t mt-4">
                 <Button 
                   variant="outline" 
