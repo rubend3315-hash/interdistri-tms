@@ -269,12 +269,23 @@ export default function MobileEntry() {
     (!m.department || m.department === 'Alle' || m.department === currentEmployee?.department)
   );
 
-  const [formData, setFormData] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    start_time: "",
-    end_time: "",
-    break_minutes: 30,
-    notes: ""
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mobile-entry-draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.formData?.date === format(new Date(), 'yyyy-MM-dd')) {
+          return parsed.formData;
+        }
+      }
+    } catch {}
+    return {
+      date: format(new Date(), 'yyyy-MM-dd'),
+      start_time: "",
+      end_time: "",
+      break_minutes: 30,
+      notes: ""
+    };
   });
 
   // Load existing draft entry and trips when app opens
