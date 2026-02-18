@@ -13,6 +13,7 @@ export default function StandplaatsWerkSection({
   customers,
   projects,
   activiteiten,
+  disabled = false,
 }) {
   const addRegel = () => {
     setStandplaatsWerk([
@@ -232,14 +233,16 @@ export default function StandplaatsWerkSection({
         );
       })}
 
-      <Button
-        variant="outline"
-        className="w-full border-dashed border-2 border-amber-300 py-6"
-        onClick={addRegel}
-      >
-        <Plus className="w-5 h-5 mr-2" />
-        Standplaatswerk toevoegen
-      </Button>
+      {!disabled && (
+        <Button
+          variant="outline"
+          className="w-full border-dashed border-2 border-amber-300 py-6"
+          onClick={addRegel}
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Standplaatswerk toevoegen
+        </Button>
+      )}
     </div>
   );
 }
