@@ -319,11 +319,14 @@ export default function StandplaatsWerk() {
         <div className="space-y-4">
           {filtered.map((record) => {
             const employee = getEmployee(record.employee_id);
+            const recYear = record.date ? new Date(record.date).getFullYear() : null;
+            const isLocked = record.date && recYear && isDateInDefinitiefPeriode(record.date, recYear, loonperiodeStatuses);
+            const validation = validateAgainstTimeEntry(record);
             return (
               <Card
                 key={record.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => openEditDialog(record)}
+                className={`transition-shadow ${isLocked ? "opacity-75" : "hover:shadow-md cursor-pointer"}`}
+                onClick={() => !isLocked && openEditDialog(record)}
               >
                 <CardContent className="p-5">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -337,6 +340,21 @@ export default function StandplaatsWerk() {
                             {record.activity_id ? getActiviteitName(record.activity_id) : "Standplaatswerk"}
                           </h3>
                           <Badge className="bg-amber-100 text-amber-700">Loodswerk</Badge>
+                          {isLocked && (
+                            <Badge className="bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                              <Lock className="w-3 h-3" /> Vergrendeld
+                            </Badge>
+                          )}
+                          {validation.valid === true && (
+                            <span title={validation.message}>
+                              <CheckCircle2 className="w-5 h-5 text-green-500" />
+                            </span>
+                          )}
+                          {validation.valid === false && (
+                            <span title={validation.message}>
+                              <XCircle className="w-5 h-5 text-red-500" />
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
                           <span className="flex items-center gap-1">
