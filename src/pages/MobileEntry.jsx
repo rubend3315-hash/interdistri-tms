@@ -704,7 +704,7 @@ export default function MobileEntry() {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries', user?.email] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
       base44.analytics.track({ eventName: "mobile_entry_draft_saved", properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length } });
       toast.success('Concept opgeslagen');
