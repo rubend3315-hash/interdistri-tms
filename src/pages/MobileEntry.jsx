@@ -540,7 +540,7 @@ export default function MobileEntry() {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries', user?.email] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
 
       base44.analytics.track({ eventName: "mobile_entry_submit_success", properties: { employeeId: currentEmployee?.id, date: formData.date, totalHours: hours, tripCount: trips.length, isOnline } });
