@@ -621,6 +621,7 @@ export default function MobileEntry() {
         break_minutes: 30,
         notes: ""
       });
+      try { localStorage.removeItem('mobile-entry-draft'); } catch {}
 
       if (hasDamage) {
         window.open('https://mijn.bumper.nl', '_blank');
