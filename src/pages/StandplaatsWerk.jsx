@@ -20,9 +20,14 @@ import {
   Calendar,
   Clock,
   Trash2,
-  Building2
+  Building2,
+  Lock,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
+import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
+import { checkEmployeeActiveRules } from "@/components/utils/employeeContractCheck";
 import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function StandplaatsWerk() {
