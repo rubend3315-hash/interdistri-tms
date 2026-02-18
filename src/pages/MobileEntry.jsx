@@ -966,11 +966,8 @@ export default function MobileEntry() {
           if (info.offset.x > 80 && info.velocity.x > 300) handleSwipe("right");
         }}
       >
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-
-      {/* Home/Frontpage Tab */}
-      {activeTab === "home" && <TabsContent value="home" forceMount>
-            {/* Welcome Message */}
+      {activeTab === "home" && (
+        <div className="space-y-4">
             <div className="bg-white rounded-lg p-2.5 text-slate-900 mb-2 border-2 border-blue-200">
               <h2 className="font-bold text-base mb-1">
                 Welkom in de Interdistri TMS app
@@ -988,12 +985,12 @@ export default function MobileEntry() {
                 </p>
               )}
             </div>
-
             <MobileFrontpage onNavigate={setActiveTab} />
-          </TabsContent>}
+        </div>
+      )}
 
-          {/* Berichten Tab */}
-          {activeTab === "berichten" && <TabsContent value="berichten" className="space-y-4" forceMount>
+      {activeTab === "berichten" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1035,19 +1032,13 @@ export default function MobileEntry() {
                               </p>
                             </div>
                             {message.priority === 'Urgent' && (
-                              <Badge className="bg-red-100 text-red-700 text-xs">
-                                Urgent
-                              </Badge>
+                              <Badge className="bg-red-100 text-red-700 text-xs">Urgent</Badge>
                             )}
                             {message.priority === 'Hoog' && (
-                              <Badge className="bg-amber-100 text-amber-700 text-xs">
-                                Hoog
-                              </Badge>
+                              <Badge className="bg-amber-100 text-amber-700 text-xs">Hoog</Badge>
                             )}
                           </div>
-                          <p className="text-sm text-slate-600 mb-2 whitespace-pre-wrap">
-                            {message.content}
-                          </p>
+                          <p className="text-sm text-slate-600 mb-2 whitespace-pre-wrap">{message.content}</p>
                           <p className="text-xs text-slate-400">
                             {format(messageDate, "d MMM yyyy, HH:mm", { locale: nl })}
                           </p>
@@ -1058,10 +1049,11 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>}
+        </div>
+      )}
 
-          {/* Planning Tab */}
-          {activeTab === "planning" && <TabsContent value="planning" className="space-y-4" forceMount>
+      {activeTab === "planning" && (
+        <div className="space-y-4">
             <MobilePlanningTab
               schedules={schedules}
               currentEmployee={currentEmployee}
@@ -1069,10 +1061,11 @@ export default function MobileEntry() {
               tiModelRoutes={tiModelRoutes}
               vehicles={vehicles}
             />
-          </TabsContent>}
+        </div>
+      )}
 
-          {/* Dienst Tab */}
-           {activeTab === "dienst" && <TabsContent value="dienst" className="space-y-4" forceMount>
+      {activeTab === "dienst" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1234,12 +1227,13 @@ export default function MobileEntry() {
                     </Button>
                   </>
                 )}
-                </CardContent>
-                </Card>
-                </TabsContent>}
+              </CardContent>
+            </Card>
+        </div>
+      )}
 
-          {/* Standplaatswerk Tab */}
-          {activeTab === "standplaats" && <TabsContent value="standplaats" className="space-y-4" forceMount>
+      {activeTab === "standplaats" && (
+        <div className="space-y-4">
             <StandplaatsWerkSection
               standplaatsWerk={standplaatsWerk}
               setStandplaatsWerk={setStandplaatsWerk}
@@ -1261,10 +1255,11 @@ export default function MobileEntry() {
                 </Button>
               </div>
             )}
-          </TabsContent>}
+        </div>
+      )}
 
-          {/* Ritten Tab */}
-          {activeTab === "ritten" && <TabsContent value="ritten" className="space-y-4" forceMount>
+      {activeTab === "ritten" && (
+        <div className="space-y-4">
             <Card className="bg-blue-900 text-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1306,7 +1301,6 @@ export default function MobileEntry() {
                           if (value.length >= 3) {
                             value = value.slice(0, 2) + ':' + value.slice(2, 4);
                           }
-                          
                           const newTrips = [...trips];
                           newTrips[index] = { ...trip, start_time: value };
                           setTrips(newTrips);
@@ -1336,7 +1330,6 @@ export default function MobileEntry() {
                           if (value.length >= 3) {
                             value = value.slice(0, 2) + ':' + value.slice(2, 4);
                           }
-                          
                           const newTrips = [...trips];
                           newTrips[index] = { ...trip, end_time: value };
                           setTrips(newTrips);
@@ -1494,7 +1487,6 @@ export default function MobileEntry() {
                     </div>
                   </div>
 
-                  {/* Route Details Section */}
                   <div className="pt-3 border-t">
                     <div className="bg-emerald-600 text-white p-2 rounded-lg mb-3 flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
@@ -1531,7 +1523,6 @@ export default function MobileEntry() {
                             value={trip.route_name || "none"}
                             onValueChange={(v) => {
                               const newTrips = [...trips];
-                              newTrips[index] = { ...trip, route_name: v === "none" ? "" : v, route_name_custom: v === "__custom__" ? "" : undefined };
                               if (v === "__custom__") {
                                 newTrips[index] = { ...trip, route_name: "", _showCustomRoute: true };
                               } else {
@@ -1642,21 +1633,20 @@ export default function MobileEntry() {
                   <Save className="w-4 h-4 mr-2" />
                   Tussentijds Opslaan & Terug naar Home
                 </Button>
-                {trips.length > 0 && (
-                  <Button 
-                    className="w-full py-3 bg-blue-600 hover:bg-blue-700"
-                    onClick={() => setActiveTab("dienst")}
-                  >
-                    <Clock className="w-4 h-4 mr-2" />
-                    Volgende → Einde diensttijd invoeren
-                  </Button>
-                )}
+                <Button 
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => setActiveTab("dienst")}
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Volgende → Einde diensttijd invoeren
+                </Button>
               </div>
             )}
-              </TabsContent>}
+        </div>
+      )}
 
-          {/* Inspectie Tab */}
-          {activeTab === "inspectie" && <TabsContent value="inspectie" className="space-y-4" forceMount>
+      {activeTab === "inspectie" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1839,10 +1829,11 @@ export default function MobileEntry() {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>}
+        </div>
+      )}
 
-          {/* Declaratie Tab */}
-          {activeTab === "declaratie" && <TabsContent value="declaratie" className="space-y-4" forceMount>
+      {activeTab === "declaratie" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1931,8 +1922,6 @@ export default function MobileEntry() {
                   className="w-full bg-blue-600 hover:bg-blue-700"
                   onClick={async () => {
                     let receiptUrl = "";
-                    
-                    // Upload receipt if provided
                     if (expenseData.receipt_file) {
                       try {
                         const uploadResult = await base44.integrations.Core.UploadFile({
@@ -1944,7 +1933,6 @@ export default function MobileEntry() {
                         return;
                       }
                     }
-
                     createExpenseMutation.mutate({
                       employee_id: currentEmployee?.id,
                       date: expenseData.date,
@@ -1962,10 +1950,11 @@ export default function MobileEntry() {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>}
+        </div>
+      )}
 
-          {/* Overzicht Tab */}
-          {activeTab === "overzicht" && <TabsContent value="overzicht" className="space-y-4" forceMount>
+      {activeTab === "overzicht" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -2005,20 +1994,23 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>}
+        </div>
+      )}
 
-          {/* Reglement Tab */}
-          {activeTab === "reglement" && <TabsContent value="reglement" className="space-y-4" forceMount>
+      {activeTab === "reglement" && (
+        <div className="space-y-4">
             <MobileReglementTab />
-          </TabsContent>}
+        </div>
+      )}
 
-          {/* Handleiding Tab */}
-          {activeTab === "handleiding" && <TabsContent value="handleiding" className="space-y-4" forceMount>
+      {activeTab === "handleiding" && (
+        <div className="space-y-4">
             <MobileHandleidingTab />
-          </TabsContent>}
+        </div>
+      )}
 
-          {/* Links Tab */}
-          {activeTab === "links" && <TabsContent value="links" className="space-y-4" forceMount>
+      {activeTab === "links" && (
+        <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Snelle links</CardTitle>
@@ -2049,9 +2041,9 @@ export default function MobileEntry() {
                   <ExternalLink className="w-4 h-4 text-slate-400" />
                 </a>
               </CardContent>
-              </Card>
-              </TabsContent>}
-              </Tabs>
+            </Card>
+        </div>
+      )}
       </motion.div>
 
       {/* Signature Dialog */}
