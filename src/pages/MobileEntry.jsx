@@ -1956,10 +1956,10 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent>}
 
           {/* Reglement Tab */}
-          <TabsContent value="reglement" className="space-y-4">
+          {activeTab === "reglement" && <TabsContent value="reglement" className="space-y-4" forceMount>
             <MobileReglementTab />
           </TabsContent>
 
