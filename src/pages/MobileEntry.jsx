@@ -150,14 +150,14 @@ export default function MobileEntry() {
   const createTimeEntryMutation = useMutation({
     mutationFn: (data) => base44.entities.TimeEntry.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries', user?.email] });
     }
   });
 
   const updateTimeEntryMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.TimeEntry.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries', user?.email] });
     }
   });
 
