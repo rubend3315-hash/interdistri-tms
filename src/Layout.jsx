@@ -298,8 +298,8 @@ export default function Layout({ children, currentPageName }) {
             <Truck className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-slate-900">Interdistri</span>
-        </div>
-        <NotificationBell />
+          </div>
+          <div className="w-10" /> {/* Spacer voor symmetrie */}
       </div>
 
       {/* Sidebar Overlay */}
