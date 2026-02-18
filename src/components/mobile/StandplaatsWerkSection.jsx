@@ -103,9 +103,11 @@ export default function StandplaatsWerkSection({
                     <span className="text-xs text-slate-500 truncate ml-1">{getRegelSummary(regel)}</span>
                   )}
                 </button>
-                <Button variant="ghost" size="icon" onClick={() => removeRegel(index)}>
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </Button>
+                {!disabled && (
+                  <Button variant="ghost" size="icon" onClick={() => removeRegel(index)}>
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </Button>
+                )}
               </div>
 
               {!isCollapsed && (
