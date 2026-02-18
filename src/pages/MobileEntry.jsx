@@ -55,7 +55,6 @@ const STATIC_MENU_ITEMS = [
   { id: "home", label: "Home", icon: Home },
   { id: "dienst", label: "Diensttijd", icon: Clock },
   { id: "ritten", label: "Ritten", icon: Truck },
-  { id: "standplaats", label: "Standplaatswerk", icon: Package },
   { id: "inspectie", label: "Voertuiginspectie", icon: ClipboardCheck },
   { id: "declaratie", label: "Declaratie", icon: FileText },
   { id: "overzicht", label: "Overzicht", icon: CheckCircle },
