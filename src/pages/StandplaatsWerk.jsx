@@ -185,6 +185,26 @@ export default function StandplaatsWerk() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Check active contract for the selected employee
+    if (formData.employee_id && formData.date) {
+      const emp = employees.find((em) => em.id === formData.employee_id);
+      const ruleCheck = checkEmployeeActiveRules(emp, formData.date);
+      if (!ruleCheck.hasActiveContract) {
+        alert(ruleCheck.warnings.join("\n"));
+        return;
+      }
+    }
+
+    // Check of datum in vergrendelde loonperiode valt
+    if (formData.date) {
+      const year = new Date(formData.date).getFullYear();
+      if (isDateInDefinitiefPeriode(formData.date, year, loonperiodeStatuses)) {
+        alert("Deze datum valt in een vergrendelde loonperiode en kan niet worden gewijzigd.");
+        return;
+      }
+    }
+
     const submitData = { ...formData };
     Object.keys(submitData).forEach((key) => {
       if (typeof submitData[key] === "string" && submitData[key].trim() === "") {
