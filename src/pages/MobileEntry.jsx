@@ -143,8 +143,8 @@ export default function MobileEntry() {
   });
 
   const { data: projects = [] } = useQuery({
-    queryKey: ['projectsMobile'],
-    queryFn: () => base44.entities.Project.list()
+    queryKey: ['activeProjectsMobile'],
+    queryFn: () => base44.entities.Project.filter({ status: 'Actief' })
   });
 
   const createTimeEntryMutation = useMutation({
