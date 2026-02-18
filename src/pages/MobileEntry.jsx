@@ -85,7 +85,7 @@ export default function MobileEntry() {
   const { isOnline, syncStatus, addToQueue } = useOfflineSync();
 
   // Tab order for swiping
-  const tabOrder = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "berichten", "reglement", "links"];
+  const tabOrder = ["home", "dienst", "ritten", "standplaats", "inspectie", "declaratie", "overzicht", "planning", "berichten", "reglement", "links"];
   
   const handleSwipe = (direction) => {
     const currentIndex = tabOrder.indexOf(activeTab);
