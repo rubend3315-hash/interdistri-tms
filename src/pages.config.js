@@ -94,6 +94,7 @@ import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
 import StandplaatsWerk from './pages/StandplaatsWerk';
+import Activiteiten from './pages/Activiteiten';
 import __Layout from './Layout.jsx';
 
 
@@ -145,6 +146,7 @@ export const PAGES = {
     "Users": Users,
     "Vehicles": Vehicles,
     "StandplaatsWerk": StandplaatsWerk,
+    "Activiteiten": Activiteiten,
 }
 
 export const pagesConfig = {
