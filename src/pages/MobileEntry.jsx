@@ -1961,10 +1961,10 @@ export default function MobileEntry() {
           {/* Reglement Tab */}
           {activeTab === "reglement" && <TabsContent value="reglement" className="space-y-4" forceMount>
             <MobileReglementTab />
-          </TabsContent>
+          </TabsContent>}
 
           {/* Handleiding Tab */}
-          <TabsContent value="handleiding" className="space-y-4">
+          {activeTab === "handleiding" && <TabsContent value="handleiding" className="space-y-4" forceMount>
             <MobileHandleidingTab />
           </TabsContent>
 
