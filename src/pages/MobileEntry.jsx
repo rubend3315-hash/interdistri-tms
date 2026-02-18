@@ -1009,10 +1009,10 @@ export default function MobileEntry() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent>}
 
           {/* Planning Tab */}
-          <TabsContent value="planning" className="space-y-4">
+          {activeTab === "planning" && <TabsContent value="planning" className="space-y-4" forceMount>
             <MobilePlanningTab
               schedules={schedules}
               currentEmployee={currentEmployee}
