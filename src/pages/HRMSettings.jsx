@@ -44,6 +44,10 @@ export default function HRMSettings() {
         <TabsContent value="urensoort" className="mt-6">
           <UrensoortTab />
         </TabsContent>
+
+        <TabsContent value="activiteiten" className="mt-6">
+          <ActiviteitTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
