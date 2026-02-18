@@ -412,6 +412,21 @@ export default function MobileEntry() {
     return () => clearInterval(timer);
   }, []);
 
+  // Auto-save draft to localStorage (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('mobile-entry-draft', JSON.stringify({
+          formData,
+          trips,
+          standplaatsWerk,
+          savedAt: Date.now()
+        }));
+      } catch {}
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [formData, trips, standplaatsWerk]);
+
   // Menu items with dynamic badge
   const menuItems = useMemo(() =>
     STATIC_MENU_ITEMS.map(item =>
