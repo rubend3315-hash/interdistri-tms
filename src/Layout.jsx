@@ -233,7 +233,7 @@ export default function Layout({ children, currentPageName }) {
     };
     
     const requiredPermission = pagePermissionMap[page];
-    if (!requiredPermission) return true;
+    if (!requiredPermission) return user.role === 'admin';
     if (requiredPermission === 'admin_only') return false;
     
     return user.permissions?.includes(requiredPermission) || false;
