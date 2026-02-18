@@ -724,7 +724,7 @@ export default function MobileEntry() {
     const [endH, endM] = end.split(':').map(Number);
     let totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
     if (totalMinutes < 0) totalMinutes += 24 * 60;
-    totalMinutes -= breakMinutes || 0;
+    totalMinutes = Math.max(0, totalMinutes - (breakMinutes || 0));
     return Math.round(totalMinutes / 60 * 100) / 100;
   };
 
