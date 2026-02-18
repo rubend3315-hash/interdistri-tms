@@ -112,8 +112,32 @@ export default function MobileFrontpage({ onNavigate }) {
     }
   ];
 
+  // Toon shifttijd-kaart alleen voor gebruikers met een alternatieve mobile_shift_department
+  const showShiftCard = currentEmployee?.mobile_shift_department && todayShift;
+
   return (
     <div className="space-y-1.5">
+      {showShiftCard && (
+        <Card className="border-l-4 border-l-amber-500 bg-amber-50/50">
+          <CardContent className="p-2">
+            <div className="flex items-center gap-2 mb-0.5">
+              <CircleDot className="w-4 h-4 text-amber-600" />
+              <h2 className="font-bold text-sm text-amber-900">
+                Shifttijd {shiftDepartment}
+              </h2>
+            </div>
+            <div className="text-xs text-amber-800 space-y-0.5 ml-6">
+              <p><span className="font-medium">Datum:</span> {format(new Date(todayShift.date), 'EEEE d MMMM', { locale: nl })}</p>
+              <p><span className="font-medium">Start dienst:</span> {todayShift.service_start_time || '-'}</p>
+              <p><span className="font-medium">Shift:</span> {todayShift.start_time || '-'} - {todayShift.end_time || '-'}</p>
+              {todayShift.message && (
+                <p className="mt-1 text-amber-700 italic">{todayShift.message}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-l-4 border-l-blue-600">
         <CardContent className="p-2">
           <h2 className="font-bold text-sm text-slate-900 mb-0.5">
