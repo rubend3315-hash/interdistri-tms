@@ -68,11 +68,11 @@ const menuItems = [
       { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
       { name: "Tijdregistratie", icon: Clock, page: "TimeTracking" },
       { name: "Ritten", icon: Truck, page: "Trips" },
+      { name: "Standplaatswerk", icon: Package, page: "StandplaatsWerk" },
       { name: "Planning", icon: CalendarDays, page: "Planning" },
       { name: "Goedkeuringen", icon: CheckSquare, page: "Approvals" },
       { name: "Dienst-Shifttijd", icon: CircleDot, page: "ShiftTime" },
       { name: "Dagstaat", icon: FileText, page: "Dagstaat" },
-      { name: "Standplaatswerk", icon: Package, page: "StandplaatsWerk" },
     ]
   },
   {
