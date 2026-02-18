@@ -170,7 +170,7 @@ export default function MobileEntryMultiDay() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trips'] })
   });
 
-  const currentEmployee = employees.find(e => e.email === user?.email);
+  const currentEmployee = Array.isArray(employees) ? employees.find(e => e.email === user?.email) : undefined;
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
   // Track page load
