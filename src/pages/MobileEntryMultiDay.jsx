@@ -390,6 +390,8 @@ export default function MobileEntryMultiDay() {
             const spwData = {
               employee_id: currentEmployee?.id,
               date: formData.date,
+              start_time: spw.start_time || null,
+              end_time: spw.end_time || null,
               customer_id: spw.customer_id || null,
               project_id: spw.project_id || null,
               activity_id: spw.activity_id || null,
