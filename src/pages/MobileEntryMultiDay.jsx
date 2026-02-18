@@ -438,6 +438,10 @@ export default function MobileEntryMultiDay() {
 
   const handleSaveDraft = async () => {
     if (isSubmitting) return;
+    if (!currentEmployee?.id) {
+      toast.error('Medewerker niet gevonden. Probeer de pagina te herladen.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
