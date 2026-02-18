@@ -1212,10 +1212,10 @@ export default function MobileEntry() {
                 </Button>
               </div>
             )}
-          </TabsContent>
+          </TabsContent>}
 
           {/* Ritten Tab */}
-          <TabsContent value="ritten" className="space-y-4">
+          {activeTab === "ritten" && <TabsContent value="ritten" className="space-y-4" forceMount>
             <Card className="bg-blue-900 text-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
