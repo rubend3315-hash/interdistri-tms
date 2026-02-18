@@ -50,6 +50,8 @@ import MobileHandleidingTab from "@/components/mobile/MobileHandleidingTab.jsx";
 import MobilePlanningTab from "@/components/mobile/MobilePlanningTab.jsx";
 import MobileSignatureDialog from "@/components/mobile/MobileSignatureDialog.jsx";
 import StandplaatsWerkSection from "@/components/mobile/StandplaatsWerkSection.jsx";
+import ProgressSteps from "@/components/mobile/ProgressSteps.jsx";
+import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator.jsx";
 import { determineShiftType } from "@/components/utils/shiftTypeUtils";
 
 const STATIC_MENU_ITEMS = [
@@ -428,6 +430,9 @@ export default function MobileEntry() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const lastTripRef = useRef(null);
 
   // Live clock ticker
   useEffect(() => {
@@ -435,8 +440,9 @@ export default function MobileEntry() {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-save draft to localStorage (debounced)
+  // Auto-save draft to localStorage (debounced) with indicator
   useEffect(() => {
+    setIsSaving(true);
     const timer = setTimeout(() => {
       try {
         localStorage.setItem('mobile-entry-draft', JSON.stringify({
@@ -445,10 +451,21 @@ export default function MobileEntry() {
           standplaatsWerk,
           savedAt: Date.now()
         }));
+        setLastSavedAt(Date.now());
       } catch {}
+      setIsSaving(false);
     }, 1000);
     return () => clearTimeout(timer);
   }, [formData, trips, standplaatsWerk]);
+
+  // Compute progress step
+  const progressStep = (() => {
+    if (!formData.start_time) return 0;
+    if (trips.length === 0) return 1;
+    if (!formData.end_time) return 2;
+    if (!signature) return 3;
+    return 4;
+  })();
 
   // Menu items with dynamic badge
   const menuItems = useMemo(() =>
@@ -629,9 +646,9 @@ export default function MobileEntry() {
       }
 
       if (isOnline) {
-        toast.success('Dienst en ritten succesvol ingediend!');
+        toast.success('✅ Dienst afgerond — goede rit vandaag!');
       } else {
-        toast.info('Offline: gegevens worden gesynchroniseerd wanneer de verbinding hersteld is.');
+        toast.info('📡 Offline opgeslagen — wordt automatisch verstuurd bij verbinding.');
       }
 
       setTrips([]);
@@ -761,7 +778,8 @@ export default function MobileEntry() {
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries', user?.email] });
       queryClient.invalidateQueries({ queryKey: ['trips'] });
       base44.analytics.track({ eventName: "mobile_entry_draft_saved", properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length } });
-      toast.success('Concept opgeslagen');
+      setLastSavedAt(Date.now());
+      toast.success('✅ Concept opgeslagen — je kunt later verder');
       setTimeout(() => setActiveTab("home"), 300);
     } catch (error) {
       console.error('Opslaan mislukt:', error);
@@ -1067,6 +1085,11 @@ export default function MobileEntry() {
 
       {activeTab === "dienst" && (
         <div className="space-y-4">
+            <ProgressSteps
+              steps={["Start dienst", "Ritten", "Eindtijd", "Indienen"]}
+              currentStep={progressStep}
+            />
+            <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1219,12 +1242,16 @@ export default function MobileEntry() {
                     )}
 
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      className={`w-full py-4 text-base font-semibold transition-all duration-300 ${
+                        formData.end_time && trips.length > 0
+                          ? 'bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-300 ring-offset-2'
+                          : 'bg-blue-600 hover:bg-blue-700'
+                      }`}
                       onClick={handleSubmitEntry}
                       disabled={isSubmitting}
                     >
-                      <Send className="w-4 h-4 mr-2" />
-                      Met Handtekening Indienen
+                      <Send className="w-5 h-5 mr-2" />
+                      {signature ? 'Dienst Indienen' : 'Met Handtekening Indienen'}
                     </Button>
                   </>
                 )}
@@ -1235,6 +1262,7 @@ export default function MobileEntry() {
 
       {activeTab === "standplaats" && (
         <div className="space-y-4">
+            <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
             <StandplaatsWerkSection
               standplaatsWerk={standplaatsWerk}
               setStandplaatsWerk={setStandplaatsWerk}
@@ -1261,6 +1289,11 @@ export default function MobileEntry() {
 
       {activeTab === "ritten" && (
         <div className="space-y-4">
+            <ProgressSteps
+              steps={["Start dienst", "Ritten", "Eindtijd", "Indienen"]}
+              currentStep={progressStep}
+            />
+            <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
             <Card className="bg-blue-900 text-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -1601,23 +1634,29 @@ export default function MobileEntry() {
             <Button 
               variant="outline" 
               className="w-full border-dashed border-2 py-6"
-              onClick={() => setTrips([...trips, {
-                start_time: "",
-                end_time: "",
-                departure_location: "Standplaats",
-                vehicle_id: "",
-                damage_occurred: "Nee",
-                start_km: "",
-                end_km: "",
-                fuel_liters: "",
-                adblue_liters: "",
-                fuel_km: "",
-                charging_kwh: "",
-                customer_id: "",
-                route_name: "",
-                planned_stops: "",
-                notes: ""
-              }])}
+              onClick={() => {
+                setTrips([...trips, {
+                  start_time: "",
+                  end_time: "",
+                  departure_location: "Standplaats",
+                  vehicle_id: "",
+                  damage_occurred: "Nee",
+                  start_km: "",
+                  end_km: "",
+                  fuel_liters: "",
+                  adblue_liters: "",
+                  fuel_km: "",
+                  charging_kwh: "",
+                  customer_id: "",
+                  route_name: "",
+                  planned_stops: "",
+                  notes: ""
+                }]);
+                // Momentum: scroll to new trip after render
+                setTimeout(() => {
+                  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }, 100);
+              }}
             >
               <Plus className="w-5 h-5 mr-2" />
               Regel Toevoegen
