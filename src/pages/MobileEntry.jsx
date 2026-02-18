@@ -544,7 +544,16 @@ export default function MobileEntry() {
 
       base44.analytics.track({ eventName: "mobile_entry_submit_success", properties: { employeeId: currentEmployee?.id, date: formData.date, totalHours: hours, tripCount: trips.length, isOnline } });
 
-      // Save standplaatsWerk records if any
+      // Save standplaatsWerk records - verwijder eerst bestaande om duplicaten te voorkomen
+      if (isOnline) {
+        const existingSpw = await base44.entities.StandplaatsWerk.filter({
+          employee_id: currentEmployee?.id,
+          date: formData.date
+        });
+        for (const s of existingSpw) {
+          await base44.entities.StandplaatsWerk.delete(s.id);
+        }
+      }
       if (standplaatsWerk.length > 0) {
         for (const spw of standplaatsWerk) {
           if (spw.customer_id || spw.activity_id) {
