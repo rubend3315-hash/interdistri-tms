@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,8 +58,30 @@ export default function MobileEntryMultiDay() {
   const [activeTab, setActiveTab] = useState("home");
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [signature, setSignature] = useState(null);
-  const [trips, setTrips] = useState([]);
-  const [standplaatsWerk, setStandplaatsWerk] = useState([]);
+  const [trips, setTrips] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mobile-entry-multiday-draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.formData?.date === format(new Date(), 'yyyy-MM-dd') && parsed.trips?.length) {
+          return parsed.trips;
+        }
+      }
+    } catch {}
+    return [];
+  });
+  const [standplaatsWerk, setStandplaatsWerk] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mobile-entry-multiday-draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.formData?.date === format(new Date(), 'yyyy-MM-dd') && parsed.standplaatsWerk?.length) {
+          return parsed.standplaatsWerk;
+        }
+      }
+    } catch {}
+    return [];
+  });
   const [menuOpen, setMenuOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isOnline, syncStatus, addToQueue } = useOfflineSync();
@@ -223,13 +245,24 @@ export default function MobileEntryMultiDay() {
   );
 
   // MULTI-DAY: formData has both date and end_date
-  const [formData, setFormData] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    end_date: format(new Date(), 'yyyy-MM-dd'),
-    start_time: "",
-    end_time: "",
-    break_minutes: 30,
-    notes: ""
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mobile-entry-multiday-draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.formData?.date === format(new Date(), 'yyyy-MM-dd')) {
+          return parsed.formData;
+        }
+      }
+    } catch {}
+    return {
+      date: format(new Date(), 'yyyy-MM-dd'),
+      end_date: format(new Date(), 'yyyy-MM-dd'),
+      start_time: "",
+      end_time: "",
+      break_minutes: 30,
+      notes: ""
+    };
   });
 
   const [inspectionData, setInspectionData] = useState({
@@ -248,6 +281,7 @@ export default function MobileEntryMultiDay() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Live clock ticker
@@ -255,6 +289,21 @@ export default function MobileEntryMultiDay() {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-save draft to localStorage (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('mobile-entry-multiday-draft', JSON.stringify({
+          formData,
+          trips,
+          standplaatsWerk,
+          savedAt: Date.now()
+        }));
+      } catch {}
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [formData, trips, standplaatsWerk]);
 
   // Menu items with dynamic badge
   const menuItems = useMemo(() =>
@@ -320,7 +369,8 @@ export default function MobileEntryMultiDay() {
   };
 
   const submitAndReturn = async () => {
-    if (isSubmitting) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       const hasDamage = trips.some(trip => trip.damage_occurred === "Ja");
@@ -421,6 +471,7 @@ export default function MobileEntryMultiDay() {
         start_time: "", end_time: "",
         break_minutes: 30, notes: ""
       });
+      try { localStorage.removeItem('mobile-entry-multiday-draft'); } catch {}
 
       if (hasDamage) {
         window.open('https://www.mijn.bumper.nl', '_blank');
@@ -432,16 +483,18 @@ export default function MobileEntryMultiDay() {
       base44.analytics.track({ eventName: "mobile_entry_submit_fail", properties: { employeeId: currentEmployee?.id, date: formData.date, error: error?.message || "unknown", entryType: "multi_day" } });
       toast.error('Er is een fout opgetreden bij het indienen. Probeer opnieuw.');
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
 
   const handleSaveDraft = async () => {
-    if (isSubmitting) return;
+    if (submittingRef.current) return;
     if (!currentEmployee?.id) {
       toast.error('Medewerker niet gevonden. Probeer de pagina te herladen.');
       return;
     }
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       const hours = calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date);
@@ -544,6 +597,7 @@ export default function MobileEntryMultiDay() {
       base44.analytics.track({ eventName: "mobile_entry_draft_fail", properties: { employeeId: currentEmployee?.id, error: error?.message || "unknown", entryType: "multi_day" } });
       toast.error('Concept opslaan mislukt. Controleer je verbinding.');
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
