@@ -1913,10 +1913,10 @@ export default function MobileEntry() {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent>}
 
           {/* Overzicht Tab */}
-          <TabsContent value="overzicht" className="space-y-4">
+          {activeTab === "overzicht" && <TabsContent value="overzicht" className="space-y-4" forceMount>
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
