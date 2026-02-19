@@ -2357,6 +2357,92 @@ export default function HelpPage() {
               </AccordionContent>
             </AccordionItem>
 
+            {/* Systeem E-mail Sjablonen */}
+            <AccordionItem value="system-email-templates-guide">
+              <AccordionTrigger className="text-base font-semibold">
+                <Mail className="w-4 h-4 mr-2" />
+                Hoe beheer ik systeem e-mail sjablonen?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Overzicht</h4>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Naast de handmatige bericht-sjablonen (via de Communicatie-pagina) heeft het systeem ook <strong>automatische e-mail sjablonen</strong>. 
+                      Dit zijn de sjablonen die worden gebruikt door systeem-functies zoals welkomstmails, contractverzending, afkeuringsmails, etc.
+                      Je kunt de HTML-opmaak, onderwerp en inhoud van al deze systeemmails volledig aanpassen.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">1. Sjablonen beheren</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Ga naar <strong>HRM-instellingen → E-mail Sjablonen</strong></li>
+                      <li>• Je ziet een overzicht van alle aangemaakte systeem-sjablonen</li>
+                      <li>• Klik op <strong>"Nieuw sjabloon"</strong> om een sjabloon aan te maken</li>
+                      <li>• Kies de juiste <strong>template_key</strong> (bijv. "stamkaart", "welkomstmail")</li>
+                      <li>• Vul het <strong>onderwerp</strong> en de <strong>HTML-inhoud</strong> in via de rich text editor</li>
+                      <li>• Activeer het sjabloon met de <strong>Actief</strong>-toggle</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">2. Beschikbare template keys</h4>
+                    <div className="overflow-x-auto">
+                      <table className="text-sm w-full border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50">
+                            <th className="text-left p-2 border border-slate-200 font-medium">Template Key</th>
+                            <th className="text-left p-2 border border-slate-200 font-medium">Wordt gebruikt bij</th>
+                            <th className="text-left p-2 border border-slate-200 font-medium">Placeholders</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-slate-600">
+                          <tr><td className="p-2 border border-slate-200 font-mono text-xs">stamkaart</td><td className="p-2 border border-slate-200">Stamkaart naar loonadministratie</td><td className="p-2 border border-slate-200 text-xs">naam, geboortedatum, bsn, adres, iban, afdeling, functie, contract_type, uren_per_week, loonschaal, uurloon, loonheffingskorting, id_document_nummer, id_document_geldig</td></tr>
+                          <tr><td className="p-2 border border-slate-200 font-mono text-xs">welkomstmail</td><td className="p-2 border border-slate-200">Welkomstmail nieuwe medewerker</td><td className="p-2 border border-slate-200 text-xs">naam, email</td></tr>
+                          <tr><td className="p-2 border border-slate-200 font-mono text-xs">contract_ter_ondertekening</td><td className="p-2 border border-slate-200">Contract verzenden ter ondertekening</td><td className="p-2 border border-slate-200 text-xs">naam, contractnummer, contract_type, startdatum, einddatum, functie</td></tr>
+                          <tr><td className="p-2 border border-slate-200 font-mono text-xs">dienst_afgekeurd</td><td className="p-2 border border-slate-200">Notificatie bij afkeuring dienst</td><td className="p-2 border border-slate-200 text-xs">naam, datum, starttijd, eindtijd, pauze, totaal_uren, reden, link</td></tr>
+                          <tr><td className="p-2 border border-slate-200 font-mono text-xs">contract_ondertekend_door_medewerker</td><td className="p-2 border border-slate-200">Melding aan admin na ondertekening</td><td className="p-2 border border-slate-200 text-xs">naam, contractnummer, admin_naam</td></tr>
+                          <tr><td className="p-2 border border-slate-200 font-mono text-xs">contract_geactiveerd</td><td className="p-2 border border-slate-200">Bevestiging aan medewerker na activering</td><td className="p-2 border border-slate-200 text-xs">naam, contractnummer</td></tr>
+                          <tr><td className="p-2 border border-slate-200 font-mono text-xs">nieuw_document</td><td className="p-2 border border-slate-200">Nieuw HR-document beschikbaar</td><td className="p-2 border border-slate-200 text-xs">naam, document_naam, document_type, vervaldatum</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">3. Placeholders gebruiken</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Gebruik de syntax <code className="bg-slate-100 px-1 rounded">{"{{placeholder_naam}}"}</code> in je sjabloon</li>
+                      <li>• Placeholders worden bij het verzenden automatisch vervangen door de echte waarden</li>
+                      <li>• Voorbeeld: <code className="bg-slate-100 px-1 rounded">{"Beste {{naam}}, je contract {{contractnummer}} staat klaar."}</code></li>
+                      <li>• Onbekende placeholders worden vervangen door "—"</li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">4. Standaard vs. aangepast</h4>
+                    <ul className="text-sm text-slate-600 space-y-2">
+                      <li>• Als er <strong>geen actief sjabloon</strong> bestaat voor een template_key, wordt het <strong>standaard systeem-sjabloon</strong> gebruikt (hardcoded in de backend)</li>
+                      <li>• Zodra je een actief sjabloon aanmaakt met de juiste template_key, wordt dat <strong>in plaats van</strong> het standaard-sjabloon gebruikt</li>
+                      <li>• Je kunt een sjabloon <strong>deactiveren</strong> om tijdelijk terug te vallen op het standaard-sjabloon</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>Tip:</strong> Test je sjabloon door een stamkaart of welkomstmail te verzenden na het aanmaken. Zo zie je direct hoe de placeholders worden ingevuld.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700">
+                      ⚠️ <strong>Let op:</strong> De template_key moet exact overeenkomen. Typ de key precies zoals in de tabel hierboven (kleine letters, underscores).
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Back-ups & Supabase Handleiding */}
             <AccordionItem value="backups-guide">
               <AccordionTrigger className="text-base font-semibold">
