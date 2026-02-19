@@ -80,7 +80,8 @@ export function useMobileSubmit({
 
           if (rawTs !== null && rawTs < serviceStart && toAbsoluteMinutes(rawTs, serviceStart) > serviceEnd) {
             errors.push(`Rit ${i + 1} start vóór je diensttijd (${dienstLabel}).`);
-          } else if (rawTe !== null && toAbsoluteMinutes(rawTe, serviceStart) > serviceEnd) {
+          }
+          if (rawTe !== null && toAbsoluteMinutes(rawTe, serviceStart) > serviceEnd) {
             errors.push(`Rit ${i + 1} eindigt na je diensttijd (${dienstLabel}).`);
           }
         }
