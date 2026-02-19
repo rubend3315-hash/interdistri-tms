@@ -69,16 +69,18 @@ export function useMobileSubmit({
     const msg = result.message;
     
     if (code === 'DUPLICATE_SUBMISSION') return 'Deze dienst is al ingediend. Ververs de pagina.';
-    if (code === 'OVERLAP_DETECTED') return msg || 'Overlap met bestaande dienst gedetecteerd.';
-    if (code === 'VALIDATION_ERROR') {
+    if (code === 'TIME_OVERLAP' || code === 'DATE_OVERLAP' || code === 'OVERLAP_DETECTED') return msg || 'Overlap met bestaande dienst gedetecteerd.';
+    if (code === 'CONCURRENT_SUBMIT') return 'Gelijktijdige submit gedetecteerd — probeer opnieuw.';
+    if (code === 'VALIDATION_ERROR' || code === 'VALIDATION_FAILED') {
       const details = result.details;
       if (Array.isArray(details) && details.length) return details.join('\n');
       return msg || 'Validatiefout — controleer je invoer.';
     }
     if (code === 'UNAUTHORIZED' || code === 'AUTH_ERROR') return 'Je sessie is verlopen. Log opnieuw in.';
-    if (code === 'EMPLOYEE_NOT_FOUND') return 'Medewerker niet gevonden — neem contact op met je supervisor.';
+    if (code === 'EMPLOYEE_NOT_FOUND' || code === 'EMPLOYEE_INACTIVE') return 'Medewerker niet gevonden of niet actief — neem contact op met je supervisor.';
     if (code === 'ALREADY_SUBMITTING') return 'Bezig met indienen, even geduld...';
     if (code === 'NETWORK_ERROR') return 'Geen verbinding — probeer opnieuw.';
+    if (code === 'TRANSACTION_FAILED') return 'Indienen mislukt — probeer opnieuw.';
     return msg || 'Er is een fout opgetreden bij het indienen.';
   }, []);
 
