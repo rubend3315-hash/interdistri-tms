@@ -228,7 +228,7 @@ export default function Urenbalans({
   const exportCSV = () => {
     const baseHeaders = ["Periode", "Maand", "Weken", "Contract", "Gewerkt", "Verlof", "Ziek", "ATV", "Feestdag", "Bijz. verlof"];
     const oproepHeaders = isOproepkracht ? ["Var. uren", "Var. bedrag"] : [];
-    const headers = [...baseHeaders, ...oproepHeaders, "Compensatie", "Saldo", "Saldo cumulatief"];
+    const headers = [...baseHeaders, ...oproepHeaders, "Compensatie uren", "Saldo", "Saldo cumulatief"];
     const rows = periodeBalans.map(p => {
       const base = [p.periode, p.maand, p.weken, p.contractUren, p.gewerkteUren,
         p.verlofUren, p.ziekUren, p.atvUren, p.feestdagUren, p.bijzonderVerlof];
