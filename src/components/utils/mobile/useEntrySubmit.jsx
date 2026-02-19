@@ -86,7 +86,7 @@ export function useEntrySubmit() {
       if (!currentlyOnline) {
         // Offline fallback: queue for later sync
         const correlationId = crypto.randomUUID();
-        await addToQueue('submitTimeEntry', { ...payload, _correlationId: correlationId });
+        await addToSyncQueue('submitTimeEntry', { ...payload, _correlationId: correlationId });
         return { success: true, offline: true };
       }
 
