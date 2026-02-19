@@ -83,7 +83,10 @@ export async function addToSyncQueue(action, data) {
     action,
     data,
     timestamp: Date.now(),
-    synced: false
+    synced: false,
+    retryCount: 0,
+    lastError: null,
+    permanentFailure: false,
   };
   
   return new Promise((resolve, reject) => {
@@ -93,6 +96,30 @@ export async function addToSyncQueue(action, data) {
     
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
+  });
+}
+
+// Update a queue item (e.g. increment retryCount, set lastError)
+export async function updateSyncQueueItem(queueId, updates) {
+  if (!db) await initDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAMES.syncQueue], 'readwrite');
+    const store = transaction.objectStore(STORE_NAMES.syncQueue);
+    const getRequest = store.get(queueId);
+
+    getRequest.onsuccess = () => {
+      const item = getRequest.result;
+      if (item) {
+        Object.assign(item, updates);
+        const putRequest = store.put(item);
+        putRequest.onerror = () => reject(putRequest.error);
+        putRequest.onsuccess = () => resolve();
+      } else {
+        resolve();
+      }
+    };
+    getRequest.onerror = () => reject(getRequest.error);
   });
 }
 
