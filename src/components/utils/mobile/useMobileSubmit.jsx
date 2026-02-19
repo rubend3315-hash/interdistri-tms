@@ -11,6 +11,44 @@ const timeToMinutes = (time) => {
 };
 
 /**
+ * Build absolute minute offsets for the full service window.
+ * Base (0) = start of formData.date.
+ * Single-day: serviceStart = startMin, serviceEnd = endMin (or +1440 if overnight)
+ * Multi-day:  serviceEnd = dayOffset * 1440 + endMin
+ */
+function buildServiceRange(formData, isMultiDay) {
+  const sMin = timeToMinutes(formData.start_time);
+  const eMin = timeToMinutes(formData.end_time);
+  if (sMin === null || eMin === null) return null;
+
+  let serviceStart = sMin;
+  let serviceEnd;
+
+  if (isMultiDay && formData.end_date && formData.end_date !== formData.date) {
+    const dayDiff = Math.round(
+      (new Date(formData.end_date + 'T12:00:00') - new Date(formData.date + 'T12:00:00')) / 864e5
+    );
+    serviceEnd = dayDiff * 1440 + eMin;
+  } else {
+    // Single-day or same date: handle overnight (e.g. 22:00–06:00)
+    serviceEnd = eMin <= sMin ? eMin + 1440 : eMin;
+  }
+
+  return { serviceStart, serviceEnd };
+}
+
+/**
+ * Convert a trip/spw time to an absolute minute offset from base date.
+ * For single-day overnight shifts: if time < serviceStart, treat as next day (+1440).
+ */
+function toAbsoluteMinutes(time, serviceStart, isSingleDay) {
+  const m = timeToMinutes(time);
+  if (m === null) return null;
+  if (isSingleDay && m < serviceStart) return m + 1440;
+  return m;
+}
+
+/**
  * useMobileSubmit — Handles validation + submit + draft save.
  * Uses useEntrySubmit for the actual backend call.
  * No direct entity calls.
