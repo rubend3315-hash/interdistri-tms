@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FileText, Printer, Send, Loader2, Save, AlertCircle } from "lucide-react";
 import SignatureCanvas from "../contracts/SignatureCanvas";
 import { getFullName } from "@/components/utils/employeeUtils";
+import { buildStamkaartEmailHtml } from "@/components/utils/stamkaartEmailHtml";
 
 function DepartmentSelect({ value, onChange, hasError }) {
   const { data: departments = [] } = useQuery({
