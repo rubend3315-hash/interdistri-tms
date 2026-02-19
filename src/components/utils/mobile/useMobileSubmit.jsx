@@ -63,6 +63,25 @@ export function useMobileSubmit({
     return true;
   }, [trips, formData, isMultiDay, setActiveTab]);
 
+  // --- Error mapping for backend HTTP status codes ---
+  const mapErrorToMessage = useCallback((result) => {
+    const code = result.error;
+    const msg = result.message;
+    
+    if (code === 'DUPLICATE_SUBMISSION') return 'Deze dienst is al ingediend. Ververs de pagina.';
+    if (code === 'OVERLAP_DETECTED') return msg || 'Overlap met bestaande dienst gedetecteerd.';
+    if (code === 'VALIDATION_ERROR') {
+      const details = result.details;
+      if (Array.isArray(details) && details.length) return details.join('\n');
+      return msg || 'Validatiefout — controleer je invoer.';
+    }
+    if (code === 'UNAUTHORIZED' || code === 'AUTH_ERROR') return 'Je sessie is verlopen. Log opnieuw in.';
+    if (code === 'EMPLOYEE_NOT_FOUND') return 'Medewerker niet gevonden — neem contact op met je supervisor.';
+    if (code === 'ALREADY_SUBMITTING') return 'Bezig met indienen, even geduld...';
+    if (code === 'NETWORK_ERROR') return 'Geen verbinding — probeer opnieuw.';
+    return msg || 'Er is een fout opgetreden bij het indienen.';
+  }, []);
+
   // --- Submit handler ---
   const handleSubmitEntry = useCallback(async (signatureOverride) => {
     const finalSignature = signatureOverride || signature;
@@ -119,11 +138,23 @@ export function useMobileSubmit({
           error: result.error || "unknown", entryType: isMultiDay ? "multi_day" : "single_day"
         }
       });
-      toast.error(result.message || 'Er is een fout opgetreden bij het indienen.');
+      
+      // Map backend error codes to user-friendly Dutch messages
+      const userMessage = mapErrorToMessage(result);
+      
+      if (result.error === 'UNAUTHORIZED' || result.error === 'AUTH_ERROR') {
+        toast.error(userMessage, { duration: 8000 });
+        setTimeout(() => base44.auth.redirectToLogin(), 3000);
+      } else if (result.error === 'DUPLICATE_SUBMISSION') {
+        toast.warning(userMessage, { duration: 6000 });
+        queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      } else {
+        toast.error(userMessage, { duration: 6000 });
+      }
     }
 
     return result;
-  }, [signature, formData, trips, standplaatsWerk, currentEmployee, isMultiDay, submitEntry, resetForm, setActiveTab, queryClient]);
+  }, [signature, formData, trips, standplaatsWerk, currentEmployee, isMultiDay, submitEntry, resetForm, setActiveTab, queryClient, mapErrorToMessage]);
 
   // --- Save draft (guarded: blocks if submit is in progress) ---
   const handleSaveDraft = useCallback(async () => {
