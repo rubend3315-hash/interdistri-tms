@@ -301,7 +301,13 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
                   <p className="text-xs text-slate-500 mb-1">Schrijf binnen het vak.</p>
                   <div className="border rounded-lg bg-slate-50 p-1" style={{ maxWidth: 400 }}>
                     <SignatureCanvas
-                      onSave={(sigUrl) => onOnboardingChange({ ...onboardingData, loonheffing_handtekening_url: sigUrl })}
+                      onSign={async (dataUrl) => {
+                        const res = await fetch(dataUrl);
+                        const blob = await res.blob();
+                        const file = new File([blob], "handtekening_lh_onboarding.jpg", { type: "image/jpeg" });
+                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        onOnboardingChange({ ...onboardingData, loonheffing_handtekening_url: file_url });
+                      }}
                     />
                   </div>
                   {onboardingData?.loonheffing_handtekening_url && (
