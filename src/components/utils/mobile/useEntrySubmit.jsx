@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useOfflineSync } from '@/components/utils/useOfflineSync';
+import { addToSyncQueue } from '@/components/utils/offlineStorage';
 
 /**
  * useEntrySubmit — Client-side hook for atomic time entry submission
@@ -8,14 +8,12 @@ import { useOfflineSync } from '@/components/utils/useOfflineSync';
  * Online: Single API call to submitTimeEntry backend function (atomic, validated)
  * Offline: Queue to IndexedDB for later sync
  * 
- * Usage:
- *   const { submitEntry, saveDraft, isSubmitting } = useEntrySubmit();
- *   const result = await submitEntry({ formData, trips, standplaatsWerk, signature });
+ * Uses addToSyncQueue directly from offlineStorage instead of creating
+ * a second useOfflineSync instance (the page already has one).
  */
 export function useEntrySubmit() {
   const submittingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addToQueue } = useOfflineSync();
 
   /**
    * Submit a time entry (online → backend function, offline → queue)
