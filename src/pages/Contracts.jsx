@@ -726,7 +726,7 @@ export default function Contracts() {
           )}
         </TabsContent>
 
-        <TabsContent value="active">
+        <TabsContent value="active" className="space-y-4">
           {activeContracts.map(contract => {
             const employee = employees.find(e => e.id === contract.employee_id);
             return (
@@ -737,9 +737,35 @@ export default function Contracts() {
                       <h3 className="font-semibold text-lg">
                         {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
                       </h3>
-                      <p className="text-sm text-slate-500">{contract.contract_number}</p>
+                      <p className="text-sm text-slate-500">{contract.contract_number} — {contract.contract_type}</p>
                     </div>
-                    {getStatusBadge(contract)}
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(contract)}
+                      <ContractPdfDownload contractId={contract.id} contractNumber={contract.contract_number} />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenContract(contract)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSendToPayroll(contract)}
+                        disabled={sendingToPayroll === contract.id}
+                        title="Versturen naar loonadministratie"
+                        className={payrollSuccess?.contractId === contract.id ? "border-emerald-500 text-emerald-600" : ""}
+                      >
+                        {sendingToPayroll === contract.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : payrollSuccess?.contractId === contract.id ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <Mail className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
