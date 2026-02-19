@@ -228,17 +228,17 @@ export default function Urenbalans({
   const exportCSV = () => {
     const baseHeaders = ["Periode", "Maand", "Weken", "Contract", "Gewerkt", "Verlof", "Ziek", "ATV", "Feestdag", "Bijz. verlof"];
     const oproepHeaders = isOproepkracht ? ["Var. uren", "Var. bedrag"] : [];
-    const headers = [...baseHeaders, ...oproepHeaders, "Saldo", "Saldo cumulatief"];
+    const headers = [...baseHeaders, ...oproepHeaders, "Compensatie", "Saldo", "Saldo cumulatief"];
     const rows = periodeBalans.map(p => {
       const base = [p.periode, p.maand, p.weken, p.contractUren, p.gewerkteUren,
         p.verlofUren, p.ziekUren, p.atvUren, p.feestdagUren, p.bijzonderVerlof];
       const oproep = isOproepkracht ? [p.variabeleUren, p.variabeleBedrag] : [];
-      return [...base, ...oproep, p.saldo, p.saldoCumulatief];
+      return [...base, ...oproep, p.compensatieUren, p.saldo, p.saldoCumulatief];
     });
     const totalBase = [totalen.contractUren, totalen.gewerkteUren,
       totalen.verlofUren, totalen.ziekUren, totalen.atvUren, totalen.feestdagUren, totalen.bijzonderVerlof];
     const totalOproep = isOproepkracht ? [totalen.variabeleUren, totalen.variabeleBedrag] : [];
-    rows.push(["Totaal", "", "", ...totalBase, ...totalOproep, totalen.saldo, ""]);
+    rows.push(["Totaal", "", "", ...totalBase, ...totalOproep, totalen.compensatieUren, totalen.saldo, ""]);
 
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(";")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
