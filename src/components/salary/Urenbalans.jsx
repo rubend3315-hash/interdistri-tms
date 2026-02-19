@@ -166,6 +166,7 @@ export default function Urenbalans({
         aantalWeken: periode.weken.length,
         contractUren: Math.round(contractUren * 100) / 100,
         gewerkteUren: Math.round(gewerkteUren * 100) / 100,
+        compensatieUren: Math.round(compensatieUren * 100) / 100,
         verlofUren: Math.round(verlofUren * 100) / 100,
         ziekUren: Math.round(ziekUren * 100) / 100,
         atvUren: Math.round(atvUren * 100) / 100,
