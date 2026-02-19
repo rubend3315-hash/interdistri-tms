@@ -1056,9 +1056,23 @@ export default function HelpPage() {
                   <AccordionItem value="email-template">
                     <AccordionTrigger>📧 EmailTemplate - E-mail Sjablonen</AccordionTrigger>
                     <AccordionContent>
-                      <p className="text-sm text-slate-600">
-                        Herbruikbare e-mailsjablonen met naam, onderwerp, HTML-inhoud, Reply-To adres en categorie. Sjablonen kunnen worden gebruikt bij het verzenden van e-mails naar medewerkers.
-                      </p>
+                      <div className="text-sm text-slate-600 space-y-2">
+                        <p>
+                          Er zijn twee soorten e-mail sjablonen in het systeem:
+                        </p>
+                        <p><strong>1. Bericht-sjablonen</strong> (via Berichten pagina): Herbruikbare sjablonen met naam, onderwerp, HTML-inhoud, Reply-To adres en categorie voor handmatige e-mails naar medewerkers.</p>
+                        <p><strong>2. Systeem-sjablonen</strong> (via HRM-instellingen → E-mail Sjablonen): Sjablonen met een <code>template_key</code> die automatisch worden gebruikt door systeemfuncties. Gebruik {"{{placeholder}}"} syntax voor dynamische waarden.</p>
+                        <p className="mt-2"><strong>Beschikbare systeem template_keys:</strong></p>
+                        <ul className="ml-4 space-y-1">
+                          <li>• <code>stamkaart</code> — Stamkaart naar loonadministratie</li>
+                          <li>• <code>welkomstmail</code> — Welkomstmail nieuwe medewerker</li>
+                          <li>• <code>contract_ter_ondertekening</code> — Contract verzenden ter ondertekening</li>
+                          <li>• <code>dienst_afgekeurd</code> — Notificatie bij afkeuring dienst</li>
+                          <li>• <code>contract_ondertekend_door_medewerker</code> — Melding aan admin</li>
+                          <li>• <code>contract_geactiveerd</code> — Bevestiging aan medewerker</li>
+                          <li>• <code>nieuw_document</code> — Nieuw HR-document beschikbaar</li>
+                        </ul>
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="supervisor-message">
