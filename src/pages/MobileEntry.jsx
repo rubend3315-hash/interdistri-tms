@@ -241,7 +241,8 @@ export default function MobileEntry() {
   const { data: shiftTimes = [] } = useQuery({
     queryKey: ['shiftTimes', currentEmployee?.id, format(new Date(), 'yyyy-MM-dd')],
     queryFn: async () => {
-      if (!currentEmployee?.department) return [];
+      const shiftDept = currentEmployee?.mobile_shift_department || currentEmployee?.department;
+      if (!shiftDept) return [];
       
       const now = new Date();
       const currentHour = now.getHours();
@@ -256,7 +257,7 @@ export default function MobileEntry() {
       }
       
       const shifts = await base44.entities.ShiftTime.filter({ 
-        department: currentEmployee.department,
+        department: shiftDept,
         date: targetDate
       });
       
