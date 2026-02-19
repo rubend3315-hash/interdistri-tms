@@ -93,12 +93,21 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
     setHasDrawn(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || isSaving) return;
+    setIsSaving(true);
     const dataUrl = canvas.toDataURL("image/png");
-    onSave(dataUrl);
-    onOpenChange(false);
+    try {
+      const result = await onSave(dataUrl);
+      // Only close dialog on success
+      if (result?.success) {
+        onOpenChange(false);
+      }
+      // On failure: dialog stays open, signature canvas intact
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
