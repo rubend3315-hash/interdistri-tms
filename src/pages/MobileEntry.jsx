@@ -518,13 +518,13 @@ export default function MobileEntry() {
       const dienstEnd = timeToMinutes(formData.end_time);
 
       if (tripStart !== null && dienstStart !== null && tripStart < dienstStart) {
-        toast.error(`Rit ${i + 1}: starttijd rit (${trip.start_time}) ligt vóór start dienst (${formData.start_time}).`);
+        toast.error(`⚠️ Rit ${i + 1}: starttijd rit (${trip.start_time}) ligt vóór start dienst (${formData.start_time}). Pas de rit aan zodat deze binnen je diensttijd valt.`, { duration: 6000 });
         setActiveTab("ritten");
         return;
       }
 
       if (tripEnd !== null && dienstEnd !== null && tripEnd > dienstEnd) {
-        toast.error(`Rit ${i + 1}: eindtijd rit (${trip.end_time}) ligt na einde dienst (${formData.end_time}).`);
+        toast.error(`⚠️ Rit ${i + 1}: eindtijd rit (${trip.end_time}) ligt na einde dienst (${formData.end_time}). Pas de rit aan zodat deze binnen je diensttijd valt.`, { duration: 6000 });
         setActiveTab("ritten");
         return;
       }
