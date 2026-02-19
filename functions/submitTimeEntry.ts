@@ -295,50 +295,48 @@ Deno.serve(async (req) => {
     // ========================================
     // 5. OVERLAP DETECTION — against committed entries
     // ========================================
-    const allForDate = await svc.entities.TimeEntry.filter({
-      employee_id: empId,
-      date: payload.date,
-    });
-    const committedEntries = allForDate.filter(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd');
+    // Full range overlap: A.start <= B.end AND A.end >= B.start
+    // We need to find ALL committed entries for this employee where:
+    //   existing.date <= newEntryEnd  AND  existing.effectiveEnd >= newEntryStart
+    //
+    // Since end_date can be null (= single day, so effectiveEnd = date),
+    // we query all entries where date <= entryEnd (covers the left side of the overlap formula).
+    // The right side (existing end >= new start) is checked in-memory because
+    // end_date is nullable and requires coalescing with date.
+    //
+    // Single query — no N+1, no intermediate dates missed.
     const entryEnd = payload.end_date || payload.date;
 
-    for (const ex of committedEntries) {
+    const candidateEntries = await svc.entities.TimeEntry.filter({
+      employee_id: empId,
+      date: { $lte: entryEnd },
+    });
+
+    // Filter to committed entries whose effective end_date >= payload.date
+    const committedOverlaps = candidateEntries.filter(e => {
+      if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
+      const exEnd = e.end_date || e.date;
+      return exEnd >= payload.date; // completes the range overlap check
+    });
+
+    for (const ex of committedOverlaps) {
       const exEnd = ex.end_date || ex.date;
-      // Date range overlap: A.start <= B.end AND A.end >= B.start
-      if (payload.date <= exEnd && entryEnd >= ex.date) {
-        // Same single date: check time overlap
-        if (payload.date === ex.date && entryEnd === exEnd && !payload.end_date && !ex.end_date) {
-          const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
-          const es = timeMin(ex.start_time), ee = timeMin(ex.end_time);
-          if (ns !== null && ne !== null && es !== null && ee !== null && ns < ee && ne > es) {
-            return Response.json({
-              success: false, error: 'TIME_OVERLAP',
-              message: `Overlapt met dienst ${ex.start_time}-${ex.end_time} op ${ex.date}`,
-              details: [`Bestaande dienst: ${ex.id}`]
-            }, { status: 409 });
-          }
-        } else {
-          // Multi-day date range overlap
+      // Both are single-day entries on the same date → check time overlap
+      if (!payload.end_date && !ex.end_date && payload.date === ex.date) {
+        const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
+        const es = timeMin(ex.start_time), ee = timeMin(ex.end_time);
+        if (ns !== null && ne !== null && es !== null && ee !== null && ns < ee && ne > es) {
           return Response.json({
-            success: false, error: 'DATE_OVERLAP',
-            message: `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
+            success: false, error: 'TIME_OVERLAP',
+            message: `Overlapt met dienst ${ex.start_time}-${ex.end_time} op ${ex.date}`,
             details: [`Bestaande dienst: ${ex.id}`]
           }, { status: 409 });
         }
-      }
-    }
-
-    // Also check for entries on end_date if multi-day
-    if (payload.end_date && payload.end_date !== payload.date) {
-      const endDateEntries = await svc.entities.TimeEntry.filter({
-        employee_id: empId,
-        date: payload.end_date,
-      });
-      const endCommitted = endDateEntries.filter(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd');
-      for (const ex of endCommitted) {
+      } else {
+        // At least one side is multi-day, date ranges overlap → block
         return Response.json({
           success: false, error: 'DATE_OVERLAP',
-          message: `Overlapt met dienst op einddatum ${payload.end_date}`,
+          message: `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
           details: [`Bestaande dienst: ${ex.id}`]
         }, { status: 409 });
       }
