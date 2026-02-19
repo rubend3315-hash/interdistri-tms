@@ -295,11 +295,14 @@ export default function EmailTemplateManager() {
 
             <div className="space-y-2">
               <Label>Inhoud * (HTML)</Label>
-              <ReactQuill
+              <Textarea
                 value={form.body}
-                onChange={(value) => setForm({ ...form, body: value })}
-                style={{ minHeight: 250 }}
+                onChange={(e) => setForm({ ...form, body: e.target.value })}
+                rows={14}
+                className="font-mono text-sm"
+                placeholder="<h2>Hallo {{naam}}</h2><p>Uw gegevens zijn verwerkt.</p>"
               />
+              <p className="text-xs text-slate-400">Voer HTML-code in voor de opmaak van de e-mail.</p>
             </div>
 
             <div className="flex gap-3 justify-end pt-4">
