@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Helper: send email via Gmail API
 const CC_ADDRESS = 'ruben@interdistri.nl';
 
 async function sendGmail(accessToken, to, subject, htmlBody) {
@@ -21,7 +20,6 @@ async function sendGmail(accessToken, to, subject, htmlBody) {
     `--${boundary}--`
   ].join('\r\n');
 
-  // URL-safe base64 encode
   const encodedMessage = btoa(unescape(encodeURIComponent(rawEmail)))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -41,6 +39,15 @@ async function sendGmail(accessToken, to, subject, htmlBody) {
     throw new Error(`Gmail send failed (${res.status}): ${errBody}`);
   }
   return await res.json();
+}
+
+function replacePlaceholders(text, placeholders) {
+  let result = text;
+  for (const [key, value] of Object.entries(placeholders)) {
+    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    result = result.replace(regex, value || '—');
+  }
+  return result;
 }
 
 Deno.serve(async (req) => {
@@ -68,9 +75,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Employee not found' }, { status: 404 });
     }
 
-    // Get Gmail access token
     const gmailToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
-
     const employeeName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
     const allUsers = await base44.asServiceRole.entities.User.list();
     const adminUsers = allUsers.filter(u => u.role === 'admin');
@@ -78,11 +83,29 @@ Deno.serve(async (req) => {
     const appBaseUrl = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
 
     if (signer_role === 'employee') {
-      // Employee has signed first -> notify all admins to sign
+      const placeholders = {
+        naam: employeeName,
+        contractnummer: contract.contract_number || '—',
+        admin_naam: '',
+      };
+
+      // Check for custom template
+      let emailSubject, emailBody;
+      const templates = await base44.asServiceRole.entities.EmailTemplate.filter({
+        template_key: 'contract_ondertekend_door_medewerker',
+        is_active: true,
+      });
+
       for (const admin of adminUsers) {
-        if (admin.email) {
-          const subject = `Contract ondertekend door ${employeeName} — uw handtekening nodig - ${contract.contract_number}`;
-          const body = `
+        if (!admin.email) continue;
+        placeholders.admin_naam = admin.full_name || 'Admin';
+
+        if (templates.length > 0) {
+          emailSubject = replacePlaceholders(templates[0].subject, placeholders);
+          emailBody = replacePlaceholders(templates[0].body, placeholders);
+        } else {
+          emailSubject = `Contract ondertekend door ${employeeName} — uw handtekening nodig - ${contract.contract_number}`;
+          emailBody = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
                 <h1 style="color: white; margin: 0; font-size: 22px;">Interdistri Transport</h1>
@@ -98,24 +121,18 @@ Deno.serve(async (req) => {
                   <p style="color: #a16207; font-size: 14px; margin: 4px 0 0;">De medewerker heeft getekend. Het contract wacht nog op uw handtekening om geactiveerd te worden.</p>
                 </div>
                 <div style="text-align: center; margin: 24px 0;">
-                  <a href="${appBaseUrl}" 
-                     style="display: inline-block; background: #2563eb; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
-                    Contract bekijken &amp; ondertekenen
-                  </a>
+                  <a href="${appBaseUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">Contract bekijken &amp; ondertekenen</a>
                 </div>
               </div>
               <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
-                <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-                  Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle
-                </p>
+                <p style="color: #94a3b8; font-size: 12px; margin: 0;">Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle</p>
               </div>
             </div>
           `;
-          await sendGmail(gmailToken, admin.email, subject, body);
         }
+        await sendGmail(gmailToken, admin.email, emailSubject, emailBody);
       }
 
-      // Create notification for admins
       const adminUserIds = adminUsers.map(u => u.id);
       await base44.asServiceRole.entities.Notification.create({
         title: `Contract ondertekend door ${employeeName} — uw handtekening nodig`,
@@ -127,44 +144,49 @@ Deno.serve(async (req) => {
       });
 
     } else if (signer_role === 'manager') {
-      // Manager has signed (after employee) -> contract is now active, notify employee
       if (employee.email) {
-        const subject = `Contract volledig ondertekend en geactiveerd - ${contract.contract_number}`;
-        const body = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #059669, #10b981); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 22px;">Interdistri Transport</h1>
-              <p style="color: #d1fae5; margin: 8px 0 0;">Contract geactiveerd ✓</p>
-            </div>
-            <div style="background: white; padding: 24px; border: 1px solid #e2e8f0; border-top: none;">
-              <p style="font-size: 16px; color: #1e293b;">Beste ${employeeName},</p>
-              <p style="color: #475569; line-height: 1.6;">
-                Goed nieuws! Je arbeidscontract <strong>${contract.contract_number}</strong> is nu door beide partijen ondertekend en is geactiveerd.
-              </p>
-              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 16px 0;">
-                <p style="color: #166534; font-weight: 600; margin: 0;">✓ Contract is actief</p>
-                <p style="color: #15803d; font-size: 14px; margin: 4px 0 0;">
-                  Je kunt je contract terugvinden in het Interdistri portaal.
-                </p>
+        const placeholders = {
+          naam: employeeName,
+          contractnummer: contract.contract_number || '—',
+        };
+
+        let emailSubject, emailBody;
+        const templates = await base44.asServiceRole.entities.EmailTemplate.filter({
+          template_key: 'contract_geactiveerd',
+          is_active: true,
+        });
+
+        if (templates.length > 0) {
+          emailSubject = replacePlaceholders(templates[0].subject, placeholders);
+          emailBody = replacePlaceholders(templates[0].body, placeholders);
+        } else {
+          emailSubject = `Contract volledig ondertekend en geactiveerd - ${contract.contract_number}`;
+          emailBody = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #059669, #10b981); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 22px;">Interdistri Transport</h1>
+                <p style="color: #d1fae5; margin: 8px 0 0;">Contract geactiveerd ✓</p>
               </div>
-              <div style="text-align: center; margin: 24px 0;">
-                <a href="${appBaseUrl}" 
-                   style="display: inline-block; background: #059669; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
-                  Contract bekijken
-                </a>
+              <div style="background: white; padding: 24px; border: 1px solid #e2e8f0; border-top: none;">
+                <p style="font-size: 16px; color: #1e293b;">Beste ${employeeName},</p>
+                <p style="color: #475569; line-height: 1.6;">Goed nieuws! Je arbeidscontract <strong>${contract.contract_number}</strong> is nu door beide partijen ondertekend en is geactiveerd.</p>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                  <p style="color: #166534; font-weight: 600; margin: 0;">✓ Contract is actief</p>
+                  <p style="color: #15803d; font-size: 14px; margin: 4px 0 0;">Je kunt je contract terugvinden in het Interdistri portaal.</p>
+                </div>
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="${appBaseUrl}" style="display: inline-block; background: #059669; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">Contract bekijken</a>
+                </div>
+              </div>
+              <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
+                <p style="color: #94a3b8; font-size: 12px; margin: 0;">Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle</p>
               </div>
             </div>
-            <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
-              <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-                Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle
-              </p>
-            </div>
-          </div>
-        `;
-        await sendGmail(gmailToken, employee.email, subject, body);
+          `;
+        }
+        await sendGmail(gmailToken, employee.email, emailSubject, emailBody);
       }
 
-      // Create notification for employee
       if (employeeUser) {
         await base44.asServiceRole.entities.Notification.create({
           title: 'Contract geactiveerd',
