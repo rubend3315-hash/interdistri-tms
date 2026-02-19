@@ -1,8 +1,8 @@
 import React from 'react';
-import { Wifi, WifiOff, Loader, CheckCircle, AlertCircle } from 'lucide-react';
+import { Wifi, WifiOff, Loader, CheckCircle, AlertCircle, CloudOff } from 'lucide-react';
 
-export default function OfflineSyncIndicator({ isOnline, syncStatus }) {
-  if (isOnline && syncStatus === 'idle') {
+export default function OfflineSyncIndicator({ isOnline, syncStatus, pendingCount = 0 }) {
+  if (isOnline && syncStatus === 'idle' && pendingCount === 0) {
     return null;
   }
 
@@ -11,7 +11,9 @@ export default function OfflineSyncIndicator({ isOnline, syncStatus }) {
       {!isOnline ? (
         <div className="bg-amber-500 text-white px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg">
           <WifiOff className="w-4 h-4" />
-          <span className="text-sm font-medium">Offline - Gegevens worden opgeslagen</span>
+          <span className="text-sm font-medium">
+            Offline{pendingCount > 0 ? ` - ${pendingCount} wijziging${pendingCount > 1 ? 'en' : ''} wachtend` : ' - Gegevens worden lokaal opgeslagen'}
+          </span>
         </div>
       ) : syncStatus === 'syncing' ? (
         <div className="bg-blue-500 text-white px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg">
@@ -26,7 +28,12 @@ export default function OfflineSyncIndicator({ isOnline, syncStatus }) {
       ) : syncStatus === 'error' ? (
         <div className="bg-red-500 text-white px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg">
           <AlertCircle className="w-4 h-4" />
-          <span className="text-sm font-medium">Synchronisatie mislukt</span>
+          <span className="text-sm font-medium">Synchronisatie mislukt - wordt opnieuw geprobeerd</span>
+        </div>
+      ) : pendingCount > 0 ? (
+        <div className="bg-slate-600 text-white px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg">
+          <CloudOff className="w-4 h-4" />
+          <span className="text-sm font-medium">{pendingCount} wijziging{pendingCount > 1 ? 'en' : ''} niet gesynchroniseerd</span>
         </div>
       ) : null}
     </div>

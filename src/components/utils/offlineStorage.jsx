@@ -1,12 +1,14 @@
 // IndexedDB setup for offline data storage
 const DB_NAME = 'InterdistriOffline';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAMES = {
   timeEntries: 'timeEntries',
   trips: 'trips',
   inspections: 'inspections',
   expenses: 'expenses',
-  syncQueue: 'syncQueue'
+  syncQueue: 'syncQueue',
+  pendingUpdates: 'pendingUpdates',
+  pendingDeletes: 'pendingDeletes'
 };
 
 let db = null;
@@ -94,6 +96,83 @@ export async function addToSyncQueue(action, data) {
   });
 }
 
+// Add a pending update (last write wins - overwrites previous pending update for same entity+recordId)
+export async function addPendingUpdate(entityName, recordId, data) {
+  if (!db) await initDB();
+
+  const item = {
+    entityName,
+    recordId,
+    data,
+    timestamp: Date.now()
+  };
+
+  // Check if there's already a pending update for this record
+  const existing = await getPendingItems(STORE_NAMES.pendingUpdates);
+  const existingItem = existing.find(e => e.entityName === entityName && e.recordId === recordId);
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAMES.pendingUpdates], 'readwrite');
+    const store = transaction.objectStore(STORE_NAMES.pendingUpdates);
+
+    if (existingItem) {
+      // Last write wins: overwrite previous pending update
+      const updated = { ...existingItem, data, timestamp: Date.now() };
+      const request = store.put(updated);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    } else {
+      const request = store.add(item);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    }
+  });
+}
+
+// Add a pending delete
+export async function addPendingDelete(entityName, recordId) {
+  if (!db) await initDB();
+
+  // Also remove any pending updates for this record (delete takes priority)
+  const pendingUpdates = await getPendingItems(STORE_NAMES.pendingUpdates);
+  const matchingUpdate = pendingUpdates.find(e => e.entityName === entityName && e.recordId === recordId);
+  if (matchingUpdate) {
+    await removeOfflineData(STORE_NAMES.pendingUpdates, matchingUpdate.id);
+  }
+
+  // Check if already queued for deletion
+  const pendingDeletes = await getPendingItems(STORE_NAMES.pendingDeletes);
+  const alreadyQueued = pendingDeletes.find(e => e.entityName === entityName && e.recordId === recordId);
+  if (alreadyQueued) return alreadyQueued.id;
+
+  const item = {
+    entityName,
+    recordId,
+    timestamp: Date.now()
+  };
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAMES.pendingDeletes], 'readwrite');
+    const store = transaction.objectStore(STORE_NAMES.pendingDeletes);
+    const request = store.add(item);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+// Get all pending items from a store
+export async function getPendingItems(storeName) {
+  if (!db) await initDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([storeName], 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.getAll();
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
 export async function getSyncQueue() {
   if (!db) await initDB();
   
@@ -141,3 +220,5 @@ export async function clearSyncQueue() {
     request.onsuccess = () => resolve();
   });
 }
+
+export { STORE_NAMES };
