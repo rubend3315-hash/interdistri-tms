@@ -113,7 +113,7 @@ export function useMobileSubmit({
         if (errors.length > 0) {
           console.log('[validateBeforeSubmit] ERRORS:', errors);
           errors.forEach(e => toast.error(e, { duration: 6000 }));
-          // setActiveTab("ritten"); // TEMP DISABLED — testing if tab switch kills toast
+          setTimeout(() => setActiveTab("ritten"), 0);
           return false;
         }
       }
