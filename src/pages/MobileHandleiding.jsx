@@ -174,6 +174,10 @@ const sections = [
         <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
           <p className="text-sm text-amber-800"><strong>🚗 Schade?</strong> Als je "Ja" selecteert bij schade, wordt na het indienen automatisch de Bumper schadepagina geopend zodat je direct de schade kunt melden.</p>
         </div>
+
+        <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+          <p className="text-sm text-red-800"><strong>⚠️ Rittijden controleren:</strong> De app controleert of je rittijden binnen je diensttijd vallen. Als een rit buiten je dienst valt, zie je bovenaan het Ritten-scherm een <strong>rode waarschuwing</strong> met precies welke ritten niet kloppen. Ook bij het indienen wordt dit geblokkeerd — je krijgt dan een duidelijke foutmelding en wordt automatisch naar het Ritten-scherm gestuurd om het aan te passen.</p>
+        </div>
       </div>
     )
   },
@@ -244,7 +248,7 @@ const sections = [
         </div>
 
         <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-          <p className="text-sm text-red-800"><strong>⚠️ Let op:</strong> De tijden van je standplaatswerk moeten binnen je diensttijd vallen. Werk dat vóór je starttijd of ná je eindtijd valt, wordt niet geaccepteerd.</p>
+          <p className="text-sm text-red-800"><strong>⚠️ Let op:</strong> De tijden van je standplaatswerk moeten binnen je diensttijd vallen. Als de tijden niet kloppen, verschijnt er een <strong>oranje waarschuwing</strong> bovenaan het Standplaatswerk-scherm met precies welke regels buiten je dienst vallen.</p>
         </div>
       </div>
     )

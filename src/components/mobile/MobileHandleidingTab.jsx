@@ -75,6 +75,9 @@ const sections = [
         <div className="p-2 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-xs text-blue-800">➕ Tik "Regel Toevoegen" voor extra ritten.</p>
         </div>
+        <div className="p-2 bg-red-50 rounded-lg border border-red-200">
+          <p className="text-xs text-red-800">⚠️ Rittijden moeten binnen je diensttijd vallen. Bij een fout zie je een rode waarschuwing bovenaan het scherm.</p>
+        </div>
       </div>
     )
   },
@@ -116,7 +119,7 @@ const sections = [
           <p className="text-xs text-emerald-800">💾 Standplaatswerk wordt automatisch opgeslagen bij het indienen van je dienst.</p>
         </div>
         <div className="p-2 bg-red-50 rounded-lg border border-red-200">
-          <p className="text-xs text-red-800">⚠️ De tijden van je standplaatswerk moeten binnen je diensttijd vallen!</p>
+          <p className="text-xs text-red-800">⚠️ De tijden van je standplaatswerk moeten binnen je diensttijd vallen! Bij een fout zie je een oranje waarschuwing bovenaan het scherm.</p>
         </div>
       </div>
     )
