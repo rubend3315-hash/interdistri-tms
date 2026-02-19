@@ -88,6 +88,13 @@ export function buildStamkaartEmailHtml({ fullName, data, lhLabel, lhDatum, sign
 
       ${signatureHtml}
 
+      ${managerName ? `
+      <div style="padding:16px 32px;border-top:1px solid #e2e8f0;">
+        <p style="margin:0 0 4px;font-size:13px;color:#334155;">Met vriendelijke groet,</p>
+        <p style="margin:0;font-size:14px;font-weight:600;color:#1e293b;">${managerName}</p>
+        <p style="margin:2px 0 0;font-size:12px;color:#64748b;">Interdistri</p>
+      </div>` : ''}
+
       <!-- Footer inside card -->
       <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
         <p style="margin:0;font-size:11px;color:#94a3b8;">Dit document is vertrouwelijk en uitsluitend bestemd voor de loonadministratie.</p>
