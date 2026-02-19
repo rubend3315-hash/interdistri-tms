@@ -773,7 +773,7 @@ export default function MobileEntryMultiDay() {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <OfflineSyncIndicator isOnline={isOnline} syncStatus={syncStatus} />
+      <OfflineSyncIndicator isOnline={isOnline} syncStatus={syncStatus} pendingCount={pendingCount} />
 
       {/* Menu Overlay */}
       {menuOpen && (
