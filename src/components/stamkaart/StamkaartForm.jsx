@@ -424,7 +424,14 @@ export default function StamkaartForm({ employee }) {
                   <p className="text-xs text-slate-500 mb-1">Schrijf binnen het vak.</p>
                   <div className="border rounded-lg bg-slate-50 p-1" style={{ maxWidth: 400 }}>
                     <SignatureCanvas
-                      onSave={(sigUrl) => setLhData(prev => ({ ...prev, loonheffing_handtekening_url: sigUrl }))}
+                      onSign={async (dataUrl) => {
+                        // Upload de handtekening als bestand
+                        const res = await fetch(dataUrl);
+                        const blob = await res.blob();
+                        const file = new File([blob], "handtekening_lh.jpg", { type: "image/jpeg" });
+                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        setLhData(prev => ({ ...prev, loonheffing_handtekening_url: file_url }));
+                      }}
                     />
                   </div>
                   {lhData.loonheffing_handtekening_url && (
