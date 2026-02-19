@@ -11,41 +11,27 @@ const timeToMinutes = (time) => {
 };
 
 /**
- * Build absolute minute offsets for the full service window.
- * Base (0) = start of formData.date.
- * Single-day: serviceStart = startMin, serviceEnd = endMin (or +1440 if overnight)
- * Multi-day:  serviceEnd = dayOffset * 1440 + endMin
+ * Build service range for single-day only.
+ * Handles overnight shifts (end_time <= start_time → +1440).
  */
-function buildServiceRange(formData, isMultiDay) {
+function buildSingleDayServiceRange(formData) {
   const sMin = timeToMinutes(formData.start_time);
   const eMin = timeToMinutes(formData.end_time);
   if (sMin === null || eMin === null) return null;
-
-  let serviceStart = sMin;
-  let serviceEnd;
-
-  if (isMultiDay && formData.end_date && formData.end_date !== formData.date) {
-    const dayDiff = Math.round(
-      (new Date(formData.end_date + 'T12:00:00') - new Date(formData.date + 'T12:00:00')) / 864e5
-    );
-    serviceEnd = dayDiff * 1440 + eMin;
-  } else {
-    // Single-day or same date: handle overnight (e.g. 22:00–06:00)
-    serviceEnd = eMin <= sMin ? eMin + 1440 : eMin;
-  }
-
-  return { serviceStart, serviceEnd };
+  return {
+    serviceStart: sMin,
+    serviceEnd: eMin <= sMin ? eMin + 1440 : eMin,
+  };
 }
 
 /**
- * Convert a trip/spw time to an absolute minute offset from base date.
- * For single-day overnight shifts: if time < serviceStart, treat as next day (+1440).
+ * Convert time to absolute minutes for single-day validation.
+ * If time < serviceStart, treat as next day (+1440) for overnight shifts.
  */
-function toAbsoluteMinutes(time, serviceStart, isSingleDay) {
+function toAbsoluteMinutes(time, serviceStart) {
   const m = timeToMinutes(time);
   if (m === null) return null;
-  if (isSingleDay && m < serviceStart) return m + 1440;
-  return m;
+  return m < serviceStart ? m + 1440 : m;
 }
 
 /**
