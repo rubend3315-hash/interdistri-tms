@@ -478,57 +478,48 @@ Deno.serve(async (req) => {
       // 9. POST-COMMIT OVERLAP GUARD
       // ========================================
       // Re-check for overlapping Ingediend entries AFTER our commit.
-      // If another request committed an overlapping entry simultaneously,
-      // we detect it here and roll back the later one.
-      const postCommitEntries = await svc.entities.TimeEntry.filter({
+      // Uses the same broad range query as pre-commit check.
+      const postCommitCandidates = await svc.entities.TimeEntry.filter({
         employee_id: empId,
-        date: payload.date,
+        date: { $lte: entryEnd },
       });
-      const overlappingCommitted = postCommitEntries.filter(e =>
+      const postCommitOverlaps = postCommitCandidates.filter(e =>
         e.id !== te.id &&
-        (e.status === 'Ingediend' || e.status === 'Goedgekeurd')
+        (e.status === 'Ingediend' || e.status === 'Goedgekeurd') &&
+        (e.end_date || e.date) >= payload.date
       );
 
-      for (const oc of overlappingCommitted) {
+      for (const oc of postCommitOverlaps) {
         const ocEnd = oc.end_date || oc.date;
-        if (payload.date <= ocEnd && entryEnd >= oc.date) {
-          // Same date, check time overlap
-          if (payload.date === oc.date && entryEnd === ocEnd && !payload.end_date && !oc.end_date) {
-            const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
-            const es = timeMin(oc.start_time), ee = timeMin(oc.end_time);
-            if (ns !== null && ne !== null && es !== null && ee !== null && ns < ee && ne > es) {
-              // Overlap detected post-commit! The one with older created_date wins.
-              if (oc.created_date < te.created_date) {
-                // We are newer → rollback ourselves
-                console.log(`[POST-COMMIT OVERLAP] Rolling back ${te.id}, older entry ${oc.id} wins`);
-                await svc.entities.TimeEntry.update(te.id, { status: 'Concept' });
-                // Cleanup our records
-                for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
-                for (const sid of created.spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
-                await safeDelete(svc.entities.TimeEntry, te.id, 'overlap-te');
-                return Response.json({
-                  success: false, error: 'TIME_OVERLAP',
-                  message: `Gelijktijdige overlap gedetecteerd met dienst ${oc.start_time}-${oc.end_time}`,
-                  details: [`Bestaande dienst: ${oc.id}`]
-                }, { status: 409 });
-              }
-              // else: we are older, the other request should handle its own rollback
-            }
-          } else if (payload.date <= ocEnd && entryEnd >= oc.date) {
-            // Multi-day overlap
-            if (oc.created_date < te.created_date) {
-              console.log(`[POST-COMMIT DATE OVERLAP] Rolling back ${te.id}`);
-              await svc.entities.TimeEntry.update(te.id, { status: 'Concept' });
-              for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
-              for (const sid of created.spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
-              await safeDelete(svc.entities.TimeEntry, te.id, 'overlap-te');
-              return Response.json({
-                success: false, error: 'DATE_OVERLAP',
-                message: `Gelijktijdige overlap gedetecteerd met dienst ${oc.date} t/m ${ocEnd}`,
-                details: [`Bestaande dienst: ${oc.id}`]
-              }, { status: 409 });
-            }
+        let isOverlap = false;
+        let errorCode = 'DATE_OVERLAP';
+        let errorMsg = `Gelijktijdige overlap gedetecteerd met dienst ${oc.date} t/m ${ocEnd}`;
+
+        if (!payload.end_date && !oc.end_date && payload.date === oc.date) {
+          // Both single-day same date → time overlap check
+          const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
+          const es = timeMin(oc.start_time), ee = timeMin(oc.end_time);
+          if (ns !== null && ne !== null && es !== null && ee !== null && ns < ee && ne > es) {
+            isOverlap = true;
+            errorCode = 'TIME_OVERLAP';
+            errorMsg = `Gelijktijdige overlap gedetecteerd met dienst ${oc.start_time}-${oc.end_time}`;
           }
+        } else {
+          // At least one multi-day, date ranges overlap
+          isOverlap = true;
+        }
+
+        if (isOverlap && oc.created_date < te.created_date) {
+          console.log(`[POST-COMMIT ${errorCode}] Rolling back ${te.id}, older entry ${oc.id} wins`);
+          await svc.entities.TimeEntry.update(te.id, { status: 'Concept' });
+          for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
+          for (const sid of created.spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
+          await safeDelete(svc.entities.TimeEntry, te.id, 'overlap-te');
+          return Response.json({
+            success: false, error: errorCode,
+            message: errorMsg,
+            details: [`Bestaande dienst: ${oc.id}`]
+          }, { status: 409 });
         }
       }
 
