@@ -167,6 +167,8 @@ export default function StamkaartForm({ employee }) {
       return;
     }
     setSendingEmail(true);
+    const currentUser = await base44.auth.me();
+    const managerName = currentUser?.full_name || '';
     const fullName = getFullName(data);
     const lhLabel = lhData.loonheffing_toepassen === "ja" ? "Ja" : lhData.loonheffing_toepassen === "nee" ? "Nee" : "Niet ingevuld";
     const defaultBody = buildStamkaartEmailHtml({
@@ -175,6 +177,7 @@ export default function StamkaartForm({ employee }) {
       lhLabel,
       lhDatum: lhData.loonheffing_datum || '—',
       signatureUrl: lhData.loonheffing_handtekening_url || null,
+      managerName,
     });
     const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
     const subject = `${subjectBase} - ${fullName}`;
@@ -199,6 +202,7 @@ export default function StamkaartForm({ employee }) {
         loonheffingskorting: lhLabel,
         id_document_nummer: data.id_document_number || '—',
         id_document_geldig: data.id_document_expiry || '—',
+        manager_naam: managerName,
       },
     });
     setSendingEmail(false);
