@@ -10,8 +10,8 @@ export default function ProgressSteps({ steps, currentStep }) {
         const isLast = index === steps.length - 1;
 
         return (
-          <React.Fragment key={index}>
-            <div className="flex flex-col items-center gap-1 flex-shrink-0">
+          <div key={index} className="flex items-center flex-shrink-0">
+            <div className="flex flex-col items-center gap-1">
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                   isCompleted
@@ -42,7 +42,7 @@ export default function ProgressSteps({ steps, currentStep }) {
                 }`}
               />
             )}
-          </React.Fragment>
+          </div>
         );
       })}
     </div>
