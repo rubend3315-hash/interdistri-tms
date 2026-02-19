@@ -94,7 +94,8 @@ export function useMobileSubmit({
 
           if (rawSs !== null && rawSs < serviceStart && toAbsoluteMinutes(rawSs, serviceStart) > serviceEnd) {
             errors.push(`Standplaatswerk ${i + 1} start vóór je diensttijd (${dienstLabel}).`);
-          } else if (rawSe !== null && toAbsoluteMinutes(rawSe, serviceStart) > serviceEnd) {
+          }
+          if (rawSe !== null && toAbsoluteMinutes(rawSe, serviceStart) > serviceEnd) {
             errors.push(`Standplaatswerk ${i + 1} eindigt na je diensttijd (${dienstLabel}).`);
           }
         }
