@@ -74,7 +74,7 @@ export default function MobileEntry() {
   };
 
   const handleSubmitClick = async () => {
-    const result = submit.startSubmitFlow();
+    const result = await submit.startSubmitFlow();
     if (result && result.needsSignature) setShowSignatureDialog(true);
   };
 
