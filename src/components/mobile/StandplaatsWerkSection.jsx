@@ -72,7 +72,12 @@ export default function StandplaatsWerkSection({
   };
 
   const isComplete = (regel) => {
-    return (regel.customer_id || regel.activity_id) && regel.start_time && regel.end_time;
+    const hasTime = regel.start_time && regel.end_time;
+    const hasActivity = regel.activity_id || regel.custom_activity;
+    if (regel.customer_id) {
+      return hasTime && !!regel.project_id && hasActivity;
+    }
+    return hasTime && hasActivity;
   };
 
   const getRegelSummary = (regel) => {
