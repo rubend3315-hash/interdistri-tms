@@ -150,9 +150,19 @@ export default function StamkaartForm({ employee }) {
 
   const handlePrint = () => window.print();
 
+  const { data: payrollSettings = [] } = useQuery({
+    queryKey: ['payrollSettings'],
+    queryFn: () => base44.entities.PayrollSettings.list(),
+  });
+  const payrollConfig = payrollSettings[0] || null;
+
   const handleSendToPayroll = async () => {
     if (missingFields.length > 0) {
       setShowErrors(true);
+      return;
+    }
+    if (!payrollConfig?.payroll_email) {
+      alert("Stel eerst het e-mailadres van de loonadministratie in via HRM-instellingen → Loonadministratie.");
       return;
     }
     setSendingEmail(true);
@@ -177,10 +187,16 @@ export default function StamkaartForm({ employee }) {
         <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Loonheffingskorting</td><td style="padding:4px;border:1px solid #ddd;">${lhLabel}</td></tr>
       </table>
     `;
-    const user = await base44.auth.me();
-    await base44.integrations.Core.SendEmail({ to: user.email, subject: `Stamkaart - ${fullName}`, body });
+    const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
+    const subject = `${subjectBase} - ${fullName}`;
+    await base44.functions.invoke('sendStamkaartEmail', {
+      to: payrollConfig.payroll_email,
+      cc: payrollConfig.payroll_cc_email || "",
+      subject,
+      body,
+    });
     setSendingEmail(false);
-    alert("Stamkaart verzonden naar " + user.email);
+    alert("Stamkaart verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
   };
 
   const fieldError = (key) => showErrors && (!data[key] || String(data[key]).trim() === "");
