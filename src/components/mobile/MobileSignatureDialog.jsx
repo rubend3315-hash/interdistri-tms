@@ -7,6 +7,7 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Initialize canvas when dialog opens
   useEffect(() => {
