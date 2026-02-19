@@ -36,7 +36,25 @@ export default function StandplaatsWerkSection({
   };
 
   const [collapsedRegels, setCollapsedRegels] = useState({});
+  const [manuallyExpanded, setManuallyExpanded] = useState({});
+  const prevCompleteRef = useRef({});
   const activeActiviteiten = activiteiten.filter(a => a.status !== "Inactief");
+
+  // Auto-collapse regels die net volledig zijn geworden
+  useEffect(() => {
+    const newCollapsed = { ...collapsedRegels };
+    let changed = false;
+    standplaatsWerk.forEach((regel, index) => {
+      const wasComplete = prevCompleteRef.current[index];
+      const nowComplete = isComplete(regel);
+      if (nowComplete && !wasComplete && !manuallyExpanded[index]) {
+        newCollapsed[index] = true;
+        changed = true;
+      }
+      prevCompleteRef.current[index] = nowComplete;
+    });
+    if (changed) setCollapsedRegels(newCollapsed);
+  }, [standplaatsWerk]);
 
   const toggleCollapse = (index) => {
     setCollapsedRegels(prev => ({ ...prev, [index]: !prev[index] }));
