@@ -124,7 +124,10 @@ export default function StandplaatsWerkSection({
               <div className="flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => toggleCollapse(index)}
+                  onClick={() => {
+                    setCollapsedRegels(prev => ({ ...prev, [index]: !prev[index] }));
+                    setManuallyExpanded(prev => ({ ...prev, [index]: !!collapsedRegels[index] }));
+                  }}
                   className="flex items-center gap-2 flex-1 text-left"
                 >
                   {isCollapsed
@@ -138,7 +141,10 @@ export default function StandplaatsWerkSection({
                 </button>
                 <div className="flex items-center gap-1">
                   {isCollapsed && (
-                    <Button variant="ghost" size="icon" onClick={() => toggleCollapse(index)}>
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      setCollapsedRegels(prev => ({ ...prev, [index]: false }));
+                      setManuallyExpanded(prev => ({ ...prev, [index]: true }));
+                    }}>
                       <Plus className="w-4 h-4 text-amber-600" />
                     </Button>
                   )}
