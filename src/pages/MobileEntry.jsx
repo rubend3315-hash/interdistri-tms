@@ -1419,7 +1419,17 @@ export default function MobileEntry() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setTrips(trips.filter((_, i) => i !== index))}
+                      onClick={() => {
+                        const updatedTrips = trips.filter((_, i) => i !== index);
+                        setTrips(updatedTrips);
+                        try {
+                          const draft = JSON.parse(localStorage.getItem('mobile-entry-draft') || '{}');
+                          if (draft.trips) {
+                            draft.trips = updatedTrips;
+                            localStorage.setItem('mobile-entry-draft', JSON.stringify(draft));
+                          }
+                        } catch {}
+                      }}
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
