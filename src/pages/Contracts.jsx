@@ -689,6 +689,24 @@ export default function Contracts() {
                             )}
                           </>
                         )}
+                        {(contract.status === 'Actief' || contract.status === 'Ondertekend') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSendToPayroll(contract)}
+                            disabled={sendingToPayroll === contract.id}
+                            title="Versturen naar loonadministratie"
+                            className={payrollSuccess?.contractId === contract.id ? "border-emerald-500 text-emerald-600" : ""}
+                          >
+                            {sendingToPayroll === contract.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : payrollSuccess?.contractId === contract.id ? (
+                              <CheckCircle className="w-4 h-4 text-emerald-600" />
+                            ) : (
+                              <Mail className="w-4 h-4" />
+                            )}
+                          </Button>
+                        )}
                         {contract.status !== 'Actief' && (
                           <Button
                             variant="outline"
