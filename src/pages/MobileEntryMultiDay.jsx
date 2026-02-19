@@ -1237,7 +1237,13 @@ export default function MobileEntryMultiDay() {
                 <CardContent className="p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-slate-900">Rit {index + 1}</h3>
-                    <Button variant="ghost" size="icon" onClick={() => setTrips(trips.filter((_, i) => i !== index))}>
+                    <Button variant="ghost" size="icon" onClick={async () => {
+                         if (trip._existingId) {
+                           await base44.entities.Trip.delete(trip._existingId);
+                           queryClient.invalidateQueries({ queryKey: ['trips'] });
+                         }
+                         setTrips(trips.filter((_, i) => i !== index));
+                       }}>
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
                   </div>
