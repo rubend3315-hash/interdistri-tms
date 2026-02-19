@@ -25,11 +25,12 @@ function buildSingleDayServiceRange(formData) {
 }
 
 /**
- * Convert time to absolute minutes for single-day validation.
- * If time < serviceStart, treat as next day (+1440) for overnight shifts.
+ * Convert minutes to absolute offset for single-day validation.
+ * If m < serviceStart, treat as next day (+1440) for overnight shifts.
+ * Accepts raw minutes (number) or time string.
  */
-function toAbsoluteMinutes(time, serviceStart) {
-  const m = timeToMinutes(time);
+function toAbsoluteMinutes(timeOrMinutes, serviceStart) {
+  const m = typeof timeOrMinutes === 'number' ? timeOrMinutes : timeToMinutes(timeOrMinutes);
   if (m === null) return null;
   return m < serviceStart ? m + 1440 : m;
 }
