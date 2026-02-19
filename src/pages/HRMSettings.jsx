@@ -11,6 +11,7 @@ import { Plus, Edit } from "lucide-react";
 import DepartmentTab from "../components/settings/DepartmentTab";
 import FunctionTab from "../components/settings/FunctionTab";
 import ActiviteitTab from "../components/settings/ActiviteitTab";
+import PayrollSettingsTab from "../components/settings/PayrollSettingsTab";
 
 export default function HRMSettings() {
   return (
@@ -27,6 +28,7 @@ export default function HRMSettings() {
           <TabsTrigger value="uurcode">Uurcode</TabsTrigger>
           <TabsTrigger value="urensoort">Urensoort</TabsTrigger>
           <TabsTrigger value="activiteiten">Activiteiten</TabsTrigger>
+          <TabsTrigger value="loonadmin">Loonadministratie</TabsTrigger>
         </TabsList>
 
         <TabsContent value="afdelingen" className="mt-6">
@@ -47,6 +49,10 @@ export default function HRMSettings() {
 
         <TabsContent value="activiteiten" className="mt-6">
           <ActiviteitTab />
+        </TabsContent>
+
+        <TabsContent value="loonadmin" className="mt-6">
+          <PayrollSettingsTab />
         </TabsContent>
       </Tabs>
     </div>
