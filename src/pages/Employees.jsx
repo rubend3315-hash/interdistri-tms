@@ -550,6 +550,8 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
     contract_hours: 40,
     hourly_rate: '',
     status: 'Actief',
+    bsn: '',
+    bank_account: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
     emergency_contact_relation: '',
