@@ -133,7 +133,9 @@ export function useMobileData() {
     );
   }, [myTimeEntries, currentEmployee?.id, todayStr]);
 
-  const approvedEntries = myTimeEntries.filter(e => e.status === 'Goedgekeurd');
+  const approvedEntries = useMemo(() =>
+    myTimeEntries.filter(e => e.status === 'Goedgekeurd'),
+  [myTimeEntries]);
 
   // Mark message as read
   const markMessageRead = async (messageId) => {
