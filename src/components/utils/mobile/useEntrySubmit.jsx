@@ -117,13 +117,15 @@ export function useEntrySubmit() {
         const data = error.response.data;
         
         if (status === 409) {
-          return { success: false, error: 'DUPLICATE_SUBMISSION', message: data?.message || 'Dubbele indiening gedetecteerd' };
+          // Backend sends specific error codes: TIME_OVERLAP, DATE_OVERLAP, CONCURRENT_SUBMIT, DUPLICATE_SUBMISSION
+          // Pass through the actual backend error code instead of hardcoding
+          return { success: false, error: data?.error || 'DUPLICATE_SUBMISSION', message: data?.message || 'Conflict gedetecteerd', details: data?.details || [] };
         }
         if (status === 422) {
-          return { success: false, error: 'VALIDATION_ERROR', message: data?.message || 'Validatiefout', details: data?.details || [] };
+          return { success: false, error: data?.error || 'VALIDATION_ERROR', message: data?.message || 'Validatiefout', details: data?.details || [] };
         }
         if (status === 401 || status === 403) {
-          return { success: false, error: 'UNAUTHORIZED', message: 'Sessie verlopen — log opnieuw in' };
+          return { success: false, error: data?.error || 'UNAUTHORIZED', message: 'Sessie verlopen — log opnieuw in' };
         }
         return { success: false, error: data?.error || 'SERVER_ERROR', message: data?.message || `Serverfout (${status})` };
       }
