@@ -196,9 +196,12 @@ export function useMobileSubmit({
   }, [validateBeforeSubmit, signature, handleSubmitEntry]);
 
   // --- Called after signature is captured ---
-  const handleSignatureAndSubmit = useCallback((dataUrl) => {
+  const handleSignatureAndSubmit = useCallback(async (dataUrl) => {
     setSignature(dataUrl);
-    handleSubmitEntry(dataUrl);
+    const result = await handleSubmitEntry(dataUrl);
+    // If submit failed, keep the signature so user doesn't have to re-draw
+    // Signature is already set via setSignature above
+    return result;
   }, [setSignature, handleSubmitEntry]);
 
   return {
