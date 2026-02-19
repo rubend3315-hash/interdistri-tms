@@ -47,10 +47,60 @@ Deno.serve(async (req) => {
     const appBaseUrl = 'https://tms.interdistri.nl';
     const editLink = `${appBaseUrl}/EditTimeEntry?id=${timeEntryId}`;
 
-    // Build email subject
+    // Check for custom template
+    const templates = await base44.asServiceRole.entities.EmailTemplate.filter({
+      template_key: 'dienst_afgekeurd',
+      is_active: true,
+    });
+
+    if (templates.length > 0) {
+      const template = templates[0];
+      const placeholders = {
+        naam: employeeName,
+        datum: formattedDate,
+        starttijd: timeEntry.start_time || '-',
+        eindtijd: timeEntry.end_time || '-',
+        pauze: `${timeEntry.break_minutes || 0} minuten`,
+        totaal_uren: `${timeEntry.total_hours || 0} uur`,
+        reden: timeEntry.rejection_reason || 'Geen reden opgegeven',
+        link: editLink,
+      };
+      let customSubject = template.subject;
+      let customBody = template.body;
+      for (const [key, value] of Object.entries(placeholders)) {
+        const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+        customSubject = customSubject.replace(regex, value || '—');
+        customBody = customBody.replace(regex, value || '—');
+      }
+
+      const accessToken = await base44.asServiceRole.connectors.getAccessToken("gmail");
+      const rawHeaders = [
+        `To: ${employee.email}`,
+        `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(customSubject)))}?=`,
+        `Content-Type: text/html; charset=UTF-8`,
+      ];
+      const rawMessage = rawHeaders.join('\r\n') + '\r\n\r\n' + customBody;
+      const encoded = btoa(unescape(encodeURIComponent(rawMessage)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raw: encoded }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        return Response.json({ error: 'Failed to send email via Gmail', details: errorData }, { status: 500 });
+      }
+      return Response.json({ success: true, message: `Custom rejection email sent to ${employee.email}` });
+    }
+
+    // Default template below
     const subject = `Je ingediende dienst (${formattedDate}) is afgekeurd`;
 
-    // Build HTML email body
     const htmlBody = `<!DOCTYPE html>
 <html lang="nl">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
