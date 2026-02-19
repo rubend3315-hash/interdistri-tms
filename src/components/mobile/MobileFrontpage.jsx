@@ -19,43 +19,19 @@ import {
 } from "lucide-react";
 
 export default function MobileFrontpage({ onNavigate }) {
+  // Reuse the same query keys as useMobileData to hit cache, no duplicate fetches
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
   const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryKey: ['currentEmployee', user?.email],
+    queryFn: () => base44.entities.Employee.filter({ email: user.email }),
+    enabled: !!user?.email
   });
 
-  const currentEmployee = employees.find(e => e.email === user?.email);
-
-  const shiftDepartment = currentEmployee?.mobile_shift_department || currentEmployee?.department;
-
-  const { data: todayShift } = useQuery({
-    queryKey: ['shiftTimes', currentEmployee?.id, shiftDepartment],
-    queryFn: async () => {
-      if (!shiftDepartment) return null;
-      
-      const now = new Date();
-      const hour = now.getHours();
-      // Voor 12:00 → vandaag tonen, na 12:00 → morgen tonen
-      const targetDate = new Date(now);
-      if (hour >= 12) {
-        targetDate.setDate(targetDate.getDate() + 1);
-      }
-      const targetDateStr = format(targetDate, 'yyyy-MM-dd');
-      
-      const allShifts = await base44.entities.ShiftTime.list();
-      const match = allShifts.find(shift => 
-        shift.department === shiftDepartment && shift.date === targetDateStr
-      );
-      
-      return match || null;
-    },
-    enabled: !!shiftDepartment
-  });
+  const currentEmployee = Array.isArray(employees) ? employees.find(e => e.email === user?.email) : undefined;
 
   const menuItems = [
     {
