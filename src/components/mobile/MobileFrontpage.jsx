@@ -116,8 +116,8 @@ export default function MobileFrontpage({ onNavigate }) {
     }
   ];
 
-  // Toon shifttijd-kaart alleen voor gebruikers met een alternatieve mobile_shift_department
-  const showShiftCard = currentEmployee?.mobile_shift_department && todayShift;
+  // Toon shifttijd-kaart zodra een shifttijd beschikbaar is voor de relevante afdeling
+  const showShiftCard = todayShift;
 
   return (
     <div className="space-y-1.5">
