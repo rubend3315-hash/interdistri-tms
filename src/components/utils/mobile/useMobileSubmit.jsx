@@ -74,28 +74,26 @@ export function useMobileSubmit({
 
         for (let i = 0; i < trips.length; i++) {
           const trip = trips[i];
-          const ts = toAbsoluteMinutes(trip.start_time, serviceStart);
-          const te = toAbsoluteMinutes(trip.end_time, serviceStart);
+          const rawTs = timeToMinutes(trip.start_time);
+          const rawTe = timeToMinutes(trip.end_time);
 
-          if (ts !== null && ts < serviceStart) {
-            errors.push(`Rit ${i + 1}: starttijd (${trip.start_time}) valt buiten je diensttijd (${dienstLabel}).`);
-          }
-          if (te !== null && te > serviceEnd) {
-            errors.push(`Rit ${i + 1}: eindtijd (${trip.end_time}) valt buiten je diensttijd (${dienstLabel}).`);
+          if (rawTs !== null && rawTs < serviceStart && toAbsoluteMinutes(rawTs, serviceStart) > serviceEnd) {
+            errors.push(`Rit ${i + 1} start vóór je diensttijd (${dienstLabel}).`);
+          } else if (rawTe !== null && toAbsoluteMinutes(rawTe, serviceStart) > serviceEnd) {
+            errors.push(`Rit ${i + 1} eindigt na je diensttijd (${dienstLabel}).`);
           }
         }
 
         for (let i = 0; i < (standplaatsWerk || []).length; i++) {
           const spw = standplaatsWerk[i];
           if (!spw.start_time && !spw.end_time) continue;
-          const ss = toAbsoluteMinutes(spw.start_time, serviceStart);
-          const se = toAbsoluteMinutes(spw.end_time, serviceStart);
+          const rawSs = timeToMinutes(spw.start_time);
+          const rawSe = timeToMinutes(spw.end_time);
 
-          if (ss !== null && ss < serviceStart) {
-            errors.push(`Standplaatswerk ${i + 1}: starttijd (${spw.start_time}) valt buiten je diensttijd (${dienstLabel}).`);
-          }
-          if (se !== null && se > serviceEnd) {
-            errors.push(`Standplaatswerk ${i + 1}: eindtijd (${spw.end_time}) valt buiten je diensttijd (${dienstLabel}).`);
+          if (rawSs !== null && rawSs < serviceStart && toAbsoluteMinutes(rawSs, serviceStart) > serviceEnd) {
+            errors.push(`Standplaatswerk ${i + 1} start vóór je diensttijd (${dienstLabel}).`);
+          } else if (rawSe !== null && toAbsoluteMinutes(rawSe, serviceStart) > serviceEnd) {
+            errors.push(`Standplaatswerk ${i + 1} eindigt na je diensttijd (${dienstLabel}).`);
           }
         }
 
