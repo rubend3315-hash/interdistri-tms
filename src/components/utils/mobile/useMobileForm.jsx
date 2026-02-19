@@ -73,6 +73,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
     description: "", amount: "", receipt_file: null, receipt_url: ""
   });
 
+  // --- Load server draft on mount ---
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
   // --- AutoSave (blocked until server draft is loaded to prevent race condition) ---
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -103,9 +106,6 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
     if (!signature) return 3;
     return 4;
   })();
-
-  // --- Load server draft on mount ---
-  const [draftLoaded, setDraftLoaded] = useState(false);
 
   useEffect(() => {
     if (!currentEmployee?.id || draftLoaded) return;
