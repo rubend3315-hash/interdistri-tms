@@ -168,7 +168,10 @@ const entityToTable = {
   'Integration': 'integration',
   'SyncLog': 'synclog',
   'Backup': 'backup',
-  'ClientFeatureConfig': 'clientfeatureconfig'
+  'ClientFeatureConfig': 'clientfeatureconfig',
+  'StandplaatsWerk': 'standplaatswerk',
+  'Activiteit': 'activiteit',
+  'Department': 'department'
 };
 
 // Known jsonb columns per table — these must be sent as JSON strings for PostgREST

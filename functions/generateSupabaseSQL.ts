@@ -343,6 +343,17 @@ Deno.serve(async (req) => {
       },
       clientfeatureconfig: {
         customer_id: 'text', feature_key: 'text', feature_label: 'text', is_active: 'boolean'
+      },
+      standplaatswerk: {
+        time_entry_id: 'text', employee_id: 'text', date: 'date',
+        start_time: 'text', end_time: 'text', customer_id: 'text',
+        project_id: 'text', activity_id: 'text', notes: 'text'
+      },
+      activiteit: {
+        name: 'text', description: 'text', sort_order: 'numeric', status: 'text'
+      },
+      department: {
+        name: 'text', label: 'text', description: 'text', sort_order: 'numeric', status: 'text'
       }
     };
 
