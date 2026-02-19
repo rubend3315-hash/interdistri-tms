@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
       const accessToken = await base44.asServiceRole.connectors.getAccessToken("gmail");
       const rawHeaders = [
         `To: ${employee.email}`,
+        `Cc: info@interdistri.nl, ruben@interdistri.nl`,
         `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(customSubject)))}?=`,
         `Content-Type: text/html; charset=UTF-8`,
       ];
@@ -252,6 +253,7 @@ Deno.serve(async (req) => {
 
     const rawHeaders = [
       `To: ${employee.email}`,
+      `Cc: info@interdistri.nl, ruben@interdistri.nl`,
       `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
       `Content-Type: text/html; charset=UTF-8`,
     ];
