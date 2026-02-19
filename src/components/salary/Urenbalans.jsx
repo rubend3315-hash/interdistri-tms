@@ -381,7 +381,7 @@ export default function Urenbalans({
                     {/* Uitklapbare weekdetails */}
                     {expandedPeriodes.has(p.periode) && (
                       <TableRow>
-                        <TableCell colSpan={10 + (isOproepkracht ? 2 : 0) + 2} className="p-0 bg-slate-50">
+                        <TableCell colSpan={11 + (isOproepkracht ? 2 : 0) + 2} className="p-0 bg-slate-50">
                           <div className="overflow-x-auto">
                             <Table>
                               <TableHeader>
