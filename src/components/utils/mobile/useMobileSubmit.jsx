@@ -150,6 +150,9 @@ export function useMobileSubmit({
       } else if (result.error === 'DUPLICATE_SUBMISSION') {
         toast.warning(userMessage, { duration: 6000 });
         queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      } else if (result.error === 'TIME_OVERLAP' || result.error === 'DATE_OVERLAP') {
+        toast.error(userMessage, { duration: 8000 });
+        queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
       } else {
         toast.error(userMessage, { duration: 6000 });
       }
