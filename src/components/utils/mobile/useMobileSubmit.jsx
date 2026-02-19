@@ -48,7 +48,9 @@ export function useMobileSubmit({
 
   // --- Client-side validation before submit ---
   const validateBeforeSubmit = useCallback(() => {
+    console.log('[validateBeforeSubmit] ENTERED — trips:', trips.length, 'isMultiDay:', isMultiDay);
     if (trips.length === 0) {
+      console.log('[validateBeforeSubmit] FAIL: no trips');
       toast.error('Je moet minimaal één rit invoeren.');
       setActiveTab("ritten");
       return false;
@@ -66,8 +68,10 @@ export function useMobileSubmit({
     // Single-day only: validate trip + standplaatswerk times vs service range.
     // Multi-day is skipped — trips have no date field, backend handles full validation.
     const isSingleDay = !isMultiDay || !formData.end_date || formData.end_date === formData.date;
+    console.log('[validateBeforeSubmit] isSingleDay:', isSingleDay);
     if (isSingleDay) {
       const range = buildSingleDayServiceRange(formData);
+      console.log('[validateBeforeSubmit] range:', range);
       if (range) {
         const { serviceStart, serviceEnd } = range;
         const dienstLabel = `${formData.start_time}–${formData.end_time}`;
@@ -78,10 +82,13 @@ export function useMobileSubmit({
           const rawTs = timeToMinutes(trip.start_time);
           const rawTe = timeToMinutes(trip.end_time);
 
-          if (rawTs !== null && rawTs < serviceStart && toAbsoluteMinutes(rawTs, serviceStart) > serviceEnd) {
+          const absTs = toAbsoluteMinutes(rawTs, serviceStart);
+          const absTe = toAbsoluteMinutes(rawTe, serviceStart);
+          console.log(`[validateBeforeSubmit] Rit ${i+1}: rawTs=${rawTs}, rawTe=${rawTe}, absTs=${absTs}, absTe=${absTe}, serviceStart=${serviceStart}, serviceEnd=${serviceEnd}`);
+          if (rawTs !== null && rawTs < serviceStart && absTs > serviceEnd) {
             errors.push(`Rit ${i + 1} start vóór je diensttijd (${dienstLabel}).`);
           }
-          if (rawTe !== null && toAbsoluteMinutes(rawTe, serviceStart) > serviceEnd) {
+          if (rawTe !== null && absTe > serviceEnd) {
             errors.push(`Rit ${i + 1} eindigt na je diensttijd (${dienstLabel}).`);
           }
         }
@@ -92,22 +99,27 @@ export function useMobileSubmit({
           const rawSs = timeToMinutes(spw.start_time);
           const rawSe = timeToMinutes(spw.end_time);
 
-          if (rawSs !== null && rawSs < serviceStart && toAbsoluteMinutes(rawSs, serviceStart) > serviceEnd) {
+          const absSs = toAbsoluteMinutes(rawSs, serviceStart);
+          const absSe = toAbsoluteMinutes(rawSe, serviceStart);
+          console.log(`[validateBeforeSubmit] SPW ${i+1}: rawSs=${rawSs}, rawSe=${rawSe}, absSs=${absSs}, absSe=${absSe}, serviceStart=${serviceStart}, serviceEnd=${serviceEnd}`);
+          if (rawSs !== null && rawSs < serviceStart && absSs > serviceEnd) {
             errors.push(`Standplaatswerk ${i + 1} start vóór je diensttijd (${dienstLabel}).`);
           }
-          if (rawSe !== null && toAbsoluteMinutes(rawSe, serviceStart) > serviceEnd) {
+          if (rawSe !== null && absSe > serviceEnd) {
             errors.push(`Standplaatswerk ${i + 1} eindigt na je diensttijd (${dienstLabel}).`);
           }
         }
 
         if (errors.length > 0) {
+          console.log('[validateBeforeSubmit] ERRORS:', errors);
           errors.forEach(e => toast.error(e, { duration: 6000 }));
-          setActiveTab("ritten");
+          // setActiveTab("ritten"); // TEMP DISABLED — testing if tab switch kills toast
           return false;
         }
       }
     }
 
+    console.log('[validateBeforeSubmit] PASSED');
     return true;
   }, [trips, standplaatsWerk, formData, isMultiDay, setActiveTab]);
 
@@ -241,7 +253,11 @@ export function useMobileSubmit({
 
   // --- Orchestrated submit flow (with signature check) ---
   const startSubmitFlow = useCallback(async () => {
-    if (!validateBeforeSubmit()) return { success: false };
+    console.log('[startSubmitFlow] ENTERED');
+    if (!validateBeforeSubmit()) {
+      console.log('[startSubmitFlow] validateBeforeSubmit returned FALSE');
+      return { success: false };
+    }
     if (!signature) {
       return { needsSignature: true };
     }
