@@ -119,6 +119,7 @@ export default function MobileEntryMultiDay() {
       </motion.div>
 
       <MobileSignatureDialog open={showSignatureDialog} onOpenChange={setShowSignatureDialog} onSave={submit.handleSignatureAndSubmit} />
+      <Toaster position="top-center" richColors />
     </div>
   );
 }
