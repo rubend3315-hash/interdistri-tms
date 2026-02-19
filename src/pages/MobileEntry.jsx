@@ -1295,6 +1295,41 @@ export default function MobileEntry() {
       {activeTab === "standplaats" && (
         <div className="space-y-4">
             <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
+
+            {/* Waarschuwing als standplaatswerk buiten diensttijd valt */}
+            {(() => {
+              const dienstStart = timeToMinutes(formData.start_time);
+              const dienstEnd = timeToMinutes(formData.end_time);
+              const warnings = [];
+              standplaatsWerk.forEach((spw, idx) => {
+                const spwStart = timeToMinutes(spw.start_time);
+                const spwEnd = timeToMinutes(spw.end_time);
+                if (spwStart !== null && dienstStart !== null && spwStart < dienstStart) {
+                  warnings.push(`Regel ${idx + 1}: begintijd (${spw.start_time}) ligt vóór start dienst (${formData.start_time})`);
+                }
+                if (spwEnd !== null && dienstEnd !== null && spwEnd > dienstEnd) {
+                  warnings.push(`Regel ${idx + 1}: eindtijd (${spw.end_time}) ligt na einde dienst (${formData.end_time})`);
+                }
+              });
+              if (warnings.length === 0) return null;
+              return (
+                <div className="p-3 bg-amber-50 rounded-lg border-2 border-amber-300">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">Standplaatswerk valt buiten je diensttijd!</p>
+                      <p className="text-xs text-amber-700 mt-0.5">Controleer of de tijden kloppen. Diensttijd: {formData.start_time || '?'} - {formData.end_time || '?'}</p>
+                      <ul className="mt-1 space-y-0.5">
+                        {warnings.map((w, i) => (
+                          <li key={i} className="text-xs text-amber-700">• {w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             <StandplaatsWerkSection
               standplaatsWerk={standplaatsWerk}
               setStandplaatsWerk={setStandplaatsWerk}
