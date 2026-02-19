@@ -32,7 +32,16 @@ export default function StandplaatsWerkSection({
     setStandplaatsWerk(updated);
   };
 
-  const removeRegel = (index) => {
+  const removeRegel = async (index) => {
+    const regel = standplaatsWerk[index];
+    // Verwijder ook uit database als het een bestaand record is
+    if (regel._existingId) {
+      try {
+        await base44.entities.StandplaatsWerk.delete(regel._existingId);
+      } catch (e) {
+        console.error('Verwijderen uit database mislukt:', e);
+      }
+    }
     setStandplaatsWerk(standplaatsWerk.filter((_, i) => i !== index));
   };
 
