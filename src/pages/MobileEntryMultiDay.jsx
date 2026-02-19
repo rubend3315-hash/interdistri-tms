@@ -85,7 +85,7 @@ export default function MobileEntryMultiDay() {
   });
   const [menuOpen, setMenuOpen] = useState(false);
   const queryClient = useQueryClient();
-  const { isOnline, syncStatus, addToQueue } = useOfflineSync();
+  const { isOnline, syncStatus, pendingCount, addToQueue } = useOfflineSync();
 
   const tabOrder = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "berichten", "reglement", "links"];
 

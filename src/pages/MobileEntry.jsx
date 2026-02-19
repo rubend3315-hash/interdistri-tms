@@ -106,7 +106,7 @@ export default function MobileEntry() {
   });
   const [menuOpen, setMenuOpen] = useState(false);
   const queryClient = useQueryClient();
-  const { isOnline, syncStatus, addToQueue } = useOfflineSync();
+  const { isOnline, syncStatus, pendingCount, addToQueue } = useOfflineSync();
 
   // Tab order for swiping
   const tabOrder = ["home", "dienst", "ritten", "standplaats", "inspectie", "declaratie", "overzicht", "planning", "berichten", "reglement", "links"];
