@@ -102,6 +102,23 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
       cc: payrollConfig.payroll_cc_email || "",
       subject,
       body,
+      template_key: "stamkaart",
+      placeholders: {
+        naam: fullName,
+        geboortedatum: employeeData.date_of_birth || '—',
+        bsn: employeeData.bsn || '—',
+        adres: `${employeeData.address || '—'}, ${employeeData.postal_code || ''} ${employeeData.city || ''}`,
+        iban: employeeData.bank_account || '—',
+        afdeling: employeeData.department || '—',
+        functie: employeeData.function || '—',
+        contract_type: employeeData.contract_type || '—',
+        uren_per_week: String(employeeData.contract_hours || '—'),
+        loonschaal: employeeData.salary_scale || '—',
+        uurloon: `€ ${employeeData.hourly_rate || '—'}`,
+        loonheffingskorting: onboardingData?.loonheffing_akkoord ? 'Ja' : 'Nee',
+        id_document_nummer: employeeData.id_document_number || '—',
+        id_document_geldig: employeeData.id_document_expiry || '—',
+      },
     });
     setSendingEmail(false);
     alert("Stamkaart verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
