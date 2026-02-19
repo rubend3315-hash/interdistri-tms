@@ -785,6 +785,20 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
         </div>
 
         <div className="border-t pt-4">
+          <h3 className="font-medium mb-3">Identificatie</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Nummer ID-kaart of paspoort</Label>
+              <Input value={formData.id_document_number || '-'} readOnly />
+            </div>
+            <div className="space-y-2">
+              <Label>Geldig tot (ID-kaart/paspoort)</Label>
+              <Input type="date" value={formData.id_document_expiry} readOnly />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
           <h3 className="font-medium mb-3">Rijbewijs & Certificaten</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -1109,6 +1123,28 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
               </SelectContent>
             </Select>
             <p className="text-xs text-slate-500">Indien ingesteld, ziet deze medewerker de shifttijden van de gekozen afdeling in de mobiele app</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="font-medium mb-3">Identificatie</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Nummer ID-kaart of paspoort</Label>
+            <Input
+              value={formData.id_document_number}
+              onChange={(e) => setFormData({ ...formData, id_document_number: e.target.value })}
+              placeholder="Documentnummer"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Geldig tot (ID-kaart/paspoort)</Label>
+            <Input
+              type="date"
+              value={formData.id_document_expiry}
+              onChange={(e) => setFormData({ ...formData, id_document_expiry: e.target.value })}
+            />
           </div>
         </div>
       </div>
