@@ -73,11 +73,15 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
     description: "", amount: "", receipt_file: null, receipt_url: ""
   });
 
-  // --- AutoSave ---
+  // --- AutoSave (blocked until server draft is loaded to prevent race condition) ---
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    // CRITICAL: Don't autosave until server draft has been loaded/attempted
+    // Otherwise localStorage overwrites with stale data before server draft arrives
+    if (!draftLoaded) return;
+
     setIsSaving(true);
     const timer = setTimeout(() => {
       try {
@@ -89,7 +93,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
       setIsSaving(false);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [formData, trips, standplaatsWerk, storageKey]);
+  }, [formData, trips, standplaatsWerk, storageKey, draftLoaded]);
 
   // --- Progress ---
   const progressStep = (() => {
