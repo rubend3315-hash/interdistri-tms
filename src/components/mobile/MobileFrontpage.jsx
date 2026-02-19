@@ -33,25 +33,29 @@ export default function MobileFrontpage({ onNavigate }) {
 
   const shiftDepartment = currentEmployee?.mobile_shift_department || currentEmployee?.department;
 
-  const { data: shiftTimes = [] } = useQuery({
+  const { data: todayShift } = useQuery({
     queryKey: ['shiftTimes', currentEmployee?.id, shiftDepartment],
     queryFn: async () => {
-      if (!shiftDepartment) return [];
+      if (!shiftDepartment) return null;
+      
+      const now = new Date();
+      const hour = now.getHours();
+      // Voor 12:00 → vandaag tonen, na 12:00 → morgen tonen
+      const targetDate = new Date(now);
+      if (hour >= 12) {
+        targetDate.setDate(targetDate.getDate() + 1);
+      }
+      const targetDateStr = format(targetDate, 'yyyy-MM-dd');
       
       const allShifts = await base44.entities.ShiftTime.list();
-      const today = format(new Date(), 'yyyy-MM-dd');
-      
-      const filteredShifts = allShifts.filter(shift => 
-        shift.department === shiftDepartment && shift.date >= today
+      const match = allShifts.find(shift => 
+        shift.department === shiftDepartment && shift.date === targetDateStr
       );
       
-      const sortedShifts = filteredShifts.sort((a, b) => a.date.localeCompare(b.date));
-      return sortedShifts.slice(0, 1);
+      return match || null;
     },
     enabled: !!shiftDepartment
   });
-
-  const todayShift = shiftTimes.length > 0 ? shiftTimes[0] : null;
 
   const menuItems = [
     {
