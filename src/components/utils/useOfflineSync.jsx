@@ -36,8 +36,17 @@ function classifyError(error) {
     const data = error.response.data;
 
     if (status === 409) {
-      // Duplicate / overlap — submission_id already processed. Mark as success (idempotent).
-      return { retryable: false, permanent: false, alreadyDone: true, code: 'DUPLICATE_SUBMISSION' };
+      const errorCode = data?.error;
+      // TIME_OVERLAP / DATE_OVERLAP = permanent failure (data conflicts with existing entry)
+      if (errorCode === 'TIME_OVERLAP' || errorCode === 'DATE_OVERLAP') {
+        return { retryable: false, permanent: true, code: errorCode, message: data?.message };
+      }
+      // CONCURRENT_SUBMIT = transient, retry later
+      if (errorCode === 'CONCURRENT_SUBMIT') {
+        return { retryable: true, permanent: false, code: errorCode };
+      }
+      // Default 409 = idempotent duplicate (submission_id already processed)
+      return { retryable: false, permanent: false, alreadyDone: true, code: errorCode || 'DUPLICATE_SUBMISSION' };
     }
     if (status === 422) {
       // Validation error — data is wrong, retrying won't help
