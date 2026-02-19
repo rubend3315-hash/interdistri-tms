@@ -241,7 +241,7 @@ export function useMobileSubmit({
 
   // --- Orchestrated submit flow (with signature check) ---
   const startSubmitFlow = useCallback(async () => {
-    if (!validateBeforeSubmit()) return;
+    if (!validateBeforeSubmit()) return { success: false };
     if (!signature) {
       return { needsSignature: true };
     }
