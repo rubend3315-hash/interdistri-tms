@@ -77,6 +77,8 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
       return;
     }
     setSendingEmail(true);
+    const currentUser = await base44.auth.me();
+    const managerName = currentUser?.full_name || '';
     const fullName = `${employeeData.first_name} ${employeeData.prefix ? employeeData.prefix + ' ' : ''}${employeeData.last_name}`;
     const lhLabel = onboardingData?.loonheffing_toepassen === "ja" ? "Ja" : onboardingData?.loonheffing_toepassen === "nee" ? "Nee" : "Niet ingevuld";
     const body = buildStamkaartEmailHtml({
@@ -85,6 +87,7 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
       lhLabel,
       lhDatum: onboardingData?.loonheffing_datum || '—',
       signatureUrl: onboardingData?.loonheffing_handtekening_url || null,
+      managerName,
     });
     const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
     const subject = `${subjectBase} - ${fullName}`;
@@ -109,6 +112,7 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
         loonheffingskorting: onboardingData?.loonheffing_akkoord ? 'Ja' : 'Nee',
         id_document_nummer: employeeData.id_document_number || '—',
         id_document_geldig: employeeData.id_document_expiry || '—',
+        manager_naam: managerName,
       },
     });
     setSendingEmail(false);
