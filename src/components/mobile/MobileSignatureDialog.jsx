@@ -145,10 +145,19 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
             <Button
               className="flex-1 bg-blue-600 hover:bg-blue-700"
               onClick={handleSave}
-              disabled={!hasDrawn}
+              disabled={!hasDrawn || isSaving}
             >
-              <Check className="w-4 h-4 mr-2" />
-              Opslaan
+              {isSaving ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Indienen...
+                </span>
+              ) : (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Opslaan & Indienen
+                </>
+              )}
             </Button>
           </div>
         </div>
