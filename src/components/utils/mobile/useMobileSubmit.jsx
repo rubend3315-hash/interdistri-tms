@@ -76,30 +76,52 @@ export function useMobileSubmit({
       }
     }
 
-    // Single-day: validate trip times vs service times
-    if (!isMultiDay || !formData.end_date || formData.end_date === formData.date) {
+    // Validate trip + standplaatswerk times vs full service range
+    const range = buildServiceRange(formData, isMultiDay);
+    if (range) {
+      const { serviceStart, serviceEnd } = range;
+      const isSingleDay = !isMultiDay || !formData.end_date || formData.end_date === formData.date;
+      const dienstLabel = `${formData.start_time}–${formData.end_time}`;
+      const errors = [];
+
+      // Check trips
       for (let i = 0; i < trips.length; i++) {
         const trip = trips[i];
-        const tripStart = timeToMinutes(trip.start_time);
-        const tripEnd = timeToMinutes(trip.end_time);
-        const dienstStart = timeToMinutes(formData.start_time);
-        const dienstEnd = timeToMinutes(formData.end_time);
+        const ts = toAbsoluteMinutes(trip.start_time, serviceStart, isSingleDay);
+        const te = toAbsoluteMinutes(trip.end_time, serviceStart, isSingleDay);
 
-        if (tripStart !== null && dienstStart !== null && tripStart < dienstStart) {
-          toast.error(`Rit ${i + 1}: starttijd (${trip.start_time}) vóór start dienst (${formData.start_time}).`, { duration: 6000 });
-          setActiveTab("ritten");
-          return false;
+        if (ts !== null && ts < serviceStart) {
+          errors.push(`Rit ${i + 1}: starttijd (${trip.start_time}) valt buiten je diensttijd (${dienstLabel}).`);
         }
-        if (tripEnd !== null && dienstEnd !== null && tripEnd > dienstEnd) {
-          toast.error(`Rit ${i + 1}: eindtijd (${trip.end_time}) na einde dienst (${formData.end_time}).`, { duration: 6000 });
-          setActiveTab("ritten");
-          return false;
+        if (te !== null && te > serviceEnd) {
+          errors.push(`Rit ${i + 1}: eindtijd (${trip.end_time}) valt buiten je diensttijd (${dienstLabel}).`);
         }
+      }
+
+      // Check standplaatswerk
+      for (let i = 0; i < (standplaatsWerk || []).length; i++) {
+        const spw = standplaatsWerk[i];
+        if (!spw.start_time && !spw.end_time) continue; // skip empty entries
+        const ss = toAbsoluteMinutes(spw.start_time, serviceStart, isSingleDay);
+        const se = toAbsoluteMinutes(spw.end_time, serviceStart, isSingleDay);
+
+        if (ss !== null && ss < serviceStart) {
+          errors.push(`Standplaatswerk ${i + 1}: starttijd (${spw.start_time}) valt buiten je diensttijd (${dienstLabel}).`);
+        }
+        if (se !== null && se > serviceEnd) {
+          errors.push(`Standplaatswerk ${i + 1}: eindtijd (${spw.end_time}) valt buiten je diensttijd (${dienstLabel}).`);
+        }
+      }
+
+      if (errors.length > 0) {
+        errors.forEach(e => toast.error(e, { duration: 6000 }));
+        setActiveTab("ritten");
+        return false;
       }
     }
 
     return true;
-  }, [trips, formData, isMultiDay, setActiveTab]);
+  }, [trips, standplaatsWerk, formData, isMultiDay, setActiveTab]);
 
   // --- Error mapping for backend HTTP status codes ---
   const mapErrorToMessage = useCallback((result) => {
