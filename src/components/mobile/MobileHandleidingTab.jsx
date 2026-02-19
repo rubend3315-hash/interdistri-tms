@@ -79,6 +79,46 @@ const sections = [
     )
   },
   {
+    id: "standplaatswerk",
+    title: "Standplaatswerk invoeren",
+    icon: MapPin,
+    content: (
+      <div className="space-y-2">
+        <p className="text-xs">Standplaatswerk (loodswerk) registreer je naast je ritten. Zo wordt bijgehouden welk werk je op de standplaats hebt gedaan.</p>
+        <div className="flex gap-2 items-start">
+          <Badge className="bg-amber-700 text-white text-xs flex-shrink-0">1</Badge>
+          <p className="text-xs"><strong>Ga naar Standplaatswerk</strong> — Tik op "Standplaatswerk" in het hoofdmenu.</p>
+        </div>
+        <div className="flex gap-2 items-start">
+          <Badge className="bg-amber-700 text-white text-xs flex-shrink-0">2</Badge>
+          <p className="text-xs"><strong>Regel toevoegen</strong> — Tik op "Standplaatswerk toevoegen".</p>
+        </div>
+        <div className="flex gap-2 items-start">
+          <Badge className="bg-amber-700 text-white text-xs flex-shrink-0">3</Badge>
+          <p className="text-xs"><strong>Tijden invullen</strong> — Vul begintijd en eindtijd in (UU:MM).</p>
+        </div>
+        <div className="flex gap-2 items-start">
+          <Badge className="bg-amber-700 text-white text-xs flex-shrink-0">4</Badge>
+          <p className="text-xs"><strong>Klant & Project</strong> — Selecteer optioneel een klant en bijbehorend project.</p>
+        </div>
+        <div className="flex gap-2 items-start">
+          <Badge className="bg-amber-700 text-white text-xs flex-shrink-0">5</Badge>
+          <p className="text-xs"><strong>Activiteit kiezen</strong> — Kies een activiteit uit de lijst of typ een vrije invoer.</p>
+        </div>
+        <div className="flex gap-2 items-start">
+          <Badge className="bg-amber-700 text-white text-xs flex-shrink-0">6</Badge>
+          <p className="text-xs"><strong>Opmerkingen</strong> — Voeg eventueel een opmerking toe.</p>
+        </div>
+        <div className="p-2 bg-amber-50 rounded-lg border border-amber-200">
+          <p className="text-xs text-amber-800">➕ Je kunt meerdere regels toevoegen als je verschillende werkzaamheden hebt gedaan.</p>
+        </div>
+        <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-200">
+          <p className="text-xs text-emerald-800">💾 Standplaatswerk wordt automatisch opgeslagen bij het indienen van je dienst.</p>
+        </div>
+      </div>
+    )
+  },
+  {
     id: "inspectie",
     title: "Voertuiginspectie",
     icon: ClipboardCheck,
