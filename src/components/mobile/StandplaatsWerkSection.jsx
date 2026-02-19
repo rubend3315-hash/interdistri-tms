@@ -110,18 +110,19 @@ export default function StandplaatsWerkSection({
         const filteredProjects = regel.customer_id
           ? projects.filter(p => p.customer_id === regel.customer_id && p.status === "Actief")
           : [];
-        const isCollapsed = collapsedRegels[index] && isFilled(regel);
+        const canCollapse = isFilled(regel);
+        const isCollapsed = collapsedRegels[index] && canCollapse;
 
         return (
-          <Card key={index} className="border-2 border-amber-200">
-            <CardContent className="p-4 space-y-3">
+          <Card key={index} className={`border-2 ${isCollapsed ? 'border-amber-100 bg-amber-50/30' : 'border-amber-200'}`}>
+            <CardContent className={isCollapsed ? "p-3" : "p-4 space-y-3"}>
               <div className="flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => isFilled(regel) && toggleCollapse(index)}
+                  onClick={() => canCollapse && toggleCollapse(index)}
                   className="flex items-center gap-2 flex-1 text-left"
                 >
-                  {isFilled(regel) && (
+                  {canCollapse && (
                     isCollapsed
                       ? <ChevronRight className="w-4 h-4 text-amber-600" />
                       : <ChevronDown className="w-4 h-4 text-amber-600" />
