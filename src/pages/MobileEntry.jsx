@@ -24,6 +24,7 @@ import MobileOverviewTab from "@/components/mobile/tabs/MobileOverviewTab";
 import MobileMessagesTab from "@/components/mobile/tabs/MobileMessagesTab";
 import MobilePlanningScheduleTab from "@/components/mobile/tabs/MobilePlanningScheduleTab";
 import MobileLinksTab from "@/components/mobile/tabs/MobileLinksTab";
+import { Toaster } from "@/components/ui/sonner";
 
 const MENU_ITEMS = [
   { id: "home", label: "Home", icon: Home },
@@ -118,6 +119,7 @@ export default function MobileEntry() {
       </motion.div>
 
       <MobileSignatureDialog open={showSignatureDialog} onOpenChange={setShowSignatureDialog} onSave={submit.handleSignatureAndSubmit} />
+      <Toaster position="top-center" richColors />
     </div>
   );
 }
