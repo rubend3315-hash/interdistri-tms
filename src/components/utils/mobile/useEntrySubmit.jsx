@@ -43,10 +43,10 @@ export function useEntrySubmit() {
       }
 
       // Build server payload (flat, clean structure)
-      // Idempotency key: same key = same result on retry
-      const idempotencyKey = crypto.randomUUID();
+      // submission_id: dedicated idempotency field — same ID = same result on retry
+      const submissionId = crypto.randomUUID();
       const payload = {
-        idempotency_key: idempotencyKey,
+        submission_id: submissionId,
         date: formData.date,
         end_date: formData.end_date || null,
         start_time: formData.start_time,
