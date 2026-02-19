@@ -125,10 +125,15 @@ export function useMobileSubmit({
     return result;
   }, [signature, formData, trips, standplaatsWerk, currentEmployee, isMultiDay, submitEntry, resetForm, setActiveTab, queryClient]);
 
-  // --- Save draft ---
+  // --- Save draft (guarded: blocks if submit is in progress) ---
   const handleSaveDraft = useCallback(async () => {
     if (!currentEmployee?.id) {
       toast.error('Medewerker niet gevonden.');
+      return;
+    }
+    // Block draft save if a submit is already in progress
+    if (submittingRef.current) {
+      toast.info('Even wachten — indienen is bezig...');
       return;
     }
 
@@ -148,7 +153,7 @@ export function useMobileSubmit({
     } else {
       toast.error('Concept opslaan mislukt.');
     }
-  }, [formData, trips, standplaatsWerk, currentEmployee, isMultiDay, saveDraft]);
+  }, [formData, trips, standplaatsWerk, currentEmployee, isMultiDay, saveDraft, submittingRef]);
 
   // --- Orchestrated submit flow (with signature check) ---
   const startSubmitFlow = useCallback(async () => {
