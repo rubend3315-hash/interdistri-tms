@@ -528,7 +528,7 @@ Deno.serve(async (req) => {
       // ========================================
       // Safe: committed entry exists. Cleanup failures are logged, never fail the response.
       try {
-        const oldDrafts = allForDate.filter(e => e.status === 'Concept' && e.id !== te.id);
+        const oldDrafts = candidateEntries.filter(e => e.status === 'Concept' && e.id !== te.id && e.date === payload.date);
         for (const draft of oldDrafts) {
           const [dTrips, dSpw] = await Promise.all([
             svc.entities.Trip.filter({ time_entry_id: draft.id }),
