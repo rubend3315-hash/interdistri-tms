@@ -124,22 +124,28 @@ export default function StandplaatsWerkSection({
               <div className="flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => canCollapse && toggleCollapse(index)}
+                  onClick={() => toggleCollapse(index)}
                   className="flex items-center gap-2 flex-1 text-left"
                 >
-                  {canCollapse && (
-                    isCollapsed
-                      ? <ChevronRight className="w-4 h-4 text-amber-600" />
-                      : <ChevronDown className="w-4 h-4 text-amber-600" />
-                  )}
+                  {isCollapsed
+                    ? <ChevronRight className="w-4 h-4 text-amber-600" />
+                    : <ChevronDown className="w-4 h-4 text-amber-600" />
+                  }
                   <h3 className="font-semibold text-slate-900 text-sm">Regel {index + 1}</h3>
                   {isCollapsed && (
                     <span className="text-xs text-slate-500 truncate ml-1">{getRegelSummary(regel)}</span>
                   )}
                 </button>
-                <Button variant="ghost" size="icon" onClick={() => removeRegel(index)}>
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  {isCollapsed && (
+                    <Button variant="ghost" size="icon" onClick={() => toggleCollapse(index)}>
+                      <Plus className="w-4 h-4 text-amber-600" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" onClick={() => removeRegel(index)}>
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </Button>
+                </div>
               </div>
 
               {!isCollapsed && (
