@@ -654,18 +654,34 @@ export default function HelpPage() {
                   <Settings className="w-5 h-5 text-slate-600" />
                   HRM-instellingen
                 </CardTitle>
-                <CardDescription>Urensoorten en uurcodes</CardDescription>
+                <CardDescription>Urensoorten, uurcodes, loonadministratie & e-mail sjablonen</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-slate-600">
-                  Configureer de basis voor tijdregistratie:
+                  Configureer de basis voor tijdregistratie en e-mailcommunicatie:
                 </p>
                 <ul className="text-sm space-y-2 text-slate-600">
                   <li>✓ Urensoorten (Gewerkt, Verlof, ATV, Ziek, etc.)</li>
                   <li>✓ Uurcodes per urensoort</li>
-                  <li>✓ Feestdagen beheer per jaar</li>
+                  <li>✓ Afdelingen en functies beheren</li>
+                  <li>✓ Activiteiten (standplaatswerk)</li>
                   <li>✓ Pauzeregels configuratie</li>
+                  <li>✓ <strong>Loonadministratie:</strong> Stel het e-mailadres, CC-adres en onderwerp in voor stamkaart-mailings</li>
+                  <li>✓ <strong>E-mail Sjablonen:</strong> Beheer de HTML-opmaak van alle automatische systeemmails</li>
                 </ul>
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm font-medium text-blue-900 mb-2">📧 Beschikbare e-mail sjablonen:</p>
+                  <ul className="text-xs space-y-1 text-blue-800">
+                    <li>• <strong>stamkaart</strong> — Stamkaart naar loonadministratie (placeholders: naam, bsn, adres, iban, afdeling, functie, etc.)</li>
+                    <li>• <strong>welkomstmail</strong> — Welkomstmail nieuwe medewerker (placeholders: naam, email)</li>
+                    <li>• <strong>contract_ter_ondertekening</strong> — Contract ter ondertekening verzenden (placeholders: naam, contractnummer, startdatum, einddatum, functie)</li>
+                    <li>• <strong>dienst_afgekeurd</strong> — Dienst afgekeurd notificatie (placeholders: naam, datum, starttijd, eindtijd, reden, link)</li>
+                    <li>• <strong>contract_ondertekend_door_medewerker</strong> — Melding aan admin na ondertekening (placeholders: naam, contractnummer, admin_naam)</li>
+                    <li>• <strong>contract_geactiveerd</strong> — Bevestiging aan medewerker na activering (placeholders: naam, contractnummer)</li>
+                    <li>• <strong>nieuw_document</strong> — Nieuw HR-document beschikbaar (placeholders: naam, document_naam, document_type, vervaldatum)</li>
+                  </ul>
+                  <p className="text-xs text-blue-600 mt-2">💡 Gebruik {"{{placeholder}}"} syntax in je sjablonen. Als er geen sjabloon is, wordt het standaard systeem-sjabloon gebruikt.</p>
+                </div>
               </CardContent>
             </Card>
 
