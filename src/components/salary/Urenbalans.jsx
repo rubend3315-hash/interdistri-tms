@@ -336,7 +336,7 @@ export default function Urenbalans({
                   <TableHead className="text-xs text-right">Bijz. verlof</TableHead>
                   {isOproepkracht && <TableHead className="text-xs text-right">Var. uren</TableHead>}
                   {isOproepkracht && <TableHead className="text-xs text-right">Var. bedrag</TableHead>}
-                  <TableHead className="text-xs text-right">Compensatie</TableHead>
+                  <TableHead className="text-xs text-right">Compensatie uren</TableHead>
                   <TableHead className="text-xs text-right">Saldo</TableHead>
                   <TableHead className="text-xs text-right">Cumulatief</TableHead>
                 </TableRow>
