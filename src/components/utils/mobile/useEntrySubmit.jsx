@@ -138,7 +138,7 @@ export function useEntrySubmit() {
       submittingRef.current = false;
       setIsSubmitting(false);
     }
-  }, [addToQueue]);
+  }, []);
 
   /**
    * Save as draft (still uses old client-side approach for now,
