@@ -1242,7 +1242,15 @@ export default function MobileEntryMultiDay() {
                            await base44.entities.Trip.delete(trip._existingId);
                            queryClient.invalidateQueries({ queryKey: ['trips'] });
                          }
-                         setTrips(trips.filter((_, i) => i !== index));
+                         const updatedTrips = trips.filter((_, i) => i !== index);
+                         setTrips(updatedTrips);
+                         try {
+                           const draft = JSON.parse(localStorage.getItem('mobile-entry-multiday-draft') || '{}');
+                           if (draft.trips) {
+                             draft.trips = updatedTrips;
+                             localStorage.setItem('mobile-entry-multiday-draft', JSON.stringify(draft));
+                           }
+                         } catch {}
                        }}>
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
