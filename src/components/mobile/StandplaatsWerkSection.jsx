@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -44,6 +44,10 @@ export default function StandplaatsWerkSection({
 
   const isFilled = (regel) => {
     return regel.customer_id || regel.activity_id || regel.start_time || regel.notes;
+  };
+
+  const isComplete = (regel) => {
+    return (regel.customer_id || regel.activity_id) && regel.start_time && regel.end_time;
   };
 
   const getRegelSummary = (regel) => {
