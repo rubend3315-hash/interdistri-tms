@@ -224,6 +224,17 @@ export default function Contracts() {
   const [sendingContract, setSendingContract] = useState(null);
   const [sendError, setSendError] = useState(null);
   const [invitingEmployee, setInvitingEmployee] = useState(false);
+  const [sendingToPayroll, setSendingToPayroll] = useState(null);
+  const [payrollSuccess, setPayrollSuccess] = useState(null);
+
+  const handleSendToPayroll = async (contract) => {
+    setSendingToPayroll(contract.id);
+    setPayrollSuccess(null);
+    const response = await base44.functions.invoke('sendContractToPayroll', { contract_id: contract.id });
+    setSendingToPayroll(null);
+    setPayrollSuccess({ contractId: contract.id, message: response.data?.message || 'Verzonden' });
+    setTimeout(() => setPayrollSuccess(null), 5000);
+  };
 
   const handleSendForSigning = async (contract, autoInvite = false) => {
     setSendingContract(contract.id);
