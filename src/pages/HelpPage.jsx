@@ -706,10 +706,16 @@ export default function HelpPage() {
                   <li>✓ Zichtbaar in mobiele app</li>
                   <li>✓ <strong>E-mail verzenden:</strong> Stuur e-mails naar individuele medewerkers of in bulk per afdeling via Gmail</li>
                   <li>✓ <strong>Reply-To adres:</strong> Stel een antwoordadres in (bijv. info@interdistri.nl) zodat antwoorden naar het juiste adres gaan</li>
-                  <li>✓ <strong>E-mail sjablonen:</strong> Maak herbruikbare sjablonen aan met onderwerp, inhoud en standaard Reply-To adres</li>
+                  <li>✓ <strong>E-mail sjablonen (berichten):</strong> Maak herbruikbare sjablonen aan met onderwerp, inhoud en standaard Reply-To adres</li>
                   <li>✓ <strong>Sjabloon categorieën:</strong> Organiseer sjablonen per categorie (Algemeen, HR, Planning, Contract, Overig)</li>
                   <li>✓ <strong>Rich text editor:</strong> Maak e-mails op met opmaak (vet, cursief, lijsten, etc.)</li>
                 </ul>
+                <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="text-sm text-amber-900">
+                    <strong>Let op:</strong> Naast de berichtensjablonen hierboven zijn er ook <strong>systeem e-mail sjablonen</strong> (welkomstmail, stamkaart, contract, afkeuring, etc.). 
+                    Deze beheer je via <strong>HRM-instellingen → E-mail Sjablonen</strong>.
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
