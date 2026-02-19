@@ -168,7 +168,7 @@ export default function StamkaartForm({ employee }) {
     setSendingEmail(true);
     const fullName = getFullName(data);
     const lhLabel = lhData.loonheffing_toepassen === "ja" ? "Ja" : lhData.loonheffing_toepassen === "nee" ? "Nee" : "Niet ingevuld";
-    const body = `
+    const defaultBody = `
       <h2>Stamkaart - ${fullName}</h2>
       <table style="border-collapse:collapse;width:100%;">
         <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Naam</td><td style="padding:4px;border:1px solid #ddd;">${fullName}</td></tr>
@@ -193,7 +193,24 @@ export default function StamkaartForm({ employee }) {
       to: payrollConfig.payroll_email,
       cc: payrollConfig.payroll_cc_email || "",
       subject,
-      body,
+      body: defaultBody,
+      template_key: "stamkaart",
+      placeholders: {
+        naam: fullName,
+        geboortedatum: data.date_of_birth || '—',
+        bsn: data.bsn || '—',
+        adres: `${data.address || '—'}, ${data.postal_code || ''} ${data.city || ''}`,
+        iban: data.bank_account || '—',
+        afdeling: data.department || '—',
+        functie: data.function || '—',
+        contract_type: data.contract_type || '—',
+        uren_per_week: String(data.contract_hours || '—'),
+        loonschaal: data.salary_scale || '—',
+        uurloon: `€ ${data.hourly_rate || '—'}`,
+        loonheffingskorting: lhLabel,
+        id_document_nummer: data.id_document_number || '—',
+        id_document_geldig: data.id_document_expiry || '—',
+      },
     });
     setSendingEmail(false);
     alert("Stamkaart verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
