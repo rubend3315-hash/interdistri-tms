@@ -45,7 +45,7 @@ const categoryColor = {
 
 const PLACEHOLDER_HELP = {
   welkomstmail: ["{{naam}}", "{{email}}"],
-  stamkaart: ["{{naam}}", "{{geboortedatum}}", "{{bsn}}", "{{adres}}", "{{iban}}", "{{afdeling}}", "{{functie}}", "{{contract_type}}", "{{uren_per_week}}", "{{loonschaal}}", "{{uurloon}}", "{{loonheffingskorting}}", "{{id_document_nummer}}", "{{id_document_geldig}}"],
+  stamkaart: ["{{naam}}", "{{geboortedatum}}", "{{bsn}}", "{{adres}}", "{{iban}}", "{{afdeling}}", "{{functie}}", "{{contract_type}}", "{{uren_per_week}}", "{{loonschaal}}", "{{uurloon}}", "{{loonheffingskorting}}", "{{id_document_nummer}}", "{{id_document_geldig}}", "{{manager_naam}}"],
   contract_ter_ondertekening: ["{{naam}}", "{{contractnummer}}", "{{contract_type}}", "{{startdatum}}", "{{einddatum}}", "{{functie}}"],
   contract_ondertekend_door_medewerker: ["{{naam}}", "{{contractnummer}}", "{{admin_naam}}"],
   contract_geactiveerd: ["{{naam}}", "{{contractnummer}}"],
