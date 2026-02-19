@@ -178,6 +178,74 @@ const sections = [
     )
   },
   {
+    id: "standplaatswerk",
+    title: "Standplaatswerk invoeren",
+    icon: MapPin,
+    color: "bg-amber-100 text-amber-700",
+    content: (
+      <div className="space-y-3">
+        <p>Standplaatswerk (loodswerk) registreer je naast je ritten. Zo wordt bijgehouden welk werk je op de standplaats hebt gedaan.</p>
+        
+        <div className="space-y-2">
+          <div className="flex gap-3 items-start">
+            <Badge className="bg-amber-700 text-white flex-shrink-0">1</Badge>
+            <div>
+              <p className="font-medium text-sm">Ga naar Standplaatswerk</p>
+              <p className="text-xs text-slate-600">Tik op <strong>"Standplaatswerk"</strong> in het hoofdmenu of op de homepagina.</p>
+            </div>
+          </div>
+          <div className="flex gap-3 items-start">
+            <Badge className="bg-amber-700 text-white flex-shrink-0">2</Badge>
+            <div>
+              <p className="font-medium text-sm">Regel toevoegen</p>
+              <p className="text-xs text-slate-600">Tik op <strong>"Standplaatswerk toevoegen"</strong> om een nieuwe regel aan te maken.</p>
+            </div>
+          </div>
+          <div className="flex gap-3 items-start">
+            <Badge className="bg-amber-700 text-white flex-shrink-0">3</Badge>
+            <div>
+              <p className="font-medium text-sm">Tijden invullen</p>
+              <p className="text-xs text-slate-600">Vul de <strong>begintijd</strong> en <strong>eindtijd</strong> in (formaat UU:MM, bijv. 08:00 - 10:30).</p>
+            </div>
+          </div>
+          <div className="flex gap-3 items-start">
+            <Badge className="bg-amber-700 text-white flex-shrink-0">4</Badge>
+            <div>
+              <p className="font-medium text-sm">Klant & Project</p>
+              <p className="text-xs text-slate-600">Selecteer optioneel een <strong>klant</strong> uit de lijst. Als de klant projecten heeft, kun je ook een <strong>project</strong> kiezen.</p>
+            </div>
+          </div>
+          <div className="flex gap-3 items-start">
+            <Badge className="bg-amber-700 text-white flex-shrink-0">5</Badge>
+            <div>
+              <p className="font-medium text-sm">Activiteit kiezen</p>
+              <p className="text-xs text-slate-600">Kies een <strong>activiteit</strong> uit de lijst (bijv. laden, lossen, sorteren). Je kunt ook <strong>"Vrije invoer"</strong> kiezen om zelf een activiteit te typen.</p>
+            </div>
+          </div>
+          <div className="flex gap-3 items-start">
+            <Badge className="bg-amber-700 text-white flex-shrink-0">6</Badge>
+            <div>
+              <p className="font-medium text-sm">Opmerkingen</p>
+              <p className="text-xs text-slate-600">Voeg eventueel een opmerking toe met bijzonderheden over het werk.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+          <p className="text-sm text-amber-800"><strong>➕ Meerdere regels:</strong> Je kunt meerdere standplaatswerkregels toevoegen als je verschillende werkzaamheden hebt gedaan. Elke regel heeft eigen tijden, klant en activiteit.</p>
+        </div>
+
+        <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+          <p className="text-sm text-emerald-800"><strong>💾 Opslaan:</strong> Standplaatswerk wordt automatisch opgeslagen wanneer je je dienst indient.</p>
+        </div>
+
+        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-800"><strong>🗑️ Verwijderen:</strong> Tik op het prullenbak-icoon om een regel te verwijderen. Ingevulde regels klappen automatisch in; tik erop om ze weer te openen.</p>
+        </div>
+      </div>
+    )
+  },
+  {
     id: "inspectie",
     title: "Voertuiginspectie",
     icon: ClipboardCheck,
