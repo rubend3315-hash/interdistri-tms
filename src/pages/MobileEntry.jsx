@@ -1326,6 +1326,41 @@ export default function MobileEntry() {
               currentStep={progressStep}
             />
             <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
+
+            {/* Waarschuwing als ritten buiten diensttijd vallen */}
+            {(() => {
+              const dienstStart = timeToMinutes(formData.start_time);
+              const dienstEnd = timeToMinutes(formData.end_time);
+              const warnings = [];
+              trips.forEach((trip, idx) => {
+                const tripStart = timeToMinutes(trip.start_time);
+                const tripEnd = timeToMinutes(trip.end_time);
+                if (tripStart !== null && dienstStart !== null && tripStart < dienstStart) {
+                  warnings.push(`Rit ${idx + 1}: starttijd (${trip.start_time}) ligt vóór start dienst (${formData.start_time})`);
+                }
+                if (tripEnd !== null && dienstEnd !== null && tripEnd > dienstEnd) {
+                  warnings.push(`Rit ${idx + 1}: eindtijd (${trip.end_time}) ligt na einde dienst (${formData.end_time})`);
+                }
+              });
+              if (warnings.length === 0) return null;
+              return (
+                <div className="p-3 bg-red-50 rounded-lg border-2 border-red-300 animate-pulse">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-red-800">Ritten vallen buiten je diensttijd!</p>
+                      <p className="text-xs text-red-700 mt-0.5">Pas de ritten aan zodat ze binnen je dienst ({formData.start_time || '?'} - {formData.end_time || '?'}) vallen.</p>
+                      <ul className="mt-1 space-y-0.5">
+                        {warnings.map((w, i) => (
+                          <li key={i} className="text-xs text-red-700">• {w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             <Card className="bg-blue-900 text-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
