@@ -724,6 +724,17 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
             <Input type="date" value={formData.date_of_birth} readOnly />
           </div>
           <div className="space-y-2">
+            <Label>BSN</Label>
+            <Input value={formData.bsn || '-'} readOnly />
+          </div>
+          <div className="space-y-2">
+            <Label>IBAN</Label>
+            <Input value={formData.bank_account || '-'} readOnly />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
             <Label>In dienst sinds</Label>
             <Input type="date" value={formData.in_service_since} readOnly />
           </div>
