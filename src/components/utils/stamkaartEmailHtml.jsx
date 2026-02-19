@@ -8,7 +8,7 @@
  * @param {string} [params.signatureUrl] - URL of the signature image
  * @returns {string} HTML string
  */
-export function buildStamkaartEmailHtml({ fullName, data, lhLabel, lhDatum, signatureUrl }) {
+export function buildStamkaartEmailHtml({ fullName, data, lhLabel, lhDatum, signatureUrl, managerName }) {
   const row = (label, value) => `
     <tr>
       <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#334155;width:220px;font-size:14px;">${label}</td>
