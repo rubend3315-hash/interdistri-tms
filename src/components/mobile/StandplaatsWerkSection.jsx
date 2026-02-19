@@ -57,7 +57,14 @@ export default function StandplaatsWerkSection({
   }, [standplaatsWerk]);
 
   const toggleCollapse = (index) => {
-    setCollapsedRegels(prev => ({ ...prev, [index]: !prev[index] }));
+    const willCollapse = !collapsedRegels[index];
+    setCollapsedRegels(prev => ({ ...prev, [index]: willCollapse }));
+    // Track als gebruiker handmatig uitklapt, zodat auto-collapse niet overruled
+    if (!willCollapse) {
+      setManuallyExpanded(prev => ({ ...prev, [index]: true }));
+    } else {
+      setManuallyExpanded(prev => ({ ...prev, [index]: false }));
+    }
   };
 
   const isFilled = (regel) => {
