@@ -131,6 +131,10 @@ export default function Urenbalans({
         return { weekNr, weekData, contractHours: weekIsOproep ? 0 : weekContractHours };
       });
 
+      // Compensatieuren = contracturen - gewerkt (alleen als positief, d.w.z. contracturen niet gehaald)
+      const compensatieUren = contractUren > 0 && gewerkteUren < contractUren
+        ? contractUren - gewerkteUren : 0;
+
       const saldo = gewerkteUren - contractUren;
       saldoCumulatief += saldo;
 
