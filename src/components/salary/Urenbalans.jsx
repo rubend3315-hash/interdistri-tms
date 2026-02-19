@@ -369,6 +369,7 @@ export default function Urenbalans({
                       <TableCell className="text-sm text-right text-teal-600">{fmt(p.bijzonderVerlof)}</TableCell>
                       {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmt(p.variabeleUren)}</TableCell>}
                       {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmtEuro(p.variabeleBedrag)}</TableCell>}
+                      <TableCell className="text-sm text-right text-green-600">{fmt(p.compensatieUren)}</TableCell>
                       <TableCell className={`text-sm text-right font-semibold ${p.saldo > 0 ? "text-emerald-600" : p.saldo < 0 ? "text-red-600" : "text-slate-400"}`}>
                         {fmtSaldo(p.saldo)}
                       </TableCell>
