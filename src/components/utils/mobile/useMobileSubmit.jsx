@@ -62,47 +62,48 @@ export function useMobileSubmit({
       }
     }
 
-    // Validate trip + standplaatswerk times vs full service range
-    const range = buildServiceRange(formData, isMultiDay);
-    if (range) {
-      const { serviceStart, serviceEnd } = range;
-      const isSingleDay = !isMultiDay || !formData.end_date || formData.end_date === formData.date;
-      const dienstLabel = `${formData.start_time}–${formData.end_time}`;
-      const errors = [];
+    // Single-day only: validate trip + standplaatswerk times vs service range.
+    // Multi-day is skipped — trips have no date field, backend handles full validation.
+    const isSingleDay = !isMultiDay || !formData.end_date || formData.end_date === formData.date;
+    if (isSingleDay) {
+      const range = buildSingleDayServiceRange(formData);
+      if (range) {
+        const { serviceStart, serviceEnd } = range;
+        const dienstLabel = `${formData.start_time}–${formData.end_time}`;
+        const errors = [];
 
-      // Check trips
-      for (let i = 0; i < trips.length; i++) {
-        const trip = trips[i];
-        const ts = toAbsoluteMinutes(trip.start_time, serviceStart, isSingleDay);
-        const te = toAbsoluteMinutes(trip.end_time, serviceStart, isSingleDay);
+        for (let i = 0; i < trips.length; i++) {
+          const trip = trips[i];
+          const ts = toAbsoluteMinutes(trip.start_time, serviceStart);
+          const te = toAbsoluteMinutes(trip.end_time, serviceStart);
 
-        if (ts !== null && ts < serviceStart) {
-          errors.push(`Rit ${i + 1}: starttijd (${trip.start_time}) valt buiten je diensttijd (${dienstLabel}).`);
+          if (ts !== null && ts < serviceStart) {
+            errors.push(`Rit ${i + 1}: starttijd (${trip.start_time}) valt buiten je diensttijd (${dienstLabel}).`);
+          }
+          if (te !== null && te > serviceEnd) {
+            errors.push(`Rit ${i + 1}: eindtijd (${trip.end_time}) valt buiten je diensttijd (${dienstLabel}).`);
+          }
         }
-        if (te !== null && te > serviceEnd) {
-          errors.push(`Rit ${i + 1}: eindtijd (${trip.end_time}) valt buiten je diensttijd (${dienstLabel}).`);
-        }
-      }
 
-      // Check standplaatswerk
-      for (let i = 0; i < (standplaatsWerk || []).length; i++) {
-        const spw = standplaatsWerk[i];
-        if (!spw.start_time && !spw.end_time) continue; // skip empty entries
-        const ss = toAbsoluteMinutes(spw.start_time, serviceStart, isSingleDay);
-        const se = toAbsoluteMinutes(spw.end_time, serviceStart, isSingleDay);
+        for (let i = 0; i < (standplaatsWerk || []).length; i++) {
+          const spw = standplaatsWerk[i];
+          if (!spw.start_time && !spw.end_time) continue;
+          const ss = toAbsoluteMinutes(spw.start_time, serviceStart);
+          const se = toAbsoluteMinutes(spw.end_time, serviceStart);
 
-        if (ss !== null && ss < serviceStart) {
-          errors.push(`Standplaatswerk ${i + 1}: starttijd (${spw.start_time}) valt buiten je diensttijd (${dienstLabel}).`);
+          if (ss !== null && ss < serviceStart) {
+            errors.push(`Standplaatswerk ${i + 1}: starttijd (${spw.start_time}) valt buiten je diensttijd (${dienstLabel}).`);
+          }
+          if (se !== null && se > serviceEnd) {
+            errors.push(`Standplaatswerk ${i + 1}: eindtijd (${spw.end_time}) valt buiten je diensttijd (${dienstLabel}).`);
+          }
         }
-        if (se !== null && se > serviceEnd) {
-          errors.push(`Standplaatswerk ${i + 1}: eindtijd (${spw.end_time}) valt buiten je diensttijd (${dienstLabel}).`);
-        }
-      }
 
-      if (errors.length > 0) {
-        errors.forEach(e => toast.error(e, { duration: 6000 }));
-        setActiveTab("ritten");
-        return false;
+        if (errors.length > 0) {
+          errors.forEach(e => toast.error(e, { duration: 6000 }));
+          setActiveTab("ritten");
+          return false;
+        }
       }
     }
 
