@@ -191,10 +191,11 @@ export default function Urenbalans({
 
   // Jaartotalen
   const totalen = useMemo(() => {
-    const t = { contractUren: 0, gewerkteUren: 0, verlofUren: 0, ziekUren: 0, atvUren: 0, feestdagUren: 0, bijzonderVerlof: 0, saldo: 0, variabeleUren: 0, variabeleBedrag: 0 };
+    const t = { contractUren: 0, gewerkteUren: 0, compensatieUren: 0, verlofUren: 0, ziekUren: 0, atvUren: 0, feestdagUren: 0, bijzonderVerlof: 0, saldo: 0, variabeleUren: 0, variabeleBedrag: 0 };
     periodeBalans.forEach(p => {
       t.contractUren += p.contractUren;
       t.gewerkteUren += p.gewerkteUren;
+      t.compensatieUren += p.compensatieUren;
       t.verlofUren += p.verlofUren;
       t.ziekUren += p.ziekUren;
       t.atvUren += p.atvUren;
