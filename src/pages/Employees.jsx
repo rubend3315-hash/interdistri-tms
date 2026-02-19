@@ -977,6 +977,25 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
           />
         </div>
         <div className="space-y-2">
+          <Label>BSN</Label>
+          <Input
+            value={formData.bsn}
+            onChange={(e) => setFormData({ ...formData, bsn: e.target.value })}
+            placeholder="BSN nummer"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>IBAN</Label>
+          <Input
+            value={formData.bank_account}
+            onChange={(e) => setFormData({ ...formData, bank_account: e.target.value })}
+            placeholder="NL00 BANK 0000 0000 00"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
           <Label>In dienst sinds</Label>
           <Input
             type="date"
