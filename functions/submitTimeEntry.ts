@@ -146,14 +146,20 @@ function validate(p) {
   if (!isOptStr(p.notes)) err.push('Opmerkingen moet string zijn');
   if (typeof p.notes === 'string' && p.notes.length > 2000) err.push('Opmerkingen max 2000 tekens');
 
-  // Trip time vs service time (single-day)
+  // Trip time vs service time (single-day, with overnight shift support)
   if (!err.length && Array.isArray(p.trips) && (!p.end_date || p.end_date === p.date)) {
-    const ds = timeMin(p.start_time), de = timeMin(p.end_time);
-    p.trips.forEach((t, i) => {
-      const ts = timeMin(t.start_time), te = timeMin(t.end_time);
-      if (ts !== null && ds !== null && ts < ds) err.push(`Rit ${i + 1}: start vóór dienst`);
-      if (te !== null && de !== null && te > de) err.push(`Rit ${i + 1}: eind na dienst`);
-    });
+    const ds = timeMin(p.start_time);
+    let de = timeMin(p.end_time);
+    if (ds !== null && de !== null) {
+      if (de <= ds) de += 1440; // overnight shift
+      p.trips.forEach((t, i) => {
+        let ts = timeMin(t.start_time), te = timeMin(t.end_time);
+        if (ts !== null && ts < ds) ts += 1440;
+        if (te !== null && te < ds) te += 1440;
+        if (ts !== null && ts < ds) err.push(`Rit ${i + 1}: start vóór dienst`);
+        if (te !== null && te > de) err.push(`Rit ${i + 1}: eind na dienst`);
+      });
+    }
   }
 
   return err;
