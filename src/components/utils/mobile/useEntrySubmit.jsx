@@ -112,7 +112,25 @@ export function useEntrySubmit() {
       }
 
     } catch (error) {
-      // Network error or unexpected failure
+      // Distinguish axios response errors from network errors
+      if (error?.response) {
+        // Backend returned an HTTP error (4xx, 5xx)
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        if (status === 409) {
+          return { success: false, error: 'DUPLICATE_SUBMISSION', message: data?.message || 'Dubbele indiening gedetecteerd' };
+        }
+        if (status === 422) {
+          return { success: false, error: 'VALIDATION_ERROR', message: data?.message || 'Validatiefout', details: data?.details || [] };
+        }
+        if (status === 401 || status === 403) {
+          return { success: false, error: 'UNAUTHORIZED', message: 'Sessie verlopen — log opnieuw in' };
+        }
+        return { success: false, error: data?.error || 'SERVER_ERROR', message: data?.message || `Serverfout (${status})` };
+      }
+      
+      // True network error (no response at all)
       return {
         success: false,
         error: 'NETWORK_ERROR',
