@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Helper: send email via Gmail API
 const CC_ADDRESS = 'ruben@interdistri.nl';
 
 async function sendGmail(accessToken, to, subject, htmlBody) {
@@ -42,6 +41,15 @@ async function sendGmail(accessToken, to, subject, htmlBody) {
   return await res.json();
 }
 
+function replacePlaceholders(text, placeholders) {
+  let result = text;
+  for (const [key, value] of Object.entries(placeholders)) {
+    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    result = result.replace(regex, value || '—');
+  }
+  return result;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -68,54 +76,75 @@ Deno.serve(async (req) => {
 
     const employeeName = `${employee.first_name} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name}`;
 
-    const emailBody = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 22px;">Interdistri Transport</h1>
-          <p style="color: #bfdbfe; margin: 8px 0 0;">Arbeidsovereenkomst</p>
-        </div>
-        <div style="background: white; padding: 24px; border: 1px solid #e2e8f0; border-top: none;">
-          <p style="font-size: 16px; color: #1e293b;">Beste ${employeeName},</p>
-          <p style="color: #475569; line-height: 1.6;">Er staat een nieuw arbeidscontract klaar ter ondertekening.</p>
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Contractnummer:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_number}</td></tr>
-              <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Type:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_type}</td></tr>
-              <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Startdatum:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.start_date ? new Date(contract.start_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</td></tr>
-              ${contract.end_date ? `<tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Einddatum:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${new Date(contract.end_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</td></tr>` : ''}
-              <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Functie:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.function_title || '-'}</td></tr>
-            </table>
-          </div>
-          <p style="color: #475569; line-height: 1.6;">Je kunt het contract bekijken en digitaal ondertekenen via de <strong>Interdistri TMS app</strong>. Open de app op je telefoon en ga naar <strong>"Mijn Contracten"</strong> in het menu.</p>
-          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 16px 0;">
-            <p style="color: #1e40af; font-size: 14px; margin: 0; font-weight: 600;">📱 Stappen:</p>
-            <ol style="color: #1e40af; font-size: 13px; margin: 8px 0 0; padding-left: 20px; line-height: 1.8;">
-              <li>Open de Interdistri TMS app</li>
-              <li>Tik op het menu (☰) rechtsboven</li>
-              <li>Kies "Mijn Contracten"</li>
-              <li>Lees het contract en onderteken digitaal</li>
-            </ol>
-          </div>
-        </div>
-        <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
-          <p style="color: #94a3b8; font-size: 12px; margin: 0;">Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle</p>
-        </div>
-      </div>
-    `;
+    const placeholders = {
+      naam: employeeName,
+      contractnummer: contract.contract_number || '—',
+      contract_type: contract.contract_type || '—',
+      startdatum: contract.start_date ? new Date(contract.start_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '—',
+      einddatum: contract.end_date ? new Date(contract.end_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '—',
+      functie: contract.function_title || '—',
+    };
 
-    // Get Gmail access token
+    // Check for custom template
+    let emailSubject, emailBody;
+    const templates = await base44.asServiceRole.entities.EmailTemplate.filter({
+      template_key: 'contract_ter_ondertekening',
+      is_active: true,
+    });
+
+    if (templates.length > 0) {
+      const template = templates[0];
+      emailSubject = replacePlaceholders(template.subject, placeholders);
+      emailBody = replacePlaceholders(template.body, placeholders);
+    } else {
+      emailSubject = `Arbeidsovereenkomst ter ondertekening - ${contract.contract_number}`;
+      emailBody = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 22px;">Interdistri Transport</h1>
+            <p style="color: #bfdbfe; margin: 8px 0 0;">Arbeidsovereenkomst</p>
+          </div>
+          <div style="background: white; padding: 24px; border: 1px solid #e2e8f0; border-top: none;">
+            <p style="font-size: 16px; color: #1e293b;">Beste ${employeeName},</p>
+            <p style="color: #475569; line-height: 1.6;">Er staat een nieuw arbeidscontract klaar ter ondertekening.</p>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Contractnummer:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_number}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Type:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.contract_type}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Startdatum:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${placeholders.startdatum}</td></tr>
+                ${contract.end_date ? `<tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Einddatum:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${placeholders.einddatum}</td></tr>` : ''}
+                <tr><td style="padding: 6px 0; color: #64748b; font-size: 14px;">Functie:</td><td style="padding: 6px 0; font-weight: 600; color: #1e293b; font-size: 14px;">${contract.function_title || '-'}</td></tr>
+              </table>
+            </div>
+            <p style="color: #475569; line-height: 1.6;">Je kunt het contract bekijken en digitaal ondertekenen via de <strong>Interdistri TMS app</strong>.</p>
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 16px 0;">
+              <p style="color: #1e40af; font-size: 14px; margin: 0; font-weight: 600;">📱 Stappen:</p>
+              <ol style="color: #1e40af; font-size: 13px; margin: 8px 0 0; padding-left: 20px; line-height: 1.8;">
+                <li>Open de Interdistri TMS app</li>
+                <li>Tik op het menu (☰) rechtsboven</li>
+                <li>Kies "Mijn Contracten"</li>
+                <li>Lees het contract en onderteken digitaal</li>
+              </ol>
+            </div>
+          </div>
+          <div style="background: #f1f5f9; padding: 16px; border-radius: 0 0 12px 12px; text-align: center;">
+            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Van Dooren Transport Zeeland B.V. (Interdistri) — Fleerbosseweg 19, 4421 RR Kapelle</p>
+          </div>
+        </div>
+      `;
+    }
+
     const gmailToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
 
-    // Update contract status first
+    // Update contract status
     await base44.asServiceRole.entities.Contract.update(contract_id, {
       status: 'TerOndertekening',
       reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
     });
 
-    // Send emails via Gmail
     // Send to employee
     try {
-      await sendGmail(gmailToken, employee.email, `Arbeidsovereenkomst ter ondertekening - ${contract.contract_number}`, emailBody);
+      await sendGmail(gmailToken, employee.email, emailSubject, emailBody);
     } catch (emailErr) {
       console.error('Failed to send employee email via Gmail:', emailErr.message);
     }
@@ -127,7 +156,7 @@ Deno.serve(async (req) => {
       console.error('Failed to send admin copy via Gmail:', emailErr.message);
     }
 
-    // Fire-and-forget notification - find user if exists
+    // Notification
     try {
       const allUsers = await base44.asServiceRole.entities.User.list();
       const employeeUser = allUsers.find(u => u.email === employee.email);

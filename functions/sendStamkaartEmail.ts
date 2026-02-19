@@ -8,20 +8,44 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { to, cc, subject, body } = await req.json();
+    const { to, cc, subject, body, template_key, placeholders } = await req.json();
 
     if (!to || !subject || !body) {
       return Response.json({ error: 'Missing required fields: to, subject, body' }, { status: 400 });
+    }
+
+    // Check for a custom template
+    let finalSubject = subject;
+    let finalBody = body;
+
+    if (template_key) {
+      const templates = await base44.asServiceRole.entities.EmailTemplate.filter({ 
+        template_key, 
+        is_active: true 
+      });
+      if (templates.length > 0) {
+        const template = templates[0];
+        finalSubject = template.subject;
+        finalBody = template.body;
+
+        // Replace placeholders
+        if (placeholders) {
+          for (const [key, value] of Object.entries(placeholders)) {
+            const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+            finalSubject = finalSubject.replace(regex, value || '—');
+            finalBody = finalBody.replace(regex, value || '—');
+          }
+        }
+      }
     }
 
     // Get Gmail access token
     const accessToken = await base44.asServiceRole.connectors.getAccessToken("gmail");
 
     // Build the email
-    const boundary = "boundary_" + Date.now();
     const headers = [
       `To: ${to}`,
-      `Subject: ${subject}`,
+      `Subject: ${finalSubject}`,
       `MIME-Version: 1.0`,
       `Content-Type: text/html; charset=UTF-8`,
     ];
@@ -30,7 +54,7 @@ Deno.serve(async (req) => {
       headers.splice(1, 0, `Cc: ${cc}`);
     }
 
-    const rawEmail = headers.join("\r\n") + "\r\n\r\n" + body;
+    const rawEmail = headers.join("\r\n") + "\r\n\r\n" + finalBody;
 
     // Base64url encode
     const encoder = new TextEncoder();
