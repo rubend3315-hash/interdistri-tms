@@ -242,6 +242,10 @@ const sections = [
         <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-sm text-blue-800"><strong>🗑️ Verwijderen:</strong> Tik op het prullenbak-icoon om een regel te verwijderen. Ingevulde regels klappen automatisch in; tik erop om ze weer te openen.</p>
         </div>
+
+        <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+          <p className="text-sm text-red-800"><strong>⚠️ Let op:</strong> De tijden van je standplaatswerk moeten binnen je diensttijd vallen. Werk dat vóór je starttijd of ná je eindtijd valt, wordt niet geaccepteerd.</p>
+        </div>
       </div>
     )
   },

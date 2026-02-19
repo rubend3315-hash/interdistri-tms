@@ -115,6 +115,9 @@ const sections = [
         <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-200">
           <p className="text-xs text-emerald-800">💾 Standplaatswerk wordt automatisch opgeslagen bij het indienen van je dienst.</p>
         </div>
+        <div className="p-2 bg-red-50 rounded-lg border border-red-200">
+          <p className="text-xs text-red-800">⚠️ De tijden van je standplaatswerk moeten binnen je diensttijd vallen!</p>
+        </div>
       </div>
     )
   },
