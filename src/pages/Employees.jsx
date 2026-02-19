@@ -642,6 +642,10 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
           }
         }
       });
+
+      if (cleanedData.mobile_shift_department === '' || cleanedData.mobile_shift_department === '_none') {
+        cleanedData.mobile_shift_department = null;
+      }
       
       onSubmit(cleanedData);
     }
