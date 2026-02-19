@@ -169,25 +169,13 @@ export default function StamkaartForm({ employee }) {
     setSendingEmail(true);
     const fullName = getFullName(data);
     const lhLabel = lhData.loonheffing_toepassen === "ja" ? "Ja" : lhData.loonheffing_toepassen === "nee" ? "Nee" : "Niet ingevuld";
-    const defaultBody = `
-      <h2>Stamkaart - ${fullName}</h2>
-      <table style="border-collapse:collapse;width:100%;">
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Naam</td><td style="padding:4px;border:1px solid #ddd;">${fullName}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Geboortedatum</td><td style="padding:4px;border:1px solid #ddd;">${data.date_of_birth || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">BSN</td><td style="padding:4px;border:1px solid #ddd;">${data.bsn || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Adres</td><td style="padding:4px;border:1px solid #ddd;">${data.address || '—'}, ${data.postal_code || ''} ${data.city || ''}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">IBAN</td><td style="padding:4px;border:1px solid #ddd;">${data.bank_account || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">ID-document nr.</td><td style="padding:4px;border:1px solid #ddd;">${data.id_document_number || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">ID-document geldig t/m</td><td style="padding:4px;border:1px solid #ddd;">${data.id_document_expiry || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Afdeling</td><td style="padding:4px;border:1px solid #ddd;">${data.department || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Functie</td><td style="padding:4px;border:1px solid #ddd;">${data.function || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Contract type</td><td style="padding:4px;border:1px solid #ddd;">${data.contract_type || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Uren/week</td><td style="padding:4px;border:1px solid #ddd;">${data.contract_hours || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Loonschaal</td><td style="padding:4px;border:1px solid #ddd;">${data.salary_scale || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Uurloon</td><td style="padding:4px;border:1px solid #ddd;">€ ${data.hourly_rate || '—'}</td></tr>
-        <tr><td style="padding:4px;border:1px solid #ddd;font-weight:bold;">Loonheffingskorting</td><td style="padding:4px;border:1px solid #ddd;">${lhLabel}</td></tr>
-      </table>
-    `;
+    const defaultBody = buildStamkaartEmailHtml({
+      fullName,
+      data,
+      lhLabel,
+      lhDatum: lhData.loonheffing_datum || '—',
+      signatureUrl: lhData.loonheffing_handtekening_url || null,
+    });
     const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
     const subject = `${subjectBase} - ${fullName}`;
     await base44.functions.invoke('sendStamkaartEmail', {
