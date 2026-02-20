@@ -41,7 +41,7 @@ const MENU_ITEMS = [
   { id: "handleiding", label: "Handleiding", icon: FileText }
 ];
 
-const TAB_ORDER = ["home", "dienst", "ritten", "standplaats", "inspectie", "declaratie", "overzicht", "planning", "berichten", "reglement", "links"];
+const TAB_ORDER = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "berichten", "reglement", "links"];
 
 export default function MobileEntry() {
   const [activeTab, setActiveTab] = useState("home");
