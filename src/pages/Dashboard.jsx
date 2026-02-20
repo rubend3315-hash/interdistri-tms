@@ -43,6 +43,10 @@ export default function Dashboard() {
 
   const isAdmin = currentUser?.role === 'admin';
 
+  if (currentUser && !isAdmin) {
+    return null;
+  }
+
   // Only fetch dashboard data for admin users
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
