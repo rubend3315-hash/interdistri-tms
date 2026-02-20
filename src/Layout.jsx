@@ -268,7 +268,11 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
-  if (isMobilePage || isEmployeeContractPage || isEmployeeEditTimeEntry) {
+  if (isMobilePage) {
+    return <>{React.cloneElement(children, { employee: currentEmployee })}</>;
+  }
+
+  if (isEmployeeContractPage || isEmployeeEditTimeEntry) {
     return <>{children}</>;
   }
 
