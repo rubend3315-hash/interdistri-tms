@@ -455,9 +455,9 @@ export default function TimeTracking() {
         wkr: 0,
       };
 
-      // If editing existing entry, delete the old one first
+      // If editing existing entry, cascade delete the old one first
       if (selectedEntry) {
-        await base44.entities.TimeEntry.delete(selectedEntry.id);
+        await base44.functions.invoke('deleteTimeEntryCascade', { id: selectedEntry.id });
       }
 
       const created1 = await base44.entities.TimeEntry.create(entry1);
