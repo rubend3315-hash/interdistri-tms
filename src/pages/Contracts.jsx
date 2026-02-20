@@ -218,6 +218,7 @@ export default function Contracts() {
   };
 
   const handleSaveContract = async (data) => {
+    if (!isAdmin) { console.warn("Unauthorized admin action blocked"); return; }
     await updateContractMutation.mutateAsync({
       id: selectedContract.id,
       data
