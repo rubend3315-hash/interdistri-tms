@@ -251,11 +251,11 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
-  if (
-    user?.role !== "admin" &&
-    !loadingEmployee
-  ) {
-    if (!currentEmployee || currentEmployee.status !== "Actief") {
+  // --- Toegangscontrole op basis van uit_dienst_datum ---
+  let showGraceWarning = false;
+
+  if (user?.role !== "admin" && !loadingEmployee) {
+    if (!currentEmployee) {
       return (
         <div className="flex items-center justify-center h-screen">
           <div className="text-center space-y-4">
@@ -272,6 +272,40 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </div>
       );
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (currentEmployee.out_of_service_date) {
+      const endDate = new Date(currentEmployee.out_of_service_date);
+      endDate.setHours(0, 0, 0, 0);
+
+      const graceEnd = new Date(endDate);
+      graceEnd.setDate(graceEnd.getDate() + 7);
+
+      if (today > graceEnd) {
+        return (
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-center space-y-4">
+              <h1 className="text-lg font-semibold">Geen toegang</h1>
+              <p className="text-muted-foreground">
+                Je account is niet gekoppeld aan een actieve medewerker.
+              </p>
+              <button
+                onClick={() => base44.auth.logout()}
+                className="px-4 py-2 bg-primary text-white rounded"
+              >
+                Uitloggen
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      if (today >= endDate && today <= graceEnd) {
+        showGraceWarning = true;
+      }
     }
   }
 
