@@ -163,15 +163,21 @@ export default function Layout({ children, currentPageName }) {
     enabled: !!user?.email,
   });
 
-  // Non-admin users: block access for inactive/out-of-service employees
+  const hasValidatedStatus = useRef(false);
+
+  // Non-admin users: block access for inactive/out-of-service employees (runs once)
   useEffect(() => {
-    if (loadingUser || loadingEmployee || !user || user.role === 'admin') return;
+    if (hasValidatedStatus.current) return;
+    if (loadingUser || loadingEmployee) return;
+    if (!user || user.role === 'admin') return;
     if (!currentEmployee) return;
+
+    hasValidatedStatus.current = true;
 
     if (currentEmployee.status !== 'Actief') {
       base44.auth.logout();
     }
-  }, [user?.role, loadingUser, loadingEmployee, currentEmployee?.status]);
+  }, [loadingUser, loadingEmployee, user, currentEmployee]);
 
   const hasPermission = (page) => {
     if (!user) return false;
