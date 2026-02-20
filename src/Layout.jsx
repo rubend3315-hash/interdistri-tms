@@ -257,6 +257,8 @@ export default function Layout({ children, currentPageName }) {
     })).filter(group => group.items.length > 0);
   }, [user?.role, user?.permissions]);
 
+  console.log("[DEBUG] State — loadingUser:", loadingUser, "loadingEmployee:", loadingEmployee, "user:", !!user, "role:", user?.role, "employee:", !!currentEmployee);
+
   // Render-fase redirect: non-admin op niet-toegestane pagina → direct Navigate
   if (!loadingUser && !loadingEmployee && user && user.role !== 'admin' && currentEmployee) {
     const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts", "EditTimeEntry"];
