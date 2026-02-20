@@ -311,6 +311,9 @@ export default function Layout({ children, currentPageName }) {
     base44.auth.logout();
   };
 
+  console.timeEnd("APP_TOTAL_LOAD");
+  console.log("[DEBUG] EXIT: full layout render (admin/desktop)");
+
   return (
     <div className="min-h-screen bg-slate-50">
       <style>{printStyles}</style>
