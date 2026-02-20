@@ -101,7 +101,7 @@ export default function MobileEntry({ employee }) {
               {data.welcomeMessage ? (
                 <p className="text-sm text-slate-600 whitespace-pre-line">{data.welcomeMessage.message}</p>
               ) : (
-                <p className="text-sm text-slate-600">Welkom op je werkdag, {data.currentEmployee ? `${data.currentEmployee.first_name} ${data.currentEmployee.last_name}` : data.user?.full_name}! Werk met plezier en rijd veilig. 🚛</p>
+                <p className="text-sm text-slate-600">Welkom op je werkdag, {employee ? `${employee.first_name} ${employee.last_name}` : data.user?.full_name}! Werk met plezier en rijd veilig. 🚛</p>
               )}
             </div>
             <MobileFrontpage onNavigate={setActiveTab} />
@@ -109,11 +109,11 @@ export default function MobileEntry({ employee }) {
         )}
         {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} trips={form.trips} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={false} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
         {activeTab === "ritten" && <MobileRittenTab trips={form.trips} setTrips={form.setTrips} standplaatsWerk={form.standplaatsWerk} setStandplaatsWerk={form.setStandplaatsWerk} vehicles={data.vehicles} customers={data.customers} routes={data.routes} tiModelRoutes={data.tiModelRoutes} projects={data.projects} activiteiten={data.activiteiten} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} isSubmitting={submit.isSubmitting} storageKey={form.storageKey} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
-        {activeTab === "inspectie" && <MobileInspectionTab inspectionData={form.inspectionData} setInspectionData={form.setInspectionData} vehicles={data.vehicles} currentEmployee={data.currentEmployee} />}
-        {activeTab === "declaratie" && <MobileExpenseTab expenseData={form.expenseData} setExpenseData={form.setExpenseData} currentEmployee={data.currentEmployee} />}
+        {activeTab === "inspectie" && <MobileInspectionTab inspectionData={form.inspectionData} setInspectionData={form.setInspectionData} vehicles={data.vehicles} currentEmployee={employee} />}
+        {activeTab === "declaratie" && <MobileExpenseTab expenseData={form.expenseData} setExpenseData={form.setExpenseData} currentEmployee={employee} />}
         {activeTab === "overzicht" && <MobileOverviewTab approvedEntries={data.approvedEntries} loadingEntries={data.loadingEntries} />}
         {activeTab === "berichten" && <MobileMessagesTab myMessages={data.myMessages} markMessageRead={data.markMessageRead} />}
-        {activeTab === "planning" && <MobilePlanningTab schedules={data.schedules} currentEmployee={data.currentEmployee} routes={data.routes} tiModelRoutes={data.tiModelRoutes} vehicles={data.vehicles} />}
+        {activeTab === "planning" && <MobilePlanningTab schedules={data.schedules} currentEmployee={employee} routes={data.routes} tiModelRoutes={data.tiModelRoutes} vehicles={data.vehicles} />}
         {activeTab === "reglement" && <MobileReglementTab />}
         {activeTab === "handleiding" && <MobileHandleidingTab />}
         {activeTab === "links" && <MobileLinksTab />}
