@@ -488,8 +488,6 @@ export default function TimeTracking() {
       start_time: isNonWorked ? "" : formData.start_time,
       end_time: isNonWorked ? "" : formData.end_time,
       status: 'Goedgekeurd',
-      approved_by: user?.email,
-      approved_date: new Date().toISOString()
     };
     delete submitData.total_hours_override;
     if (selectedEntry) {
