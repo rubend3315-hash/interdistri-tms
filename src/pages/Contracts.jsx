@@ -109,6 +109,7 @@ export default function Contracts() {
 
   const generateContractMutation = useMutation({
     mutationFn: async (data) => {
+      if (!isAdmin) { console.warn("Unauthorized admin action blocked"); return; }
       const response = await base44.functions.invoke('generateContract', data);
       return response.data;
     },
@@ -143,7 +144,10 @@ export default function Contracts() {
   });
 
   const deleteContractMutation = useMutation({
-    mutationFn: (id) => base44.entities.Contract.delete(id),
+    mutationFn: (id) => {
+      if (!isAdmin) { console.warn("Unauthorized admin action blocked"); return; }
+      return base44.entities.Contract.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       setDeleteContract(null);
@@ -229,6 +233,7 @@ export default function Contracts() {
   const [payrollSuccess, setPayrollSuccess] = useState(null);
 
   const handleSendToPayroll = async (contract) => {
+    if (!isAdmin) { console.warn("Unauthorized admin action blocked"); return; }
     setSendingToPayroll(contract.id);
     setPayrollSuccess(null);
     const response = await base44.functions.invoke('sendContractToPayroll', { contract_id: contract.id });
@@ -238,6 +243,7 @@ export default function Contracts() {
   };
 
   const handleSendForSigning = async (contract, autoInvite = false) => {
+    if (!isAdmin) { console.warn("Unauthorized admin action blocked"); return; }
     setSendingContract(contract.id);
     setSendError(null);
     try {
