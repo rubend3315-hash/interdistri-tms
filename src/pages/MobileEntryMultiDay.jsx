@@ -22,7 +22,7 @@ import MobileInspectionTab from "@/components/mobile/tabs/MobileInspectionTab";
 import MobileExpenseTab from "@/components/mobile/tabs/MobileExpenseTab";
 import MobileOverviewTab from "@/components/mobile/tabs/MobileOverviewTab";
 import MobileMessagesTab from "@/components/mobile/tabs/MobileMessagesTab";
-import MobilePlanningScheduleTab from "@/components/mobile/tabs/MobilePlanningScheduleTab";
+import MobilePlanningTab from "@/components/mobile/MobilePlanningTab";
 import MobileLinksTab from "@/components/mobile/tabs/MobileLinksTab";
 import { Toaster } from "@/components/ui/sonner";
 
