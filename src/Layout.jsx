@@ -149,9 +149,16 @@ export default function Layout({ children, currentPageName }) {
     const activeGroup = menuItems.find(g => g.items.some(i => i.page === currentPageName));
     return activeGroup ? [activeGroup.label] : [];
   });
+  console.time("USER_QUERY");
   const { data: user, isLoading: loadingUser, isError: userError } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      console.time("USER_FETCH");
+      const u = await base44.auth.me();
+      console.timeEnd("USER_FETCH");
+      console.log("[DEBUG] User fetched:", u?.email, "role:", u?.role);
+      return u;
+    },
     retry: false,
   });
 
