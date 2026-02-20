@@ -147,8 +147,6 @@ export default function Layout({ children, currentPageName }) {
     const activeGroup = menuItems.find(g => g.items.some(i => i.page === currentPageName));
     return activeGroup ? [activeGroup.label] : [];
   });
-  const navigate = useNavigate();
-
   const { data: user, isLoading: loadingUser, isError: userError } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
