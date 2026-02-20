@@ -251,10 +251,14 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
-  // --- Toegangscontrole op basis van uit_dienst_datum ---
+  // --- Toegangscontrole non-admin ---
   let showGraceWarning = false;
 
-  if (user?.role !== "admin" && !loadingEmployee) {
+  if (user?.role !== "admin") {
+    if (loadingEmployee) {
+      return null;
+    }
+
     if (!currentEmployee) {
       return (
         <div className="flex items-center justify-center h-screen">
