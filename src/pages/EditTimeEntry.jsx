@@ -80,9 +80,16 @@ export default function EditTimeEntry() {
     }
   }, [timeEntry]);
 
-  // Update TimeEntry mutation
+  // Update TimeEntry mutation — uses server-side status transition
   const updateTimeEntryMutation = useMutation({
-    mutationFn: (data) => base44.entities.TimeEntry.update(timeEntryId, data),
+    mutationFn: async (data) => {
+      const response = await base44.functions.invoke('resubmitTimeEntry', {
+        time_entry_id: timeEntryId,
+        updated_data: data
+      });
+      if (!response.data?.success) throw new Error(response.data?.message || 'Herindiening mislukt');
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timeEntry', timeEntryId] });
       alert('✓ Dienst succesvol aangepast en opnieuw ingediend!');
