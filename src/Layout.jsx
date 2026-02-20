@@ -167,24 +167,6 @@ export default function Layout({ children, currentPageName }) {
     refetchOnMount: false,
   });
 
-  useEffect(() => {
-    if (loadingUser) return;
-    if (!user) return;
-    if (user.role === "admin") return;
-
-    // Wacht tot employee-query echt klaar is
-    if (loadingEmployee) return;
-
-    // Alleen evalueren als query afgerond is
-    if (!currentEmployee) {
-      base44.auth.logout();
-      return;
-    }
-
-    if (currentEmployee.status !== "Actief") {
-      base44.auth.logout();
-    }
-  }, [loadingUser, loadingEmployee, user?.role, currentEmployee?.id, currentEmployee?.status]);
 
   const hasPermission = (page) => {
     if (!user) return false;
