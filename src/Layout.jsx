@@ -261,6 +261,10 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
+  if (user?.role !== "admin" && currentPageName === "Dashboard") {
+    return <MobileEntry />;
+  }
+
   if (isMobilePage) {
     return <>{children}</>;
   }
