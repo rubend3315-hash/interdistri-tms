@@ -143,8 +143,7 @@ export function useEntrySubmit() {
   }, []);
 
   /**
-   * Save as draft (still uses old client-side approach for now,
-   * can be migrated to a separate backend function later)
+   * Save as draft — server-side upsert to prevent race conditions / duplicates
    */
   const saveDraft = useCallback(async ({ formData, trips, standplaatsWerk, employeeId }) => {
     if (submittingRef.current) return { success: false };
@@ -152,13 +151,11 @@ export function useEntrySubmit() {
     setIsSubmitting(true);
 
     try {
-      // Draft saving still uses direct entity calls for speed
-      // (draft = Concept status, low-risk partial writes acceptable)
       const hours = calculateHoursSimple(
         formData.start_time, formData.end_time, formData.break_minutes
       );
 
-      const timeEntryPayload = {
+      const response = await base44.functions.invoke('upsertDraftTimeEntry', {
         employee_id: employeeId,
         date: formData.date,
         end_date: formData.end_date || null,
@@ -168,24 +165,13 @@ export function useEntrySubmit() {
         total_hours: hours,
         notes: formData.notes || null,
         status: 'Concept',
-      };
-
-      const existing = await base44.entities.TimeEntry.filter({
-        employee_id: employeeId,
-        date: formData.date,
-        status: 'Concept'
       });
 
-      if (existing.length > 0) {
-        await base44.entities.TimeEntry.update(existing[0].id, timeEntryPayload);
-        for (let i = 1; i < existing.length; i++) {
-          await base44.entities.TimeEntry.delete(existing[i].id);
-        }
-      } else {
-        await base44.entities.TimeEntry.create(timeEntryPayload);
+      const result = response.data;
+      if (result.success) {
+        return { success: true, id: result.id };
       }
-
-      return { success: true };
+      return { success: false, error: result.message || 'Opslaan mislukt' };
     } catch (error) {
       return { success: false, error: error?.message || 'Opslaan mislukt' };
     } finally {
