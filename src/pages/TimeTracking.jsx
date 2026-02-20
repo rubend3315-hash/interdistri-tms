@@ -151,7 +151,11 @@ export default function TimeTracking() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.TimeEntry.delete(id),
+    mutationFn: async (id) => {
+      const response = await base44.functions.invoke('deleteTimeEntryCascade', { id });
+      if (!response.data?.success) throw new Error(response.data?.message || 'Verwijderen mislukt');
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
       setIsDialogOpen(false);
@@ -163,7 +167,7 @@ export default function TimeTracking() {
     const dateStr = format(day, 'yyyy-MM-dd');
     const entries = timeEntries.filter(e => e.employee_id === employeeId && e.date === dateStr);
     for (const entry of entries) {
-      await base44.entities.TimeEntry.delete(entry.id);
+      await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
     }
     queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
   };
@@ -173,7 +177,7 @@ export default function TimeTracking() {
     const dateStrs = days.map(d => format(d, 'yyyy-MM-dd'));
     const entries = timeEntries.filter(e => e.employee_id === employeeId && dateStrs.includes(e.date));
     for (const entry of entries) {
-      await base44.entities.TimeEntry.delete(entry.id);
+      await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
     }
     queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
   };
