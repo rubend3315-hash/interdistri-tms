@@ -14,12 +14,12 @@ Deno.serve(async (req) => {
     }
 
     const svc = base44.asServiceRole;
-    const entries = await svc.entities.TimeEntry.filter({ id: time_entry_id });
-    if (!entries.length) {
+    let entry;
+    try {
+      entry = await svc.entities.TimeEntry.get(time_entry_id);
+    } catch {
       return Response.json({ error: 'NOT_FOUND', message: 'TimeEntry niet gevonden' }, { status: 404 });
     }
-
-    const entry = entries[0];
 
     // Status-transitie validatie: alleen Ingediend → Goedgekeurd
     if (entry.status !== 'Ingediend') {
