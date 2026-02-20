@@ -168,10 +168,14 @@ export default function Layout({ children, currentPageName }) {
   });
 
   useEffect(() => {
-    if (loadingUser || loadingEmployee) return;
+    if (loadingUser) return;
     if (!user) return;
     if (user.role === "admin") return;
 
+    // Wacht tot employee-query echt klaar is
+    if (loadingEmployee) return;
+
+    // Alleen evalueren als query afgerond is
     if (!currentEmployee) {
       base44.auth.logout();
       return;
