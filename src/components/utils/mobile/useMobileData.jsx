@@ -19,44 +19,37 @@ export function useMobileData(employee) {
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['activeVehicles'],
-    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' }),
-    enabled: !!currentEmployee?.id
+    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['activeCustomers'],
-    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' }),
-    enabled: !!currentEmployee?.id
+    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['activeProjectsMobile'],
-    queryFn: () => base44.entities.Project.filter({ status: 'Actief' }),
-    enabled: !!currentEmployee?.id
+    queryFn: () => base44.entities.Project.filter({ status: 'Actief' })
   });
 
   const { data: routes = [] } = useQuery({
     queryKey: ['routesMobile'],
-    queryFn: () => base44.entities.Route.filter({ is_active: true }),
-    enabled: !!currentEmployee?.id
+    queryFn: () => base44.entities.Route.filter({ is_active: true })
   });
 
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutesMobile'],
-    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true }),
-    enabled: !!currentEmployee?.id
+    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true })
   });
 
   const { data: activiteiten = [] } = useQuery({
     queryKey: ['activiteiten'],
-    queryFn: () => base44.entities.Activiteit.list(),
-    enabled: !!currentEmployee?.id
+    queryFn: () => base44.entities.Activiteit.list()
   });
 
   const { data: supervisorMessages = [] } = useQuery({
     queryKey: ['supervisorMessages'],
-    queryFn: () => base44.entities.SupervisorMessage.filter({ is_active: true }),
-    enabled: !!currentEmployee?.id
+    queryFn: () => base44.entities.SupervisorMessage.filter({ is_active: true })
   });
 
   const { data: myTimeEntries = [], isLoading: loadingEntries } = useQuery({
