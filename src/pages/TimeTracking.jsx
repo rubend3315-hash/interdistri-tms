@@ -111,7 +111,13 @@ export default function TimeTracking() {
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.TimeEntry.create(data),
+    mutationFn: async (data) => {
+      // Admin creates entries directly as Goedgekeurd — use approveTimeEntry after create
+      const entry = await base44.entities.TimeEntry.create({ ...data, status: 'Ingediend' });
+      const response = await base44.functions.invoke('approveTimeEntry', { time_entry_id: entry.id });
+      if (!response.data?.success) throw new Error(response.data?.message || 'Goedkeuren mislukt');
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
       setIsDialogOpen(false);
@@ -119,7 +125,25 @@ export default function TimeTracking() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.TimeEntry.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      // Admin updates + approves: update data first, then approve via backend
+      const { status, approved_by, approved_date, ...fieldData } = data;
+      if (Object.keys(fieldData).length > 0) {
+        await base44.entities.TimeEntry.update(id, fieldData);
+      }
+      // If target status is Goedgekeurd, use the server-side transition
+      if (status === 'Goedgekeurd') {
+        // Ensure entry is in Ingediend state for the approve function
+        const entries = await base44.entities.TimeEntry.filter({ id });
+        const current = entries[0];
+        if (current && current.status !== 'Ingediend') {
+          await base44.entities.TimeEntry.update(id, { status: 'Ingediend' });
+        }
+        const response = await base44.functions.invoke('approveTimeEntry', { time_entry_id: id });
+        if (!response.data?.success) throw new Error(response.data?.message || 'Goedkeuren mislukt');
+      }
+      return { success: true };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
       setIsDialogOpen(false);

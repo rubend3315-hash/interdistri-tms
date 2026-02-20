@@ -103,23 +103,22 @@ export default function Approvals() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: (entry) => base44.entities.TimeEntry.update(entry.id, {
-      status: 'Goedgekeurd',
-      approved_by: user?.email,
-      approved_date: new Date().toISOString()
-    }),
+    mutationFn: async (entry) => {
+      const response = await base44.functions.invoke('approveTimeEntry', { time_entry_id: entry.id });
+      if (!response.data?.success) throw new Error(response.data?.message || 'Goedkeuren mislukt');
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timeEntries-all'] });
     }
   });
 
   const rejectMutation = useMutation({
-    mutationFn: ({ entry, reason }) => base44.entities.TimeEntry.update(entry.id, {
-      status: 'Afgekeurd',
-      rejection_reason: reason,
-      approved_by: user?.email,
-      approved_date: new Date().toISOString()
-    }),
+    mutationFn: async ({ entry, reason }) => {
+      const response = await base44.functions.invoke('rejectTimeEntry', { time_entry_id: entry.id, rejection_reason: reason });
+      if (!response.data?.success) throw new Error(response.data?.message || 'Afkeuren mislukt');
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timeEntries-all'] });
       setIsRejectDialogOpen(false);
@@ -128,7 +127,15 @@ export default function Approvals() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.TimeEntry.update(selectedEntry.id, data),
+    mutationFn: async (data) => {
+      // Admin edit with approve: use approveTimeEntry with edit_data
+      const response = await base44.functions.invoke('approveTimeEntry', {
+        time_entry_id: selectedEntry.id,
+        edit_data: data
+      });
+      if (!response.data?.success) throw new Error(response.data?.message || 'Opslaan mislukt');
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timeEntries-all'] });
       setIsDetailDialogOpen(false);
