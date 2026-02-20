@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Clock, Save, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 
 export default function EditTimeEntry() {
@@ -27,6 +27,16 @@ export default function EditTimeEntry() {
     queryFn: () => base44.auth.me()
   });
   const isAdmin = currentUser?.role === 'admin';
+
+  // Fetch current employee for ownership check
+  const { data: currentEmployee } = useQuery({
+    queryKey: ['currentEmployee', currentUser?.email],
+    queryFn: async () => {
+      const emps = await base44.entities.Employee.filter({ email: currentUser.email });
+      return emps[0] ?? null;
+    },
+    enabled: !!currentUser?.email && !isAdmin
+  });
 
   // Get TimeEntry ID from URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -45,6 +55,12 @@ export default function EditTimeEntry() {
     enabled: !!timeEntryId,
     retry: 1
   });
+
+  // Ownership check: non-admin users can only edit their own entries
+  if (!isAdmin && timeEntry && currentEmployee && timeEntry.employee_id !== currentEmployee.id) {
+    console.warn("Blocked unauthorized time entry access");
+    return <Navigate to={createPageUrl("MobileEntry")} replace />;
+  }
 
   // Fetch Employee details
   const { data: employee } = useQuery({
