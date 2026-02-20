@@ -294,6 +294,8 @@ export default function Layout({ children, currentPageName }) {
   }
 
   if (isEmployeeContractPage || isEmployeeEditTimeEntry) {
+    console.timeEnd("APP_TOTAL_LOAD");
+    console.log("[DEBUG] EXIT: employee contract/edit page → render children");
     return <>{children}</>;
   }
 
