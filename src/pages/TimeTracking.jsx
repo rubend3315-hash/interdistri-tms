@@ -456,8 +456,11 @@ export default function TimeTracking() {
         await base44.entities.TimeEntry.delete(selectedEntry.id);
       }
 
-      await base44.entities.TimeEntry.create(entry1);
-      await base44.entities.TimeEntry.create(entry2);
+      const created1 = await base44.entities.TimeEntry.create(entry1);
+      const created2 = await base44.entities.TimeEntry.create(entry2);
+      // Approve both via server-side status transition
+      await base44.functions.invoke('approveTimeEntry', { time_entry_id: created1.id });
+      await base44.functions.invoke('approveTimeEntry', { time_entry_id: created2.id });
       queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
       setIsDialogOpen(false);
       return;
