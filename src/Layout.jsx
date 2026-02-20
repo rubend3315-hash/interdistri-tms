@@ -30,6 +30,7 @@ import {
   Mail
 } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
+import MobileEntry from "./pages/MobileEntry";
 import { cn } from "@/lib/utils";
 
 // Service worker registration removed to prevent errors
