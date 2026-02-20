@@ -1,7 +1,7 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, addDays, differenceInDays, startOfWeek, endOfWeek } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -31,7 +31,6 @@ import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const today = new Date();
   const [showExport, setShowExport] = React.useState(false);
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
@@ -43,14 +42,6 @@ export default function Dashboard() {
   });
 
   const isAdmin = currentUser?.role === 'admin';
-
-  // Redirect non-admin users away from dashboard
-  // (Layout already handles redirecting non-admins to MobileEntry, this is just a safety net)
-  React.useEffect(() => {
-    if (currentUser && !isAdmin) {
-      // Do nothing - Layout will handle the redirect to MobileEntry
-    }
-  }, [currentUser, isAdmin, navigate]);
 
   // Only fetch dashboard data for admin users
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
