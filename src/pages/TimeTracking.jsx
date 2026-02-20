@@ -34,6 +34,17 @@ export default function TimeTracking() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
+  const { data: currentUser, isLoading: loadingUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
+
+  if (!loadingUser && !isAdmin) {
+    return <Navigate to={createPageUrl("MobileEntry")} replace />;
+  }
+
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });

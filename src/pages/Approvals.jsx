@@ -79,7 +79,7 @@ export default function Approvals() {
     }
   });
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
@@ -90,6 +90,12 @@ export default function Approvals() {
       }
     }
   });
+
+  const isAdmin = user?.role === 'admin';
+
+  if (!loadingUser && !isAdmin) {
+    return <Navigate to={createPageUrl("MobileEntry")} replace />;
+  }
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ['loonperiodeStatuses'],
