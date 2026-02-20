@@ -406,9 +406,7 @@ export default function TimeTracking() {
         project_id: formData.project_id,
         customer_id: formData.customer_id,
         notes: formData.notes,
-        status: 'Goedgekeurd',
-        approved_by: user?.email,
-        approved_date: new Date().toISOString(),
+        status: 'Ingediend',
       };
 
       // Entry 1: start day (e.g. Sunday)
