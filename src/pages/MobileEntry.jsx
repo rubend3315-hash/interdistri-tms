@@ -43,14 +43,14 @@ const MENU_ITEMS = [
 
 const TAB_ORDER = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "berichten", "reglement", "links"];
 
-export default function MobileEntry() {
+export default function MobileEntry({ employee }) {
   const [activeTab, setActiveTab] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const { isOnline, syncStatus, pendingCount } = useOfflineSync();
 
-  const data = useMobileData();
-  const form = useMobileForm({ isMultiDay: false, currentEmployee: data.currentEmployee });
+  const data = useMobileData(employee);
+  const form = useMobileForm({ isMultiDay: false, currentEmployee: employee });
   const submit = useMobileSubmit({
     formData: form.formData, trips: form.trips, standplaatsWerk: form.standplaatsWerk,
     signature: form.signature, setSignature: form.setSignature,

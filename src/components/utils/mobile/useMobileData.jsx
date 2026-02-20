@@ -7,7 +7,7 @@ import { format, getWeek, getYear } from "date-fns";
  * useMobileData — Central data fetching hook for mobile entry pages.
  * Zero entity calls in pages/components — all queries live here.
  */
-export function useMobileData() {
+export function useMobileData(employee) {
   const queryClient = useQueryClient();
 
   const { data: user, isLoading: loadingUser } = useQuery({
@@ -15,13 +15,7 @@ export function useMobileData() {
     queryFn: () => base44.auth.me()
   });
 
-  const { data: employees = [] } = useQuery({
-    queryKey: ['currentEmployee', user?.email],
-    queryFn: () => base44.entities.Employee.filter({ email: user.email }),
-    enabled: !!user?.email
-  });
-
-  const currentEmployee = Array.isArray(employees) ? employees.find(e => e.email === user?.email) : undefined;
+  const currentEmployee = employee;
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['activeVehicles'],
