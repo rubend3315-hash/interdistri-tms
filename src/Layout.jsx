@@ -162,11 +162,16 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
+  console.time("EMPLOYEE_QUERY");
   const { data: currentEmployee, isLoading: loadingEmployee } = useQuery({
     queryKey: ['currentEmployee', user?.email],
     queryFn: async ({ queryKey }) => {
       const [, email] = queryKey;
+      console.time("EMPLOYEE_FETCH");
+      console.log("[DEBUG] Employee filter start — email:", email);
       const emps = await base44.entities.Employee.filter({ email });
+      console.timeEnd("EMPLOYEE_FETCH");
+      console.log("[DEBUG] Employee result:", emps[0]?.id, "status:", emps[0]?.status);
       return emps[0] ?? null;
     },
     enabled: !!user && user.role !== 'admin',
