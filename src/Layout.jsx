@@ -142,36 +142,22 @@ const menuItems = [
 ];
 
 export default function Layout({ children, currentPageName }) {
-  console.time("APP_TOTAL_LOAD");
-  console.log("[DEBUG] Layout render start — page:", currentPageName);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState(() => {
     const activeGroup = menuItems.find(g => g.items.some(i => i.page === currentPageName));
     return activeGroup ? [activeGroup.label] : [];
   });
-  console.time("USER_QUERY");
   const { data: user, isLoading: loadingUser, isError: userError } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: async () => {
-      console.time("USER_FETCH");
-      const u = await base44.auth.me();
-      console.timeEnd("USER_FETCH");
-      console.log("[DEBUG] User fetched:", u?.email, "role:", u?.role);
-      return u;
-    },
+    queryFn: () => base44.auth.me(),
     retry: false,
   });
 
-  console.time("EMPLOYEE_QUERY");
   const { data: currentEmployee, isLoading: loadingEmployee } = useQuery({
     queryKey: ['currentEmployee', user?.email],
     queryFn: async ({ queryKey }) => {
       const [, email] = queryKey;
-      console.time("EMPLOYEE_FETCH");
-      console.log("[DEBUG] Employee filter start — email:", email);
       const emps = await base44.entities.Employee.filter({ email });
-      console.timeEnd("EMPLOYEE_FETCH");
-      console.log("[DEBUG] Employee result:", emps[0]?.id, "status:", emps[0]?.status);
       return emps[0] ?? null;
     },
     enabled: !!user && user.role !== 'admin',
@@ -257,8 +243,6 @@ export default function Layout({ children, currentPageName }) {
     })).filter(group => group.items.length > 0);
   }, [user?.role, user?.permissions]);
 
-  console.log("[DEBUG] State — loadingUser:", loadingUser, "loadingEmployee:", loadingEmployee, "user:", !!user, "role:", user?.role, "employee:", !!currentEmployee);
-
   // Render-fase redirect: non-admin op niet-toegestane pagina → direct Navigate
   if (!loadingUser && !loadingEmployee && user && user.role !== 'admin' && currentEmployee) {
     const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts", "EditTimeEntry"];
@@ -276,26 +260,20 @@ export default function Layout({ children, currentPageName }) {
 
   // While user is loading, show nothing to prevent flash/redirect issues
   if (loadingUser) {
-    console.log("[DEBUG] EXIT: loadingUser=true → return null (white screen)");
     return null;
   }
 
   // If user is not logged in, redirect to login
   if (userError || !user) {
-    console.log("[DEBUG] EXIT: userError or !user → redirectToLogin", { userError, user: !!user });
     base44.auth.redirectToLogin();
     return null;
   }
 
   if (isMobilePage) {
-    console.timeEnd("APP_TOTAL_LOAD");
-    console.log("[DEBUG] EXIT: mobile page → render children directly");
     return <>{children}</>;
   }
 
   if (isEmployeeContractPage || isEmployeeEditTimeEntry) {
-    console.timeEnd("APP_TOTAL_LOAD");
-    console.log("[DEBUG] EXIT: employee contract/edit page → render children");
     return <>{children}</>;
   }
 
@@ -310,9 +288,6 @@ export default function Layout({ children, currentPageName }) {
   const handleLogout = () => {
     base44.auth.logout();
   };
-
-  console.timeEnd("APP_TOTAL_LOAD");
-  console.log("[DEBUG] EXIT: full layout render (admin/desktop)");
 
   return (
     <div className="min-h-screen bg-slate-50">
