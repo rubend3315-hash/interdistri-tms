@@ -25,43 +25,50 @@ export function useMobileData() {
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['activeVehicles'],
-    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
+    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' }),
+    enabled: !!currentEmployee?.id
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['activeCustomers'],
-    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
+    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' }),
+    enabled: !!currentEmployee?.id
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['activeProjectsMobile'],
-    queryFn: () => base44.entities.Project.filter({ status: 'Actief' })
+    queryFn: () => base44.entities.Project.filter({ status: 'Actief' }),
+    enabled: !!currentEmployee?.id
   });
 
   const { data: routes = [] } = useQuery({
     queryKey: ['routesMobile'],
-    queryFn: () => base44.entities.Route.filter({ is_active: true })
+    queryFn: () => base44.entities.Route.filter({ is_active: true }),
+    enabled: !!currentEmployee?.id
   });
 
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutesMobile'],
-    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true })
+    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true }),
+    enabled: !!currentEmployee?.id
   });
 
   const { data: activiteiten = [] } = useQuery({
     queryKey: ['activiteiten'],
-    queryFn: () => base44.entities.Activiteit.list()
+    queryFn: () => base44.entities.Activiteit.list(),
+    enabled: !!currentEmployee?.id
   });
 
   const { data: supervisorMessages = [] } = useQuery({
     queryKey: ['supervisorMessages'],
-    queryFn: () => base44.entities.SupervisorMessage.filter({ is_active: true })
+    queryFn: () => base44.entities.SupervisorMessage.filter({ is_active: true }),
+    enabled: !!currentEmployee?.id
   });
 
   const { data: myTimeEntries = [], isLoading: loadingEntries } = useQuery({
     queryKey: ['myTimeEntries', user?.email],
     queryFn: () => base44.entities.TimeEntry.filter({ created_by: user?.email }),
-    enabled: !!user?.email
+    enabled: !!currentEmployee?.id
   });
 
   const { data: myMessages = [] } = useQuery({
