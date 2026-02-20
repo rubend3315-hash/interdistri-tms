@@ -243,16 +243,7 @@ export default function Layout({ children, currentPageName }) {
     })).filter(group => group.items.length > 0);
   }, [user?.role, user?.permissions]);
 
-  // Render-fase redirect: non-admin op niet-toegestane pagina → direct Navigate
-  if (!loadingUser && !loadingEmployee && user && user.role !== 'admin' && currentEmployee) {
-    const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts", "EditTimeEntry"];
-    if (!allowedPages.includes(currentPageName)) {
-      const targetPage = currentEmployee.mobile_entry_type === 'multi_day'
-        ? "MobileEntryMultiDay"
-        : "MobileEntry";
-      return <Navigate to={createPageUrl(targetPage)} replace />;
-    }
-  }
+
 
   const isMobilePage = currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay";
   const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
