@@ -15,6 +15,35 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { cn } from "@/lib/utils";
 
+const ALLOWED_TARGET_PAGES = [
+  "MobileEntry",
+  "MobileEntryMultiDay",
+  "Contracts",
+  "EditTimeEntry",
+  "Planning",
+  "Trips",
+  "Vehicles",
+  "Employees",
+  "SalaryReports",
+  "Recalculations",
+  "Dashboard",
+  "Messages",
+  "Customers",
+  "Projects"
+];
+
+const ADMIN_ONLY_PAGES = [
+  "Employees",
+  "SalaryReports",
+  "Recalculations",
+  "Backups",
+  "AuditLog",
+  "DataMigration",
+  "HRImport",
+  "HRMSettings",
+  "Integrations"
+];
+
 export default function NotificationBell() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -72,7 +101,14 @@ export default function NotificationBell() {
       markAsReadMutation.mutate(notification.id);
     }
     if (notification.target_page) {
-      navigate(createPageUrl(notification.target_page));
+      if (
+        ALLOWED_TARGET_PAGES.includes(notification.target_page) &&
+        (user.role === "admin" || !ADMIN_ONLY_PAGES.includes(notification.target_page))
+      ) {
+        navigate(createPageUrl(notification.target_page));
+      } else {
+        console.warn("Blocked invalid or unauthorized notification target:", notification.target_page);
+      }
       setOpen(false);
     }
   };
