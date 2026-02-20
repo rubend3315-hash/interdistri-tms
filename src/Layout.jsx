@@ -276,16 +276,20 @@ export default function Layout({ children, currentPageName }) {
 
   // While user is loading, show nothing to prevent flash/redirect issues
   if (loadingUser) {
+    console.log("[DEBUG] EXIT: loadingUser=true → return null (white screen)");
     return null;
   }
 
   // If user is not logged in, redirect to login
   if (userError || !user) {
+    console.log("[DEBUG] EXIT: userError or !user → redirectToLogin", { userError, user: !!user });
     base44.auth.redirectToLogin();
     return null;
   }
 
   if (isMobilePage) {
+    console.timeEnd("APP_TOTAL_LOAD");
+    console.log("[DEBUG] EXIT: mobile page → render children directly");
     return <>{children}</>;
   }
 
