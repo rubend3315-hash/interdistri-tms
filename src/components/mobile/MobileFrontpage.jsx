@@ -45,7 +45,7 @@ export default function MobileFrontpage({ onNavigate }) {
       color: "from-emerald-500 to-emerald-600"
     },
     {
-      id: "standplaats",
+      id: "ritten",
       title: "Standplaatswerk",
       description: "Loodswerk registreren",
       icon: Package,
