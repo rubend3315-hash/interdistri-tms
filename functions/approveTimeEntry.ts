@@ -17,7 +17,11 @@ Deno.serve(async (req) => {
     let entry;
     try {
       entry = await svc.entities.TimeEntry.get(time_entry_id);
-    } catch {
+    } catch (e) {
+      console.error('[approveTimeEntry] Get failed:', e?.message);
+      return Response.json({ error: 'NOT_FOUND', message: 'TimeEntry niet gevonden' }, { status: 404 });
+    }
+    if (!entry) {
       return Response.json({ error: 'NOT_FOUND', message: 'TimeEntry niet gevonden' }, { status: 404 });
     }
 
