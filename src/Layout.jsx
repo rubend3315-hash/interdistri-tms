@@ -163,18 +163,12 @@ export default function Layout({ children, currentPageName }) {
     enabled: !!user?.email,
   });
 
-  const hasValidatedStatus = useRef(false);
-
-  // Non-admin users: block access for inactive/out-of-service employees (runs once)
+  // Non-admin users: block access if no employee record or status !== "Actief"
   useEffect(() => {
-    if (hasValidatedStatus.current) return;
     if (loadingUser || loadingEmployee) return;
     if (!user || user.role === 'admin') return;
-    if (!currentEmployee) return;
 
-    hasValidatedStatus.current = true;
-
-    if (currentEmployee.status !== 'Actief') {
+    if (!currentEmployee || currentEmployee.status !== 'Actief') {
       base44.auth.logout();
     }
   }, [loadingUser, loadingEmployee, user, currentEmployee]);
