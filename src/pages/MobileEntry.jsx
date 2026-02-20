@@ -112,7 +112,7 @@ export default function MobileEntry() {
         {activeTab === "declaratie" && <MobileExpenseTab expenseData={form.expenseData} setExpenseData={form.setExpenseData} currentEmployee={data.currentEmployee} />}
         {activeTab === "overzicht" && <MobileOverviewTab approvedEntries={data.approvedEntries} loadingEntries={data.loadingEntries} />}
         {activeTab === "berichten" && <MobileMessagesTab myMessages={data.myMessages} markMessageRead={data.markMessageRead} />}
-        {activeTab === "planning" && <MobilePlanningScheduleTab schedules={data.schedules} />}
+        {activeTab === "planning" && <MobilePlanningTab schedules={data.schedules} currentEmployee={data.currentEmployee} routes={data.routes} tiModelRoutes={data.tiModelRoutes} vehicles={data.vehicles} />}
         {activeTab === "reglement" && <MobileReglementTab />}
         {activeTab === "handleiding" && <MobileHandleidingTab />}
         {activeTab === "links" && <MobileLinksTab />}
