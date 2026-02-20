@@ -22,6 +22,12 @@ export default function EditTimeEntry() {
   const [signature, setSignature] = useState(null);
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+  const isAdmin = currentUser?.role === 'admin';
+
   // Get TimeEntry ID from URL
   const urlParams = new URLSearchParams(window.location.search);
   const timeEntryId = urlParams.get('id');
