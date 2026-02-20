@@ -142,6 +142,8 @@ const menuItems = [
 ];
 
 export default function Layout({ children, currentPageName }) {
+  console.time("APP_TOTAL_LOAD");
+  console.log("[DEBUG] Layout render start — page:", currentPageName);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState(() => {
     const activeGroup = menuItems.find(g => g.items.some(i => i.page === currentPageName));
