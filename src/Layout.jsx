@@ -474,6 +474,18 @@ export default function Layout({ children, currentPageName }) {
         "lg:ml-72 min-h-screen",
         "pt-16 lg:pt-0"
       )}>
+        {showGraceWarning && (
+          <div style={{
+            background: "#fff3cd",
+            color: "#856404",
+            padding: "12px 16px",
+            borderBottom: "1px solid #ffeeba",
+            textAlign: "center",
+            fontWeight: 500
+          }}>
+            Je dienstverband is beëindigd. Je kunt nog tot 7 dagen na je uit-dienstdatum inloggen om je zaken af te ronden.
+          </div>
+        )}
         <div className="p-4 lg:p-8">
           {React.cloneElement(children, { currentUser: user })}
         </div>
