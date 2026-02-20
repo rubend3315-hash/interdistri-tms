@@ -262,11 +262,11 @@ export default function Layout({ children, currentPageName }) {
   }
 
   if (user?.role !== "admin" && currentPageName === "Dashboard") {
-    return <MobileEntry />;
+    return <MobileEntry currentUser={user} />;
   }
 
   if (isMobilePage) {
-    return <>{children}</>;
+    return <>{React.cloneElement(children, { currentUser: user })}</>;
   }
 
   if (isEmployeeContractPage || isEmployeeEditTimeEntry) {
@@ -427,7 +427,7 @@ export default function Layout({ children, currentPageName }) {
         "pt-16 lg:pt-0"
       )}>
         <div className="p-4 lg:p-8">
-          {children}
+          {React.cloneElement(children, { currentUser: user })}
         </div>
       </main>
     </div>
