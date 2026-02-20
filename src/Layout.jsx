@@ -174,7 +174,7 @@ export default function Layout({ children, currentPageName }) {
     if (!currentEmployee || currentEmployee.status !== 'Actief') {
       base44.auth.logout();
     }
-  }, [loadingUser, loadingEmployee, user, currentEmployee]);
+  }, [loadingUser, loadingEmployee]);
 
   const hasPermission = (page) => {
     if (!user) return false;
