@@ -165,25 +165,15 @@ export default function Layout({ children, currentPageName }) {
     enabled: !!user?.email,
   });
 
-  // Non-admin users: only allow certain pages, redirect to correct mobile entry type
-  // Also block access for inactive/out-of-service employees
+  // Non-admin users: block access for inactive/out-of-service employees
   useEffect(() => {
     if (loadingUser || loadingEmployee || !user || user.role === 'admin') return;
     if (!currentEmployee) return;
 
     if (currentEmployee.status === 'Uit dienst' && currentEmployee.out_of_service_date) {
       base44.auth.logout();
-      return;
     }
-
-    const allowedPages = ["MobileEntry", "MobileEntryMultiDay", "Contracts", "EditTimeEntry"];
-    if (!allowedPages.includes(currentPageName)) {
-      const targetPage = currentEmployee.mobile_entry_type === 'multi_day'
-        ? "MobileEntryMultiDay"
-        : "MobileEntry";
-      navigate(createPageUrl(targetPage), { replace: true });
-    }
-  }, [user?.role, user?.email, loadingUser, loadingEmployee, currentEmployee?.status, currentEmployee?.mobile_entry_type, currentPageName, navigate]);
+  }, [user?.role, loadingUser, loadingEmployee, currentEmployee?.status]);
 
   const hasPermission = (page) => {
     if (!user) return false;
