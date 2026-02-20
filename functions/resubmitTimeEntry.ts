@@ -31,6 +31,21 @@ Deno.serve(async (req) => {
       }, { status: 409 });
     }
 
+    // Employee status check: alleen actieve medewerkers mogen herindienden
+    if (entry.employee_id) {
+      try {
+        const emp = await svc.entities.Employee.get(entry.employee_id);
+        if (!emp || emp.status !== 'Actief') {
+          return Response.json({
+            error: 'EMPLOYEE_INACTIVE',
+            message: `Medewerker is ${emp?.status?.toLowerCase() || 'onbekend'} — kan niet herindienden`
+          }, { status: 403 });
+        }
+      } catch (e) {
+        console.error('[resubmitTimeEntry] Employee lookup failed:', e?.message);
+      }
+    }
+
     // Ownership check: non-admin users can only resubmit their own entries
     if (user.role !== 'admin') {
       const employees = await svc.entities.Employee.filter({ email: user.email });

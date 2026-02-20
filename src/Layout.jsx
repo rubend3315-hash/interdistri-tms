@@ -168,7 +168,7 @@ export default function Layout({ children, currentPageName }) {
     if (loadingUser || loadingEmployee || !user || user.role === 'admin') return;
     if (!currentEmployee) return;
 
-    if (currentEmployee.status === 'Uit dienst' && currentEmployee.out_of_service_date) {
+    if (currentEmployee.status !== 'Actief') {
       base44.auth.logout();
     }
   }, [user?.role, loadingUser, loadingEmployee, currentEmployee?.status]);

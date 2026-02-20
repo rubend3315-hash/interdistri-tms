@@ -25,6 +25,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'NOT_FOUND', message: 'TimeEntry niet gevonden' }, { status: 404 });
     }
 
+    // Employee status check: alleen entries van actieve medewerkers goedkeuren
+    if (entry.employee_id) {
+      try {
+        const emp = await svc.entities.Employee.get(entry.employee_id);
+        if (!emp || emp.status !== 'Actief') {
+          return Response.json({
+            error: 'EMPLOYEE_INACTIVE',
+            message: `Medewerker is ${emp?.status?.toLowerCase() || 'onbekend'} — kan niet goedkeuren`
+          }, { status: 403 });
+        }
+      } catch (e) {
+        console.error('[approveTimeEntry] Employee lookup failed:', e?.message);
+      }
+    }
+
     // Status-transitie validatie: alleen Ingediend → Goedgekeurd
     if (entry.status !== 'Ingediend') {
       return Response.json({

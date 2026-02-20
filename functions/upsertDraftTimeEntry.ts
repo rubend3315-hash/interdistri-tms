@@ -21,6 +21,17 @@ Deno.serve(async (req) => {
 
     const svc = base44.asServiceRole;
 
+    // Employee status check: alleen actieve medewerkers mogen drafts opslaan
+    let employee;
+    try {
+      employee = await svc.entities.Employee.get(employee_id);
+    } catch (e) {
+      return Response.json({ success: false, error: 'EMPLOYEE_NOT_FOUND', message: 'Medewerker niet gevonden' }, { status: 404 });
+    }
+    if (!employee || employee.status !== 'Actief') {
+      return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: `Medewerker is ${employee?.status?.toLowerCase() || 'onbekend'} — alleen actieve medewerkers mogen drafts opslaan` }, { status: 403 });
+    }
+
     // 1. Zoek alle bestaande Concept entries voor employee_id + date
     const existing = await svc.entities.TimeEntry.filter({
       employee_id,

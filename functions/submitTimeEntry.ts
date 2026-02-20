@@ -243,8 +243,8 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'EMPLOYEE_NOT_FOUND', message: 'Geen medewerker voor dit account' }, { status: 403 });
     }
     const employee = employees[0];
-    if (employee.status === 'Uit dienst') {
-      return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: 'Medewerker is uit dienst' }, { status: 403 });
+    if (employee.status !== 'Actief') {
+      return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: `Medewerker is ${employee.status.toLowerCase()} — alleen actieve medewerkers mogen indienen` }, { status: 403 });
     }
     const empId = employee.id;
 
