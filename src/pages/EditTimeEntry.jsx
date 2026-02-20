@@ -179,15 +179,13 @@ export default function EditTimeEntry() {
       return;
     }
 
-    // Update TimeEntry with new data and signature
+    // Update TimeEntry with new data and signature (status transition handled by backend)
     const updateData = {
       start_time: formData.start_time,
       end_time: formData.end_time,
       notes: formData.notes,
       total_hours: totalHours,
       signature_url: signature,
-      status: "Ingediend",
-      rejection_reason: null // Clear rejection reason
     };
 
     // Add edit history
