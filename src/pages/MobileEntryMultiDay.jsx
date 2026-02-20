@@ -80,6 +80,7 @@ export default function MobileEntryMultiDay({ employee }) {
   };
 
   if (data.loadingUser) return <div className="min-h-screen bg-slate-100 flex items-center justify-center"><Skeleton className="w-32 h-32 rounded-full" /></div>;
+  if (!employee?.id) return null;
 
   return (
     <div className="min-h-screen bg-slate-100">
