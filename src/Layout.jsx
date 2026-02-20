@@ -167,20 +167,16 @@ export default function Layout({ children, currentPageName }) {
     refetchOnMount: false,
   });
 
-  useEffect(() => {
-    if (loadingUser || loadingEmployee) return;
-    if (!user) return;
-    if (user.role === "admin") return;
-
-    if (!currentEmployee) {
-      base44.auth.logout();
-      return;
-    }
-
-    if (currentEmployee.status !== "Actief") {
-      base44.auth.logout();
-    }
-  }, [loadingUser, loadingEmployee, user?.role, currentEmployee?.id, currentEmployee?.status]);
+  // Non-admin users: block access if no employee record or status !== "Actief"
+  // TEMPORARILY DISABLED FOR ISOLATION TEST — white screen debugging
+  // useEffect(() => {
+  //   if (loadingUser || loadingEmployee) return;
+  //   if (!user || user.role === 'admin') return;
+  //
+  //   if (!currentEmployee || currentEmployee.status !== 'Actief') {
+  //     base44.auth.logout();
+  //   }
+  // }, [loadingUser, loadingEmployee]);
 
   const hasPermission = (page) => {
     if (!user) return false;
