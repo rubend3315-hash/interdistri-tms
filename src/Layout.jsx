@@ -160,7 +160,10 @@ export default function Layout({ children, currentPageName }) {
       const emps = await base44.entities.Employee.filter({ email });
       return emps[0] ?? null;
     },
-    enabled: !!user?.email,
+    enabled: !!user && user.role !== 'admin',
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Non-admin users: block access if no employee record or status !== "Actief"
