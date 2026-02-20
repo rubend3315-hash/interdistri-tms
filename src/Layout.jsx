@@ -251,10 +251,6 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
-  console.log("USER EMAIL:", user?.email);
-  console.log("EMPLOYEE FOUND:", currentEmployee);
-  console.log("EMPLOYEE STATUS:", currentEmployee?.status);
-
   if (
     user?.role !== "admin" &&
     !loadingEmployee
