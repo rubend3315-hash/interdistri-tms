@@ -54,7 +54,7 @@ export default function MobileEntry({ employee }) {
   const submit = useMobileSubmit({
     formData: form.formData, trips: form.trips, standplaatsWerk: form.standplaatsWerk,
     signature: form.signature, setSignature: form.setSignature,
-    currentEmployee: data.currentEmployee, isMultiDay: false,
+    currentEmployee: employee, isMultiDay: false,
     resetForm: form.resetForm, setActiveTab, queryClient: data.queryClient,
   });
 
@@ -63,10 +63,10 @@ export default function MobileEntry({ employee }) {
   [data.unreadCount]);
 
   useEffect(() => {
-    if (data.currentEmployee?.id) {
-      base44.analytics.track({ eventName: "mobile_entry_page_loaded", properties: { employeeId: data.currentEmployee.id, entryType: "single_day" } });
+    if (employee?.id) {
+      base44.analytics.track({ eventName: "mobile_entry_page_loaded", properties: { employeeId: employee.id, entryType: "single_day" } });
     }
-  }, [data.currentEmployee?.id]);
+  }, [employee?.id]);
 
   const handleSwipe = (dir) => {
     const idx = TAB_ORDER.indexOf(activeTab);
@@ -80,7 +80,7 @@ export default function MobileEntry({ employee }) {
   };
 
   if (data.loadingUser) return <div className="min-h-screen bg-slate-100 flex items-center justify-center"><Skeleton className="w-32 h-32 rounded-full" /></div>;
-  if (!data.currentEmployee?.id) return null;
+  if (!employee?.id) return null;
 
   return (
     <div className="min-h-screen bg-slate-100">

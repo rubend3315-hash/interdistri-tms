@@ -54,7 +54,7 @@ export default function MobileEntryMultiDay({ employee }) {
   const submit = useMobileSubmit({
     formData: form.formData, trips: form.trips, standplaatsWerk: form.standplaatsWerk,
     signature: form.signature, setSignature: form.setSignature,
-    currentEmployee: data.currentEmployee, isMultiDay: true,
+    currentEmployee: employee, isMultiDay: true,
     resetForm: form.resetForm, setActiveTab, queryClient: data.queryClient,
   });
 
@@ -63,10 +63,10 @@ export default function MobileEntryMultiDay({ employee }) {
   [data.unreadCount]);
 
   useEffect(() => {
-    if (data.currentEmployee?.id) {
-      base44.analytics.track({ eventName: "mobile_entry_page_loaded", properties: { employeeId: data.currentEmployee.id, entryType: "multi_day" } });
+    if (employee?.id) {
+      base44.analytics.track({ eventName: "mobile_entry_page_loaded", properties: { employeeId: employee.id, entryType: "multi_day" } });
     }
-  }, [data.currentEmployee?.id]);
+  }, [employee?.id]);
 
   const handleSwipe = (dir) => {
     const idx = TAB_ORDER.indexOf(activeTab);
