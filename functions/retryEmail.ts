@@ -9,7 +9,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { log_id } = await req.json();
+    const { log_id, correlation_id: incomingCorrelationId } = await req.json();
+    const correlationId = incomingCorrelationId || crypto.randomUUID();
     if (!log_id) {
       return Response.json({ error: 'Missing log_id' }, { status: 400 });
     }
@@ -39,6 +40,7 @@ Deno.serve(async (req) => {
       resent_by: user.email,
       original_log_id: log_id,
       skip_auth: true,
+      correlation_id: correlationId,
     });
 
     // Update original log
@@ -62,6 +64,7 @@ Deno.serve(async (req) => {
         performed_by_email: user.email,
         performed_by_name: user.full_name,
         performed_by_role: user.role,
+        correlation_id: correlationId,
         metadata: { retry_count: newRetryCount, success: result.data?.success, new_log_id: result.data?.logId },
       });
     } catch (_) {}

@@ -108,7 +108,11 @@ Deno.serve(async (req) => {
       original_log_id, // link to original log
       idempotency_key: explicitKey, // caller can provide explicit key
       entity_id: entityId,          // for auto-generating idempotency key
+      correlation_id: incomingCorrelationId, // flow tracing
     } = body;
+
+    // Generate correlation_id if not provided
+    const correlationId = incomingCorrelationId || crypto.randomUUID();
 
     // Auth check - skip for automation-triggered calls
     if (!skip_auth) {
@@ -173,6 +177,7 @@ Deno.serve(async (req) => {
       sent_at: new Date().toISOString(),
       retry_count: 0,
       idempotency_key: idempotencyKey,
+      correlation_id: correlationId,
       ...(resent_by ? { resent_by } : {}),
       ...(original_log_id ? { original_log_id } : {}),
     });
@@ -197,6 +202,7 @@ Deno.serve(async (req) => {
           description: `E-mail verzonden naar ${to}: "${finalSubject}"`,
           performed_by_email: resent_by || sourceFunction || 'system',
           performed_by_role: resent_by ? 'admin' : 'system',
+          correlation_id: correlationId,
           metadata: { source_function: sourceFunction, to, message_id: result.messageId, attempts: result.attempts },
         });
       } catch (_) {}
@@ -205,6 +211,7 @@ Deno.serve(async (req) => {
         messageId: result.messageId,
         logId: logEntry.id,
         attempts: result.attempts,
+        correlation_id: correlationId,
       });
     } else {
       await base44.asServiceRole.entities.EmailLog.update(logEntry.id, {
@@ -222,6 +229,7 @@ Deno.serve(async (req) => {
           description: `E-mail verzending mislukt naar ${to}: "${finalSubject}"`,
           performed_by_email: sourceFunction || 'system',
           performed_by_role: 'system',
+          correlation_id: correlationId,
           metadata: { source_function: sourceFunction, to, error: result.error, attempts: result.attempts },
         });
       } catch (_) {}
@@ -230,6 +238,7 @@ Deno.serve(async (req) => {
         error: result.error,
         logId: logEntry.id,
         attempts: result.attempts,
+        correlation_id: correlationId,
       }, { status: 502 });
     }
   } catch (error) {
