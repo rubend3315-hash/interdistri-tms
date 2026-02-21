@@ -132,9 +132,9 @@ Deno.serve(async (req) => {
         }
         const sentAt = new Date().toISOString();
         try {
-          await sendGmail(gmailToken, admin.email, emailSubject, emailBody);
+          const gmailResult = await sendGmail(gmailToken, admin.email, emailSubject, emailBody);
           await base44.asServiceRole.entities.EmailLog.create({
-            to: admin.email, cc: CC_ADDRESS, subject: emailSubject, status: 'success', source_function: 'notifyContractSigned', sent_at: sentAt,
+            to: admin.email, cc: CC_ADDRESS, subject: emailSubject, status: 'success', source_function: 'notifyContractSigned', sent_at: sentAt, message_id: gmailResult?.id || null,
           });
         } catch (sendErr) {
           await base44.asServiceRole.entities.EmailLog.create({
@@ -196,9 +196,9 @@ Deno.serve(async (req) => {
         }
         const sentAt2 = new Date().toISOString();
         try {
-          await sendGmail(gmailToken, employee.email, emailSubject, emailBody);
+          const gmailResult2 = await sendGmail(gmailToken, employee.email, emailSubject, emailBody);
           await base44.asServiceRole.entities.EmailLog.create({
-            to: employee.email, cc: CC_ADDRESS, subject: emailSubject, status: 'success', source_function: 'notifyContractSigned', sent_at: sentAt2,
+            to: employee.email, cc: CC_ADDRESS, subject: emailSubject, status: 'success', source_function: 'notifyContractSigned', sent_at: sentAt2, message_id: gmailResult2?.id || null,
           });
         } catch (sendErr) {
           await base44.asServiceRole.entities.EmailLog.create({

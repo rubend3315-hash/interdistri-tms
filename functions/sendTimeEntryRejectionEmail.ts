@@ -92,10 +92,18 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ raw: encoded }),
       });
 
+      const sentAtCustom = new Date().toISOString();
       if (!response.ok) {
         const errorData = await response.text();
+        await base44.asServiceRole.entities.EmailLog.create({
+          to: employee.email, cc: 'info@interdistri.nl, ruben@interdistri.nl', subject: customSubject, status: 'failed', source_function: 'sendTimeEntryRejectionEmail', error_message: errorData, sent_at: sentAtCustom,
+        });
         return Response.json({ error: 'Failed to send email via Gmail', details: errorData }, { status: 500 });
       }
+      const customGmailResult = await response.json();
+      await base44.asServiceRole.entities.EmailLog.create({
+        to: employee.email, cc: 'info@interdistri.nl, ruben@interdistri.nl', subject: customSubject, status: 'success', source_function: 'sendTimeEntryRejectionEmail', sent_at: sentAtCustom, message_id: customGmailResult?.id || null,
+      });
       return Response.json({ success: true, message: `Custom rejection email sent to ${employee.email}` });
     }
 
@@ -274,11 +282,20 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ raw: encoded }),
     });
 
+    const sentAtDefault = new Date().toISOString();
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Gmail send failed:', errorData);
+      await base44.asServiceRole.entities.EmailLog.create({
+        to: employee.email, cc: 'info@interdistri.nl, ruben@interdistri.nl', subject, status: 'failed', source_function: 'sendTimeEntryRejectionEmail', error_message: errorData, sent_at: sentAtDefault,
+      });
       return Response.json({ error: 'Failed to send email via Gmail', details: errorData }, { status: 500 });
     }
+
+    const defaultGmailResult = await response.json();
+    await base44.asServiceRole.entities.EmailLog.create({
+      to: employee.email, cc: 'info@interdistri.nl, ruben@interdistri.nl', subject, status: 'success', source_function: 'sendTimeEntryRejectionEmail', sent_at: sentAtDefault, message_id: defaultGmailResult?.id || null,
+    });
 
     return Response.json({ 
       success: true, 

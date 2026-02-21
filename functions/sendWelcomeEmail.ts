@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
 
     const sentAt = new Date().toISOString();
     try {
-      await sendGmail(gmailToken, employeeEmail, emailSubject, emailBody);
+      const gmailResult = await sendGmail(gmailToken, employeeEmail, emailSubject, emailBody);
       await base44.asServiceRole.entities.EmailLog.create({
         to: employeeEmail,
         cc: CC_ADDRESS,
@@ -133,6 +133,7 @@ Deno.serve(async (req) => {
         status: 'success',
         source_function: 'sendWelcomeEmail',
         sent_at: sentAt,
+        message_id: gmailResult?.id || null,
       });
     } catch (sendErr) {
       await base44.asServiceRole.entities.EmailLog.create({

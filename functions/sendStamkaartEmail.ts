@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
       status: 'success',
       source_function: 'sendStamkaartEmail',
       sent_at: sentAt,
+      message_id: result.id || null,
     });
 
     return Response.json({ success: true, messageId: result.id, cc: finalCc });

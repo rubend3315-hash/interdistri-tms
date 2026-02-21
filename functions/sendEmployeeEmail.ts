@@ -55,7 +55,8 @@ Deno.serve(async (req) => {
       });
 
       if (response.ok) {
-        results.push({ email: toEmail, status: 'sent' });
+        const gmailResult = await response.json();
+        results.push({ email: toEmail, status: 'sent', messageId: gmailResult.id });
         await base44.asServiceRole.entities.EmailLog.create({
           to: toEmail,
           cc: ccAddr,
@@ -63,6 +64,7 @@ Deno.serve(async (req) => {
           status: 'success',
           source_function: 'sendEmployeeEmail',
           sent_at: sentAt,
+          message_id: gmailResult.id || null,
         });
       } else {
         const errorData = await response.text();
