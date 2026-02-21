@@ -329,10 +329,10 @@ export default function StamkaartForm({
       <div className="grid grid-cols-2 gap-x-6 overflow-hidden">
         {/* Kolom 1 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <StamkaartRow label="Datum in dienst">
+          <StamkaartRow label="Datum in dienst" compact>
             <Input type="date" className={inputCls} value={data.in_service_since || ""} onChange={e => update("in_service_since", e.target.value)} />
           </StamkaartRow>
-          <StamkaartRow label="Functie">
+          <StamkaartRow label="Functie" compact>
             <Select value={data.function || '_none'} onValueChange={v => update("function", v === '_none' ? '' : v)}>
               <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Selecteer" /></SelectTrigger>
               <SelectContent>
@@ -341,7 +341,7 @@ export default function StamkaartForm({
               </SelectContent>
             </Select>
           </StamkaartRow>
-          <StamkaartRow label="Afdeling" required>
+          <StamkaartRow label="Afdeling" required compact>
             <Select value={data.department || ""} onValueChange={v => update("department", v)}>
               <SelectTrigger className={`h-[30px] text-xs bg-white shadow-none ${fieldError("department") ? "border border-red-400" : "border border-slate-400/60"}`}><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -352,7 +352,7 @@ export default function StamkaartForm({
         </div>
         {/* Kolom 2 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <StamkaartRow label="Contract type">
+          <StamkaartRow label="Contract type" compact>
             <Select value={data.contract_type || "Tijdelijk"} onValueChange={v => update("contract_type", v)}>
               <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -362,10 +362,10 @@ export default function StamkaartForm({
               </SelectContent>
             </Select>
           </StamkaartRow>
-          <StamkaartRow label="Contracturen">
+          <StamkaartRow label="Contracturen" compact>
             <Input type="number" className={inputCls} value={data.contract_hours || ""} onChange={e => update("contract_hours", Number(e.target.value))} />
           </StamkaartRow>
-          <StamkaartRow label="Loonschaal">
+          <StamkaartRow label="Loonschaal" compact>
             {loadingSalary ? (
               <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Laden...</span>
             ) : (
@@ -380,7 +380,7 @@ export default function StamkaartForm({
               </Select>
             )}
           </StamkaartRow>
-          <StamkaartRow label="Bruto uurloon (€)">
+          <StamkaartRow label="Bruto uurloon (€)" compact>
             <Input type="number" step="0.01" className={inputCls} value={data.hourly_rate || ""} onChange={e => update("hourly_rate", Number(e.target.value))} />
           </StamkaartRow>
         </div>

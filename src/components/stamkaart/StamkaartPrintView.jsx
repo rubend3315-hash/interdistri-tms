@@ -89,16 +89,16 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
       <div className="grid grid-cols-2 gap-x-6 overflow-hidden">
         {/* Kolom 1 */}
         <div className="space-y-0">
-          <StamkaartRow label="Datum in dienst"><PrintVal>{fmtDate(employee.in_service_since)}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Functie"><PrintVal>{employee.function}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Afdeling"><PrintVal>{employee.department}</PrintVal></StamkaartRow>
+          <StamkaartRow label="Datum in dienst" compact><PrintVal>{fmtDate(employee.in_service_since)}</PrintVal></StamkaartRow>
+          <StamkaartRow label="Functie" compact><PrintVal>{employee.function}</PrintVal></StamkaartRow>
+          <StamkaartRow label="Afdeling" compact><PrintVal>{employee.department}</PrintVal></StamkaartRow>
         </div>
         {/* Kolom 2 */}
         <div className="space-y-0">
-          <StamkaartRow label="Contract type"><PrintVal>{employee.contract_type}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Contracturen"><PrintVal>{employee.contract_hours ? `${employee.contract_hours} uur` : null}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Loonschaal"><PrintVal>{employee.salary_scale}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Bruto uurloon (€)"><PrintVal>{employee.hourly_rate ? `€ ${Number(employee.hourly_rate).toFixed(2)}` : null}</PrintVal></StamkaartRow>
+          <StamkaartRow label="Contract type" compact><PrintVal>{employee.contract_type}</PrintVal></StamkaartRow>
+          <StamkaartRow label="Contracturen" compact><PrintVal>{employee.contract_hours ? `${employee.contract_hours} uur` : null}</PrintVal></StamkaartRow>
+          <StamkaartRow label="Loonschaal" compact><PrintVal>{employee.salary_scale}</PrintVal></StamkaartRow>
+          <StamkaartRow label="Bruto uurloon (€)" compact><PrintVal>{employee.hourly_rate ? `€ ${Number(employee.hourly_rate).toFixed(2)}` : null}</PrintVal></StamkaartRow>
         </div>
       </div>
 
