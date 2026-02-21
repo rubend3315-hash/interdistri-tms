@@ -89,7 +89,7 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="grid" style={{ gridTemplateColumns: "58% 42%", gap: 10 }}>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 360px", columnGap: 24 }}>
         {/* LINKERKOLOM */}
         <div className="space-y-0">
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
@@ -113,7 +113,7 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div>
+        <div style={{ maxWidth: 360 }}>
           <div className="flex items-center justify-between" style={{ marginBottom: 2 }}>
             <span className="text-xs text-slate-600">Handtekening werknemer</span>
             <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>

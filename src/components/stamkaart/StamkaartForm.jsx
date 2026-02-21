@@ -365,7 +365,7 @@ export default function StamkaartForm({
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="grid" style={{ gridTemplateColumns: "58% 42%", gap: 12 }}>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 360px", columnGap: 24 }}>
         {/* LINKERKOLOM — Loonheffing + Financieel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4 }}>
@@ -404,22 +404,22 @@ export default function StamkaartForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4 }}>
-            <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Bijzonderheden</span>
-            <Input className={inputCls} value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
+          <div className="grid items-start" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4, paddingTop: 4 }}>
+            <span style={{ fontSize: 13, lineHeight: 1.3, paddingTop: 6 }} className="text-slate-600">Bijzonderheden</span>
+            <textarea className="text-xs px-2 py-1.5 bg-white border border-slate-400/60 shadow-none rounded-md h-16 resize-none w-full focus:outline-none focus:ring-1 focus:ring-ring" value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
           </div>
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 360 }}>
           <div className="flex items-center justify-between">
             <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Handtekening werknemer</span>
             <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
           </div>
           {lhSignatureUrl ? (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col" style={{ gap: 4 }}>
               <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 95 }} />
-              <Button variant="outline" size="sm" className="h-5 text-xs px-2 self-start mt-1" style={{ fontSize: 11 }} onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
+              <Button variant="outline" size="sm" className="h-5 text-xs px-2 self-start" style={{ fontSize: 11 }} onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
             </div>
           ) : (
             <div className="border border-slate-400/60 bg-white w-full" style={{ height: 95 }}>
@@ -431,21 +431,23 @@ export default function StamkaartForm({
 
       {/* ═══ ACTIES ═══ */}
       {!hideActions && (
-        <div className="flex items-center gap-2 border-t border-slate-200" style={{ marginTop: 8, paddingTop: 6 }}>
+        <div className="border-t border-slate-200" style={{ marginTop: 8, paddingTop: 6 }}>
           {!isOnboarding && (
-            <>
-              <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs px-3" disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
-                {saved ? "Opgeslagen ✓" : "Opslaan"}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => window.print()} className="h-7 text-xs px-3">
-                <Printer className="w-3 h-3 mr-1" /> Printen
-              </Button>
+            <div className="flex flex-col gap-1.5 items-start">
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs px-3" disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
+                  {saved ? "Opgeslagen ✓" : "Opslaan"}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => window.print()} className="h-7 text-xs px-3">
+                  <Printer className="w-3 h-3 mr-1" /> Printen
+                </Button>
+              </div>
               <Button size="sm" variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail} className="h-7 text-xs px-3">
                 {sendingEmail ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
                 Versturen naar Loonadministratie
               </Button>
-            </>
+            </div>
           )}
         </div>
       )}
