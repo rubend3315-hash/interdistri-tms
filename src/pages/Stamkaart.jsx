@@ -38,7 +38,7 @@ export default function Stamkaart() {
   if (selectedEmployee && printMode) {
     return (
       <div className="max-w-5xl mx-auto">
-        <div className="no-print flex gap-2 mb-4">
+        <div className="print:hidden flex gap-2 mb-4">
           <Button variant="outline" onClick={() => setPrintMode(false)}>
             ← Terug naar formulier
           </Button>
