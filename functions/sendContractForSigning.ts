@@ -127,6 +127,22 @@ Deno.serve(async (req) => {
       }
     } catch (_) { /* notification is optional */ }
 
+    // Audit log
+    try {
+      await base44.functions.invoke('auditService', {
+        entity_type: 'Contract',
+        entity_id: contract_id,
+        action_type: 'send',
+        category: 'Contracten',
+        description: `Contract ${contract.contract_number} ter ondertekening verzonden naar ${employeeName} (${employee.email})`,
+        performed_by_email: user.email,
+        performed_by_name: user.full_name,
+        performed_by_role: user.role,
+        target_name: `${contract.contract_number} - ${employeeName}`,
+        metadata: { contract_number: contract.contract_number, employee_email: employee.email, employee_name: employeeName },
+      });
+    } catch (_) {}
+
     return Response.json({ success: true, message: `Contract is verzonden naar ${employeeName} (${employee.email})` });
 
   } catch (error) {

@@ -187,6 +187,19 @@ Deno.serve(async (req) => {
         message_id: result.messageId || null,
         retry_count: result.attempts - 1,
       });
+      // Audit log
+      try {
+        await base44.functions.invoke('auditService', {
+          entity_type: 'EmailLog',
+          entity_id: logEntry.id,
+          action_type: resent_by ? 'resend' : 'send',
+          category: 'Communicatie',
+          description: `E-mail verzonden naar ${to}: "${finalSubject}"`,
+          performed_by_email: resent_by || sourceFunction || 'system',
+          performed_by_role: resent_by ? 'admin' : 'system',
+          metadata: { source_function: sourceFunction, to, message_id: result.messageId, attempts: result.attempts },
+        });
+      } catch (_) {}
       return Response.json({
         success: true,
         messageId: result.messageId,
@@ -199,6 +212,19 @@ Deno.serve(async (req) => {
         error_message: result.error,
         retry_count: result.attempts - 1,
       });
+      // Audit log for failure
+      try {
+        await base44.functions.invoke('auditService', {
+          entity_type: 'EmailLog',
+          entity_id: logEntry.id,
+          action_type: 'send',
+          category: 'Communicatie',
+          description: `E-mail verzending mislukt naar ${to}: "${finalSubject}"`,
+          performed_by_email: sourceFunction || 'system',
+          performed_by_role: 'system',
+          metadata: { source_function: sourceFunction, to, error: result.error, attempts: result.attempts },
+        });
+      } catch (_) {}
       return Response.json({
         success: false,
         error: result.error,

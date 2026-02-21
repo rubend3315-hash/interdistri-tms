@@ -92,6 +92,25 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Audit log for contract changes
+    try {
+      await base44.functions.invoke('auditService', {
+        entity_type: 'ContractWijziging',
+        entity_id: event?.entity_id,
+        action_type: event?.type === 'create' ? 'create' : 'update',
+        category: 'Contracten',
+        description: event?.type === 'create'
+          ? `Contractwijziging aangevraagd voor ${empName}: ${data.type_wijziging}`
+          : `Contractwijziging status gewijzigd voor ${empName}: ${old_data?.status || '-'} → ${data.status}`,
+        performed_by_email: data.aangevraagd_door || 'system',
+        performed_by_role: 'system',
+        target_name: empName,
+        old_value: old_data?.status || null,
+        new_value: data.status || null,
+        metadata: { type_wijziging: data.type_wijziging, nieuwe_waarde: data.nieuwe_waarde, ingangsdatum: data.ingangsdatum },
+      });
+    } catch (_) {}
+
     return Response.json({ success: true });
   } catch (error) {
     console.error('ContractWijziging automation error:', error);

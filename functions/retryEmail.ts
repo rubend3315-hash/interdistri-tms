@@ -51,6 +51,21 @@ Deno.serve(async (req) => {
       ...(result.data?.error ? { error_message: result.data.error } : {}),
     });
 
+    // Audit log for retry
+    try {
+      await base44.functions.invoke('auditService', {
+        entity_type: 'EmailLog',
+        entity_id: log_id,
+        action_type: 'retry',
+        category: 'Communicatie',
+        description: `E-mail retry #${newRetryCount} door ${user.email}: "${log.subject}" naar ${log.to}`,
+        performed_by_email: user.email,
+        performed_by_name: user.full_name,
+        performed_by_role: user.role,
+        metadata: { retry_count: newRetryCount, success: result.data?.success, new_log_id: result.data?.logId },
+      });
+    } catch (_) {}
+
     return Response.json({
       success: result.data?.success || false,
       retry_count: newRetryCount,

@@ -44,6 +44,20 @@ Deno.serve(async (req) => {
       source_function: 'sendStamkaartEmail',
     });
 
+    // Audit log
+    try {
+      await base44.functions.invoke('auditService', {
+        entity_type: 'Employee',
+        action_type: 'send',
+        category: 'Medewerkers',
+        description: `Stamkaart e-mail verzonden naar ${to}`,
+        performed_by_email: user.email,
+        performed_by_name: user.full_name,
+        performed_by_role: user.role,
+        metadata: { to, subject: finalSubject },
+      });
+    } catch (_) {}
+
     return Response.json(result.data);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
