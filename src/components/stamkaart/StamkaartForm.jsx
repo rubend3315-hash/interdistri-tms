@@ -363,69 +363,70 @@ export default function StamkaartForm({
         </StamkaartRow>
       </div>
 
-      {/* ═══ LOONHEFFINGSKORTING ═══ */}
-      <StamkaartSectionTitle title="Loonheffingskorting" />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <StamkaartRow label="Loonheffingskorting toepassen?">
-          <RadioGroup
-            value={lhToepassen}
-            onValueChange={val => setLh("loonheffing_toepassen", val)}
-            className="flex items-center gap-4"
-          >
-            <div className="flex items-center gap-1.5">
-              <RadioGroupItem value="ja" id="sk_lh_ja" className="w-3.5 h-3.5" />
-              <Label htmlFor="sk_lh_ja" className="text-xs cursor-pointer">Ja</Label>
+      {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
+      <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
+      <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 1fr" }}>
+        {/* LINKERKOLOM — Loonheffing + Financieel */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 32, gap: 4 }}>
+            <span className="text-xs text-slate-600">Loonheffingskorting?</span>
+            <RadioGroup
+              value={lhToepassen}
+              onValueChange={val => setLh("loonheffing_toepassen", val)}
+              className="flex items-center gap-3"
+            >
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="ja" id="sk_lh_ja" className="w-3.5 h-3.5" />
+                <Label htmlFor="sk_lh_ja" className="text-xs cursor-pointer">Ja</Label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="nee" id="sk_lh_nee" className="w-3.5 h-3.5" />
+                <Label htmlFor="sk_lh_nee" className="text-xs cursor-pointer">Nee</Label>
+              </div>
+              {!lhToepassen && (
+                <span className="text-xs text-amber-600">⚠</span>
+              )}
+            </RadioGroup>
+          </div>
+          {lhToepassen && (
+            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 32, gap: 4 }}>
+              <span className="text-xs text-slate-600">Vanaf datum</span>
+              <Input type="date" className={inputCls} value={lhDatum} onChange={e => setLh("loonheffing_datum", e.target.value)} />
             </div>
-            <div className="flex items-center gap-1.5">
-              <RadioGroupItem value="nee" id="sk_lh_nee" className="w-3.5 h-3.5" />
-              <Label htmlFor="sk_lh_nee" className="text-xs cursor-pointer">Nee</Label>
-            </div>
-            {!lhToepassen && (
-              <span className="text-xs text-amber-600 ml-2">⚠ Geen keuze</span>
-            )}
-          </RadioGroup>
-        </StamkaartRow>
-        {lhToepassen && (
-          <StamkaartRow label="Vanaf datum">
-            <Input type="date" className={inputCls} value={lhDatum} onChange={e => setLh("loonheffing_datum", e.target.value)} />
-          </StamkaartRow>
-        )}
-      </div>
-
-      {/* ═══ FINANCIËLE SITUATIE ═══ */}
-      <StamkaartSectionTitle title="Financiële situatie" />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <StamkaartRow label="LKV (WW, WAO, WIA)?">
-          <Select value={data.lkv_uitkering || "nee"} onValueChange={v => update("lkv_uitkering", v)}>
-            <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ja">Ja, doelgroep verklaring aanvragen</SelectItem>
-              <SelectItem value="nee">Nee</SelectItem>
-            </SelectContent>
-          </Select>
-        </StamkaartRow>
-        <StamkaartRow label="Bijzonderheden">
-          <Input className={inputCls} value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventuele bijzonderheden..." />
-        </StamkaartRow>
-      </div>
-
-      {/* ═══ HANDTEKENING ═══ */}
-      <StamkaartSectionTitle title="Ondertekening" />
-      <div className="mt-1">
-        <div className="flex items-end gap-4 mb-1">
-          <span className="text-xs text-slate-600">Handtekening werknemer</span>
-          <span className="text-xs text-slate-600">Datum: <span className="text-slate-800">{new Date().toLocaleDateString('nl-NL')}</span></span>
+          )}
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 32, gap: 4 }}>
+            <span className="text-xs text-slate-600">LKV (WW, WAO, WIA)?</span>
+            <Select value={data.lkv_uitkering || "nee"} onValueChange={v => update("lkv_uitkering", v)}>
+              <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ja">Ja, doelgroepverklaring</SelectItem>
+                <SelectItem value="nee">Nee</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 32, gap: 4 }}>
+            <span className="text-xs text-slate-600">Bijzonderheden</span>
+            <Input className={inputCls} value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
+          </div>
         </div>
-        {lhSignatureUrl ? (
-          <div className="flex items-center gap-3">
-            <img src={lhSignatureUrl} alt="Handtekening" className="border" style={{ height: 110 }} />
-            <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
+
+        {/* RECHTERKOLOM — Handtekening */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-600">Handtekening werknemer</span>
+            <span className="text-xs text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
           </div>
-        ) : (
-          <div className="border border-slate-300 bg-white" style={{ height: 110 }}>
-            <SignatureCanvas onSign={handleSignature} />
-          </div>
-        )}
+          {lhSignatureUrl ? (
+            <div className="flex flex-col gap-1">
+              <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-300 w-full object-contain" style={{ height: 100 }} />
+              <Button variant="outline" size="sm" className="h-6 text-xs px-2 self-start" onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
+            </div>
+          ) : (
+            <div className="border border-slate-300 bg-white w-full" style={{ height: 100 }}>
+              <SignatureCanvas onSign={handleSignature} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ═══ ACTIES ═══ */}
