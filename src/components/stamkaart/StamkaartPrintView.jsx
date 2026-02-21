@@ -87,34 +87,44 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
         <StamkaartRow label="Bruto uurloon (€)"><PrintVal>{employee.hourly_rate ? `€ ${Number(employee.hourly_rate).toFixed(2)}` : null}</PrintVal></StamkaartRow>
       </div>
 
-      {/* ═══ LOONHEFFINGSKORTING ═══ */}
-      <StamkaartSectionTitle title="Loonheffingskorting" />
-      <div className="space-y-0">
-        <StamkaartRow label="Loonheffingskorting toepassen?"><PrintVal>{lhLabel}</PrintVal></StamkaartRow>
-        {lhToepassen && <StamkaartRow label="Vanaf datum"><PrintVal>{fmtDate(lhDatum)}</PrintVal></StamkaartRow>}
-      </div>
-
-      {/* ═══ FINANCIËLE SITUATIE ═══ */}
-      <StamkaartSectionTitle title="Financiële situatie" />
-      <div className="space-y-0">
-        <StamkaartRow label="LKV (WW, WAO, WIA)?"><PrintVal>{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Bijzonderheden"><PrintVal>{employee.financiele_situatie}</PrintVal></StamkaartRow>
-      </div>
-
-      {/* ═══ ONDERTEKENING ═══ */}
-      <StamkaartSectionTitle title="Ondertekening" />
-      <div className="grid items-start gap-2 mt-1" style={{ gridTemplateColumns: "1fr 1fr" }}>
-        <div>
-          <span className="text-xs text-slate-600 block mb-1">Handtekening werknemer</span>
-          {lhSignatureUrl ? (
-            <img src={lhSignatureUrl} alt="Handtekening" className="h-12 border" />
-          ) : (
-            <span className="text-xs text-slate-400 italic">Niet getekend</span>
+      {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
+      <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
+      <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 1fr" }}>
+        {/* LINKERKOLOM */}
+        <div className="space-y-0">
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28 }}>
+            <span className="text-xs text-slate-600">Loonheffingskorting?</span>
+            <PrintVal>{lhLabel}</PrintVal>
+          </div>
+          {lhToepassen && (
+            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28 }}>
+              <span className="text-xs text-slate-600">Vanaf datum</span>
+              <PrintVal>{fmtDate(lhDatum)}</PrintVal>
+            </div>
           )}
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28 }}>
+            <span className="text-xs text-slate-600">LKV (WW, WAO, WIA)?</span>
+            <PrintVal>{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</PrintVal>
+          </div>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28 }}>
+            <span className="text-xs text-slate-600">Bijzonderheden</span>
+            <PrintVal>{employee.financiele_situatie}</PrintVal>
+          </div>
         </div>
+
+        {/* RECHTERKOLOM — Handtekening */}
         <div>
-          <span className="text-xs text-slate-600 block mb-1">Datum</span>
-          <span className="text-xs text-slate-800">{fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-slate-600">Handtekening werknemer</span>
+            <span className="text-xs text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
+          </div>
+          {lhSignatureUrl ? (
+            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-300 w-full object-contain" style={{ height: 100 }} />
+          ) : (
+            <div className="border border-slate-300 flex items-center justify-center" style={{ height: 100 }}>
+              <span className="text-xs text-slate-400 italic">Niet getekend</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
