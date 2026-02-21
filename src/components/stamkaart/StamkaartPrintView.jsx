@@ -38,9 +38,9 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
     : (employee.drivers_license_categories || "");
 
   return (
-    <div className="mx-auto bg-white" style={{ maxWidth: 880, fontSize: "10pt" }}>
+    <div className="mx-auto bg-white" style={{ maxWidth: 800, fontSize: "10pt", lineHeight: 1.35 }}>
       {/* Company header */}
-      <div className="flex items-start justify-between border-b-2 border-slate-800 pb-1 mb-2">
+      <div className="flex items-start justify-between border-b-2 border-slate-800" style={{ paddingBottom: 2, marginBottom: 4 }}>
         <div>
           <span className="text-sm font-bold text-slate-800">Stamkaart werknemers</span>
           <br />
@@ -89,24 +89,24 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <div className="grid" style={{ gridTemplateColumns: "58% 42%", gap: 10 }}>
         {/* LINKERKOLOM */}
         <div className="space-y-0">
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 24 }}>
             <span className="text-xs text-slate-600">Loonheffingskorting?</span>
             <PrintVal>{lhLabel}</PrintVal>
           </div>
           {lhToepassen && (
-            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28 }}>
+            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 24 }}>
               <span className="text-xs text-slate-600">Vanaf datum</span>
               <PrintVal>{fmtDate(lhDatum)}</PrintVal>
             </div>
           )}
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 24 }}>
             <span className="text-xs text-slate-600">LKV (WW, WAO, WIA)?</span>
             <PrintVal>{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</PrintVal>
           </div>
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 24 }}>
             <span className="text-xs text-slate-600">Bijzonderheden</span>
             <PrintVal>{employee.financiele_situatie}</PrintVal>
           </div>
@@ -114,14 +114,14 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
 
         {/* RECHTERKOLOM — Handtekening */}
         <div>
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between" style={{ marginBottom: 2 }}>
             <span className="text-xs text-slate-600">Handtekening werknemer</span>
-            <span className="text-xs text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
+            <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
           </div>
           {lhSignatureUrl ? (
-            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-300 w-full object-contain" style={{ height: 100 }} />
+            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-300 w-full object-contain" style={{ height: 90 }} />
           ) : (
-            <div className="border border-slate-300 flex items-center justify-center" style={{ height: 100 }}>
+            <div className="border border-slate-300 flex items-center justify-center" style={{ height: 90 }}>
               <span className="text-xs text-slate-400 italic">Niet getekend</span>
             </div>
           )}

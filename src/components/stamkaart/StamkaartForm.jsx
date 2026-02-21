@@ -29,23 +29,24 @@ export const STAMKAART_REQUIRED_FIELDS = [
 // ── Shared sub-components (also exported for print view) ──
 export function StamkaartRow({ label, required, children }) {
   return (
-    <div className="grid items-center" style={{ gridTemplateColumns: "30% 70%", minHeight: 32, gap: 4 }}>
-      <span className="text-xs text-slate-600 truncate">{label}{required && " *"}</span>
-      <div className="min-h-[26px] flex items-center">{children}</div>
+    <div className="grid items-center" style={{ gridTemplateColumns: "30% 70%", minHeight: 28, gap: 4 }}>
+      <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600 truncate">{label}{required && " *"}</span>
+      <div className="min-h-[24px] flex items-center">{children}</div>
     </div>
   );
 }
 
 export function StamkaartSectionTitle({ title }) {
   return (
-    <div className="border-b border-slate-300 pb-0 mt-2 mb-0.5">
-      <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">{title}</span>
+    <div className="border-b border-slate-200" style={{ marginTop: 6, marginBottom: 2, paddingBottom: 1 }}>
+      <span style={{ fontSize: 11 }} className="font-semibold text-slate-700 uppercase tracking-wide">{title}</span>
     </div>
   );
 }
 
-const inputCls = "h-7 text-xs px-2 py-0 border-slate-300";
-const inputErr = "h-7 text-xs px-2 py-0 border-red-400";
+const inputCls = "text-xs px-2 py-0 border-slate-300";
+const inputErr = "text-xs px-2 py-0 border-red-400";
+const inputStyle = { height: 28 };
 
 /**
  * StamkaartForm — single source of truth for stamkaart layout
@@ -233,16 +234,16 @@ export default function StamkaartForm({
     : getFullName(data);
 
   return (
-    <div className="mx-auto" style={{ maxWidth: 880 }}>
+    <div className="mx-auto" style={{ maxWidth: 820, lineHeight: 1.35 }}>
       {/* Header */}
-      <div className="flex items-center justify-between border-b-2 border-slate-800 pb-1 mb-2">
+      <div className="flex items-center justify-between border-b-2 border-slate-800" style={{ paddingBottom: 2, marginBottom: 4 }}>
         <span className="text-sm font-bold text-slate-800">Stamkaart werknemers — {fullName || '(nieuw)'}</span>
         <span className="text-xs text-slate-500">Nr. {data.employee_number || '—'}</span>
       </div>
 
       {/* Validation */}
       {showErrors && missingFields.length > 0 && (
-        <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 border border-red-200 px-3 py-1.5 mb-2">
+        <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 border border-red-200 px-2 py-1" style={{ marginBottom: 4 }}>
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>Verplichte velden ontbreken: {missingFields.map(f => f.label).join(', ')}</span>
         </div>
@@ -315,7 +316,7 @@ export default function StamkaartForm({
         </StamkaartRow>
         <StamkaartRow label="Afdeling" required>
           <Select value={data.department || ""} onValueChange={v => update("department", v)}>
-            <SelectTrigger className={`h-7 text-xs ${fieldError("department") ? "border-red-400" : "border-slate-300"}`}><SelectValue /></SelectTrigger>
+            <SelectTrigger style={inputStyle} className={`text-xs ${fieldError("department") ? "border-red-400" : "border-slate-300"}`}><SelectValue /></SelectTrigger>
             <SelectContent>
               {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.label}</SelectItem>)}
             </SelectContent>
@@ -323,7 +324,7 @@ export default function StamkaartForm({
         </StamkaartRow>
         <StamkaartRow label="Functie">
           <Select value={data.function || '_none'} onValueChange={v => update("function", v === '_none' ? '' : v)}>
-            <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue placeholder="Selecteer" /></SelectTrigger>
+            <SelectTrigger style={inputStyle} className="text-xs border-slate-300"><SelectValue placeholder="Selecteer" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="_none" disabled>Selecteer</SelectItem>
               {functions.map(f => <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>)}
@@ -332,7 +333,7 @@ export default function StamkaartForm({
         </StamkaartRow>
         <StamkaartRow label="Contract type">
           <Select value={data.contract_type || "Tijdelijk"} onValueChange={v => update("contract_type", v)}>
-            <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue /></SelectTrigger>
+            <SelectTrigger style={inputStyle} className="text-xs border-slate-300"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
               <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
@@ -348,7 +349,7 @@ export default function StamkaartForm({
             <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Laden...</span>
           ) : (
             <Select value={currentScaleKey} onValueChange={handleScaleChange}>
-              <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue placeholder="Kies" /></SelectTrigger>
+              <SelectTrigger style={inputStyle} className="text-xs border-slate-300"><SelectValue placeholder="Kies" /></SelectTrigger>
               <SelectContent className="max-h-64">
                 {scaleOptions.map(st => {
                   const key = `${st.scale}|${st.step}`;
@@ -365,11 +366,11 @@ export default function StamkaartForm({
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <div className="grid" style={{ gridTemplateColumns: "58% 42%", gap: 12 }}>
         {/* LINKERKOLOM — Loonheffing + Financieel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 32, gap: 4 }}>
-            <span className="text-xs text-slate-600">Loonheffingskorting?</span>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28, gap: 4 }}>
+            <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Loonheffingskorting?</span>
             <RadioGroup
               value={lhToepassen}
               onValueChange={val => setLh("loonheffing_toepassen", val)}
@@ -389,40 +390,40 @@ export default function StamkaartForm({
             </RadioGroup>
           </div>
           {lhToepassen && (
-            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 32, gap: 4 }}>
-              <span className="text-xs text-slate-600">Vanaf datum</span>
+            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28, gap: 4 }}>
+              <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Vanaf datum</span>
               <Input type="date" className={inputCls} value={lhDatum} onChange={e => setLh("loonheffing_datum", e.target.value)} />
             </div>
           )}
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 32, gap: 4 }}>
-            <span className="text-xs text-slate-600">LKV (WW, WAO, WIA)?</span>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28, gap: 4 }}>
+            <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">LKV (WW, WAO, WIA)?</span>
             <Select value={data.lkv_uitkering || "nee"} onValueChange={v => update("lkv_uitkering", v)}>
-              <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue /></SelectTrigger>
+              <SelectTrigger style={inputStyle} className="text-xs border-slate-300"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ja">Ja, doelgroepverklaring</SelectItem>
                 <SelectItem value="nee">Nee</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 32, gap: 4 }}>
-            <span className="text-xs text-slate-600">Bijzonderheden</span>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28, gap: 4 }}>
+            <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Bijzonderheden</span>
             <Input className={inputCls} value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
           </div>
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-600">Handtekening werknemer</span>
-            <span className="text-xs text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
+            <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Handtekening werknemer</span>
+            <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
           </div>
           {lhSignatureUrl ? (
             <div className="flex flex-col gap-1">
-              <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-300 w-full object-contain" style={{ height: 100 }} />
-              <Button variant="outline" size="sm" className="h-6 text-xs px-2 self-start" onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
+              <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-300 w-full object-contain" style={{ height: 95 }} />
+              <Button variant="outline" size="sm" className="h-5 text-xs px-2 self-start" style={{ fontSize: 11 }} onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
             </div>
           ) : (
-            <div className="border border-slate-300 bg-white w-full" style={{ height: 100 }}>
+            <div className="border border-slate-300 bg-white w-full" style={{ height: 95 }}>
               <SignatureCanvas onSign={handleSignature} />
             </div>
           )}
@@ -431,7 +432,7 @@ export default function StamkaartForm({
 
       {/* ═══ ACTIES ═══ */}
       {!hideActions && (
-        <div className="flex items-center gap-2 border-t border-slate-300 mt-3 pt-2">
+        <div className="flex items-center gap-2 border-t border-slate-200" style={{ marginTop: 8, paddingTop: 6 }}>
           {!isOnboarding && (
             <>
               <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs px-3" disabled={saveMutation.isPending}>
