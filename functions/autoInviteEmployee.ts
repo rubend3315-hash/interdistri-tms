@@ -1,3 +1,11 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║ FUNCTION TYPE: SYSTEM_LEVEL                                     ║
+// ║ Called by: Entity automation (Employee create/update)            ║
+// ║ Auth: None (automation-triggered, no user session)               ║
+// ║ Tenant: Must receive tenant_id via entity data                   ║
+// ║ Uses asServiceRole — required for system-level automation.       ║
+// ║ Do not mix user session and service role access.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Helper: send email via Gmail API

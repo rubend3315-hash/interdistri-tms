@@ -1,3 +1,10 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║ FUNCTION TYPE: USER_FACING                                      ║
+// ║ Called by: Admin via frontend (Contracts page)                   ║
+// ║ Auth: User session (admin only)                                  ║
+// ║ DO NOT USE RAW ENTITY CALLS — USE tenantService for tenant data  ║
+// ║ Do not mix user session and service role access.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 function formatDate(dateStr) {
