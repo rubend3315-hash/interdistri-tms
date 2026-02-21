@@ -45,9 +45,15 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
     let tempEmpId = onboardingData._temp_employee_id;
     if (!tempEmpId) {
       const empPayload = buildEmployeePayload();
+      empPayload.status = "concept";
       const tempEmp = await base44.entities.Employee.create(empPayload);
       tempEmpId = tempEmp.id;
       onChange({ ...onboardingData, _temp_employee_id: tempEmpId });
+    } else {
+      // Update temp employee with latest data
+      const empPayload = buildEmployeePayload();
+      empPayload.status = "concept";
+      await base44.entities.Employee.update(tempEmpId, empPayload);
     }
 
     const res = await base44.functions.invoke('generateContract', {

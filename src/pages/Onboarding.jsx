@@ -83,11 +83,13 @@ export default function Onboarding() {
 
     let employee;
 
-    // If a temp employee was created for preview, reuse it
+    // If a temp employee was created for preview, update it and set status to Actief
     if (onboardingData._temp_employee_id) {
+      empPayload.status = "Actief";
       await base44.entities.Employee.update(onboardingData._temp_employee_id, empPayload);
       employee = { id: onboardingData._temp_employee_id };
     } else {
+      empPayload.status = "Actief";
       employee = await base44.entities.Employee.create(empPayload);
     }
 
@@ -164,7 +166,32 @@ export default function Onboarding() {
               {employeeName || "Vul de gegevens in om te starten"}
             </p>
           </div>
-          <Button variant="outline" onClick={() => setWizardOpen(false)}>Annuleren</Button>
+          <Button variant="outline" onClick={async () => {
+          // Cleanup temp employee if created during preview
+          if (onboardingData._temp_employee_id) {
+            await base44.entities.Employee.delete(onboardingData._temp_employee_id);
+          }
+          setWizardOpen(false);
+          setCurrentStep(1);
+          setCreatedEmployeeId(null);
+          setEmployeeData({
+            first_name: "", last_name: "", prefix: "", initials: "", email: "", phone: "",
+            date_of_birth: "", bsn: "", bank_account: "", address: "", postal_code: "", city: "",
+            department: "PakketDistributie", function: "", in_service_since: "", employee_number: "",
+            mobile_entry_type: "single_day", emergency_contact_name: "", emergency_contact_phone: "",
+            photo_url: "", drivers_license_number: "", drivers_license_categories: "",
+            drivers_license_expiry: "", code95_expiry: "", contract_type: "Tijdelijk",
+            contract_hours: 40, salary_scale: "", hourly_rate: "", status: "Actief",
+            is_chauffeur: true, tonen_in_planner: true, opnemen_in_loonrapport: true,
+          });
+          setOnboardingData({
+            pincode_sleutelkast: "", pincode_verklaring_signed: false,
+            sleutel_verklaring_signed: false, sleutel_nummer: "", sleutel_toegang: "",
+            gps_buddy_toestemming: false, dienstbetrekking_signed: false,
+            bedrijfsreglement_ontvangen: false, contract_generated: false,
+            mobile_invite_sent: false, employee_signature_url: "",
+          });
+        }}>Annuleren</Button>
         </div>
 
         <OnboardingStepIndicator currentStep={currentStep} onStepClick={setCurrentStep} />
