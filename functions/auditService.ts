@@ -18,10 +18,15 @@ function sanitizeMetadata(obj) {
   return clean;
 }
 
+const WRITE_SECRET = 'auditService_internal_v1';
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    const body = await req.json();
+
+    // Block direct SDK writes — only this function may create AuditLog entries
     const {
       entity_type,
       entity_id,
@@ -36,7 +41,7 @@ Deno.serve(async (req) => {
       new_value,
       metadata,
       correlation_id,
-    } = await req.json();
+    } = body;
 
     if (!action_type || !category || !description) {
       return Response.json({ error: 'Missing required: action_type, category, description' }, { status: 400 });
