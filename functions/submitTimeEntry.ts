@@ -243,8 +243,16 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'EMPLOYEE_NOT_FOUND', message: 'Geen medewerker voor dit account' }, { status: 403 });
     }
     const employee = employees[0];
-    if (employee.status !== 'Actief') {
-      return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: `Medewerker is ${employee.status.toLowerCase()} — alleen actieve medewerkers mogen indienen` }, { status: 403 });
+    if (employee.out_of_service_date) {
+      const exitDate = new Date(employee.out_of_service_date);
+      exitDate.setHours(0, 0, 0, 0);
+      const graceEnd = new Date(exitDate);
+      graceEnd.setDate(graceEnd.getDate() + 7);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (today > graceEnd) {
+        return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: 'Je dienstverband is beëindigd en de grace-periode is verlopen.' }, { status: 403 });
+      }
     }
     const empId = employee.id;
 
