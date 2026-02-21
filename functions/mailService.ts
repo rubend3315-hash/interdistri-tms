@@ -172,6 +172,7 @@ Deno.serve(async (req) => {
       source_function: sourceFunction || 'mailService',
       sent_at: new Date().toISOString(),
       retry_count: 0,
+      idempotency_key: idempotencyKey,
       ...(resent_by ? { resent_by } : {}),
       ...(original_log_id ? { original_log_id } : {}),
     });
