@@ -233,7 +233,7 @@ export default function StamkaartForm({
     : getFullName(data);
 
   return (
-    <div className="mx-auto" style={{ maxWidth: 820, lineHeight: 1.35 }}>
+    <div className="mx-auto" style={{ maxWidth: 780, lineHeight: 1.35 }}>
       {/* Header */}
       <div className="flex items-center justify-between border-b-2 border-slate-800" style={{ paddingBottom: 2, marginBottom: 4 }}>
         <span className="text-sm font-bold text-slate-800">Stamkaart werknemers — {fullName || '(nieuw)'}</span>
@@ -309,7 +309,7 @@ export default function StamkaartForm({
 
       {/* ═══ DIENSTVERBAND ═══ */}
       <StamkaartSectionTitle title="Gegevens dienstverband" />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div className="grid grid-cols-2" style={{ columnGap: 24, rowGap: 2 }}>
         <StamkaartRow label="Datum in dienst">
           <Input type="date" className={inputCls} value={data.in_service_since || ""} onChange={e => update("in_service_since", e.target.value)} />
         </StamkaartRow>
@@ -340,7 +340,7 @@ export default function StamkaartForm({
             </SelectContent>
           </Select>
         </StamkaartRow>
-        <StamkaartRow label="Contracturen per week">
+        <StamkaartRow label="Contracturen">
           <Input type="number" className={inputCls} value={data.contract_hours || ""} onChange={e => update("contract_hours", Number(e.target.value))} />
         </StamkaartRow>
         <StamkaartRow label="Loonschaal">
@@ -365,7 +365,7 @@ export default function StamkaartForm({
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="grid" style={{ gridTemplateColumns: "1fr 360px", columnGap: 24 }}>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 320px", columnGap: 24 }}>
         {/* LINKERKOLOM — Loonheffing + Financieel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4 }}>
@@ -411,18 +411,18 @@ export default function StamkaartForm({
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 360 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 320 }}>
           <div className="flex items-center justify-between">
             <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Handtekening werknemer</span>
             <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
           </div>
           {lhSignatureUrl ? (
             <div className="flex flex-col" style={{ gap: 4 }}>
-              <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 95 }} />
+              <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 90 }} />
               <Button variant="outline" size="sm" className="h-5 text-xs px-2 self-start" style={{ fontSize: 11 }} onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
             </div>
           ) : (
-            <div className="border border-slate-400/60 bg-white w-full" style={{ height: 95 }}>
+            <div className="border border-slate-400/60 bg-white w-full" style={{ height: 90 }}>
               <SignatureCanvas onSign={handleSignature} />
             </div>
           )}

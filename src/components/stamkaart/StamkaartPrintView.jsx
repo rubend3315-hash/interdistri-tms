@@ -38,7 +38,7 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
     : (employee.drivers_license_categories || "");
 
   return (
-    <div className="mx-auto bg-white" style={{ maxWidth: 800, fontSize: "10pt", lineHeight: 1.35, paddingBottom: 4 }}>
+    <div className="mx-auto bg-white" style={{ maxWidth: 780, fontSize: "10pt", lineHeight: 1.35, paddingBottom: 4 }}>
       {/* Company header */}
       <div className="flex items-start justify-between border-b-2 border-slate-800" style={{ paddingBottom: 2, marginBottom: 4 }}>
         <div>
@@ -77,19 +77,19 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
 
       {/* ═══ DIENSTVERBAND ═══ */}
       <StamkaartSectionTitle title="Gegevens dienstverband" />
-      <div className="space-y-0">
+      <div className="grid grid-cols-2" style={{ columnGap: 24, rowGap: 0 }}>
         <StamkaartRow label="Datum in dienst"><PrintVal>{fmtDate(employee.in_service_since)}</PrintVal></StamkaartRow>
         <StamkaartRow label="Afdeling"><PrintVal>{employee.department}</PrintVal></StamkaartRow>
         <StamkaartRow label="Functie"><PrintVal>{employee.function}</PrintVal></StamkaartRow>
         <StamkaartRow label="Contract type"><PrintVal>{employee.contract_type}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Contracturen per week"><PrintVal>{employee.contract_hours ? `${employee.contract_hours} uur` : null}</PrintVal></StamkaartRow>
+        <StamkaartRow label="Contracturen"><PrintVal>{employee.contract_hours ? `${employee.contract_hours} uur` : null}</PrintVal></StamkaartRow>
         <StamkaartRow label="Loonschaal"><PrintVal>{employee.salary_scale}</PrintVal></StamkaartRow>
         <StamkaartRow label="Bruto uurloon (€)"><PrintVal>{employee.hourly_rate ? `€ ${Number(employee.hourly_rate).toFixed(2)}` : null}</PrintVal></StamkaartRow>
       </div>
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="grid" style={{ gridTemplateColumns: "1fr 360px", columnGap: 24 }}>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 320px", columnGap: 24 }}>
         {/* LINKERKOLOM */}
         <div className="space-y-0">
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
@@ -113,15 +113,15 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div style={{ maxWidth: 360 }}>
+        <div style={{ maxWidth: 320 }}>
           <div className="flex items-center justify-between" style={{ marginBottom: 2 }}>
             <span className="text-xs text-slate-600">Handtekening werknemer</span>
             <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
           </div>
           {lhSignatureUrl ? (
-            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 85 }} />
+            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 80 }} />
           ) : (
-            <div className="border border-slate-400/60 bg-white flex items-center justify-center" style={{ height: 85 }}>
+            <div className="border border-slate-400/60 bg-white flex items-center justify-center" style={{ height: 80 }}>
               <span className="text-xs text-slate-400 italic">Niet getekend</span>
             </div>
           )}
