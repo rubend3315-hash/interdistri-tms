@@ -57,22 +57,31 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
       {/* ═══ WERKNEMER GEGEVENS ═══ */}
       <StamkaartSectionTitle title="Werknemer gegevens" />
       <div className="space-y-0">
-        <StamkaartRow label="Voorletters / voornaam"><PrintVal>{employee.first_name}</PrintVal></StamkaartRow>
+        <StamkaartRow label="Voorletters"><PrintVal>{employee.initials}</PrintVal></StamkaartRow>
+        <StamkaartRow label="Voornaam"><PrintVal>{employee.first_name}</PrintVal></StamkaartRow>
+        <StamkaartRow label="Tussenvoegsel"><PrintVal>{employee.prefix}</PrintVal></StamkaartRow>
         <StamkaartRow label="Achternaam"><PrintVal>{employee.last_name}</PrintVal></StamkaartRow>
         <StamkaartRow label="Geboortedatum"><PrintVal>{fmtDate(employee.date_of_birth)}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Burger Service Nummer"><PrintVal>{employee.bsn}</PrintVal></StamkaartRow>
         <StamkaartRow label="Adres"><PrintVal>{employee.address}</PrintVal></StamkaartRow>
         <StamkaartRow label="Postcode en woonplaats"><PrintVal>{employee.postal_code} {employee.city}</PrintVal></StamkaartRow>
         <StamkaartRow label="E-mailadres"><PrintVal>{employee.email}</PrintVal></StamkaartRow>
-        <StamkaartRow label="IBAN-rekeningnummer"><PrintVal>{employee.bank_account}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Nummer ID-kaart / paspoort"><PrintVal>{employee.id_document_number}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Geldigheid ID-kaart / paspoort"><PrintVal>{fmtDate(employee.id_document_expiry)}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Rijbewijsnummer"><PrintVal>{employee.drivers_license_number}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Rijbewijscategorieën"><PrintVal>{cats}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Rijbewijs vervaldatum"><PrintVal>{fmtDate(employee.drivers_license_expiry)}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Code 95 vervaldatum"><PrintVal>{fmtDate(employee.code95_expiry)}</PrintVal></StamkaartRow>
         <StamkaartRow label="Telefoon"><PrintVal>{employee.phone}</PrintVal></StamkaartRow>
+        <StamkaartRow label="IBAN"><PrintVal>{employee.bank_account}</PrintVal></StamkaartRow>
         <StamkaartRow label="Noodcontact (naam / telefoon)"><PrintVal>{employee.emergency_contact_name} {employee.emergency_contact_phone}</PrintVal></StamkaartRow>
+      </div>
+
+      {/* ═══ IDENTITEITSBEWIJS ═══ */}
+      <StamkaartSectionTitle title="Identiteitsbewijs" />
+      <div className="space-y-0">
+        <StamkaartRow label="Burger Service Nummer"><PrintVal>{employee.bsn}</PrintVal></StamkaartRow>
+        <StamkaartRow label="Nr. ID-kaart/paspoort | Geldig tot"><PrintVal>{employee.id_document_number} — {fmtDate(employee.id_document_expiry)}</PrintVal></StamkaartRow>
+      </div>
+
+      {/* ═══ RIJBEWIJS ═══ */}
+      <StamkaartSectionTitle title="Rijbewijs" />
+      <div className="space-y-0">
+        <StamkaartRow label="Rijbewijsnummer | Categorieën"><PrintVal>{employee.drivers_license_number} — {cats}</PrintVal></StamkaartRow>
+        <StamkaartRow label="Vervaldatum | Code 95 verval"><PrintVal>{fmtDate(employee.drivers_license_expiry)} — {fmtDate(employee.code95_expiry)}</PrintVal></StamkaartRow>
       </div>
 
       {/* ═══ DIENSTVERBAND ═══ */}

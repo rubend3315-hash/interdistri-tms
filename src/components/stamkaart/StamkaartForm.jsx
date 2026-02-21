@@ -251,17 +251,20 @@ export default function StamkaartForm({
       {/* ═══ WERKNEMER GEGEVENS ═══ */}
       <StamkaartSectionTitle title="Werknemer gegevens" />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <StamkaartRow label="Voorletters / voornaam" required>
+        <StamkaartRow label="Voorletters">
+          <Input className={inputCls} value={data.initials || ""} onChange={e => update("initials", e.target.value)} placeholder="bijv. J.A." />
+        </StamkaartRow>
+        <StamkaartRow label="Voornaam" required>
           <Input className={fieldError("first_name") ? inputErr : inputCls} value={data.first_name || ""} onChange={e => update("first_name", e.target.value)} />
+        </StamkaartRow>
+        <StamkaartRow label="Tussenvoegsel">
+          <Input className={inputCls} value={data.prefix || ""} onChange={e => update("prefix", e.target.value)} placeholder="bijv. van, de" />
         </StamkaartRow>
         <StamkaartRow label="Achternaam" required>
           <Input className={fieldError("last_name") ? inputErr : inputCls} value={data.last_name || ""} onChange={e => update("last_name", e.target.value)} />
         </StamkaartRow>
         <StamkaartRow label="Geboortedatum" required>
           <Input type="date" className={fieldError("date_of_birth") ? inputErr : inputCls} value={data.date_of_birth || ""} onChange={e => update("date_of_birth", e.target.value)} />
-        </StamkaartRow>
-        <StamkaartRow label="Burger Service Nummer" required>
-          <Input className={fieldError("bsn") ? inputErr : inputCls} value={data.bsn || ""} onChange={e => update("bsn", e.target.value)} />
         </StamkaartRow>
         <StamkaartRow label="Adres" required>
           <Input className={fieldError("address") ? inputErr : inputCls} value={data.address || ""} onChange={e => update("address", e.target.value)} />
@@ -275,34 +278,47 @@ export default function StamkaartForm({
         <StamkaartRow label="E-mailadres" required>
           <Input type="email" className={fieldError("email") ? inputErr : inputCls} value={data.email || ""} onChange={e => update("email", e.target.value)} />
         </StamkaartRow>
-        <StamkaartRow label="IBAN / Telefoon" required>
-          <div className="flex gap-1 w-full">
-            <Input className={fieldError("bank_account") ? inputErr : inputCls} style={{ width: '55%' }} value={data.bank_account || ""} onChange={e => update("bank_account", e.target.value)} placeholder="IBAN *" />
-            <Input className={inputCls} style={{ width: '45%' }} value={data.phone || ""} onChange={e => update("phone", e.target.value)} placeholder="Telefoon" />
-          </div>
+        <StamkaartRow label="Telefoon">
+          <Input className={inputCls} value={data.phone || ""} onChange={e => update("phone", e.target.value)} />
         </StamkaartRow>
-        <StamkaartRow label="Nummer ID-kaart / paspoort" required>
-          <Input className={fieldError("id_document_number") ? inputErr : inputCls} value={data.id_document_number || ""} onChange={e => update("id_document_number", e.target.value)} />
-        </StamkaartRow>
-        <StamkaartRow label="Geldig ID / Rijbewijs verval" required>
-          <div className="flex gap-1 w-full">
-            <Input type="date" className={fieldError("id_document_expiry") ? inputErr : inputCls} style={{ width: '50%' }} value={data.id_document_expiry || ""} onChange={e => update("id_document_expiry", e.target.value)} />
-            <Input type="date" className={inputCls} style={{ width: '50%' }} value={data.drivers_license_expiry || ""} onChange={e => update("drivers_license_expiry", e.target.value)} />
-          </div>
-        </StamkaartRow>
-        <StamkaartRow label="Rijbewijsnr / categorieën">
-          <div className="flex gap-1 w-full">
-            <Input className={inputCls} style={{ width: '50%' }} value={data.drivers_license_number || ""} onChange={e => update("drivers_license_number", e.target.value)} placeholder="Nummer" />
-            <Input className={inputCls} style={{ width: '50%' }} value={data.drivers_license_categories || ""} onChange={e => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
-          </div>
-        </StamkaartRow>
-        <StamkaartRow label="Code 95 vervaldatum">
-          <Input type="date" className={inputCls} value={data.code95_expiry || ""} onChange={e => update("code95_expiry", e.target.value)} />
+        <StamkaartRow label="IBAN" required>
+          <Input className={fieldError("bank_account") ? inputErr : inputCls} value={data.bank_account || ""} onChange={e => update("bank_account", e.target.value)} />
         </StamkaartRow>
         <StamkaartRow label="Noodcontact (naam / telefoon)">
           <div className="flex gap-1 w-full">
             <Input className={inputCls} style={{ width: '50%' }} value={data.emergency_contact_name || ""} onChange={e => update("emergency_contact_name", e.target.value)} placeholder="Naam" />
             <Input className={inputCls} style={{ width: '50%' }} value={data.emergency_contact_phone || ""} onChange={e => update("emergency_contact_phone", e.target.value)} placeholder="Telefoon" />
+          </div>
+        </StamkaartRow>
+      </div>
+
+      {/* ═══ IDENTITEITSBEWIJS ═══ */}
+      <StamkaartSectionTitle title="Identiteitsbewijs" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <StamkaartRow label="Burger Service Nummer" required>
+          <Input className={fieldError("bsn") ? inputErr : inputCls} value={data.bsn || ""} onChange={e => update("bsn", e.target.value)} />
+        </StamkaartRow>
+        <StamkaartRow label="Nr. ID-kaart/paspoort | Geldig tot" required>
+          <div className="flex gap-1 w-full">
+            <Input className={fieldError("id_document_number") ? inputErr : inputCls} style={{ width: '55%' }} value={data.id_document_number || ""} onChange={e => update("id_document_number", e.target.value)} placeholder="Documentnummer" />
+            <Input type="date" className={fieldError("id_document_expiry") ? inputErr : inputCls} style={{ width: '45%' }} value={data.id_document_expiry || ""} onChange={e => update("id_document_expiry", e.target.value)} />
+          </div>
+        </StamkaartRow>
+      </div>
+
+      {/* ═══ RIJBEWIJS ═══ */}
+      <StamkaartSectionTitle title="Rijbewijs" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <StamkaartRow label="Rijbewijsnummer | Categorieën">
+          <div className="flex gap-1 w-full">
+            <Input className={inputCls} style={{ width: '55%' }} value={data.drivers_license_number || ""} onChange={e => update("drivers_license_number", e.target.value)} placeholder="Nummer" />
+            <Input className={inputCls} style={{ width: '45%' }} value={data.drivers_license_categories || ""} onChange={e => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
+          </div>
+        </StamkaartRow>
+        <StamkaartRow label="Vervaldatum | Code 95 verval">
+          <div className="flex gap-1 w-full">
+            <Input type="date" className={inputCls} style={{ width: '50%' }} value={data.drivers_license_expiry || ""} onChange={e => update("drivers_license_expiry", e.target.value)} />
+            <Input type="date" className={inputCls} style={{ width: '50%' }} value={data.code95_expiry || ""} onChange={e => update("code95_expiry", e.target.value)} />
           </div>
         </StamkaartRow>
       </div>
