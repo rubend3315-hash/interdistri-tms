@@ -111,8 +111,8 @@ export default function SignatureCanvas({ onSign, signing }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-slate-600">
-        Teken hieronder om het contract te ondertekenen:
+      <p className="text-xs font-normal text-slate-500">
+        Onderteken hieronder ter bevestiging van de juistheid van bovenstaande gegevens.
       </p>
       <div className="border-2 border-dashed border-slate-300 rounded-lg bg-white">
         <canvas
