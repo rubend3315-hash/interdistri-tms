@@ -1,51 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const CC_ADDRESS = 'ruben@interdistri.nl';
-
-async function sendGmail(accessToken, to, subject, htmlBody) {
-  const boundary = 'boundary_' + Date.now() + Math.random();
-  const ccLine = to.toLowerCase() !== CC_ADDRESS.toLowerCase() ? `Cc: ${CC_ADDRESS}` : '';
-  const rawEmail = [
-    `To: ${to}`,
-    ...(ccLine ? [ccLine] : []),
-    `Subject: ${subject}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    ``,
-    `--${boundary}`,
-    `Content-Type: text/html; charset="UTF-8"`,
-    `Content-Transfer-Encoding: base64`,
-    ``,
-    btoa(unescape(encodeURIComponent(htmlBody))),
-    `--${boundary}--`
-  ].join('\r\n');
-
-  const encodedMessage = btoa(unescape(encodeURIComponent(rawEmail)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-
-  const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ raw: encodedMessage })
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`Gmail send failed (${res.status}): ${errBody}`);
-  }
-  return await res.json();
-}
-
 function replacePlaceholders(text, placeholders) {
   let result = text;
   for (const [key, value] of Object.entries(placeholders)) {
-    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-    result = result.replace(regex, value || '—');
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value || '—');
   }
   return result;
 }
@@ -65,9 +23,7 @@ Deno.serve(async (req) => {
     }
 
     const contract = await base44.asServiceRole.entities.Contract.get(contract_id);
-    if (!contract) {
-      return Response.json({ error: 'Contract niet gevonden' }, { status: 404 });
-    }
+    if (!contract) return Response.json({ error: 'Contract niet gevonden' }, { status: 404 });
 
     const employee = await base44.asServiceRole.entities.Employee.get(contract.employee_id);
     if (!employee || !employee.email) {
@@ -85,17 +41,15 @@ Deno.serve(async (req) => {
       functie: contract.function_title || '—',
     };
 
-    // Check for custom template
-    let emailSubject, emailBody;
     const templates = await base44.asServiceRole.entities.EmailTemplate.filter({
       template_key: 'contract_ter_ondertekening',
       is_active: true,
     });
 
+    let emailSubject, emailBody;
     if (templates.length > 0) {
-      const template = templates[0];
-      emailSubject = replacePlaceholders(template.subject, placeholders);
-      emailBody = replacePlaceholders(template.body, placeholders);
+      emailSubject = replacePlaceholders(templates[0].subject, placeholders);
+      emailBody = replacePlaceholders(templates[0].body, placeholders);
     } else {
       emailSubject = `Arbeidsovereenkomst ter ondertekening - ${contract.contract_number}`;
       emailBody = `
@@ -134,38 +88,28 @@ Deno.serve(async (req) => {
       `;
     }
 
-    const gmailToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
-
     // Update contract status
     await base44.asServiceRole.entities.Contract.update(contract_id, {
       status: 'TerOndertekening',
       reminder_sent_dates: [...(contract.reminder_sent_dates || []), new Date().toISOString().split('T')[0]]
     });
 
-    // Send to employee
-    const sentAt = new Date().toISOString();
-    try {
-      const gmailResult = await sendGmail(gmailToken, employee.email, emailSubject, emailBody);
-      await base44.asServiceRole.entities.EmailLog.create({
-        to: employee.email, cc: CC_ADDRESS, subject: emailSubject, status: 'success', source_function: 'sendContractForSigning', sent_at: sentAt, message_id: gmailResult?.id || null,
-      });
-    } catch (emailErr) {
-      console.error('Failed to send employee email via Gmail:', emailErr.message);
-      await base44.asServiceRole.entities.EmailLog.create({
-        to: employee.email, cc: CC_ADDRESS, subject: emailSubject, status: 'failed', source_function: 'sendContractForSigning', error_message: emailErr.message, sent_at: sentAt,
-      });
-    }
+    // Send to employee via mailService
+    await base44.functions.invoke('mailService', {
+      to: employee.email,
+      subject: emailSubject,
+      html: emailBody,
+      source_function: 'sendContractForSigning',
+    });
 
     // Send copy to admin
     const adminSubject = `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`;
-    try {
-      const adminGmailResult = await sendGmail(gmailToken, user.email, adminSubject, `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`);
-      await base44.asServiceRole.entities.EmailLog.create({
-        to: user.email, cc: CC_ADDRESS, subject: adminSubject, status: 'success', source_function: 'sendContractForSigning', sent_at: new Date().toISOString(), message_id: adminGmailResult?.id || null,
-      });
-    } catch (emailErr) {
-      console.error('Failed to send admin copy via Gmail:', emailErr.message);
-    }
+    await base44.functions.invoke('mailService', {
+      to: user.email,
+      subject: adminSubject,
+      html: `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`,
+      source_function: 'sendContractForSigning',
+    });
 
     // Notification
     try {

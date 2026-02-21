@@ -1,7 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const FORCED_CC = 'ruben@interdistri.nl';
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -17,81 +15,29 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields: to_emails, subject, body' }, { status: 400 });
     }
 
-    const accessToken = await base44.asServiceRole.connectors.getAccessToken("gmail");
-
     const results = [];
 
     for (const toEmail of to_emails) {
-      const ccAddr = toEmail.toLowerCase() !== FORCED_CC.toLowerCase() ? FORCED_CC : '';
-
-      const rawHeaders = [
-        `To: ${toEmail}`,
-        ...(ccAddr ? [`Cc: ${ccAddr}`] : []),
-        `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
-        `Content-Type: text/html; charset=UTF-8`,
-      ];
-
-      if (reply_to) {
-        rawHeaders.push(`Reply-To: ${reply_to}`);
-      }
-
-      const rawMessage = rawHeaders.join('\r\n') + '\r\n\r\n' + body;
-
-      // Base64url encode the raw message
-      const encoded = btoa(unescape(encodeURIComponent(rawMessage)))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-
-      const sentAt = new Date().toISOString();
-
-      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ raw: encoded }),
+      const result = await base44.functions.invoke('mailService', {
+        to: toEmail,
+        subject,
+        html: body,
+        reply_to,
+        source_function: 'sendEmployeeEmail',
       });
 
-      if (response.ok) {
-        const gmailResult = await response.json();
-        results.push({ email: toEmail, status: 'sent', messageId: gmailResult.id });
-        await base44.asServiceRole.entities.EmailLog.create({
-          to: toEmail,
-          cc: ccAddr,
-          subject,
-          status: 'success',
-          source_function: 'sendEmployeeEmail',
-          sent_at: sentAt,
-          message_id: gmailResult.id || null,
-        });
-      } else {
-        const errorData = await response.text();
-        console.error(`Failed to send to ${toEmail}:`, errorData);
-        results.push({ email: toEmail, status: 'failed', error: errorData });
-        await base44.asServiceRole.entities.EmailLog.create({
-          to: toEmail,
-          cc: ccAddr,
-          subject,
-          status: 'failed',
-          source_function: 'sendEmployeeEmail',
-          error_message: errorData,
-          sent_at: sentAt,
-        });
-      }
+      results.push({
+        email: toEmail,
+        status: result.data?.success ? 'sent' : 'failed',
+        messageId: result.data?.messageId,
+        error: result.data?.error,
+      });
     }
 
     const sentCount = results.filter(r => r.status === 'sent').length;
     const failedCount = results.filter(r => r.status === 'failed').length;
 
-    return Response.json({
-      success: true,
-      sent: sentCount,
-      failed: failedCount,
-      results
-    });
-
+    return Response.json({ success: true, sent: sentCount, failed: failedCount, results });
   } catch (error) {
     console.error('sendEmployeeEmail error:', error);
     return Response.json({ error: error.message }, { status: 500 });
