@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download, HardDrive, FileJson, FileSpreadsheet, AlertTriangle } from "lucide-react";
+import { Loader2, Download, HardDrive, FileJson, FileSpreadsheet, AlertTriangle, Clock, User } from "lucide-react";
 
 function formatBytes(bytes) {
   if (!bytes || bytes === 0) return "0 B";
@@ -35,6 +35,16 @@ export default function FileStorageOverview() {
         const data = JSON.parse(backup.json_data);
         const exportId = data.export_id || backup.backup_group_id;
         const timestamp = data.timestamp || backup.backup_date;
+        const triggerType = backup.trigger_type || data.trigger_type || null;
+        const retentionUntil = backup.retention_until || data.retention_until || null;
+
+        const common = {
+          export_id: exportId,
+          date: timestamp,
+          exported_by: data.exported_by,
+          trigger_type: triggerType,
+          retention_until: retentionUntil,
+        };
 
         // New format: files array
         if (data.files && Array.isArray(data.files)) {
@@ -45,9 +55,7 @@ export default function FileStorageOverview() {
               format: f.format,
               size: f.size || 0,
               url: f.url,
-              export_id: exportId,
-              date: timestamp,
-              exported_by: data.exported_by,
+              ...common,
             });
           }
         } else if (data.entities) {
@@ -60,9 +68,7 @@ export default function FileStorageOverview() {
                 format: "JSON",
                 size: 0,
                 url: info.file_url,
-                export_id: exportId,
-                date: timestamp,
-                exported_by: data.exported_by,
+                ...common,
               });
             }
             if (info.csv_url) {
@@ -72,9 +78,7 @@ export default function FileStorageOverview() {
                 format: "CSV",
                 size: 0,
                 url: info.csv_url,
-                export_id: exportId,
-                date: timestamp,
-                exported_by: data.exported_by,
+                ...common,
               });
             }
           }
@@ -129,9 +133,10 @@ export default function FileStorageOverview() {
                   <TableRow>
                     <TableHead>Bestandsnaam</TableHead>
                     <TableHead>Entity</TableHead>
+                    <TableHead>Trigger</TableHead>
                     <TableHead>Datum</TableHead>
+                    <TableHead>Retention tot</TableHead>
                     <TableHead>Grootte</TableHead>
-                    <TableHead>Export ID</TableHead>
                     <TableHead className="text-right">Download</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -151,6 +156,19 @@ export default function FileStorageOverview() {
                       <TableCell>
                         <Badge variant="outline" className="text-xs">{f.entity}</Badge>
                       </TableCell>
+                      <TableCell>
+                        {f.trigger_type === "scheduled" ? (
+                          <Badge className="bg-blue-100 text-blue-700 text-xs gap-1">
+                            <Clock className="w-3 h-3" /> Scheduled
+                          </Badge>
+                        ) : f.trigger_type === "manual" ? (
+                          <Badge className="bg-slate-100 text-slate-700 text-xs gap-1">
+                            <User className="w-3 h-3" /> Manual
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm text-slate-500">
                         {new Date(f.date).toLocaleDateString("nl-NL", {
                           day: "2-digit",
@@ -160,13 +178,23 @@ export default function FileStorageOverview() {
                           minute: "2-digit",
                         })}
                       </TableCell>
+                      <TableCell>
+                        {f.retention_until ? (() => {
+                          const isExpired = new Date(f.retention_until) < new Date();
+                          return (
+                            <Badge className={isExpired
+                              ? "bg-red-100 text-red-700 text-xs"
+                              : "bg-green-100 text-green-700 text-xs"
+                            }>
+                              {isExpired ? "Verlopen" : new Date(f.retention_until).toLocaleDateString("nl-NL")}
+                            </Badge>
+                          );
+                        })() : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm text-slate-500">
                         {f.size ? formatBytes(f.size) : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs font-mono text-slate-400 truncate max-w-[140px] block">
-                          {f.export_id}
-                        </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
