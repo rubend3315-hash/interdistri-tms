@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Loader2, Download, RotateCcw, AlertCircle, ChevronDown, ChevronRight, CloudUpload, CloudDownload, Database, Copy, Check, FileDown } from "lucide-react";
 import DataProtectionPolicy from "../components/backup/DataProtectionPolicy";
+import ExportResultDialog from "../components/backup/ExportResultDialog";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -19,6 +20,9 @@ export default function BackupsPage() {
   const [restoreEntityName, setRestoreEntityName] = useState(null);
   const [showSupabaseRestore, setShowSupabaseRestore] = useState(false);
   const [supabaseConfirmCode, setSupabaseConfirmCode] = useState('');
+  const [showExportResult, setShowExportResult] = useState(false);
+  const [exportResultData, setExportResultData] = useState(null);
+  const [exportResultError, setExportResultError] = useState(null);
   const [showSQLDialog, setShowSQLDialog] = useState(false);
   const [generatedSQL, setGeneratedSQL] = useState('');
   const [sqlCopied, setSqlCopied] = useState(false);
@@ -76,11 +80,14 @@ export default function BackupsPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['backups-metadata'] });
-      const urls = Object.values(data.entities || {}).filter(e => e.file_url).map(e => e.file_url);
-      alert(`Kritieke data export voltooid! ${data.total_records} records geëxporteerd uit ${Object.keys(data.entities).length} entities.`);
+      setExportResultData(data);
+      setExportResultError(null);
+      setShowExportResult(true);
     },
     onError: (error) => {
-      alert('Fout bij kritieke export: ' + (error?.response?.data?.error || error.message));
+      setExportResultData(null);
+      setExportResultError(error?.response?.data?.error || error.message);
+      setShowExportResult(true);
     }
   });
 
@@ -331,6 +338,14 @@ export default function BackupsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Export Result Dialog */}
+      <ExportResultDialog
+        open={showExportResult}
+        onClose={() => setShowExportResult(false)}
+        data={exportResultData}
+        error={exportResultError}
+      />
 
       {/* Data Protection Policy */}
       <div className="max-w-6xl mx-auto mt-6 px-6">
