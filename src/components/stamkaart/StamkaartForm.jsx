@@ -316,11 +316,11 @@ export default function StamkaartForm({
             <Input className={inputCls} style={{ width: '45%' }} value={data.drivers_license_categories || ""} onChange={e => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
           </div>
         </StamkaartRow>
-        <StamkaartRow label="Vervaldatum | Code 95 verval">
-          <div className="flex gap-1 w-full">
-            <Input type="date" className={inputCls} style={{ width: '50%' }} value={data.drivers_license_expiry || ""} onChange={e => update("drivers_license_expiry", e.target.value)} />
-            <Input type="date" className={inputCls} style={{ width: '50%' }} value={data.code95_expiry || ""} onChange={e => update("code95_expiry", e.target.value)} />
-          </div>
+        <StamkaartRow label="Vervaldatum rijbewijs">
+          <Input type="date" className={inputCls} value={data.drivers_license_expiry || ""} onChange={e => update("drivers_license_expiry", e.target.value)} />
+        </StamkaartRow>
+        <StamkaartRow label="Vervaldatum Code 95">
+          <Input type="date" className={inputCls} value={data.code95_expiry || ""} onChange={e => update("code95_expiry", e.target.value)} />
         </StamkaartRow>
       </div>
 

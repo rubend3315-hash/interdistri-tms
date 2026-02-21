@@ -81,7 +81,8 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
       <StamkaartSectionTitle title="Rijbewijs" />
       <div className="space-y-0">
         <StamkaartRow label="Rijbewijsnummer | Categorieën"><PrintVal>{employee.drivers_license_number} — {cats}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Vervaldatum | Code 95 verval"><PrintVal>{fmtDate(employee.drivers_license_expiry)} — {fmtDate(employee.code95_expiry)}</PrintVal></StamkaartRow>
+        <StamkaartRow label="Vervaldatum rijbewijs"><PrintVal>{fmtDate(employee.drivers_license_expiry)}</PrintVal></StamkaartRow>
+        <StamkaartRow label="Vervaldatum Code 95"><PrintVal>{fmtDate(employee.code95_expiry)}</PrintVal></StamkaartRow>
       </div>
 
       {/* ═══ DIENSTVERBAND ═══ */}
