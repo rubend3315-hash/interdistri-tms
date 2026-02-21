@@ -309,58 +309,64 @@ export default function StamkaartForm({
 
       {/* ═══ DIENSTVERBAND ═══ */}
       <StamkaartSectionTitle title="Gegevens dienstverband" />
-      <div className="grid grid-cols-2" style={{ columnGap: 24, rowGap: 2 }}>
-        <StamkaartRow label="Datum in dienst">
-          <Input type="date" className={inputCls} value={data.in_service_since || ""} onChange={e => update("in_service_since", e.target.value)} />
-        </StamkaartRow>
-        <StamkaartRow label="Afdeling" required>
-          <Select value={data.department || ""} onValueChange={v => update("department", v)}>
-            <SelectTrigger className={`h-[30px] text-xs bg-white shadow-none ${fieldError("department") ? "border border-red-400" : "border border-slate-400/60"}`}><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </StamkaartRow>
-        <StamkaartRow label="Functie">
-          <Select value={data.function || '_none'} onValueChange={v => update("function", v === '_none' ? '' : v)}>
-            <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Selecteer" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none" disabled>Selecteer</SelectItem>
-              {functions.map(f => <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </StamkaartRow>
-        <StamkaartRow label="Contract type">
-          <Select value={data.contract_type || "Tijdelijk"} onValueChange={v => update("contract_type", v)}>
-            <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
-              <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
-              <SelectItem value="Oproep">Oproep / 0-uren</SelectItem>
-            </SelectContent>
-          </Select>
-        </StamkaartRow>
-        <StamkaartRow label="Contracturen">
-          <Input type="number" className={inputCls} value={data.contract_hours || ""} onChange={e => update("contract_hours", Number(e.target.value))} />
-        </StamkaartRow>
-        <StamkaartRow label="Loonschaal">
-          {loadingSalary ? (
-            <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Laden...</span>
-          ) : (
-            <Select value={currentScaleKey} onValueChange={handleScaleChange}>
-              <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Kies" /></SelectTrigger>
-              <SelectContent className="max-h-64">
-                {scaleOptions.map(st => {
-                  const key = `${st.scale}|${st.step}`;
-                  return <SelectItem key={key} value={key}>{st.scale} trede {st.step} (€{st.hourly_rate?.toFixed(2)})</SelectItem>;
-                })}
+      <div className="grid grid-cols-2" style={{ columnGap: 24 }}>
+        {/* Kolom 1 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <StamkaartRow label="Datum in dienst">
+            <Input type="date" className={inputCls} value={data.in_service_since || ""} onChange={e => update("in_service_since", e.target.value)} />
+          </StamkaartRow>
+          <StamkaartRow label="Functie">
+            <Select value={data.function || '_none'} onValueChange={v => update("function", v === '_none' ? '' : v)}>
+              <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Selecteer" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none" disabled>Selecteer</SelectItem>
+                {functions.map(f => <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>)}
               </SelectContent>
             </Select>
-          )}
-        </StamkaartRow>
-        <StamkaartRow label="Bruto uurloon (€)">
-          <Input type="number" step="0.01" className={inputCls} value={data.hourly_rate || ""} onChange={e => update("hourly_rate", Number(e.target.value))} />
-        </StamkaartRow>
+          </StamkaartRow>
+          <StamkaartRow label="Afdeling" required>
+            <Select value={data.department || ""} onValueChange={v => update("department", v)}>
+              <SelectTrigger className={`h-[30px] text-xs bg-white shadow-none ${fieldError("department") ? "border border-red-400" : "border border-slate-400/60"}`}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </StamkaartRow>
+        </div>
+        {/* Kolom 2 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <StamkaartRow label="Contract type">
+            <Select value={data.contract_type || "Tijdelijk"} onValueChange={v => update("contract_type", v)}>
+              <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
+                <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
+                <SelectItem value="Oproep">Oproep / 0-uren</SelectItem>
+              </SelectContent>
+            </Select>
+          </StamkaartRow>
+          <StamkaartRow label="Contracturen">
+            <Input type="number" className={inputCls} value={data.contract_hours || ""} onChange={e => update("contract_hours", Number(e.target.value))} />
+          </StamkaartRow>
+          <StamkaartRow label="Loonschaal">
+            {loadingSalary ? (
+              <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Laden...</span>
+            ) : (
+              <Select value={currentScaleKey} onValueChange={handleScaleChange}>
+                <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Kies" /></SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {scaleOptions.map(st => {
+                    const key = `${st.scale}|${st.step}`;
+                    return <SelectItem key={key} value={key}>{st.scale} trede {st.step} (€{st.hourly_rate?.toFixed(2)})</SelectItem>;
+                  })}
+                </SelectContent>
+              </Select>
+            )}
+          </StamkaartRow>
+          <StamkaartRow label="Bruto uurloon (€)">
+            <Input type="number" step="0.01" className={inputCls} value={data.hourly_rate || ""} onChange={e => update("hourly_rate", Number(e.target.value))} />
+          </StamkaartRow>
+        </div>
       </div>
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
