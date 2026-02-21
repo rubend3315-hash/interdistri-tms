@@ -29,9 +29,9 @@ export const STAMKAART_REQUIRED_FIELDS = [
 // ── Shared sub-components (also exported for print view) ──
 export function StamkaartRow({ label, required, children }) {
   return (
-    <div className="grid items-center" style={{ gridTemplateColumns: "30% 70%", minHeight: 28, gap: 4 }}>
+    <div className="grid items-center" style={{ gridTemplateColumns: "32% 68%", minHeight: 30, gap: 4 }}>
       <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600 truncate">{label}{required && " *"}</span>
-      <div className="min-h-[24px] flex items-center">{children}</div>
+      <div className="min-h-[26px] flex items-center">{children}</div>
     </div>
   );
 }
@@ -44,8 +44,8 @@ export function StamkaartSectionTitle({ title }) {
   );
 }
 
-const inputCls = "text-xs px-2 py-0 border-slate-300 h-[28px]";
-const inputErr = "text-xs px-2 py-0 border-red-400 h-[28px]";
+const inputCls = "text-xs px-2 py-0.5 h-[30px] bg-white border border-slate-400/60 shadow-none";
+const inputErr = "text-xs px-2 py-0.5 h-[30px] bg-white border border-red-400 shadow-none";
 
 /**
  * StamkaartForm — single source of truth for stamkaart layout
@@ -315,7 +315,7 @@ export default function StamkaartForm({
         </StamkaartRow>
         <StamkaartRow label="Afdeling" required>
           <Select value={data.department || ""} onValueChange={v => update("department", v)}>
-            <SelectTrigger className={`h-[28px] text-xs ${fieldError("department") ? "border-red-400" : "border-slate-300"}`}><SelectValue /></SelectTrigger>
+            <SelectTrigger className={`h-[30px] text-xs bg-white shadow-none ${fieldError("department") ? "border border-red-400" : "border border-slate-400/60"}`}><SelectValue /></SelectTrigger>
             <SelectContent>
               {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.label}</SelectItem>)}
             </SelectContent>
@@ -323,7 +323,7 @@ export default function StamkaartForm({
         </StamkaartRow>
         <StamkaartRow label="Functie">
           <Select value={data.function || '_none'} onValueChange={v => update("function", v === '_none' ? '' : v)}>
-            <SelectTrigger className="h-[28px] text-xs border-slate-300"><SelectValue placeholder="Selecteer" /></SelectTrigger>
+            <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Selecteer" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="_none" disabled>Selecteer</SelectItem>
               {functions.map(f => <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>)}
@@ -332,7 +332,7 @@ export default function StamkaartForm({
         </StamkaartRow>
         <StamkaartRow label="Contract type">
           <Select value={data.contract_type || "Tijdelijk"} onValueChange={v => update("contract_type", v)}>
-            <SelectTrigger className="h-[28px] text-xs border-slate-300"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
               <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
@@ -348,7 +348,7 @@ export default function StamkaartForm({
             <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Laden...</span>
           ) : (
             <Select value={currentScaleKey} onValueChange={handleScaleChange}>
-              <SelectTrigger className="h-[28px] text-xs border-slate-300"><SelectValue placeholder="Kies" /></SelectTrigger>
+              <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Kies" /></SelectTrigger>
               <SelectContent className="max-h-64">
                 {scaleOptions.map(st => {
                   const key = `${st.scale}|${st.step}`;
@@ -368,7 +368,7 @@ export default function StamkaartForm({
       <div className="grid" style={{ gridTemplateColumns: "58% 42%", gap: 12 }}>
         {/* LINKERKOLOM — Loonheffing + Financieel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28, gap: 4 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4 }}>
             <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Loonheffingskorting?</span>
             <RadioGroup
               value={lhToepassen}
@@ -389,22 +389,22 @@ export default function StamkaartForm({
             </RadioGroup>
           </div>
           {lhToepassen && (
-            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28, gap: 4 }}>
+            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4 }}>
               <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Vanaf datum</span>
               <Input type="date" className={inputCls} value={lhDatum} onChange={e => setLh("loonheffing_datum", e.target.value)} />
             </div>
           )}
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28, gap: 4 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4 }}>
             <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">LKV (WW, WAO, WIA)?</span>
             <Select value={data.lkv_uitkering || "nee"} onValueChange={v => update("lkv_uitkering", v)}>
-              <SelectTrigger className="h-[28px] text-xs border-slate-300"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ja">Ja, doelgroepverklaring</SelectItem>
                 <SelectItem value="nee">Nee</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28, gap: 4 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4 }}>
             <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Bijzonderheden</span>
             <Input className={inputCls} value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
           </div>
@@ -418,11 +418,11 @@ export default function StamkaartForm({
           </div>
           {lhSignatureUrl ? (
             <div className="flex flex-col gap-1">
-              <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-300 w-full object-contain" style={{ height: 95 }} />
-              <Button variant="outline" size="sm" className="h-5 text-xs px-2 self-start" style={{ fontSize: 11 }} onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
+              <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 95 }} />
+              <Button variant="outline" size="sm" className="h-5 text-xs px-2 self-start mt-1" style={{ fontSize: 11 }} onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
             </div>
           ) : (
-            <div className="border border-slate-300 bg-white w-full" style={{ height: 95 }}>
+            <div className="border border-slate-400/60 bg-white w-full" style={{ height: 95 }}>
               <SignatureCanvas onSign={handleSignature} />
             </div>
           )}

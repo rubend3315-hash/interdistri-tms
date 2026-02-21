@@ -38,7 +38,7 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
     : (employee.drivers_license_categories || "");
 
   return (
-    <div className="mx-auto bg-white" style={{ maxWidth: 800, fontSize: "10pt", lineHeight: 1.35 }}>
+    <div className="mx-auto bg-white" style={{ maxWidth: 800, fontSize: "10pt", lineHeight: 1.35, paddingBottom: 4 }}>
       {/* Company header */}
       <div className="flex items-start justify-between border-b-2 border-slate-800" style={{ paddingBottom: 2, marginBottom: 4 }}>
         <div>
@@ -92,21 +92,21 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
       <div className="grid" style={{ gridTemplateColumns: "58% 42%", gap: 10 }}>
         {/* LINKERKOLOM */}
         <div className="space-y-0">
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 24 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
             <span className="text-xs text-slate-600">Loonheffingskorting?</span>
             <PrintVal>{lhLabel}</PrintVal>
           </div>
           {lhToepassen && (
-            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 24 }}>
+            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
               <span className="text-xs text-slate-600">Vanaf datum</span>
               <PrintVal>{fmtDate(lhDatum)}</PrintVal>
             </div>
           )}
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 24 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
             <span className="text-xs text-slate-600">LKV (WW, WAO, WIA)?</span>
             <PrintVal>{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</PrintVal>
           </div>
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 24 }}>
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
             <span className="text-xs text-slate-600">Bijzonderheden</span>
             <PrintVal>{employee.financiele_situatie}</PrintVal>
           </div>
@@ -119,9 +119,9 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
             <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
           </div>
           {lhSignatureUrl ? (
-            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-300 w-full object-contain" style={{ height: 90 }} />
+            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 85 }} />
           ) : (
-            <div className="border border-slate-300 flex items-center justify-center" style={{ height: 90 }}>
+            <div className="border border-slate-400/60 bg-white flex items-center justify-center" style={{ height: 85 }}>
               <span className="text-xs text-slate-400 italic">Niet getekend</span>
             </div>
           )}
