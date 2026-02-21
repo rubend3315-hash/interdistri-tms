@@ -434,10 +434,10 @@ export default function StamkaartForm({
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 270 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 270 }} className="px-3">
           <div className="flex items-center justify-between">
-            <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Handtekening werknemer</span>
-            <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
+            <span style={{ fontSize: 12, lineHeight: 1.4 }} className="text-slate-500 font-normal">Handtekening werknemer</span>
+            <span style={{ fontSize: 12 }} className="text-slate-500 font-normal">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
           </div>
           {lhSignatureUrl ? (
             <div className="flex flex-col" style={{ gap: 4 }}>
