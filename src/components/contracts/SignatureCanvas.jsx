@@ -111,7 +111,7 @@ export default function SignatureCanvas({ onSign, signing }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs font-normal text-slate-500">
+      <p className="text-sm text-gray-500 mb-2 max-w-[80%]">
         Onderteken hieronder ter bevestiging van de juistheid van bovenstaande gegevens.
       </p>
       <div className="border-2 border-dashed border-slate-300 rounded-lg bg-white">
