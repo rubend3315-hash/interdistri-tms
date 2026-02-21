@@ -428,7 +428,7 @@ export default function StamkaartForm({
           </div>
           <div className="grid items-start" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4, paddingTop: 4 }}>
             <span style={{ fontSize: 13, lineHeight: 1.3, paddingTop: 6 }} className="text-slate-600">Bijzonderheden</span>
-            <textarea className="text-xs px-2 py-1.5 bg-white border border-slate-400/60 shadow-none rounded-md h-16 resize-none w-full focus:outline-none focus:ring-1 focus:ring-ring" value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
+            <textarea className="text-xs px-2 py-1.5 bg-white border border-slate-400/60 shadow-none rounded-md min-h-[90px] resize-none w-full focus:outline-none focus:ring-1 focus:ring-ring" value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
           </div>
         </div>
 
@@ -452,25 +452,19 @@ export default function StamkaartForm({
       </div>
 
       {/* ═══ ACTIES ═══ */}
-      {!hideActions && (
-        <div className="border-t border-slate-200" style={{ marginTop: 8, paddingTop: 6 }}>
-          {!isOnboarding && (
-            <div className="flex flex-col gap-1.5 items-start">
-              <div className="flex items-center gap-2">
-                <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs px-3" disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
-                  {saved ? "Opgeslagen ✓" : "Opslaan"}
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => window.print()} className="h-7 text-xs px-3">
-                  <Printer className="w-3 h-3 mr-1" /> Printen
-                </Button>
-              </div>
-              <Button size="sm" variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail} className="h-7 text-xs px-3">
-                {sendingEmail ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
-                Versturen naar Loonadministratie
-              </Button>
-            </div>
-          )}
+      {!hideActions && !isOnboarding && (
+        <div className="flex items-center gap-2" style={{ marginTop: 16 }}>
+          <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs px-3" disabled={saveMutation.isPending}>
+            {saveMutation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
+            {saved ? "Opgeslagen ✓" : "Opslaan"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => window.print()} className="h-7 text-xs px-3">
+            <Printer className="w-3 h-3 mr-1" /> Printen
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail} className="h-7 text-xs px-3">
+            {sendingEmail ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
+            Versturen naar Loonadministratie
+          </Button>
         </div>
       )}
     </div>
