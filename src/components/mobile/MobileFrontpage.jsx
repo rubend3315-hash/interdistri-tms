@@ -108,7 +108,7 @@ export default function MobileFrontpage({ onNavigate }) {
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => onNavigate(item.navigateTo || item.id)}
               className="text-left"
             >
               <Card className="hover:shadow-lg transition-all duration-200 border hover:border-blue-300">
