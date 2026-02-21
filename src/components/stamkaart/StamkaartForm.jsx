@@ -29,16 +29,16 @@ export const STAMKAART_REQUIRED_FIELDS = [
 // ── Shared sub-components (also exported for print view) ──
 export function StamkaartRow({ label, required, children }) {
   return (
-    <div className="grid items-center gap-1" style={{ gridTemplateColumns: "30% 70%", minHeight: 36 }}>
+    <div className="grid items-center" style={{ gridTemplateColumns: "30% 70%", minHeight: 32, gap: 4 }}>
       <span className="text-xs text-slate-600 truncate">{label}{required && " *"}</span>
-      <div className="min-h-[28px] flex items-center">{children}</div>
+      <div className="min-h-[26px] flex items-center">{children}</div>
     </div>
   );
 }
 
 export function StamkaartSectionTitle({ title }) {
   return (
-    <div className="border-b border-slate-300 pb-0.5 mt-3 mb-1">
+    <div className="border-b border-slate-300 pb-0 mt-2 mb-0.5">
       <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">{title}</span>
     </div>
   );
@@ -250,7 +250,7 @@ export default function StamkaartForm({
 
       {/* ═══ WERKNEMER GEGEVENS ═══ */}
       <StamkaartSectionTitle title="Werknemer gegevens" />
-      <div className="space-y-1">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <StamkaartRow label="Voorletters / voornaam" required>
           <Input className={fieldError("first_name") ? inputErr : inputCls} value={data.first_name || ""} onChange={e => update("first_name", e.target.value)} />
         </StamkaartRow>
@@ -275,29 +275,29 @@ export default function StamkaartForm({
         <StamkaartRow label="E-mailadres" required>
           <Input type="email" className={fieldError("email") ? inputErr : inputCls} value={data.email || ""} onChange={e => update("email", e.target.value)} />
         </StamkaartRow>
-        <StamkaartRow label="IBAN-rekeningnummer" required>
-          <Input className={fieldError("bank_account") ? inputErr : inputCls} value={data.bank_account || ""} onChange={e => update("bank_account", e.target.value)} />
+        <StamkaartRow label="IBAN / Telefoon" required>
+          <div className="flex gap-1 w-full">
+            <Input className={fieldError("bank_account") ? inputErr : inputCls} style={{ width: '55%' }} value={data.bank_account || ""} onChange={e => update("bank_account", e.target.value)} placeholder="IBAN *" />
+            <Input className={inputCls} style={{ width: '45%' }} value={data.phone || ""} onChange={e => update("phone", e.target.value)} placeholder="Telefoon" />
+          </div>
         </StamkaartRow>
         <StamkaartRow label="Nummer ID-kaart / paspoort" required>
           <Input className={fieldError("id_document_number") ? inputErr : inputCls} value={data.id_document_number || ""} onChange={e => update("id_document_number", e.target.value)} />
         </StamkaartRow>
-        <StamkaartRow label="Geldigheid ID-kaart / paspoort" required>
-          <Input type="date" className={fieldError("id_document_expiry") ? inputErr : inputCls} value={data.id_document_expiry || ""} onChange={e => update("id_document_expiry", e.target.value)} />
+        <StamkaartRow label="Geldig ID / Rijbewijs verval" required>
+          <div className="flex gap-1 w-full">
+            <Input type="date" className={fieldError("id_document_expiry") ? inputErr : inputCls} style={{ width: '50%' }} value={data.id_document_expiry || ""} onChange={e => update("id_document_expiry", e.target.value)} />
+            <Input type="date" className={inputCls} style={{ width: '50%' }} value={data.drivers_license_expiry || ""} onChange={e => update("drivers_license_expiry", e.target.value)} />
+          </div>
         </StamkaartRow>
-        <StamkaartRow label="Rijbewijsnummer">
-          <Input className={inputCls} value={data.drivers_license_number || ""} onChange={e => update("drivers_license_number", e.target.value)} />
-        </StamkaartRow>
-        <StamkaartRow label="Rijbewijscategorieën">
-          <Input className={inputCls} value={data.drivers_license_categories || ""} onChange={e => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
-        </StamkaartRow>
-        <StamkaartRow label="Rijbewijs vervaldatum">
-          <Input type="date" className={inputCls} value={data.drivers_license_expiry || ""} onChange={e => update("drivers_license_expiry", e.target.value)} />
+        <StamkaartRow label="Rijbewijsnr / categorieën">
+          <div className="flex gap-1 w-full">
+            <Input className={inputCls} style={{ width: '50%' }} value={data.drivers_license_number || ""} onChange={e => update("drivers_license_number", e.target.value)} placeholder="Nummer" />
+            <Input className={inputCls} style={{ width: '50%' }} value={data.drivers_license_categories || ""} onChange={e => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
+          </div>
         </StamkaartRow>
         <StamkaartRow label="Code 95 vervaldatum">
           <Input type="date" className={inputCls} value={data.code95_expiry || ""} onChange={e => update("code95_expiry", e.target.value)} />
-        </StamkaartRow>
-        <StamkaartRow label="Telefoon">
-          <Input className={inputCls} value={data.phone || ""} onChange={e => update("phone", e.target.value)} />
         </StamkaartRow>
         <StamkaartRow label="Noodcontact (naam / telefoon)">
           <div className="flex gap-1 w-full">
@@ -309,7 +309,7 @@ export default function StamkaartForm({
 
       {/* ═══ DIENSTVERBAND ═══ */}
       <StamkaartSectionTitle title="Gegevens dienstverband" />
-      <div className="space-y-1">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <StamkaartRow label="Datum in dienst">
           <Input type="date" className={inputCls} value={data.in_service_since || ""} onChange={e => update("in_service_since", e.target.value)} />
         </StamkaartRow>
@@ -365,7 +365,7 @@ export default function StamkaartForm({
 
       {/* ═══ LOONHEFFINGSKORTING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting" />
-      <div className="space-y-1">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <StamkaartRow label="Loonheffingskorting toepassen?">
           <RadioGroup
             value={lhToepassen}
@@ -394,7 +394,7 @@ export default function StamkaartForm({
 
       {/* ═══ FINANCIËLE SITUATIE ═══ */}
       <StamkaartSectionTitle title="Financiële situatie" />
-      <div className="space-y-1">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <StamkaartRow label="LKV (WW, WAO, WIA)?">
           <Select value={data.lkv_uitkering || "nee"} onValueChange={v => update("lkv_uitkering", v)}>
             <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue /></SelectTrigger>
@@ -411,24 +411,21 @@ export default function StamkaartForm({
 
       {/* ═══ HANDTEKENING ═══ */}
       <StamkaartSectionTitle title="Ondertekening" />
-      <div className="grid items-start gap-2 mt-1" style={{ gridTemplateColumns: "1fr 1fr" }}>
-        <div>
-          <span className="text-xs text-slate-600 block mb-1">Handtekening werknemer</span>
-          {lhSignatureUrl ? (
-            <div className="space-y-1">
-              <img src={lhSignatureUrl} alt="Handtekening" className="h-12 border" />
-              <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
-            </div>
-          ) : (
-            <div className="border border-slate-300 bg-white" style={{ maxHeight: 80, overflow: 'hidden' }}>
-              <SignatureCanvas onSign={handleSignature} />
-            </div>
-          )}
+      <div className="mt-1">
+        <div className="flex items-end gap-4 mb-1">
+          <span className="text-xs text-slate-600">Handtekening werknemer</span>
+          <span className="text-xs text-slate-600">Datum: <span className="text-slate-800">{new Date().toLocaleDateString('nl-NL')}</span></span>
         </div>
-        <div>
-          <span className="text-xs text-slate-600 block mb-1">Datum</span>
-          <span className="text-xs text-slate-800">{new Date().toLocaleDateString('nl-NL')}</span>
-        </div>
+        {lhSignatureUrl ? (
+          <div className="flex items-center gap-3">
+            <img src={lhSignatureUrl} alt="Handtekening" className="border" style={{ height: 110 }} />
+            <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
+          </div>
+        ) : (
+          <div className="border border-slate-300 bg-white" style={{ height: 110 }}>
+            <SignatureCanvas onSign={handleSignature} />
+          </div>
+        )}
       </div>
 
       {/* ═══ ACTIES ═══ */}
@@ -445,7 +442,7 @@ export default function StamkaartForm({
               </Button>
               <Button size="sm" variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail} className="h-7 text-xs px-3">
                 {sendingEmail ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
-                Versturen naar Loon
+                Versturen naar Loonadministratie
               </Button>
             </>
           )}
