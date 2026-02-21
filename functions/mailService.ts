@@ -1,3 +1,11 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║ FUNCTION TYPE: SYSTEM_LEVEL (INFRASTRUCTURE)                    ║
+// ║ Called by: Other backend functions (not directly from frontend)  ║
+// ║ Auth: Caller-dependent (skip_auth for automations)               ║
+// ║ Tenant: Receives tenant_id from caller, passes to EmailLog      ║
+// ║ Uses asServiceRole — required for Gmail API + EmailLog writes.   ║
+// ║ Do not mix user session and service role access.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const FORCED_CC = 'ruben@interdistri.nl';

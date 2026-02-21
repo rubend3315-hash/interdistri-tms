@@ -1,3 +1,10 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║ FUNCTION TYPE: SYSTEM_LEVEL (GUARD)                             ║
+// ║ Called by: Entity automation (tenant-aware entities update)      ║
+// ║ Auth: None (automation-triggered, no user session)               ║
+// ║ Uses asServiceRole — required for tenant_id enforcement.         ║
+// ║ Do not mix user session and service role access.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**

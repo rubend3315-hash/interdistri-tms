@@ -1,3 +1,11 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║ FUNCTION TYPE: SYSTEM_LEVEL (INFRASTRUCTURE)                    ║
+// ║ Called by: Other backend functions (not directly from frontend)  ║
+// ║ Auth: None required (logging service)                            ║
+// ║ Tenant: Receives tenant_id from caller, passes to AuditLog      ║
+// ║ Uses asServiceRole — required for AuditLog writes.               ║
+// ║ Do not mix user session and service role access.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Sensitive fields to strip from metadata

@@ -1,3 +1,10 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║ FUNCTION TYPE: SYSTEM_LEVEL (MIGRATION)                         ║
+// ║ Called by: Admin manually via dashboard                          ║
+// ║ Auth: User session (admin only)                                  ║
+// ║ Uses asServiceRole — required for bulk data migration.           ║
+// ║ Do not mix user session and service role access.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**

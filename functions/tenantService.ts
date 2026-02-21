@@ -1,3 +1,10 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║ FUNCTION TYPE: SYSTEM_LEVEL (INFRASTRUCTURE)                    ║
+// ║ Called by: Frontend (via tenantAware wrappers) + backend funcs   ║
+// ║ Auth: User session required for tenant resolution                ║
+// ║ Uses asServiceRole — required for cross-tenant checks.           ║
+// ║ Do not mix user session and service role access.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**
