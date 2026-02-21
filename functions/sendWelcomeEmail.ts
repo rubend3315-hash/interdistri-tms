@@ -123,7 +123,29 @@ Deno.serve(async (req) => {
       `;
     }
 
-    await sendGmail(gmailToken, employeeEmail, emailSubject, emailBody);
+    const sentAt = new Date().toISOString();
+    try {
+      await sendGmail(gmailToken, employeeEmail, emailSubject, emailBody);
+      await base44.asServiceRole.entities.EmailLog.create({
+        to: employeeEmail,
+        cc: CC_ADDRESS,
+        subject: emailSubject,
+        status: 'success',
+        source_function: 'sendWelcomeEmail',
+        sent_at: sentAt,
+      });
+    } catch (sendErr) {
+      await base44.asServiceRole.entities.EmailLog.create({
+        to: employeeEmail,
+        cc: CC_ADDRESS,
+        subject: emailSubject,
+        status: 'failed',
+        source_function: 'sendWelcomeEmail',
+        error_message: sendErr.message,
+        sent_at: sentAt,
+      });
+      throw sendErr;
+    }
 
     return Response.json({ success: true, message: `Welkomstmail verzonden naar ${employeeName} (${employeeEmail}) met CC naar ${CC_ADDRESS}` });
   } catch (error) {

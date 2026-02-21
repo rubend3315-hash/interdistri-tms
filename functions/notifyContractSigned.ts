@@ -130,7 +130,17 @@ Deno.serve(async (req) => {
             </div>
           `;
         }
-        await sendGmail(gmailToken, admin.email, emailSubject, emailBody);
+        const sentAt = new Date().toISOString();
+        try {
+          await sendGmail(gmailToken, admin.email, emailSubject, emailBody);
+          await base44.asServiceRole.entities.EmailLog.create({
+            to: admin.email, cc: CC_ADDRESS, subject: emailSubject, status: 'success', source_function: 'notifyContractSigned', sent_at: sentAt,
+          });
+        } catch (sendErr) {
+          await base44.asServiceRole.entities.EmailLog.create({
+            to: admin.email, cc: CC_ADDRESS, subject: emailSubject, status: 'failed', source_function: 'notifyContractSigned', error_message: sendErr.message, sent_at: sentAt,
+          });
+        }
       }
 
       const adminUserIds = adminUsers.map(u => u.id);
@@ -184,7 +194,17 @@ Deno.serve(async (req) => {
             </div>
           `;
         }
-        await sendGmail(gmailToken, employee.email, emailSubject, emailBody);
+        const sentAt2 = new Date().toISOString();
+        try {
+          await sendGmail(gmailToken, employee.email, emailSubject, emailBody);
+          await base44.asServiceRole.entities.EmailLog.create({
+            to: employee.email, cc: CC_ADDRESS, subject: emailSubject, status: 'success', source_function: 'notifyContractSigned', sent_at: sentAt2,
+          });
+        } catch (sendErr) {
+          await base44.asServiceRole.entities.EmailLog.create({
+            to: employee.email, cc: CC_ADDRESS, subject: emailSubject, status: 'failed', source_function: 'notifyContractSigned', error_message: sendErr.message, sent_at: sentAt2,
+          });
+        }
       }
 
       if (employeeUser) {

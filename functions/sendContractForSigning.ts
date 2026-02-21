@@ -143,15 +143,26 @@ Deno.serve(async (req) => {
     });
 
     // Send to employee
+    const sentAt = new Date().toISOString();
     try {
       await sendGmail(gmailToken, employee.email, emailSubject, emailBody);
+      await base44.asServiceRole.entities.EmailLog.create({
+        to: employee.email, cc: CC_ADDRESS, subject: emailSubject, status: 'success', source_function: 'sendContractForSigning', sent_at: sentAt,
+      });
     } catch (emailErr) {
       console.error('Failed to send employee email via Gmail:', emailErr.message);
+      await base44.asServiceRole.entities.EmailLog.create({
+        to: employee.email, cc: CC_ADDRESS, subject: emailSubject, status: 'failed', source_function: 'sendContractForSigning', error_message: emailErr.message, sent_at: sentAt,
+      });
     }
 
     // Send copy to admin
+    const adminSubject = `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`;
     try {
-      await sendGmail(gmailToken, user.email, `[Kopie] Arbeidsovereenkomst verzonden naar ${employeeName} - ${contract.contract_number}`, `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`);
+      await sendGmail(gmailToken, user.email, adminSubject, `<p>Contract ${contract.contract_number} is verzonden naar ${employeeName} (${employee.email}).</p>`);
+      await base44.asServiceRole.entities.EmailLog.create({
+        to: user.email, cc: CC_ADDRESS, subject: adminSubject, status: 'success', source_function: 'sendContractForSigning', sent_at: new Date().toISOString(),
+      });
     } catch (emailErr) {
       console.error('Failed to send admin copy via Gmail:', emailErr.message);
     }
