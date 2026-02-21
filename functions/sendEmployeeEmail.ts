@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const FORCED_CC = 'ruben@interdistri.nl';
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -20,8 +22,11 @@ Deno.serve(async (req) => {
     const results = [];
 
     for (const toEmail of to_emails) {
+      const ccAddr = toEmail.toLowerCase() !== FORCED_CC.toLowerCase() ? FORCED_CC : '';
+
       const rawHeaders = [
         `To: ${toEmail}`,
+        ...(ccAddr ? [`Cc: ${ccAddr}`] : []),
         `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
         `Content-Type: text/html; charset=UTF-8`,
       ];
@@ -38,6 +43,8 @@ Deno.serve(async (req) => {
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 
+      const sentAt = new Date().toISOString();
+
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
         method: 'POST',
         headers: {
@@ -49,10 +56,27 @@ Deno.serve(async (req) => {
 
       if (response.ok) {
         results.push({ email: toEmail, status: 'sent' });
+        await base44.asServiceRole.entities.EmailLog.create({
+          to: toEmail,
+          cc: ccAddr,
+          subject,
+          status: 'success',
+          source_function: 'sendEmployeeEmail',
+          sent_at: sentAt,
+        });
       } else {
         const errorData = await response.text();
         console.error(`Failed to send to ${toEmail}:`, errorData);
         results.push({ email: toEmail, status: 'failed', error: errorData });
+        await base44.asServiceRole.entities.EmailLog.create({
+          to: toEmail,
+          cc: ccAddr,
+          subject,
+          status: 'failed',
+          source_function: 'sendEmployeeEmail',
+          error_message: errorData,
+          sent_at: sentAt,
+        });
       }
     }
 

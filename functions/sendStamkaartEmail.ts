@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const FORCED_CC = 'ruben@interdistri.nl';
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -39,27 +41,36 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Build CC list: forced CC + any extra cc from caller
+    const ccSet = new Set();
+    ccSet.add(FORCED_CC);
+    if (cc) {
+      cc.split(',').map(e => e.trim()).filter(Boolean).forEach(e => ccSet.add(e));
+    }
+    // Remove 'to' from CC to avoid duplicate
+    ccSet.delete(to.toLowerCase());
+    const finalCc = Array.from(ccSet).join(', ');
+
     // Get Gmail access token
     const accessToken = await base44.asServiceRole.connectors.getAccessToken("gmail");
 
     // Build the email
     const headers = [
       `To: ${to}`,
+      `Cc: ${finalCc}`,
       `Subject: ${finalSubject}`,
       `MIME-Version: 1.0`,
       `Content-Type: text/html; charset=UTF-8`,
     ];
-    
-    if (cc) {
-      headers.splice(1, 0, `Cc: ${cc}`);
-    }
 
     const rawEmail = headers.join("\r\n") + "\r\n\r\n" + finalBody;
 
     // Base64url encode
     const encoder = new TextEncoder();
-    const data = encoder.encode(rawEmail);
-    const base64 = btoa(String.fromCharCode(...data))
+    const data2 = encoder.encode(rawEmail);
+    let binary = '';
+    for (const b of data2) binary += String.fromCharCode(b);
+    const base64 = btoa(binary)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
@@ -73,13 +84,36 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ raw: base64 }),
     });
 
+    const sentAt = new Date().toISOString();
+
     if (!response.ok) {
       const errorData = await response.text();
+      // Log failed send
+      await base44.asServiceRole.entities.EmailLog.create({
+        to,
+        cc: finalCc,
+        subject: finalSubject,
+        status: 'failed',
+        source_function: 'sendStamkaartEmail',
+        error_message: errorData,
+        sent_at: sentAt,
+      });
       return Response.json({ error: `Gmail API error: ${errorData}` }, { status: response.status });
     }
 
     const result = await response.json();
-    return Response.json({ success: true, messageId: result.id });
+
+    // Log successful send
+    await base44.asServiceRole.entities.EmailLog.create({
+      to,
+      cc: finalCc,
+      subject: finalSubject,
+      status: 'success',
+      source_function: 'sendStamkaartEmail',
+      sent_at: sentAt,
+    });
+
+    return Response.json({ success: true, messageId: result.id, cc: finalCc });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

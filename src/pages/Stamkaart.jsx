@@ -10,11 +10,13 @@ import { FileText, Search, Users, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getFullName } from "@/components/utils/employeeUtils";
 import StamkaartForm from "@/components/stamkaart/StamkaartForm";
+import StamkaartPrintView from "@/components/stamkaart/StamkaartPrintView";
 
 export default function Stamkaart() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("all");
+  const [printMode, setPrintMode] = useState(false);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees_stamkaart'],
@@ -33,12 +35,33 @@ export default function Stamkaart() {
 
   const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
 
+  if (selectedEmployee && printMode) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="no-print flex gap-2 mb-4">
+          <Button variant="outline" onClick={() => setPrintMode(false)}>
+            ← Terug naar formulier
+          </Button>
+          <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700">
+            <FileText className="w-4 h-4 mr-2" /> Afdrukken
+          </Button>
+        </div>
+        <StamkaartPrintView employee={selectedEmployee} />
+      </div>
+    );
+  }
+
   if (selectedEmployee) {
     return (
       <div className="max-w-5xl mx-auto">
-        <Button variant="outline" className="mb-4" onClick={() => setSelectedEmployeeId(null)}>
-          ← Terug naar overzicht
-        </Button>
+        <div className="flex gap-2 mb-4">
+          <Button variant="outline" onClick={() => { setSelectedEmployeeId(null); setPrintMode(false); }}>
+            ← Terug naar overzicht
+          </Button>
+          <Button variant="outline" onClick={() => setPrintMode(true)}>
+            <FileText className="w-4 h-4 mr-2" /> Printweergave
+          </Button>
+        </div>
         <StamkaartForm employee={selectedEmployee} />
       </div>
     );
