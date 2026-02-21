@@ -25,45 +25,76 @@ Deno.serve(async (req) => {
     const results = {};
     let totalRecords = 0;
 
+    const files = [];
+    let totalSize = 0;
+
     // Export each critical entity
     for (const entityName of CRITICAL_ENTITIES) {
       try {
         await delay(300);
         const records = await base44.asServiceRole.entities[entityName].list('', 10000);
-        results[entityName] = {
-          count: records?.length || 0,
-          status: 'success',
-        };
-        totalRecords += records?.length || 0;
+        const count = records?.length || 0;
+        totalRecords += count;
 
-        if (records && records.length > 0) {
-          // Upload as JSON file
-          const jsonStr = JSON.stringify(records, null, 2);
-          const blob = new Blob([jsonStr], { type: 'application/json' });
-          const file = new File([blob], `${exportId}_${entityName}.json`, { type: 'application/json' });
-          const upload = await base44.asServiceRole.integrations.Core.UploadFile({ file });
-          results[entityName].file_url = upload.file_url;
-
-          // Also create CSV for spreadsheet-compatible export
-          if (records.length > 0) {
-            const headers = Object.keys(records[0]).filter(k => typeof records[0][k] !== 'object');
-            const csvRows = [headers.join(';')];
-            for (const rec of records) {
-              const row = headers.map(h => {
-                const val = rec[h];
-                if (val === null || val === undefined) return '';
-                const str = String(val).replace(/"/g, '""');
-                return `"${str}"`;
-              });
-              csvRows.push(row.join(';'));
-            }
-            const csvStr = csvRows.join('\n');
-            const csvBlob = new Blob([csvStr], { type: 'text/csv' });
-            const csvFile = new File([csvBlob], `${exportId}_${entityName}.csv`, { type: 'text/csv' });
-            const csvUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: csvFile });
-            results[entityName].csv_url = csvUpload.file_url;
-          }
+        if (!records || records.length === 0) {
+          results[entityName] = { count: 0, status: 'success' };
+          continue;
         }
+
+        // Upload JSON
+        const jsonStr = JSON.stringify(records, null, 2);
+        const jsonSize = jsonStr.length;
+        totalSize += jsonSize;
+        const jsonBlob = new Blob([jsonStr], { type: 'application/json' });
+        const jsonFileName = `${exportId}_${entityName}.json`;
+        const jsonFile = new File([jsonBlob], jsonFileName, { type: 'application/json' });
+        const jsonUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: jsonFile });
+
+        files.push({
+          name: jsonFileName,
+          entity: entityName,
+          format: 'JSON',
+          records: count,
+          size: jsonSize,
+          location: 'Base44 File Storage',
+          url: jsonUpload.file_url,
+        });
+
+        // Upload CSV
+        const headers = Object.keys(records[0]).filter(k => typeof records[0][k] !== 'object');
+        const csvRows = [headers.join(';')];
+        for (const rec of records) {
+          const row = headers.map(h => {
+            const val = rec[h];
+            if (val === null || val === undefined) return '';
+            return `"${String(val).replace(/"/g, '""')}"`;
+          });
+          csvRows.push(row.join(';'));
+        }
+        const csvStr = csvRows.join('\n');
+        const csvSize = csvStr.length;
+        totalSize += csvSize;
+        const csvBlob = new Blob([csvStr], { type: 'text/csv' });
+        const csvFileName = `${exportId}_${entityName}.csv`;
+        const csvFile = new File([csvBlob], csvFileName, { type: 'text/csv' });
+        const csvUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: csvFile });
+
+        files.push({
+          name: csvFileName,
+          entity: entityName,
+          format: 'CSV',
+          records: count,
+          size: csvSize,
+          location: 'Base44 File Storage',
+          url: csvUpload.file_url,
+        });
+
+        results[entityName] = {
+          count,
+          status: 'success',
+          json_url: jsonUpload.file_url,
+          csv_url: csvUpload.file_url,
+        };
       } catch (err) {
         console.error(`Export ${entityName} failed:`, err.message);
         results[entityName] = { count: 0, status: 'error', error: err.message };
@@ -76,7 +107,7 @@ Deno.serve(async (req) => {
       backup_group_id: exportId,
       entity_name: '_critical_export',
       record_count: CRITICAL_ENTITIES.length,
-      backup_size: 0,
+      backup_size: totalSize,
       entity_count: totalRecords,
       status: 'Completed',
       backup_type: 'Manual',
@@ -84,8 +115,10 @@ Deno.serve(async (req) => {
       json_data: JSON.stringify({
         export_type: 'critical_entities',
         entities: results,
+        files: files.map(f => ({ name: f.name, entity: f.entity, format: f.format, url: f.url, size: f.size })),
         timestamp: now.toISOString(),
         exported_by: user.email,
+        total_size: totalSize,
       }),
     });
 
@@ -94,11 +127,11 @@ Deno.serve(async (req) => {
       await base44.functions.invoke('auditService', {
         action_type: 'export',
         category: 'Data',
-        description: `Kritieke data export: ${totalRecords} records uit ${CRITICAL_ENTITIES.join(', ')}`,
+        description: `Kritieke data export: ${totalRecords} records, ${files.length} bestanden, ${Math.round(totalSize / 1024)} KB`,
         performed_by_email: user.email,
         performed_by_name: user.full_name,
         performed_by_role: user.role,
-        metadata: { export_id: exportId, total_records: totalRecords, entities: Object.keys(results) },
+        metadata: { export_id: exportId, total_records: totalRecords, total_size: totalSize, file_count: files.length },
       });
     } catch (_) {}
 
@@ -106,7 +139,8 @@ Deno.serve(async (req) => {
       success: true,
       export_id: exportId,
       total_records: totalRecords,
-      entities: results,
+      total_size: totalSize,
+      files,
     });
   } catch (error) {
     console.error('exportCriticalData error:', error);
