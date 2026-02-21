@@ -233,7 +233,7 @@ export default function StamkaartForm({
     : getFullName(data);
 
   return (
-    <div className="mx-auto" style={{ maxWidth: 780, lineHeight: 1.35 }}>
+    <div className="mx-auto" style={{ maxWidth: 720, lineHeight: 1.35 }}>
       {/* Header */}
       <div className="flex items-center justify-between border-b-2 border-slate-800" style={{ paddingBottom: 2, marginBottom: 4 }}>
         <span className="text-sm font-bold text-slate-800">Stamkaart werknemers — {fullName || '(nieuw)'}</span>
@@ -387,7 +387,7 @@ export default function StamkaartForm({
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="grid" style={{ gridTemplateColumns: "1fr 320px", columnGap: 24 }}>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 280px", columnGap: 24 }}>
         {/* LINKERKOLOM — Loonheffing + Financieel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4 }}>
@@ -428,12 +428,12 @@ export default function StamkaartForm({
           </div>
           <div className="grid items-start" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4, paddingTop: 4 }}>
             <span style={{ fontSize: 13, lineHeight: 1.3, paddingTop: 6 }} className="text-slate-600">Bijzonderheden</span>
-            <textarea className="text-xs px-2 py-1.5 bg-white border border-slate-400/60 shadow-none rounded-md min-h-[90px] resize-none w-full focus:outline-none focus:ring-1 focus:ring-ring" value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
+            <textarea className="text-xs px-2 py-1.5 bg-white border border-slate-400/60 shadow-none rounded-md min-h-[110px] resize-none w-full focus:outline-none focus:ring-1 focus:ring-ring" value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
           </div>
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 320 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 280 }}>
           <div className="flex items-center justify-between">
             <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Handtekening werknemer</span>
             <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>

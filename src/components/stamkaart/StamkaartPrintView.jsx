@@ -38,7 +38,7 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
     : (employee.drivers_license_categories || "");
 
   return (
-    <div className="mx-auto bg-white" style={{ maxWidth: 780, fontSize: "10pt", lineHeight: 1.35, paddingBottom: 4 }}>
+    <div className="mx-auto bg-white" style={{ maxWidth: 720, fontSize: "10pt", lineHeight: 1.35, paddingBottom: 4 }}>
       {/* Company header */}
       <div className="flex items-start justify-between border-b-2 border-slate-800" style={{ paddingBottom: 2, marginBottom: 4 }}>
         <div>
@@ -104,7 +104,7 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="grid" style={{ gridTemplateColumns: "1fr 320px", columnGap: 24 }}>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 280px", columnGap: 24 }}>
         {/* LINKERKOLOM */}
         <div className="space-y-0">
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
@@ -121,14 +121,14 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
             <span className="text-xs text-slate-600">LKV (WW, WAO, WIA)?</span>
             <PrintVal>{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</PrintVal>
           </div>
-          <div className="grid items-start" style={{ gridTemplateColumns: "45% 55%", minHeight: 80 }}>
+          <div className="grid items-start" style={{ gridTemplateColumns: "45% 55%", minHeight: 95 }}>
             <span className="text-xs text-slate-600" style={{ paddingTop: 4 }}>Bijzonderheden</span>
-            <div className="text-xs text-slate-800 border border-slate-400/60 bg-white min-h-[80px] px-2 py-1.5" style={{ whiteSpace: 'pre-wrap' }}>{employee.financiele_situatie || "—"}</div>
+            <div className="text-xs text-slate-800 border border-slate-400/60 bg-white min-h-[95px] px-2 py-1.5" style={{ whiteSpace: 'pre-wrap' }}>{employee.financiele_situatie || "—"}</div>
           </div>
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div style={{ maxWidth: 320 }}>
+        <div style={{ maxWidth: 280 }}>
           <div className="flex items-center justify-between" style={{ marginBottom: 2 }}>
             <span className="text-xs text-slate-600">Handtekening werknemer</span>
             <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
