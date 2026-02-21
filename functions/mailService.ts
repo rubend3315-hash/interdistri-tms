@@ -106,6 +106,8 @@ Deno.serve(async (req) => {
       skip_auth,       // for automation calls (e.g. sendTimeEntryRejectionEmail)
       resent_by,       // admin email if resend
       original_log_id, // link to original log
+      idempotency_key: explicitKey, // caller can provide explicit key
+      entity_id: entityId,          // for auto-generating idempotency key
     } = body;
 
     // Auth check - skip for automation-triggered calls
