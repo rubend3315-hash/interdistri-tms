@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import EmailTemplateManager from "../components/email/EmailTemplateManager";
 import SendEmailDialog from "../components/email/SendEmailDialog";
+import EmailLogOverview from "../components/email/EmailLogOverview";
 
 export default function Messages() {
   const [showNewMessageDialog, setShowNewMessageDialog] = useState(false);
@@ -151,19 +152,7 @@ export default function Messages() {
         </TabsContent>
 
         <TabsContent value="email" className="mt-6">
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Mail className="w-16 h-16 text-blue-200 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">E-mail verzenden</h3>
-              <p className="text-slate-500 mb-4">
-                Verstuur e-mails naar individuele medewerkers of in bulk per afdeling via Gmail.
-              </p>
-              <Button onClick={() => setShowSendEmailDialog(true)} className="bg-blue-600 hover:bg-blue-700">
-                <Send className="w-4 h-4 mr-2" />
-                E-mail opstellen
-              </Button>
-            </CardContent>
-          </Card>
+          <EmailLogOverview />
         </TabsContent>
 
         <TabsContent value="berichten" className="mt-6">
