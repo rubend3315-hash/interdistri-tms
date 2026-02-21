@@ -30,6 +30,7 @@ import {
   Mail
 } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
+import { APP_VERSION } from "./components/utils/appVersion";
 import MobileEntry from "./pages/MobileEntry";
 import { cn } from "@/lib/utils";
 
@@ -462,14 +463,15 @@ export default function Layout({ children, currentPageName }) {
               </div>
               <NotificationBell />
               <button 
-                onClick={handleLogout}
-                className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600"
-                title="Afmelden"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+                    onClick={handleLogout}
+                    className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600"
+                    title="Afmelden"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 text-center mt-2">Interdistri TMS v{APP_VERSION}</p>
+              </div>
         </div>
       </aside>
 
