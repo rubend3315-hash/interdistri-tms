@@ -11,7 +11,7 @@ import SignatureCanvas from "../contracts/SignatureCanvas";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { buildStamkaartEmailHtml } from "@/components/utils/stamkaartEmailHtml";
 
-const REQUIRED_FIELDS = [
+export const STAMKAART_REQUIRED_FIELDS = [
   { key: "first_name", label: "Voornaam" },
   { key: "last_name", label: "Achternaam" },
   { key: "date_of_birth", label: "Geboortedatum" },
@@ -26,17 +26,17 @@ const REQUIRED_FIELDS = [
   { key: "id_document_expiry", label: "Geldigheid ID-kaart/paspoort" },
 ];
 
-// Inline row: label 30% | input 70%
-function Row({ label, required, error, children }) {
+// ── Shared sub-components (also exported for print view) ──
+export function StamkaartRow({ label, required, children }) {
   return (
-    <div className="grid items-center gap-1" style={{ gridTemplateColumns: "30% 70%", height: 36 }}>
+    <div className="grid items-center gap-1" style={{ gridTemplateColumns: "30% 70%", minHeight: 36 }}>
       <span className="text-xs text-slate-600 truncate">{label}{required && " *"}</span>
-      <div className="h-full flex items-center">{children}</div>
+      <div className="min-h-[28px] flex items-center">{children}</div>
     </div>
   );
 }
 
-function SectionTitle({ title }) {
+export function StamkaartSectionTitle({ title }) {
   return (
     <div className="border-b border-slate-300 pb-0.5 mt-3 mb-1">
       <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">{title}</span>
@@ -47,21 +47,64 @@ function SectionTitle({ title }) {
 const inputCls = "h-7 text-xs px-2 py-0 border-slate-300";
 const inputErr = "h-7 text-xs px-2 py-0 border-red-400";
 
-export default function StamkaartForm({ employee }) {
+/**
+ * StamkaartForm — single source of truth for stamkaart layout
+ * 
+ * Props:
+ * - employee: employee data object (required)
+ * - mode: "standalone" (default, Stamkaart page) | "onboarding" (inside onboarding wizard)
+ * 
+ * Onboarding-specific props (only when mode="onboarding"):
+ * - onChange: callback(updatedEmployeeData) — propagate changes to parent
+ * - onboardingData: onboarding state object
+ * - onOnboardingChange: callback(updatedOnboardingData)
+ * - hideActions: boolean — hide save/print/send buttons
+ */
+export default function StamkaartForm({ 
+  employee, 
+  mode = "standalone",
+  onChange: externalOnChange,
+  onboardingData,
+  onOnboardingChange,
+  hideActions = false,
+}) {
+  const isOnboarding = mode === "onboarding";
+
   const [data, setData] = useState({ ...employee });
-  const [lhData, setLhData] = useState({
-    loonheffing_toepassen: employee.loonheffing_toepassen || "",
-    loonheffing_datum: employee.loonheffing_datum || "",
-    loonheffing_handtekening_url: employee.loonheffing_handtekening_url || "",
-  });
+  
+  // In standalone mode, loonheffing lives on the employee object
+  // In onboarding mode, it lives in onboardingData
+  const lhToepassen = isOnboarding 
+    ? (onboardingData?.loonheffing_toepassen || "") 
+    : (data.loonheffing_toepassen || "");
+  const lhDatum = isOnboarding 
+    ? (onboardingData?.loonheffing_datum || "") 
+    : (data.loonheffing_datum || "");
+  const lhSignatureUrl = isOnboarding 
+    ? (onboardingData?.loonheffing_handtekening_url || "") 
+    : (data.loonheffing_handtekening_url || "");
+
   const [sendingEmail, setSendingEmail] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const queryClient = useQueryClient();
 
-  const update = (field, value) => setData(prev => ({ ...prev, [field]: value }));
+  const update = (field, value) => {
+    const updated = { ...data, [field]: value };
+    setData(updated);
+    if (isOnboarding && externalOnChange) externalOnChange(updated);
+  };
+
+  const setLh = (key, value) => {
+    if (isOnboarding && onOnboardingChange) {
+      onOnboardingChange({ ...onboardingData, [key]: value });
+    } else {
+      setData(prev => ({ ...prev, [key]: value }));
+    }
+  };
+
   const fieldError = (key) => showErrors && (!data[key] || String(data[key]).trim() === "");
-  const missingFields = REQUIRED_FIELDS.filter(f => !data[f.key] || String(data[f.key]).trim() === "");
+  const missingFields = STAMKAART_REQUIRED_FIELDS.filter(f => !data[f.key] || String(data[f.key]).trim() === "");
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
@@ -102,25 +145,20 @@ export default function StamkaartForm({ employee }) {
   const handleScaleChange = (val) => {
     const [scale, step] = val.split('|');
     const match = salaryTables.find(st => st.scale === scale && String(st.step) === step);
-    setData(prev => ({
-      ...prev,
+    const updated = {
+      ...data,
       salary_scale: `${scale} trede ${step}`,
-      hourly_rate: match?.hourly_rate || prev.hourly_rate
-    }));
+      hourly_rate: match?.hourly_rate || data.hourly_rate,
+    };
+    setData(updated);
+    if (isOnboarding && externalOnChange) externalOnChange(updated);
   };
 
+  // ── Standalone-only: save & send ──
   const saveMutation = useMutation({
     mutationFn: () => {
-      const saveData = {
-        ...data,
-        loonheffing_toepassen: lhData.loonheffing_toepassen,
-        loonheffing_datum: lhData.loonheffing_datum,
-        loonheffing_handtekening_url: lhData.loonheffing_handtekening_url,
-      };
-      delete saveData.id;
-      delete saveData.created_date;
-      delete saveData.updated_date;
-      delete saveData.created_by;
+      const saveData = { ...data, loonheffing_toepassen: lhToepassen, loonheffing_datum: lhDatum, loonheffing_handtekening_url: lhSignatureUrl };
+      delete saveData.id; delete saveData.created_date; delete saveData.updated_date; delete saveData.created_by;
       return base44.entities.Employee.update(employee.id, saveData);
     },
     onSuccess: () => {
@@ -146,11 +184,11 @@ export default function StamkaartForm({ employee }) {
     const currentUser = await base44.auth.me();
     const managerName = currentUser?.full_name || '';
     const fullName = getFullName(data);
-    const lhLabel = lhData.loonheffing_toepassen === "ja" ? "Ja" : lhData.loonheffing_toepassen === "nee" ? "Nee" : "Niet ingevuld";
+    const lhLabel = lhToepassen === "ja" ? "Ja" : lhToepassen === "nee" ? "Nee" : "Niet ingevuld";
     const defaultBody = buildStamkaartEmailHtml({
       fullName, data, lhLabel,
-      lhDatum: lhData.loonheffing_datum || '—',
-      signatureUrl: lhData.loonheffing_handtekening_url || null,
+      lhDatum: lhDatum || '—',
+      signatureUrl: lhSignatureUrl || null,
       managerName,
     });
     const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
@@ -158,8 +196,7 @@ export default function StamkaartForm({ employee }) {
     await base44.functions.invoke('sendStamkaartEmail', {
       to: payrollConfig.payroll_email,
       cc: payrollConfig.payroll_cc_email || "",
-      subject,
-      body: defaultBody,
+      subject, body: defaultBody,
       template_key: "stamkaart",
       placeholders: {
         naam: fullName,
@@ -183,11 +220,23 @@ export default function StamkaartForm({ employee }) {
     alert("Stamkaart verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
   };
 
+  const handleSignature = async (dataUrl) => {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], "handtekening_stamkaart.jpg", { type: "image/jpeg" });
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setLh("loonheffing_handtekening_url", file_url);
+  };
+
+  const fullName = isOnboarding
+    ? `${data.first_name || ''} ${data.prefix ? data.prefix + ' ' : ''}${data.last_name || ''}`.trim()
+    : getFullName(data);
+
   return (
     <div className="mx-auto" style={{ maxWidth: 880 }}>
       {/* Header */}
       <div className="flex items-center justify-between border-b-2 border-slate-800 pb-1 mb-2">
-        <span className="text-sm font-bold text-slate-800">Stamkaart werknemers — {getFullName(data)}</span>
+        <span className="text-sm font-bold text-slate-800">Stamkaart werknemers — {fullName || '(nieuw)'}</span>
         <span className="text-xs text-slate-500">Nr. {data.employee_number || '—'}</span>
       </div>
 
@@ -200,79 +249,79 @@ export default function StamkaartForm({ employee }) {
       )}
 
       {/* ═══ WERKNEMER GEGEVENS ═══ */}
-      <SectionTitle title="Werknemer gegevens" />
+      <StamkaartSectionTitle title="Werknemer gegevens" />
       <div className="space-y-1">
-        <Row label="Voorletters / voornaam" required error={fieldError("first_name")}>
+        <StamkaartRow label="Voorletters / voornaam" required>
           <Input className={fieldError("first_name") ? inputErr : inputCls} value={data.first_name || ""} onChange={e => update("first_name", e.target.value)} />
-        </Row>
-        <Row label="Achternaam" required error={fieldError("last_name")}>
+        </StamkaartRow>
+        <StamkaartRow label="Achternaam" required>
           <Input className={fieldError("last_name") ? inputErr : inputCls} value={data.last_name || ""} onChange={e => update("last_name", e.target.value)} />
-        </Row>
-        <Row label="Geboortedatum" required error={fieldError("date_of_birth")}>
+        </StamkaartRow>
+        <StamkaartRow label="Geboortedatum" required>
           <Input type="date" className={fieldError("date_of_birth") ? inputErr : inputCls} value={data.date_of_birth || ""} onChange={e => update("date_of_birth", e.target.value)} />
-        </Row>
-        <Row label="Burger Service Nummer" required error={fieldError("bsn")}>
+        </StamkaartRow>
+        <StamkaartRow label="Burger Service Nummer" required>
           <Input className={fieldError("bsn") ? inputErr : inputCls} value={data.bsn || ""} onChange={e => update("bsn", e.target.value)} />
-        </Row>
-        <Row label="Adres" required error={fieldError("address")}>
+        </StamkaartRow>
+        <StamkaartRow label="Adres" required>
           <Input className={fieldError("address") ? inputErr : inputCls} value={data.address || ""} onChange={e => update("address", e.target.value)} />
-        </Row>
-        <Row label="Postcode en woonplaats" required>
+        </StamkaartRow>
+        <StamkaartRow label="Postcode en woonplaats" required>
           <div className="flex gap-1 w-full">
             <Input className={fieldError("postal_code") ? inputErr : inputCls} style={{ width: '35%' }} value={data.postal_code || ""} onChange={e => update("postal_code", e.target.value)} placeholder="Postcode" />
             <Input className={fieldError("city") ? inputErr : inputCls} style={{ width: '65%' }} value={data.city || ""} onChange={e => update("city", e.target.value)} placeholder="Woonplaats" />
           </div>
-        </Row>
-        <Row label="E-mailadres" required error={fieldError("email")}>
+        </StamkaartRow>
+        <StamkaartRow label="E-mailadres" required>
           <Input type="email" className={fieldError("email") ? inputErr : inputCls} value={data.email || ""} onChange={e => update("email", e.target.value)} />
-        </Row>
-        <Row label="IBAN-rekeningnummer" required error={fieldError("bank_account")}>
+        </StamkaartRow>
+        <StamkaartRow label="IBAN-rekeningnummer" required>
           <Input className={fieldError("bank_account") ? inputErr : inputCls} value={data.bank_account || ""} onChange={e => update("bank_account", e.target.value)} />
-        </Row>
-        <Row label="Nummer ID-kaart / paspoort" required error={fieldError("id_document_number")}>
+        </StamkaartRow>
+        <StamkaartRow label="Nummer ID-kaart / paspoort" required>
           <Input className={fieldError("id_document_number") ? inputErr : inputCls} value={data.id_document_number || ""} onChange={e => update("id_document_number", e.target.value)} />
-        </Row>
-        <Row label="Geldigheid ID-kaart / paspoort" required error={fieldError("id_document_expiry")}>
+        </StamkaartRow>
+        <StamkaartRow label="Geldigheid ID-kaart / paspoort" required>
           <Input type="date" className={fieldError("id_document_expiry") ? inputErr : inputCls} value={data.id_document_expiry || ""} onChange={e => update("id_document_expiry", e.target.value)} />
-        </Row>
-        <Row label="Rijbewijsnummer">
+        </StamkaartRow>
+        <StamkaartRow label="Rijbewijsnummer">
           <Input className={inputCls} value={data.drivers_license_number || ""} onChange={e => update("drivers_license_number", e.target.value)} />
-        </Row>
-        <Row label="Rijbewijscategorieën">
+        </StamkaartRow>
+        <StamkaartRow label="Rijbewijscategorieën">
           <Input className={inputCls} value={data.drivers_license_categories || ""} onChange={e => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
-        </Row>
-        <Row label="Rijbewijs vervaldatum">
+        </StamkaartRow>
+        <StamkaartRow label="Rijbewijs vervaldatum">
           <Input type="date" className={inputCls} value={data.drivers_license_expiry || ""} onChange={e => update("drivers_license_expiry", e.target.value)} />
-        </Row>
-        <Row label="Code 95 vervaldatum">
+        </StamkaartRow>
+        <StamkaartRow label="Code 95 vervaldatum">
           <Input type="date" className={inputCls} value={data.code95_expiry || ""} onChange={e => update("code95_expiry", e.target.value)} />
-        </Row>
-        <Row label="Telefoon">
+        </StamkaartRow>
+        <StamkaartRow label="Telefoon">
           <Input className={inputCls} value={data.phone || ""} onChange={e => update("phone", e.target.value)} />
-        </Row>
-        <Row label="Noodcontact (naam / telefoon)">
+        </StamkaartRow>
+        <StamkaartRow label="Noodcontact (naam / telefoon)">
           <div className="flex gap-1 w-full">
             <Input className={inputCls} style={{ width: '50%' }} value={data.emergency_contact_name || ""} onChange={e => update("emergency_contact_name", e.target.value)} placeholder="Naam" />
             <Input className={inputCls} style={{ width: '50%' }} value={data.emergency_contact_phone || ""} onChange={e => update("emergency_contact_phone", e.target.value)} placeholder="Telefoon" />
           </div>
-        </Row>
+        </StamkaartRow>
       </div>
 
       {/* ═══ DIENSTVERBAND ═══ */}
-      <SectionTitle title="Gegevens dienstverband" />
+      <StamkaartSectionTitle title="Gegevens dienstverband" />
       <div className="space-y-1">
-        <Row label="Datum in dienst">
+        <StamkaartRow label="Datum in dienst">
           <Input type="date" className={inputCls} value={data.in_service_since || ""} onChange={e => update("in_service_since", e.target.value)} />
-        </Row>
-        <Row label="Afdeling" required error={fieldError("department")}>
+        </StamkaartRow>
+        <StamkaartRow label="Afdeling" required>
           <Select value={data.department || ""} onValueChange={v => update("department", v)}>
             <SelectTrigger className={`h-7 text-xs ${fieldError("department") ? "border-red-400" : "border-slate-300"}`}><SelectValue /></SelectTrigger>
             <SelectContent>
               {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.label}</SelectItem>)}
             </SelectContent>
           </Select>
-        </Row>
-        <Row label="Functie">
+        </StamkaartRow>
+        <StamkaartRow label="Functie">
           <Select value={data.function || '_none'} onValueChange={v => update("function", v === '_none' ? '' : v)}>
             <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue placeholder="Selecteer" /></SelectTrigger>
             <SelectContent>
@@ -280,8 +329,8 @@ export default function StamkaartForm({ employee }) {
               {functions.map(f => <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>)}
             </SelectContent>
           </Select>
-        </Row>
-        <Row label="Contract type">
+        </StamkaartRow>
+        <StamkaartRow label="Contract type">
           <Select value={data.contract_type || "Tijdelijk"} onValueChange={v => update("contract_type", v)}>
             <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -290,11 +339,11 @@ export default function StamkaartForm({ employee }) {
               <SelectItem value="Oproep">Oproep / 0-uren</SelectItem>
             </SelectContent>
           </Select>
-        </Row>
-        <Row label="Contracturen per week">
+        </StamkaartRow>
+        <StamkaartRow label="Contracturen per week">
           <Input type="number" className={inputCls} value={data.contract_hours || ""} onChange={e => update("contract_hours", Number(e.target.value))} />
-        </Row>
-        <Row label="Loonschaal">
+        </StamkaartRow>
+        <StamkaartRow label="Loonschaal">
           {loadingSalary ? (
             <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Laden...</span>
           ) : (
@@ -308,19 +357,19 @@ export default function StamkaartForm({ employee }) {
               </SelectContent>
             </Select>
           )}
-        </Row>
-        <Row label="Bruto uurloon (€)">
+        </StamkaartRow>
+        <StamkaartRow label="Bruto uurloon (€)">
           <Input type="number" step="0.01" className={inputCls} value={data.hourly_rate || ""} onChange={e => update("hourly_rate", Number(e.target.value))} />
-        </Row>
+        </StamkaartRow>
       </div>
 
       {/* ═══ LOONHEFFINGSKORTING ═══ */}
-      <SectionTitle title="Loonheffingskorting" />
+      <StamkaartSectionTitle title="Loonheffingskorting" />
       <div className="space-y-1">
-        <Row label="Loonheffingskorting toepassen?">
+        <StamkaartRow label="Loonheffingskorting toepassen?">
           <RadioGroup
-            value={lhData.loonheffing_toepassen}
-            onValueChange={val => setLhData(prev => ({ ...prev, loonheffing_toepassen: val }))}
+            value={lhToepassen}
+            onValueChange={val => setLh("loonheffing_toepassen", val)}
             className="flex items-center gap-4"
           >
             <div className="flex items-center gap-1.5">
@@ -331,22 +380,22 @@ export default function StamkaartForm({ employee }) {
               <RadioGroupItem value="nee" id="sk_lh_nee" className="w-3.5 h-3.5" />
               <Label htmlFor="sk_lh_nee" className="text-xs cursor-pointer">Nee</Label>
             </div>
-            {!lhData.loonheffing_toepassen && (
+            {!lhToepassen && (
               <span className="text-xs text-amber-600 ml-2">⚠ Geen keuze</span>
             )}
           </RadioGroup>
-        </Row>
-        {lhData.loonheffing_toepassen && (
-          <Row label="Vanaf datum">
-            <Input type="date" className={inputCls} value={lhData.loonheffing_datum || ""} onChange={e => setLhData(prev => ({ ...prev, loonheffing_datum: e.target.value }))} />
-          </Row>
+        </StamkaartRow>
+        {lhToepassen && (
+          <StamkaartRow label="Vanaf datum">
+            <Input type="date" className={inputCls} value={lhDatum} onChange={e => setLh("loonheffing_datum", e.target.value)} />
+          </StamkaartRow>
         )}
       </div>
 
       {/* ═══ FINANCIËLE SITUATIE ═══ */}
-      <SectionTitle title="Financiële situatie" />
+      <StamkaartSectionTitle title="Financiële situatie" />
       <div className="space-y-1">
-        <Row label="LKV (WW, WAO, WIA)?">
+        <StamkaartRow label="LKV (WW, WAO, WIA)?">
           <Select value={data.lkv_uitkering || "nee"} onValueChange={v => update("lkv_uitkering", v)}>
             <SelectTrigger className="h-7 text-xs border-slate-300"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -354,30 +403,26 @@ export default function StamkaartForm({ employee }) {
               <SelectItem value="nee">Nee</SelectItem>
             </SelectContent>
           </Select>
-        </Row>
-        <Row label="Bijzonderheden">
+        </StamkaartRow>
+        <StamkaartRow label="Bijzonderheden">
           <Input className={inputCls} value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventuele bijzonderheden..." />
-        </Row>
+        </StamkaartRow>
       </div>
 
       {/* ═══ HANDTEKENING ═══ */}
-      <SectionTitle title="Ondertekening" />
+      <StamkaartSectionTitle title="Ondertekening" />
       <div className="grid items-start gap-2 mt-1" style={{ gridTemplateColumns: "1fr 1fr" }}>
         <div>
           <span className="text-xs text-slate-600 block mb-1">Handtekening werknemer</span>
-          <div className="border border-slate-300 bg-white" style={{ maxHeight: 80, overflow: 'hidden' }}>
-            <SignatureCanvas
-              onSign={async (dataUrl) => {
-                const res = await fetch(dataUrl);
-                const blob = await res.blob();
-                const file = new File([blob], "handtekening_lh.jpg", { type: "image/jpeg" });
-                const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                setLhData(prev => ({ ...prev, loonheffing_handtekening_url: file_url }));
-              }}
-            />
-          </div>
-          {lhData.loonheffing_handtekening_url && (
-            <img src={lhData.loonheffing_handtekening_url} alt="Handtekening" className="h-10 border mt-1" />
+          {lhSignatureUrl ? (
+            <div className="space-y-1">
+              <img src={lhSignatureUrl} alt="Handtekening" className="h-12 border" />
+              <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
+            </div>
+          ) : (
+            <div className="border border-slate-300 bg-white" style={{ maxHeight: 80, overflow: 'hidden' }}>
+              <SignatureCanvas onSign={handleSignature} />
+            </div>
           )}
         </div>
         <div>
@@ -387,19 +432,25 @@ export default function StamkaartForm({ employee }) {
       </div>
 
       {/* ═══ ACTIES ═══ */}
-      <div className="flex items-center gap-2 border-t border-slate-300 mt-3 pt-2">
-        <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs px-3" disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
-          {saved ? "Opgeslagen ✓" : "Opslaan"}
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => window.print()} className="h-7 text-xs px-3">
-          <Printer className="w-3 h-3 mr-1" /> Printen
-        </Button>
-        <Button size="sm" variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail} className="h-7 text-xs px-3">
-          {sendingEmail ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
-          Versturen naar Loon
-        </Button>
-      </div>
+      {!hideActions && (
+        <div className="flex items-center gap-2 border-t border-slate-300 mt-3 pt-2">
+          {!isOnboarding && (
+            <>
+              <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs px-3" disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
+                {saved ? "Opgeslagen ✓" : "Opslaan"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => window.print()} className="h-7 text-xs px-3">
+                <Printer className="w-3 h-3 mr-1" /> Printen
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail} className="h-7 text-xs px-3">
+                {sendingEmail ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
+                Versturen naar Loon
+              </Button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
