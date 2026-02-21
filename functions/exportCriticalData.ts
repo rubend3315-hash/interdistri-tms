@@ -13,6 +13,10 @@ const delay = (ms) => new Promise(r => setTimeout(r, ms));
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    const body = await req.json().catch(() => ({}));
+    const triggerType = body.trigger_type || 'manual';
+
     const user = await base44.auth.me();
 
     if (!user || user.role !== 'admin') {
@@ -20,6 +24,9 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date();
+    const retentionUntil = new Date(now);
+    retentionUntil.setDate(retentionUntil.getDate() + 90);
+
     const timestamp = now.toISOString().replace(/[:.]/g, '-');
     const exportId = `critical-export-${timestamp}`;
     const results = {};
@@ -112,6 +119,8 @@ Deno.serve(async (req) => {
       status: 'Completed',
       backup_type: 'Manual',
       environment: 'production',
+      trigger_type: triggerType,
+      retention_until: retentionUntil.toISOString(),
       json_data: JSON.stringify({
         export_type: 'critical_entities',
         entities: results,
@@ -119,6 +128,8 @@ Deno.serve(async (req) => {
         timestamp: now.toISOString(),
         exported_by: user.email,
         total_size: totalSize,
+        trigger_type: triggerType,
+        retention_until: retentionUntil.toISOString(),
       }),
     });
 
