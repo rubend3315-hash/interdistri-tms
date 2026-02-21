@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Download, RotateCcw, AlertCircle, ChevronDown, ChevronRight, CloudUpload, CloudDownload, Database, Copy, Check } from "lucide-react";
+import { Loader2, Download, RotateCcw, AlertCircle, ChevronDown, ChevronRight, CloudUpload, CloudDownload, Database, Copy, Check, FileDown } from "lucide-react";
+import DataProtectionPolicy from "../components/backup/DataProtectionPolicy";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -65,6 +66,21 @@ export default function BackupsPage() {
     },
     onError: (error) => {
       alert('Fout bij export naar Supabase: ' + (error?.response?.data?.error || error.message));
+    }
+  });
+
+  const exportCriticalMutation = useMutation({
+    mutationFn: async () => {
+      const response = await base44.functions.invoke('exportCriticalData');
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['backups-metadata'] });
+      const urls = Object.values(data.entities || {}).filter(e => e.file_url).map(e => e.file_url);
+      alert(`Kritieke data export voltooid! ${data.total_records} records geëxporteerd uit ${Object.keys(data.entities).length} entities.`);
+    },
+    onError: (error) => {
+      alert('Fout bij kritieke export: ' + (error?.response?.data?.error || error.message));
     }
   });
 
@@ -183,6 +199,16 @@ export default function BackupsPage() {
             >
               <CloudDownload className="w-4 h-4 mr-2" />
               Herstel vanuit Supabase
+            </Button>
+            <Button
+              onClick={() => exportCriticalMutation.mutate()}
+              disabled={exportCriticalMutation.isPending}
+              variant="outline"
+              className="border-red-300 text-red-700 hover:bg-red-50"
+            >
+              {exportCriticalMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              <FileDown className="w-4 h-4 mr-2" />
+              {exportCriticalMutation.isPending ? 'Exporteren...' : 'Export Kritieke Data (CSV+JSON)'}
             </Button>
             <Button
               onClick={() => generateSQLMutation.mutate()}
@@ -304,6 +330,11 @@ export default function BackupsPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Data Protection Policy */}
+      <div className="max-w-6xl mx-auto mt-6 px-6">
+        <DataProtectionPolicy />
       </div>
 
       {/* Restore Dialog */}
