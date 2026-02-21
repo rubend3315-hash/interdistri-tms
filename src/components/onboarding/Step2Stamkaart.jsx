@@ -128,12 +128,12 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
   };
 
   return (
-    <div className="max-w-[900px] mx-auto space-y-4">
+    <div className="max-w-[880px] mx-auto space-y-3">
       {/* Print view (hidden on screen) */}
       <OnboardingPrintView employeeData={employeeData} onboardingData={onboardingData} />
 
       {/* Werknemer gegevens samenvatting */}
-      <section className="border rounded-lg p-4 bg-white">
+      <section className="border rounded-lg p-3 bg-white">
         <h3 className="text-sm font-semibold text-slate-700 mb-2">Werknemer gegevens (overgenomen)</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-1 text-sm text-slate-600">
           <div><span className="text-slate-400">Naam:</span> {employeeData.first_name} {employeeData.prefix ? employeeData.prefix + ' ' : ''}{employeeData.last_name}</div>
@@ -143,48 +143,44 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
       </section>
 
       {/* Rijbewijs & Certificaten */}
-      <section className="border rounded-lg p-4 bg-white">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Rijbewijs & Certificaten</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <section className="border rounded-lg p-3 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Rijbewijs & Certificaten</h3>
+        <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Rijbewijsnummer</Label>
-            <Input className="h-10" value={employeeData.drivers_license_number || ""} onChange={(e) => update("drivers_license_number", e.target.value)} />
+            <Input className="h-9" value={employeeData.drivers_license_number || ""} onChange={(e) => update("drivers_license_number", e.target.value)} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Rijbewijscategorieën</Label>
-            <Input className="h-10" value={employeeData.drivers_license_categories || ""} onChange={(e) => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
+            <Input className="h-9" value={employeeData.drivers_license_categories || ""} onChange={(e) => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           <div className="space-y-1">
             <Label className="text-xs">Rijbewijs vervaldatum</Label>
-            <Input className="h-10" type="date" value={employeeData.drivers_license_expiry || ""} onChange={(e) => update("drivers_license_expiry", e.target.value)} />
+            <Input className="h-9" type="date" value={employeeData.drivers_license_expiry || ""} onChange={(e) => update("drivers_license_expiry", e.target.value)} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Code 95 vervaldatum</Label>
-            <Input className="h-10" type="date" value={employeeData.code95_expiry || ""} onChange={(e) => update("code95_expiry", e.target.value)} />
+            <Input className="h-9" type="date" value={employeeData.code95_expiry || ""} onChange={(e) => update("code95_expiry", e.target.value)} />
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           <div className="space-y-1">
-            <Label className="text-xs">Nummer ID-kaart of paspoort *</Label>
-            <Input className="h-10" value={employeeData.id_document_number || ""} onChange={(e) => update("id_document_number", e.target.value)} className={`h-10 ${!employeeData.id_document_number ? "border-amber-300" : ""}`} />
+            <Label className="text-xs">Nr. ID-kaart/paspoort *</Label>
+            <Input className={`h-9 ${!employeeData.id_document_number ? "border-amber-300" : ""}`} value={employeeData.id_document_number || ""} onChange={(e) => update("id_document_number", e.target.value)} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Geldig tot (ID) *</Label>
-            <Input className="h-10" type="date" value={employeeData.id_document_expiry || ""} onChange={(e) => update("id_document_expiry", e.target.value)} className={`h-10 ${!employeeData.id_document_expiry ? "border-amber-300" : ""}`} />
+            <Input className={`h-9 ${!employeeData.id_document_expiry ? "border-amber-300" : ""}`} type="date" value={employeeData.id_document_expiry || ""} onChange={(e) => update("id_document_expiry", e.target.value)} />
           </div>
         </div>
       </section>
 
       {/* Dienstverband */}
-      <section className="border rounded-lg p-4 bg-white">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Gegevens dienstverband</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <section className="border rounded-lg p-3 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Gegevens dienstverband</h3>
+        <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Contract type</Label>
             <Select value={employeeData.contract_type || "Tijdelijk"} onValueChange={(v) => update("contract_type", v)}>
-              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
                 <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
@@ -194,17 +190,15 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Contracturen per week</Label>
-            <Input className="h-10" type="number" value={employeeData.contract_hours || ""} onChange={(e) => update("contract_hours", Number(e.target.value))} />
+            <Input className="h-9" type="number" value={employeeData.contract_hours || ""} onChange={(e) => update("contract_hours", Number(e.target.value))} />
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           <div className="space-y-1">
             <Label className="text-xs">Loonschaal</Label>
             {loadingSalary ? (
-              <div className="flex items-center gap-2 text-sm text-slate-500 h-10"><Loader2 className="w-4 h-4 animate-spin" /> Laden...</div>
+              <div className="flex items-center gap-2 text-xs text-slate-500 h-9"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Laden...</div>
             ) : (
               <Select value={currentScaleKey} onValueChange={handleScaleChange}>
-                <SelectTrigger className="h-10"><SelectValue placeholder="Kies loonschaal" /></SelectTrigger>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Kies loonschaal" /></SelectTrigger>
                 <SelectContent className="max-h-64">
                   {scaleOptions.map(st => {
                     const key = `${st.scale}|${st.step}`;
@@ -216,15 +210,15 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Bruto uurloon (€)</Label>
-            <Input className="h-10" type="number" step="0.01" value={employeeData.hourly_rate || ""} onChange={(e) => update("hourly_rate", Number(e.target.value))} />
+            <Input className="h-9" type="number" step="0.01" value={employeeData.hourly_rate || ""} onChange={(e) => update("hourly_rate", Number(e.target.value))} />
           </div>
         </div>
       </section>
 
       {/* Loonheffingskorting */}
-      <section className="border rounded-lg p-4 bg-white">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Loonheffingskorting</h3>
-        <p className="text-xs text-slate-500 mb-3">Wilt u dat uw werkgever rekening houdt met de loonheffingskorting? (slechts 1 werkgever tegelijk)</p>
+      <section className="border rounded-lg p-3 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Loonheffingskorting</h3>
+        <p className="text-xs text-slate-500 mb-2">Wilt u dat uw werkgever rekening houdt met de loonheffingskorting? (slechts 1 werkgever tegelijk)</p>
 
         <RadioGroup
           value={onboardingData?.loonheffing_toepassen || ""}
@@ -249,11 +243,11 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
       </section>
 
       {/* Ondertekening – single signature */}
-      <section className="border rounded-lg p-4 bg-white">
+      <section className="border rounded-lg p-3 bg-white">
         <h3 className="text-sm font-semibold text-slate-700 mb-2">Ondertekening</h3>
-        <p className="text-xs text-slate-500 mb-3">Eénmalige elektronische handtekening voor alle stamkaartgegevens.</p>
+        <p className="text-xs text-slate-500 mb-2">Eénmalige elektronische handtekening voor alle stamkaartgegevens.</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-2 gap-2 mb-2">
           <div className="space-y-1">
             <Label className="text-xs">Datum</Label>
             <Input type="date" className="h-9" value={onboardingData?.loonheffing_datum || ""} onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_datum: e.target.value })} />
@@ -265,7 +259,7 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
             <div className="flex items-center gap-2 text-sm text-green-700">
               <span className="font-medium">Handtekening opgeslagen</span>
             </div>
-            <img src={onboardingData.loonheffing_handtekening_url} alt="Handtekening" className="border rounded max-h-[120px]" />
+            <img src={onboardingData.loonheffing_handtekening_url} alt="Handtekening" className="border rounded max-h-[100px]" />
             <Button variant="outline" size="sm" onClick={() => onOnboardingChange({ ...onboardingData, loonheffing_handtekening_url: "" })}>Opnieuw tekenen</Button>
           </div>
         ) : (
@@ -288,8 +282,8 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
       </section>
 
       {/* LKV & Financieel */}
-      <section className="border rounded-lg p-4 bg-white">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">LKV & Financiële situatie</h3>
+      <section className="border rounded-lg p-3 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">LKV & Financiële situatie</h3>
         <div className="space-y-3">
           <div className="space-y-1">
             <Label className="text-xs">Komt werknemer uit uitkeringssituatie (WW, WAO, WIA)?</Label>
@@ -309,7 +303,7 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
       </section>
 
       {/* Acties */}
-      <section className="border rounded-lg p-4 bg-white flex flex-wrap items-center gap-3">
+      <section className="border rounded-lg p-3 bg-white flex flex-wrap items-center gap-3">
         <Button variant="outline" size="sm" onClick={() => window.print()}>
           <Printer className="w-4 h-4 mr-1.5" /> Printen
         </Button>

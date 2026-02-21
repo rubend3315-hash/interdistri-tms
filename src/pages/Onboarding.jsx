@@ -74,8 +74,10 @@ export default function Onboarding() {
     delete empPayload.id_document_number;
     delete empPayload.lkv_uitkering;
     delete empPayload.financiele_situatie;
-    // Clean nulls
+    // Clean nulls — protect required string fields
+    const requiredStringFields = ['first_name', 'last_name', 'department'];
     Object.keys(empPayload).forEach(k => {
+      if (requiredStringFields.includes(k)) return;
       if (empPayload[k] === '' || empPayload[k] === undefined) empPayload[k] = null;
     });
 

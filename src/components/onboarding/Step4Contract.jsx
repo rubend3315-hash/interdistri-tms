@@ -101,7 +101,7 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
   const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
 
   return (
-    <div className="max-w-[900px] mx-auto space-y-4">
+    <div className="max-w-[880px] mx-auto space-y-3">
       {/* Contract settings */}
       <section className="border rounded-lg p-4 bg-white">
         <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">

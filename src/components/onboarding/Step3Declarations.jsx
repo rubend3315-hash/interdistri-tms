@@ -33,12 +33,13 @@ export default function Step3Declarations({ onboardingData, onChange, onNext, on
     setSigning(false);
   };
 
-  const allComplete = onboardingData.pincode_verklaring_signed &&
+  const allDeclarationsConfirmed = onboardingData.pincode_verklaring_signed &&
     onboardingData.sleutel_verklaring_signed &&
     onboardingData.gps_buddy_toestemming &&
     onboardingData.dienstbetrekking_signed &&
-    onboardingData.bedrijfsreglement_ontvangen &&
-    onboardingData.employee_signature_url;
+    onboardingData.bedrijfsreglement_ontvangen;
+
+  const allComplete = allDeclarationsConfirmed && !!onboardingData.employee_signature_url;
 
   const declarations = [
     { key: "pincode_verklaring_signed", icon: Key, title: "Ontvangstverklaring Pincode", done: onboardingData.pincode_verklaring_signed },
@@ -51,7 +52,7 @@ export default function Step3Declarations({ onboardingData, onChange, onNext, on
   const completedCount = declarations.filter(d => d.done).length;
 
   return (
-    <div className="max-w-[900px] mx-auto space-y-4">
+    <div className="max-w-[880px] mx-auto space-y-3">
       {/* Progress summary */}
       <div className="flex items-center gap-3 text-sm text-slate-600">
         <span>{completedCount}/{declarations.length} verklaringen afgerond</span>
@@ -205,11 +206,17 @@ export default function Step3Declarations({ onboardingData, onChange, onNext, on
         </Accordion>
       </section>
 
-      {/* Handtekening – single */}
-      <section className="border rounded-lg p-4 bg-white">
+      {/* Handtekening – single, locked until all declarations confirmed */}
+      <section className={`border rounded-lg p-3 bg-white ${!allDeclarationsConfirmed ? 'opacity-60' : ''}`}>
         <h3 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
           <Shield className="w-4 h-4 text-slate-500" /> Handtekening Medewerker
         </h3>
+
+        {!allDeclarationsConfirmed && (
+          <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded mb-2">
+            Bevestig eerst alle verklaringen hierboven voordat u kunt ondertekenen.
+          </p>
+        )}
 
         {onboardingData.employee_signature_url ? (
           <div className="space-y-2">
@@ -217,14 +224,14 @@ export default function Step3Declarations({ onboardingData, onChange, onNext, on
               <CheckCircle2 className="w-4 h-4" />
               <span className="font-medium">Handtekening ontvangen</span>
             </div>
-            <img src={onboardingData.employee_signature_url} alt="Handtekening" className="border rounded max-h-[120px]" />
+            <img src={onboardingData.employee_signature_url} alt="Handtekening" className="border rounded max-h-[100px]" />
             <Button variant="outline" size="sm" onClick={() => update("employee_signature_url", "")}>Opnieuw tekenen</Button>
           </div>
-        ) : (
+        ) : allDeclarationsConfirmed ? (
           <div style={{ maxWidth: 400 }}>
             <SignatureCanvas onSign={handleSignature} signing={signing} />
           </div>
-        )}
+        ) : null}
       </section>
 
       <div className="flex justify-between">
