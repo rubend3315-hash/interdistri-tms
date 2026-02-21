@@ -28,8 +28,19 @@ Deno.serve(async (req) => {
     } catch (e) {
       return Response.json({ success: false, error: 'EMPLOYEE_NOT_FOUND', message: 'Medewerker niet gevonden' }, { status: 404 });
     }
-    if (!employee || employee.status !== 'Actief') {
-      return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: `Medewerker is ${employee?.status?.toLowerCase() || 'onbekend'} — alleen actieve medewerkers mogen drafts opslaan` }, { status: 403 });
+    if (!employee) {
+      return Response.json({ success: false, error: 'EMPLOYEE_NOT_FOUND', message: 'Medewerker niet gevonden' }, { status: 404 });
+    }
+    if (employee.out_of_service_date) {
+      const exitDate = new Date(employee.out_of_service_date);
+      exitDate.setHours(0, 0, 0, 0);
+      const graceEnd = new Date(exitDate);
+      graceEnd.setDate(graceEnd.getDate() + 7);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (today > graceEnd) {
+        return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: 'Je dienstverband is beëindigd en de grace-periode is verlopen.' }, { status: 403 });
+      }
     }
 
     // 1. Zoek alle bestaande Concept entries voor employee_id + date

@@ -20,8 +20,7 @@ import {
   ArrowRight,
   Calendar,
   FileText,
-  TrendingUp,
-  Car,
+    Car,
   Bell,
   Download
 } from "lucide-react";

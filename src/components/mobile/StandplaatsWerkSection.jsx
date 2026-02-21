@@ -52,19 +52,21 @@ export default function StandplaatsWerkSection({
 
   // Auto-collapse regels die net volledig zijn geworden
   useEffect(() => {
-    const newCollapsed = { ...collapsedRegels };
-    let changed = false;
-    standplaatsWerk.forEach((regel, index) => {
-      const wasComplete = prevCompleteRef.current[index];
-      const nowComplete = isComplete(regel);
-      if (nowComplete && !wasComplete && !manuallyExpanded[index]) {
-        newCollapsed[index] = true;
-        changed = true;
-      }
-      prevCompleteRef.current[index] = nowComplete;
+    setCollapsedRegels(prev => {
+      const newState = { ...prev };
+      let changed = false;
+      standplaatsWerk.forEach((regel, index) => {
+        const wasComplete = prevCompleteRef.current[index];
+        const nowComplete = isComplete(regel);
+        if (nowComplete && !wasComplete && !manuallyExpanded[index]) {
+          newState[index] = true;
+          changed = true;
+        }
+        prevCompleteRef.current[index] = nowComplete;
+      });
+      return changed ? newState : prev;
     });
-    if (changed) setCollapsedRegels(newCollapsed);
-  }, [standplaatsWerk]);
+  }, [standplaatsWerk, manuallyExpanded]);
 
   const toggleCollapse = (index) => {
     const willCollapse = !collapsedRegels[index];
