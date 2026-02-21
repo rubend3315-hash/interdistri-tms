@@ -104,27 +104,43 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="space-y-0">
-        <StamkaartRow label="Loonheffingskorting?"><PrintVal>{lhLabel}</PrintVal></StamkaartRow>
-        {lhToepassen && (
-          <StamkaartRow label="Vanaf datum"><PrintVal>{fmtDate(lhDatum)}</PrintVal></StamkaartRow>
-        )}
-        <StamkaartRow label="LKV (WW, WAO, WIA)?"><PrintVal>{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Bijzonderheden">
-          <div className="text-xs text-slate-800 border border-slate-400/60 bg-white min-h-[60px] px-2 py-1.5 w-full" style={{ whiteSpace: 'pre-wrap' }}>{employee.financiele_situatie || "—"}</div>
-        </StamkaartRow>
-      </div>
-
-      {/* ═══ HANDTEKENING ═══ */}
-      <div style={{ marginTop: 16 }}>
-        <span style={{ fontSize: 15, fontWeight: 600 }} className="text-slate-800">Handtekening werknemer — <span className="font-normal text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span></span>
-        {lhSignatureUrl ? (
-          <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ minHeight: 100, marginTop: 4 }} />
-        ) : (
-          <div className="border-2 border-dashed border-slate-300 bg-white flex items-center justify-center w-full" style={{ minHeight: 110, marginTop: 6 }}>
-            <span className="text-xs text-slate-400 italic">Niet getekend</span>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 270px", columnGap: 24 }}>
+        {/* LINKERKOLOM */}
+        <div className="space-y-0">
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
+            <span className="text-xs text-slate-600">Loonheffingskorting?</span>
+            <PrintVal>{lhLabel}</PrintVal>
           </div>
-        )}
+          {lhToepassen && (
+            <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
+              <span className="text-xs text-slate-600">Vanaf datum</span>
+              <PrintVal>{fmtDate(lhDatum)}</PrintVal>
+            </div>
+          )}
+          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
+            <span className="text-xs text-slate-600">LKV (WW, WAO, WIA)?</span>
+            <PrintVal>{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</PrintVal>
+          </div>
+          <div className="grid items-start" style={{ gridTemplateColumns: "45% 55%", minHeight: 100 }}>
+            <span className="text-xs text-slate-600" style={{ paddingTop: 4 }}>Bijzonderheden</span>
+            <div className="text-xs text-slate-800 border border-slate-400/60 bg-white min-h-[100px] px-2 py-1.5" style={{ whiteSpace: 'pre-wrap' }}>{employee.financiele_situatie || "—"}</div>
+          </div>
+        </div>
+
+        {/* RECHTERKOLOM — Handtekening */}
+        <div style={{ maxWidth: 270 }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 2 }}>
+            <span className="text-xs text-slate-600">Handtekening werknemer</span>
+            <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
+          </div>
+          {lhSignatureUrl ? (
+            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 80 }} />
+          ) : (
+            <div className="border border-slate-400/60 bg-white flex items-center justify-center" style={{ height: 80 }}>
+              <span className="text-xs text-slate-400 italic">Niet getekend</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
