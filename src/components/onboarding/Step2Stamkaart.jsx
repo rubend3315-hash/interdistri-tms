@@ -1,19 +1,25 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { FileText, ChevronLeft, ChevronRight, Printer, Send, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer, Send, Loader2, AlertTriangle } from "lucide-react";
 import SignatureCanvas from "../contracts/SignatureCanvas";
 import { buildStamkaartEmailHtml } from "@/components/utils/stamkaartEmailHtml";
+import OnboardingPrintView from "./OnboardingPrintView";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
+} from "@/components/ui/dialog";
 
 export default function Step2Stamkaart({ employeeData, onboardingData, onOnboardingChange, onChange, onNext, onBack }) {
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [pendingSend, setPendingSend] = useState(false);
+
   const update = (field, value) => {
     onChange({ ...employeeData, [field]: value });
   };
@@ -23,16 +29,12 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
     queryFn: () => base44.entities.SalaryTable.filter({ status: "Actief" }),
   });
 
-  // Group salary tables by scale, picking unique scale+step combos
   const scaleOptions = useMemo(() => {
     const map = new Map();
     salaryTables.forEach(st => {
       const key = `${st.scale}|${st.step}`;
-      if (!map.has(key)) {
-        map.set(key, st);
-      }
+      if (!map.has(key)) map.set(key, st);
     });
-    // Sort by scale then step
     return Array.from(map.values()).sort((a, b) => {
       if (a.scale < b.scale) return -1;
       if (a.scale > b.scale) return 1;
@@ -41,7 +43,6 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
   }, [salaryTables]);
 
   const handleScaleChange = (val) => {
-    // val = "scale|step"
     const [scale, step] = val.split('|');
     const match = salaryTables.find(st => st.scale === scale && String(st.step) === step);
     update("salary_scale", `${scale} trede ${step}`);
@@ -51,25 +52,28 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
   };
 
   const currentScaleKey = useMemo(() => {
-    // Try to find matching scale key from current employeeData
-    const match = scaleOptions.find(st => {
-      const label = `${st.scale} trede ${st.step}`;
-      return label === employeeData.salary_scale;
-    });
+    const match = scaleOptions.find(st => `${st.scale} trede ${st.step}` === employeeData.salary_scale);
     return match ? `${match.scale}|${match.step}` : "";
   }, [employeeData.salary_scale, scaleOptions]);
-
-  const [sendingEmail, setSendingEmail] = React.useState(false);
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   const { data: payrollSettings = [] } = useQuery({
     queryKey: ['payrollSettings'],
     queryFn: () => base44.entities.PayrollSettings.list(),
   });
   const payrollConfig = payrollSettings[0] || null;
+
+  // Validation for send
+  const signaturePresent = !!(onboardingData?.loonheffing_handtekening_url || onboardingData?.employee_signature_url);
+  const loonheffingChosen = !!onboardingData?.loonheffing_toepassen;
+  const idValid = !!employeeData.id_document_expiry;
+  const ibanFilled = !!employeeData.bank_account;
+  const canSend = signaturePresent && loonheffingChosen && idValid && ibanFilled;
+
+  const missingFields = [];
+  if (!signaturePresent) missingFields.push("Handtekening");
+  if (!loonheffingChosen) missingFields.push("Loonheffingskorting keuze");
+  if (!idValid) missingFields.push("ID geldig tot");
+  if (!ibanFilled) missingFields.push("IBAN");
 
   const handleSendToPayroll = async () => {
     if (!payrollConfig?.payroll_email) {
@@ -82,9 +86,7 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
     const fullName = `${employeeData.first_name} ${employeeData.prefix ? employeeData.prefix + ' ' : ''}${employeeData.last_name}`;
     const lhLabel = onboardingData?.loonheffing_toepassen === "ja" ? "Ja" : onboardingData?.loonheffing_toepassen === "nee" ? "Nee" : "Niet ingevuld";
     const body = buildStamkaartEmailHtml({
-      fullName,
-      data: employeeData,
-      lhLabel,
+      fullName, data: employeeData, lhLabel,
       lhDatum: onboardingData?.loonheffing_datum || '—',
       signatureUrl: onboardingData?.loonheffing_handtekening_url || null,
       managerName,
@@ -94,8 +96,7 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
     await base44.functions.invoke('sendStamkaartEmail', {
       to: payrollConfig.payroll_email,
       cc: payrollConfig.payroll_cc_email || "",
-      subject,
-      body,
+      subject, body,
       template_key: "stamkaart",
       placeholders: {
         naam: fullName,
@@ -116,241 +117,261 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
       },
     });
     setSendingEmail(false);
+    setShowPrintPreview(false);
+    setPendingSend(false);
     alert("Stamkaart verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
   };
 
+  const handleSendClick = () => {
+    setPendingSend(true);
+    setShowPrintPreview(true);
+  };
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-600" />
-            Stamkaart Werknemer
-          </CardTitle>
-          <p className="text-sm text-slate-500">Gegevens conform de stamkaart van Interdistri</p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Samenvatting persoongegevens */}
-          <div className="bg-slate-50 p-4 rounded-lg space-y-2">
-            <h4 className="font-medium text-sm text-slate-700">Werknemer gegevens (overgenomen)</h4>
-            <div className="grid grid-cols-3 gap-2 text-sm">
-              <div><span className="text-slate-500">Naam:</span> {employeeData.first_name} {employeeData.prefix ? employeeData.prefix + ' ' : ''}{employeeData.last_name}</div>
-              <div><span className="text-slate-500">Email:</span> {employeeData.email}</div>
-              <div><span className="text-slate-500">Telefoon:</span> {employeeData.phone || '—'}</div>
-            </div>
+    <div className="max-w-[900px] mx-auto space-y-4">
+      {/* Print view (hidden on screen) */}
+      <OnboardingPrintView employeeData={employeeData} onboardingData={onboardingData} />
+
+      {/* Werknemer gegevens samenvatting */}
+      <section className="border rounded-lg p-4 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Werknemer gegevens (overgenomen)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-1 text-sm text-slate-600">
+          <div><span className="text-slate-400">Naam:</span> {employeeData.first_name} {employeeData.prefix ? employeeData.prefix + ' ' : ''}{employeeData.last_name}</div>
+          <div><span className="text-slate-400">Email:</span> {employeeData.email}</div>
+          <div><span className="text-slate-400">Telefoon:</span> {employeeData.phone || '—'}</div>
+        </div>
+      </section>
+
+      {/* Rijbewijs & Certificaten */}
+      <section className="border rounded-lg p-4 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Rijbewijs & Certificaten</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Rijbewijsnummer</Label>
+            <Input className="h-10" value={employeeData.drivers_license_number || ""} onChange={(e) => update("drivers_license_number", e.target.value)} />
           </div>
-
-          {/* Rijbewijs */}
-          <div className="border-t pt-4">
-            <h4 className="font-medium mb-3">Rijbewijs & Certificaten</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Rijbewijsnummer</Label>
-                <Input value={employeeData.drivers_license_number || ""} onChange={(e) => update("drivers_license_number", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Rijbewijscategorieën</Label>
-                <Input value={employeeData.drivers_license_categories || ""} onChange={(e) => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-3">
-              <div className="space-y-2">
-                <Label>Rijbewijs vervaldatum</Label>
-                <Input type="date" value={employeeData.drivers_license_expiry || ""} onChange={(e) => update("drivers_license_expiry", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Code 95 vervaldatum</Label>
-                <Input type="date" value={employeeData.code95_expiry || ""} onChange={(e) => update("code95_expiry", e.target.value)} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-3">
-              <div className="space-y-2">
-                <Label>Nummer ID-kaart of paspoort *</Label>
-                <Input value={employeeData.id_document_number || ""} onChange={(e) => update("id_document_number", e.target.value)} className={!employeeData.id_document_number ? "border-amber-300" : ""} />
-              </div>
-              <div className="space-y-2">
-                <Label>Geldig tot (ID-kaart/paspoort) *</Label>
-                <Input type="date" value={employeeData.id_document_expiry || ""} onChange={(e) => update("id_document_expiry", e.target.value)} className={!employeeData.id_document_expiry ? "border-amber-300" : ""} />
-              </div>
-            </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Rijbewijscategorieën</Label>
+            <Input className="h-10" value={employeeData.drivers_license_categories || ""} onChange={(e) => update("drivers_license_categories", e.target.value)} placeholder="B, C, CE" />
           </div>
-
-          {/* Contract info */}
-          <div className="border-t pt-4">
-            <h4 className="font-medium mb-3">Gegevens dienstverband</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Contract type</Label>
-                <Select value={employeeData.contract_type || "Tijdelijk"} onValueChange={(v) => update("contract_type", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
-                    <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
-                    <SelectItem value="Oproep">Oproep / 0-uren</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Contracturen per week</Label>
-                <Input type="number" value={employeeData.contract_hours || ""} onChange={(e) => update("contract_hours", Number(e.target.value))} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-3">
-              <div className="space-y-2">
-                <Label>Loonschaal (uit loontabellen)</Label>
-                {loadingSalary ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-500 h-9"><Loader2 className="w-4 h-4 animate-spin" /> Laden...</div>
-                ) : (
-                  <Select value={currentScaleKey} onValueChange={handleScaleChange}>
-                    <SelectTrigger><SelectValue placeholder="Kies loonschaal" /></SelectTrigger>
-                    <SelectContent className="max-h-64">
-                      {scaleOptions.map(st => {
-                        const key = `${st.scale}|${st.step}`;
-                        const label = `${st.scale} trede ${st.step}${st.name ? ` — ${st.name}` : ''} (€${st.hourly_rate?.toFixed(2)})`;
-                        return <SelectItem key={key} value={key}>{label}</SelectItem>;
-                      })}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Bruto uurloon (€)</Label>
-                <Input type="number" step="0.01" value={employeeData.hourly_rate || ""} onChange={(e) => update("hourly_rate", Number(e.target.value))} />
-                {employeeData.hourly_rate > 0 && (
-                  <p className="text-xs text-slate-500">Automatisch ingevuld vanuit loontabel. Handmatig aanpasbaar.</p>
-                )}
-              </div>
-            </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Rijbewijs vervaldatum</Label>
+            <Input className="h-10" type="date" value={employeeData.drivers_license_expiry || ""} onChange={(e) => update("drivers_license_expiry", e.target.value)} />
           </div>
-
-          {/* Loonheffingskorting toepassen */}
-          <div className="border-t pt-4">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="bg-slate-800 text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center">2</span>
-              <h4 className="font-semibold">Loonheffingskorting toepassen</h4>
-            </div>
-
-            <div className="border rounded-lg p-4 space-y-4 bg-white">
-              <div>
-                <p className="text-sm text-slate-700 mb-1"><strong>2a</strong>&nbsp; Wilt u dat uw werkgever of uitkeringsinstantie rekening houdt met de loonheffingskorting?</p>
-                <p className="text-xs text-slate-500 italic mb-3">U kunt de loonheffingskorting maar door 1 werkgever of uitkeringsinstantie tegelijkertijd laten toepassen.</p>
-
-                <RadioGroup
-                  value={onboardingData?.loonheffing_toepassen || ""}
-                  onValueChange={(val) => onOnboardingChange({ ...onboardingData, loonheffing_toepassen: val })}
-                  className="space-y-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <RadioGroupItem value="ja" id="lh_ja" />
-                    <Label htmlFor="lh_ja" className="font-medium text-sm cursor-pointer">Ja, vanaf</Label>
-                    <Input
-                      type="date"
-                      className="w-40 h-8 text-sm"
-                      value={onboardingData?.loonheffing_ja_datum || ""}
-                      onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_ja_datum: e.target.value })}
-                      disabled={onboardingData?.loonheffing_toepassen !== "ja"}
-                    />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <RadioGroupItem value="nee" id="lh_nee" />
-                    <Label htmlFor="lh_nee" className="font-medium text-sm cursor-pointer">Nee, vanaf</Label>
-                    <Input
-                      type="date"
-                      className="w-40 h-8 text-sm"
-                      value={onboardingData?.loonheffing_nee_datum || ""}
-                      onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_nee_datum: e.target.value })}
-                      disabled={onboardingData?.loonheffing_toepassen !== "nee"}
-                    />
-                  </div>
-                </RadioGroup>
-
-                {!onboardingData?.loonheffing_toepassen && (
-                  <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded mt-3">
-                    Let op: zonder keuze moet het anoniementarief worden toegepast.
-                  </p>
-                )}
-              </div>
-
-              {/* Ondertekening */}
-              <div className="border-t pt-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="bg-slate-800 text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center">3</span>
-                  <h4 className="font-semibold">Ondertekening</h4>
-                </div>
-                <p className="text-xs text-slate-500 italic mb-3">Lever dit formulier na ondertekening in bij uw werkgever of uitkeringsinstantie.</p>
-
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div className="space-y-1">
-                    <Label className="text-sm">Datum</Label>
-                    <Input
-                      type="date"
-                      value={onboardingData?.loonheffing_datum || ""}
-                      onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_datum: e.target.value })}
-                      className="h-9"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-sm">Handtekening</Label>
-                  <p className="text-xs text-slate-500 mb-1">Schrijf binnen het vak.</p>
-                  <div className="border rounded-lg bg-slate-50 p-1" style={{ maxWidth: 400 }}>
-                    <SignatureCanvas
-                      onSign={async (dataUrl) => {
-                        const res = await fetch(dataUrl);
-                        const blob = await res.blob();
-                        const file = new File([blob], "handtekening_lh_onboarding.jpg", { type: "image/jpeg" });
-                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                        onOnboardingChange({ ...onboardingData, loonheffing_handtekening_url: file_url });
-                      }}
-                    />
-                  </div>
-                  {onboardingData?.loonheffing_handtekening_url && (
-                    <div className="mt-2">
-                      <img src={onboardingData.loonheffing_handtekening_url} alt="Handtekening" className="h-12 border rounded" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Code 95 vervaldatum</Label>
+            <Input className="h-10" type="date" value={employeeData.code95_expiry || ""} onChange={(e) => update("code95_expiry", e.target.value)} />
           </div>
-
-          {/* LKV en financiële situatie */}
-          <div className="border-t pt-4">
-            <h4 className="font-medium mb-3">Beoordeling LKV & Financiële situatie</h4>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label>Komt werknemer uit uitkeringssituatie (WW, WAO, WIA)?</Label>
-                <Select value={employeeData.lkv_uitkering || "nee"} onValueChange={(v) => update("lkv_uitkering", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ja">Ja, doelgroep verklaring aanvragen</SelectItem>
-                    <SelectItem value="nee">Nee</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Financiële situatie / bijzonderheden</Label>
-                <Textarea value={employeeData.financiele_situatie || ""} onChange={(e) => update("financiele_situatie", e.target.value)} rows={2} placeholder="Eventuele bijzonderheden..." />
-              </div>
-            </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Nummer ID-kaart of paspoort *</Label>
+            <Input className="h-10" value={employeeData.id_document_number || ""} onChange={(e) => update("id_document_number", e.target.value)} className={`h-10 ${!employeeData.id_document_number ? "border-amber-300" : ""}`} />
           </div>
-        </CardContent>
-      </Card>
+          <div className="space-y-1">
+            <Label className="text-xs">Geldig tot (ID) *</Label>
+            <Input className="h-10" type="date" value={employeeData.id_document_expiry || ""} onChange={(e) => update("id_document_expiry", e.target.value)} className={`h-10 ${!employeeData.id_document_expiry ? "border-amber-300" : ""}`} />
+          </div>
+        </div>
+      </section>
 
-      {/* Print / Send */}
-      <Card>
-        <CardContent className="pt-4 flex flex-wrap items-center gap-3">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" /> Stamkaart Printen
-          </Button>
-          <Button variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail}>
-            {sendingEmail ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+      {/* Dienstverband */}
+      <section className="border rounded-lg p-4 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Gegevens dienstverband</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Contract type</Label>
+            <Select value={employeeData.contract_type || "Tijdelijk"} onValueChange={(v) => update("contract_type", v)}>
+              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
+                <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
+                <SelectItem value="Oproep">Oproep / 0-uren</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Contracturen per week</Label>
+            <Input className="h-10" type="number" value={employeeData.contract_hours || ""} onChange={(e) => update("contract_hours", Number(e.target.value))} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Loonschaal</Label>
+            {loadingSalary ? (
+              <div className="flex items-center gap-2 text-sm text-slate-500 h-10"><Loader2 className="w-4 h-4 animate-spin" /> Laden...</div>
+            ) : (
+              <Select value={currentScaleKey} onValueChange={handleScaleChange}>
+                <SelectTrigger className="h-10"><SelectValue placeholder="Kies loonschaal" /></SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {scaleOptions.map(st => {
+                    const key = `${st.scale}|${st.step}`;
+                    return <SelectItem key={key} value={key}>{st.scale} trede {st.step} (€{st.hourly_rate?.toFixed(2)})</SelectItem>;
+                  })}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Bruto uurloon (€)</Label>
+            <Input className="h-10" type="number" step="0.01" value={employeeData.hourly_rate || ""} onChange={(e) => update("hourly_rate", Number(e.target.value))} />
+          </div>
+        </div>
+      </section>
+
+      {/* Loonheffingskorting */}
+      <section className="border rounded-lg p-4 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Loonheffingskorting</h3>
+        <p className="text-xs text-slate-500 mb-3">Wilt u dat uw werkgever rekening houdt met de loonheffingskorting? (slechts 1 werkgever tegelijk)</p>
+
+        <RadioGroup
+          value={onboardingData?.loonheffing_toepassen || ""}
+          onValueChange={(val) => onOnboardingChange({ ...onboardingData, loonheffing_toepassen: val })}
+          className="space-y-2"
+        >
+          <div className="flex items-center gap-3">
+            <RadioGroupItem value="ja" id="lh_ja" />
+            <Label htmlFor="lh_ja" className="text-sm cursor-pointer">Ja, vanaf</Label>
+            <Input type="date" className="w-40 h-9 text-sm" value={onboardingData?.loonheffing_ja_datum || ""} onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_ja_datum: e.target.value })} disabled={onboardingData?.loonheffing_toepassen !== "ja"} />
+          </div>
+          <div className="flex items-center gap-3">
+            <RadioGroupItem value="nee" id="lh_nee" />
+            <Label htmlFor="lh_nee" className="text-sm cursor-pointer">Nee, vanaf</Label>
+            <Input type="date" className="w-40 h-9 text-sm" value={onboardingData?.loonheffing_nee_datum || ""} onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_nee_datum: e.target.value })} disabled={onboardingData?.loonheffing_toepassen !== "nee"} />
+          </div>
+        </RadioGroup>
+
+        {!onboardingData?.loonheffing_toepassen && (
+          <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded mt-3">Zonder keuze wordt het anoniementarief toegepast.</p>
+        )}
+      </section>
+
+      {/* Ondertekening – single signature */}
+      <section className="border rounded-lg p-4 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Ondertekening</h3>
+        <p className="text-xs text-slate-500 mb-3">Eénmalige elektronische handtekening voor alle stamkaartgegevens.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Datum</Label>
+            <Input type="date" className="h-9" value={onboardingData?.loonheffing_datum || ""} onChange={(e) => onOnboardingChange({ ...onboardingData, loonheffing_datum: e.target.value })} />
+          </div>
+        </div>
+
+        {onboardingData?.loonheffing_handtekening_url ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-green-700">
+              <span className="font-medium">Handtekening opgeslagen</span>
+            </div>
+            <img src={onboardingData.loonheffing_handtekening_url} alt="Handtekening" className="border rounded max-h-[120px]" />
+            <Button variant="outline" size="sm" onClick={() => onOnboardingChange({ ...onboardingData, loonheffing_handtekening_url: "" })}>Opnieuw tekenen</Button>
+          </div>
+        ) : (
+          <div style={{ maxWidth: 400 }}>
+            <SignatureCanvas
+              onSign={async (dataUrl) => {
+                const res = await fetch(dataUrl);
+                const blob = await res.blob();
+                const file = new File([blob], "handtekening_lh_onboarding.jpg", { type: "image/jpeg" });
+                const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                onOnboardingChange({
+                  ...onboardingData,
+                  loonheffing_handtekening_url: file_url,
+                  loonheffing_datum: onboardingData.loonheffing_datum || new Date().toISOString().split('T')[0],
+                });
+              }}
+            />
+          </div>
+        )}
+      </section>
+
+      {/* LKV & Financieel */}
+      <section className="border rounded-lg p-4 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">LKV & Financiële situatie</h3>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Komt werknemer uit uitkeringssituatie (WW, WAO, WIA)?</Label>
+            <Select value={employeeData.lkv_uitkering || "nee"} onValueChange={(v) => update("lkv_uitkering", v)}>
+              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ja">Ja, doelgroep verklaring aanvragen</SelectItem>
+                <SelectItem value="nee">Nee</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Financiële situatie / bijzonderheden</Label>
+            <Textarea value={employeeData.financiele_situatie || ""} onChange={(e) => update("financiele_situatie", e.target.value)} rows={2} placeholder="Eventuele bijzonderheden..." />
+          </div>
+        </div>
+      </section>
+
+      {/* Acties */}
+      <section className="border rounded-lg p-4 bg-white flex flex-wrap items-center gap-3">
+        <Button variant="outline" size="sm" onClick={() => window.print()}>
+          <Printer className="w-4 h-4 mr-1.5" /> Printen
+        </Button>
+        <div className="relative">
+          <Button variant="outline" size="sm" onClick={handleSendClick} disabled={sendingEmail || !canSend}>
+            {sendingEmail ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Send className="w-4 h-4 mr-1.5" />}
             Versturen naar Loonadministratie
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+        {!canSend && missingFields.length > 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Ontbreekt: {missingFields.join(", ")}
+          </div>
+        )}
+      </section>
 
+      {/* Print Preview / Send Confirmation Dialog */}
+      <Dialog open={showPrintPreview} onOpenChange={setShowPrintPreview}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Print Preview – Stamkaart</DialogTitle>
+            <DialogDescription>Controleer de gegevens voordat u verstuurt naar de loonadministratie.</DialogDescription>
+          </DialogHeader>
+          <div className="border rounded p-4 text-sm space-y-3 bg-white">
+            <PreviewSection label="Persoonlijk" items={[
+              ["Naam", `${employeeData.first_name} ${employeeData.prefix || ""} ${employeeData.last_name}`],
+              ["Geboortedatum", employeeData.date_of_birth],
+              ["BSN", employeeData.bsn],
+              ["IBAN", employeeData.bank_account],
+              ["Adres", `${employeeData.address || "—"}, ${employeeData.postal_code || ""} ${employeeData.city || ""}`],
+            ]} />
+            <PreviewSection label="Dienstverband" items={[
+              ["Afdeling", employeeData.department],
+              ["Functie", employeeData.function],
+              ["Contracttype", employeeData.contract_type],
+              ["Uren/week", employeeData.contract_hours],
+              ["Uurloon", employeeData.hourly_rate ? `€ ${Number(employeeData.hourly_rate).toFixed(2)}` : "—"],
+            ]} />
+            <PreviewSection label="Loonheffingskorting" items={[
+              ["Keuze", onboardingData?.loonheffing_toepassen === "ja" ? "Ja" : "Nee"],
+            ]} />
+            {onboardingData?.loonheffing_handtekening_url && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Handtekening:</p>
+                <img src={onboardingData.loonheffing_handtekening_url} alt="Handtekening" className="max-h-16 border rounded" />
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setShowPrintPreview(false); setPendingSend(false); }}>Annuleren</Button>
+            {pendingSend && (
+              <Button onClick={handleSendToPayroll} disabled={sendingEmail} className="bg-blue-600 hover:bg-blue-700">
+                {sendingEmail ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Send className="w-4 h-4 mr-1.5" />}
+                Bevestig & Verstuur
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Navigation */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
           <ChevronLeft className="w-4 h-4 mr-1" /> Vorige
@@ -378,6 +399,20 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
           Volgende: Verklaringen <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
+    </div>
+  );
+}
+
+function PreviewSection({ label, items }) {
+  return (
+    <div>
+      <h4 className="text-xs font-semibold text-slate-500 uppercase mb-1">{label}</h4>
+      {items.map(([k, v], i) => (
+        <div key={i} className="flex py-0.5">
+          <span className="w-36 text-slate-400 shrink-0">{k}</span>
+          <span className="text-slate-700">{v || "—"}</span>
+        </div>
+      ))}
     </div>
   );
 }

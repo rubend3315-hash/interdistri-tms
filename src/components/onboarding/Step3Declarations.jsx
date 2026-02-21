@@ -1,17 +1,16 @@
 import React, { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ChevronLeft, ChevronRight, Key, DoorOpen, Satellite, FileText, BookOpen, CheckCircle2, Shield } from "lucide-react";
 import SignatureCanvas from "../contracts/SignatureCanvas";
 import { base44 } from "@/api/base44Client";
 
 export default function Step3Declarations({ onboardingData, onChange, onNext, onBack, employeeName }) {
   const [signing, setSigning] = useState(false);
-  const [activeSection, setActiveSection] = useState(null);
 
   const generatedPin = useMemo(() => {
     if (onboardingData.pincode_sleutelkast) return onboardingData.pincode_sleutelkast;
@@ -26,7 +25,6 @@ export default function Step3Declarations({ onboardingData, onChange, onNext, on
 
   const handleSignature = async (dataUrl) => {
     setSigning(true);
-    // Convert base64 to blob
     const res = await fetch(dataUrl);
     const blob = await res.blob();
     const file = new File([blob], "handtekening_onboarding.jpg", { type: "image/jpeg" });
@@ -43,227 +41,191 @@ export default function Step3Declarations({ onboardingData, onChange, onNext, on
     onboardingData.employee_signature_url;
 
   const declarations = [
-    {
-      key: "pincode_verklaring_signed",
-      icon: Key,
-      title: "Ontvangstverklaring Pincode Sleutelkast",
-      done: onboardingData.pincode_verklaring_signed,
-    },
-    {
-      key: "sleutel_verklaring_signed",
-      icon: DoorOpen,
-      title: "Sleutelverklaring Pand & Hek",
-      done: onboardingData.sleutel_verklaring_signed,
-    },
-    {
-      key: "gps_buddy_toestemming",
-      icon: Satellite,
-      title: "Toestemmingsverklaring GPS Buddy",
-      done: onboardingData.gps_buddy_toestemming,
-    },
-    {
-      key: "dienstbetrekking_signed",
-      icon: FileText,
-      title: "Verklaring van Dienstbetrekking",
-      done: onboardingData.dienstbetrekking_signed,
-    },
-    {
-      key: "bedrijfsreglement_ontvangen",
-      icon: BookOpen,
-      title: "Ontvangst Bedrijfsreglement",
-      done: onboardingData.bedrijfsreglement_ontvangen,
-    },
+    { key: "pincode_verklaring_signed", icon: Key, title: "Ontvangstverklaring Pincode", done: onboardingData.pincode_verklaring_signed },
+    { key: "sleutel_verklaring_signed", icon: DoorOpen, title: "Sleutelverklaring", done: onboardingData.sleutel_verklaring_signed },
+    { key: "gps_buddy_toestemming", icon: Satellite, title: "Toestemming GPS", done: onboardingData.gps_buddy_toestemming },
+    { key: "dienstbetrekking_signed", icon: FileText, title: "Verklaring Dienstbetrekking", done: onboardingData.dienstbetrekking_signed },
+    { key: "bedrijfsreglement_ontvangen", icon: BookOpen, title: "Bedrijfsreglement", done: onboardingData.bedrijfsreglement_ontvangen },
   ];
 
+  const completedCount = declarations.filter(d => d.done).length;
+
   return (
-    <div className="space-y-6">
-      {/* Overview cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {declarations.map((decl) => (
-          <Card
-            key={decl.key}
-            className={`cursor-pointer transition-all hover:shadow-md ${activeSection === decl.key ? 'ring-2 ring-blue-500' : ''} ${decl.done ? 'border-green-200 bg-green-50/50' : ''}`}
-            onClick={() => setActiveSection(activeSection === decl.key ? null : decl.key)}
-          >
-            <CardContent className="py-4 flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${decl.done ? 'bg-green-100' : 'bg-slate-100'}`}>
-                {decl.done ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <decl.icon className="w-5 h-5 text-slate-500" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-slate-800 truncate">{decl.title}</p>
-                <Badge variant="outline" className={decl.done ? "bg-green-100 text-green-700 border-green-200" : "bg-slate-100 text-slate-500"}>
-                  {decl.done ? "Afgerond" : "Openstaand"}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+    <div className="max-w-[900px] mx-auto space-y-4">
+      {/* Progress summary */}
+      <div className="flex items-center gap-3 text-sm text-slate-600">
+        <span>{completedCount}/{declarations.length} verklaringen afgerond</span>
+        {onboardingData.employee_signature_url && (
+          <Badge className="bg-green-100 text-green-700 text-xs">Handtekening ✓</Badge>
+        )}
       </div>
 
-      {/* Pincode verklaring */}
-      {activeSection === "pincode_verklaring_signed" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base"><Key className="w-5 h-5 text-blue-600" />Ontvangstverklaring Pincode Sleutelkast</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm font-medium text-blue-800 mb-2">Gegenereerde pincode:</p>
-              <p className="text-4xl font-mono font-bold text-blue-900 tracking-widest">{onboardingData.pincode_sleutelkast || generatedPin}</p>
-            </div>
-            <div className="text-sm text-slate-600 space-y-1">
-              <p>1. Dit is de eigen unieke pincode van de medewerker.</p>
-              <p>2. De pincode mag aan niemand anders verstrekt worden.</p>
-              <p>3. De medewerker draagt zorg dat niemand de pincode afkijkt bij invoeren.</p>
-              <p>4. Sleutels uitgenomen onder deze pincode vallen onder verantwoordelijkheid van de medewerker.</p>
-              <p>5. Bij verlies dient de medewerker zelf aangifte te doen.</p>
-              <p>6. Kosten van vermiste sleutels incl. programmeerkosten worden op netto salaris ingehouden.</p>
-            </div>
-            <div className="flex items-center gap-3 pt-2">
-              <Checkbox
-                checked={onboardingData.pincode_verklaring_signed || false}
-                onCheckedChange={(v) => update("pincode_verklaring_signed", v)}
-              />
-              <Label className="text-sm">{employeeName} heeft kennis genomen van de verklaring en gaat akkoord</Label>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Sleutelverklaring + GPS Buddy (gecombineerd) */}
-      {activeSection === "sleutel_verklaring_signed" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base"><DoorOpen className="w-5 h-5 text-blue-600" />Sleutelverklaring Pand & Hek</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Sleutelnummer</Label>
-                <Input value={onboardingData.sleutel_nummer || ""} onChange={(e) => update("sleutel_nummer", e.target.value)} />
+      {/* Accordion verklaringen */}
+      <section className="border rounded-lg bg-white overflow-hidden">
+        <Accordion type="single" collapsible className="w-full">
+          {/* Pincode */}
+          <AccordionItem value="pincode" className="border-b last:border-b-0">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-3 text-left">
+                {onboardingData.pincode_verklaring_signed ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                ) : (
+                  <Key className="w-4 h-4 text-slate-400 shrink-0" />
+                )}
+                <span className="text-sm font-medium">Ontvangstverklaring Pincode Sleutelkast</span>
+                <Badge variant="outline" className={`text-xs ml-auto mr-2 ${onboardingData.pincode_verklaring_signed ? "bg-green-50 text-green-700" : ""}`}>
+                  {onboardingData.pincode_verklaring_signed ? "Afgerond" : "Openstaand"}
+                </Badge>
               </div>
-              <div className="space-y-2">
-                <Label>Sleutel geeft toegang tot</Label>
-                <Input value={onboardingData.sleutel_toegang || ""} onChange={(e) => update("sleutel_toegang", e.target.value)} placeholder="bijv. Pand + hek" />
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="bg-slate-50 p-3 rounded mb-3">
+                <p className="text-xs text-slate-500 mb-1">Gegenereerde pincode:</p>
+                <p className="text-2xl font-mono font-bold tracking-widest text-slate-800">{onboardingData.pincode_sleutelkast || generatedPin}</p>
               </div>
-            </div>
-            <div className="text-sm text-slate-600 space-y-1 bg-slate-50 p-3 rounded-lg">
-              <p>• Sleutelhouder houdt zich aan geldende regels en veiligheidsvoorschriften.</p>
-              <p>• Het is verboden een kopie te (laten) maken.</p>
-              <p>• Sleutelhouder is verantwoordelijk voor schade door misbruik.</p>
-              <p>• Diefstal of verlies direct melden bij leidinggevende.</p>
-              <p>• Bij einde dienstverband uiterlijk op laatste werkdag inleveren.</p>
-            </div>
-            <div className="flex items-center gap-3 pt-2">
-              <Checkbox
-                checked={onboardingData.sleutel_verklaring_signed || false}
-                onCheckedChange={(v) => update("sleutel_verklaring_signed", v)}
-              />
-              <Label className="text-sm">{employeeName} gaat akkoord met de sleutelverklaring</Label>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* GPS Buddy */}
-      {activeSection === "gps_buddy_toestemming" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base"><Satellite className="w-5 h-5 text-blue-600" />Toestemmingsverklaring GPS Buddy</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm text-slate-600 space-y-2 bg-slate-50 p-4 rounded-lg">
-              <p>Ondergetekende geeft toestemming voor de aanwezigheid van een GPS-Buddy ritregistratiesysteem in het door hem/haar te gebruiken voertuig van Interdistri.</p>
-              <p>Verwerkersverantwoordelijke gebruikt de geregistreerde data uitsluitend voor werkgerelateerde zaken. GPS-Buddy verwerkt de data uitsluitend voor de uitvoer van de overeenkomst.</p>
-              <p>Beide partijen dragen zorg voor naleving van de AVG en nadere privacy regelgeving.</p>
-              <p>Gegevens worden 7 jaar bewaard voor de Belastingdienst. Verkregen gegevens worden zonder toestemming niet aan derden verstrekt, tenzij wettelijk verplicht.</p>
-            </div>
-            <div className="flex items-center gap-3 pt-2">
-              <Checkbox
-                checked={onboardingData.gps_buddy_toestemming || false}
-                onCheckedChange={(v) => update("gps_buddy_toestemming", v)}
-              />
-              <Label className="text-sm">{employeeName} geeft toestemming voor GPS Buddy ritregistratie</Label>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Verklaring van dienstbetrekking */}
-      {activeSection === "dienstbetrekking_signed" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base"><FileText className="w-5 h-5 text-blue-600" />Verklaring van Dienstbetrekking</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm text-slate-600 space-y-2 bg-slate-50 p-4 rounded-lg">
-              <p className="font-medium">Als bedoeld in artikel 2.11, eerste lid van de Wet wegvervoer goederen</p>
-              <p>Vergunninghouder: <strong>Interdistri</strong>, Fleerbosseweg 19, 4421RR Kapelle</p>
-              <p>Chauffeur: <strong>{employeeName}</strong></p>
-              <p className="mt-2">Verklaren:</p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>dat het vervoer met de door de chauffeur bestuurde vrachtauto voor rekening en risico van de vergunninghouder wordt verricht;</li>
-                <li>dat er sprake is van een loons- en gezagsverhouding;</li>
-                <li>de vermelde gegevens naar waarheid te hebben ingevuld.</li>
-              </ul>
-            </div>
-            <div className="flex items-center gap-3 pt-2">
-              <Checkbox
-                checked={onboardingData.dienstbetrekking_signed || false}
-                onCheckedChange={(v) => update("dienstbetrekking_signed", v)}
-              />
-              <Label className="text-sm">{employeeName} bevestigt de verklaring van dienstbetrekking</Label>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Bedrijfsreglement */}
-      {activeSection === "bedrijfsreglement_ontvangen" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="w-5 h-5 text-blue-600" />Ontvangst Bedrijfsreglement</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm text-slate-600 bg-slate-50 p-4 rounded-lg">
-              <p>Het bedrijfsreglement is beschikbaar via de mobiele app (Mobile Entry). De medewerker bevestigt hierbij dat het bedrijfsreglement is ontvangen en gelezen.</p>
-            </div>
-            <div className="flex items-center gap-3 pt-2">
-              <Checkbox
-                checked={onboardingData.bedrijfsreglement_ontvangen || false}
-                onCheckedChange={(v) => update("bedrijfsreglement_ontvangen", v)}
-              />
-              <Label className="text-sm">{employeeName} bevestigt ontvangst van het bedrijfsreglement</Label>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Handtekening */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Shield className="w-5 h-5 text-blue-600" />
-            Handtekening Medewerker
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {onboardingData.employee_signature_url ? (
-            <div className="space-y-3">
-              <div className="bg-green-50 p-3 rounded-lg flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <span className="text-sm text-green-700 font-medium">Handtekening ontvangen</span>
+              <div className="text-xs text-slate-600 space-y-0.5 mb-3">
+                <p>1. Dit is de eigen unieke pincode van de medewerker.</p>
+                <p>2. De pincode mag aan niemand anders verstrekt worden.</p>
+                <p>3. Sleutels uitgenomen onder deze pincode vallen onder verantwoordelijkheid van de medewerker.</p>
+                <p>4. Bij verlies dient de medewerker zelf aangifte te doen.</p>
+                <p>5. Kosten van vermiste sleutels worden op netto salaris ingehouden.</p>
               </div>
-              <img src={onboardingData.employee_signature_url} alt="Handtekening" className="border rounded-lg max-h-32" />
-              <Button variant="outline" size="sm" onClick={() => update("employee_signature_url", "")}>
-                Opnieuw tekenen
-              </Button>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={onboardingData.pincode_verklaring_signed || false} onCheckedChange={(v) => update("pincode_verklaring_signed", v)} />
+                <Label className="text-sm">{employeeName} gaat akkoord</Label>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Sleutel */}
+          <AccordionItem value="sleutel" className="border-b last:border-b-0">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-3 text-left">
+                {onboardingData.sleutel_verklaring_signed ? <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" /> : <DoorOpen className="w-4 h-4 text-slate-400 shrink-0" />}
+                <span className="text-sm font-medium">Sleutelverklaring Pand & Hek</span>
+                <Badge variant="outline" className={`text-xs ml-auto mr-2 ${onboardingData.sleutel_verklaring_signed ? "bg-green-50 text-green-700" : ""}`}>
+                  {onboardingData.sleutel_verklaring_signed ? "Afgerond" : "Openstaand"}
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Sleutelnummer</Label>
+                  <Input className="h-10" value={onboardingData.sleutel_nummer || ""} onChange={(e) => update("sleutel_nummer", e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Sleutel geeft toegang tot</Label>
+                  <Input className="h-10" value={onboardingData.sleutel_toegang || ""} onChange={(e) => update("sleutel_toegang", e.target.value)} placeholder="bijv. Pand + hek" />
+                </div>
+              </div>
+              <div className="text-xs text-slate-600 space-y-0.5 mb-3 bg-slate-50 p-2 rounded">
+                <p>• Het is verboden een kopie te (laten) maken.</p>
+                <p>• Diefstal of verlies direct melden bij leidinggevende.</p>
+                <p>• Bij einde dienstverband uiterlijk op laatste werkdag inleveren.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={onboardingData.sleutel_verklaring_signed || false} onCheckedChange={(v) => update("sleutel_verklaring_signed", v)} />
+                <Label className="text-sm">{employeeName} gaat akkoord</Label>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* GPS */}
+          <AccordionItem value="gps" className="border-b last:border-b-0">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-3 text-left">
+                {onboardingData.gps_buddy_toestemming ? <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" /> : <Satellite className="w-4 h-4 text-slate-400 shrink-0" />}
+                <span className="text-sm font-medium">Toestemmingsverklaring GPS Buddy</span>
+                <Badge variant="outline" className={`text-xs ml-auto mr-2 ${onboardingData.gps_buddy_toestemming ? "bg-green-50 text-green-700" : ""}`}>
+                  {onboardingData.gps_buddy_toestemming ? "Afgerond" : "Openstaand"}
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded mb-3">
+                <p>Ondergetekende geeft toestemming voor GPS-Buddy ritregistratiesysteem in het voertuig van Interdistri.</p>
+                <p>Verwerkersverantwoordelijke gebruikt de data uitsluitend werkgerelateerd. Gegevens worden 7 jaar bewaard.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={onboardingData.gps_buddy_toestemming || false} onCheckedChange={(v) => update("gps_buddy_toestemming", v)} />
+                <Label className="text-sm">{employeeName} geeft toestemming</Label>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Dienstbetrekking */}
+          <AccordionItem value="dienstbetrekking" className="border-b last:border-b-0">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-3 text-left">
+                {onboardingData.dienstbetrekking_signed ? <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" /> : <FileText className="w-4 h-4 text-slate-400 shrink-0" />}
+                <span className="text-sm font-medium">Verklaring van Dienstbetrekking</span>
+                <Badge variant="outline" className={`text-xs ml-auto mr-2 ${onboardingData.dienstbetrekking_signed ? "bg-green-50 text-green-700" : ""}`}>
+                  {onboardingData.dienstbetrekking_signed ? "Afgerond" : "Openstaand"}
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded mb-3">
+                <p className="font-medium">Artikel 2.11 Wet wegvervoer goederen</p>
+                <p>Vergunninghouder: Interdistri, Fleerbosseweg 19, 4421RR Kapelle</p>
+                <p>Chauffeur: {employeeName}</p>
+                <ul className="list-disc pl-4 mt-1 space-y-0.5">
+                  <li>Vervoer voor rekening en risico vergunninghouder</li>
+                  <li>Loons- en gezagsverhouding aanwezig</li>
+                  <li>Gegevens naar waarheid ingevuld</li>
+                </ul>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={onboardingData.dienstbetrekking_signed || false} onCheckedChange={(v) => update("dienstbetrekking_signed", v)} />
+                <Label className="text-sm">{employeeName} bevestigt de verklaring</Label>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Bedrijfsreglement */}
+          <AccordionItem value="reglement" className="border-b-0">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-3 text-left">
+                {onboardingData.bedrijfsreglement_ontvangen ? <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" /> : <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />}
+                <span className="text-sm font-medium">Ontvangst Bedrijfsreglement</span>
+                <Badge variant="outline" className={`text-xs ml-auto mr-2 ${onboardingData.bedrijfsreglement_ontvangen ? "bg-green-50 text-green-700" : ""}`}>
+                  {onboardingData.bedrijfsreglement_ontvangen ? "Afgerond" : "Openstaand"}
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <p className="text-xs text-slate-600 mb-3">Het bedrijfsreglement is beschikbaar via de mobiele app. De medewerker bevestigt ontvangst en kennisneming.</p>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={onboardingData.bedrijfsreglement_ontvangen || false} onCheckedChange={(v) => update("bedrijfsreglement_ontvangen", v)} />
+                <Label className="text-sm">{employeeName} bevestigt ontvangst</Label>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </section>
+
+      {/* Handtekening – single */}
+      <section className="border rounded-lg p-4 bg-white">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+          <Shield className="w-4 h-4 text-slate-500" /> Handtekening Medewerker
+        </h3>
+
+        {onboardingData.employee_signature_url ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-green-700">
+              <CheckCircle2 className="w-4 h-4" />
+              <span className="font-medium">Handtekening ontvangen</span>
             </div>
-          ) : (
+            <img src={onboardingData.employee_signature_url} alt="Handtekening" className="border rounded max-h-[120px]" />
+            <Button variant="outline" size="sm" onClick={() => update("employee_signature_url", "")}>Opnieuw tekenen</Button>
+          </div>
+        ) : (
+          <div style={{ maxWidth: 400 }}>
             <SignatureCanvas onSign={handleSignature} signing={signing} />
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </section>
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>

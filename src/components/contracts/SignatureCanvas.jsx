@@ -120,7 +120,7 @@ export default function SignatureCanvas({ onSign, signing }) {
           style={{
             touchAction: 'none',
             width: '100%',
-            height: '200px',
+            height: '120px',
             display: 'block',
             cursor: 'crosshair'
           }}
