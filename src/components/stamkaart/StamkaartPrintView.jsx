@@ -117,14 +117,11 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
 
       {/* ═══ HANDTEKENING ═══ */}
       <div style={{ marginTop: 16 }}>
-        <div className="flex items-center justify-between">
-          <span style={{ fontSize: 15, fontWeight: 600 }} className="text-slate-800">Handtekening werknemer</span>
-          <span style={{ fontSize: 13 }} className="text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
-        </div>
+        <span style={{ fontSize: 15, fontWeight: 600 }} className="text-slate-800">Handtekening werknemer — <span className="font-normal text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span></span>
         {lhSignatureUrl ? (
           <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ minHeight: 100, marginTop: 4 }} />
         ) : (
-          <div className="border-2 border-dashed border-slate-300 bg-white flex items-center justify-center w-full" style={{ minHeight: 100, marginTop: 4 }}>
+          <div className="border-2 border-dashed border-slate-300 bg-white flex items-center justify-center w-full" style={{ minHeight: 110, marginTop: 6 }}>
             <span className="text-xs text-slate-400 italic">Niet getekend</span>
           </div>
         )}

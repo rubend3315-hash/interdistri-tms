@@ -111,7 +111,7 @@ export default function SignatureCanvas({ onSign, signing }) {
 
   return (
     <div className="space-y-3">
-      <p style={{ fontSize: 14, marginTop: 6, marginBottom: 6 }} className="font-normal text-slate-500">
+      <p style={{ fontSize: 14, marginTop: 6, marginBottom: 8 }} className="font-normal text-slate-500">
         Onderteken het formulier.
       </p>
       <div className="border-2 border-dashed border-slate-300 rounded-lg bg-white">
