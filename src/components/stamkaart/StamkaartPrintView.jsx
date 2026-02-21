@@ -86,7 +86,7 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
 
       {/* ═══ DIENSTVERBAND ═══ */}
       <StamkaartSectionTitle title="Gegevens dienstverband" />
-      <div className="grid grid-cols-2" style={{ columnGap: 24 }}>
+      <div className="grid grid-cols-2 gap-x-6 overflow-hidden">
         {/* Kolom 1 */}
         <div className="space-y-0">
           <StamkaartRow label="Datum in dienst"><PrintVal>{fmtDate(employee.in_service_since)}</PrintVal></StamkaartRow>
