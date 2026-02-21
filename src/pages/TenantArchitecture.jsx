@@ -31,15 +31,19 @@ const systemLevelFunctions = [
   { name: "onContractActivated", caller: "Entity automation (Contract)", type: "AUTOMATION" },
   { name: "autoInviteEmployee", caller: "Entity automation (Employee)", type: "AUTOMATION" },
   { name: "migrateTenantIds", caller: "Admin — handmatig via dashboard", type: "MIGRATION" },
+  { name: "guardTenantDelete", caller: "Entity automation (Tenant delete)", type: "GUARD" },
 ];
 
 const rules = [
   { rule: "USER_FACING functies MOETEN tenantService gebruiken voor tenant-aware data", ok: true },
   { rule: "SYSTEM_LEVEL functies MOGEN asServiceRole gebruiken", ok: true },
   { rule: "SYSTEM_LEVEL functies MOETEN tenant_id ontvangen via entity data of parameter", ok: true },
+  { rule: "Tenant kan NOOIT fysiek verwijderd worden — guardTenantDelete herstelt automatisch", ok: true },
+  { rule: "Gearchiveerde tenants blokkeren nieuwe creates (Employee, Contract, Vehicle, etc.)", ok: true },
   { rule: "NOOIT user session en service role mixen in dezelfde functie", ok: false },
   { rule: "NOOIT directe base44.entities.X calls in USER_FACING functies", ok: false },
   { rule: "NOOIT tenantService aanroepen vanuit automations (geen user session)", ok: false },
+  { rule: "NOOIT een Tenant fysiek deleten — altijd status op 'archived' zetten", ok: false },
 ];
 
 export default function TenantArchitecture() {
