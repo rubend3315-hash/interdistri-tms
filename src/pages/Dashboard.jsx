@@ -29,20 +29,15 @@ import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
 import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
 
-export default function Dashboard() {
+export default function Dashboard({ currentUser }) {
   const today = new Date();
   const [showExport, setShowExport] = React.useState(false);
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
-  const { data: currentUser, isLoading: loadingUser } = useQuery({
-    queryKey: ['currentUserDashboard'],
-    queryFn: () => base44.auth.me()
-  });
-
   const isAdmin = currentUser?.role === 'admin';
 
-  if (currentUser && !isAdmin) {
+  if (!currentUser || !isAdmin) {
     return null;
   }
 
@@ -83,31 +78,17 @@ export default function Dashboard() {
     enabled: isAdmin
   });
 
-  const user = currentUser;
-
   const { data: notifications = [], isLoading: loadingNotifications } = useQuery({
-    queryKey: ['notifications', user?.id],
+    queryKey: ['notifications', currentUser?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!currentUser?.id) return [];
       const allNotifications = await base44.entities.Notification.list('-created_date', 50);
       return allNotifications.filter(n => 
-        n.user_ids && n.user_ids.includes(user.id)
+        n.user_ids && n.user_ids.includes(currentUser.id)
       );
     },
-    enabled: isAdmin && !!user?.id,
+    enabled: isAdmin && !!currentUser?.id,
   });
-
-  // Show loading while checking user role, then redirect non-admins
-  if (loadingUser || (!isAdmin && currentUser)) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-center space-y-3">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-slate-500">Laden...</p>
-        </div>
-      </div>
-    );
-  }
 
   const isLoading = loadingEmployees || loadingVehicles || loadingTimeEntries || loadingTrips || loadingNiwo;
 
