@@ -428,18 +428,20 @@ export default function StamkaartForm({
       </div>
 
       {/* ═══ HANDTEKENING ═══ */}
-      <div style={{ marginTop: 8 }}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 4 }}>
-          <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600 font-medium">Handtekening werknemer</span>
-          <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
+      <div style={{ marginTop: 16 }}>
+        <div className="flex items-center justify-between">
+          <span style={{ fontSize: 15, fontWeight: 600 }} className="text-slate-800">Handtekening werknemer</span>
+          <span style={{ fontSize: 13 }} className="text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
         </div>
         {lhSignatureUrl ? (
-          <div className="flex flex-col" style={{ gap: 4 }}>
-            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 100 }} />
+          <div className="flex flex-col" style={{ marginTop: 6, gap: 4 }}>
+            <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ minHeight: 100 }} />
             <Button variant="outline" size="sm" className="h-5 text-xs px-2 self-start" style={{ fontSize: 11 }} onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
           </div>
         ) : (
-          <SignatureCanvas onSign={handleSignature} />
+          <div style={{ marginTop: 4 }}>
+            <SignatureCanvas onSign={handleSignature} />
+          </div>
         )}
       </div>
 

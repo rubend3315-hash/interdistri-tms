@@ -116,15 +116,15 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
       </div>
 
       {/* ═══ HANDTEKENING ═══ */}
-      <div style={{ marginTop: 8 }}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 4 }}>
-          <span className="text-xs text-slate-600 font-medium">Handtekening werknemer</span>
-          <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
+      <div style={{ marginTop: 16 }}>
+        <div className="flex items-center justify-between">
+          <span style={{ fontSize: 15, fontWeight: 600 }} className="text-slate-800">Handtekening werknemer</span>
+          <span style={{ fontSize: 13 }} className="text-slate-500">Datum: {fmtDate(lhDatum) !== "—" ? fmtDate(lhDatum) : new Date().toLocaleDateString('nl-NL')}</span>
         </div>
         {lhSignatureUrl ? (
-          <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 80 }} />
+          <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ minHeight: 100, marginTop: 4 }} />
         ) : (
-          <div className="border-2 border-dashed border-slate-300 bg-white flex items-center justify-center w-full" style={{ height: 80 }}>
+          <div className="border-2 border-dashed border-slate-300 bg-white flex items-center justify-center w-full" style={{ minHeight: 100, marginTop: 4 }}>
             <span className="text-xs text-slate-400 italic">Niet getekend</span>
           </div>
         )}
