@@ -387,7 +387,7 @@ export default function StamkaartForm({
 
       {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
       <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
-      <div className="grid" style={{ gridTemplateColumns: "1fr 280px", columnGap: 24 }}>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 270px", columnGap: 24 }}>
         {/* LINKERKOLOM — Loonheffing + Financieel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4 }}>
@@ -428,12 +428,12 @@ export default function StamkaartForm({
           </div>
           <div className="grid items-start" style={{ gridTemplateColumns: "45% 55%", minHeight: 30, gap: 4, paddingTop: 4 }}>
             <span style={{ fontSize: 13, lineHeight: 1.3, paddingTop: 6 }} className="text-slate-600">Bijzonderheden</span>
-            <textarea className="text-xs px-2 py-1.5 bg-white border border-slate-400/60 shadow-none rounded-md min-h-[110px] resize-none w-full focus:outline-none focus:ring-1 focus:ring-ring" value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
+            <textarea className="text-xs px-2 py-1.5 bg-white border border-slate-400/60 shadow-none rounded-md min-h-[118px] resize-none w-full focus:outline-none focus:ring-1 focus:ring-ring" value={data.financiele_situatie || ""} onChange={e => update("financiele_situatie", e.target.value)} placeholder="Eventueel..." />
           </div>
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 280 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 270 }}>
           <div className="flex items-center justify-between">
             <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">Handtekening werknemer</span>
             <span style={{ fontSize: 11 }} className="text-slate-500">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
@@ -453,7 +453,7 @@ export default function StamkaartForm({
 
       {/* ═══ ACTIES ═══ */}
       {!hideActions && !isOnboarding && (
-        <div className="flex items-center gap-2" style={{ marginTop: 16 }}>
+        <div className="flex items-center gap-2" className="mt-6">
           <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs px-3" disabled={saveMutation.isPending}>
             {saveMutation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
             {saved ? "Opgeslagen ✓" : "Opslaan"}
