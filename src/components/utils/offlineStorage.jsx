@@ -37,32 +37,6 @@ export async function initDB() {
   });
 }
 
-export async function saveOfflineData(storeName, data) {
-  if (!db) await initDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([storeName], 'readwrite');
-    const store = transaction.objectStore(storeName);
-    const request = store.add({ ...data, timestamp: Date.now() });
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
-}
-
-export async function getOfflineData(storeName) {
-  if (!db) await initDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([storeName], 'readonly');
-    const store = transaction.objectStore(storeName);
-    const request = store.getAll();
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
-}
-
 export async function removeOfflineData(storeName, id) {
   if (!db) await initDB();
   
@@ -232,19 +206,6 @@ export async function markAsSynced(queueId) {
     };
     
     getRequest.onerror = () => reject(getRequest.error);
-  });
-}
-
-export async function clearSyncQueue() {
-  if (!db) await initDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAMES.syncQueue], 'readwrite');
-    const store = transaction.objectStore(STORE_NAMES.syncQueue);
-    const request = store.clear();
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
   });
 }
 

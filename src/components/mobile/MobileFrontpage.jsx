@@ -15,19 +15,22 @@ import {
 } from "lucide-react";
 
 export default function MobileFrontpage({ onNavigate }) {
-  // Reuse the same query keys as useMobileData to hit cache, no duplicate fetches
+  // Cache-warming: reuse the same query keys as useMobileData to hit cache
+  useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: employees = [] } = useQuery({
+  useQuery({
     queryKey: ['currentEmployee', user?.email],
     queryFn: () => base44.entities.Employee.filter({ email: user.email }),
     enabled: !!user?.email
   });
-
-  const currentEmployee = Array.isArray(employees) ? employees.find(e => e.email === user?.email) : undefined;
 
   const menuItems = [
     {

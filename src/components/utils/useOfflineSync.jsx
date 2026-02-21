@@ -94,22 +94,13 @@ async function processSyncItem(item) {
       return { success: false, retryable: true, code: result.error || 'UNKNOWN' };
     }
 
-    // Legacy entity-based actions
+    // Legacy entity-based actions (inspection + expense still used by their tabs)
     switch (action) {
-      case 'createTimeEntry':
-        await base44.entities.TimeEntry.create(data);
-        break;
-      case 'createTrip':
-        await base44.entities.Trip.create(data);
-        break;
       case 'createInspection':
         await base44.entities.VehicleInspection.create(data);
         break;
       case 'createExpense':
         await base44.entities.Expense.create(data);
-        break;
-      case 'createStandplaatsWerk':
-        await base44.entities.StandplaatsWerk.create(data);
         break;
       default:
         console.warn('Unknown sync action:', action);

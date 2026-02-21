@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { format, addDays, differenceInDays, startOfWeek, endOfWeek } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { nl } from "date-fns/locale";
 import { StatCard } from "@/components/ui/stat-card";
 import { AlertCard } from "@/components/ui/alert-card";
@@ -19,7 +19,6 @@ import {
   AlertTriangle,
   ArrowRight,
   Calendar,
-  FileText,
     Car,
   Bell,
   Download
@@ -32,8 +31,6 @@ import ExportDialog from "../components/export/ExportDialog";
 export default function Dashboard({ currentUser }) {
   const today = new Date();
   const [showExport, setShowExport] = React.useState(false);
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
   const isAdmin = currentUser?.role === 'admin';
 

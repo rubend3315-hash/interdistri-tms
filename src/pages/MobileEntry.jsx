@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Home, Clock, Truck, ClipboardCheck, FileText,
   CheckCircle, CalendarDays, Mail, ExternalLink
