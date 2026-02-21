@@ -21,6 +21,11 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, action: 'skipped_guard_action' });
     }
 
+    // Skip if this is a tenant migration (only tenant_id added, no other changes)
+    if (data?.metadata?._tenant_migration) {
+      return Response.json({ success: true, action: 'skipped_tenant_migration' });
+    }
+
     const correlationId = crypto.randomUUID();
 
     if (event.type === 'update' && old_data) {
