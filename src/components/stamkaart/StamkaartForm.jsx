@@ -29,9 +29,9 @@ export const STAMKAART_REQUIRED_FIELDS = [
 // ── Shared sub-components (also exported for print view) ──
 export function StamkaartRow({ label, required, children }) {
   return (
-    <div className="grid items-center" style={{ gridTemplateColumns: "32% 68%", minHeight: 30, gap: 4 }}>
-      <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600 truncate">{label}{required && " *"}</span>
-      <div className="min-h-[26px] flex items-center">{children}</div>
+    <div className="flex items-center" style={{ minHeight: 30 }}>
+      <span style={{ fontSize: 13, lineHeight: 1.3, width: 240, minWidth: 240, paddingRight: 8, textAlign: 'right' }} className="text-slate-600 truncate">{label}{required && " *"}</span>
+      <div className="flex-1 min-h-[26px] flex items-center">{children}</div>
     </div>
   );
 }
