@@ -41,6 +41,7 @@ Deno.serve(async (req) => {
       new_value,
       metadata,
       correlation_id,
+      tenant_id,
     } = body;
 
     if (!action_type || !category || !description) {
@@ -69,6 +70,7 @@ Deno.serve(async (req) => {
       metadata: sanitizeMetadata(metadata),
       ip_address: ip,
       correlation_id: correlation_id || null,
+      tenant_id: tenant_id || null,
     });
 
     return Response.json({ success: true, auditLogId: entry.id });

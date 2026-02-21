@@ -109,6 +109,7 @@ Deno.serve(async (req) => {
       idempotency_key: explicitKey, // caller can provide explicit key
       entity_id: entityId,          // for auto-generating idempotency key
       correlation_id: incomingCorrelationId, // flow tracing
+      tenant_id: incomingTenantId,  // tenant isolation
     } = body;
 
     // Generate correlation_id if not provided
@@ -180,6 +181,7 @@ Deno.serve(async (req) => {
       correlation_id: correlationId,
       ...(resent_by ? { resent_by } : {}),
       ...(original_log_id ? { original_log_id } : {}),
+      ...(incomingTenantId ? { tenant_id: incomingTenantId } : {}),
     });
 
     // Get Gmail token and send
@@ -203,6 +205,7 @@ Deno.serve(async (req) => {
           performed_by_email: resent_by || sourceFunction || 'system',
           performed_by_role: resent_by ? 'admin' : 'system',
           correlation_id: correlationId,
+          tenant_id: incomingTenantId || null,
           metadata: { source_function: sourceFunction, to, message_id: result.messageId, attempts: result.attempts },
         });
       } catch (_) {}
@@ -230,6 +233,7 @@ Deno.serve(async (req) => {
           performed_by_email: sourceFunction || 'system',
           performed_by_role: 'system',
           correlation_id: correlationId,
+          tenant_id: incomingTenantId || null,
           metadata: { source_function: sourceFunction, to, error: result.error, attempts: result.attempts },
         });
       } catch (_) {}
