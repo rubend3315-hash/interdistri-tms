@@ -124,6 +124,23 @@ Deno.serve(async (req) => {
       if (!data) {
         return Response.json({ error: 'data required' }, { status: 400 });
       }
+
+      // Block creates on archived tenants for protected entity types
+      const ARCHIVED_BLOCKED_ENTITIES = ['Employee', 'Contract', 'Vehicle', 'Customer', 'EmailLog', 'User'];
+      if (isTenantEntity && ARCHIVED_BLOCKED_ENTITIES.includes(entity_name)) {
+        try {
+          const tenants = await base44.asServiceRole.entities.Tenant.filter({ id: tenant_id });
+          if (tenants.length > 0 && tenants[0].status === 'archived') {
+            return Response.json({
+              error: 'TENANT_ARCHIVED',
+              message: `Tenant is gearchiveerd. Nieuwe ${entity_name} records kunnen niet worden aangemaakt.`,
+            }, { status: 403 });
+          }
+        } catch (e) {
+          console.error('Tenant status check failed:', e.message);
+        }
+      }
+
       const createData = isTenantEntity ? { ...data, tenant_id } : data;
       const record = await base44.asServiceRole.entities[entity_name].create(createData);
       return Response.json({ success: true, data: record, tenant_id });
