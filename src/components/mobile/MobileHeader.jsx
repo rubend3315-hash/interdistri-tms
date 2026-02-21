@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Truck, Clock, Menu } from "lucide-react";
 import OfflineSyncIndicator from "@/components/OfflineSyncIndicator";
+import { APP_VERSION } from "../utils/appVersion";
 
 export default function MobileHeader({ todayShift, todayStr, isOnline, syncStatus, pendingCount, onMenuOpen }) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -22,7 +23,10 @@ export default function MobileHeader({ todayShift, todayStr, isOnline, syncStatu
               <Truck className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-bold text-sm">Interdistri TMS</h1>
+              <h1 className="font-bold text-sm flex items-center gap-2">
+                <span>Interdistri TMS</span>
+                <span className="text-xs opacity-70 font-normal">v{APP_VERSION}</span>
+              </h1>
               <p className="text-xs text-blue-100">Mobiele App</p>
             </div>
           </div>
