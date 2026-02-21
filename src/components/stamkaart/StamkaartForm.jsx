@@ -44,9 +44,8 @@ export function StamkaartSectionTitle({ title }) {
   );
 }
 
-const inputCls = "text-xs px-2 py-0 border-slate-300";
-const inputErr = "text-xs px-2 py-0 border-red-400";
-const inputStyle = { height: 28 };
+const inputCls = "text-xs px-2 py-0 border-slate-300 h-[28px]";
+const inputErr = "text-xs px-2 py-0 border-red-400 h-[28px]";
 
 /**
  * StamkaartForm — single source of truth for stamkaart layout
@@ -316,7 +315,7 @@ export default function StamkaartForm({
         </StamkaartRow>
         <StamkaartRow label="Afdeling" required>
           <Select value={data.department || ""} onValueChange={v => update("department", v)}>
-            <SelectTrigger style={inputStyle} className={`text-xs ${fieldError("department") ? "border-red-400" : "border-slate-300"}`}><SelectValue /></SelectTrigger>
+            <SelectTrigger className={`h-[28px] text-xs ${fieldError("department") ? "border-red-400" : "border-slate-300"}`}><SelectValue /></SelectTrigger>
             <SelectContent>
               {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.label}</SelectItem>)}
             </SelectContent>
@@ -324,7 +323,7 @@ export default function StamkaartForm({
         </StamkaartRow>
         <StamkaartRow label="Functie">
           <Select value={data.function || '_none'} onValueChange={v => update("function", v === '_none' ? '' : v)}>
-            <SelectTrigger style={inputStyle} className="text-xs border-slate-300"><SelectValue placeholder="Selecteer" /></SelectTrigger>
+            <SelectTrigger className="h-[28px] text-xs border-slate-300"><SelectValue placeholder="Selecteer" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="_none" disabled>Selecteer</SelectItem>
               {functions.map(f => <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>)}
@@ -333,7 +332,7 @@ export default function StamkaartForm({
         </StamkaartRow>
         <StamkaartRow label="Contract type">
           <Select value={data.contract_type || "Tijdelijk"} onValueChange={v => update("contract_type", v)}>
-            <SelectTrigger style={inputStyle} className="text-xs border-slate-300"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-[28px] text-xs border-slate-300"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
               <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
@@ -349,7 +348,7 @@ export default function StamkaartForm({
             <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Laden...</span>
           ) : (
             <Select value={currentScaleKey} onValueChange={handleScaleChange}>
-              <SelectTrigger style={inputStyle} className="text-xs border-slate-300"><SelectValue placeholder="Kies" /></SelectTrigger>
+              <SelectTrigger className="h-[28px] text-xs border-slate-300"><SelectValue placeholder="Kies" /></SelectTrigger>
               <SelectContent className="max-h-64">
                 {scaleOptions.map(st => {
                   const key = `${st.scale}|${st.step}`;
@@ -398,7 +397,7 @@ export default function StamkaartForm({
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 28, gap: 4 }}>
             <span style={{ fontSize: 13, lineHeight: 1.3 }} className="text-slate-600">LKV (WW, WAO, WIA)?</span>
             <Select value={data.lkv_uitkering || "nee"} onValueChange={v => update("lkv_uitkering", v)}>
-              <SelectTrigger style={inputStyle} className="text-xs border-slate-300"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-[28px] text-xs border-slate-300"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ja">Ja, doelgroepverklaring</SelectItem>
                 <SelectItem value="nee">Nee</SelectItem>
