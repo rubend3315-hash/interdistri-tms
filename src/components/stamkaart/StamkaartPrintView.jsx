@@ -121,9 +121,9 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
             <span className="text-xs text-slate-600">LKV (WW, WAO, WIA)?</span>
             <PrintVal>{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</PrintVal>
           </div>
-          <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
-            <span className="text-xs text-slate-600">Bijzonderheden</span>
-            <PrintVal>{employee.financiele_situatie}</PrintVal>
+          <div className="grid items-start" style={{ gridTemplateColumns: "45% 55%", minHeight: 80 }}>
+            <span className="text-xs text-slate-600" style={{ paddingTop: 4 }}>Bijzonderheden</span>
+            <div className="text-xs text-slate-800 border border-slate-400/60 bg-white min-h-[80px] px-2 py-1.5" style={{ whiteSpace: 'pre-wrap' }}>{employee.financiele_situatie || "—"}</div>
           </div>
         </div>
 
