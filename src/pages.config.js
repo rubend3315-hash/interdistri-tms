@@ -91,11 +91,11 @@ import ShiftTime from './pages/ShiftTime';
 import Stamkaart from './pages/Stamkaart';
 import StandplaatsWerk from './pages/StandplaatsWerk';
 import TIRekenmodule from './pages/TIRekenmodule';
+import TenantArchitecture from './pages/TenantArchitecture';
 import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import TenantArchitecture from './pages/TenantArchitecture';
 import __Layout from './Layout.jsx';
 
 
@@ -144,11 +144,11 @@ export const PAGES = {
     "Stamkaart": Stamkaart,
     "StandplaatsWerk": StandplaatsWerk,
     "TIRekenmodule": TIRekenmodule,
+    "TenantArchitecture": TenantArchitecture,
     "TimeTracking": TimeTracking,
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "TenantArchitecture": TenantArchitecture,
 }
 
 export const pagesConfig = {

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Download, RotateCcw, AlertCircle, ChevronDown, ChevronRight, CloudUpload, CloudDownload, Database, Copy, Check, FileDown } from "lucide-react";
 import DataProtectionPolicy from "../components/backup/DataProtectionPolicy";
 import ExportResultDialog from "../components/backup/ExportResultDialog";
+import FileStorageOverview from "../components/backup/FileStorageOverview";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -346,6 +347,11 @@ export default function BackupsPage() {
         data={exportResultData}
         error={exportResultError}
       />
+
+      {/* File Storage Overview */}
+      <div className="max-w-6xl mx-auto mt-6">
+        <FileStorageOverview />
+      </div>
 
       {/* Data Protection Policy */}
       <div className="max-w-6xl mx-auto mt-6 px-6">
