@@ -140,6 +140,29 @@ Deno.serve(async (req) => {
 
     const finalCc = buildCcList(to, cc);
 
+    // Idempotency check: generate key from source+recipient+entityId+template
+    const idempotencyKey = explicitKey || [
+      sourceFunction || 'mailService',
+      to.toLowerCase().trim(),
+      entityId || '',
+      templateKey || '',
+    ].join('|');
+
+    // Check for existing successful send with same key
+    const existingLogs = await base44.asServiceRole.entities.EmailLog.filter({
+      idempotency_key: idempotencyKey,
+      status: 'success',
+    });
+    if (existingLogs.length > 0) {
+      return Response.json({
+        success: true,
+        skipped: true,
+        reason: 'Duplicate blocked by idempotency key',
+        existingLogId: existingLogs[0].id,
+        messageId: existingLogs[0].message_id,
+      });
+    }
+
     // Create pending log
     const logEntry = await base44.asServiceRole.entities.EmailLog.create({
       to,
