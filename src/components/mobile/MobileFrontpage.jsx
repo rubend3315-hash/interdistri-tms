@@ -15,12 +15,7 @@ import {
 } from "lucide-react";
 
 export default function MobileFrontpage({ onNavigate }) {
-  // Cache-warming: reuse the same query keys as useMobileData to hit cache
-  useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
+  // Cache-warming: reuse the same query keys as useMobileData to hit cache, no new fetches
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
