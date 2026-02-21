@@ -434,18 +434,18 @@ export default function StamkaartForm({
         </div>
 
         {/* RECHTERKOLOM — Handtekening */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 270 }}>
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-sm text-slate-600">Handtekening werknemer</span>
-            <span className="text-sm text-slate-600">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', maxWidth: 270 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ fontSize: 14, lineHeight: 1.4, whiteSpace: 'nowrap' }} className="text-slate-600">Handtekening werknemer</span>
+            <span style={{ fontSize: 12 }} className="text-slate-500 font-normal">Datum: {new Date().toLocaleDateString('nl-NL')}</span>
           </div>
           {lhSignatureUrl ? (
-            <div className="flex flex-col" style={{ gap: 4 }}>
+            <div className="flex flex-col" style={{ marginTop: 6, gap: 4 }}>
               <img src={lhSignatureUrl} alt="Handtekening" className="border border-slate-400/60 w-full object-contain bg-white" style={{ height: 90 }} />
               <Button variant="outline" size="sm" className="h-5 text-xs px-2 self-start" style={{ fontSize: 11 }} onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
             </div>
           ) : (
-            <div className="border border-slate-400/60 bg-white w-full" style={{ height: 90 }}>
+            <div className="border border-slate-400/60 bg-white w-full" style={{ height: 90, marginTop: 6 }}>
               <SignatureCanvas onSign={handleSignature} />
             </div>
           )}
