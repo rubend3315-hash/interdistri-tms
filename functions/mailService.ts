@@ -8,7 +8,8 @@
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const FORCED_CC = 'ruben@interdistri.nl';
+// ── NO hardcoded e-mail addresses ──
+// CC addresses come exclusively from the caller (HR-instellingen / PayrollSettings).
 const MAX_RETRIES = 3;
 const GMAIL_SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
 const TZ = 'Europe/Amsterdam';
@@ -20,12 +21,13 @@ function nlTimestamp() {
 
 function buildCcList(to, extraCc) {
   const ccSet = new Set();
-  ccSet.add(FORCED_CC);
+  // Only add CC addresses explicitly provided by the caller (from HR-settings)
   if (extraCc) {
     (typeof extraCc === 'string' ? extraCc.split(',') : extraCc)
-      .map(e => e.trim()).filter(Boolean).forEach(e => ccSet.add(e));
+      .map(e => e.trim().toLowerCase()).filter(Boolean).forEach(e => ccSet.add(e));
   }
-  ccSet.delete(to.toLowerCase());
+  // Never CC the primary recipient
+  ccSet.delete(to.toLowerCase().trim());
   return Array.from(ccSet).join(', ');
 }
 
@@ -238,8 +240,9 @@ Deno.serve(async (req) => {
       ...(incomingTenantId ? { tenant_id: incomingTenantId } : {}),
     });
 
-    // Diagnostic logging for email content
-    console.log(`[mailService] DIAGNOSTIC: to=${to}, subject="${finalSubject.substring(0, 80)}", html_length=${finalBody.length}, html_empty=${!finalBody || finalBody.trim().length === 0}, source=${sourceFunction || 'mailService'}`);
+    // Diagnostic logging — address source tracing
+    console.log(`[mailService] SEND: to=${to}, cc=${finalCc || '(none)'}, source=${sourceFunction || 'mailService'}, address_source=caller/HR-settings`);
+    console.log(`[mailService] DIAGNOSTIC: subject="${finalSubject.substring(0, 80)}", html_length=${finalBody.length}, html_empty=${!finalBody || finalBody.trim().length === 0}`);
     if (finalBody.length < 50) {
       console.warn(`[mailService] WARNING: HTML body suspiciously short (${finalBody.length} chars): "${finalBody}"`);
     }
