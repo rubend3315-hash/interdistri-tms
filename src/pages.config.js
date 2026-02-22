@@ -97,6 +97,7 @@ import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
 import SecurityArchitecture from './pages/SecurityArchitecture';
+import SecurityRoadmap from './pages/SecurityRoadmap';
 import __Layout from './Layout.jsx';
 
 
@@ -151,6 +152,7 @@ export const PAGES = {
     "Users": Users,
     "Vehicles": Vehicles,
     "SecurityArchitecture": SecurityArchitecture,
+    "SecurityRoadmap": SecurityRoadmap,
 }
 
 export const pagesConfig = {
