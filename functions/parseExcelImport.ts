@@ -45,15 +45,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Authenticatie
+    // Authenticatie + RBAC
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    
-    if (!user) {
-      return Response.json(
-        { error: 'Unauthorized' } as ErrorResponse,
-        { status: 401 }
-      );
+    if (!user) return Response.json({ error: 'Unauthorized' } as ErrorResponse, { status: 401 });
+
+    // RBAC: ADMIN, OPERATIONS_MANAGER, SUPERVISOR
+    if (user.role !== 'admin' && !['ADMIN', 'OPERATIONS_MANAGER', 'SUPERVISOR'].includes(user.business_role)) {
+      return Response.json({ error: 'Forbidden: insufficient business role' } as ErrorResponse, { status: 403 });
     }
 
     // Parse FormData
