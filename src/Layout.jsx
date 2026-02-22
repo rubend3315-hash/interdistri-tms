@@ -496,32 +496,80 @@ export default function Layout({ children, currentPageName }) {
                     </button>
                     {expandedGroups.includes(group.label) && (
                       <div className="space-y-1 mt-1">
-                        {group.items.map((item) => {
-                      const isActive = currentPageName === item.page;
-                      return (
-                        <Link
-                          key={item.page}
-                          to={createPageUrl(item.page)}
-                          onClick={() => setSidebarOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
-                            isActive 
-                              ? "bg-blue-50 text-blue-700 font-medium" 
-                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                          )}
-                        >
-                          <item.icon className={cn(
-                            "w-5 h-5",
-                            isActive ? "text-blue-600" : "text-slate-400"
-                          )} />
-                          <span className="text-sm">{item.name}</span>
-                        </Link>
-                      );
-                    })}
+                        {/* Regular items */}
+                        {group.items && group.items.map((item) => {
+                          const isActive = currentPageName === item.page;
+                          return (
+                            <Link
+                              key={item.page}
+                              to={createPageUrl(item.page)}
+                              onClick={() => setSidebarOpen(false)}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                                isActive 
+                                  ? "bg-blue-50 text-blue-700 font-medium" 
+                                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                              )}
+                            >
+                              <item.icon className={cn(
+                                "w-5 h-5",
+                                isActive ? "text-blue-600" : "text-slate-400"
+                              )} />
+                              <span className="text-sm">{item.name}</span>
+                            </Link>
+                          );
+                        })}
+                        {/* Subgroups */}
+                        {group.subgroups && group.subgroups.map((sg) => {
+                          const sgKey = `${group.label}::${sg.label}`;
+                          const sgExpanded = expandedGroups.includes(sgKey);
+                          const SgIcon = sg.icon;
+                          return (
+                            <div key={sg.label} className="mt-1">
+                              <button
+                                onClick={() => toggleGroup(sgKey)}
+                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+                              >
+                                <SgIcon className="w-4 h-4 text-slate-400" />
+                                <span className="flex-1 text-left">{sg.label}</span>
+                                <ChevronRight className={cn(
+                                  "w-3.5 h-3.5 text-slate-400 transition-transform",
+                                  sgExpanded && "rotate-90"
+                                )} />
+                              </button>
+                              {sgExpanded && (
+                                <div className="space-y-0.5 mt-0.5 ml-2 pl-2 border-l-2 border-slate-100">
+                                  {sg.items.map((item) => {
+                                    const isActive = currentPageName === item.page;
+                                    return (
+                                      <Link
+                                        key={item.page}
+                                        to={createPageUrl(item.page)}
+                                        onClick={() => setSidebarOpen(false)}
+                                        className={cn(
+                                          "flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 text-[13px]",
+                                          isActive 
+                                            ? "bg-blue-50 text-blue-700 font-medium" 
+                                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                        )}
+                                      >
+                                        <item.icon className={cn(
+                                          "w-4 h-4",
+                                          isActive ? "text-blue-600" : "text-slate-400"
+                                        )} />
+                                        <span>{item.name}</span>
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                ))}
             
             {/* Mobile App Link */}
                 {currentEmployee && (
