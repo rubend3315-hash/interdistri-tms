@@ -460,21 +460,21 @@ export default function Layout({ children, currentPageName }) {
           </div>
 
           {/* Navigation */}
-              <nav className="flex-1 overflow-y-auto py-4 px-3">
-                {filteredMenu.map((group) => (
-                  <div key={group.label} className="mb-2">
+              <nav className="flex-1 overflow-y-auto py-3 px-3">
+                {filteredMenu.map((group, groupIdx) => (
+                  <div key={group.label} className={cn(groupIdx > 0 && "mt-6")}>
                     <button
                       onClick={() => toggleGroup(group.label)}
-                      className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-600"
+                      className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-[0.08em] hover:text-slate-600 transition-colors"
                     >
                       {group.label}
                       <ChevronDown className={cn(
-                        "w-4 h-4 transition-transform",
+                        "w-3.5 h-3.5 transition-transform duration-200",
                         expandedGroups.includes(group.label) ? "rotate-0" : "-rotate-90"
                       )} />
                     </button>
                     {expandedGroups.includes(group.label) && (
-                      <div className="space-y-1 mt-1">
+                      <div className="space-y-0.5 mt-1">
                         {/* Regular items */}
                         {group.items && group.items.map((item) => {
                           const isActive = currentPageName === item.page;
@@ -484,17 +484,20 @@ export default function Layout({ children, currentPageName }) {
                               to={createPageUrl(item.page)}
                               onClick={() => setSidebarOpen(false)}
                               className={cn(
-                                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                                "relative flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 group",
                                 isActive 
-                                  ? "bg-blue-50 text-blue-700 font-medium" 
-                                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                  ? "bg-blue-50/80 text-blue-800 font-medium" 
+                                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                               )}
                             >
+                              {isActive && (
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-600 rounded-r-full" />
+                              )}
                               <item.icon className={cn(
-                                "w-5 h-5",
-                                isActive ? "text-blue-600" : "text-slate-400"
+                                "w-[18px] h-[18px] flex-shrink-0",
+                                isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-500"
                               )} />
-                              <span className="text-sm">{item.name}</span>
+                              <span className="text-[13px]">{item.name}</span>
                             </Link>
                           );
                         })}
@@ -503,36 +506,35 @@ export default function Layout({ children, currentPageName }) {
                           const sgKey = `${group.label}::${sg.label}`;
                           const sgExpanded = expandedGroups.includes(sgKey);
                           const SgIcon = sg.icon;
-                          const isSecurityGroup = sg.label === "Security & Compliance";
+                          const isHighlighted = sg.highlight === true;
                           return (
                             <div key={sg.label} className={cn(
-                              "mt-1",
-                              isSecurityGroup && "bg-slate-50/80 rounded-xl px-1 py-1.5 -mx-1 border border-slate-100/80",
-                              sgIdx > 0 && !isSecurityGroup && "mt-2"
+                              sgIdx === 0 ? "mt-1" : "mt-2",
+                              isHighlighted && "bg-gradient-to-b from-slate-50 to-slate-50/40 rounded-xl px-1.5 py-1.5 -mx-1 border border-slate-200/60 mt-2 mb-1"
                             )}>
                               <button
                                 onClick={() => toggleGroup(sgKey)}
                                 className={cn(
-                                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors",
-                                  isSecurityGroup 
-                                    ? "text-slate-600 hover:bg-slate-100/60" 
-                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                  "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[11px] font-semibold uppercase tracking-[0.06em] transition-colors",
+                                  isHighlighted 
+                                    ? "text-slate-700 hover:bg-white/60" 
+                                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                                 )}
                               >
                                 <SgIcon className={cn(
-                                  "w-4 h-4 flex-shrink-0",
-                                  isSecurityGroup ? "text-blue-500/70" : "text-slate-400"
+                                  "w-[15px] h-[15px] flex-shrink-0",
+                                  isHighlighted ? "text-blue-600/80" : "text-slate-400"
                                 )} />
                                 <span className="flex-1 text-left">{sg.label}</span>
                                 <ChevronRight className={cn(
-                                  "w-3.5 h-3.5 text-slate-400 transition-transform duration-200",
+                                  "w-3 h-3 text-slate-400 transition-transform duration-200",
                                   sgExpanded && "rotate-90"
                                 )} />
                               </button>
                               {sgExpanded && (
                                 <div className={cn(
-                                  "space-y-0.5 mt-0.5 ml-3 pl-2.5",
-                                  isSecurityGroup ? "border-l-2 border-blue-200/60" : "border-l-2 border-slate-100"
+                                  "space-y-0.5 mt-0.5 ml-3.5 pl-2.5",
+                                  isHighlighted ? "border-l-2 border-blue-200/50" : "border-l-2 border-slate-100"
                                 )}>
                                   {sg.items.map((item) => {
                                     const isActive = currentPageName === item.page;
@@ -542,17 +544,20 @@ export default function Layout({ children, currentPageName }) {
                                         to={createPageUrl(item.page)}
                                         onClick={() => setSidebarOpen(false)}
                                         className={cn(
-                                          "flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 text-[13px]",
+                                          "relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-all duration-150 group",
                                           isActive 
-                                            ? "bg-blue-50 text-blue-700 font-medium shadow-sm shadow-blue-100/50" 
-                                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                            ? "bg-blue-50/80 text-blue-800 font-medium" 
+                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                                         )}
                                       >
+                                        {isActive && (
+                                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-blue-600 rounded-r-full" />
+                                        )}
                                         <item.icon className={cn(
-                                          "w-4 h-4 flex-shrink-0",
-                                          isActive ? "text-blue-600" : "text-slate-400"
+                                          "w-[15px] h-[15px] flex-shrink-0",
+                                          isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-500"
                                         )} />
-                                        <span>{item.name}</span>
+                                        <span className="text-[12px]">{item.name}</span>
                                       </Link>
                                     );
                                   })}
