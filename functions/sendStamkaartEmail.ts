@@ -52,8 +52,27 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields: subject, body' }, { status: 400 });
     }
 
-    // ── VALIDATIE: 'to' mag niet gelijk zijn aan Gmail-connector of ingelogde gebruiker ──
+    // ── VALIDATIE: publiek e-maildomein blokkeren ──
+    const BLOCKED_DOMAINS = [
+      'gmail.com', 'hotmail.com', 'outlook.com', 'live.com',
+      'yahoo.com', 'icloud.com', 'proton.me', 'protonmail.com',
+    ];
     const toNorm = to.toLowerCase().trim();
+    const toDomain = toNorm.split('@')[1];
+    if (toDomain && BLOCKED_DOMAINS.includes(toDomain)) {
+      const errorMsg = `Het loonadministratie-adres mag geen publiek e-maildomein zijn (${toDomain}). Gebruik een zakelijk domein. Pas dit aan in HRM-instellingen → Loonadministratie.`;
+      console.error(`[sendStamkaartEmail] BLOCKED: publiek domein ${toDomain}`);
+      try {
+        await base44.asServiceRole.entities.EmailLog.create({
+          to, subject: subject || '(geen onderwerp)', status: 'failed',
+          source_function: 'sendStamkaartEmail', error_message: errorMsg,
+          sent_at: new Date().toISOString(),
+        });
+      } catch (_) {}
+      return Response.json({ success: false, error: errorMsg }, { status: 400 });
+    }
+
+    // ── VALIDATIE: 'to' mag niet gelijk zijn aan Gmail-connector of ingelogde gebruiker ──
     const currentUserEmail = (user.email || '').toLowerCase().trim();
 
     // Check tegen ingelogde gebruiker
