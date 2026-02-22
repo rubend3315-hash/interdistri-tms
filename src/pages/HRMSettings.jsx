@@ -13,6 +13,7 @@ import FunctionTab from "../components/settings/FunctionTab";
 import ActiviteitTab from "../components/settings/ActiviteitTab";
 import PayrollSettingsTab from "../components/settings/PayrollSettingsTab";
 import EmailTemplateManager from "../components/email/EmailTemplateManager";
+import PincodeBeheerTab from "../components/settings/PincodeBeheerTab";
 
 export default function HRMSettings() {
   return (
@@ -31,6 +32,7 @@ export default function HRMSettings() {
           <TabsTrigger value="activiteiten">Activiteiten</TabsTrigger>
           <TabsTrigger value="loonadmin">Loonadministratie</TabsTrigger>
           <TabsTrigger value="emailsjablonen">E-mail Sjablonen</TabsTrigger>
+          <TabsTrigger value="pincodebeheer">Pincodebeheer</TabsTrigger>
         </TabsList>
 
         <TabsContent value="afdelingen" className="mt-6">
@@ -59,6 +61,10 @@ export default function HRMSettings() {
 
         <TabsContent value="emailsjablonen" className="mt-6">
           <EmailTemplateManager />
+        </TabsContent>
+
+        <TabsContent value="pincodebeheer" className="mt-6">
+          <PincodeBeheerTab />
         </TabsContent>
       </Tabs>
     </div>
