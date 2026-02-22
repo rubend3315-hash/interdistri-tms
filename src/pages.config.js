@@ -99,6 +99,7 @@ import Vehicles from './pages/Vehicles';
 import SecurityArchitecture from './pages/SecurityArchitecture';
 import SecurityRoadmap from './pages/SecurityRoadmap';
 import SystemArchitectureDiagram from './pages/SystemArchitectureDiagram';
+import SecuritySummary from './pages/SecuritySummary';
 import __Layout from './Layout.jsx';
 
 
@@ -155,6 +156,7 @@ export const PAGES = {
     "SecurityArchitecture": SecurityArchitecture,
     "SecurityRoadmap": SecurityRoadmap,
     "SystemArchitectureDiagram": SystemArchitectureDiagram,
+    "SecuritySummary": SecuritySummary,
 }
 
 export const pagesConfig = {

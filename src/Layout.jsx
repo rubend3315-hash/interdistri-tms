@@ -142,6 +142,7 @@ const menuItems = [
       { name: "Security Architectuur", icon: Shield, page: "SecurityArchitecture" },
       { name: "Security Roadmap", icon: Shield, page: "SecurityRoadmap" },
       { name: "Systeemdiagram", icon: Shield, page: "SystemArchitectureDiagram" },
+      { name: "Security Samenvatting", icon: Shield, page: "SecuritySummary" },
     ]
   },
 ];
@@ -222,6 +223,7 @@ export default function Layout({ children, currentPageName }) {
       'SecurityArchitecture': 'admin_only',
       'SecurityRoadmap': 'admin_only',
       'SystemArchitectureDiagram': 'admin_only',
+      'SecuritySummary': 'admin_only',
       'Activiteiten': 'customers',
       'StandplaatsWerk': 'timetracking',
       'PayCheckedAudit': 'reports',
