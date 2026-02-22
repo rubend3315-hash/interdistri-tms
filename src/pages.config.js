@@ -96,6 +96,7 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
+import SecurityArchitecture from './pages/SecurityArchitecture';
 import __Layout from './Layout.jsx';
 
 
@@ -149,6 +150,7 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
+    "SecurityArchitecture": SecurityArchitecture,
 }
 
 export const pagesConfig = {
