@@ -30,7 +30,13 @@ function buildCcList(to, extraCc) {
 }
 
 function base64UrlEncode(str) {
-  const encoded = btoa(unescape(encodeURIComponent(str)));
+  // Use TextEncoder + manual base64 for large payloads (btoa fails on large strings)
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const encoded = btoa(binary);
   return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
