@@ -119,6 +119,7 @@ const menuItems = [
         icon: Shield,
         highlight: true,
         items: [
+          { name: "Governance Dashboard", icon: Shield, page: "GovernanceDashboard" },
           { name: "Security Samenvatting", icon: ShieldCheck, page: "SecuritySummary" },
           { name: "Security Architectuur", icon: Shield, page: "SecurityArchitecture" },
           { name: "Systeemdiagram", icon: Shield, page: "SystemArchitectureDiagram" },
@@ -258,6 +259,7 @@ export default function Layout({ children, currentPageName }) {
       'SecurityArchitecture': 'admin_only',
       'SecurityRoadmap': 'admin_only',
       'SystemArchitectureDiagram': 'admin_only',
+      'GovernanceDashboard': 'admin_only',
       'SecuritySummary': 'admin_only',
       'SecurityPrivacy': 'helppage',
       'Trust': 'helppage',
