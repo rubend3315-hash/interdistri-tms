@@ -238,6 +238,7 @@ export default function Layout({ children, currentPageName }) {
 
 
   const isMobilePage = currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay";
+  const isStamkaartDocument = currentPageName === "StamkaartDocument";
   const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
   const isEmployeeEditTimeEntry = user && user.role !== 'admin' && currentPageName === "EditTimeEntry";
 
@@ -320,6 +321,10 @@ export default function Layout({ children, currentPageName }) {
 
   if (isMobilePage) {
     return <>{React.cloneElement(children, { currentUser: user })}</>;
+  }
+
+  if (isStamkaartDocument) {
+    return <>{children}</>;
   }
 
   if (isEmployeeContractPage || isEmployeeEditTimeEntry) {
