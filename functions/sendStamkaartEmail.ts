@@ -208,6 +208,7 @@ Deno.serve(async (req) => {
       html: finalBody,
       source_function: 'sendStamkaartEmail',
       idempotency_key: idempotencyKey,
+      skip_auth: true,
     });
 
     // Audit log (no BSN/IBAN in metadata)
