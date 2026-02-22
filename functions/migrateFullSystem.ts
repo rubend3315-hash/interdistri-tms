@@ -5,9 +5,10 @@ Deno.serve(async (req) => {
         const base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
 
-        // Only admins or specific user can migrate data
-        if (user?.role !== 'admin' && user?.email !== 'rubend3315@gmail.com') {
-            return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+        if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        // RBAC: Governance/Migration → ADMIN only
+        if (user.role !== 'admin' && !['ADMIN'].includes(user.business_role)) {
+            return Response.json({ error: 'Forbidden: insufficient business role' }, { status: 403 });
         }
 
         const results = {
