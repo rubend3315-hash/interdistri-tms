@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { CheckCircle2, XCircle, Key } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 const fmtDate = (val) => {
   if (!val) return '—';
@@ -132,18 +132,12 @@ export default function OnboardingPrintView({ employeeData, onboardingData, onCl
         )}
 
         <DeclarationBlock
-          title="Ontvangstverklaring Pincode Sleutelkast"
+          title="Ontvangstverklaring Sleutelkast"
           done={ob.pincode_verklaring_signed}
-          extra={ob.pincode_sleutelkast ? (
-            <div className="bg-slate-50 p-2 rounded mb-2">
-              <span className="text-xs text-slate-500">Gegenereerde pincode: </span>
-              <span className="font-mono font-bold tracking-widest text-base">{"••••"}</span>
-              <p className="text-[10px] text-slate-400 italic mt-0.5">Pincode is uitsluitend bekend bij medewerker.</p>
-            </div>
-          ) : null}
         >
-          <ol className="list-decimal pl-4 space-y-0.5">
-            <li>Dit is de eigen unieke pincode van de medewerker.</li>
+          <p>De medewerker ontvangt een persoonlijke pincode voor de sleutelkast. Deze valt onder eigen verantwoordelijkheid.</p>
+          <p className="mt-1">De pincode wordt afzonderlijk verstrekt en is uitsluitend bekend bij de medewerker.</p>
+          <ol className="list-decimal pl-4 mt-1 space-y-0.5">
             <li>De pincode mag aan niemand anders verstrekt worden.</li>
             <li>Sleutels uitgenomen onder deze pincode vallen onder verantwoordelijkheid van de medewerker.</li>
             <li>Bij verlies dient de medewerker zelf aangifte te doen.</li>

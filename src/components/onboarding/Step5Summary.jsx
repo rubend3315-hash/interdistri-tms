@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, ChevronLeft, Loader2, Key, Printer, Send } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronLeft, Loader2, KeyRound, Printer, Send } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { buildStamkaartEmailHtml } from "@/components/utils/stamkaartEmailHtml";
 import { getFullName } from "@/components/utils/employeeUtils";
@@ -11,7 +11,7 @@ import OnboardingPrintView from "./OnboardingPrintView";
 const CHECKLIST = [
   { key: "employee_created", label: "Medewerker aangemaakt" },
   { key: "stamkaart_completed", label: "Stamkaart ingevuld" },
-  { key: "pincode_verklaring_signed", label: "Pincode verklaring" },
+  { key: "pincode_verklaring_signed", label: "Sleutelkast verklaring" },
   { key: "sleutel_verklaring_signed", label: "Sleutelverklaring" },
   { key: "gps_buddy_toestemming", label: "GPS Buddy toestemming" },
   { key: "dienstbetrekking_signed", label: "Verklaring dienstbetrekking" },
@@ -124,14 +124,11 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
           <span className="text-xs font-medium text-slate-500">{completedCount}/{CHECKLIST.length}</span>
         </div>
 
-        {/* Pincode */}
-        {onboardingData.pincode_sleutelkast && (
-          <div className="flex items-center gap-2 mb-3 p-2 bg-slate-50 rounded text-sm">
-            <Key className="w-4 h-4 text-slate-500" />
-            <span className="text-slate-600">Pincode:</span>
-            <span className="font-mono font-bold tracking-widest">{onboardingData.pincode_sleutelkast}</span>
-          </div>
-        )}
+        {/* Pincode status indicator — no actual code shown */}
+        <div className="flex items-center gap-2 mb-3 p-2 bg-slate-50 rounded text-xs text-slate-500">
+          <KeyRound className="w-4 h-4 text-slate-400" />
+          <span>Sleutelkastpincode wordt automatisch aangemaakt bij afronden onboarding. Beheer via HR → Instellingen → Pincodebeheer.</span>
+        </div>
 
         {/* Checklist */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">

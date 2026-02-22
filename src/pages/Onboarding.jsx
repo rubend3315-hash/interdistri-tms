@@ -33,7 +33,7 @@ export default function Onboarding() {
     is_chauffeur: true, tonen_in_planner: true, opnemen_in_loonrapport: true,
   });
   const [onboardingData, setOnboardingData] = useState({
-    pincode_sleutelkast: "", pincode_verklaring_signed: false,
+    pincode_verklaring_signed: false,
     sleutel_verklaring_signed: false, sleutel_nummer: "", sleutel_toegang: "",
     gps_buddy_toestemming: false, dienstbetrekking_signed: false,
     bedrijfsreglement_ontvangen: false, contract_generated: false,
@@ -107,13 +107,12 @@ export default function Onboarding() {
       });
     }
 
-    // 3. Create onboarding process record
+    // 3. Create onboarding process record (no pincode stored here)
     await base44.entities.OnboardingProcess.create({
       employee_id: employee.id,
       employee_name: employeeName,
       status: "Afgerond",
       current_step: 6,
-      pincode_sleutelkast: onboardingData.pincode_sleutelkast,
       stamkaart_completed: true,
       pincode_verklaring_signed: onboardingData.pincode_verklaring_signed,
       sleutel_verklaring_signed: onboardingData.sleutel_verklaring_signed,
@@ -127,6 +126,33 @@ export default function Onboarding() {
       employee_signature_url: onboardingData.employee_signature_url,
       completed_date: new Date().toISOString(),
     });
+
+    // 4. Auto-create KeylockerPincode if none exists
+    const existingPins = await base44.entities.KeylockerPincode.filter({ employee_id: employee.id, active: true });
+    if (existingPins.length === 0) {
+      const FORBIDDEN = ["0000","1234","4321","1111","2222","3333","4444","5555","6666","7777","8888","9999"];
+      let pin;
+      do { pin = String(Math.floor(1000 + Math.random() * 9000)); } while (FORBIDDEN.includes(pin));
+      const currentUser = await base44.auth.me();
+      await base44.entities.KeylockerPincode.create({
+        employee_id: employee.id,
+        employee_name: employeeName,
+        pincode: pin,
+        active: true,
+        change_reason: "Automatisch aangemaakt bij afronden onboarding",
+        changed_by: currentUser.email,
+        changed_by_name: currentUser.full_name,
+        source: "onboarding",
+      });
+      try {
+        await base44.functions.invoke('auditService', {
+          entity_type: 'KeylockerPincode', entity_id: employee.id,
+          action_type: 'create', category: 'Security',
+          description: `Pincode automatisch aangemaakt voor ${employeeName} via onboarding`,
+          metadata: { type: 'keylocker_pincode_auto_created', employee_id: employee.id },
+        });
+      } catch (_) {}
+    }
 
     queryClient.invalidateQueries({ queryKey: ['onboarding_processes'] });
     queryClient.invalidateQueries({ queryKey: ['employees'] });
@@ -148,7 +174,7 @@ export default function Onboarding() {
       is_chauffeur: true, tonen_in_planner: true, opnemen_in_loonrapport: true,
     });
     setOnboardingData({
-      pincode_sleutelkast: "", pincode_verklaring_signed: false,
+      pincode_verklaring_signed: false,
       sleutel_verklaring_signed: false, sleutel_nummer: "", sleutel_toegang: "",
       gps_buddy_toestemming: false, dienstbetrekking_signed: false,
       bedrijfsreglement_ontvangen: false, contract_generated: false,
@@ -185,7 +211,7 @@ export default function Onboarding() {
             is_chauffeur: true, tonen_in_planner: true, opnemen_in_loonrapport: true,
           });
           setOnboardingData({
-            pincode_sleutelkast: "", pincode_verklaring_signed: false,
+            pincode_verklaring_signed: false,
             sleutel_verklaring_signed: false, sleutel_nummer: "", sleutel_toegang: "",
             gps_buddy_toestemming: false, dienstbetrekking_signed: false,
             bedrijfsreglement_ontvangen: false, contract_generated: false,
@@ -335,7 +361,6 @@ export default function Onboarding() {
                 <th className="text-left py-3 px-4 font-medium text-slate-600">Medewerker</th>
                 <th className="text-left py-3 px-4 font-medium text-slate-600">Datum</th>
                 <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
-                <th className="text-left py-3 px-4 font-medium text-slate-600">Pincode</th>
                 <th className="text-right py-3 px-4 font-medium text-slate-600">Acties</th>
               </tr>
             </thead>
@@ -353,7 +378,6 @@ export default function Onboarding() {
                       "bg-blue-100 text-blue-700"
                     }>{proc.status}</Badge>
                   </td>
-                  <td className="py-3 px-4 font-mono text-slate-700">{proc.pincode_sleutelkast || "—"}</td>
                   <td className="py-3 px-4 text-right">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-600" onClick={() => deleteMutation.mutate(proc.id)}>
                       <Trash2 className="w-4 h-4" />

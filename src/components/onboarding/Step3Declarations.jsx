@@ -12,12 +12,7 @@ import { base44 } from "@/api/base44Client";
 export default function Step3Declarations({ onboardingData, onChange, onNext, onBack, employeeName }) {
   const [signing, setSigning] = useState(false);
 
-  const generatedPin = useMemo(() => {
-    if (onboardingData.pincode_sleutelkast) return onboardingData.pincode_sleutelkast;
-    const pin = String(Math.floor(1000 + Math.random() * 9000));
-    onChange({ ...onboardingData, pincode_sleutelkast: pin });
-    return pin;
-  }, []);
+  // Pincode is no longer generated during onboarding — managed via HR Pincodebeheer
 
   const update = (field, value) => {
     onChange({ ...onboardingData, [field]: value });
@@ -42,7 +37,7 @@ export default function Step3Declarations({ onboardingData, onChange, onNext, on
   const allComplete = allDeclarationsConfirmed && !!onboardingData.employee_signature_url;
 
   const declarations = [
-    { key: "pincode_verklaring_signed", icon: Key, title: "Ontvangstverklaring Pincode", done: onboardingData.pincode_verklaring_signed },
+    { key: "pincode_verklaring_signed", icon: Key, title: "Ontvangstverklaring Sleutelkast", done: onboardingData.pincode_verklaring_signed },
     { key: "sleutel_verklaring_signed", icon: DoorOpen, title: "Sleutelverklaring", done: onboardingData.sleutel_verklaring_signed },
     { key: "gps_buddy_toestemming", icon: Satellite, title: "Toestemming GPS", done: onboardingData.gps_buddy_toestemming },
     { key: "dienstbetrekking_signed", icon: FileText, title: "Verklaring Dienstbetrekking", done: onboardingData.dienstbetrekking_signed },
@@ -64,7 +59,7 @@ export default function Step3Declarations({ onboardingData, onChange, onNext, on
       {/* Accordion verklaringen */}
       <section className="border rounded-lg bg-white overflow-hidden">
         <Accordion type="single" collapsible className="w-full">
-          {/* Pincode */}
+          {/* Sleutelkast verklaring (geen pincode meer) */}
           <AccordionItem value="pincode" className="border-b last:border-b-0">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
               <div className="flex items-center gap-3 text-left">
@@ -73,23 +68,22 @@ export default function Step3Declarations({ onboardingData, onChange, onNext, on
                 ) : (
                   <Key className="w-4 h-4 text-slate-400 shrink-0" />
                 )}
-                <span className="text-sm font-medium">Ontvangstverklaring Pincode Sleutelkast</span>
+                <span className="text-sm font-medium">Ontvangstverklaring Sleutelkast</span>
                 <Badge variant="outline" className={`text-xs ml-auto mr-2 ${onboardingData.pincode_verklaring_signed ? "bg-green-50 text-green-700" : ""}`}>
                   {onboardingData.pincode_verklaring_signed ? "Afgerond" : "Openstaand"}
                 </Badge>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              <div className="bg-slate-50 p-3 rounded mb-3">
-                <p className="text-xs text-slate-500 mb-1">Gegenereerde pincode:</p>
-                <p className="text-2xl font-mono font-bold tracking-widest text-slate-800">{onboardingData.pincode_sleutelkast || generatedPin}</p>
-              </div>
-              <div className="text-xs text-slate-600 space-y-0.5 mb-3">
-                <p>1. Dit is de eigen unieke pincode van de medewerker.</p>
-                <p>2. De pincode mag aan niemand anders verstrekt worden.</p>
-                <p>3. Sleutels uitgenomen onder deze pincode vallen onder verantwoordelijkheid van de medewerker.</p>
-                <p>4. Bij verlies dient de medewerker zelf aangifte te doen.</p>
-                <p>5. Kosten van vermiste sleutels worden op netto salaris ingehouden.</p>
+              <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded mb-3">
+                <p>De medewerker ontvangt een persoonlijke pincode voor de sleutelkast. Deze valt onder eigen verantwoordelijkheid.</p>
+                <p className="mt-1">De pincode wordt afzonderlijk verstrekt en is uitsluitend bekend bij de medewerker.</p>
+                <ul className="list-decimal pl-4 mt-2 space-y-0.5">
+                  <li>De pincode mag aan niemand anders verstrekt worden.</li>
+                  <li>Sleutels uitgenomen onder deze pincode vallen onder verantwoordelijkheid van de medewerker.</li>
+                  <li>Bij verlies dient de medewerker zelf aangifte te doen.</li>
+                  <li>Kosten van vermiste sleutels worden op netto salaris ingehouden.</li>
+                </ul>
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox checked={onboardingData.pincode_verklaring_signed || false} onCheckedChange={(v) => update("pincode_verklaring_signed", v)} />
