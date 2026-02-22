@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, Loader2, CheckCircle2, AlertTriangle, FileText, Lock } from "lucide-react";
+import { Shield, Loader2, CheckCircle2, AlertTriangle, FileText, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ShareIdDocumentButton({ employeeId, employeeName, onboardingDocumentId, onboardingDocument }) {
@@ -110,6 +110,7 @@ export default function ShareIdDocumentButton({ employeeId, employeeName, onboar
                   <li>• Maximaal 5 downloads</li>
                   <li>• Elke download wordt gelogd</li>
                   <li>• Geen bijlage in e-mail</li>
+                  <li>• Private storage — signed URL (5 min geldig)</li>
                 </ul>
               </div>
             </div>
