@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Search, Users, ChevronRight } from "lucide-react";
+import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { getFullName } from "@/components/utils/employeeUtils";
 import StamkaartForm from "@/components/stamkaart/StamkaartForm";
@@ -42,8 +43,10 @@ export default function Stamkaart() {
           <Button variant="outline" onClick={() => setPrintMode(false)}>
             ← Terug naar formulier
           </Button>
-          <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700">
-            <FileText className="w-4 h-4 mr-2" /> Afdrukken
+          <Button onClick={() => {
+            window.open(createPageUrl(`StamkaartDocument?id=${selectedEmployee.id}`), '_blank');
+          }} className="bg-blue-600 hover:bg-blue-700">
+            <FileText className="w-4 h-4 mr-2" /> Afdrukken (schoon document)
           </Button>
         </div>
         <StamkaartPrintView employee={selectedEmployee} />
