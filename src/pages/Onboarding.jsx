@@ -40,6 +40,7 @@ export default function Onboarding() {
     gps_buddy_toestemming: false, dienstbetrekking_signed: false,
     bedrijfsreglement_ontvangen: false, contract_generated: false,
     mobile_invite_sent: false, employee_signature_url: "",
+    id_document: { file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false },
   });
   const [createdEmployeeId, setCreatedEmployeeId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -203,6 +204,7 @@ export default function Onboarding() {
       gps_buddy_toestemming: false, dienstbetrekking_signed: false,
       bedrijfsreglement_ontvangen: false, contract_generated: false,
       mobile_invite_sent: false, employee_signature_url: "",
+      id_document: { file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false },
       });
       };
 
@@ -240,6 +242,7 @@ export default function Onboarding() {
             gps_buddy_toestemming: false, dienstbetrekking_signed: false,
             bedrijfsreglement_ontvangen: false, contract_generated: false,
             mobile_invite_sent: false, employee_signature_url: "",
+            id_document: { file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false },
           });
         }}>Annuleren</Button>
         </div>
