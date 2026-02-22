@@ -27,6 +27,10 @@ function sanitizeMetadata(obj) {
 }
 
 const WRITE_SECRET = 'auditService_internal_v1';
+const TZ = 'Europe/Amsterdam';
+function nlTimestamp() {
+  return new Date().toLocaleString('sv-SE', { timeZone: TZ }).replace(' ', 'T');
+}
 
 Deno.serve(async (req) => {
   try {
@@ -75,7 +79,7 @@ Deno.serve(async (req) => {
       target_name: target_name || null,
       old_value: old_value || null,
       new_value: new_value || null,
-      metadata: sanitizeMetadata(metadata),
+      metadata: { ...sanitizeMetadata(metadata), _timestamp_nl: nlTimestamp() },
       ip_address: ip,
       correlation_id: correlation_id || null,
       tenant_id: tenant_id || null,
