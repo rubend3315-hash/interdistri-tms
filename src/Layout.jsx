@@ -477,6 +477,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-50">
       <style>{printStyles}</style>
+      <style>{enterpriseStyles}</style>
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-50 flex items-center justify-between px-4">
         <button 
@@ -530,10 +531,10 @@ export default function Layout({ children, currentPageName }) {
           {/* Navigation */}
               <nav className="flex-1 overflow-y-auto py-3 px-3">
                 {filteredMenu.map((group, groupIdx) => (
-                  <div key={group.label} className={cn(groupIdx > 0 && "mt-6")}>
+                  <div key={group.label} style={{ marginTop: groupIdx > 0 ? 'var(--ent-space-6)' : 0 }}>
                     <button
                       onClick={() => toggleGroup(group.label)}
-                      className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-[0.08em] hover:text-slate-600 transition-colors"
+                      className="ent-nav-group-label w-full flex items-center justify-between hover:text-slate-600 transition-colors"
                     >
                       {group.label}
                       <ChevronDown className={cn(
@@ -542,7 +543,7 @@ export default function Layout({ children, currentPageName }) {
                       )} />
                     </button>
                     {expandedGroups.includes(group.label) && (
-                      <div className="space-y-0.5 mt-1">
+                      <div className="mt-1" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--ent-space-1)' }}>
                         {/* Regular items */}
                         {group.items && group.items.map((item) => {
                           const isActive = currentPageName === item.page;
@@ -552,20 +553,12 @@ export default function Layout({ children, currentPageName }) {
                               to={createPageUrl(item.page)}
                               onClick={() => setSidebarOpen(false)}
                               className={cn(
-                                "relative flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 group",
-                                isActive 
-                                  ? "bg-blue-50/80 text-blue-800 font-medium" 
-                                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+                                "ent-nav-item",
+                                isActive && "ent-nav-item--active"
                               )}
                             >
-                              {isActive && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-600 rounded-r-full" />
-                              )}
-                              <item.icon className={cn(
-                                "w-[18px] h-[18px] flex-shrink-0",
-                                isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-500"
-                              )} />
-                              <span className="text-[13px]">{item.name}</span>
+                              <item.icon className="ent-nav-icon" />
+                              <span>{item.name}</span>
                             </Link>
                           );
                         })}
@@ -577,23 +570,15 @@ export default function Layout({ children, currentPageName }) {
                           const isHighlighted = sg.highlight === true;
                           return (
                             <div key={sg.label} className={cn(
-                              sgIdx === 0 ? "mt-1" : "mt-2",
-                              isHighlighted && "bg-gradient-to-b from-slate-50 to-slate-50/40 rounded-xl px-1.5 py-1.5 -mx-1 border border-slate-200/60 mt-2 mb-1"
-                            )}>
+                              isHighlighted ? "ent-gov-section" : "",
+                              sgIdx > 0 && !isHighlighted && "mt-1"
+                            )} style={sgIdx === 0 ? { marginTop: 'var(--ent-space-2)' } : undefined}>
                               <button
                                 onClick={() => toggleGroup(sgKey)}
-                                className={cn(
-                                  "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[11px] font-semibold uppercase tracking-[0.06em] transition-colors",
-                                  isHighlighted 
-                                    ? "text-slate-700 hover:bg-white/60" 
-                                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
-                                )}
+                                className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors hover:bg-slate-50/60"
                               >
-                                <SgIcon className={cn(
-                                  "w-[15px] h-[15px] flex-shrink-0",
-                                  isHighlighted ? "text-blue-600/80" : "text-slate-400"
-                                )} />
-                                <span className="flex-1 text-left">{sg.label}</span>
+                                <SgIcon className={cn("ent-sg-icon", isHighlighted && "ent-sg-icon")} />
+                                <span className={cn("ent-sg-label flex-1 text-left", isHighlighted && "ent-sg-label")}>{sg.label}</span>
                                 <ChevronRight className={cn(
                                   "w-3 h-3 text-slate-400 transition-transform duration-200",
                                   sgExpanded && "rotate-90"
@@ -601,9 +586,9 @@ export default function Layout({ children, currentPageName }) {
                               </button>
                               {sgExpanded && (
                                 <div className={cn(
-                                  "space-y-0.5 mt-0.5 ml-3.5 pl-2.5",
-                                  isHighlighted ? "border-l-2 border-blue-200/50" : "border-l-2 border-slate-100"
-                                )}>
+                                  "ml-3.5 pl-2.5 mt-0.5 ent-sg-border",
+                                  isHighlighted && "ent-sg-border"
+                                )} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--ent-space-1)' }}>
                                   {sg.items.map((item) => {
                                     const isActive = currentPageName === item.page;
                                     return (
@@ -612,20 +597,12 @@ export default function Layout({ children, currentPageName }) {
                                         to={createPageUrl(item.page)}
                                         onClick={() => setSidebarOpen(false)}
                                         className={cn(
-                                          "relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-all duration-150 group",
-                                          isActive 
-                                            ? "bg-blue-50/80 text-blue-800 font-medium" 
-                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                                          "ent-nav-subitem",
+                                          isActive && "ent-nav-subitem--active"
                                         )}
                                       >
-                                        {isActive && (
-                                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-blue-600 rounded-r-full" />
-                                        )}
-                                        <item.icon className={cn(
-                                          "w-[15px] h-[15px] flex-shrink-0",
-                                          isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-500"
-                                        )} />
-                                        <span className="text-[12px]">{item.name}</span>
+                                        <item.icon className="ent-nav-subicon" />
+                                        <span>{item.name}</span>
                                       </Link>
                                     );
                                   })}
