@@ -385,12 +385,13 @@ export default function Layout({ children, currentPageName }) {
 
   const isMobilePage = currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay";
   const isSecureDownloadPage = currentPageName === "SecureDownload";
+  const isPublicSecurityPage = currentPageName === "SecurityPrivacy";
   const isStamkaartDocument = false;
   const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
   const isEmployeeEditTimeEntry = user && user.role !== 'admin' && currentPageName === "EditTimeEntry";
 
-  // SecureDownload is fully public — render immediately, skip all auth
-  if (isSecureDownloadPage) {
+  // Public pages — render immediately, skip all auth
+  if (isSecureDownloadPage || isPublicSecurityPage) {
     return <>{children}</>;
   }
 
