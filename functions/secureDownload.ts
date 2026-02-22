@@ -202,8 +202,9 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Deze link is verlopen. Vraag een nieuwe link aan bij uw contactpersoon.' }, { status: 410 });
       }
 
-      // Rate limit: max 10 downloads
-      if (tokenRecord.download_count >= 10) {
+      // Rate limit: use max_downloads if set, fallback to 10
+      const maxDownloads = tokenRecord.max_downloads || 10;
+      if (tokenRecord.download_count >= maxDownloads) {
         return Response.json({ error: 'Download limiet bereikt voor deze link.' }, { status: 429 });
       }
 
@@ -231,8 +232,50 @@ Deno.serve(async (req) => {
       if (tokenRecord.type === 'stamkaart') {
         html = buildStamkaartHtml(emp, emp);
       } else if (tokenRecord.type === 'onboarding') {
-        // Onboarding: same stamkaart + extra info
         html = buildStamkaartHtml(emp, emp);
+      } else if (tokenRecord.type === 'id_document') {
+        // Serve document file preview for ID documents
+        const docId = tokenRecord.document_id;
+        if (!docId) {
+          return Response.json({ error: 'Geen document gekoppeld aan dit token.' }, { status: 400 });
+        }
+        let doc;
+        try {
+          doc = await base44.asServiceRole.entities.Document.get(docId);
+        } catch (_) {
+          return Response.json({ error: 'Document niet gevonden.' }, { status: 404 });
+        }
+        const fileUrl = doc.file_url;
+        const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
+        const isImage = fileUrl && /\.(jpg|jpeg|png|gif|webp)/i.test(fileUrl);
+        const isPdf = fileUrl && /\.pdf/i.test(fileUrl);
+        html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ID Document - ${fullName}</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:800px;margin:0 auto;padding:20px;background:#f8fafc}
+.header{background:#1e293b;color:white;padding:16px 24px;border-radius:8px 8px 0 0;margin-bottom:0}
+.content{background:white;border:1px solid #e2e8f0;padding:24px;border-radius:0 0 8px 8px}
+.meta{display:flex;gap:24px;margin-bottom:16px;font-size:13px;color:#475569}
+.meta strong{color:#1e293b}
+.doc-preview{text-align:center;padding:20px;background:#f1f5f9;border-radius:8px;border:1px solid #e2e8f0}
+.footer{text-align:center;font-size:10px;color:#94a3b8;margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0}
+img.doc-img{max-width:100%;max-height:600px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+</style></head><body>
+<div class="header"><h2 style="margin:0;font-size:16px">🔒 Vertrouwelijk ID-document</h2></div>
+<div class="content">
+  <div class="meta">
+    <div><strong>Medewerker:</strong> ${fullName}</div>
+    <div><strong>Type:</strong> ${doc.document_type || '—'}</div>
+    <div><strong>Document:</strong> ${doc.name || '—'}</div>
+  </div>
+  <div class="doc-preview">
+    ${isImage ? `<img class="doc-img" src="${fileUrl}" alt="ID Document" />` : 
+      isPdf ? `<iframe src="${fileUrl}" style="width:100%;height:600px;border:none;border-radius:4px" title="PDF Preview"></iframe>` :
+      `<p style="color:#475569">Document beschikbaar: <a href="${fileUrl}" target="_blank" style="color:#1d4ed8;font-weight:600">Download bestand</a></p>`}
+  </div>
+  <div class="footer">
+    <p>⚠️ Dit document bevat vertrouwelijke persoonsgegevens. Niet delen met onbevoegden.</p>
+    <p>Download ${tokenRecord.download_count + 1} van maximaal ${maxDownloads}. Link verloopt op ${new Date(tokenRecord.expires_at).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' })}.</p>
+  </div>
+</div></body></html>`;
       }
 
       // Audit download
