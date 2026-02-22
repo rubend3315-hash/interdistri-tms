@@ -13,6 +13,7 @@ import { nl } from "date-fns/locale";
 import OnboardingStepIndicator from "../components/onboarding/OnboardingStepIndicator";
 import Step1EmployeeDetails from "../components/onboarding/Step1EmployeeDetails";
 import Step2Stamkaart from "../components/onboarding/Step2Stamkaart";
+import StepIdDocument from "../components/onboarding/StepIdDocument";
 import Step3Declarations from "../components/onboarding/Step3Declarations";
 import Step4Contract from "../components/onboarding/Step4Contract";
 import Step5MobileAccess from "../components/onboarding/Step5MobileAccess";
@@ -94,7 +95,23 @@ export default function Onboarding() {
       employee = await base44.entities.Employee.create(empPayload);
     }
 
-    // 2a. Generate contract if settings were saved
+    // 2a. Create Document entity for uploaded ID document
+    const idDoc = onboardingData?.id_document;
+    if (idDoc?.file_url) {
+      const doc = await base44.entities.Document.create({
+        name: `ID Document - ${employeeName}`,
+        document_type: idDoc.document_type || "Identiteitsbewijs",
+        file_url: idDoc.file_url,
+        linked_employee_id: employee.id,
+        linked_entity_name: employeeName,
+        notes: `Bron: onboarding${idDoc.contains_bsn ? ' — BSN zichtbaar op document' : ''}`,
+        status: "Actief",
+      });
+      // Store document id for secure sharing
+      setOnboardingData(prev => ({ ...prev, id_document: { ...prev.id_document, document_id: doc.id } }));
+    }
+
+    // 2b. Generate contract if settings were saved
     if (onboardingData.contract_generated && onboardingData.contract_settings) {
       const cs = onboardingData.contract_settings;
       await base44.functions.invoke('generateContract', {
@@ -113,7 +130,7 @@ export default function Onboarding() {
       employee_id: employee.id,
       employee_name: employeeName,
       status: "Afgerond",
-      current_step: 7,
+      current_step: 8,
       stamkaart_completed: true,
       pincode_verklaring_signed: onboardingData.pincode_verklaring_signed,
       sleutel_verklaring_signed: onboardingData.sleutel_verklaring_signed,
@@ -241,37 +258,37 @@ export default function Onboarding() {
           />
         )}
         {currentStep === 3 && (
-          <Step3Declarations
+          <StepIdDocument
+            employeeData={employeeData}
             onboardingData={onboardingData}
             onChange={setOnboardingData}
-            employeeName={employeeName}
             onNext={() => setCurrentStep(4)}
             onBack={() => setCurrentStep(2)}
           />
         )}
         {currentStep === 4 && (
-          <Step4Contract
-            employeeData={employeeData}
+          <Step3Declarations
             onboardingData={onboardingData}
             onChange={setOnboardingData}
-            employeeId={createdEmployeeId}
+            employeeName={employeeName}
             onNext={() => setCurrentStep(5)}
             onBack={() => setCurrentStep(3)}
           />
         )}
         {currentStep === 5 && (
-          <Step5MobileAccess
+          <Step4Contract
             employeeData={employeeData}
-            onEmployeeChange={setEmployeeData}
             onboardingData={onboardingData}
             onChange={setOnboardingData}
+            employeeId={createdEmployeeId}
             onNext={() => setCurrentStep(6)}
             onBack={() => setCurrentStep(4)}
           />
         )}
         {currentStep === 6 && (
-          <Step6Invite
+          <Step5MobileAccess
             employeeData={employeeData}
+            onEmployeeChange={setEmployeeData}
             onboardingData={onboardingData}
             onChange={setOnboardingData}
             onNext={() => setCurrentStep(7)}
@@ -279,10 +296,19 @@ export default function Onboarding() {
           />
         )}
         {currentStep === 7 && (
+          <Step6Invite
+            employeeData={employeeData}
+            onboardingData={onboardingData}
+            onChange={setOnboardingData}
+            onNext={() => setCurrentStep(8)}
+            onBack={() => setCurrentStep(6)}
+          />
+        )}
+        {currentStep === 8 && (
           <Step7Summary
             employeeData={employeeData}
             onboardingData={onboardingData}
-            onBack={() => setCurrentStep(6)}
+            onBack={() => setCurrentStep(7)}
             onComplete={handleComplete}
             isSubmitting={submitting}
           />

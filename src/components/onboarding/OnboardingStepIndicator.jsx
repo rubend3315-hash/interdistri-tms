@@ -5,11 +5,12 @@ import { cn } from "@/lib/utils";
 const STEPS = [
   { number: 1, label: "Medewerker" },
   { number: 2, label: "Stamkaart" },
-  { number: 3, label: "Verklaringen" },
-  { number: 4, label: "Contract" },
-  { number: 5, label: "Mobiele Toegang" },
-  { number: 6, label: "Uitnodiging" },
-  { number: 7, label: "Overzicht" },
+  { number: 3, label: "ID-document" },
+  { number: 4, label: "Verklaringen" },
+  { number: 5, label: "Contract" },
+  { number: 6, label: "Mobiele Toegang" },
+  { number: 7, label: "Uitnodiging" },
+  { number: 8, label: "Overzicht" },
 ];
 
 export default function OnboardingStepIndicator({ currentStep, onStepClick }) {
