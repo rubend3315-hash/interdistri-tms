@@ -140,6 +140,7 @@ const enterpriseStyles = `
 const menuItems = [
   {
     label: "Core Operations",
+    subtitle: "Dagelijkse uitvoering & planning",
     items: [
       { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
       { name: "Tijdregistratie", icon: Clock, page: "TimeTracking" },
@@ -153,6 +154,7 @@ const menuItems = [
   },
   {
     label: "HR",
+    subtitle: "Personeelsbeheer & lifecycle management",
     items: [
       { name: "Medewerkers", icon: Users, page: "Employees" },
       { name: "Onboarding", icon: Users, page: "Onboarding" },
@@ -168,6 +170,7 @@ const menuItems = [
   },
   {
     label: "Loon & Rapportage",
+    subtitle: "Salarisadministratie & compliance",
     items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
       { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
@@ -177,6 +180,7 @@ const menuItems = [
   },
   {
     label: "Business",
+    subtitle: "Klant-, project- en commerciële sturing",
     items: [
       { name: "Klanten", icon: Building2, page: "Customers" },
       { name: "Projecten", icon: FolderKanban, page: "Projects" },
@@ -187,12 +191,14 @@ const menuItems = [
   },
   {
     label: "Communicatie",
+    subtitle: "Interne & externe berichtgeving",
     items: [
       { name: "Berichten", icon: Mail, page: "Messages" },
     ]
   },
   {
     label: "Operationeel Beheer",
+    subtitle: "Configuratie & systeeminstellingen",
     items: [
       { name: "HR Instellingen", icon: Settings, page: "HRMSettings" },
       { name: "HR Import", icon: FileSpreadsheet, page: "HRImport" },
@@ -208,6 +214,7 @@ const menuItems = [
   },
   {
     label: "Governance & Control",
+    subtitle: "Security, compliance & risicobeheersing",
     subgroups: [
       {
         label: "Security & Compliance",
@@ -544,9 +551,14 @@ export default function Layout({ children, currentPageName }) {
                       onClick={() => toggleGroup(group.label)}
                       className="ent-nav-group-label w-full flex items-center justify-between hover:text-slate-600 transition-colors"
                     >
-                      {group.label}
+                      <div className="text-left">
+                        <span>{group.label}</span>
+                        {group.subtitle && expandedGroups.includes(group.label) && (
+                          <span className="block text-[9px] font-normal normal-case tracking-normal text-slate-400 mt-0.5 leading-tight">{group.subtitle}</span>
+                        )}
+                      </div>
                       <ChevronDown className={cn(
-                        "w-3.5 h-3.5 transition-transform duration-200",
+                        "w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0",
                         expandedGroups.includes(group.label) ? "rotate-0" : "-rotate-90"
                       )} />
                     </button>
