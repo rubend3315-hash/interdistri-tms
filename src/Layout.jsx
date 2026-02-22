@@ -152,29 +152,58 @@ const menuItems = [
     ]
   },
   {
-    label: "HR & Business",
+    label: "HR",
     items: [
-      { name: "Onboarding", icon: Users, page: "Onboarding" },
       { name: "Medewerkers", icon: Users, page: "Employees" },
+      { name: "Onboarding", icon: Users, page: "Onboarding" },
       { name: "Stamkaart", icon: FileText, page: "Stamkaart" },
-      { name: "HR Import", icon: FileSpreadsheet, page: "HRImport" },
       { name: "Contracten", icon: FileText, page: "Contracts" },
-      { name: "Contract Sjablonen", icon: FileText, page: "ContractTemplates" },
       { name: "Contractwijzigingen", icon: FileText, page: "ContractWijzigingen" },
       { name: "Contract Analytics", icon: FileSpreadsheet, page: "ContractAnalytics" },
       { name: "Afgeronde Contracten", icon: CheckSquare, page: "CompletedContracts" },
       { name: "Bedrijfsreglement", icon: BookOpen, page: "Bedrijfsreglement" },
+      { name: "Resultaat & Ontwikkeling", icon: FileText, page: "PerformanceReviews" },
+      { name: "Documentenbeheer", icon: FileText, page: "Documents" },
+    ]
+  },
+  {
+    label: "Loon & Rapportage",
+    items: [
+      { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
       { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
       { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
-      { name: "Resultaat & Ontwikkeling", icon: FileText, page: "PerformanceReviews" },
-      { name: "KPI rapportage PostNL", icon: Users, page: "EmployeeReport" },
-      { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
       { name: "PayChecked Audit", icon: ShieldCheck, page: "PayCheckedAudit" },
-      { name: "Charters", icon: Truck, page: "Charters" },
+    ]
+  },
+  {
+    label: "Business",
+    items: [
       { name: "Klanten", icon: Building2, page: "Customers" },
       { name: "Projecten", icon: FolderKanban, page: "Projects" },
       { name: "Activiteiten", icon: Package, page: "Activiteiten" },
+      { name: "Charters", icon: Truck, page: "Charters" },
+      { name: "KPI rapportage PostNL", icon: FileSpreadsheet, page: "EmployeeReport" },
+    ]
+  },
+  {
+    label: "Communicatie",
+    items: [
       { name: "Berichten", icon: Mail, page: "Messages" },
+    ]
+  },
+  {
+    label: "Operationeel Beheer",
+    items: [
+      { name: "HR Instellingen", icon: Settings, page: "HRMSettings" },
+      { name: "HR Import", icon: FileSpreadsheet, page: "HRImport" },
+      { name: "Contract Sjablonen", icon: FileText, page: "ContractTemplates" },
+      { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
+      { name: "Integraties", icon: Link2, page: "Integrations" },
+      { name: "Herberekeningen", icon: Wrench, page: "Recalculations" },
+      { name: "Datamigratie", icon: Database, page: "DataMigration" },
+      { name: "Voertuigen", icon: Car, page: "Vehicles" },
+      { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
+      { name: "Gebruikers", icon: Users, page: "Users" },
     ]
   },
   {
@@ -201,27 +230,6 @@ const menuItems = [
         icon: HardDrive,
         items: [
           { name: "Back-ups", icon: Database, page: "Backups" },
-          { name: "Datamigratie", icon: Database, page: "DataMigration" },
-        ]
-      },
-      {
-        label: "Platform & Integraties",
-        icon: Link2,
-        items: [
-          { name: "Integraties", icon: Link2, page: "Integrations" },
-          { name: "Herberekeningen", icon: Wrench, page: "Recalculations" },
-          { name: "HR Instellingen", icon: Settings, page: "HRMSettings" },
-          { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
-          { name: "Documentenbeheer", icon: FileText, page: "Documents" },
-          { name: "Gebruikers", icon: Users, page: "Users" },
-        ]
-      },
-      {
-        label: "Operationeel Beheer",
-        icon: Car,
-        items: [
-          { name: "Voertuigen", icon: Car, page: "Vehicles" },
-          { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
         ]
       },
       {
