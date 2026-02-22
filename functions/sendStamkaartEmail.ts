@@ -112,19 +112,21 @@ Deno.serve(async (req) => {
       console.warn(`[sendStamkaartEmail] Gmail profile check failed: ${gmailErr.message}`);
     }
 
-    // ── GENERATE SECURE DOWNLOAD TOKEN ──
+    // ── GENERATE SECURE DOWNLOAD TOKEN (inline, no function invoke) ──
     const type = download_type || 'stamkaart';
-    const tokenResult = await base44.functions.invoke('secureDownload', {
-      action: 'generate',
+    const downloadToken = generateToken();
+    const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000).toISOString();
+
+    await base44.asServiceRole.entities.SecureDownloadToken.create({
+      token: downloadToken,
       type,
       employee_id,
+      expires_at: expiresAt,
+      used: false,
+      download_count: 0,
+      created_by_email: user.email,
+      created_by_name: user.full_name,
     });
-
-    if (!tokenResult.data?.success || !tokenResult.data?.token) {
-      return Response.json({ success: false, error: 'Kon geen beveiligde downloadlink aanmaken.' }, { status: 500 });
-    }
-
-    const downloadToken = tokenResult.data.token;
     // Build the secure download URL — uses the app's base URL
     const appBaseUrl = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
     const secureDownloadUrl = `${appBaseUrl}/SecureDownload?token=${downloadToken}`;
