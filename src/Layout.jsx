@@ -217,6 +217,7 @@ export default function Layout({ children, currentPageName }) {
       'HelpPage': 'helppage',
       'Onboarding': 'employees',
       'MobileHandleiding': 'helppage',
+      'SecurityArchitecture': 'admin_only',
       'Activiteiten': 'customers',
       'StandplaatsWerk': 'timetracking',
       'PayCheckedAudit': 'reports',
