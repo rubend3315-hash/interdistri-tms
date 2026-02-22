@@ -218,7 +218,13 @@ Deno.serve(async (req) => {
       });
 
       // Fetch employee with decrypted sensitive fields
-      const emp = await base44.asServiceRole.entities.Employee.get(tokenRecord.employee_id);
+      let emp;
+      try {
+        emp = await base44.asServiceRole.entities.Employee.get(tokenRecord.employee_id);
+      } catch (empErr) {
+        console.error(`[secureDownload] Employee not found: ${tokenRecord.employee_id} - ${empErr.message}`);
+        return Response.json({ error: 'Medewerker niet gevonden. Het account is mogelijk verwijderd.' }, { status: 404 });
+      }
       if (emp.bsn) emp.bsn = await decrypt(emp.bsn);
       if (emp.bank_account) emp.bank_account = await decrypt(emp.bank_account);
 
