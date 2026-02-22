@@ -520,25 +520,41 @@ export default function Layout({ children, currentPageName }) {
                           );
                         })}
                         {/* Subgroups */}
-                        {group.subgroups && group.subgroups.map((sg) => {
+                        {group.subgroups && group.subgroups.map((sg, sgIdx) => {
                           const sgKey = `${group.label}::${sg.label}`;
                           const sgExpanded = expandedGroups.includes(sgKey);
                           const SgIcon = sg.icon;
+                          const isSecurityGroup = sg.label === "Security & Compliance";
                           return (
-                            <div key={sg.label} className="mt-1">
+                            <div key={sg.label} className={cn(
+                              "mt-1",
+                              isSecurityGroup && "bg-slate-50/80 rounded-xl px-1 py-1.5 -mx-1 border border-slate-100/80",
+                              sgIdx > 0 && !isSecurityGroup && "mt-2"
+                            )}>
                               <button
                                 onClick={() => toggleGroup(sgKey)}
-                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+                                className={cn(
+                                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors",
+                                  isSecurityGroup 
+                                    ? "text-slate-600 hover:bg-slate-100/60" 
+                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                )}
                               >
-                                <SgIcon className="w-4 h-4 text-slate-400" />
+                                <SgIcon className={cn(
+                                  "w-4 h-4 flex-shrink-0",
+                                  isSecurityGroup ? "text-blue-500/70" : "text-slate-400"
+                                )} />
                                 <span className="flex-1 text-left">{sg.label}</span>
                                 <ChevronRight className={cn(
-                                  "w-3.5 h-3.5 text-slate-400 transition-transform",
+                                  "w-3.5 h-3.5 text-slate-400 transition-transform duration-200",
                                   sgExpanded && "rotate-90"
                                 )} />
                               </button>
                               {sgExpanded && (
-                                <div className="space-y-0.5 mt-0.5 ml-2 pl-2 border-l-2 border-slate-100">
+                                <div className={cn(
+                                  "space-y-0.5 mt-0.5 ml-3 pl-2.5",
+                                  isSecurityGroup ? "border-l-2 border-blue-200/60" : "border-l-2 border-slate-100"
+                                )}>
                                   {sg.items.map((item) => {
                                     const isActive = currentPageName === item.page;
                                     return (
@@ -549,12 +565,12 @@ export default function Layout({ children, currentPageName }) {
                                         className={cn(
                                           "flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 text-[13px]",
                                           isActive 
-                                            ? "bg-blue-50 text-blue-700 font-medium" 
+                                            ? "bg-blue-50 text-blue-700 font-medium shadow-sm shadow-blue-100/50" 
                                             : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                         )}
                                       >
                                         <item.icon className={cn(
-                                          "w-4 h-4",
+                                          "w-4 h-4 flex-shrink-0",
                                           isActive ? "text-blue-600" : "text-slate-400"
                                         )} />
                                         <span>{item.name}</span>

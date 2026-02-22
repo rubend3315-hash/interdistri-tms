@@ -90,6 +90,7 @@ import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
 import SecureDownload from './pages/SecureDownload';
 import SecurityArchitecture from './pages/SecurityArchitecture';
+import SecurityPrivacy from './pages/SecurityPrivacy';
 import SecurityRoadmap from './pages/SecurityRoadmap';
 import SecuritySummary from './pages/SecuritySummary';
 import ShiftTime from './pages/ShiftTime';
@@ -100,10 +101,9 @@ import TIRekenmodule from './pages/TIRekenmodule';
 import TenantArchitecture from './pages/TenantArchitecture';
 import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
+import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import SecurityPrivacy from './pages/SecurityPrivacy';
-import Trust from './pages/Trust';
 import __Layout from './Layout.jsx';
 
 
@@ -151,6 +151,7 @@ export const PAGES = {
     "SalaryTables": SalaryTables,
     "SecureDownload": SecureDownload,
     "SecurityArchitecture": SecurityArchitecture,
+    "SecurityPrivacy": SecurityPrivacy,
     "SecurityRoadmap": SecurityRoadmap,
     "SecuritySummary": SecuritySummary,
     "ShiftTime": ShiftTime,
@@ -161,10 +162,9 @@ export const PAGES = {
     "TenantArchitecture": TenantArchitecture,
     "TimeTracking": TimeTracking,
     "Trips": Trips,
+    "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "SecurityPrivacy": SecurityPrivacy,
-    "Trust": Trust,
 }
 
 export const pagesConfig = {
