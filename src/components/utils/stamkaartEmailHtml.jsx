@@ -1,109 +1,183 @@
 /**
- * Generates a professionally styled HTML email body for a stamkaart.
+ * Generates a clean, professional HTML document for a stamkaart.
+ * Used as email body for payroll administration.
+ * Matches the StamkaartPrintView layout — official document quality, no UI elements.
+ *
  * @param {object} params
  * @param {string} params.fullName
  * @param {object} params.data - Employee data fields
  * @param {string} params.lhLabel - Loonheffingskorting label (Ja/Nee/Niet ingevuld)
  * @param {string} params.lhDatum - Loonheffing datum
  * @param {string} [params.signatureUrl] - URL of the signature image
+ * @param {string} [params.managerName]
  * @returns {string} HTML string
  */
 export function buildStamkaartEmailHtml({ fullName, data, lhLabel, lhDatum, signatureUrl, managerName }) {
-  const row = (label, value) => `
+  const fmtDate = (val) => {
+    if (!val) return '—';
+    try {
+      const d = new Date(val);
+      return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}`;
+    } catch { return val; }
+  };
+
+  const cats = Array.isArray(data.drivers_license_categories)
+    ? data.drivers_license_categories.join(', ')
+    : (data.drivers_license_categories || '—');
+
+  const sectionTitle = (title) => `
     <tr>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#334155;width:220px;font-size:14px;">${label}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#1e293b;font-size:14px;">${value || '—'}</td>
+      <td colspan="2" style="padding:8px 0 2px 0;border-bottom:1px solid #334155;">
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#334155;">${title}</span>
+      </td>
     </tr>`;
 
-  const section = (title, rows) => `
+  const row = (label, value, labelWidth) => {
+    const w = labelWidth || 220;
+    return `
     <tr>
-      <td colspan="2" style="padding:16px 14px 8px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#3b82f6;border-bottom:2px solid #3b82f6;">
-        ${title}
-      </td>
-    </tr>
-    ${rows}`;
+      <td style="padding:3px 8px 3px 0;font-size:12px;color:#475569;width:${w}px;text-align:right;white-space:nowrap;">${label}</td>
+      <td style="padding:3px 0;font-size:12px;color:#1e293b;">${value || '—'}</td>
+    </tr>`;
+  };
 
-  const signatureHtml = signatureUrl ? `
-    <div style="margin-top:24px;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
-      <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#334155;">Handtekening loonheffingsverklaring:</p>
-      <img src="${signatureUrl}" alt="Handtekening" style="max-height:80px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;padding:4px;" />
-    </div>` : '';
+  const compactRow = (label, value) => row(label, value, 150);
+
+  const printDate = new Date().toLocaleDateString('nl-NL');
 
   return `
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:640px;margin:0 auto;padding:24px 16px;">
-    
-    <!-- Header -->
-    <div style="background:linear-gradient(135deg,#1e40af 0%,#2563eb 100%);border-radius:12px 12px 0 0;padding:28px 32px;text-align:center;">
-      <h1 style="margin:0;font-size:22px;font-weight:700;color:#ffffff;">🚛 Interdistri</h1>
-      <p style="margin:4px 0 0;font-size:13px;color:#bfdbfe;">Transport Management Systeem</p>
-    </div>
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:680px;margin:0 auto;padding:20px 16px;">
 
-    <!-- Title bar -->
-    <div style="background:#1e293b;padding:14px 32px;">
-      <h2 style="margin:0;font-size:16px;font-weight:600;color:#ffffff;">Stamkaart — ${fullName}</h2>
-      <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Gegenereerd op ${new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-    </div>
+    <!-- Document Header -->
+    <table style="width:100%;border-bottom:2px solid #1e293b;margin-bottom:6px;">
+      <tr>
+        <td style="padding-bottom:2px;">
+          <span style="font-size:14px;font-weight:700;color:#1e293b;">Stamkaart werknemers — ${fullName}</span>
+        </td>
+        <td style="padding-bottom:2px;text-align:right;">
+          <span style="font-size:11px;color:#64748b;">Nr. ${data.employee_number || '—'}</span>
+        </td>
+      </tr>
+    </table>
 
-    <!-- Content -->
-    <div style="background:#ffffff;padding:0;border-radius:0 0 12px 12px;overflow:hidden;border:1px solid #e2e8f0;border-top:none;">
-      <table style="width:100%;border-collapse:collapse;">
-        ${section('Persoonsgegevens', [
-          row('Naam', fullName),
-          row('Geboortedatum', data.date_of_birth),
-          row('BSN', data.bsn),
-          row('Adres', `${data.address || '—'}, ${data.postal_code || ''} ${data.city || ''}`),
-          row('E-mail', data.email),
-          row('Telefoon', data.phone),
-          row('IBAN', data.bank_account),
-        ].join(''))}
+    <!-- Company info -->
+    <table style="width:100%;margin-bottom:8px;">
+      <tr>
+        <td style="font-size:10px;color:#64748b;text-align:right;">
+          Interdistri B.V. &bull; Fleerbosseweg 19, 4421 RR Kapelle &bull; K.v.K. 20150449 &bull; Datum: ${printDate}
+        </td>
+      </tr>
+    </table>
 
-        ${section('Identificatie & Rijbewijs', [
-          row('ID-document nummer', data.id_document_number),
-          row('ID-document geldig t/m', data.id_document_expiry),
-          row('Rijbewijsnummer', data.drivers_license_number),
-          row('Rijbewijscategorieën', Array.isArray(data.drivers_license_categories) ? data.drivers_license_categories.join(', ') : data.drivers_license_categories),
-          row('Rijbewijs vervaldatum', data.drivers_license_expiry),
-          row('Code 95 vervaldatum', data.code95_expiry),
-        ].join(''))}
+    <!-- Werknemer gegevens -->
+    <table style="width:100%;border-collapse:collapse;">
+      ${sectionTitle('Werknemer gegevens')}
+      ${row('Voorletters', data.initials)}
+      ${row('Voornaam', data.first_name)}
+      ${row('Tussenvoegsel', data.prefix)}
+      ${row('Achternaam', data.last_name)}
+      ${row('Geboortedatum', fmtDate(data.date_of_birth))}
+      ${row('Adres', data.address)}
+      ${row('Postcode en woonplaats', `${data.postal_code || ''} ${data.city || ''}`)}
+      ${row('E-mailadres', data.email)}
+      ${row('Telefoon', data.phone)}
+      ${row('IBAN', data.bank_account)}
+      ${row('Noodcontact', `${data.emergency_contact_name || '—'} ${data.emergency_contact_phone || ''}`)}
+    </table>
 
-        ${section('Dienstverband', [
-          row('Afdeling', data.department),
-          row('Functie', data.function),
-          row('Contract type', data.contract_type),
-          row('Uren per week', data.contract_hours),
-          row('Loonschaal', data.salary_scale),
-          row('Bruto uurloon', data.hourly_rate ? `€ ${data.hourly_rate}` : '—'),
-          row('In dienst sinds', data.in_service_since),
-        ].join(''))}
+    <!-- Identiteitsbewijs -->
+    <table style="width:100%;border-collapse:collapse;margin-top:4px;">
+      ${sectionTitle('Identiteitsbewijs')}
+      ${row('Burger Service Nummer', data.bsn)}
+      ${row('Nr. ID-kaart/paspoort', data.id_document_number)}
+      ${row('Geldig tot', fmtDate(data.id_document_expiry))}
+    </table>
 
-        ${section('Loonheffingsverklaring', [
-          row('Loonheffingskorting toepassen', lhLabel),
-          row('Datum', lhDatum),
-        ].join(''))}
-      </table>
+    <!-- Rijbewijs -->
+    <table style="width:100%;border-collapse:collapse;margin-top:4px;">
+      ${sectionTitle('Rijbewijs')}
+      ${row('Rijbewijsnummer', data.drivers_license_number)}
+      ${row('Categorieën', cats)}
+      ${row('Vervaldatum rijbewijs', fmtDate(data.drivers_license_expiry))}
+      ${row('Vervaldatum Code 95', fmtDate(data.code95_expiry))}
+    </table>
 
-      ${signatureHtml}
+    <!-- Dienstverband -->
+    <table style="width:100%;border-collapse:collapse;margin-top:4px;">
+      ${sectionTitle('Gegevens dienstverband')}
+    </table>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr valign="top">
+        <td style="width:50%;">
+          <table style="width:100%;border-collapse:collapse;">
+            ${compactRow('Datum in dienst', fmtDate(data.in_service_since))}
+            ${compactRow('Functie', data.function)}
+            ${compactRow('Afdeling', data.department)}
+          </table>
+        </td>
+        <td style="width:50%;">
+          <table style="width:100%;border-collapse:collapse;">
+            ${compactRow('Contract type', data.contract_type)}
+            ${compactRow('Contracturen', data.contract_hours ? `${data.contract_hours} uur` : '—')}
+            ${compactRow('Loonschaal', data.salary_scale)}
+            ${compactRow('Bruto uurloon', data.hourly_rate ? `€ ${Number(data.hourly_rate).toFixed(2)}` : '—')}
+          </table>
+        </td>
+      </tr>
+    </table>
 
-      ${managerName ? `
-      <div style="padding:16px 32px;border-top:1px solid #e2e8f0;">
-        <p style="margin:0 0 4px;font-size:13px;color:#334155;">Met vriendelijke groet,</p>
-        <p style="margin:0;font-size:14px;font-weight:600;color:#1e293b;">${managerName}</p>
-        <p style="margin:2px 0 0;font-size:12px;color:#64748b;">Interdistri</p>
-      </div>` : ''}
+    <!-- Loonheffingsverklaring -->
+    <table style="width:100%;border-collapse:collapse;margin-top:4px;">
+      ${sectionTitle('Loonheffingskorting & ondertekening')}
+    </table>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr valign="top">
+        <td style="width:60%;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:3px 0;font-size:12px;color:#475569;width:45%;">Loonheffingskorting?</td>
+              <td style="padding:3px 0;font-size:12px;color:#1e293b;">${lhLabel}</td>
+            </tr>
+            ${lhDatum && lhDatum !== '—' ? `
+            <tr>
+              <td style="padding:3px 0;font-size:12px;color:#475569;">Vanaf datum</td>
+              <td style="padding:3px 0;font-size:12px;color:#1e293b;">${fmtDate(lhDatum)}</td>
+            </tr>` : ''}
+            <tr>
+              <td style="padding:3px 0;font-size:12px;color:#475569;">LKV (WW, WAO, WIA)?</td>
+              <td style="padding:3px 0;font-size:12px;color:#1e293b;">${data.lkv_uitkering === 'ja' ? 'Ja, doelgroepverklaring' : 'Nee'}</td>
+            </tr>
+            ${data.financiele_situatie ? `
+            <tr>
+              <td style="padding:3px 0;font-size:12px;color:#475569;vertical-align:top;">Bijzonderheden</td>
+              <td style="padding:3px 0;font-size:12px;color:#1e293b;white-space:pre-wrap;">${data.financiele_situatie}</td>
+            </tr>` : ''}
+          </table>
+        </td>
+        <td style="width:40%;padding-left:16px;">
+          <div style="font-size:12px;color:#475569;margin-bottom:4px;">Handtekening werknemer</div>
+          ${signatureUrl
+            ? `<img src="${signatureUrl}" alt="Handtekening" style="max-height:80px;border:1px solid #cbd5e1;background:#fff;padding:4px;display:block;" />`
+            : `<div style="height:80px;border:1px solid #cbd5e1;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:#94a3b8;">Niet getekend</div>`
+          }
+        </td>
+      </tr>
+    </table>
 
-      <!-- Footer inside card -->
-      <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
-        <p style="margin:0;font-size:11px;color:#94a3b8;">Dit document is vertrouwelijk en uitsluitend bestemd voor de loonadministratie.</p>
-      </div>
-    </div>
+    ${managerName ? `
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0;">
+      <p style="margin:0 0 2px;font-size:12px;color:#334155;">Met vriendelijke groet,</p>
+      <p style="margin:0;font-size:13px;font-weight:600;color:#1e293b;">${managerName}</p>
+      <p style="margin:2px 0 0;font-size:11px;color:#64748b;">Interdistri B.V.</p>
+    </div>` : ''}
 
-    <!-- Outer footer -->
-    <div style="text-align:center;padding:16px 0;">
-      <p style="margin:0;font-size:11px;color:#94a3b8;">Interdistri TMS • Automatisch gegenereerd</p>
+    <!-- Footer -->
+    <div style="margin-top:12px;padding-top:8px;border-top:1px solid #e2e8f0;text-align:center;">
+      <p style="margin:0;font-size:10px;color:#94a3b8;">Dit document is vertrouwelijk en uitsluitend bestemd voor de loonadministratie.</p>
     </div>
   </div>
 </body>

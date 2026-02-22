@@ -219,6 +219,7 @@ export default function Layout({ children, currentPageName }) {
       'Activiteiten': 'customers',
       'StandplaatsWerk': 'timetracking',
       'PayCheckedAudit': 'reports',
+      'StamkaartDocument': 'employees',
     };
     
     const requiredPermission = pagePermissionMap[page];
