@@ -11,6 +11,7 @@ import ShareIdDocumentButton from "./ShareIdDocumentButton";
 const CHECKLIST = [
   { key: "employee_created", label: "Medewerker aangemaakt" },
   { key: "stamkaart_completed", label: "Stamkaart ingevuld" },
+  { key: "id_document_uploaded", label: "ID-document geüpload" },
   { key: "pincode_verklaring_signed", label: "Sleutelkast verklaring" },
   { key: "sleutel_verklaring_signed", label: "Sleutelverklaring" },
   { key: "gps_buddy_toestemming", label: "GPS Buddy toestemming" },
@@ -26,8 +27,9 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
   const getStatus = (key) => {
     if (key === "employee_created") return true;
     if (key === "stamkaart_completed") return true;
+    if (key === "id_document_uploaded") return !!onboardingData?.id_document?.file_url;
     if (key === "employee_signature_url") return !!onboardingData.employee_signature_url;
-    if (key === "mobile_access_configured") return true; // always configured (defaults applied in step 5)
+    if (key === "mobile_access_configured") return true;
     return !!onboardingData[key];
   };
 

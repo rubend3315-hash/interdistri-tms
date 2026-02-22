@@ -62,6 +62,12 @@ export default function Onboarding() {
   const employeeName = `${employeeData.first_name} ${employeeData.prefix ? employeeData.prefix + ' ' : ''}${employeeData.last_name}`.trim();
 
   const handleComplete = async () => {
+    // Validate ID document is uploaded
+    if (!onboardingData?.id_document?.file_url) {
+      alert("Upload eerst een identiteitsdocument (Stap 3) voordat je de onboarding kunt afronden.");
+      return;
+    }
+
     setSubmitting(true);
 
     // 1. Create employee
