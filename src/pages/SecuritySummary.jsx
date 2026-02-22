@@ -1,155 +1,156 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, CheckCircle2, AlertTriangle, TrendingUp, FileText } from "lucide-react";
+import { Shield, CheckCircle2, AlertTriangle, Eye, Lock, Key, Users, Server, Mail, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const VERSIE = "1.0";
-const LAATSTE_UPDATE = "2026-02-22";
+const today = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+
+const StatusBadge = ({ status }) => {
+  const config = {
+    gemitigeerd: { color: "bg-green-100 text-green-700 border-green-200", dot: "bg-green-500" },
+    "op orde": { color: "bg-blue-100 text-blue-700 border-blue-200", dot: "bg-blue-500" },
+    "laag risico": { color: "bg-green-100 text-green-700 border-green-200", dot: "bg-green-500" },
+    "gemonitord risico": { color: "bg-orange-100 text-orange-700 border-orange-200", dot: "bg-orange-500" },
+  };
+  const c = config[status.toLowerCase()] || config["op orde"];
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${c.color}`}>
+      <span className={`w-2 h-2 rounded-full ${c.dot}`} />
+      {status}
+    </span>
+  );
+};
+
+const ITEMS = [
+  {
+    icon: Lock,
+    title: "Gevoelige persoonsgegevens",
+    status: "Gemitigeerd",
+    description: "BSN en IBAN worden versleuteld opgeslagen met AES-256-GCM encryptie. Decryptie vindt uitsluitend plaats server-side wanneer noodzakelijk en wordt niet gelogd in plaintext.",
+  },
+  {
+    icon: Mail,
+    title: "Documentverzending",
+    status: "Gemitigeerd",
+    description: "Persoonsgevoelige documenten worden niet per e-mail verzonden. In plaats daarvan wordt een tijdelijke, token-gebaseerde beveiligde downloadlink gebruikt (48 uur geldig, maximaal 10 downloads).",
+  },
+  {
+    icon: Key,
+    title: "Sleutelkast-pincode",
+    status: "Laag risico",
+    description: "Pincode wordt niet getoond in onboarding of documenten. Alleen zichtbaar via HR-instellingen met audit logging en 30-seconden view timer.",
+  },
+  {
+    icon: Users,
+    title: "Toegangsbeheer",
+    status: "Op orde",
+    description: "Rolgebaseerd toegangsmodel (RBAC) met fijnmazige permissies. Admin-only voor kritieke acties. Audit logging actief op alle beveiligingsrelevante handelingen.",
+  },
+  {
+    icon: Server,
+    title: "Back-ups",
+    status: "Gemonitord risico",
+    description: "Back-ups bevatten versleutelde data (BSN/IBAN). Toegang beperkt tot admin. Herstel vereist bevestigingscode. Verdere versleuteling van back-upbestanden is gepland.",
+  },
+  {
+    icon: Shield,
+    title: "Externe communicatie",
+    status: "Op orde",
+    description: "Alle communicatie via TLS 1.2+. Gmail OAuth 2.0 voor e-mailverzending. Geen onversleutelde dataoverdracht mogelijk.",
+  },
+];
 
 export default function SecuritySummary() {
+  const gemitigeerdCount = ITEMS.filter(i => ["gemitigeerd", "laag risico"].includes(i.status.toLowerCase())).length;
+  const gemonitordCount = ITEMS.filter(i => i.status.toLowerCase() === "gemonitord risico").length;
+  const opOrdeCount = ITEMS.filter(i => i.status.toLowerCase() === "op orde").length;
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-          <FileText className="w-8 h-8 text-blue-600" />
-          Security Samenvatting — Interdistri TMS
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">Managementsamenvatting • Doelgroep: Directie, accountant, auditor</p>
-        <div className="flex items-center gap-3 mt-2">
-          <Badge variant="outline" className="text-xs">Versie {VERSIE}</Badge>
-          <Badge variant="outline" className="text-xs">Laatste update: {LAATSTE_UPDATE}</Badge>
+      <div className="flex items-center justify-between print:block">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <Shield className="w-7 h-7 text-blue-600" />
+            Security Samenvatting
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">Managementsamenvatting — Interdistri TMS</p>
+          <p className="text-xs text-slate-400 mt-1">Doelgroep: Directie, accountant, auditor</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => window.print()} className="print:hidden">
+          <Printer className="w-4 h-4 mr-1.5" /> Afdrukken
+        </Button>
+      </div>
+
+      {/* Score overview */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 print:border-0 print:p-3">
+        <h2 className="text-sm font-semibold text-slate-700 mb-3">Beveiligingsstatus</h2>
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+            <p className="text-xl font-bold text-green-700">{gemitigeerdCount}</p>
+            <p className="text-[10px] text-green-600 font-medium">Gemitigeerd</p>
+          </div>
+          <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-xl font-bold text-blue-700">{opOrdeCount}</p>
+            <p className="text-[10px] text-blue-600 font-medium">Operationeel stabiel</p>
+          </div>
+          <div className="p-3 bg-orange-50 rounded-lg border border-orange-100">
+            <p className="text-xl font-bold text-orange-700">{gemonitordCount}</p>
+            <p className="text-[10px] text-orange-600 font-medium">Gemonitord</p>
+          </div>
+        </div>
+        {/* Legenda */}
+        <div className="flex items-center gap-4 mt-4 text-xs text-slate-500">
+          <span className="font-medium text-slate-600">Legenda:</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Gemitigeerd</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500" /> Gemonitord</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Operationeel stabiel</span>
         </div>
       </div>
 
-      {/* 1. Overzicht */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="w-5 h-5 text-blue-600" />
-            1. Overzicht
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-slate-700">
-          <p>Het Interdistri Transport Management Systeem (TMS) verwerkt personeels-, contract- en transportgegevens. Het systeem beschikt over de volgende beveiligingsmaatregelen:</p>
-          <ul className="mt-3 space-y-2">
-            {[
-              "Rolgebaseerde toegang met gescheiden rechten voor beheerders en medewerkers",
-              "Audit logging van alle beveiligingsrelevante acties",
-              "TLS-beveiligde communicatie met alle externe services",
-              "Gescheiden productie- en testomgeving met volledige data-isolatie",
-              "Dubbele back-upstrategie (intern + externe database)",
-              "Gescheiden sleutelkastbeheer — operationeel losgekoppeld van juridisch dossier",
-            ].map((item, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="text-blue-500 mt-0.5">•</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      {/* Items */}
+      <div className="space-y-3">
+        {ITEMS.map((item, idx) => {
+          const Icon = item.icon;
+          const statusLower = item.status.toLowerCase();
+          const borderColor = ["gemitigeerd", "laag risico"].includes(statusLower)
+            ? "border-green-200" : statusLower === "gemonitord risico"
+            ? "border-orange-200" : "border-blue-200";
 
-      {/* 2. Beveiligingspunten */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            2. Beveiligingspunten
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              "Gevoelige data alleen toegankelijk voor geautoriseerde beheerders",
-              "Sleutelkastpincode nooit zichtbaar in documenten, print of e-mail",
-              "E-mailverzending beveiligd via OAuth 2.0 en versleuteld transport",
-              "Logging van alle kritieke acties (inzage, wijziging, verwijdering)",
-              "Bevestigingscodes vereist bij data-herstel",
-              "Idempotency-controle voorkomt dubbele e-mailverzendingen",
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-2 text-sm">
-                <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
-                <span className="text-slate-700">{item}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 3. Risico's */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <AlertTriangle className="w-5 h-5 text-amber-600" />
-            3. Bekende Risico's
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[
-              { risico: "Gevoelige persoonsgegevens (BSN, IBAN) opgeslagen zonder veldversleuteling", ernst: "Hoog", mitigatie: "Toegangsbeperking + transportversleuteling (TLS)" },
-              { risico: "Back-ups bevatten volledige onversleutelde data", ernst: "Hoog", mitigatie: "Alleen toegankelijk voor beheerders met bevestigingscode" },
-              { risico: "E-mail naar loonadministratie kan persoonsgegevens bevatten", ernst: "Hoog", mitigatie: "OAuth 2.0 + TLS-beveiligd transport" },
-              { risico: "Document-URLs niet voorzien van tijdgebonden handtekening", ernst: "Medium", mitigatie: "URLs zijn uniek en niet voorspelbaar" },
-            ].map((item, i) => (
-              <div key={i} className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-amber-900">{item.risico}</p>
-                  <Badge className={`text-[10px] shrink-0 ml-2 ${item.ernst === "Hoog" ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"}`}>{item.ernst}</Badge>
+          return (
+            <div key={idx} className={`bg-white border rounded-xl p-5 ${borderColor} print:break-inside-avoid`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon className="w-4 h-4 text-slate-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">{item.description}</p>
+                  </div>
                 </div>
-                <p className="text-xs text-amber-700">Mitigatie: {item.mitigatie}</p>
+                <StatusBadge status={item.status} />
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          );
+        })}
+      </div>
 
-      {/* 4. Verbeterplan */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
-            4. Verbeterplan 2026
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {[
-              { maatregel: "Veldversleuteling voor BSN, IBAN en pincode", prioriteit: "Hoog" },
-              { maatregel: "Versleuteling van back-updata", prioriteit: "Hoog" },
-              { maatregel: "Beveiligde download-links voor documenten (signed URLs)", prioriteit: "Middel" },
-              { maatregel: "Tweefactorauthenticatie (2FA) voor beheerders", prioriteit: "Middel" },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <span className="text-sm text-slate-800">{item.maatregel}</span>
-                <Badge className={`text-[10px] shrink-0 ml-2 ${item.prioriteit === "Hoog" ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"}`}>{item.prioriteit}</Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Conclusie */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-slate-700 mb-2">Conclusie</h2>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          Het Interdistri TMS beschikt over een <strong>volwassen beveiligingsniveau</strong> met AES-256 encryptie voor gevoelige persoonsgegevens, 
+          beveiligde documentverzending via token-gebaseerde downloads, rolgebaseerde toegang en uitgebreide audit logging. 
+          De belangrijkste risico's uit de oorspronkelijke risico-inventarisatie zijn gemitigeerd. Het resterende aandachtspunt 
+          (back-up versleuteling) wordt actief gemonitord.
+        </p>
+      </div>
 
-      {/* 5. Conclusie */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="w-5 h-5 text-blue-600" />
-            5. Conclusie
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-slate-700 space-y-3">
-          <p>
-            Het Interdistri TMS biedt een beveiligingsniveau dat <strong>geschikt is voor MKB-operatie</strong>. Het systeem beschikt over rolgebaseerde toegang, audit logging, beveiligde communicatie en gescheiden back-upstrategieën.
-          </p>
-          <p>
-            Bij verdere schaalvergroting wordt aanbevolen om <strong>veldversleuteling</strong> te implementeren voor persoonsgegevens en <strong>back-updata te versleutelen</strong>. Deze verbeteringen zijn gepland in het verbeterplan 2026.
-          </p>
-          <p className="text-xs text-slate-400 italic mt-4">
-            Dit document is opgesteld per {LAATSTE_UPDATE} en is bestemd als managementsamenvatting voor interne en externe auditing.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Footer */}
+      <p className="text-xs text-slate-400 text-center italic pb-4">
+        Deze samenvatting weerspiegelt de huidige security-architectuur per {today}. Voor vragen: security@interdistri.nl
+      </p>
     </div>
   );
 }
