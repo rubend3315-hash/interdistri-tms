@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -12,28 +11,32 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, Loader2, CheckCircle2, AlertTriangle, FileText, Lock, ShieldCheck } from "lucide-react";
+import { Shield, Loader2, CheckCircle2, AlertTriangle, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ShareIdDocumentButton({ employeeId, employeeName, onboardingDocumentId, onboardingDocument }) {
   const [open, setOpen] = useState(false);
-  const [selectedDocId, setSelectedDocId] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
 
-  // If onboarding document is available, use it directly; otherwise fetch from DB
-  const hasOnboardingDoc = !!onboardingDocumentId;
-
-  const { data: documents = [], isLoading: loadingDocs } = useQuery({
-    queryKey: ['id_documents', employeeId],
+  // Resolve document ID: use passed onboardingDocumentId, or fetch from DB
+  const { data: resolvedDocId, isLoading: loadingDoc } = useQuery({
+    queryKey: ['onboarding_id_doc', employeeId],
     queryFn: async () => {
-      if (!employeeId) return [];
-      const docs = await base44.entities.Document.filter({ linked_employee_id: employeeId });
-      return docs.filter(d => ['Identiteitsbewijs', 'Paspoort', 'Rijbewijs'].includes(d.document_type));
+      if (onboardingDocumentId) return onboardingDocumentId;
+      if (!employeeId) return null;
+      const docs = await base44.entities.Document.filter({
+        linked_employee_id: employeeId,
+        source: "onboarding",
+      });
+      const idDocs = docs.filter(d => ['Identiteitsbewijs', 'Paspoort', 'Rijbewijs'].includes(d.document_type));
+      if (idDocs.length === 0) return null;
+      // Meest recente
+      idDocs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      return idDocs[0].id;
     },
-    enabled: open && !!employeeId && !hasOnboardingDoc,
+    enabled: open,
   });
 
   const { data: payrollSettings = [] } = useQuery({
@@ -42,24 +45,26 @@ export default function ShareIdDocumentButton({ employeeId, employeeName, onboar
     enabled: open,
   });
 
+  const documentId = onboardingDocumentId || resolvedDocId;
+  const hasDocument = !!documentId;
+
   const handleOpen = () => {
     setResult(null);
-    setSelectedDocId(onboardingDocumentId || "");
     const ps = payrollSettings[0];
     setRecipientEmail(ps?.payroll_email || "");
     setOpen(true);
   };
 
   const handleSend = async () => {
-    if (!selectedDocId || !recipientEmail) {
-      toast.error("Selecteer een document en vul een e-mailadres in.");
+    if (!documentId || !recipientEmail) {
+      toast.error("Geen document beschikbaar of e-mailadres ontbreekt.");
       return;
     }
     setSending(true);
     setResult(null);
     try {
       const res = await base44.functions.invoke('shareIdDocument', {
-        document_id: selectedDocId,
+        document_id: documentId,
         employee_id: employeeId,
         employee_name: employeeName,
         recipient_email: recipientEmail,
@@ -115,10 +120,14 @@ export default function ShareIdDocumentButton({ employeeId, employeeName, onboar
               </div>
             </div>
 
-            {/* Document selection */}
+            {/* Document status */}
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">ID-document</Label>
-              {hasOnboardingDoc ? (
+              {loadingDoc ? (
+                <div className="flex items-center gap-2 text-xs text-slate-500 py-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Document ophalen...
+                </div>
+              ) : hasDocument ? (
                 <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
                   <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
                   <div>
@@ -130,31 +139,11 @@ export default function ShareIdDocumentButton({ employeeId, employeeName, onboar
                     )}
                   </div>
                 </div>
-              ) : loadingDocs ? (
-                <div className="flex items-center gap-2 text-xs text-slate-500 py-2">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Documenten laden...
-                </div>
-              ) : documents.length === 0 ? (
-                <div className="text-xs text-slate-500 bg-slate-50 rounded p-3">
-                  <FileText className="w-4 h-4 mb-1 text-slate-400" />
-                  Geen ID-documenten gevonden. Upload eerst een document in Stap 3 (ID-document).
-                </div>
               ) : (
-                <Select value={selectedDocId} onValueChange={setSelectedDocId}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue placeholder="Kies document..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {documents.map(doc => (
-                      <SelectItem key={doc.id} value={doc.id}>
-                        <span className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px] py-0">{doc.document_type}</Badge>
-                          {doc.name}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <p>Nog geen ID-document geüpload in Stap 3 (ID-document). Ga terug en upload eerst een document.</p>
+                </div>
               )}
             </div>
 
@@ -192,7 +181,7 @@ export default function ShareIdDocumentButton({ employeeId, employeeName, onboar
               <Button
                 size="sm"
                 onClick={handleSend}
-                disabled={sending || !selectedDocId || !recipientEmail}
+                disabled={sending || !hasDocument || !recipientEmail}
                 className="bg-blue-600 hover:bg-blue-700 gap-1.5"
               >
                 {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Shield className="w-3.5 h-3.5" />}

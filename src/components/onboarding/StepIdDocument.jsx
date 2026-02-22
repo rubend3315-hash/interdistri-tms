@@ -23,6 +23,8 @@ export default function StepIdDocument({ employeeData, onboardingData, onChange,
   const idDoc = onboardingData?.id_document || {};
   const hasDoc = !!(idDoc.file_uri || idDoc.file_url);
 
+  const fullName = `${employeeData.first_name || ""} ${employeeData.prefix ? employeeData.prefix + " " : ""}${employeeData.last_name || ""}`.trim();
+
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -36,19 +38,37 @@ export default function StepIdDocument({ employeeData, onboardingData, onChange,
       return;
     }
 
+    const docType = idDoc.document_type || "Identiteitsbewijs";
+
     setUploading(true);
     try {
-      // SECURITY: Upload naar private storage — NIET publiek
+      // SECURITY: Upload naar private storage
       const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+
+      // Direct Document entity aanmaken
+      const doc = await base44.entities.Document.create({
+        name: `ID Document - ${fullName || "Medewerker"}`,
+        document_type: docType,
+        file_uri,
+        file_url: null,
+        encrypted: true,
+        source: "onboarding",
+        linked_employee_id: onboardingData?._temp_employee_id || employeeData?.id || null,
+        linked_entity_name: fullName || null,
+        notes: `Bron: onboarding`,
+        status: "Actief",
+      });
+
       onChange(prev => ({
         ...prev,
         id_document: {
           ...prev.id_document,
           file_uri,
-          file_url: null, // geen publieke URL
+          file_url: null,
           file_name: file.name,
-          document_type: prev.id_document?.document_type || "Identiteitsbewijs",
+          document_type: docType,
           encrypted: true,
+          document_id: doc.id,
         },
       }));
       toast.success("Document veilig geüpload!");
@@ -60,25 +80,46 @@ export default function StepIdDocument({ employeeData, onboardingData, onChange,
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    // Verwijder Document entity als die bestaat
+    if (idDoc.document_id) {
+      try {
+        await base44.entities.Document.delete(idDoc.document_id);
+      } catch (_) {}
+    }
     onChange(prev => ({
       ...prev,
-      id_document: { ...prev.id_document, file_uri: null, file_url: null, file_name: null, encrypted: false },
+      id_document: { ...prev.id_document, file_uri: null, file_url: null, file_name: null, encrypted: false, document_id: null },
     }));
   };
 
-  const handleTypeChange = (value) => {
+  const handleTypeChange = async (value) => {
     onChange(prev => ({
       ...prev,
       id_document: { ...prev.id_document, document_type: value },
     }));
+    // Update Document entity als die al bestaat
+    if (idDoc.document_id) {
+      try {
+        await base44.entities.Document.update(idDoc.document_id, { document_type: value });
+      } catch (_) {}
+    }
   };
 
-  const handleBsnToggle = (checked) => {
+  const handleBsnToggle = async (checked) => {
+    const containsBsn = !!checked;
     onChange(prev => ({
       ...prev,
-      id_document: { ...prev.id_document, contains_bsn: !!checked },
+      id_document: { ...prev.id_document, contains_bsn: containsBsn },
     }));
+    // Update Document notes
+    if (idDoc.document_id) {
+      try {
+        await base44.entities.Document.update(idDoc.document_id, {
+          notes: `Bron: onboarding${containsBsn ? ' — BSN zichtbaar op document' : ''}`,
+        });
+      } catch (_) {}
+    }
   };
 
   const handleNext = () => {
@@ -92,8 +133,6 @@ export default function StepIdDocument({ employeeData, onboardingData, onChange,
     }
     onNext();
   };
-
-  const fullName = `${employeeData.first_name || ""} ${employeeData.prefix ? employeeData.prefix + " " : ""}${employeeData.last_name || ""}`.trim();
 
   return (
     <div className="max-w-[880px] mx-auto space-y-4">
@@ -128,7 +167,7 @@ export default function StepIdDocument({ employeeData, onboardingData, onChange,
               <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-green-800 truncate">{idDoc.file_name || "Document geüpload"}</p>
-                <p className="text-xs text-green-600">Type: {idDoc.document_type || "—"}</p>
+                <p className="text-xs text-green-600">Type: {idDoc.document_type || "—"} — Privé opgeslagen</p>
               </div>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-600" onClick={handleRemove}>
                 <Trash2 className="w-4 h-4" />
@@ -186,7 +225,7 @@ export default function StepIdDocument({ employeeData, onboardingData, onChange,
           <div>
             <p className="font-medium text-slate-600">Beveiligingsbeleid</p>
             <p className="mt-0.5">
-              Het document wordt veilig opgeslagen. Delen met loonadministratie gebeurt uitsluitend via een beveiligde downloadlink (geen e-mailbijlage).
+              Het document wordt veilig opgeslagen in privé-storage. Delen met loonadministratie gebeurt uitsluitend via een beveiligde downloadlink (geen e-mailbijlage).
             </p>
           </div>
         </div>

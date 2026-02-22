@@ -102,23 +102,15 @@ export default function Onboarding() {
       employee = await base44.entities.Employee.create(empPayload);
     }
 
-    // 2a. Create Document entity for uploaded ID document (private storage)
+    // 2a. Update existing Document entity with final employee_id
     const idDoc = onboardingData?.id_document;
-    if (idDoc?.file_uri) {
-      const doc = await base44.entities.Document.create({
-        name: `ID Document - ${employeeName}`,
-        document_type: idDoc.document_type || "Identiteitsbewijs",
-        file_uri: idDoc.file_uri,
-        file_url: null, // SECURITY: geen publieke URL
-        encrypted: true,
-        source: "onboarding",
+    if (idDoc?.document_id) {
+      await base44.entities.Document.update(idDoc.document_id, {
         linked_employee_id: employee.id,
         linked_entity_name: employeeName,
+        name: `ID Document - ${employeeName}`,
         notes: `Bron: onboarding${idDoc.contains_bsn ? ' — BSN zichtbaar op document' : ''}`,
-        status: "Actief",
       });
-      // Store document id for secure sharing
-      setOnboardingData(prev => ({ ...prev, id_document: { ...prev.id_document, document_id: doc.id } }));
     }
 
     // 2b. Generate contract if settings were saved
