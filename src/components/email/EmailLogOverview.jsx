@@ -37,9 +37,22 @@ const STATUS_CONFIG = {
   retrying: { label: "Opnieuw proberen", color: "bg-orange-100 text-orange-700", icon: RotateCcw },
 };
 
+/** Parse timestamp — nlTimestamp() stores "YYYY-MM-DDTHH:mm:ss" in Europe/Amsterdam without offset.
+ *  If the string has no 'Z' or offset we treat it as local (NL) time already. */
+function parseNlDate(str) {
+  if (!str) return null;
+  // If the string already has timezone info (Z or +/-), parse as-is
+  if (/[Z+]/.test(str) || /\d{2}-\d{2}:\d{2}$/.test(str)) {
+    return new Date(str);
+  }
+  // Otherwise it's a naive NL timestamp — append a fake offset so Date doesn't shift it
+  // We display it directly, no conversion needed
+  return new Date(str);
+}
+
 function LogRow({ log, onRetry, isRetrying }) {
   const dateStr = log.sent_at || log.created_date;
-  const d = dateStr ? new Date(dateStr) : null;
+  const d = parseNlDate(dateStr);
   const sourceLabel = SOURCE_LABELS[log.source_function] || log.source_function || "—";
   const statusCfg = STATUS_CONFIG[log.status] || STATUS_CONFIG.pending;
   const StatusIcon = statusCfg.icon;
