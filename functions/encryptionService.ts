@@ -71,8 +71,21 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, values, employee_id } = body;
 
-    // Action: encrypt — encrypt given field values
+    // ── GLOBAL AUTH GATE ── All actions require authentication
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // RBAC helper: admin system role OR matching business_role
+    function requireRole(allowedRoles) {
+      if (user.role === 'admin') return null;
+      if (allowedRoles.includes(user.business_role)) return null;
+      return Response.json({ error: 'Forbidden: insufficient business role' }, { status: 403 });
+    }
+
+    // Action: encrypt — ADMIN only
     if (action === 'encrypt') {
+      const denied = requireRole(['ADMIN']);
+      if (denied) return denied;
       const result = {};
       for (const [field, plaintext] of Object.entries(values || {})) {
         result[field] = await encrypt(plaintext);
@@ -80,8 +93,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, values: result });
     }
 
-    // Action: decrypt — decrypt given field values
+    // Action: decrypt — ADMIN only
     if (action === 'decrypt') {
+      const denied = requireRole(['ADMIN']);
+      if (denied) return denied;
       const result = {};
       for (const [field, ciphertext] of Object.entries(values || {})) {
         result[field] = await decrypt(ciphertext);
@@ -89,14 +104,11 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, values: result });
     }
 
-    // Action: decrypt_employee — fetch employee, decrypt sensitive fields, return
+    // Action: decrypt_employee — ADMIN + HR_MANAGER
     if (action === 'decrypt_employee') {
       if (!employee_id) return Response.json({ error: 'Missing employee_id' }, { status: 400 });
-      
-      const user = await base44.auth.me();
-      if (!user || user.role !== 'admin') {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
+      const denied = requireRole(['ADMIN', 'HR_MANAGER']);
+      if (denied) return denied;
 
       const emp = await base44.asServiceRole.entities.Employee.get(employee_id);
       const decrypted = { ...emp };
@@ -105,14 +117,11 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, employee: decrypted });
     }
 
-    // Action: encrypt_and_save — encrypt BSN/IBAN and update employee
+    // Action: encrypt_and_save — ADMIN only
     if (action === 'encrypt_and_save') {
       if (!employee_id) return Response.json({ error: 'Missing employee_id' }, { status: 400 });
-      
-      const user = await base44.auth.me();
-      if (!user || user.role !== 'admin') {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
+      const denied = requireRole(['ADMIN']);
+      if (denied) return denied;
 
       const updateData = {};
       if (values?.bsn !== undefined) {
@@ -129,12 +138,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: true });
     }
 
-    // Action: migrate — encrypt all plaintext BSN/IBAN in database
+    // Action: migrate — ADMIN only
     if (action === 'migrate') {
-      const user = await base44.auth.me();
-      if (!user || user.role !== 'admin') {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
+      const denied = requireRole(['ADMIN']);
+      if (denied) return denied;
 
       const employees = await base44.asServiceRole.entities.Employee.filter({});
       let migrated = 0;
