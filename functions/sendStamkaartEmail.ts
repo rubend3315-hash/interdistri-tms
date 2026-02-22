@@ -52,6 +52,50 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields: subject, body' }, { status: 400 });
     }
 
+    // ── VALIDATIE: 'to' mag niet gelijk zijn aan Gmail-connector of ingelogde gebruiker ──
+    const toNorm = to.toLowerCase().trim();
+    const currentUserEmail = (user.email || '').toLowerCase().trim();
+
+    // Check tegen ingelogde gebruiker
+    if (toNorm === currentUserEmail) {
+      const errorMsg = 'Het loonadministratie-adres mag niet gelijk zijn aan uw eigen gebruikersaccount. Pas dit aan in HRM-instellingen → Loonadministratie.';
+      console.error(`[sendStamkaartEmail] BLOCKED: to=${to} === currentUser=${user.email}`);
+      try {
+        await base44.asServiceRole.entities.EmailLog.create({
+          to, subject: subject || '(geen onderwerp)', status: 'failed',
+          source_function: 'sendStamkaartEmail', error_message: errorMsg,
+          sent_at: new Date().toISOString(),
+        });
+      } catch (_) {}
+      return Response.json({ success: false, error: errorMsg }, { status: 400 });
+    }
+
+    // Check tegen het gekoppelde Gmail-account (afzender)
+    try {
+      const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
+      const profileRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+      if (profileRes.ok) {
+        const profile = await profileRes.json();
+        const gmailAccount = (profile.emailAddress || '').toLowerCase().trim();
+        if (gmailAccount && toNorm === gmailAccount) {
+          const errorMsg = `Het loonadministratie-adres (${to}) mag niet gelijk zijn aan het gekoppelde Gmail-account (${gmailAccount}). Pas dit aan in HRM-instellingen → Loonadministratie.`;
+          console.error(`[sendStamkaartEmail] BLOCKED: to=${to} === gmailConnector=${gmailAccount}`);
+          try {
+            await base44.asServiceRole.entities.EmailLog.create({
+              to, subject: subject || '(geen onderwerp)', status: 'failed',
+              source_function: 'sendStamkaartEmail', error_message: errorMsg,
+              sent_at: new Date().toISOString(),
+            });
+          } catch (_) {}
+          return Response.json({ success: false, error: errorMsg }, { status: 400 });
+        }
+      }
+    } catch (gmailErr) {
+      console.warn(`[sendStamkaartEmail] Gmail profile check failed (non-blocking): ${gmailErr.message}`);
+    }
+
     let finalSubject = subject;
     let finalBody = body;
 
