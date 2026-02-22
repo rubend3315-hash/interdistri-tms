@@ -90,6 +90,7 @@ import Recalculations from './pages/Recalculations';
 import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
 import SecureDownload from './pages/SecureDownload';
+import SecurityAccessControl from './pages/SecurityAccessControl';
 import SecurityArchitecture from './pages/SecurityArchitecture';
 import SecurityPrivacy from './pages/SecurityPrivacy';
 import SecurityRoadmap from './pages/SecurityRoadmap';
@@ -105,7 +106,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import SecurityAccessControl from './pages/SecurityAccessControl';
 import __Layout from './Layout.jsx';
 
 
@@ -153,6 +153,7 @@ export const PAGES = {
     "SalaryReports": SalaryReports,
     "SalaryTables": SalaryTables,
     "SecureDownload": SecureDownload,
+    "SecurityAccessControl": SecurityAccessControl,
     "SecurityArchitecture": SecurityArchitecture,
     "SecurityPrivacy": SecurityPrivacy,
     "SecurityRoadmap": SecurityRoadmap,
@@ -168,7 +169,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "SecurityAccessControl": SecurityAccessControl,
 }
 
 export const pagesConfig = {

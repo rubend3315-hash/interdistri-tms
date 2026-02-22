@@ -198,19 +198,34 @@ export default function UsersPage() {
       await base44.entities.User.update(userId, { business_role });
       return { userId, business_role, userName, oldBusinessRole };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       alert('Business rol bijgewerkt!');
-      logAuditEvent({
-        action: 'business_role_change',
-        category: 'Gebruikers',
-        description: `Business rol van ${data.userName} gewijzigd van ${ROLE_LABELS[data.oldBusinessRole] || data.oldBusinessRole || 'Geen'} naar ${ROLE_LABELS[data.business_role]}`,
-        targetEntity: 'User',
-        targetId: data.userId,
-        targetName: data.userName,
-        oldValue: ROLE_LABELS[data.oldBusinessRole] || data.oldBusinessRole || 'Geen',
-        newValue: ROLE_LABELS[data.business_role],
-      });
+      try {
+        await base44.functions.invoke('auditService', {
+          entity_type: 'User',
+          entity_id: data.userId,
+          action_type: 'business_role_change',
+          category: 'Permissies',
+          description: `Business rol van ${data.userName} gewijzigd van "${ROLE_LABELS[data.oldBusinessRole] || data.oldBusinessRole || 'Geen'}" naar "${ROLE_LABELS[data.business_role]}"`,
+          performed_by_email: currentUser?.email || 'onbekend',
+          performed_by_name: currentUser?.full_name || 'Onbekend',
+          performed_by_role: currentUser?.role || 'admin',
+          target_entity: 'User',
+          target_id: data.userId,
+          target_name: data.userName,
+          old_value: data.oldBusinessRole || 'Geen',
+          new_value: data.business_role,
+          metadata: {
+            old_role: data.oldBusinessRole || null,
+            new_role: data.business_role,
+            user_email: data.userName,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (e) {
+        console.warn('Audit log voor business_role_change mislukt:', e);
+      }
     },
     onError: (error) => {
       alert('Fout bij bijwerken business rol: ' + error.message);
