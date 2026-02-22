@@ -171,10 +171,14 @@ Deno.serve(async (req) => {
     // Generate correlation_id if not provided
     const correlationId = incomingCorrelationId || crypto.randomUUID();
 
-    // Auth check - skip for automation-triggered calls
+    // Auth check - skip for internal/automation-triggered calls
     if (!skip_auth) {
-      const user = await base44.auth.me();
-      if (!user) {
+      try {
+        const user = await base44.auth.me();
+        if (!user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+      } catch (authErr) {
         return Response.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
