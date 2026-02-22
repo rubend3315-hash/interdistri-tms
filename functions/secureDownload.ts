@@ -176,8 +176,22 @@ Deno.serve(async (req) => {
       const { token } = body;
       if (!token) return Response.json({ error: 'Missing token' }, { status: 400 });
 
-      // Find token
-      const tokens = await base44.asServiceRole.entities.SecureDownloadToken.filter({ token });
+      console.log(`[secureDownload] Looking up token: ${token.substring(0, 8)}...`);
+
+      // Find token — always use service role to bypass auth/tenant context
+      let tokens = [];
+      try {
+        tokens = await base44.asServiceRole.entities.SecureDownloadToken.filter({ token });
+      } catch (filterErr) {
+        console.error(`[secureDownload] Token filter error: ${filterErr.message}`);
+        // Fallback: list all and find manually
+        const allTokens = await base44.asServiceRole.entities.SecureDownloadToken.list('-created_date', 200);
+        tokens = allTokens.filter(t => t.token === token);
+        console.log(`[secureDownload] Fallback search found ${tokens.length} match(es) from ${allTokens.length} total tokens`);
+      }
+
+      console.log(`[secureDownload] Token found: ${tokens.length > 0 ? JSON.stringify({ id: tokens[0]?.id, type: tokens[0]?.type, employee_id: tokens[0]?.employee_id, expires_at: tokens[0]?.expires_at, download_count: tokens[0]?.download_count }) : 'NONE'}`);
+
       if (tokens.length === 0) {
         return Response.json({ error: 'Token niet gevonden of ongeldig' }, { status: 404 });
       }

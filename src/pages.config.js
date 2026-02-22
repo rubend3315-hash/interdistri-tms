@@ -68,6 +68,7 @@ import Documents from './pages/Documents';
 import EditTimeEntry from './pages/EditTimeEntry';
 import EmployeeReport from './pages/EmployeeReport';
 import Employees from './pages/Employees';
+import EncryptionMigration from './pages/EncryptionMigration';
 import HRImport from './pages/HRImport';
 import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
@@ -87,6 +88,7 @@ import Projects from './pages/Projects';
 import Recalculations from './pages/Recalculations';
 import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
+import SecureDownload from './pages/SecureDownload';
 import SecurityArchitecture from './pages/SecurityArchitecture';
 import SecurityRoadmap from './pages/SecurityRoadmap';
 import SecuritySummary from './pages/SecuritySummary';
@@ -100,8 +102,6 @@ import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import SecureDownload from './pages/SecureDownload';
-import EncryptionMigration from './pages/EncryptionMigration';
 import __Layout from './Layout.jsx';
 
 
@@ -127,6 +127,7 @@ export const PAGES = {
     "EditTimeEntry": EditTimeEntry,
     "EmployeeReport": EmployeeReport,
     "Employees": Employees,
+    "EncryptionMigration": EncryptionMigration,
     "HRImport": HRImport,
     "HRMSettings": HRMSettings,
     "HelpPage": HelpPage,
@@ -146,6 +147,7 @@ export const PAGES = {
     "Recalculations": Recalculations,
     "SalaryReports": SalaryReports,
     "SalaryTables": SalaryTables,
+    "SecureDownload": SecureDownload,
     "SecurityArchitecture": SecurityArchitecture,
     "SecurityRoadmap": SecurityRoadmap,
     "SecuritySummary": SecuritySummary,
@@ -159,8 +161,6 @@ export const PAGES = {
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "SecureDownload": SecureDownload,
-    "EncryptionMigration": EncryptionMigration,
 }
 
 export const pagesConfig = {

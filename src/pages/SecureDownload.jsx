@@ -21,14 +21,19 @@ export default function SecureDownload() {
     }
 
     (async () => {
-      const res = await base44.functions.invoke("secureDownload", {
-        action: "download",
-        token,
-      });
-      if (res.data?.success && res.data?.html) {
-        setHtml(res.data.html);
-      } else {
-        setError(res.data?.error || "Er is een fout opgetreden bij het ophalen van het document.");
+      try {
+        const res = await base44.functions.invoke("secureDownload", {
+          action: "download",
+          token,
+        });
+        if (res.data?.success && res.data?.html) {
+          setHtml(res.data.html);
+        } else {
+          setError(res.data?.error || "Er is een fout opgetreden bij het ophalen van het document.");
+        }
+      } catch (err) {
+        const errMsg = err?.response?.data?.error || err.message || "Er is een fout opgetreden.";
+        setError(errMsg);
       }
       setLoading(false);
     })();
