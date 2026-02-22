@@ -146,11 +146,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Contract niet gevonden' }, { status: 404 });
     }
 
-    // RBAC: ADMIN/HR_MANAGER can download any, EMPLOYEE only their own
-    if (user.role !== 'admin' && !['ADMIN', 'HR_MANAGER'].includes(user.business_role)) {
+    if (user.role !== 'admin') {
       const employees = await base44.asServiceRole.entities.Employee.filter({ email: user.email });
       if (employees.length === 0 || employees[0].id !== contract.employee_id) {
-        return Response.json({ error: 'Forbidden: geen toegang tot dit contract' }, { status: 403 });
+        return Response.json({ error: 'Geen toegang tot dit contract' }, { status: 403 });
       }
     }
 

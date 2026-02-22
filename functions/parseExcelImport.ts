@@ -55,10 +55,6 @@ Deno.serve(async (req) => {
         { status: 401 }
       );
     }
-    // RBAC: Business import → ADMIN, OPERATIONS_MANAGER, SUPERVISOR
-    if (user.role !== 'admin' && !['ADMIN', 'OPERATIONS_MANAGER', 'SUPERVISOR'].includes(user.business_role)) {
-      return Response.json({ error: 'Forbidden: insufficient business role' }, { status: 403 });
-    }
 
     // Parse FormData
     let formData: FormData;

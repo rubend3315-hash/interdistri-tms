@@ -4,10 +4,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    // RBAC: Reports → ADMIN, FINANCE, HR_MANAGER
-    if (user.role !== 'admin' && !['ADMIN', 'FINANCE', 'HR_MANAGER'].includes(user.business_role)) {
-      return Response.json({ error: 'Forbidden: insufficient business role' }, { status: 403 });
+
+    if (!user) {
+      return Response.json({ error: 'Ongeautoriseerd' }, { status: 401 });
     }
 
     const payload = await req.json();
