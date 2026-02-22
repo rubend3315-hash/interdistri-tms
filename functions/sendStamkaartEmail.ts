@@ -50,7 +50,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[sendStamkaartEmail] Calling mailService: to=${to}, finalSubject="${finalSubject.substring(0, 60)}", finalBody_length=${finalBody.length}`);
+    // Log address source for traceability
+    console.log(`[sendStamkaartEmail] ADDRESSES: to=${to} (source=HR-settings/payroll_email), cc=${cc || '(none)'} (source=HR-settings/payroll_cc_email)`);
+    console.log(`[sendStamkaartEmail] Calling mailService: finalSubject="${finalSubject.substring(0, 60)}", finalBody_length=${finalBody.length}`);
 
     // Generate unique idempotency key per send — includes timestamp so re-sends are NOT blocked
     const idempotencyKey = `sendStamkaartEmail|${to.toLowerCase().trim()}|${Date.now()}`;
