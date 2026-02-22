@@ -140,6 +140,7 @@ const menuItems = [
       { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
       { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
       { name: "Security Architectuur", icon: Shield, page: "SecurityArchitecture" },
+      { name: "Security Roadmap", icon: Shield, page: "SecurityRoadmap" },
     ]
   },
 ];
@@ -218,6 +219,7 @@ export default function Layout({ children, currentPageName }) {
       'Onboarding': 'employees',
       'MobileHandleiding': 'helppage',
       'SecurityArchitecture': 'admin_only',
+      'SecurityRoadmap': 'admin_only',
       'Activiteiten': 'customers',
       'StandplaatsWerk': 'timetracking',
       'PayCheckedAudit': 'reports',
