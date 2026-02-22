@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Printer, Send, Loader2, Save, AlertCircle } from "lucide-react";
+import { Send, Loader2, Save, AlertCircle, Printer } from "lucide-react";
+import StamkaartPrintDialog from "./StamkaartPrintDialog";
 import SignatureCanvas from "../contracts/SignatureCanvas";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { buildStamkaartEmailHtml } from "@/components/utils/stamkaartEmailHtml";
@@ -454,14 +455,19 @@ export default function StamkaartForm({
 
       {/* ═══ ACTIES ═══ */}
       {!hideActions && !isOnboarding && (
-        <div className="flex items-center gap-2" className="mt-6">
+        <div className="flex items-center gap-2 mt-6">
           <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs px-3" disabled={saveMutation.isPending}>
             {saveMutation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
             {saved ? "Opgeslagen ✓" : "Opslaan"}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => window.print()} className="h-7 text-xs px-3">
-            <Printer className="w-3 h-3 mr-1" /> Printen
-          </Button>
+          <StamkaartPrintDialog
+            employee={data}
+            trigger={
+              <Button size="sm" variant="outline" className="h-7 text-xs px-3">
+                <Printer className="w-3 h-3 mr-1" /> Printen
+              </Button>
+            }
+          />
           <Button size="sm" variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail} className="h-7 text-xs px-3">
             {sendingEmail ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
             Versturen naar Loonadministratie

@@ -1,23 +1,20 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Search, Users, ChevronRight } from "lucide-react";
-import { createPageUrl } from "@/utils";
+import { FileText, Search, Users, ChevronRight, Printer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getFullName } from "@/components/utils/employeeUtils";
 import StamkaartForm from "@/components/stamkaart/StamkaartForm";
-import StamkaartPrintView from "@/components/stamkaart/StamkaartPrintView";
+import StamkaartPrintDialog from "@/components/stamkaart/StamkaartPrintDialog";
 
 export default function Stamkaart() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("all");
-  const [printMode, setPrintMode] = useState(false);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees_stamkaart'],
@@ -36,34 +33,21 @@ export default function Stamkaart() {
 
   const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
 
-  if (selectedEmployee && printMode) {
-    return (
-      <div className="max-w-5xl mx-auto">
-        <div className="print:hidden flex gap-2 mb-4">
-          <Button variant="outline" onClick={() => setPrintMode(false)}>
-            ← Terug naar formulier
-          </Button>
-          <Button onClick={() => {
-            window.open(createPageUrl(`StamkaartDocument?id=${selectedEmployee.id}`), '_blank');
-          }} className="bg-blue-600 hover:bg-blue-700">
-            <FileText className="w-4 h-4 mr-2" /> Afdrukken (schoon document)
-          </Button>
-        </div>
-        <StamkaartPrintView employee={selectedEmployee} />
-      </div>
-    );
-  }
-
   if (selectedEmployee) {
     return (
       <div className="max-w-5xl mx-auto">
         <div className="flex gap-2 mb-4">
-          <Button variant="outline" onClick={() => { setSelectedEmployeeId(null); setPrintMode(false); }}>
+          <Button variant="outline" onClick={() => setSelectedEmployeeId(null)}>
             ← Terug naar overzicht
           </Button>
-          <Button variant="outline" onClick={() => setPrintMode(true)}>
-            <FileText className="w-4 h-4 mr-2" /> Printweergave
-          </Button>
+          <StamkaartPrintDialog
+            employee={selectedEmployee}
+            trigger={
+              <Button variant="outline">
+                <Printer className="w-4 h-4 mr-2" /> Afdrukken
+              </Button>
+            }
+          />
         </div>
         <StamkaartForm employee={selectedEmployee} />
       </div>
