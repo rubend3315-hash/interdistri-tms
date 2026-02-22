@@ -106,7 +106,7 @@ export default function Step5Invite({ employeeData, onboardingData, onChange, on
           <ChevronLeft className="w-4 h-4 mr-1" /> Vorige
         </Button>
         <Button onClick={onNext} className="bg-blue-600 hover:bg-blue-700">
-          Volgende: Overzicht <ChevronRight className="w-4 h-4 ml-1" />
+          Volgende <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
     </div>
