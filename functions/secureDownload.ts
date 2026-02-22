@@ -234,7 +234,7 @@ Deno.serve(async (req) => {
       } else if (tokenRecord.type === 'onboarding') {
         html = buildStamkaartHtml(emp, emp);
       } else if (tokenRecord.type === 'id_document') {
-        // Serve document file preview for ID documents
+        // Serve document file preview for ID documents — PRIVATE STORAGE with signed URLs
         const docId = tokenRecord.document_id;
         if (!docId) {
           return Response.json({ error: 'Geen document gekoppeld aan dit token.' }, { status: 400 });
@@ -245,10 +245,25 @@ Deno.serve(async (req) => {
         } catch (_) {
           return Response.json({ error: 'Document niet gevonden.' }, { status: 404 });
         }
-        const fileUrl = doc.file_url;
+
+        // SECURITY: Generate signed URL for private file (expires in 300s)
+        let fileUrl = doc.file_url; // fallback for legacy public docs
+        if (doc.file_uri) {
+          const signedResult = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
+            file_uri: doc.file_uri,
+            expires_in: 300,
+          });
+          fileUrl = signedResult.signed_url;
+        }
+
+        if (!fileUrl) {
+          return Response.json({ error: 'Geen bestand beschikbaar voor dit document.' }, { status: 404 });
+        }
+
         const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
-        const isImage = fileUrl && /\.(jpg|jpeg|png|gif|webp)/i.test(fileUrl);
-        const isPdf = fileUrl && /\.pdf/i.test(fileUrl);
+        const fileName = doc.name || '';
+        const isImage = /\.(jpg|jpeg|png|gif|webp)/i.test(fileName) || /\.(jpg|jpeg|png|gif|webp)/i.test(fileUrl);
+        const isPdf = /\.pdf/i.test(fileName) || /\.pdf/i.test(fileUrl);
         html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ID Document - ${fullName}</title>
 <style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:800px;margin:0 auto;padding:20px;background:#f8fafc}
 .header{background:#1e293b;color:white;padding:16px 24px;border-radius:8px 8px 0 0;margin-bottom:0}
@@ -274,6 +289,7 @@ img.doc-img{max-width:100%;max-height:600px;border-radius:4px;box-shadow:0 2px 8
   <div class="footer">
     <p>⚠️ Dit document bevat vertrouwelijke persoonsgegevens. Niet delen met onbevoegden.</p>
     <p>Download ${tokenRecord.download_count + 1} van maximaal ${maxDownloads}. Link verloopt op ${new Date(tokenRecord.expires_at).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' })}.</p>
+    <p style="font-size:9px;color:#cbd5e1;margin-top:4px">Bestandstoegang verloopt automatisch na 5 minuten.</p>
   </div>
 </div></body></html>`;
       }
