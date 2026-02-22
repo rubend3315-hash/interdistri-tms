@@ -255,16 +255,18 @@ export default function Layout({ children, currentPageName }) {
   const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
   const isEmployeeEditTimeEntry = user && user.role !== 'admin' && currentPageName === "EditTimeEntry";
 
+  // SecureDownload is fully public — render immediately, skip all auth
+  if (isSecureDownloadPage) {
+    return <>{children}</>;
+  }
+
   // While user is loading, show nothing to prevent flash/redirect issues
   if (loadingUser) {
     return null;
   }
 
-  // If user is not logged in, allow SecureDownload without auth, redirect others to login
+  // If user is not logged in, redirect to login
   if (userError || !user) {
-    if (isSecureDownloadPage) {
-      return <>{children}</>;
-    }
     base44.auth.redirectToLogin();
     return null;
   }
