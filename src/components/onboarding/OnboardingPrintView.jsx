@@ -116,26 +116,81 @@ export default function OnboardingPrintView({ employeeData, onboardingData, onCl
         {ob.loonheffing_datum && <Row label="Vanaf datum" value={fmtDate(ob.loonheffing_datum)} />}
       </Section>
 
-      {/* Verklaringen */}
+      {/* Verklaringen — volledig statisch uitgeschreven */}
       <Section title="Verklaringen">
-        <CheckItem label="Ontvangstverklaring Pincode Sleutelkast" done={ob.pincode_verklaring_signed} />
-        <CheckItem label="Sleutelverklaring Pand & Hek" done={ob.sleutel_verklaring_signed} />
-        {ob.sleutel_nummer && <Row label="Sleutelnummer" value={ob.sleutel_nummer} />}
-        {ob.sleutel_toegang && <Row label="Toegang tot" value={ob.sleutel_toegang} />}
-        <CheckItem label="Toestemming GPS Buddy" done={ob.gps_buddy_toestemming} />
-        <CheckItem label="Verklaring Dienstbetrekking" done={ob.dienstbetrekking_signed} />
-        <CheckItem label="Bedrijfsreglement ontvangen" done={ob.bedrijfsreglement_ontvangen} />
-      </Section>
-
-      {/* Pincode */}
-      {ob.pincode_sleutelkast && (
-        <Section title="Pincode Sleutelkast">
-          <div className="flex items-center gap-2 text-sm">
-            <Key className="w-4 h-4 text-slate-500" />
-            <span className="font-mono font-bold tracking-widest text-lg">{ob.pincode_sleutelkast}</span>
+        {!allDeclarationsDone && (
+          <div className="bg-amber-50 border border-amber-300 rounded p-2 mb-3 text-xs font-semibold text-amber-800">
+            LET OP: Niet alle verklaringen zijn afgerond.
           </div>
-        </Section>
-      )}
+        )}
+
+        <DeclarationBlock
+          title="Ontvangstverklaring Pincode Sleutelkast"
+          done={ob.pincode_verklaring_signed}
+          extra={ob.pincode_sleutelkast ? (
+            <div className="bg-slate-50 p-2 rounded mb-2">
+              <span className="text-xs text-slate-500">Gegenereerde pincode: </span>
+              <span className="font-mono font-bold tracking-widest text-base">{ob.pincode_sleutelkast}</span>
+            </div>
+          ) : null}
+        >
+          <ol className="list-decimal pl-4 space-y-0.5">
+            <li>Dit is de eigen unieke pincode van de medewerker.</li>
+            <li>De pincode mag aan niemand anders verstrekt worden.</li>
+            <li>Sleutels uitgenomen onder deze pincode vallen onder verantwoordelijkheid van de medewerker.</li>
+            <li>Bij verlies dient de medewerker zelf aangifte te doen.</li>
+            <li>Kosten van vermiste sleutels worden op netto salaris ingehouden.</li>
+          </ol>
+        </DeclarationBlock>
+
+        <DeclarationBlock
+          title="Sleutelverklaring Pand & Hek"
+          done={ob.sleutel_verklaring_signed}
+          extra={
+            (ob.sleutel_nummer || ob.sleutel_toegang) ? (
+              <div className="bg-slate-50 p-2 rounded mb-2 text-xs space-y-0.5">
+                {ob.sleutel_nummer && <div><span className="text-slate-500">Sleutelnummer:</span> <span className="font-medium">{ob.sleutel_nummer}</span></div>}
+                {ob.sleutel_toegang && <div><span className="text-slate-500">Toegang tot:</span> <span className="font-medium">{ob.sleutel_toegang}</span></div>}
+              </div>
+            ) : null
+          }
+        >
+          <ul className="list-disc pl-4 space-y-0.5">
+            <li>Het is verboden een kopie te (laten) maken.</li>
+            <li>Diefstal of verlies direct melden bij leidinggevende.</li>
+            <li>Bij einde dienstverband uiterlijk op laatste werkdag inleveren.</li>
+          </ul>
+        </DeclarationBlock>
+
+        <DeclarationBlock
+          title="Toestemmingsverklaring GPS Buddy"
+          done={ob.gps_buddy_toestemming}
+        >
+          <p>Ondergetekende geeft toestemming voor het GPS-Buddy ritregistratiesysteem in het voertuig van Interdistri.</p>
+          <p className="mt-1">Verwerkersverantwoordelijke gebruikt de data uitsluitend werkgerelateerd. Gegevens worden 7 jaar bewaard.</p>
+        </DeclarationBlock>
+
+        <DeclarationBlock
+          title="Verklaring van Dienstbetrekking"
+          done={ob.dienstbetrekking_signed}
+        >
+          <p className="font-medium mb-1">Artikel 2.11 Wet wegvervoer goederen</p>
+          <p>Vergunninghouder: Interdistri, Fleerbosseweg 19, 4421RR Kapelle</p>
+          <p>Chauffeur: {fullName}</p>
+          <ul className="list-disc pl-4 mt-1 space-y-0.5">
+            <li>Vervoer voor rekening en risico vergunninghouder</li>
+            <li>Loons- en gezagsverhouding aanwezig</li>
+            <li>Gegevens naar waarheid ingevuld</li>
+          </ul>
+        </DeclarationBlock>
+
+        <DeclarationBlock
+          title="Ontvangst Bedrijfsreglement"
+          done={ob.bedrijfsreglement_ontvangen}
+        >
+          <p>Het bedrijfsreglement is beschikbaar via de mobiele app. De medewerker bevestigt ontvangst en kennisneming van het bedrijfsreglement van Interdistri B.V.</p>
+        </DeclarationBlock>
+      </Section>
 
       {/* Contract */}
       {ob.contract_generated && ob.contract_settings && (
