@@ -194,7 +194,7 @@ export default function StamkaartForm({
     });
     const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
     const subject = `${subjectBase} - ${fullName}`;
-    await base44.functions.invoke('sendStamkaartEmail', {
+    const response = await base44.functions.invoke('sendStamkaartEmail', {
       to: payrollConfig.payroll_email,
       cc: payrollConfig.payroll_cc_email || "",
       subject, body: defaultBody,
@@ -218,7 +218,14 @@ export default function StamkaartForm({
       },
     });
     setSendingEmail(false);
-    alert("Stamkaart verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
+    const result = response.data;
+    if (result?.success && result?.messageId) {
+      alert("Stamkaart verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
+    } else if (result?.skipped) {
+      alert("Deze stamkaart is al eerder verzonden (duplicate voorkomen).");
+    } else {
+      alert("Verzending mislukt: " + (result?.error || "Onbekende fout. Controleer de e-mail log."));
+    }
   };
 
   const handleSignature = async (dataUrl) => {
