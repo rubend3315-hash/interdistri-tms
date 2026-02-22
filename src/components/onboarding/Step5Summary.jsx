@@ -47,13 +47,23 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
     }
     setSendingPayroll(true);
     try {
+      // Use persisted employee id: prefer _temp_employee_id from onboarding, then employeeData.id
+      const persistedEmployeeId = onboardingData?._temp_employee_id || employeeData.id;
+      console.log("employee_id sent to backend:", persistedEmployeeId);
+
+      if (!persistedEmployeeId) {
+        alert("De medewerker is nog niet opgeslagen. Ga terug naar Stap 2 en verstuur eerst de stamkaart, of rond de onboarding af.");
+        setSendingPayroll(false);
+        return;
+      }
+
       const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
       const subject = `${subjectBase} - ${fullName}`;
       const response = await base44.functions.invoke('sendStamkaartEmail', {
         to: payrollConfig.payroll_email,
         cc: payrollConfig.payroll_cc_email || "",
         subject,
-        employee_id: employeeData.id,
+        employee_id: persistedEmployeeId,
         employee_name: fullName,
         download_type: "onboarding",
         template_key: "stamkaart",

@@ -31,37 +31,75 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
   if (!idValid) missingForSend.push("ID geldig tot");
   if (!ibanFilled) missingForSend.push("IBAN");
 
+  // Ensure employee is persisted before sending email (during onboarding, id may not exist yet)
+  const ensureEmployeePersisted = async () => {
+    // If we already have a temp employee, use that
+    if (onboardingData?._temp_employee_id) {
+      // Update temp employee with latest data
+      await base44.entities.Employee.update(onboardingData._temp_employee_id, { ...employeeData, status: "concept" });
+      return onboardingData._temp_employee_id;
+    }
+    // If employeeData has a real id, use it
+    if (employeeData.id) {
+      return employeeData.id;
+    }
+    // Create a temp employee with status "concept"
+    const empPayload = { ...employeeData, status: "concept" };
+    // Clean categories
+    if (typeof empPayload.drivers_license_categories === 'string' && empPayload.drivers_license_categories.trim()) {
+      empPayload.drivers_license_categories = empPayload.drivers_license_categories.split(',').map(s => s.trim());
+    } else {
+      empPayload.drivers_license_categories = null;
+    }
+    delete empPayload.id_document_number;
+    delete empPayload.lkv_uitkering;
+    delete empPayload.financiele_situatie;
+    const created = await base44.entities.Employee.create(empPayload);
+    // Store temp employee id in onboarding data so it can be reused/cleaned up
+    onOnboardingChange(prev => ({ ...prev, _temp_employee_id: created.id }));
+    return created.id;
+  };
+
   const handleSendToPayroll = async () => {
     if (!payrollConfig?.payroll_email) {
       alert("Stel eerst het e-mailadres van de loonadministratie in via HRM-instellingen → Loonadministratie.");
       return;
     }
     setSendingEmail(true);
-    const fullName = `${employeeData.first_name} ${employeeData.prefix ? employeeData.prefix + ' ' : ''}${employeeData.last_name}`;
-    const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
-    const subject = `${subjectBase} - ${fullName}`;
-    const response = await base44.functions.invoke('sendStamkaartEmail', {
-      to: payrollConfig.payroll_email,
-      cc: payrollConfig.payroll_cc_email || "",
-      subject,
-      employee_id: employeeData.id,
-      employee_name: fullName,
-      download_type: "stamkaart",
-      template_key: "stamkaart",
-      placeholders: {
-        naam: fullName,
-        afdeling: employeeData.department || '—',
-        functie: employeeData.function || '—',
-      },
-    });
-    setSendingEmail(false);
-    const result = response.data;
-    if (result?.success && result?.messageId) {
-      alert("Beveiligde stamkaart-link verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
-    } else if (result?.skipped) {
-      alert("Deze stamkaart is al eerder verzonden (duplicate voorkomen).");
-    } else {
-      alert("Verzending mislukt: " + (result?.error || "Onbekende fout. Controleer de e-mail log."));
+    try {
+      const persistedEmployeeId = await ensureEmployeePersisted();
+      console.log("employee_id sent to backend:", persistedEmployeeId);
+
+      const fullName = `${employeeData.first_name} ${employeeData.prefix ? employeeData.prefix + ' ' : ''}${employeeData.last_name}`;
+      const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
+      const subject = `${subjectBase} - ${fullName}`;
+      const response = await base44.functions.invoke('sendStamkaartEmail', {
+        to: payrollConfig.payroll_email,
+        cc: payrollConfig.payroll_cc_email || "",
+        subject,
+        employee_id: persistedEmployeeId,
+        employee_name: fullName,
+        download_type: "stamkaart",
+        template_key: "stamkaart",
+        placeholders: {
+          naam: fullName,
+          afdeling: employeeData.department || '—',
+          functie: employeeData.function || '—',
+        },
+      });
+      const result = response.data;
+      if (result?.success && result?.messageId) {
+        alert("Beveiligde stamkaart-link verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
+      } else if (result?.skipped) {
+        alert("Deze stamkaart is al eerder verzonden (duplicate voorkomen).");
+      } else {
+        alert("Verzending mislukt: " + (result?.error || "Onbekende fout. Controleer de e-mail log."));
+      }
+    } catch (err) {
+      const errMsg = err?.response?.data?.error || err.message || "Onbekende fout.";
+      alert("Verzending mislukt: " + errMsg);
+    } finally {
+      setSendingEmail(false);
     }
   };
 
