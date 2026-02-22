@@ -11,6 +11,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 const FORCED_CC = 'ruben@interdistri.nl';
 const MAX_RETRIES = 3;
 const GMAIL_SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
+const TZ = 'Europe/Amsterdam';
+
+/** Returns current timestamp in Europe/Amsterdam as ISO-like string for storage */
+function nlTimestamp() {
+  return new Date().toLocaleString('sv-SE', { timeZone: TZ }).replace(' ', 'T');
+}
 
 function buildCcList(to, extraCc) {
   const ccSet = new Set();
@@ -210,14 +216,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create pending log
+    // Create pending log (timestamps in Europe/Amsterdam)
     const logEntry = await base44.asServiceRole.entities.EmailLog.create({
       to,
       cc: finalCc,
       subject: finalSubject,
       status: 'sending',
       source_function: sourceFunction || 'mailService',
-      sent_at: new Date().toISOString(),
+      sent_at: nlTimestamp(),
       retry_count: 0,
       idempotency_key: idempotencyKey,
       correlation_id: correlationId,
@@ -235,7 +241,7 @@ Deno.serve(async (req) => {
         status: 'success',
         message_id: result.messageId || null,
         retry_count: result.attempts - 1,
-        sent_at: new Date().toISOString(),
+        sent_at: nlTimestamp(),
       });
       // Audit log
       try {
@@ -265,7 +271,7 @@ Deno.serve(async (req) => {
         status: 'failed',
         error_message: result.error?.substring(0, 500) || 'Unknown error',
         retry_count: result.attempts - 1,
-        last_retry_at: new Date().toISOString(),
+        last_retry_at: nlTimestamp(),
       });
       // Audit log for failure
       try {
