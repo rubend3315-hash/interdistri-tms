@@ -69,6 +69,7 @@ import EditTimeEntry from './pages/EditTimeEntry';
 import EmployeeReport from './pages/EmployeeReport';
 import Employees from './pages/Employees';
 import EncryptionMigration from './pages/EncryptionMigration';
+import GovernanceDashboard from './pages/GovernanceDashboard';
 import HRImport from './pages/HRImport';
 import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
@@ -104,7 +105,7 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import GovernanceDashboard from './pages/GovernanceDashboard';
+import SecurityAccessControl from './pages/SecurityAccessControl';
 import __Layout from './Layout.jsx';
 
 
@@ -131,6 +132,7 @@ export const PAGES = {
     "EmployeeReport": EmployeeReport,
     "Employees": Employees,
     "EncryptionMigration": EncryptionMigration,
+    "GovernanceDashboard": GovernanceDashboard,
     "HRImport": HRImport,
     "HRMSettings": HRMSettings,
     "HelpPage": HelpPage,
@@ -166,7 +168,7 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "GovernanceDashboard": GovernanceDashboard,
+    "SecurityAccessControl": SecurityAccessControl,
 }
 
 export const pagesConfig = {

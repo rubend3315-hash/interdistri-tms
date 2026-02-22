@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Lock, Database, Mail, FileText, Users, Key, AlertTriangle, CheckCircle2, Server, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Shield, Lock, Database, Mail, FileText, Users, Key, AlertTriangle, CheckCircle2, Server, Eye, Download } from "lucide-react";
+import { SECURITY_VERSION, SECURITY_LAST_UPDATED } from "@/components/utils/appVersion";
 
-const VERSIE = "1.0";
-const LAATSTE_UPDATE = "2026-02-22";
+const VERSIE = SECURITY_VERSION;
+const LAATSTE_UPDATE = SECURITY_LAST_UPDATED;
 
 const Section = ({ id, icon: Icon, title, children }) => (
   <Card id={id} className="scroll-mt-6">
