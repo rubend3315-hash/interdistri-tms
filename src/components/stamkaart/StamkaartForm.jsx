@@ -9,7 +9,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Send, Loader2, Save, AlertCircle } from "lucide-react";
 import SignatureCanvas from "../contracts/SignatureCanvas";
 import { getFullName } from "@/components/utils/employeeUtils";
-import { buildStamkaartEmailHtml } from "@/components/utils/stamkaartEmailHtml";
 
 export const STAMKAART_REQUIRED_FIELDS = [
   { key: "first_name", label: "Voornaam" },
@@ -182,45 +181,27 @@ export default function StamkaartForm({
       return;
     }
     setSendingEmail(true);
-    const currentUser = await base44.auth.me();
-    const managerName = currentUser?.full_name || '';
     const fullName = getFullName(data);
-    const lhLabel = lhToepassen === "ja" ? "Ja" : lhToepassen === "nee" ? "Nee" : "Niet ingevuld";
-    const defaultBody = buildStamkaartEmailHtml({
-      fullName, data, lhLabel,
-      lhDatum: lhDatum || '—',
-      signatureUrl: lhSignatureUrl || null,
-      managerName,
-    });
     const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
     const subject = `${subjectBase} - ${fullName}`;
     const response = await base44.functions.invoke('sendStamkaartEmail', {
       to: payrollConfig.payroll_email,
       cc: payrollConfig.payroll_cc_email || "",
-      subject, body: defaultBody,
+      subject,
+      employee_id: employee.id,
+      employee_name: fullName,
+      download_type: "stamkaart",
       template_key: "stamkaart",
       placeholders: {
         naam: fullName,
-        geboortedatum: data.date_of_birth || '—',
-        bsn: data.bsn || '—',
-        adres: `${data.address || '—'}, ${data.postal_code || ''} ${data.city || ''}`,
-        iban: data.bank_account || '—',
         afdeling: data.department || '—',
         functie: data.function || '—',
-        contract_type: data.contract_type || '—',
-        uren_per_week: String(data.contract_hours || '—'),
-        loonschaal: data.salary_scale || '—',
-        uurloon: `€ ${data.hourly_rate || '—'}`,
-        loonheffingskorting: lhLabel,
-        id_document_nummer: data.id_document_number || '—',
-        id_document_geldig: data.id_document_expiry || '—',
-        manager_naam: managerName,
       },
     });
     setSendingEmail(false);
     const result = response.data;
     if (result?.success && result?.messageId) {
-      alert("Stamkaart verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
+      alert("Beveiligde stamkaart-link verzonden naar " + payrollConfig.payroll_email + (payrollConfig.payroll_cc_email ? ` (CC: ${payrollConfig.payroll_cc_email})` : ""));
     } else if (result?.skipped) {
       alert("Deze stamkaart is al eerder verzonden (duplicate voorkomen).");
     } else {
