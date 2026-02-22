@@ -137,7 +137,8 @@ export default function OnboardingPrintView({ employeeData, onboardingData, onCl
           extra={ob.pincode_sleutelkast ? (
             <div className="bg-slate-50 p-2 rounded mb-2">
               <span className="text-xs text-slate-500">Gegenereerde pincode: </span>
-              <span className="font-mono font-bold tracking-widest text-base">{ob.pincode_sleutelkast}</span>
+              <span className="font-mono font-bold tracking-widest text-base">{"••••"}</span>
+              <p className="text-[10px] text-slate-400 italic mt-0.5">Pincode is uitsluitend bekend bij medewerker.</p>
             </div>
           ) : null}
         >
