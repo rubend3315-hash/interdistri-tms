@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Smartphone, Send, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Smartphone, Send, CheckCircle2, Loader2, AlertCircle, Mail } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 export default function Step5Invite({ employeeData, onboardingData, onChange, onNext, onBack }) {
@@ -9,6 +9,7 @@ export default function Step5Invite({ employeeData, onboardingData, onChange, on
   const [error, setError] = useState(null);
 
   const invited = onboardingData.mobile_invite_sent;
+  const welcomeSent = onboardingData.welcome_email_sent;
 
   const handleInvite = async () => {
     if (!employeeData.email) {
@@ -17,8 +18,39 @@ export default function Step5Invite({ employeeData, onboardingData, onChange, on
     }
     setSending(true);
     setError(null);
+
+    // 1. Invite user
     await base44.users.inviteUser(employeeData.email, "user");
-    onChange({ ...onboardingData, mobile_invite_sent: true });
+
+    // 2. Send welcome email (only if not already sent)
+    let welcomeSuccess = false;
+    if (!onboardingData.welcome_email_sent) {
+      // We need an employee_id; if temp employee exists use that, otherwise skip
+      const empId = onboardingData._temp_employee_id;
+      if (empId) {
+        const res = await base44.functions.invoke('sendWelcomeEmail', { employee_id: empId });
+        welcomeSuccess = res.data?.success === true;
+      }
+
+      // Audit log
+      try {
+        await base44.functions.invoke('auditService', {
+          entity_type: 'OnboardingProcess',
+          action_type: 'send',
+          category: 'Medewerkers',
+          description: `Welkomstmail verzonden vanuit onboarding naar ${employeeData.email}`,
+          metadata: { type: 'welcome_mail_sent_from_onboarding', email: employeeData.email },
+        });
+      } catch (_) {}
+    }
+
+    onChange({
+      ...onboardingData,
+      mobile_invite_sent: true,
+      welcome_email_sent: welcomeSuccess || onboardingData.welcome_email_sent || false,
+      invite_sent_date: new Date().toISOString(),
+      welcome_email_sent_date: welcomeSuccess ? new Date().toISOString() : onboardingData.welcome_email_sent_date,
+    });
     setSending(false);
   };
 
@@ -38,11 +70,18 @@ export default function Step5Invite({ employeeData, onboardingData, onChange, on
         </div>
 
         {invited ? (
-          <div className="bg-green-50 p-3 rounded flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
-            <div>
-              <p className="font-medium text-sm text-green-800">Uitnodiging verzonden</p>
-              <p className="text-xs text-green-600">Email verstuurd naar {employeeData.email}</p>
+          <div className="space-y-2">
+            <div className="bg-green-50 p-3 rounded flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+              <div>
+                <p className="font-medium text-sm text-green-800">Uitnodiging en welkomstmail succesvol verzonden</p>
+                <p className="text-xs text-green-600">Email verstuurd naar {employeeData.email}</p>
+              </div>
+            </div>
+            <div className="text-xs text-slate-500 space-y-0.5 pl-1">
+              {onboardingData.invite_sent_date && <p>Uitnodiging verzonden op: {new Date(onboardingData.invite_sent_date).toLocaleString('nl-NL')}</p>}
+              {onboardingData.welcome_email_sent_date && <p>Welkomstmail verzonden op: {new Date(onboardingData.welcome_email_sent_date).toLocaleString('nl-NL')}</p>}
+              {onboardingData.welcome_email_sent === false && <p className="text-amber-600">Welkomstmail kon niet worden verzonden (medewerker nog niet opgeslagen).</p>}
             </div>
           </div>
         ) : (

@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, ChevronLeft, Loader2, Key } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronLeft, Loader2, Key, Printer, Send } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { buildStamkaartEmailHtml } from "@/components/utils/stamkaartEmailHtml";
+import { getFullName } from "@/components/utils/employeeUtils";
+import OnboardingPrintView from "./OnboardingPrintView";
 
 const CHECKLIST = [
   { key: "employee_created", label: "Medewerker aangemaakt" },
@@ -24,13 +29,88 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
     return !!onboardingData[key];
   };
 
+  const [showPrint, setShowPrint] = useState(false);
+  const [sendingPayroll, setSendingPayroll] = useState(false);
+
+  const { data: payrollSettings = [] } = useQuery({
+    queryKey: ['payrollSettings_summary'],
+    queryFn: () => base44.entities.PayrollSettings.list(),
+  });
+  const payrollConfig = payrollSettings[0] || null;
+
   const completedCount = CHECKLIST.filter(item => getStatus(item.key)).length;
   const fullName = `${employeeData.first_name} ${employeeData.prefix ? employeeData.prefix + ' ' : ''}${employeeData.last_name}`;
+
+  const handleSendToPayroll = async () => {
+    if (!payrollConfig?.payroll_email) {
+      alert("Stel eerst het e-mailadres van de loonadministratie in via HRM-instellingen → Loonadministratie.");
+      return;
+    }
+    setSendingPayroll(true);
+    const currentUser = await base44.auth.me();
+    const managerName = currentUser?.full_name || '';
+    const lhLabel = onboardingData.loonheffing_toepassen === 'ja' ? 'Ja' : onboardingData.loonheffing_toepassen === 'nee' ? 'Nee' : 'Niet ingevuld';
+    const body = buildStamkaartEmailHtml({
+      fullName, data: employeeData, lhLabel,
+      lhDatum: onboardingData.loonheffing_datum || '—',
+      signatureUrl: onboardingData.loonheffing_handtekening_url || null,
+      managerName,
+    });
+    const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
+    const subject = `${subjectBase} - ${fullName}`;
+    const response = await base44.functions.invoke('sendStamkaartEmail', {
+      to: payrollConfig.payroll_email,
+      cc: payrollConfig.payroll_cc_email || "",
+      subject, body,
+      template_key: "stamkaart",
+      placeholders: {
+        naam: fullName,
+        geboortedatum: employeeData.date_of_birth || '—',
+        bsn: employeeData.bsn || '—',
+        adres: `${employeeData.address || '—'}, ${employeeData.postal_code || ''} ${employeeData.city || ''}`,
+        iban: employeeData.bank_account || '—',
+        afdeling: employeeData.department || '—',
+        functie: employeeData.function || '—',
+        contract_type: employeeData.contract_type || '—',
+        uren_per_week: String(employeeData.contract_hours || '—'),
+        loonschaal: employeeData.salary_scale || '—',
+        uurloon: `€ ${employeeData.hourly_rate || '—'}`,
+        loonheffingskorting: lhLabel,
+        id_document_nummer: employeeData.id_document_number || '—',
+        id_document_geldig: employeeData.id_document_expiry || '—',
+        manager_naam: managerName,
+      },
+    });
+    setSendingPayroll(false);
+    const result = response.data;
+    if (result?.success && result?.messageId) {
+      alert("Stamkaart verzonden naar " + payrollConfig.payroll_email);
+    } else if (result?.skipped) {
+      alert("Deze stamkaart is al eerder verzonden (duplicate voorkomen).");
+    } else {
+      alert("Verzending mislukt: " + (result?.error || "Onbekende fout."));
+    }
+  };
+
+  if (showPrint) {
+    return <OnboardingPrintView employeeData={employeeData} onboardingData={onboardingData} onClose={() => setShowPrint(false)} />;
+  }
 
   return (
     <div className="max-w-[900px] mx-auto space-y-4">
       <section className="border rounded-lg p-4 bg-white">
-        <h3 className="text-sm font-semibold text-slate-700 mb-1">Onboarding Overzicht</h3>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-sm font-semibold text-slate-700">Onboarding Overzicht</h3>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowPrint(true)} className="h-7 text-xs">
+              <Printer className="w-3.5 h-3.5 mr-1" /> Afdrukken
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleSendToPayroll} disabled={sendingPayroll} className="h-7 text-xs">
+              {sendingPayroll ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+              Versturen naar loonadministratie
+            </Button>
+          </div>
+        </div>
         <p className="text-xs text-slate-500 mb-3">{fullName} — {employeeData.department}</p>
 
         {/* Progress */}
