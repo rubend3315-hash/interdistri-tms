@@ -27,7 +27,7 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
   const getStatus = (key) => {
     if (key === "employee_created") return true;
     if (key === "stamkaart_completed") return true;
-    if (key === "id_document_uploaded") return !!onboardingData?.id_document?.file_url;
+    if (key === "id_document_uploaded") return !!(onboardingData?.id_document?.file_uri || onboardingData?.id_document?.file_url);
     if (key === "employee_signature_url") return !!onboardingData.employee_signature_url;
     if (key === "mobile_access_configured") return true;
     return !!onboardingData[key];

@@ -40,7 +40,7 @@ export default function Onboarding() {
     gps_buddy_toestemming: false, dienstbetrekking_signed: false,
     bedrijfsreglement_ontvangen: false, contract_generated: false,
     mobile_invite_sent: false, employee_signature_url: "",
-    id_document: { file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false },
+    id_document: { file_uri: null, file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false, encrypted: false },
   });
   const [createdEmployeeId, setCreatedEmployeeId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -64,7 +64,7 @@ export default function Onboarding() {
 
   const handleComplete = async () => {
     // Validate ID document is uploaded
-    if (!onboardingData?.id_document?.file_url) {
+    if (!onboardingData?.id_document?.file_uri) {
       alert("Upload eerst een identiteitsdocument (Stap 3) voordat je de onboarding kunt afronden.");
       return;
     }
@@ -102,13 +102,16 @@ export default function Onboarding() {
       employee = await base44.entities.Employee.create(empPayload);
     }
 
-    // 2a. Create Document entity for uploaded ID document
+    // 2a. Create Document entity for uploaded ID document (private storage)
     const idDoc = onboardingData?.id_document;
-    if (idDoc?.file_url) {
+    if (idDoc?.file_uri) {
       const doc = await base44.entities.Document.create({
         name: `ID Document - ${employeeName}`,
         document_type: idDoc.document_type || "Identiteitsbewijs",
-        file_url: idDoc.file_url,
+        file_uri: idDoc.file_uri,
+        file_url: null, // SECURITY: geen publieke URL
+        encrypted: true,
+        source: "onboarding",
         linked_employee_id: employee.id,
         linked_entity_name: employeeName,
         notes: `Bron: onboarding${idDoc.contains_bsn ? ' — BSN zichtbaar op document' : ''}`,
@@ -204,7 +207,7 @@ export default function Onboarding() {
       gps_buddy_toestemming: false, dienstbetrekking_signed: false,
       bedrijfsreglement_ontvangen: false, contract_generated: false,
       mobile_invite_sent: false, employee_signature_url: "",
-      id_document: { file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false },
+      id_document: { file_uri: null, file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false, encrypted: false },
       });
       };
 
@@ -242,7 +245,7 @@ export default function Onboarding() {
             gps_buddy_toestemming: false, dienstbetrekking_signed: false,
             bedrijfsreglement_ontvangen: false, contract_generated: false,
             mobile_invite_sent: false, employee_signature_url: "",
-            id_document: { file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false },
+            id_document: { file_uri: null, file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false, encrypted: false },
           });
         }}>Annuleren</Button>
         </div>

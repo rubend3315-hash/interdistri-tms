@@ -21,7 +21,7 @@ export default function StepIdDocument({ employeeData, onboardingData, onChange,
   const fileInputRef = useRef(null);
 
   const idDoc = onboardingData?.id_document || {};
-  const hasDoc = !!idDoc.file_url;
+  const hasDoc = !!(idDoc.file_uri || idDoc.file_url);
 
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -38,17 +38,20 @@ export default function StepIdDocument({ employeeData, onboardingData, onChange,
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // SECURITY: Upload naar private storage — NIET publiek
+      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
       onChange(prev => ({
         ...prev,
         id_document: {
           ...prev.id_document,
-          file_url,
+          file_uri,
+          file_url: null, // geen publieke URL
           file_name: file.name,
           document_type: prev.id_document?.document_type || "Identiteitsbewijs",
+          encrypted: true,
         },
       }));
-      toast.success("Document geüpload!");
+      toast.success("Document veilig geüpload!");
     } catch (err) {
       toast.error("Upload mislukt: " + (err.message || "Onbekende fout"));
     } finally {
@@ -60,7 +63,7 @@ export default function StepIdDocument({ employeeData, onboardingData, onChange,
   const handleRemove = () => {
     onChange(prev => ({
       ...prev,
-      id_document: { ...prev.id_document, file_url: null, file_name: null },
+      id_document: { ...prev.id_document, file_uri: null, file_url: null, file_name: null, encrypted: false },
     }));
   };
 
