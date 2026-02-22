@@ -250,6 +250,7 @@ export default function Layout({ children, currentPageName }) {
 
 
   const isMobilePage = currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay";
+  const isSecureDownloadPage = currentPageName === "SecureDownload";
   const isStamkaartDocument = false;
   const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
   const isEmployeeEditTimeEntry = user && user.role !== 'admin' && currentPageName === "EditTimeEntry";
@@ -259,8 +260,11 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
-  // If user is not logged in, redirect to login
+  // If user is not logged in, allow SecureDownload without auth, redirect others to login
   if (userError || !user) {
+    if (isSecureDownloadPage) {
+      return <>{children}</>;
+    }
     base44.auth.redirectToLogin();
     return null;
   }
