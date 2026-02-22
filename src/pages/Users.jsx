@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users, Plus, Mail, Shield, User, Search, Edit, CheckSquare, Save, X, ExternalLink, Link2 } from "lucide-react";
+import { Users, Plus, Mail, Shield, User, Search, Edit, CheckSquare, Save, X, ExternalLink, Link2, Briefcase } from "lucide-react";
 import { format } from "date-fns";
 import { logAuditEvent } from "../components/utils/auditLogger";
 import UserEmployeeLinkTab from "../components/users/UserEmployeeLinkTab";
+import { BUSINESS_ROLES, ROLE_LABELS, getBusinessRole } from "../components/utils/businessRoles";
 
 const ROLES = {
   admin: {
