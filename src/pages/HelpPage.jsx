@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Zap, Layers, Users, Clock, CheckSquare, Truck, CalendarDays, Shield, Smartphone, CircleDot, Download, FileText, Building2, FolderKanban, DollarSign, FileSpreadsheet, Mail, Car, Settings } from 'lucide-react';
+import { BookOpen, Zap, Layers, Users, Clock, CheckSquare, Truck, CalendarDays, Shield, Smartphone, CircleDot, Download, FileText, Building2, FolderKanban, DollarSign, FileSpreadsheet, Mail, Car, Settings, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function HelpPage() {
@@ -95,6 +97,24 @@ export default function HelpPage() {
           h1:first-of-type { page-break-before: avoid; }
         }
       `}</style>
+
+      {/* Security Architectuur link */}
+      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between no-print">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <Lock className="w-5 h-5 text-blue-700" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-900">Security Architectuur</p>
+            <p className="text-xs text-slate-500">Formele beveiligingsdocumentatie — alleen voor Admin</p>
+          </div>
+        </div>
+        <Link to={createPageUrl("SecurityArchitecture")}>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Shield className="w-4 h-4" /> Bekijken
+          </Button>
+        </Link>
+      </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -139,6 +139,7 @@ const menuItems = [
       { name: "Datamigratie", icon: Shield, page: "DataMigration" },
       { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
       { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
+      { name: "Security Architectuur", icon: Shield, page: "SecurityArchitecture" },
     ]
   },
 ];
