@@ -63,12 +63,11 @@ function buildStamkaartHtml(emp, lhData) {
 .section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#334155;border-bottom:1px solid #e2e8f0;padding:6px 0 1px;margin-top:10px}
 table{width:100%;border-collapse:collapse}td{padding:2px 4px;font-size:12px}
 .label{color:#475569;width:240px;text-align:right;padding-right:8px}.val{color:#1e293b}
-.header{border-bottom:2px solid #1e293b;padding-bottom:4px;margin-bottom:8px}
+.header{border-bottom:2px solid #1e293b;padding-bottom:8px;margin-bottom:24px;overflow:hidden}
 .footer{margin-top:16px;padding-top:4px;border-top:1px solid #e2e8f0;text-align:center;font-size:9px;color:#94a3b8}
 @media print{body{padding:10mm}}</style></head><body>
-<div class="header"><strong style="font-size:14px">Stamkaart werknemers</strong><br>
-<span style="color:#475569">${fullName} — Nr. ${emp.employee_number || '—'}</span>
-<div style="float:right;text-align:right;font-size:9px;color:#64748b"><strong style="color:#334155">Interdistri B.V.</strong><br>Fleerbosseweg 19, 4421 RR Kapelle<br>K.v.K. nr: 20150449<br>Datum: ${printDate}</div></div>
+<div class="header"><div style="float:right;text-align:right;font-size:9px;color:#64748b"><strong style="color:#334155">Interdistri B.V.</strong><br>Fleerbosseweg 19, 4421 RR Kapelle<br>K.v.K. nr: 20150449<br>Datum: ${printDate}</div><strong style="font-size:14px">Stamkaart werknemers</strong><br>
+<span style="color:#475569">${fullName} — Nr. ${emp.employee_number || '—'}</span></div>
 
 <div class="section">Werknemer gegevens</div>
 <table>
