@@ -7,12 +7,19 @@
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const TOKEN_EXPIRY_HOURS = 48;
+
 function replacePlaceholders(text, placeholders) {
   let result = text;
   for (const [key, value] of Object.entries(placeholders)) {
     result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value || '—');
   }
   return result;
+}
+
+function generateToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 Deno.serve(async (req) => {
