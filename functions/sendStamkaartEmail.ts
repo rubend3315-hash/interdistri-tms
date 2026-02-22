@@ -52,12 +52,16 @@ Deno.serve(async (req) => {
 
     console.log(`[sendStamkaartEmail] Calling mailService: to=${to}, finalSubject="${finalSubject.substring(0, 60)}", finalBody_length=${finalBody.length}`);
 
+    // Generate unique idempotency key per send — includes timestamp so re-sends are NOT blocked
+    const idempotencyKey = `sendStamkaartEmail|${to.toLowerCase().trim()}|${Date.now()}`;
+
     const result = await base44.functions.invoke('mailService', {
       to,
       cc,
       subject: finalSubject,
       html: finalBody,
       source_function: 'sendStamkaartEmail',
+      idempotency_key: idempotencyKey,
     });
 
     // Audit log
