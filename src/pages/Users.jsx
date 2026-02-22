@@ -621,7 +621,7 @@ export default function UsersPage() {
                   {user.created_date ? format(new Date(user.created_date), 'dd-MM-yyyy') : '-'}
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t">
-                  <span className="text-xs text-slate-500">Rol wijzigen:</span>
+                  <span className="text-xs text-slate-500">Systeem rol:</span>
                   <Select
                     value={user.role}
                     onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
@@ -632,6 +632,24 @@ export default function UsersPage() {
                     <SelectContent>
                       <SelectItem value="admin">Admin</SelectItem>
                       <SelectItem value="user">Medewerker</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="text-xs text-slate-500 flex items-center gap-1">
+                    <Briefcase className="w-3 h-3" /> Business rol:
+                  </span>
+                  <Select
+                    value={user.business_role || 'EMPLOYEE'}
+                    onValueChange={(val) => handleBusinessRoleChange(user.id, val)}
+                  >
+                    <SelectTrigger className="w-44 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(ROLE_LABELS).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
