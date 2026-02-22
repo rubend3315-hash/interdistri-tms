@@ -219,7 +219,7 @@ export default function Layout({ children, currentPageName }) {
       'Activiteiten': 'customers',
       'StandplaatsWerk': 'timetracking',
       'PayCheckedAudit': 'reports',
-      'StamkaartDocument': 'employees',
+      
     };
     
     const requiredPermission = pagePermissionMap[page];
@@ -239,7 +239,7 @@ export default function Layout({ children, currentPageName }) {
 
 
   const isMobilePage = currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay";
-  const isStamkaartDocument = currentPageName === "StamkaartDocument";
+  const isStamkaartDocument = false;
   const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
   const isEmployeeEditTimeEntry = user && user.role !== 'admin' && currentPageName === "EditTimeEntry";
 
