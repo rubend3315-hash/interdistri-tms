@@ -41,6 +41,7 @@ import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
 import MobileEntry from "./pages/MobileEntry";
 import { cn } from "@/lib/utils";
+import { getBusinessRole, isNavGroupVisible } from "./components/utils/businessRoles";
 
 // Service worker registration removed to prevent errors
 
@@ -290,6 +291,8 @@ export default function Layout({ children, currentPageName }) {
   });
 
 
+  const businessRole = getBusinessRole(user);
+
   const hasPermission = (page) => {
     if (!user) return false;
     if (user.role === 'admin') return true;
@@ -349,7 +352,6 @@ export default function Layout({ children, currentPageName }) {
       'Activiteiten': 'customers',
       'StandplaatsWerk': 'timetracking',
       'PayCheckedAudit': 'reports',
-      
     };
     
     const requiredPermission = pagePermissionMap[page];
@@ -360,20 +362,22 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const filteredMenu = useMemo(() => {
-    return menuItems.map(group => {
-      if (group.subgroups) {
-        const filteredSubgroups = group.subgroups.map(sg => ({
-          ...sg,
-          items: sg.items.filter(item => hasPermission(item.page))
-        })).filter(sg => sg.items.length > 0);
-        return { ...group, subgroups: filteredSubgroups };
-      }
-      return {
-        ...group,
-        items: group.items.filter(item => hasPermission(item.page))
-      };
-    }).filter(group => group.subgroups ? group.subgroups.length > 0 : group.items?.length > 0);
-  }, [user?.role, user?.permissions]);
+    return menuItems
+      .filter(group => isNavGroupVisible(user, group.label))
+      .map(group => {
+        if (group.subgroups) {
+          const filteredSubgroups = group.subgroups.map(sg => ({
+            ...sg,
+            items: sg.items.filter(item => hasPermission(item.page))
+          })).filter(sg => sg.items.length > 0);
+          return { ...group, subgroups: filteredSubgroups };
+        }
+        return {
+          ...group,
+          items: group.items.filter(item => hasPermission(item.page))
+        };
+      }).filter(group => group.subgroups ? group.subgroups.length > 0 : group.items?.length > 0);
+  }, [user?.role, user?.permissions, user?.business_role]);
 
 
 
