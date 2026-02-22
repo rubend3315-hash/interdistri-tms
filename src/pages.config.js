@@ -101,6 +101,7 @@ import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
 import SecureDownload from './pages/SecureDownload';
+import EncryptionMigration from './pages/EncryptionMigration';
 import __Layout from './Layout.jsx';
 
 
@@ -159,6 +160,7 @@ export const PAGES = {
     "Users": Users,
     "Vehicles": Vehicles,
     "SecureDownload": SecureDownload,
+    "EncryptionMigration": EncryptionMigration,
 }
 
 export const pagesConfig = {

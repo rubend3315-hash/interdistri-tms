@@ -224,6 +224,7 @@ export default function Layout({ children, currentPageName }) {
       'SecurityRoadmap': 'admin_only',
       'SystemArchitectureDiagram': 'admin_only',
       'SecuritySummary': 'admin_only',
+      'SecureDownload': 'public',
       'Activiteiten': 'customers',
       'StandplaatsWerk': 'timetracking',
       'PayCheckedAudit': 'reports',
