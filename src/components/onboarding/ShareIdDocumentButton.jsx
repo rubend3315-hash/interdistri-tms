@@ -16,12 +16,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Shield, Loader2, CheckCircle2, AlertTriangle, FileText, Lock } from "lucide-react";
 import { toast } from "sonner";
 
-export default function ShareIdDocumentButton({ employeeId, employeeName }) {
+export default function ShareIdDocumentButton({ employeeId, employeeName, onboardingDocumentId, onboardingDocument }) {
   const [open, setOpen] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
+
+  // If onboarding document is available, use it directly; otherwise fetch from DB
+  const hasOnboardingDoc = !!onboardingDocumentId;
 
   const { data: documents = [], isLoading: loadingDocs } = useQuery({
     queryKey: ['id_documents', employeeId],
@@ -30,7 +33,7 @@ export default function ShareIdDocumentButton({ employeeId, employeeName }) {
       const docs = await base44.entities.Document.filter({ linked_employee_id: employeeId });
       return docs.filter(d => ['Identiteitsbewijs', 'Paspoort', 'Rijbewijs'].includes(d.document_type));
     },
-    enabled: open && !!employeeId,
+    enabled: open && !!employeeId && !hasOnboardingDoc,
   });
 
   const { data: payrollSettings = [] } = useQuery({
@@ -41,7 +44,7 @@ export default function ShareIdDocumentButton({ employeeId, employeeName }) {
 
   const handleOpen = () => {
     setResult(null);
-    setSelectedDocId("");
+    setSelectedDocId(onboardingDocumentId || "");
     const ps = payrollSettings[0];
     setRecipientEmail(ps?.payroll_email || "");
     setOpen(true);
@@ -113,15 +116,27 @@ export default function ShareIdDocumentButton({ employeeId, employeeName }) {
 
             {/* Document selection */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">ID-document selecteren</Label>
-              {loadingDocs ? (
+              <Label className="text-xs font-medium">ID-document</Label>
+              {hasOnboardingDoc ? (
+                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                  <div>
+                    <p className="font-medium text-green-800">
+                      {onboardingDocument?.document_type || "ID-document"} — geüpload tijdens onboarding
+                    </p>
+                    {onboardingDocument?.file_name && (
+                      <p className="text-xs text-green-600">{onboardingDocument.file_name}</p>
+                    )}
+                  </div>
+                </div>
+              ) : loadingDocs ? (
                 <div className="flex items-center gap-2 text-xs text-slate-500 py-2">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Documenten laden...
                 </div>
               ) : documents.length === 0 ? (
                 <div className="text-xs text-slate-500 bg-slate-50 rounded p-3">
                   <FileText className="w-4 h-4 mb-1 text-slate-400" />
-                  Geen ID-documenten gevonden voor deze medewerker. Upload eerst een Identiteitsbewijs, Paspoort of Rijbewijs via Documentenbeheer.
+                  Geen ID-documenten gevonden. Upload eerst een document in Stap 3 (ID-document).
                 </div>
               ) : (
                 <Select value={selectedDocId} onValueChange={setSelectedDocId}>
@@ -176,7 +191,7 @@ export default function ShareIdDocumentButton({ employeeId, employeeName }) {
               <Button
                 size="sm"
                 onClick={handleSend}
-                disabled={sending || !selectedDocId || !recipientEmail || documents.length === 0}
+                disabled={sending || !selectedDocId || !recipientEmail}
                 className="bg-blue-600 hover:bg-blue-700 gap-1.5"
               >
                 {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Shield className="w-3.5 h-3.5" />}

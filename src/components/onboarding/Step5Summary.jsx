@@ -114,6 +114,8 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
             <ShareIdDocumentButton
               employeeId={onboardingData?._temp_employee_id || employeeData?.id}
               employeeName={fullName}
+              onboardingDocumentId={onboardingData?.id_document?.document_id}
+              onboardingDocument={onboardingData?.id_document}
             />
           </div>
         </div>
