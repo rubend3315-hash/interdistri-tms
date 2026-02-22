@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Send, Loader2, Save, AlertCircle, Printer } from "lucide-react";
-import StamkaartPrintDialog from "./StamkaartPrintDialog";
+import { Send, Loader2, Save, AlertCircle } from "lucide-react";
 import SignatureCanvas from "../contracts/SignatureCanvas";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { buildStamkaartEmailHtml } from "@/components/utils/stamkaartEmailHtml";
@@ -460,14 +459,6 @@ export default function StamkaartForm({
             {saveMutation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
             {saved ? "Opgeslagen ✓" : "Opslaan"}
           </Button>
-          <StamkaartPrintDialog
-            employee={data}
-            trigger={
-              <Button size="sm" variant="outline" className="h-7 text-xs px-3">
-                <Printer className="w-3 h-3 mr-1" /> Printen
-              </Button>
-            }
-          />
           <Button size="sm" variant="outline" onClick={handleSendToPayroll} disabled={sendingEmail} className="h-7 text-xs px-3">
             {sendingEmail ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
             Versturen naar Loonadministratie
