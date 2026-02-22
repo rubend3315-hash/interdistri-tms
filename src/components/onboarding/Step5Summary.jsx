@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, ChevronLeft, Loader2, KeyRound, Printer, Send } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { CheckCircle2, XCircle, ChevronLeft, Loader2, KeyRound, Printer } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import OnboardingPrintView from "./OnboardingPrintView";
 import ShareIdDocumentButton from "./ShareIdDocumentButton";
@@ -34,65 +33,9 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
   };
 
   const [showPrint, setShowPrint] = useState(false);
-  const [sendingPayroll, setSendingPayroll] = useState(false);
-
-  const { data: payrollSettings = [] } = useQuery({
-    queryKey: ['payrollSettings_summary'],
-    queryFn: () => base44.entities.PayrollSettings.list(),
-  });
-  const payrollConfig = payrollSettings[0] || null;
 
   const completedCount = CHECKLIST.filter(item => getStatus(item.key)).length;
   const fullName = `${employeeData.first_name} ${employeeData.prefix ? employeeData.prefix + ' ' : ''}${employeeData.last_name}`;
-
-  const handleSendToPayroll = async () => {
-    if (!payrollConfig?.payroll_email) {
-      alert("Stel eerst het e-mailadres van de loonadministratie in via HRM-instellingen → Loonadministratie.");
-      return;
-    }
-    setSendingPayroll(true);
-    try {
-      // Use persisted employee id: prefer _temp_employee_id from onboarding, then employeeData.id
-      const persistedEmployeeId = onboardingData?._temp_employee_id || employeeData.id;
-      console.log("employee_id sent to backend:", persistedEmployeeId);
-
-      if (!persistedEmployeeId) {
-        alert("De medewerker is nog niet opgeslagen. Ga terug naar Stap 2 en verstuur eerst de stamkaart, of rond de onboarding af.");
-        setSendingPayroll(false);
-        return;
-      }
-
-      const subjectBase = payrollConfig.payroll_subject || "Vertrouwelijk, onboarding en HR gegevens";
-      const subject = `${subjectBase} - ${fullName}`;
-      const response = await base44.functions.invoke('sendStamkaartEmail', {
-        to: payrollConfig.payroll_email,
-        cc: payrollConfig.payroll_cc_email || "",
-        subject,
-        employee_id: persistedEmployeeId,
-        employee_name: fullName,
-        download_type: "onboarding",
-        template_key: "stamkaart",
-        placeholders: {
-          naam: fullName,
-          afdeling: employeeData.department || '—',
-          functie: employeeData.function || '—',
-        },
-      });
-      const result = response.data;
-      if (result?.success && result?.messageId) {
-        alert("Beveiligde onboarding-link verzonden naar " + payrollConfig.payroll_email);
-      } else if (result?.skipped) {
-        alert("Deze stamkaart is al eerder verzonden (duplicate voorkomen).");
-      } else {
-        alert("Verzending mislukt: " + (result?.error || "Onbekende fout."));
-      }
-    } catch (err) {
-      const errMsg = err?.response?.data?.error || err.message || "Onbekende fout.";
-      alert("Verzending mislukt: " + errMsg);
-    } finally {
-      setSendingPayroll(false);
-    }
-  };
 
   if (showPrint) {
     return <OnboardingPrintView employeeData={employeeData} onboardingData={onboardingData} onClose={() => setShowPrint(false)} />;
@@ -106,10 +49,6 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowPrint(true)} className="h-7 text-xs">
               <Printer className="w-3.5 h-3.5 mr-1" /> Afdrukken
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleSendToPayroll} disabled={sendingPayroll} className="h-7 text-xs">
-              {sendingPayroll ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
-              Versturen naar loonadministratie
             </Button>
             <ShareIdDocumentButton
               employeeId={onboardingData?._temp_employee_id || employeeData?.id}
