@@ -113,7 +113,7 @@ export default function Onboarding() {
       employee_id: employee.id,
       employee_name: employeeName,
       status: "Afgerond",
-      current_step: 6,
+      current_step: 7,
       stamkaart_completed: true,
       pincode_verklaring_signed: onboardingData.pincode_verklaring_signed,
       sleutel_verklaring_signed: onboardingData.sleutel_verklaring_signed,
@@ -260,8 +260,9 @@ export default function Onboarding() {
           />
         )}
         {currentStep === 5 && (
-          <Step5Invite
+          <Step5MobileAccess
             employeeData={employeeData}
+            onEmployeeChange={setEmployeeData}
             onboardingData={onboardingData}
             onChange={setOnboardingData}
             onNext={() => setCurrentStep(6)}
@@ -269,10 +270,19 @@ export default function Onboarding() {
           />
         )}
         {currentStep === 6 && (
-          <Step5Summary
+          <Step6Invite
             employeeData={employeeData}
             onboardingData={onboardingData}
+            onChange={setOnboardingData}
+            onNext={() => setCurrentStep(7)}
             onBack={() => setCurrentStep(5)}
+          />
+        )}
+        {currentStep === 7 && (
+          <Step7Summary
+            employeeData={employeeData}
+            onboardingData={onboardingData}
+            onBack={() => setCurrentStep(6)}
             onComplete={handleComplete}
             isSubmitting={submitting}
           />

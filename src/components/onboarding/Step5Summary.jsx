@@ -17,6 +17,7 @@ const CHECKLIST = [
   { key: "bedrijfsreglement_ontvangen", label: "Bedrijfsreglement" },
   { key: "employee_signature_url", label: "Handtekening" },
   { key: "contract_generated", label: "Contract afgehandeld" },
+  { key: "mobile_access_configured", label: "Mobiele toegang geconfigureerd" },
   { key: "mobile_invite_sent", label: "Mobile Entry uitnodiging" },
 ];
 
@@ -25,6 +26,7 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
     if (key === "employee_created") return true;
     if (key === "stamkaart_completed") return true;
     if (key === "employee_signature_url") return !!onboardingData.employee_signature_url;
+    if (key === "mobile_access_configured") return true; // always configured (defaults applied in step 5)
     return !!onboardingData[key];
   };
 
