@@ -27,9 +27,29 @@ Deno.serve(async (req) => {
 
     console.log(`[sendStamkaartEmail] DIAGNOSTIC: to=${to}, subject="${(subject || '').substring(0, 60)}", body_length=${(body || '').length}, body_empty=${!body || body.trim().length === 0}, template_key=${template_key || 'none'}`);
 
-    if (!to || !subject || !body) {
-      console.error(`[sendStamkaartEmail] MISSING FIELDS: to=${!!to}, subject=${!!subject}, body=${!!body}`);
-      return Response.json({ error: 'Missing required fields: to, subject, body' }, { status: 400 });
+    // ── HARDE VALIDATIE: loonadministratie e-mailadres ──
+    if (!to || typeof to !== 'string' || !to.trim().includes('@')) {
+      const errorMsg = 'Geen geldig loonadministratie e-mailadres ingesteld in HR-instellingen. Ga naar HRM-instellingen → Loonadministratie.';
+      console.error(`[sendStamkaartEmail] BLOCKED: ${errorMsg} (to="${to || ''}")`);
+
+      // Log geblokkeerde verzending in EmailLog
+      try {
+        await base44.asServiceRole.entities.EmailLog.create({
+          to: to || '(niet ingesteld)',
+          subject: subject || '(geen onderwerp)',
+          status: 'failed',
+          source_function: 'sendStamkaartEmail',
+          error_message: errorMsg,
+          sent_at: new Date().toISOString(),
+        });
+      } catch (_) {}
+
+      return Response.json({ success: false, error: errorMsg }, { status: 400 });
+    }
+
+    if (!subject || !body) {
+      console.error(`[sendStamkaartEmail] MISSING FIELDS: subject=${!!subject}, body=${!!body}`);
+      return Response.json({ error: 'Missing required fields: subject, body' }, { status: 400 });
     }
 
     let finalSubject = subject;
