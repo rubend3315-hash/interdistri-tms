@@ -23,10 +23,16 @@ const Row = ({ label, value }) => (
   </div>
 );
 
-const CheckItem = ({ label, done }) => (
-  <div className={`flex items-center gap-2 text-xs py-0.5 ${done ? 'text-green-700' : 'text-slate-400'}`}>
-    {done ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <XCircle className="w-3.5 h-3.5 text-slate-300 shrink-0" />}
-    <span>{label}</span>
+const DeclarationBlock = ({ title, done, extra, children }) => (
+  <div className="mb-3 pb-3 border-b border-slate-200 last:border-b-0 break-inside-avoid" style={{ pageBreakInside: 'avoid' }}>
+    <div className="flex items-center justify-between mb-1.5">
+      <h4 className="text-xs font-semibold text-slate-800">{title}</h4>
+      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${done ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+        {done ? '✓ Akkoord' : '✗ Niet akkoord'}
+      </span>
+    </div>
+    {extra}
+    <div className="text-xs text-slate-600 leading-relaxed">{children}</div>
   </div>
 );
 
@@ -37,6 +43,7 @@ export default function OnboardingPrintView({ employeeData, onboardingData, onCl
   const cats = Array.isArray(emp.drivers_license_categories) ? emp.drivers_license_categories.join(', ') : (emp.drivers_license_categories || '—');
 
   const lhLabel = ob.loonheffing_toepassen === 'ja' ? 'Ja' : ob.loonheffing_toepassen === 'nee' ? 'Nee' : 'Niet ingevuld';
+  const allDeclarationsDone = ob.pincode_verklaring_signed && ob.sleutel_verklaring_signed && ob.gps_buddy_toestemming && ob.dienstbetrekking_signed && ob.bedrijfsreglement_ontvangen;
 
   useEffect(() => {
     const timer = setTimeout(() => window.print(), 500);
