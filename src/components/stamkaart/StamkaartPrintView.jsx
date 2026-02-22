@@ -1,45 +1,69 @@
 import React from "react";
 import { getFullName } from "@/components/utils/employeeUtils";
-import { StamkaartRow, StamkaartSectionTitle } from "./StamkaartForm";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
+
+/**
+ * ╔══════════════════════════════════════════════════════════════╗
+ * ║ StamkaartPrintView — SINGLE SOURCE OF TRUTH                ║
+ * ║                                                            ║
+ * ║ Dit component is de enige document-template voor:          ║
+ * ║ - Printweergave (Stamkaart pagina)                         ║
+ * ║ - StamkaartDocument pagina (schoon, zonder layout)         ║
+ * ║ - Onboarding preview                                      ║
+ * ║                                                            ║
+ * ║ De email HTML (stamkaartEmailHtml.js) volgt exact          ║
+ * ║ dezelfde sectie-indeling, veldvolgorde en structuur.       ║
+ * ╚══════════════════════════════════════════════════════════════╝
+ *
+ * Props:
+ * - employee: employee data object (required)
+ * - onboardingData: (optional) loonheffing data from onboarding
+ */
 
 function fmtDate(val) {
   if (!val) return "—";
   try { return format(new Date(val), "d-M-yyyy", { locale: nl }); } catch { return val; }
 }
 
-function PrintVal({ children }) {
-  return <span className="text-xs text-slate-800">{children || "—"}</span>;
+function SectionTitle({ title }) {
+  return (
+    <div className="border-b border-slate-200" style={{ marginTop: 6, marginBottom: 2, paddingBottom: 1 }}>
+      <span style={{ fontSize: 11 }} className="font-semibold text-slate-700 uppercase tracking-wide">{title}</span>
+    </div>
+  );
 }
 
-/**
- * StamkaartPrintView — read-only A4 representation using EXACT same structure as StamkaartForm.
- * No separate layout logic. Same sections, same field order, same grid.
- * 
- * Props:
- * - employee: employee data object
- * - onboardingData: (optional) if coming from onboarding, loonheffing data lives here
- */
+function Row({ label, compact, children }) {
+  const w = compact ? 150 : 240;
+  return (
+    <div className="flex items-center" style={{ minHeight: 26 }}>
+      <span style={{ fontSize: 13, lineHeight: 1.3, width: w, minWidth: w, paddingRight: 8, textAlign: 'right' }} className="text-slate-600 truncate">{label}</span>
+      <span className="text-xs text-slate-800 flex-1 min-w-0">{children || "—"}</span>
+    </div>
+  );
+}
+
 export default function StamkaartPrintView({ employee, onboardingData }) {
   if (!employee) return null;
 
-  const fullName = getFullName ? getFullName(employee) : 
+  const fullName = getFullName ? getFullName(employee) :
     `${employee.first_name || ''} ${employee.prefix ? employee.prefix + ' ' : ''}${employee.last_name || ''}`.trim();
-  
+
   // Resolve loonheffing data: onboarding → employee
   const lhToepassen = onboardingData?.loonheffing_toepassen || employee.loonheffing_toepassen || "";
   const lhDatum = onboardingData?.loonheffing_datum || employee.loonheffing_datum || "";
   const lhSignatureUrl = onboardingData?.loonheffing_handtekening_url || employee.loonheffing_handtekening_url || "";
   const lhLabel = lhToepassen === "ja" ? "Ja" : lhToepassen === "nee" ? "Nee" : "Niet ingevuld";
 
-  const cats = Array.isArray(employee.drivers_license_categories) 
-    ? employee.drivers_license_categories.join(", ") 
+  const cats = Array.isArray(employee.drivers_license_categories)
+    ? employee.drivers_license_categories.join(", ")
     : (employee.drivers_license_categories || "");
 
   return (
     <div className="mx-auto bg-white" style={{ maxWidth: 720, fontSize: "10pt", lineHeight: 1.35, paddingBottom: 4 }}>
-      {/* Company header */}
+
+      {/* ═══ DOCUMENT HEADER ═══ */}
       <div className="flex items-start justify-between border-b-2 border-slate-800" style={{ paddingBottom: 2, marginBottom: 4 }}>
         <div>
           <span className="text-sm font-bold text-slate-800">Stamkaart werknemers</span>
@@ -55,72 +79,74 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
       </div>
 
       {/* ═══ WERKNEMER GEGEVENS ═══ */}
-      <StamkaartSectionTitle title="Werknemer gegevens" />
+      <SectionTitle title="Werknemer gegevens" />
       <div className="space-y-0">
-        <StamkaartRow label="Voorletters"><PrintVal>{employee.initials}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Voornaam"><PrintVal>{employee.first_name}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Tussenvoegsel"><PrintVal>{employee.prefix}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Achternaam"><PrintVal>{employee.last_name}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Geboortedatum"><PrintVal>{fmtDate(employee.date_of_birth)}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Adres"><PrintVal>{employee.address}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Postcode en woonplaats"><PrintVal>{employee.postal_code} {employee.city}</PrintVal></StamkaartRow>
-        <StamkaartRow label="E-mailadres"><PrintVal>{employee.email}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Telefoon"><PrintVal>{employee.phone}</PrintVal></StamkaartRow>
-        <StamkaartRow label="IBAN"><PrintVal>{employee.bank_account}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Noodcontact (naam / telefoon)"><PrintVal>{employee.emergency_contact_name} {employee.emergency_contact_phone}</PrintVal></StamkaartRow>
+        <Row label="Voorletters">{employee.initials}</Row>
+        <Row label="Voornaam">{employee.first_name}</Row>
+        <Row label="Tussenvoegsel">{employee.prefix}</Row>
+        <Row label="Achternaam">{employee.last_name}</Row>
+        <Row label="Geboortedatum">{fmtDate(employee.date_of_birth)}</Row>
+        <Row label="Adres">{employee.address}</Row>
+        <Row label="Postcode en woonplaats">{employee.postal_code} {employee.city}</Row>
+        <Row label="E-mailadres">{employee.email}</Row>
+        <Row label="Telefoon">{employee.phone}</Row>
+        <Row label="IBAN">{employee.bank_account}</Row>
+        <Row label="Noodcontact (naam / telefoon)">{employee.emergency_contact_name} {employee.emergency_contact_phone}</Row>
       </div>
 
       {/* ═══ IDENTITEITSBEWIJS ═══ */}
-      <StamkaartSectionTitle title="Identiteitsbewijs" />
+      <SectionTitle title="Identiteitsbewijs" />
       <div className="space-y-0">
-        <StamkaartRow label="Burger Service Nummer"><PrintVal>{employee.bsn}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Nr. ID-kaart/paspoort | Geldig tot"><PrintVal>{employee.id_document_number} — {fmtDate(employee.id_document_expiry)}</PrintVal></StamkaartRow>
+        <Row label="Burger Service Nummer">{employee.bsn}</Row>
+        <Row label="Nr. ID-kaart/paspoort">{employee.id_document_number}</Row>
+        <Row label="Geldig tot">{fmtDate(employee.id_document_expiry)}</Row>
       </div>
 
       {/* ═══ RIJBEWIJS ═══ */}
-      <StamkaartSectionTitle title="Rijbewijs" />
+      <SectionTitle title="Rijbewijs" />
       <div className="space-y-0">
-        <StamkaartRow label="Rijbewijsnummer | Categorieën"><PrintVal>{employee.drivers_license_number} — {cats}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Vervaldatum rijbewijs"><PrintVal>{fmtDate(employee.drivers_license_expiry)}</PrintVal></StamkaartRow>
-        <StamkaartRow label="Vervaldatum Code 95"><PrintVal>{fmtDate(employee.code95_expiry)}</PrintVal></StamkaartRow>
+        <Row label="Rijbewijsnummer">{employee.drivers_license_number}</Row>
+        <Row label="Categorieën">{cats}</Row>
+        <Row label="Vervaldatum rijbewijs">{fmtDate(employee.drivers_license_expiry)}</Row>
+        <Row label="Vervaldatum Code 95">{fmtDate(employee.code95_expiry)}</Row>
       </div>
 
       {/* ═══ DIENSTVERBAND ═══ */}
-      <StamkaartSectionTitle title="Gegevens dienstverband" />
+      <SectionTitle title="Gegevens dienstverband" />
       <div className="grid grid-cols-2 gap-x-6 overflow-hidden">
         {/* Kolom 1 */}
         <div className="space-y-0">
-          <StamkaartRow label="Datum in dienst" compact><PrintVal>{fmtDate(employee.in_service_since)}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Functie" compact><PrintVal>{employee.function}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Afdeling" compact><PrintVal>{employee.department}</PrintVal></StamkaartRow>
+          <Row label="Datum in dienst" compact>{fmtDate(employee.in_service_since)}</Row>
+          <Row label="Functie" compact>{employee.function}</Row>
+          <Row label="Afdeling" compact>{employee.department}</Row>
         </div>
         {/* Kolom 2 */}
         <div className="space-y-0">
-          <StamkaartRow label="Contract type" compact><PrintVal>{employee.contract_type}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Contracturen" compact><PrintVal>{employee.contract_hours ? `${employee.contract_hours} uur` : null}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Loonschaal" compact><PrintVal>{employee.salary_scale}</PrintVal></StamkaartRow>
-          <StamkaartRow label="Bruto uurloon (€)" compact><PrintVal>{employee.hourly_rate ? `€ ${Number(employee.hourly_rate).toFixed(2)}` : null}</PrintVal></StamkaartRow>
+          <Row label="Contract type" compact>{employee.contract_type}</Row>
+          <Row label="Contracturen" compact>{employee.contract_hours ? `${employee.contract_hours} uur` : null}</Row>
+          <Row label="Loonschaal" compact>{employee.salary_scale}</Row>
+          <Row label="Bruto uurloon (€)" compact>{employee.hourly_rate ? `€ ${Number(employee.hourly_rate).toFixed(2)}` : null}</Row>
         </div>
       </div>
 
-      {/* ═══ LOONHEFFING, FINANCIEEL & ONDERTEKENING ═══ */}
-      <StamkaartSectionTitle title="Loonheffingskorting & ondertekening" />
+      {/* ═══ LOONHEFFINGSKORTING & ONDERTEKENING ═══ */}
+      <SectionTitle title="Loonheffingskorting & ondertekening" />
       <div className="grid" style={{ gridTemplateColumns: "1fr 270px", columnGap: 24 }}>
         {/* LINKERKOLOM */}
         <div className="space-y-0">
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
             <span className="text-xs text-slate-600">Loonheffingskorting?</span>
-            <PrintVal>{lhLabel}</PrintVal>
+            <span className="text-xs text-slate-800">{lhLabel}</span>
           </div>
           {lhToepassen && (
             <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
               <span className="text-xs text-slate-600">Vanaf datum</span>
-              <PrintVal>{fmtDate(lhDatum)}</PrintVal>
+              <span className="text-xs text-slate-800">{fmtDate(lhDatum)}</span>
             </div>
           )}
           <div className="grid items-center" style={{ gridTemplateColumns: "45% 55%", minHeight: 22 }}>
             <span className="text-xs text-slate-600">LKV (WW, WAO, WIA)?</span>
-            <PrintVal>{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</PrintVal>
+            <span className="text-xs text-slate-800">{employee.lkv_uitkering === "ja" ? "Ja, doelgroepverklaring" : "Nee"}</span>
           </div>
           <div className="grid items-start" style={{ gridTemplateColumns: "45% 55%", minHeight: 100 }}>
             <span className="text-xs text-slate-600" style={{ paddingTop: 4 }}>Bijzonderheden</span>
@@ -142,6 +168,11 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ═══ FOOTER ═══ */}
+      <div className="text-center border-t border-slate-200" style={{ marginTop: 8, paddingTop: 4 }}>
+        <span className="text-[9px] text-slate-400">Dit document is vertrouwelijk en uitsluitend bestemd voor de loonadministratie.</span>
       </div>
     </div>
   );
