@@ -25,7 +25,10 @@ Deno.serve(async (req) => {
 
     const { to, cc, subject, body, template_key, placeholders } = await req.json();
 
+    console.log(`[sendStamkaartEmail] DIAGNOSTIC: to=${to}, subject="${(subject || '').substring(0, 60)}", body_length=${(body || '').length}, body_empty=${!body || body.trim().length === 0}, template_key=${template_key || 'none'}`);
+
     if (!to || !subject || !body) {
+      console.error(`[sendStamkaartEmail] MISSING FIELDS: to=${!!to}, subject=${!!subject}, body=${!!body}`);
       return Response.json({ error: 'Missing required fields: to, subject, body' }, { status: 400 });
     }
 
@@ -37,11 +40,17 @@ Deno.serve(async (req) => {
         template_key, 
         is_active: true 
       });
+      console.log(`[sendStamkaartEmail] Template lookup: key="${template_key}", found=${templates.length}`);
       if (templates.length > 0) {
         finalSubject = replacePlaceholders(templates[0].subject, placeholders);
         finalBody = replacePlaceholders(templates[0].body, placeholders);
+        console.log(`[sendStamkaartEmail] Template applied: new subject="${finalSubject.substring(0, 60)}", new body_length=${finalBody.length}`);
+      } else {
+        console.log(`[sendStamkaartEmail] No active template found for key="${template_key}", using original body (length=${body.length})`);
       }
     }
+
+    console.log(`[sendStamkaartEmail] Calling mailService: to=${to}, finalSubject="${finalSubject.substring(0, 60)}", finalBody_length=${finalBody.length}`);
 
     const result = await base44.functions.invoke('mailService', {
       to,
