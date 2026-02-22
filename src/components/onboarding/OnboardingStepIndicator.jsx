@@ -7,8 +7,9 @@ const STEPS = [
   { number: 2, label: "Stamkaart" },
   { number: 3, label: "Verklaringen" },
   { number: 4, label: "Contract" },
-  { number: 5, label: "Uitnodiging" },
-  { number: 6, label: "Overzicht" },
+  { number: 5, label: "Mobiele Toegang" },
+  { number: 6, label: "Uitnodiging" },
+  { number: 7, label: "Overzicht" },
 ];
 
 export default function OnboardingStepIndicator({ currentStep, onStepClick }) {

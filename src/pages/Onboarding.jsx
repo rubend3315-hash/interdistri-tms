@@ -15,8 +15,9 @@ import Step1EmployeeDetails from "../components/onboarding/Step1EmployeeDetails"
 import Step2Stamkaart from "../components/onboarding/Step2Stamkaart";
 import Step3Declarations from "../components/onboarding/Step3Declarations";
 import Step4Contract from "../components/onboarding/Step4Contract";
-import Step5Invite from "../components/onboarding/Step5Invite";
-import Step5Summary from "../components/onboarding/Step5Summary";
+import Step5MobileAccess from "../components/onboarding/Step5MobileAccess";
+import Step6Invite from "../components/onboarding/Step5Invite";
+import Step7Summary from "../components/onboarding/Step5Summary";
 
 export default function Onboarding() {
   const queryClient = useQueryClient();
