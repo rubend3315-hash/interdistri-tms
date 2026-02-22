@@ -347,7 +347,7 @@ export default function Layout({ children, currentPageName }) {
       'SystemArchitectureDiagram': 'admin_only',
       'GovernanceDashboard': 'admin_only',
       'SecuritySummary': 'admin_only',
-      'SecurityPrivacy': 'helppage',
+      'SecurityPrivacy': 'public',
       'Trust': 'helppage',
       'SecureDownload': 'public',
       'EncryptionMigration': 'admin_only',
@@ -679,7 +679,13 @@ export default function Layout({ children, currentPageName }) {
                   </button>
                 </div>
                 <p className="text-xs text-slate-400 text-center mt-2">Interdistri TMS v{APP_VERSION}</p>
-              </div>
+                              <Link
+                                to={createPageUrl("SecurityPrivacy")}
+                                className="block text-xs text-slate-400 hover:text-blue-600 text-center mt-1 transition-colors"
+                              >
+                                Security & Privacyverklaring
+                              </Link>
+                          </div>
         </div>
       </aside>
 
