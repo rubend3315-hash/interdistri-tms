@@ -52,7 +52,20 @@ async function resolveTemplate(base44, templateKey, placeholders) {
 }
 
 async function sendViaGmail(accessToken, to, cc, subject, htmlBody, replyTo) {
+  // First, resolve the authenticated sender address from Gmail profile
+  let fromAddress = null;
+  try {
+    const profileRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    if (profileRes.ok) {
+      const profile = await profileRes.json();
+      fromAddress = profile.emailAddress;
+    }
+  } catch (_) { /* fallback: no From header, Gmail fills it in */ }
+
   const rawHeaders = [
+    ...(fromAddress ? [`From: Interdistri <${fromAddress}>`] : []),
     `To: ${to}`,
     ...(cc ? [`Cc: ${cc}`] : []),
     `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
@@ -63,6 +76,8 @@ async function sendViaGmail(accessToken, to, cc, subject, htmlBody, replyTo) {
   const rawMessage = rawHeaders.join('\r\n') + '\r\n\r\n' + htmlBody;
   const encoded = base64UrlEncode(rawMessage);
 
+  console.log(`[mailService] Sending to=${to}, from=${fromAddress || 'auto'}, subject="${subject.substring(0, 60)}"`);
+
   const res = await fetch(GMAIL_SEND_URL, {
     method: 'POST',
     headers: {
@@ -72,11 +87,30 @@ async function sendViaGmail(accessToken, to, cc, subject, htmlBody, replyTo) {
     body: JSON.stringify({ raw: encoded }),
   });
 
+  const responseStatus = res.status;
+  const responseText = await res.text();
+  
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Gmail API error (${res.status}): ${errText}`);
+    console.error(`[mailService] Gmail API FAILED (${responseStatus}): ${responseText}`);
+    throw new Error(`Gmail API error (${responseStatus}): ${responseText}`);
   }
-  return await res.json();
+  
+  let responseData;
+  try {
+    responseData = JSON.parse(responseText);
+  } catch {
+    console.error(`[mailService] Gmail returned non-JSON: ${responseText}`);
+    throw new Error(`Gmail API returned non-JSON response (${responseStatus}): ${responseText.substring(0, 200)}`);
+  }
+
+  // Validate that Gmail actually gave us a message ID
+  if (!responseData.id) {
+    console.error(`[mailService] Gmail 200 OK but no messageId:`, responseData);
+    throw new Error(`Gmail accepted request but returned no messageId: ${JSON.stringify(responseData)}`);
+  }
+
+  console.log(`[mailService] SUCCESS messageId=${responseData.id}, threadId=${responseData.threadId}, labels=${JSON.stringify(responseData.labelIds)}`);
+  return responseData;
 }
 
 async function sendWithRetry(accessToken, to, cc, subject, htmlBody, replyTo, maxRetries = MAX_RETRIES) {
@@ -201,6 +235,7 @@ Deno.serve(async (req) => {
         status: 'success',
         message_id: result.messageId || null,
         retry_count: result.attempts - 1,
+        sent_at: new Date().toISOString(),
       });
       // Audit log
       try {
@@ -225,10 +260,12 @@ Deno.serve(async (req) => {
         correlation_id: correlationId,
       });
     } else {
+      console.error(`[mailService] ALL RETRIES FAILED for to=${to}: ${result.error}`);
       await base44.asServiceRole.entities.EmailLog.update(logEntry.id, {
         status: 'failed',
-        error_message: result.error,
+        error_message: result.error?.substring(0, 500) || 'Unknown error',
         retry_count: result.attempts - 1,
+        last_retry_at: new Date().toISOString(),
       });
       // Audit log for failure
       try {
