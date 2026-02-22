@@ -1,0 +1,85 @@
+/* ===== Interdistri Enterprise Design System ===== */
+
+:root {
+  /* Primary - Blue-700 anchor */
+  --ent-primary: #1d4ed8;
+  --ent-primary-light: #dbeafe;
+  --ent-primary-dark: #1e3a8a;
+  --ent-primary-muted: #eff6ff;
+
+  /* Accent - Slate */
+  --ent-accent: #334155;
+  --ent-accent-light: #f1f5f9;
+  --ent-accent-muted: #f8fafc;
+
+  /* Governance - Distinct neutral */
+  --ent-gov-bg: #f8fafc;
+  --ent-gov-border: #e2e8f0;
+  --ent-gov-highlight: #f1f5f9;
+
+  /* Semantic */
+  --ent-success: #059669;
+  --ent-success-light: #ecfdf5;
+  --ent-success-border: #a7f3d0;
+
+  --ent-warning: #d97706;
+  --ent-warning-light: #fffbeb;
+  --ent-warning-border: #fde68a;
+
+  --ent-danger: #dc2626;
+  --ent-danger-light: #fef2f2;
+  --ent-danger-border: #fecaca;
+
+  /* Text hierarchy */
+  --ent-text-primary: #0f172a;
+  --ent-text-secondary: #475569;
+  --ent-text-muted: #94a3b8;
+  --ent-text-disabled: #cbd5e1;
+
+  /* Surfaces */
+  --ent-surface: #ffffff;
+  --ent-surface-raised: #ffffff;
+  --ent-surface-sunken: #f8fafc;
+  --ent-border: #e2e8f0;
+  --ent-border-strong: #cbd5e1;
+
+  /* Spacing (8px grid) */
+  --ent-space-1: 4px;
+  --ent-space-2: 8px;
+  --ent-space-3: 12px;
+  --ent-space-4: 16px;
+  --ent-space-5: 20px;
+  --ent-space-6: 24px;
+  --ent-space-8: 32px;
+  --ent-space-10: 40px;
+
+  /* Radius */
+  --ent-radius-sm: 6px;
+  --ent-radius-md: 8px;
+  --ent-radius-lg: 12px;
+
+  /* Shadows */
+  --ent-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --ent-shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px -1px rgba(0, 0, 0, 0.07);
+}
+
+/* Enterprise body defaults */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Consistent scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
