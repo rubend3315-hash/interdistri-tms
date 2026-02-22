@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
     // Generate idempotency key with timestamp so re-sends are NOT blocked
     const idempotencyKey = `sendStamkaartEmail|${to.toLowerCase().trim()}|${Date.now()}`;
 
-    const result = await base44.functions.invoke('mailService', {
+    const result = await base44.asServiceRole.functions.invoke('mailService', {
       to,
       cc,
       subject: finalSubject,
@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
 
     // Audit log (no BSN/IBAN in metadata)
     try {
-      await base44.functions.invoke('auditService', {
+      await base44.asServiceRole.functions.invoke('auditService', {
         entity_type: 'Employee',
         entity_id: employee_id,
         action_type: 'send',
