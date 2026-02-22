@@ -25,9 +25,13 @@ import {
   X,
   LogOut,
   ChevronDown,
+  ChevronRight,
   Settings,
   CircleDot,
-  Mail
+  Mail,
+  Database,
+  Lock,
+  Wrench
 } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
