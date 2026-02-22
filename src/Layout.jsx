@@ -193,8 +193,21 @@ const menuItems = [
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState(() => {
-    const activeGroup = menuItems.find(g => g.items.some(i => i.page === currentPageName));
-    return activeGroup ? [activeGroup.label] : [];
+    const result = [];
+    for (const g of menuItems) {
+      if (g.items && g.items.some(i => i.page === currentPageName)) {
+        result.push(g.label);
+      }
+      if (g.subgroups) {
+        for (const sg of g.subgroups) {
+          if (sg.items.some(i => i.page === currentPageName)) {
+            result.push(g.label);
+            result.push(`${g.label}::${sg.label}`);
+          }
+        }
+      }
+    }
+    return result.length > 0 ? result : [];
   });
   const { data: user, isLoading: loadingUser, isError: userError } = useQuery({
     queryKey: ['currentUser'],
