@@ -143,6 +143,7 @@ const menuItems = [
       { name: "Security Roadmap", icon: Shield, page: "SecurityRoadmap" },
       { name: "Systeemdiagram", icon: Shield, page: "SystemArchitectureDiagram" },
       { name: "Security Samenvatting", icon: Shield, page: "SecuritySummary" },
+      { name: "Encryptie Migratie", icon: Shield, page: "EncryptionMigration" },
     ]
   },
 ];
@@ -225,6 +226,7 @@ export default function Layout({ children, currentPageName }) {
       'SystemArchitectureDiagram': 'admin_only',
       'SecuritySummary': 'admin_only',
       'SecureDownload': 'public',
+      'EncryptionMigration': 'admin_only',
       'Activiteiten': 'customers',
       'StandplaatsWerk': 'timetracking',
       'PayCheckedAudit': 'reports',
