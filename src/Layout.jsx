@@ -129,27 +129,63 @@ const menuItems = [
   },
   {
     label: "Beheer",
-    items: [
-      { name: "HR Instellingen", icon: BookOpen, page: "HRMSettings" },
-      { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
-      { name: "Integraties", icon: Link2, page: "Integrations" },
-      { name: "Herberekeningen", icon: Shield, page: "Recalculations" },
-      { name: "Documentenbeheer", icon: FileText, page: "Documents" },
-      { name: "Gebruikers", icon: Settings, page: "Users" },
-      { name: "Audit Log", icon: Shield, page: "AuditLog" },
-      { name: "Voertuigen", icon: Car, page: "Vehicles" },
-      { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
-      { name: "Back-ups", icon: Shield, page: "Backups" },
-      { name: "Datamigratie", icon: Shield, page: "DataMigration" },
-      { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
-      { name: "Security & Privacy", icon: Shield, page: "SecurityPrivacy" },
-      { name: "Trust & Security", icon: Shield, page: "Trust" },
-      { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
-      { name: "Security Architectuur", icon: Shield, page: "SecurityArchitecture" },
-      { name: "Security Roadmap", icon: Shield, page: "SecurityRoadmap" },
-      { name: "Systeemdiagram", icon: Shield, page: "SystemArchitectureDiagram" },
-      { name: "Security Samenvatting", icon: Shield, page: "SecuritySummary" },
-      { name: "Encryptie Migratie", icon: Shield, page: "EncryptionMigration" },
+    subgroups: [
+      {
+        label: "Security & Compliance",
+        icon: Shield,
+        items: [
+          { name: "Security Samenvatting", icon: FileText, page: "SecuritySummary" },
+          { name: "Security Architectuur", icon: Shield, page: "SecurityArchitecture" },
+          { name: "Systeemdiagram", icon: Shield, page: "SystemArchitectureDiagram" },
+          { name: "Security Roadmap", icon: Shield, page: "SecurityRoadmap" },
+          { name: "Security & Privacy", icon: Shield, page: "SecurityPrivacy" },
+          { name: "Trust & Security", icon: Shield, page: "Trust" },
+          { name: "Encryptie Migratie", icon: Lock, page: "EncryptionMigration" },
+          { name: "Audit Log", icon: Shield, page: "AuditLog" },
+        ]
+      },
+      {
+        label: "HR & Configuratie",
+        icon: Settings,
+        items: [
+          { name: "HR Instellingen", icon: BookOpen, page: "HRMSettings" },
+          { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
+          { name: "Documentenbeheer", icon: FileText, page: "Documents" },
+          { name: "Gebruikers", icon: Settings, page: "Users" },
+        ]
+      },
+      {
+        label: "Integraties & Platform",
+        icon: Link2,
+        items: [
+          { name: "Integraties", icon: Link2, page: "Integrations" },
+          { name: "Herberekeningen", icon: Wrench, page: "Recalculations" },
+          { name: "Datamigratie", icon: Database, page: "DataMigration" },
+        ]
+      },
+      {
+        label: "Data & Continuïteit",
+        icon: Database,
+        items: [
+          { name: "Back-ups", icon: Database, page: "Backups" },
+        ]
+      },
+      {
+        label: "Operationeel Beheer",
+        icon: Car,
+        items: [
+          { name: "Voertuigen", icon: Car, page: "Vehicles" },
+          { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
+        ]
+      },
+      {
+        label: "Hulp & Documentatie",
+        icon: BookOpen,
+        items: [
+          { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
+          { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
+        ]
+      },
     ]
   },
 ];
