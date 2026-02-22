@@ -238,6 +238,12 @@ Deno.serve(async (req) => {
       ...(incomingTenantId ? { tenant_id: incomingTenantId } : {}),
     });
 
+    // Diagnostic logging for email content
+    console.log(`[mailService] DIAGNOSTIC: to=${to}, subject="${finalSubject.substring(0, 80)}", html_length=${finalBody.length}, html_empty=${!finalBody || finalBody.trim().length === 0}, source=${sourceFunction || 'mailService'}`);
+    if (finalBody.length < 50) {
+      console.warn(`[mailService] WARNING: HTML body suspiciously short (${finalBody.length} chars): "${finalBody}"`);
+    }
+
     // Get Gmail token and send
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
     const result = await sendWithRetry(accessToken, to, finalCc, finalSubject, finalBody, replyTo);
