@@ -32,19 +32,29 @@ const Table = ({ headers, rows, className }) => (
 );
 
 export default function SecurityArchitecture() {
+  const handlePrintPdf = () => {
+    window.print();
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-          <Shield className="w-8 h-8 text-blue-600" />
-          Security Architectuur — Interdistri TMS
-        </h1>
-        <div className="flex items-center gap-3 mt-2">
-          <Badge variant="outline" className="text-xs">Versie {VERSIE}</Badge>
-          <Badge variant="outline" className="text-xs">Laatste update: {LAATSTE_UPDATE}</Badge>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+            <Shield className="w-8 h-8 text-blue-600" />
+            Security Architectuur — Interdistri TMS
+          </h1>
+          <div className="flex flex-wrap items-center gap-3 mt-2">
+            <Badge className="bg-blue-100 text-blue-800 text-xs">{VERSIE}</Badge>
+            <Badge variant="outline" className="text-xs">Laatste update: {LAATSTE_UPDATE}</Badge>
+          </div>
+          <p className="text-sm text-slate-500 mt-2">Interne security-documentatie & auditreferentie. Alleen zichtbaar voor Admin.</p>
         </div>
-        <p className="text-sm text-slate-500 mt-2">Interne security-documentatie & auditreferentie. Alleen zichtbaar voor Admin.</p>
+        <Button onClick={handlePrintPdf} variant="outline" className="print:hidden shrink-0 gap-2">
+          <Download className="w-4 h-4" />
+          Exporteer als PDF
+        </Button>
       </div>
 
       {/* 1. Doel en Scope */}
@@ -356,6 +366,13 @@ export default function SecurityArchitecture() {
           Dit document is gegenereerd op basis van de actuele systeemconfiguratie per {LAATSTE_UPDATE} en is uitsluitend bestemd voor interne security-documentatie en audit.
         </p>
       </Section>
+
+      {/* PDF Export Footer (alleen zichtbaar in print) */}
+      <div className="hidden print:block text-center text-xs text-slate-400 border-t border-slate-200 pt-4 mt-8">
+        <p className="font-semibold text-slate-700">Interdistri TMS – Security & RBAC Architectuur</p>
+        <p>Versie: {VERSIE}</p>
+        <p>Geëxporteerd op: {new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      </div>
     </div>
   );
 }
