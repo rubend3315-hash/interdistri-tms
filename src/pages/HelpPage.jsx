@@ -488,7 +488,7 @@ export default function HelpPage() {
                   <li>✓ <strong>Stap 1 — Persoonsgegevens:</strong> Naam, adres, contact, afdeling, functie en pasfoto invoeren</li>
                   <li>✓ <strong>Stap 2 — Stamkaart:</strong> Rijbewijs, ID-document (incl. geldigheidsdatum), loonschaal uit loontabellen, uurloon, IBAN</li>
                   <li>✓ <strong>Loonheffingsverklaring:</strong> Ja/Nee keuze met datum, digitale handtekening — conform officieel formulier</li>
-                  <li>✓ <strong>Stap 3 — Verklaringen:</strong> Pincode sleutelkast, sleutelverklaring, GPS Buddy, dienstbetrekking, bedrijfsreglement</li>
+                  <li>✓ <strong>Stap 3 — Verklaringen:</strong> Ontvangst sleutelkast, sleutelverklaring, GPS Buddy, dienstbetrekking, bedrijfsreglement</li>
                   <li>✓ <strong>Stap 4 — Contract:</strong> Contracttype selecteren, sjabloon kiezen, contract automatisch genereren met medewerkergegevens</li>
                   <li>✓ <strong>Stap 5 — Uitnodigen:</strong> Medewerker uitnodigen voor de mobiele app (e-mail)</li>
                   <li>✓ <strong>Stap 6 — Samenvatting:</strong> Overzicht alle stappen, checklist, handtekening en afronden</li>
@@ -496,6 +496,22 @@ export default function HelpPage() {
                   <li>✓ Validatie van verplichte velden per stap</li>
                   <li>✓ Overzicht van alle lopende en afgeronde onboardings</li>
                 </ul>
+                <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <p className="text-sm font-medium text-slate-900 mb-1">🔐 Architectuur:</p>
+                  <ul className="text-xs text-slate-600 space-y-1">
+                    <li>• Onboarding bevat uitsluitend juridische verklaringen (geen concrete pincode).</li>
+                    <li>• De sleutelkastverklaring bevestigt verantwoordelijkheid — de pincode wordt afzonderlijk verstrekt.</li>
+                    <li>• Operationeel pincodebeheer is losgekoppeld en wordt beheerd via <strong>HRM-instellingen → Pincodebeheer</strong>.</li>
+                    <li>• Bij afronden onboarding wordt automatisch een pincode aangemaakt in de KeylockerPincode module.</li>
+                  </ul>
+                </div>
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm font-medium text-blue-900 mb-1">📄 Print & PDF bevatten:</p>
+                  <ul className="text-xs text-blue-800 space-y-1">
+                    <li>✓ Stamkaart, contract, verklaringen, handtekening</li>
+                    <li>✗ Geen sleutelkastpincode</li>
+                  </ul>
+                </div>
               </CardContent>
             </Card>
 
@@ -668,7 +684,29 @@ export default function HelpPage() {
                   <li>✓ Pauzeregels configuratie</li>
                   <li>✓ <strong>Loonadministratie:</strong> Stel het e-mailadres, CC-adres en onderwerp in voor stamkaart-mailings</li>
                   <li>✓ <strong>E-mail Sjablonen:</strong> Beheer de HTML-opmaak van alle automatische systeemmails</li>
+                  <li>✓ <strong>Pincodebeheer (Sleutelkast):</strong> Beheer persoonlijke sleutelkastpincodes per medewerker</li>
                 </ul>
+                <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <p className="text-sm font-medium text-slate-900 mb-2">🔐 Sleutelkastbeheer (Pincodebeheer)</p>
+                  <p className="text-xs text-slate-600 mb-2">Beheer van persoonlijke sleutelkastpincodes per medewerker:</p>
+                  <ul className="text-xs space-y-1 text-slate-600">
+                    <li>✓ Automatische aanmaak bij afronden onboarding</li>
+                    <li>✓ Handmatig genereren of instellen</li>
+                    <li>✓ Wijzigen van bestaande pincode</li>
+                    <li>✓ 30 seconden beveiligde weergave</li>
+                    <li>✓ Audit logging van alle acties (view, wijzig, aanmaak)</li>
+                    <li>✓ Geen zichtbaarheid in print of PDF</li>
+                    <li>✓ Geen verzending naar loonadministratie</li>
+                  </ul>
+                  <p className="text-xs text-slate-600 mt-2 font-medium">Beveiliging:</p>
+                  <ul className="text-xs space-y-1 text-slate-600">
+                    <li>✓ Alleen zichtbaar voor Admin/HR</li>
+                    <li>✓ Elke view en wijziging wordt gelogd</li>
+                    <li>✓ Niet zichtbaar in onboarding, print of HR-documenten</li>
+                    <li>✓ Verboden pincodes (0000, 1234, etc.) worden geblokkeerd</li>
+                    <li>✓ Duplicaatcontrole — elke actieve pincode is uniek</li>
+                  </ul>
+                </div>
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-sm font-medium text-blue-900 mb-2">📧 Beschikbare e-mail sjablonen:</p>
                   <ul className="text-xs space-y-1 text-blue-800">
@@ -913,7 +951,15 @@ export default function HelpPage() {
                     <AccordionTrigger>🚀 OnboardingProcess - Onboarding</AccordionTrigger>
                     <AccordionContent>
                       <p className="text-sm text-slate-600">
-                        Vastlegging van het onboardingproces per medewerker: huidige stap, status, pincode sleutelkast, verklaringen, contract, uitnodiging en handtekening.
+                        Vastlegging van het onboardingproces per medewerker: huidige stap, status, verklaringen, contract, uitnodiging en handtekening. Pincode wordt niet opgeslagen — beheer via KeylockerPincode.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="keylocker-pincode">
+                    <AccordionTrigger>🔐 KeylockerPincode - Sleutelkastpincodes</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-slate-600">
+                        Beveiligde opslag van persoonlijke sleutelkastpincodes per medewerker. Losgekoppeld van onboarding. Audit logging op elke view en wijziging. Beheer via HRM-instellingen → Pincodebeheer.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -1761,7 +1807,7 @@ export default function HelpPage() {
                   <div className="border-t pt-4">
                     <h4 className="font-medium text-slate-900 mb-2">Stap 3 — Verklaringen</h4>
                     <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• <strong>Pincode sleutelkast:</strong> Automatisch gegenereerde 4-cijferige pincode, ontvangstverklaring ondertekenen</li>
+                      <li>• <strong>Ontvangstverklaring sleutelkast:</strong> Verantwoordelijkheidsverklaring — geen concrete pincode zichtbaar</li>
                       <li>• <strong>Sleutelverklaring:</strong> Sleutelnummer en toegang vastleggen</li>
                       <li>• <strong>GPS Buddy toestemming:</strong> Akkoord voor GPS-tracking</li>
                       <li>• <strong>Verklaring dienstbetrekking:</strong> Bevestiging dienstverband</li>
@@ -1769,6 +1815,9 @@ export default function HelpPage() {
                       <li>• Alle verklaringen moeten afgevinkt zijn om door te gaan</li>
                       <li>• Digitale handtekening van de medewerker</li>
                     </ul>
+                    <div className="mt-2 p-2 bg-slate-50 rounded text-xs text-slate-500">
+                      <strong>Let op:</strong> Pincodebeheer vindt plaats via HRM-instellingen → Pincodebeheer. Bij afronden van de onboarding wordt automatisch een pincode aangemaakt.
+                    </div>
                   </div>
 
                   <div className="border-t pt-4">
@@ -2737,6 +2786,63 @@ export default function HelpPage() {
                   <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
                     <p className="text-sm text-amber-700">
                       ⚠️ <strong>Belangrijk:</strong> Alleen het gebruikersaccount (inloggegevens en permissies) moet opnieuw worden aangemaakt. Alle medewerkergegevens in het systeem blijven volledig intact.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Security Architectuur */}
+            <AccordionItem value="security-architecture">
+              <AccordionTrigger className="text-base font-semibold">
+                <Shield className="w-4 h-4 mr-2" />
+                Security Architectuur — Sleutelkast
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">Architectuurscheiding</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm font-medium text-blue-900 mb-1">📋 Onboarding</p>
+                        <p className="text-xs text-blue-700">Juridisch dossier: verklaringen, handtekeningen, contracten. Bevat geen operationele gegevens zoals pincodes.</p>
+                      </div>
+                      <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <p className="text-sm font-medium text-purple-900 mb-1">🔐 Sleutelkastbeheer</p>
+                        <p className="text-xs text-purple-700">Operationeel beveiligingsbeheer: pincodegeneratie, wijziging, audit logging. Volledig losgekoppeld van onboarding.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">Processchema: Onboarding & Sleutelkastbeheer</h4>
+                    <div className="bg-slate-50 p-3 rounded-lg text-xs text-slate-700 space-y-1 font-mono">
+                      <p>1. HR start onboarding</p>
+                      <p>2. Medewerker doorloopt stappen (gegevens, stamkaart, verklaringen, contract, uitnodiging)</p>
+                      <p>3. Onboarding wordt afgerond (status: "Afgerond")</p>
+                      <p>4. Systeem controleert: bestaat er een actieve pincode?</p>
+                      <p>   → Nee: automatische pincode aanmaken in KeylockerPincode</p>
+                      <p>   → Ja: geen actie</p>
+                      <p>5. HR beheert pincodes via HRM-instellingen → Pincodebeheer</p>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2 italic">Pincode is geen onderdeel van het juridische dossier.</p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-slate-900 mb-2">De pincode wordt:</h4>
+                    <ul className="text-sm text-slate-600 space-y-1">
+                      <li>✗ Nooit getoond in onboarding</li>
+                      <li>✗ Nooit opgenomen in print of PDF</li>
+                      <li>✗ Nooit meegestuurd naar loonadministratie</li>
+                      <li>✓ Alleen zichtbaar via beveiligd HR-tabblad (Pincodebeheer)</li>
+                      <li>✓ Elke actie (view, wijzig, aanmaak) wordt gelogd in audit trail</li>
+                      <li>✓ 30 seconden zichtbaarheid na bevestiging</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <p className="text-sm text-red-700">
+                      ⚠️ <strong>Belangrijk:</strong> De pincode mag nooit worden gecommuniceerd via e-mail, print, PDF of enig ander onbeveiligd kanaal. Gebruik uitsluitend het Pincodebeheer-tabblad.
                     </p>
                   </div>
                 </div>
