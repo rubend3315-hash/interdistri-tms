@@ -73,7 +73,7 @@ const printStyles = `
 
 const menuItems = [
   {
-    label: "Kernsystemen",
+    label: "Core Operations",
     items: [
       { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
       { name: "Tijdregistratie", icon: Clock, page: "TimeTracking" },
@@ -82,11 +82,11 @@ const menuItems = [
       { name: "Standplaatswerk", icon: Package, page: "StandplaatsWerk" },
       { name: "Planning", icon: CalendarDays, page: "Planning" },
       { name: "Dienst-Shifttijd", icon: CircleDot, page: "ShiftTime" },
-      { name: "Dagstaat", icon: FileText, page: "Dagstaat" },
+      { name: "Dagstaat", icon: ClipboardList, page: "Dagstaat" },
     ]
   },
   {
-    label: "HR & Beheer",
+    label: "HR & Business",
     items: [
       { name: "Onboarding", icon: Users, page: "Onboarding" },
       { name: "Medewerkers", icon: Users, page: "Employees" },
@@ -102,76 +102,51 @@ const menuItems = [
       { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
       { name: "Resultaat & Ontwikkeling", icon: FileText, page: "PerformanceReviews" },
       { name: "KPI rapportage PostNL", icon: Users, page: "EmployeeReport" },
-      ]
-      },
-      {
-      label: "Loon & Rapportage",
-      items: [
       { name: "Loonrapporten", icon: FileSpreadsheet, page: "SalaryReports" },
-      { name: "PayChecked Audit", icon: Shield, page: "PayCheckedAudit" },
-      ]
-      },
-  {
-    label: "Charters",
-    items: [
+      { name: "PayChecked Audit", icon: ShieldCheck, page: "PayCheckedAudit" },
       { name: "Charters", icon: Truck, page: "Charters" },
-    ]
-  },
-  {
-    label: "Klanten",
-    items: [
       { name: "Klanten", icon: Building2, page: "Customers" },
       { name: "Projecten", icon: FolderKanban, page: "Projects" },
       { name: "Activiteiten", icon: Package, page: "Activiteiten" },
-      ]
-      },
-      {
-      label: "Communicatie",
-    items: [
       { name: "Berichten", icon: Mail, page: "Messages" },
     ]
   },
   {
-    label: "Beheer",
+    label: "Governance & Control",
     subgroups: [
       {
         label: "Security & Compliance",
         icon: Shield,
+        highlight: true,
         items: [
-          { name: "Security Samenvatting", icon: FileText, page: "SecuritySummary" },
+          { name: "Security Samenvatting", icon: ShieldCheck, page: "SecuritySummary" },
           { name: "Security Architectuur", icon: Shield, page: "SecurityArchitecture" },
           { name: "Systeemdiagram", icon: Shield, page: "SystemArchitectureDiagram" },
           { name: "Security Roadmap", icon: Shield, page: "SecurityRoadmap" },
-          { name: "Security & Privacy", icon: Shield, page: "SecurityPrivacy" },
-          { name: "Trust & Security", icon: Shield, page: "Trust" },
+          { name: "Security & Privacy", icon: Lock, page: "SecurityPrivacy" },
+          { name: "Trust & Security", icon: ShieldCheck, page: "Trust" },
           { name: "Encryptie Migratie", icon: Lock, page: "EncryptionMigration" },
-          { name: "Audit Log", icon: Shield, page: "AuditLog" },
-        ]
-      },
-      {
-        label: "HR & Configuratie",
-        icon: Settings,
-        items: [
-          { name: "HR Instellingen", icon: BookOpen, page: "HRMSettings" },
-          { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
-          { name: "Documentenbeheer", icon: FileText, page: "Documents" },
-          { name: "Gebruikers", icon: Settings, page: "Users" },
-        ]
-      },
-      {
-        label: "Integraties & Platform",
-        icon: Link2,
-        items: [
-          { name: "Integraties", icon: Link2, page: "Integrations" },
-          { name: "Herberekeningen", icon: Wrench, page: "Recalculations" },
-          { name: "Datamigratie", icon: Database, page: "DataMigration" },
+          { name: "Audit Log", icon: ClipboardList, page: "AuditLog" },
         ]
       },
       {
         label: "Data & Continuïteit",
-        icon: Database,
+        icon: HardDrive,
         items: [
           { name: "Back-ups", icon: Database, page: "Backups" },
+          { name: "Datamigratie", icon: Database, page: "DataMigration" },
+        ]
+      },
+      {
+        label: "Platform & Integraties",
+        icon: Link2,
+        items: [
+          { name: "Integraties", icon: Link2, page: "Integrations" },
+          { name: "Herberekeningen", icon: Wrench, page: "Recalculations" },
+          { name: "HR Instellingen", icon: Settings, page: "HRMSettings" },
+          { name: "Feestdagen", icon: CalendarDays, page: "Holidays" },
+          { name: "Documentenbeheer", icon: FileText, page: "Documents" },
+          { name: "Gebruikers", icon: Users, page: "Users" },
         ]
       },
       {
@@ -183,8 +158,8 @@ const menuItems = [
         ]
       },
       {
-        label: "Hulp & Documentatie",
-        icon: BookOpen,
+        label: "Documentatie",
+        icon: LifeBuoy,
         items: [
           { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
           { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
