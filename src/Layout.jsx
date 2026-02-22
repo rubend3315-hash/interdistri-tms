@@ -298,10 +298,19 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const filteredMenu = useMemo(() => {
-    return menuItems.map(group => ({
-      ...group,
-      items: group.items.filter(item => hasPermission(item.page))
-    })).filter(group => group.items.length > 0);
+    return menuItems.map(group => {
+      if (group.subgroups) {
+        const filteredSubgroups = group.subgroups.map(sg => ({
+          ...sg,
+          items: sg.items.filter(item => hasPermission(item.page))
+        })).filter(sg => sg.items.length > 0);
+        return { ...group, subgroups: filteredSubgroups };
+      }
+      return {
+        ...group,
+        items: group.items.filter(item => hasPermission(item.page))
+      };
+    }).filter(group => group.subgroups ? group.subgroups.length > 0 : group.items?.length > 0);
   }, [user?.role, user?.permissions]);
 
 
