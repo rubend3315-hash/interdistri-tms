@@ -87,19 +87,20 @@ import Projects from './pages/Projects';
 import Recalculations from './pages/Recalculations';
 import SalaryReports from './pages/SalaryReports';
 import SalaryTables from './pages/SalaryTables';
+import SecurityArchitecture from './pages/SecurityArchitecture';
+import SecurityRoadmap from './pages/SecurityRoadmap';
+import SecuritySummary from './pages/SecuritySummary';
 import ShiftTime from './pages/ShiftTime';
 import Stamkaart from './pages/Stamkaart';
 import StandplaatsWerk from './pages/StandplaatsWerk';
+import SystemArchitectureDiagram from './pages/SystemArchitectureDiagram';
 import TIRekenmodule from './pages/TIRekenmodule';
 import TenantArchitecture from './pages/TenantArchitecture';
 import TimeTracking from './pages/TimeTracking';
 import Trips from './pages/Trips';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import SecurityArchitecture from './pages/SecurityArchitecture';
-import SecurityRoadmap from './pages/SecurityRoadmap';
-import SystemArchitectureDiagram from './pages/SystemArchitectureDiagram';
-import SecuritySummary from './pages/SecuritySummary';
+import SecureDownload from './pages/SecureDownload';
 import __Layout from './Layout.jsx';
 
 
@@ -144,19 +145,20 @@ export const PAGES = {
     "Recalculations": Recalculations,
     "SalaryReports": SalaryReports,
     "SalaryTables": SalaryTables,
+    "SecurityArchitecture": SecurityArchitecture,
+    "SecurityRoadmap": SecurityRoadmap,
+    "SecuritySummary": SecuritySummary,
     "ShiftTime": ShiftTime,
     "Stamkaart": Stamkaart,
     "StandplaatsWerk": StandplaatsWerk,
+    "SystemArchitectureDiagram": SystemArchitectureDiagram,
     "TIRekenmodule": TIRekenmodule,
     "TenantArchitecture": TenantArchitecture,
     "TimeTracking": TimeTracking,
     "Trips": Trips,
     "Users": Users,
     "Vehicles": Vehicles,
-    "SecurityArchitecture": SecurityArchitecture,
-    "SecurityRoadmap": SecurityRoadmap,
-    "SystemArchitectureDiagram": SystemArchitectureDiagram,
-    "SecuritySummary": SecuritySummary,
+    "SecureDownload": SecureDownload,
 }
 
 export const pagesConfig = {

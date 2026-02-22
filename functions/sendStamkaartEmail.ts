@@ -1,9 +1,9 @@
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║ FUNCTION TYPE: USER_FACING                                      ║
-// ║ Called by: Admin via frontend (Stamkaart page)                   ║
+// ║ Called by: Admin via frontend (Stamkaart page + Onboarding)     ║
 // ║ Auth: User session (admin only)                                  ║
-// ║ DO NOT USE RAW ENTITY CALLS — USE tenantService for tenant data  ║
-// ║ Do not mix user session and service role access.                 ║
+// ║ SECURITY UPGRADE: No longer sends BSN/IBAN in email body.       ║
+// ║ Instead generates a secure download token and sends a link.     ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
@@ -23,33 +23,30 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { to, cc, subject, body, template_key, placeholders } = await req.json();
+    const { to, cc, subject, employee_id, employee_name, download_type, template_key, placeholders } = await req.json();
 
-    console.log(`[sendStamkaartEmail] DIAGNOSTIC: to=${to}, subject="${(subject || '').substring(0, 60)}", body_length=${(body || '').length}, body_empty=${!body || body.trim().length === 0}, template_key=${template_key || 'none'}`);
+    console.log(`[sendStamkaartEmail] SECURE MODE: to=${to}, employee_id=${employee_id}, type=${download_type || 'stamkaart'}`);
 
     // ── HARDE VALIDATIE: loonadministratie e-mailadres ──
     if (!to || typeof to !== 'string' || !to.trim().includes('@')) {
-      const errorMsg = 'Geen geldig loonadministratie e-mailadres ingesteld in HR-instellingen. Ga naar HRM-instellingen → Loonadministratie.';
-      console.error(`[sendStamkaartEmail] BLOCKED: ${errorMsg} (to="${to || ''}")`);
-
-      // Log geblokkeerde verzending in EmailLog
+      const errorMsg = 'Geen geldig loonadministratie e-mailadres ingesteld in HR-instellingen.';
+      console.error(`[sendStamkaartEmail] BLOCKED: ${errorMsg}`);
       try {
         await base44.asServiceRole.entities.EmailLog.create({
-          to: to || '(niet ingesteld)',
-          subject: subject || '(geen onderwerp)',
-          status: 'failed',
-          source_function: 'sendStamkaartEmail',
-          error_message: errorMsg,
-          sent_at: new Date().toISOString(),
+          to: to || '(niet ingesteld)', subject: subject || '(geen onderwerp)',
+          status: 'failed', source_function: 'sendStamkaartEmail',
+          error_message: errorMsg, sent_at: new Date().toISOString(),
         });
       } catch (_) {}
-
       return Response.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
-    if (!subject || !body) {
-      console.error(`[sendStamkaartEmail] MISSING FIELDS: subject=${!!subject}, body=${!!body}`);
-      return Response.json({ error: 'Missing required fields: subject, body' }, { status: 400 });
+    if (!subject) {
+      return Response.json({ error: 'Missing required field: subject' }, { status: 400 });
+    }
+
+    if (!employee_id) {
+      return Response.json({ error: 'Missing required field: employee_id' }, { status: 400 });
     }
 
     // ── VALIDATIE: publiek e-maildomein blokkeren ──
@@ -60,11 +57,11 @@ Deno.serve(async (req) => {
     const toNorm = to.toLowerCase().trim();
     const toDomain = toNorm.split('@')[1];
     if (toDomain && BLOCKED_DOMAINS.includes(toDomain)) {
-      const errorMsg = `Het loonadministratie-adres mag geen publiek e-maildomein zijn (${toDomain}). Gebruik een zakelijk domein. Pas dit aan in HRM-instellingen → Loonadministratie.`;
+      const errorMsg = `Het loonadministratie-adres mag geen publiek e-maildomein zijn (${toDomain}).`;
       console.error(`[sendStamkaartEmail] BLOCKED: publiek domein ${toDomain}`);
       try {
         await base44.asServiceRole.entities.EmailLog.create({
-          to, subject: subject || '(geen onderwerp)', status: 'failed',
+          to, subject, status: 'failed',
           source_function: 'sendStamkaartEmail', error_message: errorMsg,
           sent_at: new Date().toISOString(),
         });
@@ -72,24 +69,19 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
-    // ── VALIDATIE: 'to' mag niet gelijk zijn aan Gmail-connector of ingelogde gebruiker ──
+    // ── VALIDATIE: to ≠ eigen account of Gmail connector ──
     const currentUserEmail = (user.email || '').toLowerCase().trim();
-
-    // Check tegen ingelogde gebruiker
     if (toNorm === currentUserEmail) {
-      const errorMsg = 'Het loonadministratie-adres mag niet gelijk zijn aan uw eigen gebruikersaccount. Pas dit aan in HRM-instellingen → Loonadministratie.';
-      console.error(`[sendStamkaartEmail] BLOCKED: to=${to} === currentUser=${user.email}`);
+      const errorMsg = 'Het loonadministratie-adres mag niet gelijk zijn aan uw eigen gebruikersaccount.';
       try {
         await base44.asServiceRole.entities.EmailLog.create({
-          to, subject: subject || '(geen onderwerp)', status: 'failed',
-          source_function: 'sendStamkaartEmail', error_message: errorMsg,
-          sent_at: new Date().toISOString(),
+          to, subject, status: 'failed', source_function: 'sendStamkaartEmail',
+          error_message: errorMsg, sent_at: new Date().toISOString(),
         });
       } catch (_) {}
       return Response.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
-    // Check tegen het gekoppelde Gmail-account (afzender)
     try {
       const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
       const profileRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
@@ -99,45 +91,105 @@ Deno.serve(async (req) => {
         const profile = await profileRes.json();
         const gmailAccount = (profile.emailAddress || '').toLowerCase().trim();
         if (gmailAccount && toNorm === gmailAccount) {
-          const errorMsg = `Het loonadministratie-adres (${to}) mag niet gelijk zijn aan het gekoppelde Gmail-account (${gmailAccount}). Pas dit aan in HRM-instellingen → Loonadministratie.`;
-          console.error(`[sendStamkaartEmail] BLOCKED: to=${to} === gmailConnector=${gmailAccount}`);
+          const errorMsg = `Het loonadministratie-adres mag niet gelijk zijn aan het gekoppelde Gmail-account.`;
           try {
             await base44.asServiceRole.entities.EmailLog.create({
-              to, subject: subject || '(geen onderwerp)', status: 'failed',
-              source_function: 'sendStamkaartEmail', error_message: errorMsg,
-              sent_at: new Date().toISOString(),
+              to, subject, status: 'failed', source_function: 'sendStamkaartEmail',
+              error_message: errorMsg, sent_at: new Date().toISOString(),
             });
           } catch (_) {}
           return Response.json({ success: false, error: errorMsg }, { status: 400 });
         }
       }
     } catch (gmailErr) {
-      console.warn(`[sendStamkaartEmail] Gmail profile check failed (non-blocking): ${gmailErr.message}`);
+      console.warn(`[sendStamkaartEmail] Gmail profile check failed: ${gmailErr.message}`);
     }
 
-    let finalSubject = subject;
-    let finalBody = body;
+    // ── GENERATE SECURE DOWNLOAD TOKEN ──
+    const type = download_type || 'stamkaart';
+    const tokenResult = await base44.functions.invoke('secureDownload', {
+      action: 'generate',
+      type,
+      employee_id,
+    });
 
-    if (template_key) {
+    if (!tokenResult.data?.success || !tokenResult.data?.token) {
+      return Response.json({ success: false, error: 'Kon geen beveiligde downloadlink aanmaken.' }, { status: 500 });
+    }
+
+    const downloadToken = tokenResult.data.token;
+    // Build the secure download URL — uses the app's base URL
+    const appBaseUrl = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
+    const secureDownloadUrl = `${appBaseUrl}/SecureDownload?token=${downloadToken}`;
+
+    console.log(`[sendStamkaartEmail] Token generated, URL: ${secureDownloadUrl}`);
+
+    // ── BUILD SECURE EMAIL BODY (no BSN/IBAN) ──
+    const empName = employee_name || '(medewerker)';
+    const typeLabel = type === 'onboarding' ? 'onboarding dossier' : 'stamkaart';
+    
+    let finalSubject = subject;
+    let finalBody = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:white;border-radius:12px;padding:32px;border:1px solid #e2e8f0;">
+    <div style="border-bottom:2px solid #1e293b;padding-bottom:8px;margin-bottom:16px;">
+      <strong style="font-size:16px;color:#1e293b;">Interdistri B.V.</strong>
+      <span style="float:right;font-size:11px;color:#64748b;">Vertrouwelijk</span>
+    </div>
+    
+    <p style="font-size:14px;color:#334155;margin:0 0 16px;">
+      De ${typeLabel} van <strong>${empName}</strong> is beschikbaar via onderstaande beveiligde link.
+    </p>
+    
+    <p style="font-size:13px;color:#475569;margin:0 0 16px;">
+      Deze link verloopt automatisch na 48 uur. Klik op de knop om het document veilig te openen.
+    </p>
+    
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${secureDownloadUrl}" 
+         style="display:inline-block;background:#1e40af;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">
+        📄 ${type === 'onboarding' ? 'Onboarding dossier' : 'Stamkaart'} openen
+      </a>
+    </div>
+    
+    <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:12px;margin:16px 0;">
+      <p style="font-size:12px;color:#92400e;margin:0;">
+        ⚠️ <strong>Beveiligingsmelding:</strong> Dit document bevat vertrouwelijke persoonsgegevens. 
+        Deel deze link niet met onbevoegden. De link is maximaal 10 keer te gebruiken.
+      </p>
+    </div>
+    
+    <p style="font-size:11px;color:#94a3b8;margin:16px 0 0;">
+      Mocht de knop niet werken, kopieer dan deze link:<br/>
+      <a href="${secureDownloadUrl}" style="color:#2563eb;word-break:break-all;font-size:11px;">${secureDownloadUrl}</a>
+    </p>
+  </div>
+  
+  <div style="text-align:center;margin-top:16px;">
+    <span style="font-size:10px;color:#94a3b8;">Dit bericht is vertrouwelijk en uitsluitend bestemd voor de geadresseerde.</span>
+  </div>
+</div>
+</body></html>`;
+
+    // Check for custom template
+    if (template_key && placeholders) {
       const templates = await base44.asServiceRole.entities.EmailTemplate.filter({ 
-        template_key, 
-        is_active: true 
+        template_key, is_active: true 
       });
-      console.log(`[sendStamkaartEmail] Template lookup: key="${template_key}", found=${templates.length}`);
       if (templates.length > 0) {
-        finalSubject = replacePlaceholders(templates[0].subject, placeholders);
-        finalBody = replacePlaceholders(templates[0].body, placeholders);
-        console.log(`[sendStamkaartEmail] Template applied: new subject="${finalSubject.substring(0, 60)}", new body_length=${finalBody.length}`);
-      } else {
-        console.log(`[sendStamkaartEmail] No active template found for key="${template_key}", using original body (length=${body.length})`);
+        // Add secure_download_url to placeholders
+        const allPlaceholders = { 
+          ...placeholders, 
+          secure_download_url: secureDownloadUrl,
+          download_link: `<a href="${secureDownloadUrl}" style="display:inline-block;background:#1e40af;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">📄 Document openen</a>`,
+        };
+        finalSubject = replacePlaceholders(templates[0].subject, allPlaceholders);
+        finalBody = replacePlaceholders(templates[0].body, allPlaceholders);
       }
     }
 
-    // Log address source for traceability
-    console.log(`[sendStamkaartEmail] ADDRESSES: to=${to} (source=HR-settings/payroll_email), cc=${cc || '(none)'} (source=HR-settings/payroll_cc_email)`);
-    console.log(`[sendStamkaartEmail] Calling mailService: finalSubject="${finalSubject.substring(0, 60)}", finalBody_length=${finalBody.length}`);
-
-    // Generate unique idempotency key per send — includes timestamp so re-sends are NOT blocked
+    // Generate idempotency key with timestamp so re-sends are NOT blocked
     const idempotencyKey = `sendStamkaartEmail|${to.toLowerCase().trim()}|${Date.now()}`;
 
     const result = await base44.functions.invoke('mailService', {
@@ -149,17 +201,18 @@ Deno.serve(async (req) => {
       idempotency_key: idempotencyKey,
     });
 
-    // Audit log
+    // Audit log (no BSN/IBAN in metadata)
     try {
       await base44.functions.invoke('auditService', {
         entity_type: 'Employee',
+        entity_id: employee_id,
         action_type: 'send',
         category: 'Medewerkers',
-        description: `Stamkaart e-mail verzonden naar ${to}`,
+        description: `Stamkaart beveiligde link verzonden naar ${to} (${typeLabel})`,
         performed_by_email: user.email,
         performed_by_name: user.full_name,
         performed_by_role: user.role,
-        metadata: { to, subject: finalSubject },
+        metadata: { to, subject: finalSubject, type, secure: true },
       });
     } catch (_) {}
 
