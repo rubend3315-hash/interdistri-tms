@@ -193,6 +193,43 @@ export default function UsersPage() {
     }
   });
 
+  const updateBusinessRoleMutation = useMutation({
+    mutationFn: async ({ userId, business_role, userName, oldBusinessRole }) => {
+      await base44.entities.User.update(userId, { business_role });
+      return { userId, business_role, userName, oldBusinessRole };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      alert('Business rol bijgewerkt!');
+      logAuditEvent({
+        action: 'business_role_change',
+        category: 'Gebruikers',
+        description: `Business rol van ${data.userName} gewijzigd van ${ROLE_LABELS[data.oldBusinessRole] || data.oldBusinessRole || 'Geen'} naar ${ROLE_LABELS[data.business_role]}`,
+        targetEntity: 'User',
+        targetId: data.userId,
+        targetName: data.userName,
+        oldValue: ROLE_LABELS[data.oldBusinessRole] || data.oldBusinessRole || 'Geen',
+        newValue: ROLE_LABELS[data.business_role],
+      });
+    },
+    onError: (error) => {
+      alert('Fout bij bijwerken business rol: ' + error.message);
+    }
+  });
+
+  const handleBusinessRoleChange = (userId, newBusinessRole) => {
+    const targetUser = users.find(u => u.id === userId);
+    const oldRole = targetUser?.business_role || 'EMPLOYEE';
+    if (confirm(`Wil je de business rol van deze gebruiker wijzigen naar "${ROLE_LABELS[newBusinessRole]}"?`)) {
+      updateBusinessRoleMutation.mutate({
+        userId,
+        business_role: newBusinessRole,
+        userName: targetUser?.full_name || targetUser?.email || 'Onbekend',
+        oldBusinessRole: oldRole
+      });
+    }
+  };
+
   const handleInvite = () => {
     if (!inviteData.email) {
       alert('Vul een email adres in');
