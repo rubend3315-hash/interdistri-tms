@@ -499,7 +499,8 @@ export default function UsersPage() {
                 <tr className="border-b bg-slate-50">
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Naam</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Email</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Rol</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Systeem Rol</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Business Rol</th>
                   <th className="text-center py-3 px-4 font-semibold text-slate-700">Status</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Aangemaakt</th>
                   <th className="text-center py-3 px-4 font-semibold text-slate-700">Acties</th>
@@ -516,6 +517,21 @@ export default function UsersPage() {
                       <Badge className={getRoleBadge(user.role)}>
                         {ROLES[user.role]?.label || user.role}
                       </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Select
+                        value={user.business_role || 'EMPLOYEE'}
+                        onValueChange={(val) => handleBusinessRoleChange(user.id, val)}
+                      >
+                        <SelectTrigger className="w-44 h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(ROLE_LABELS).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center">
