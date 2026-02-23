@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      fileName: 'DailyPayrollReportSchema_v1.json',
+      fileName: 'DailyPayrollReportSchema_v2.2.json',
       fileBase64,
     });
   } catch (error) {
