@@ -201,6 +201,7 @@ Deno.serve(async (req) => {
       type,
       employee_id,
       expires_at: expiresAt,
+      max_downloads: 5,
       used: false,
       download_count: 0,
       created_by_email: user.email,

@@ -246,19 +246,39 @@ Deno.serve(async (req) => {
           return Response.json({ error: 'Document niet gevonden.' }, { status: 404 });
         }
 
-        // SECURITY: Generate signed URL for private file (expires in 300s)
-        let fileUrl = doc.file_url; // fallback for legacy public docs
-        if (doc.file_uri) {
-          const signedResult = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
-            file_uri: doc.file_uri,
-            expires_in: 300,
-          });
-          fileUrl = signedResult.signed_url;
+        // SECURITY: Enforce private storage only — no legacy file_url fallback
+        if (!doc.file_uri) {
+          try {
+            await base44.asServiceRole.entities.AuditLog.create({
+              action_type: 'tamper_attempt_update',
+              category: 'Security',
+              description: `SecureDownload BLOCKED — document ${docId} missing private file_uri (legacy public storage rejected)`,
+              performed_by_email: tokenRecord.created_by_email || 'external',
+              metadata: { document_id: docId, token: token.substring(0, 8) + '...' },
+            });
+          } catch (_) {}
+          return Response.json({ error: 'Document mist beveiligde opslag. Neem contact op met de beheerder.' }, { status: 403 });
         }
 
-        if (!fileUrl) {
-          return Response.json({ error: 'Geen bestand beschikbaar voor dit document.' }, { status: 404 });
+        // SECURITY: Block unencrypted ID documents
+        if (tokenRecord.type === 'id_document' && !doc.encrypted) {
+          try {
+            await base44.asServiceRole.entities.AuditLog.create({
+              action_type: 'tamper_attempt_update',
+              category: 'Security',
+              description: `SecureDownload BLOCKED — unencrypted ID document ${docId}`,
+              performed_by_email: tokenRecord.created_by_email || 'external',
+              metadata: { document_id: docId, token: token.substring(0, 8) + '...' },
+            });
+          } catch (_) {}
+          return Response.json({ error: 'Onversleuteld ID-document geblokkeerd.' }, { status: 403 });
         }
+
+        const signedResult = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
+          file_uri: doc.file_uri,
+          expires_in: 300,
+        });
+        const fileUrl = signedResult.signed_url;
 
         const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
         const fileName = doc.name || '';
