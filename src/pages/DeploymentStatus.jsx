@@ -146,12 +146,15 @@ export default function DeploymentStatus() {
                         <td className="py-3 px-4 text-slate-400 font-mono text-xs">{idx + 1}</td>
                         <td className="py-3 px-4 font-mono text-slate-800">{row.function}</td>
                         <td className="py-3 px-4">
-                          <Badge className={row.status === "OK"
-                            ? "bg-green-100 text-green-800 hover:bg-green-100"
-                            : "bg-red-100 text-red-800 hover:bg-red-100"
-                          }>
-                            {row.status === "OK" ? "✓ Deployed" : "✗ " + row.status}
-                          </Badge>
+                          <Badge className={
+                                row.status === "OK"
+                                  ? "bg-green-100 text-green-800 hover:bg-green-100"
+                                  : row.status === "SKIPPED"
+                                  ? "bg-slate-100 text-slate-600 hover:bg-slate-100"
+                                  : "bg-red-100 text-red-800 hover:bg-red-100"
+                              }>
+                                {row.status === "OK" ? "✓ Deployed" : row.status === "SKIPPED" ? "— Overgeslagen" : "✗ " + row.status}
+                              </Badge>
                         </td>
                         <td className="py-3 px-4 text-slate-500">{row.message || "—"}</td>
                       </tr>
