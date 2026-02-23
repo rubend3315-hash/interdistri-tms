@@ -252,9 +252,10 @@ const menuItems = [
         label: "Documentatie",
         icon: LifeBuoy,
         items: [
-          { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
-          { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
-        ]
+            { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
+            { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
+            { name: "Payroll Export Docs", icon: FileSpreadsheet, page: "DailyPayrollExportDocs" },
+          ]
       },
       {
         label: "Systeem",
