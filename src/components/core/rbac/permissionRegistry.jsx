@@ -1,3 +1,4 @@
+
 /**
  * RBAC Permission Registry — Enterprise v2.2
  * 
@@ -42,6 +43,12 @@ export const PERMISSIONS = {
   // Governance & Encryptie
   GOVERNANCE_MANAGE: 'governance.manage',
   ENCRYPTION_MANAGE: 'encryption.manage',
+
+  // Gebruikersbeheer
+  USERS_MANAGE: 'users.manage',
+
+  // Dashboard (admin-level overzicht)
+  DASHBOARD_VIEW: 'dashboard.view',
 
   // Services (medewerker-eigen)
   SERVICES_OWN_READ: 'services.own.read',
