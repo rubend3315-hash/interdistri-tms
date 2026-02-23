@@ -1,69 +1,114 @@
 /**
- * Enterprise RBAC - Business Role Definitions
+ * Enterprise RBAC — Bridge Module v2.2
  * 
- * Dit is de centrale bron voor alle business role logica in de frontend.
- * Backend enforcement via requireBusinessRole in backend functions.
+ * DEPRECATED: Direct role checks via dit bestand worden uitgefaseerd.
+ * Gebruik voortaan alleen:
+ *   import { hasPermission } from '@/components/core/rbac/requirePermission';
+ *   import { PERMISSIONS } from '@/components/core/rbac/permissionRegistry';
+ * 
+ * Dit bestand is behouden voor backward compatibility met bestaande imports.
+ * Alle logica delegeert nu naar de centrale RBAC engine.
  */
 
+import { ROLES, ROLE_LABELS as CORE_ROLE_LABELS } from '../core/rbac/roleDefinitions';
+import { PERMISSIONS } from '../core/rbac/permissionRegistry';
+import { getEffectiveRole, hasPermission, hasAnyPermission } from '../core/rbac/requirePermission';
+
+// Re-export rollen onder oude naamgeving voor backward compatibility
 export const BUSINESS_ROLES = {
-  ADMIN: 'ADMIN',
-  HR_MANAGER: 'HR_MANAGER',
-  OPERATIONS_MANAGER: 'OPERATIONS_MANAGER',
-  FINANCE: 'FINANCE',
-  SUPERVISOR: 'SUPERVISOR',
-  EMPLOYEE: 'EMPLOYEE',
+  ADMIN: ROLES.SUPER_ADMIN,
+  HR_MANAGER: ROLES.HR_ADMIN,
+  HR_ADMIN: ROLES.HR_ADMIN,
+  OPERATIONS_MANAGER: ROLES.PLANNER,
+  PLANNER: ROLES.PLANNER,
+  FINANCE: ROLES.HR_ADMIN,
+  SUPERVISOR: ROLES.PLANNER,
+  EMPLOYEE: ROLES.EMPLOYEE,
 };
 
 export const ROLE_LABELS = {
-  ADMIN: 'Administrator',
-  HR_MANAGER: 'HR Manager',
-  OPERATIONS_MANAGER: 'Operations Manager',
-  FINANCE: 'Finance',
-  SUPERVISOR: 'Supervisor',
+  [ROLES.SUPER_ADMIN]: 'Super Admin',
+  [ROLES.HR_ADMIN]: 'HR Admin',
+  [ROLES.PLANNER]: 'Planner',
+  [ROLES.EMPLOYEE]: 'Medewerker',
+  // Legacy mappings
+  ADMIN: 'Super Admin',
+  HR_MANAGER: 'HR Admin',
+  OPERATIONS_MANAGER: 'Planner',
+  FINANCE: 'HR Admin',
+  SUPERVISOR: 'Planner',
   EMPLOYEE: 'Medewerker',
 };
 
 /**
- * Bepaal de effectieve business role van een gebruiker.
- * Admin system role → altijd ADMIN business role.
+ * DEPRECATED — Gebruik getEffectiveRole() uit requirePermission.js
  */
 export function getBusinessRole(user) {
-  if (!user) return null;
-  if (user.role === 'admin') return BUSINESS_ROLES.ADMIN;
-  return user.business_role || BUSINESS_ROLES.EMPLOYEE;
+  return getEffectiveRole(user);
 }
 
 /**
- * Check of gebruiker een van de toegestane rollen heeft.
+ * DEPRECATED — Gebruik hasPermission() of hasAnyPermission() uit requirePermission.js
  */
 export function hasBusinessRole(user, allowedRoles) {
-  const role = getBusinessRole(user);
-  if (!role) return false;
-  if (role === BUSINESS_ROLES.ADMIN) return true; // Admin altijd toegang
+  const role = getEffectiveRole(user);
+  if (role === ROLES.SUPER_ADMIN) return true;
   return allowedRoles.includes(role);
 }
 
 /**
- * Navigatie groep zichtbaarheidsregels per domein.
+ * Navigatie groep → permission mapping.
+ * Vervangt oude role-based NAV_GROUP_ROLES.
  */
-export const NAV_GROUP_ROLES = {
-  'Core Operations': [BUSINESS_ROLES.ADMIN, BUSINESS_ROLES.HR_MANAGER, BUSINESS_ROLES.OPERATIONS_MANAGER, BUSINESS_ROLES.FINANCE, BUSINESS_ROLES.SUPERVISOR],
-  'HR': [BUSINESS_ROLES.ADMIN, BUSINESS_ROLES.HR_MANAGER],
-  'Loon & Rapportage': [BUSINESS_ROLES.ADMIN, BUSINESS_ROLES.FINANCE],
-  'Business': [BUSINESS_ROLES.ADMIN, BUSINESS_ROLES.OPERATIONS_MANAGER, BUSINESS_ROLES.SUPERVISOR],
-  'Communicatie': [BUSINESS_ROLES.ADMIN, BUSINESS_ROLES.HR_MANAGER, BUSINESS_ROLES.OPERATIONS_MANAGER, BUSINESS_ROLES.FINANCE, BUSINESS_ROLES.SUPERVISOR],
-  'Operationeel Beheer': [BUSINESS_ROLES.ADMIN],
-  'Governance & Control': [BUSINESS_ROLES.ADMIN],
+export const NAV_GROUP_PERMISSIONS = {
+  'Core Operations': [
+    PERMISSIONS.PLANNING_MANAGE,
+    PERMISSIONS.PLANNING_READ,
+    PERMISSIONS.CUSTOMERS_MANAGE,
+    PERMISSIONS.CHARTERS_MANAGE,
+    PERMISSIONS.MOBILE_READWRITE,
+  ],
+  'HR': [
+    PERMISSIONS.ONBOARDING_MANAGE,
+    PERMISSIONS.EMPLOYEES_MANAGE,
+    PERMISSIONS.CONTRACTS_MANAGE,
+    PERMISSIONS.DOCUMENTS_MANAGE,
+  ],
+  'Loon & Rapportage': [
+    PERMISSIONS.CONTRACTS_MANAGE,
+    PERMISSIONS.DOCUMENTS_MANAGE,
+  ],
+  'Business': [
+    PERMISSIONS.CUSTOMERS_MANAGE,
+    PERMISSIONS.CHARTERS_MANAGE,
+    PERMISSIONS.PLANNING_MANAGE,
+  ],
+  'Communicatie': [
+    PERMISSIONS.MAIL_SEND,
+    PERMISSIONS.MOBILE_READWRITE,
+  ],
+  'Operationeel Beheer': [
+    PERMISSIONS.GOVERNANCE_MANAGE,
+    PERMISSIONS.ENCRYPTION_MANAGE,
+  ],
+  'Governance & Control': [
+    PERMISSIONS.GOVERNANCE_MANAGE,
+    PERMISSIONS.AUDIT_READ,
+  ],
 };
 
+// Legacy export — backward compatible
+export const NAV_GROUP_ROLES = NAV_GROUP_PERMISSIONS;
+
 /**
- * Check of een navigatiegroep zichtbaar is voor de gebruiker.
+ * Permission-based navigatie check.
+ * Vervangt oude role-based isNavGroupVisible.
  */
 export function isNavGroupVisible(user, groupLabel) {
-  const role = getBusinessRole(user);
-  if (!role) return false;
-  if (role === BUSINESS_ROLES.ADMIN) return true;
-  const allowedRoles = NAV_GROUP_ROLES[groupLabel];
-  if (!allowedRoles) return false;
-  return allowedRoles.includes(role);
+  const role = getEffectiveRole(user);
+  if (role === ROLES.SUPER_ADMIN) return true;
+  
+  const requiredPermissions = NAV_GROUP_PERMISSIONS[groupLabel];
+  if (!requiredPermissions) return false;
+  return hasAnyPermission(user, requiredPermissions);
 }
