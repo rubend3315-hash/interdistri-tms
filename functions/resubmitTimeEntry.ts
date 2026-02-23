@@ -1,3 +1,4 @@
+// redeploy: 2026-02-23T full_function_redeploy_protocol_v1
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║ FUNCTION TYPE: USER_FACING                                      ║
 // ║ Called by: Employee via mobile/desktop (EditTimeEntry page)      ║

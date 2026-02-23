@@ -1,3 +1,4 @@
+// redeploy: 2026-02-23T full_function_redeploy_protocol_v1
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
