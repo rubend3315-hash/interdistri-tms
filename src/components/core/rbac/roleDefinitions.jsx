@@ -1,67 +1,63 @@
 /**
- * RBAC Role Definitions — Interdistri TMS v2.2.0
+ * RBAC Role Definitions — Enterprise v2.2
  * 
- * Definieert de 4 systeem-rollen en hun permissions.
- * Elke rol bevat een vaste set permissions uit de permissionRegistry.
- * 
- * SUPER_ADMIN heeft ALLE permissions.
- * Andere rollen hebben een subset.
+ * 4 vaste rollen. Niet wijzigbaar via UI.
+ * SUPER_ADMIN heeft wildcard (*) toegang.
  */
 
-import { PERMISSIONS, ALL_PERMISSIONS } from './permissionRegistry';
+import { PERMISSIONS, WILDCARD } from './permissionRegistry';
 
 export const ROLES = {
   SUPER_ADMIN: 'SUPER_ADMIN',
-  HR_MANAGER: 'HR_MANAGER',
+  HR_ADMIN: 'HR_ADMIN',
   PLANNER: 'PLANNER',
   EMPLOYEE: 'EMPLOYEE',
 };
 
 export const ROLE_LABELS = {
   [ROLES.SUPER_ADMIN]: 'Super Admin',
-  [ROLES.HR_MANAGER]: 'HR Manager',
+  [ROLES.HR_ADMIN]: 'HR Admin',
   [ROLES.PLANNER]: 'Planner',
   [ROLES.EMPLOYEE]: 'Medewerker',
 };
 
 /**
  * Permission mapping per rol.
- * SUPER_ADMIN krijgt automatisch alle permissions.
+ * SUPER_ADMIN krijgt wildcard — alle permissions.
  */
 export const ROLE_PERMISSIONS = {
-  [ROLES.SUPER_ADMIN]: ALL_PERMISSIONS,
+  [ROLES.SUPER_ADMIN]: [WILDCARD],
 
-  [ROLES.HR_MANAGER]: [
-    PERMISSIONS.MOBILE_ENTRY,
-    PERMISSIONS.PLANNING_VIEW_OWN,
-    PERMISSIONS.TIME_APPROVE,
-    PERMISSIONS.CONTRACTS_GENERATE,
-    PERMISSIONS.CONTRACTS_SEND,
+  [ROLES.HR_ADMIN]: [
+    PERMISSIONS.ONBOARDING_MANAGE,
     PERMISSIONS.EMPLOYEES_MANAGE,
-    PERMISSIONS.ONBOARDING_COMPLETE,
-    PERMISSIONS.PAYROLL_SEND,
-    PERMISSIONS.REPORTS_VIEW,
+    PERMISSIONS.CONTRACTS_MANAGE,
+    PERMISSIONS.DOCUMENTS_MANAGE,
+    PERMISSIONS.ID_SHARE,
+    PERMISSIONS.MAIL_SEND,
+    PERMISSIONS.PLANNING_READ,
+    PERMISSIONS.MOBILE_READWRITE,
     PERMISSIONS.AUDIT_READ,
   ],
 
   [ROLES.PLANNER]: [
-    PERMISSIONS.MOBILE_ENTRY,
-    PERMISSIONS.PLANNING_VIEW_OWN,
     PERMISSIONS.PLANNING_MANAGE,
-    PERMISSIONS.REPORTS_VIEW,
+    PERMISSIONS.CUSTOMERS_MANAGE,
+    PERMISSIONS.CHARTERS_MANAGE,
+    PERMISSIONS.MOBILE_READWRITE,
   ],
 
   [ROLES.EMPLOYEE]: [
-    PERMISSIONS.MOBILE_ENTRY,
-    PERMISSIONS.PLANNING_VIEW_OWN,
-    PERMISSIONS.TIME_SUBMIT,
-    PERMISSIONS.CONTRACTS_SIGN_OWN,
+    PERMISSIONS.MOBILE_OWN,
+    PERMISSIONS.PLANNING_OWN_READ,
+    PERMISSIONS.CONTRACT_OWN_SIGN,
+    PERMISSIONS.SERVICES_OWN_READ,
   ],
 };
 
 /**
  * Haal permissions op voor een rol.
- * Onbekende rollen krijgen EMPLOYEE permissions als fallback.
+ * Onbekende rollen krijgen EMPLOYEE permissions.
  */
 export function getPermissionsForRole(role) {
   return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS[ROLES.EMPLOYEE];

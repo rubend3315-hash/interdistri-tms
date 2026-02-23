@@ -1,23 +1,23 @@
 /**
- * RBAC Permission Check Helper — Interdistri TMS v2.2.0
+ * RBAC Permission Engine — Enterprise v2.2
  * 
- * Frontend helper om te checken of een gebruiker een bepaalde permission heeft.
+ * Centrale permission check. Alle toegangscontrole gaat via dit bestand.
+ * Geen directe role checks (user.role === ...) meer in de app.
  * 
  * Gebruik:
  *   import { hasPermission, requirePermission } from '@/components/core/rbac/requirePermission';
+ *   import { PERMISSIONS } from '@/components/core/rbac/permissionRegistry';
  * 
- *   // Boolean check
- *   if (hasPermission(user, PERMISSIONS.TIME_APPROVE)) { ... }
- * 
- *   // Throws bij ontbreken (voor guards)
- *   requirePermission(user, PERMISSIONS.BACKUP_CREATE);
+ *   if (hasPermission(user, PERMISSIONS.PLANNING_MANAGE)) { ... }
+ *   requirePermission(user, PERMISSIONS.GOVERNANCE_MANAGE);
  */
 
 import { ROLES, ROLE_PERMISSIONS } from './roleDefinitions';
+import { WILDCARD } from './permissionRegistry';
 
 /**
  * Bepaal de effectieve RBAC rol van een gebruiker.
- * - Platform admin (user.role === 'admin') → SUPER_ADMIN
+ * - Platform admin (user.role === 'admin') → SUPER_ADMIN (runtime mapping)
  * - Anders: user.business_role of fallback naar EMPLOYEE
  */
 export function getEffectiveRole(user) {
@@ -28,11 +28,12 @@ export function getEffectiveRole(user) {
 
 /**
  * Check of een gebruiker een specifieke permission heeft.
- * Returns boolean.
+ * Ondersteunt wildcard (*) — SUPER_ADMIN heeft altijd toegang.
  */
 export function hasPermission(user, permission) {
   const role = getEffectiveRole(user);
   const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS[ROLES.EMPLOYEE];
+  if (permissions.includes(WILDCARD)) return true;
   return permissions.includes(permission);
 }
 
@@ -52,7 +53,6 @@ export function hasAnyPermission(user, permissionList) {
 
 /**
  * Guard: gooi een error als de permission ontbreekt.
- * Gebruik voor kritieke acties waar je wilt dat de flow stopt.
  */
 export function requirePermission(user, permission) {
   if (!hasPermission(user, permission)) {

@@ -1,51 +1,54 @@
 /**
- * RBAC Permission Registry — Interdistri TMS v2.2.0
+ * RBAC Permission Registry — Enterprise v2.2
  * 
  * Centrale bron van alle permissions in het systeem.
- * Elke permission is een unieke string die een specifieke actie vertegenwoordigt.
+ * Elke permission is een unieke dot-notatie string.
  * 
  * BELANGRIJK: Wijzig geen bestaande permissions zonder migratie.
  */
 
 export const PERMISSIONS = {
-  // Mobiel
-  MOBILE_ENTRY: 'mobile.entry',
-
   // Planning
-  PLANNING_VIEW_OWN: 'planning.view.own',
   PLANNING_MANAGE: 'planning.manage',
+  PLANNING_READ: 'planning.read',
+  PLANNING_OWN_READ: 'planning.own.read',
 
-  // Tijdregistratie
-  TIME_SUBMIT: 'time.submit',
-  TIME_APPROVE: 'time.approve',
+  // Mobiel
+  MOBILE_READWRITE: 'mobile.readwrite',
+  MOBILE_OWN: 'mobile.own',
 
-  // Contracten
-  CONTRACTS_SIGN_OWN: 'contracts.sign.own',
-  CONTRACTS_GENERATE: 'contracts.generate',
-  CONTRACTS_SEND: 'contracts.send',
+  // Klanten & Charters
+  CUSTOMERS_MANAGE: 'customers.manage',
+  CHARTERS_MANAGE: 'charters.manage',
 
-  // Medewerkers
+  // Onboarding & Medewerkers
+  ONBOARDING_MANAGE: 'onboarding.manage',
   EMPLOYEES_MANAGE: 'employees.manage',
 
-  // Onboarding
-  ONBOARDING_COMPLETE: 'onboarding.complete',
+  // Contracten
+  CONTRACTS_MANAGE: 'contracts.manage',
+  CONTRACT_OWN_SIGN: 'contract.own.sign',
 
-  // Payroll
-  PAYROLL_SEND: 'payroll.send',
+  // Documenten & ID
+  DOCUMENTS_MANAGE: 'documents.manage',
+  ID_SHARE: 'id.share',
 
-  // Rapportage
-  REPORTS_VIEW: 'reports.view',
+  // Communicatie
+  MAIL_SEND: 'mail.send',
 
   // Audit
   AUDIT_READ: 'audit.read',
 
-  // Back-ups
-  BACKUP_CREATE: 'backup.create',
-  BACKUP_RESTORE: 'backup.restore',
+  // Governance & Encryptie
+  GOVERNANCE_MANAGE: 'governance.manage',
+  ENCRYPTION_MANAGE: 'encryption.manage',
 
-  // RBAC beheer
-  RBAC_MANAGE: 'rbac.manage',
+  // Services (medewerker-eigen)
+  SERVICES_OWN_READ: 'services.own.read',
 };
+
+/** Wildcard — geeft volledige toegang */
+export const WILDCARD = '*';
 
 /** Lijst van alle permission strings voor validatie */
 export const ALL_PERMISSIONS = Object.values(PERMISSIONS);
