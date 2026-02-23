@@ -27,6 +27,7 @@ import CharterOverview from "../components/dashboard/CharterOverview";
 import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
 import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
+import SystemStatusCard from "../components/dashboard/SystemStatusCard";
 
 export default function Dashboard({ currentUser }) {
   const today = new Date();
