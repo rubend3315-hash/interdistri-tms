@@ -2,9 +2,25 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**
  * Sends daily payroll report to Azure.
- * Fetches data directly to avoid function-to-function auth issues.
+ * Schema v2.2 — includes startDateTimeISO / endDateTimeISO.
  * Returns AZURE_NOT_CONFIGURED in dry-run mode when env vars missing.
  */
+
+function buildISO(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return null;
+  const timeParts = timeStr.split(':');
+  const hh = timeParts[0] || '00', mm = timeParts[1] || '00', ss = timeParts[2] || '00';
+  const isoBase = `${dateStr}T${hh}:${mm}:${ss}`;
+  const utcDate = new Date(`${dateStr}T${hh}:${mm}:${ss}Z`);
+  if (isNaN(utcDate.getTime())) return null;
+  const amsFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const amsParts = Object.fromEntries(amsFmt.formatToParts(utcDate).filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+  const amsDate = new Date(`${amsParts.year}-${amsParts.month}-${amsParts.day}T${amsParts.hour}:${amsParts.minute}:${amsParts.second}Z`);
+  const offsetMin = (amsDate.getTime() - utcDate.getTime()) / 60000;
+  const sign = offsetMin >= 0 ? '+' : '-';
+  const absMin = Math.abs(offsetMin);
+  return `${isoBase}${sign}${String(Math.floor(absMin / 60)).padStart(2, '0')}:${String(absMin % 60).padStart(2, '0')}`;
+}
 
 function calcHoursFromTimes(startTime, endTime) {
   if (!startTime || !endTime) return 0;
@@ -55,6 +71,13 @@ function buildReport(date, employees, timeEntries, trips, standplaatsWerk, custo
     grandTotalTripKm += empTotalTripKm;
     grandTotalStandplaatsHours += empTotalSWHours;
 
+    // Enrich time entries with ISO datetimes
+    const enrichedTE = empTE.map(te => {
+      const startDate = te.date || null;
+      const endDate = te.end_date || te.date || null;
+      return { ...te, startDateTimeISO: buildISO(startDate, te.start_time), endDateTimeISO: buildISO(endDate, te.end_time) };
+    });
+
     employeesWithData.push({
       employeeNumber: emp.employee_number || null,
       employeeId: emp.id,
@@ -73,7 +96,7 @@ function buildReport(date, employees, timeEntries, trips, standplaatsWerk, custo
         totalTripKilometers: Math.round(empTotalTripKm * 100) / 100,
         totalStandplaatsHours: Math.round(empTotalSWHours * 100) / 100,
       },
-      timeEntries: empTE,
+      timeEntries: enrichedTE,
       trips: empTrips,
       standplaatsWerk: empSW,
     });
@@ -81,7 +104,7 @@ function buildReport(date, employees, timeEntries, trips, standplaatsWerk, custo
 
   return {
     success: true,
-    schemaVersion: "1.0",
+    schemaVersion: "2.2",
     reportType: "DAILY_PAYROLL",
     metadata: { sourceSystem: "Interdistri TMS", generatedBy: "buildDailyPayrollReportData", timezone: "Europe/Amsterdam" },
     reportDate: date,
