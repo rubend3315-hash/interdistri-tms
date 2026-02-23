@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
       {
         error: 'Excel import failed',
         details: errorMessage,
-        ...(Deno.env.get('ENV') === 'development' && { stack: errorStack })
+        ...(errorStack ? { stack: errorStack } : {})
       } as ErrorResponse,
       { status: 500 }
     );
