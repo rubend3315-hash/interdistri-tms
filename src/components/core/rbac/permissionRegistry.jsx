@@ -14,6 +14,11 @@ export const PERMISSIONS = {
   PLANNING_READ: 'planning.read',
   PLANNING_OWN_READ: 'planning.own.read',
 
+  // Operationeel (los van planning)
+  TIMETRACKING_MANAGE: 'timetracking.manage',
+  APPROVALS_MANAGE: 'approvals.manage',
+  TRIPS_MANAGE: 'trips.manage',
+
   // Mobiel
   MOBILE_READWRITE: 'mobile.readwrite',
   MOBILE_OWN: 'mobile.own',

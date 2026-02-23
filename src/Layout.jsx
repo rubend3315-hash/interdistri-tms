@@ -311,13 +311,13 @@ export default function Layout({ children, currentPageName }) {
     const PAGE_PERMISSION_MAP = {
       // Core Operations
       'Dashboard': PERMISSIONS.DASHBOARD_VIEW,
-      'TimeTracking': PERMISSIONS.PLANNING_MANAGE,
-      'Approvals': PERMISSIONS.PLANNING_MANAGE,
-      'Trips': PERMISSIONS.PLANNING_MANAGE,
-      'StandplaatsWerk': PERMISSIONS.PLANNING_MANAGE,
+      'TimeTracking': PERMISSIONS.TIMETRACKING_MANAGE,
+      'Approvals': PERMISSIONS.APPROVALS_MANAGE,
+      'Trips': PERMISSIONS.TRIPS_MANAGE,
+      'StandplaatsWerk': PERMISSIONS.TRIPS_MANAGE,
       'Planning': PERMISSIONS.PLANNING_MANAGE,
       'ShiftTime': PERMISSIONS.PLANNING_MANAGE,
-      'Dagstaat': PERMISSIONS.PLANNING_MANAGE,
+      'Dagstaat': PERMISSIONS.TRIPS_MANAGE,
 
       // HR
       'Employees': PERMISSIONS.EMPLOYEES_MANAGE,
