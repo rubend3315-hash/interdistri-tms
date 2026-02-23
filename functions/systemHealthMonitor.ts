@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     let isRed = false;
 
     try {
-      const res = await base44.functions.invoke('systemHealthCheck');
+      const res = await base44.asServiceRole.functions.invoke('systemHealthCheck');
       healthData = res.data;
 
       isRed = !healthData ||
