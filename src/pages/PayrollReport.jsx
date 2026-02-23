@@ -16,6 +16,85 @@ export default function PayrollReport() {
   const [selectedDate, setSelectedDate] = useState(defaultDate);
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState(null);
+  const [loadingJson, setLoadingJson] = useState(false);
+  const [loadingSchema, setLoadingSchema] = useState(false);
+  const [loadingAzure, setLoadingAzure] = useState(false);
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    retry: false,
+  });
+
+  const isAdminOrHr = user?.role === 'admin' || ['ADMIN', 'HR_ADMIN'].includes(user?.business_role);
+
+  const downloadBase64File = (base64, fileName, mimeType = 'application/json') => {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const blob = new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadJson = async () => {
+    setLoadingJson(true);
+    try {
+      const response = await base44.functions.invoke('downloadDailyPayrollReportJson', { date: selectedDate });
+      const { fileBase64, fileName } = response.data;
+      downloadBase64File(fileBase64, fileName);
+      toast.success(`JSON payload gedownload: ${fileName}`);
+    } catch (err) {
+      toast.error(`Fout bij downloaden JSON: ${err.message}`);
+    } finally {
+      setLoadingJson(false);
+    }
+  };
+
+  const handleDownloadSchema = async () => {
+    setLoadingSchema(true);
+    try {
+      const response = await base44.functions.invoke('downloadDailyPayrollSchema', {});
+      const { fileBase64, fileName } = response.data;
+      downloadBase64File(fileBase64, fileName);
+      toast.success(`JSON schema gedownload: ${fileName}`);
+    } catch (err) {
+      toast.error(`Fout bij downloaden schema: ${err.message}`);
+    } finally {
+      setLoadingSchema(false);
+    }
+  };
+
+  const handleTestAzure = async () => {
+    setLoadingAzure(true);
+    try {
+      const response = await base44.functions.invoke('sendDailyPayrollReportToAzure', { date: selectedDate });
+      const data = response.data;
+      if (data.error === 'AZURE_NOT_CONFIGURED') {
+        toast.info('Azure integratie nog niet geconfigureerd (dry-run).', {
+          description: `${data.employeeCount} medewerkers gevonden voor ${selectedDate}`,
+        });
+      } else if (data.success) {
+        toast.success(`Azure push geslaagd (HTTP ${data.azureStatusCode})`, {
+          description: `${data.employeeCount} medewerkers verstuurd`,
+        });
+      } else {
+        toast.error(`Azure push mislukt: ${data.error}`, {
+          description: data.details || '',
+        });
+      }
+    } catch (err) {
+      toast.error(`Fout bij Azure test: ${err.message}`);
+    } finally {
+      setLoadingAzure(false);
+    }
+  };
 
   const handleGenerate = async () => {
     setLoading(true);
