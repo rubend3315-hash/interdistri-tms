@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
 
     // B) Supabase connectivity
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/tenant?select=id&limit=1`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/employee?select=base44_id&limit=1`, {
         method: 'GET',
         headers: {
           'apikey': SUPABASE_KEY,
