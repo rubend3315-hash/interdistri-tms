@@ -18,6 +18,10 @@ export default function DailyPayrollExportDocs() {
             <FileText className="w-4 h-4" />
             Technische Documentatie
           </TabsTrigger>
+          <TabsTrigger value="api-spec" className="gap-2">
+            <Code className="w-4 h-4" />
+            API Specificatie
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="user-manual">
