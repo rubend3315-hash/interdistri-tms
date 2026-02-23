@@ -121,13 +121,15 @@ const KNOWN_TIMEENTRY_FIELDS = new Set([
 ]);
 
 /**
- * Compare the live TimeEntry entity schema against the known mapped fields.
+ * Compare actual TimeEntry record keys against the known mapped fields.
+ * Fetches the most recent record and checks for unmapped keys.
  * Returns an array of unknown field names, or empty if all fields are covered.
  */
 async function checkTimeEntrySchemaAlignment(base44) {
-  const schema = await base44.asServiceRole.entities.TimeEntry.schema();
-  const schemaFields = Object.keys(schema.properties || {});
-  const unknownFields = schemaFields.filter(f => !KNOWN_TIMEENTRY_FIELDS.has(f));
+  const recent = await base44.asServiceRole.entities.TimeEntry.list('-created_date', 1);
+  if (recent.length === 0) return []; // no data yet — nothing to check
+  const recordKeys = Object.keys(recent[0]);
+  const unknownFields = recordKeys.filter(f => !KNOWN_TIMEENTRY_FIELDS.has(f));
   return unknownFields;
 }
 
