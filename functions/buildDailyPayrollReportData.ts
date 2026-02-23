@@ -1,16 +1,125 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+/**
+ * Schema v2 — Azure-ready JSON data layer for daily payroll report.
+ * All TimeEntry, Trip and StandplaatsWerk fields are explicitly mapped.
+ * No presentation text — raw numeric/ISO values only.
+ */
+
+function mapTimeEntry(te) {
+  return {
+    id: te.id,
+    employee_id: te.employee_id,
+    date: te.date || null,
+    end_date: te.end_date || null,
+    week_number: te.week_number ?? null,
+    year: te.year ?? null,
+    start_time: te.start_time || null,
+    end_time: te.end_time || null,
+    break_minutes: te.break_minutes ?? 0,
+    total_hours: te.total_hours ?? 0,
+    overtime_hours: te.overtime_hours ?? 0,
+    night_hours: te.night_hours ?? 0,
+    weekend_hours: te.weekend_hours ?? 0,
+    holiday_hours: te.holiday_hours ?? 0,
+    shift_type: te.shift_type || null,
+    project_id: te.project_id || null,
+    customer_id: te.customer_id || null,
+    departure_location: te.departure_location || null,
+    return_location: te.return_location || null,
+    departure_time: te.departure_time || null,
+    expected_return_time: te.expected_return_time || null,
+    subsistence_allowance: te.subsistence_allowance ?? 0,
+    advanced_costs: te.advanced_costs ?? 0,
+    meals: te.meals ?? 0,
+    wkr: te.wkr ?? 0,
+    travel_allowance_multiplier: te.travel_allowance_multiplier ?? 0,
+    notes: te.notes || null,
+    status: te.status || null,
+    signature_url: te.signature_url || null,
+    submission_id: te.submission_id || null,
+    approved_by: te.approved_by || null,
+    approved_date: te.approved_date || null,
+    rejection_reason: te.rejection_reason || null,
+    edit_history: te.edit_history || [],
+    created_date: te.created_date || null,
+    updated_date: te.updated_date || null,
+    created_by: te.created_by || null,
+  };
+}
+
+function mapTrip(trip, customerMap) {
+  return {
+    id: trip.id,
+    employee_id: trip.employee_id,
+    time_entry_id: trip.time_entry_id || null,
+    date: trip.date || null,
+    vehicle_id: trip.vehicle_id || null,
+    customer_id: trip.customer_id || null,
+    customer_name: customerMap[trip.customer_id] || null,
+    project_id: trip.project_id || null,
+    route_name: trip.route_name || null,
+    planned_stops: trip.planned_stops ?? null,
+    completed_stops: trip.completed_stops ?? null,
+    start_km: trip.start_km ?? null,
+    end_km: trip.end_km ?? null,
+    total_km: trip.total_km ?? null,
+    fuel_liters: trip.fuel_liters ?? null,
+    adblue_liters: trip.adblue_liters ?? null,
+    fuel_km: trip.fuel_km ?? null,
+    charging_kwh: trip.charging_kwh ?? null,
+    fuel_cost: trip.fuel_cost ?? null,
+    cargo_description: trip.cargo_description || null,
+    cargo_weight: trip.cargo_weight ?? null,
+    departure_time: trip.departure_time || null,
+    arrival_time: trip.arrival_time || null,
+    departure_location: trip.departure_location || null,
+    notes: trip.notes || null,
+    status: trip.status || null,
+    created_date: trip.created_date || null,
+    updated_date: trip.updated_date || null,
+    created_by: trip.created_by || null,
+  };
+}
+
+function mapStandplaatsWerk(sw) {
+  return {
+    id: sw.id,
+    time_entry_id: sw.time_entry_id || null,
+    employee_id: sw.employee_id || null,
+    date: sw.date || null,
+    start_time: sw.start_time || null,
+    end_time: sw.end_time || null,
+    customer_id: sw.customer_id || null,
+    project_id: sw.project_id || null,
+    activity_id: sw.activity_id || null,
+    notes: sw.notes || null,
+    created_date: sw.created_date || null,
+    updated_date: sw.updated_date || null,
+    created_by: sw.created_by || null,
+  };
+}
+
+/** Parse HH:MM times into decimal hours difference */
+function calcHoursFromTimes(startTime, endTime) {
+  if (!startTime || !endTime) return 0;
+  const [sh, sm] = startTime.split(':').map(Number);
+  const [eh, em] = endTime.split(':').map(Number);
+  if (isNaN(sh) || isNaN(sm) || isNaN(eh) || isNaN(em)) return 0;
+  let diff = (eh * 60 + em) - (sh * 60 + sm);
+  if (diff < 0) diff += 24 * 60; // overnight
+  return diff / 60;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Auth: check if called by user directly (enforce admin/hr_admin)
-    // Service role calls (function-to-function) pass through
     let user = null;
     try {
       user = await base44.auth.me();
     } catch (_) {
-      // Service role call — no user context, that's OK
+      // Service role call — no user context
     }
 
     if (user && user.role !== 'admin' && !['ADMIN', 'HR_ADMIN'].includes(user.business_role)) {
@@ -20,7 +129,6 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    // Fetch all data in parallel
     const [employees, timeEntries, trips, standplaatsWerk, customers] = await Promise.all([
       base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
       base44.asServiceRole.entities.TimeEntry.filter({ date }),
@@ -32,14 +140,16 @@ Deno.serve(async (req) => {
     const customerMap = {};
     for (const c of customers) customerMap[c.id] = c.company_name || '';
 
-    // Sort employees by employee_number ascending
     employees.sort((a, b) => {
       const numA = a.employee_number || '';
       const numB = b.employee_number || '';
       return numA.localeCompare(numB, 'nl', { numeric: true });
     });
 
-    // Build per-employee data, only include employees with data
+    let grandTotalHours = 0;
+    let grandTotalTripKm = 0;
+    let grandTotalStandplaatsHours = 0;
+
     const employeesWithData = [];
 
     for (const emp of employees) {
@@ -49,29 +159,50 @@ Deno.serve(async (req) => {
 
       if (empTimeEntries.length === 0 && empTrips.length === 0 && empStandplaats.length === 0) continue;
 
+      const mappedTimeEntries = empTimeEntries.map(te => mapTimeEntry(te));
+      const mappedTrips = empTrips.map(trip => mapTrip(trip, customerMap));
+      const mappedStandplaats = empStandplaats.map(sw => mapStandplaatsWerk(sw));
+
+      // Employee-level totals
+      const empTotalHours = mappedTimeEntries.reduce((sum, te) => sum + (te.total_hours || 0), 0);
+      const empTotalTripKm = mappedTrips.reduce((sum, tr) => sum + (tr.total_km || 0), 0);
+      const empTotalStandplaatsHours = mappedStandplaats.reduce((sum, sw) => {
+        return sum + calcHoursFromTimes(sw.start_time, sw.end_time);
+      }, 0);
+
+      grandTotalHours += empTotalHours;
+      grandTotalTripKm += empTotalTripKm;
+      grandTotalStandplaatsHours += empTotalStandplaatsHours;
+
       const empName = [emp.first_name, emp.prefix, emp.last_name].filter(Boolean).join(' ');
 
-      // Enrich trips with customer names
-      const enrichedTrips = empTrips.map(trip => ({
-        ...trip,
-        customer_name: customerMap[trip.customer_id] || '-',
-      }));
-
       employeesWithData.push({
-        employeeNumber: emp.employee_number || '-',
+        employeeNumber: emp.employee_number || null,
         employeeId: emp.id,
         name: empName,
-        department: emp.department || '-',
-        timeEntries: empTimeEntries,
-        trips: enrichedTrips,
-        standplaatsWerk: empStandplaats,
+        department: emp.department || null,
+        totals: {
+          totalHours: Math.round(empTotalHours * 100) / 100,
+          totalTripKilometers: Math.round(empTotalTripKm * 100) / 100,
+          totalStandplaatsHours: Math.round(empTotalStandplaatsHours * 100) / 100,
+        },
+        timeEntries: mappedTimeEntries,
+        trips: mappedTrips,
+        standplaatsWerk: mappedStandplaats,
       });
     }
 
     return Response.json({
       success: true,
+      schemaVersion: "1.0",
       reportDate: date,
       generatedAt: new Date().toISOString(),
+      totals: {
+        totalHours: Math.round(grandTotalHours * 100) / 100,
+        totalTripKilometers: Math.round(grandTotalTripKm * 100) / 100,
+        totalStandplaatsHours: Math.round(grandTotalStandplaatsHours * 100) / 100,
+      },
+      employeeCount: employeesWithData.length,
       employees: employeesWithData,
     });
   } catch (error) {
