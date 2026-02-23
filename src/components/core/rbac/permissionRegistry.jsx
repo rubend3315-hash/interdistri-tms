@@ -18,9 +18,12 @@ export const PERMISSIONS = {
   MOBILE_READWRITE: 'mobile.readwrite',
   MOBILE_OWN: 'mobile.own',
 
-  // Klanten & Charters
+  // Klanten, Projecten, Charters
   CUSTOMERS_MANAGE: 'customers.manage',
+  PROJECTS_MANAGE: 'projects.manage',
+  ACTIVITIES_MANAGE: 'activities.manage',
   CHARTERS_MANAGE: 'charters.manage',
+  KPI_VIEW: 'kpi.view',
 
   // Onboarding & Medewerkers
   ONBOARDING_MANAGE: 'onboarding.manage',

@@ -340,10 +340,10 @@ export default function Layout({ children, currentPageName }) {
       // Business
       'Customers': PERMISSIONS.CUSTOMERS_MANAGE,
       'CustomerDetail': PERMISSIONS.CUSTOMERS_MANAGE,
-      'Projects': PERMISSIONS.CUSTOMERS_MANAGE,
-      'Activiteiten': PERMISSIONS.CUSTOMERS_MANAGE,
+      'Projects': PERMISSIONS.PROJECTS_MANAGE,
+      'Activiteiten': PERMISSIONS.ACTIVITIES_MANAGE,
       'Charters': PERMISSIONS.CHARTERS_MANAGE,
-      'EmployeeReport': PERMISSIONS.CUSTOMERS_MANAGE,
+      'EmployeeReport': PERMISSIONS.KPI_VIEW,
 
       // Communicatie
       'Messages': PERMISSIONS.MAIL_SEND,
@@ -497,6 +497,11 @@ export default function Layout({ children, currentPageName }) {
 
   if (isEmployeeUser(user) && currentPageName === "Dashboard") {
     return <MobileEntry currentUser={user} />;
+  }
+
+  // PLANNER landing page: redirect Dashboard → Planning
+  if (effectiveRole === ROLES.PLANNER && currentPageName === "Dashboard") {
+    return <>{window.location.replace(createPageUrl("Planning"))}</>;
   }
 
   if (isMobilePage) {
