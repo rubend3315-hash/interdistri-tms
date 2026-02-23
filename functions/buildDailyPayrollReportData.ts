@@ -100,6 +100,45 @@ function mapStandplaatsWerk(sw) {
   };
 }
 
+/** Validate the final report object before returning */
+function validateReport(report) {
+  const errors = [];
+  const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+
+  if (!report.schemaVersion) errors.push('schemaVersion ontbreekt');
+  if (!report.reportDate) errors.push('reportDate ontbreekt');
+  if (!report.period?.startDate) errors.push('period.startDate ontbreekt');
+  if (!report.period?.endDate) errors.push('period.endDate ontbreekt');
+  if (!Array.isArray(report.employees)) errors.push('employees is geen array');
+
+  // Top-level totals numeric check
+  for (const key of ['totalHours', 'totalTripKilometers', 'totalStandplaatsHours']) {
+    if (typeof report.totals?.[key] !== 'number') {
+      errors.push(`totals.${key} is niet numeriek`);
+    }
+  }
+
+  // generatedAt ISO check
+  if (report.generatedAt && !ISO_DATE_REGEX.test(report.generatedAt)) {
+    errors.push('generatedAt is geen geldig ISO-formaat');
+  }
+
+  // Per-employee validation
+  if (Array.isArray(report.employees)) {
+    for (let i = 0; i < report.employees.length; i++) {
+      const emp = report.employees[i];
+      const prefix = `employees[${i}]`;
+      for (const key of ['totalHours', 'totalTripKilometers', 'totalStandplaatsHours']) {
+        if (typeof emp.totals?.[key] !== 'number') {
+          errors.push(`${prefix}.totals.${key} is niet numeriek`);
+        }
+      }
+    }
+  }
+
+  return errors;
+}
+
 /** Parse HH:MM times into decimal hours difference */
 function calcHoursFromTimes(startTime, endTime) {
   if (!startTime || !endTime) return 0;
