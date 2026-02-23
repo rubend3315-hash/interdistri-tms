@@ -1,7 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@4.0.0';
 
-async function fetchReportData(base44, date) {
+/**
+ * Shared data-fetching logic: builds the Azure-ready JSON structure.
+ * Used by this function for PDF rendering and also duplicated in
+ * buildDailyPayrollReportData for direct JSON access.
+ */
+async function buildReportData(base44, date) {
   const [employees, timeEntries, trips, standplaatsWerk, customers] = await Promise.all([
     base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
     base44.asServiceRole.entities.TimeEntry.filter({ date }),
@@ -47,7 +52,6 @@ async function fetchReportData(base44, date) {
   }
 
   return {
-    success: true,
     reportDate: date,
     generatedAt: new Date().toISOString(),
     employees: employeesWithData,
@@ -67,8 +71,8 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    // Fetch report data
-    const reportData = await fetchReportData(base44, date);
+    // Build report data
+    const reportData = await buildReportData(base44, date);
     const { employees: employeesWithData, reportDate } = reportData;
 
     // Format date for display
@@ -83,27 +87,23 @@ Deno.serve(async (req) => {
 
     for (const emp of employeesWithData) {
       let lines = 0;
-      lines += 3; // employee_number, name, department
-      lines += 1; // spacer
+      lines += 3;
+      lines += 1;
 
       if (emp.timeEntries.length > 0) {
         lines += 1;
         lines += emp.timeEntries.length;
         lines += 1;
       }
-
       if (emp.trips.length > 0) {
         lines += 1;
         lines += emp.trips.length;
         lines += 1;
       }
-
       if (emp.standplaatsWerk.length > 0) {
         lines += 1;
         lines += emp.standplaatsWerk.length;
       }
-
-      const estimatedHeight = lines * LINE_HEIGHT + SECTION_SPACING;
 
       sections.push({
         employeeNumber: emp.employeeNumber,
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
         timeEntries: emp.timeEntries,
         trips: emp.trips,
         standplaatsWerk: emp.standplaatsWerk,
-        estimatedHeight,
+        estimatedHeight: lines * LINE_HEIGHT + SECTION_SPACING,
       });
     }
 
@@ -126,7 +126,6 @@ Deno.serve(async (req) => {
     // Phase 1: Calculate total pages
     let totalPages = 1;
     let calcY = MARGIN_TOP;
-
     for (const section of sections) {
       if (calcY + section.estimatedHeight > PAGE_HEIGHT - MARGIN_BOTTOM) {
         totalPages++;
@@ -135,9 +134,8 @@ Deno.serve(async (req) => {
       calcY += section.estimatedHeight;
     }
 
-    // Phase 2: Render
+    // Phase 2: Render PDF
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
     let currentPage = 1;
     let currentY = MARGIN_TOP;
 
@@ -194,7 +192,6 @@ Deno.serve(async (req) => {
         doc.text('--- Tijdregistratie ---', MARGIN_LEFT, currentY);
         doc.setTextColor(0, 0, 0);
         currentY += LINE_HEIGHT * 0.7;
-
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         for (const te of section.timeEntries) {
@@ -215,7 +212,6 @@ Deno.serve(async (req) => {
         doc.text('--- Ritten ---', MARGIN_LEFT, currentY);
         doc.setTextColor(0, 0, 0);
         currentY += LINE_HEIGHT * 0.7;
-
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         for (const trip of section.trips) {
@@ -236,7 +232,6 @@ Deno.serve(async (req) => {
         doc.text('--- Standplaatswerk ---', MARGIN_LEFT, currentY);
         doc.setTextColor(0, 0, 0);
         currentY += LINE_HEIGHT * 0.7;
-
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         for (const sw of section.standplaatsWerk) {
