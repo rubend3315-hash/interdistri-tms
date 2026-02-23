@@ -6,6 +6,39 @@ import { jsPDF } from 'npm:jspdf@4.0.0';
  * Used by this function for PDF rendering and also duplicated in
  * buildDailyPayrollReportData for direct JSON access.
  */
+
+/**
+ * Build a full ISO 8601 datetime string from a date (YYYY-MM-DD) and time (HH:mm or HH:mm:ss).
+ * Uses Europe/Amsterdam timezone offset.
+ */
+function buildISO(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return null;
+  const timeParts = timeStr.split(':');
+  const hh = timeParts[0] || '00';
+  const mm = timeParts[1] || '00';
+  const ss = timeParts[2] || '00';
+  const isoBase = `${dateStr}T${hh}:${mm}:${ss}`;
+  const utcDate = new Date(`${dateStr}T${hh}:${mm}:${ss}Z`);
+  if (isNaN(utcDate.getTime())) return null;
+  const amsFmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Amsterdam',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+  const amsParts = Object.fromEntries(
+    amsFmt.formatToParts(utcDate).filter(p => p.type !== 'literal').map(p => [p.type, p.value])
+  );
+  const amsDate = new Date(`${amsParts.year}-${amsParts.month}-${amsParts.day}T${amsParts.hour}:${amsParts.minute}:${amsParts.second}Z`);
+  const offsetMs = amsDate.getTime() - utcDate.getTime();
+  const offsetMin = offsetMs / 60000;
+  const sign = offsetMin >= 0 ? '+' : '-';
+  const absMin = Math.abs(offsetMin);
+  const offHH = String(Math.floor(absMin / 60)).padStart(2, '0');
+  const offMM = String(absMin % 60).padStart(2, '0');
+  return `${isoBase}${sign}${offHH}:${offMM}`;
+}
+
 async function buildReportData(base44, date) {
   const [employees, allTimeEntries, trips, standplaatsWerk, customers] = await Promise.all([
     base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
@@ -43,12 +76,23 @@ async function buildReportData(base44, date) {
       customer_name: customerMap[trip.customer_id] || '-',
     }));
 
+    // Build ISO 8601 datetimes for each time entry (for PDF display)
+    const enrichedTimeEntries = empTimeEntries.map(te => {
+      const startDate = te.date || null;
+      const endDate = te.end_date || te.date || null;
+      return {
+        ...te,
+        startDateTimeISO: buildISO(startDate, te.start_time),
+        endDateTimeISO: buildISO(endDate, te.end_time),
+      };
+    });
+
     employeesWithData.push({
       employeeNumber: emp.employee_number || '-',
       employeeId: emp.id,
       name: empName,
       department: emp.department || '-',
-      timeEntries: empTimeEntries,
+      timeEntries: enrichedTimeEntries,
       trips: enrichedTrips,
       standplaatsWerk: empStandplaats,
     });
@@ -103,25 +147,24 @@ Deno.serve(async (req) => {
     const rText = (text, x, y) => doc.text(text, x, y, { align: 'right' });
 
     // ---- Column definitions ----
-    // Tijdregistratie columns (x offsets from ML)
+    // Tijdregistratie columns — ISO datetime in Start/Eind kolommen
     const TE_COLS = [
-      { label: 'Start',     x: 0,   w: 16 },
-      { label: 'Eind',      x: 16,  w: 16 },
-      { label: 'Pauze',     x: 32,  w: 14,  right: true },
-      { label: 'Uren',      x: 46,  w: 14,  right: true },
-      { label: 'Overuren',  x: 60,  w: 16,  right: true },
-      { label: 'Nacht',     x: 76,  w: 14,  right: true },
-      { label: 'Weekend',   x: 90,  w: 16,  right: true },
-      { label: 'Feestdag',  x: 106, w: 16,  right: true },
-      { label: 'Dienst',    x: 122, w: 22 },
-      { label: 'Verblijf',  x: 144, w: 18,  right: true },
-      { label: 'Voorschot', x: 162, w: 18,  right: true },
-      { label: 'Inhoud.',   x: 180, w: 16,  right: true },
-      { label: 'WKR',       x: 196, w: 14,  right: true },
-      { label: 'Reiskosten', x: 210, w: 16, right: true },
-      { label: 'Status',    x: 226, w: 20 },
+      { label: 'Start (ISO)',  x: 0,   w: 44 },
+      { label: 'Eind (ISO)',   x: 44,  w: 44 },
+      { label: 'Pauze',        x: 88,  w: 14,  right: true },
+      { label: 'Uren',         x: 102, w: 14,  right: true },
+      { label: 'Overuren',     x: 116, w: 16,  right: true },
+      { label: 'Nacht',        x: 132, w: 14,  right: true },
+      { label: 'Weekend',      x: 146, w: 16,  right: true },
+      { label: 'Feestdag',     x: 162, w: 16,  right: true },
+      { label: 'Dienst',       x: 178, w: 20 },
+      { label: 'Verblijf',     x: 198, w: 16,  right: true },
+      { label: 'Voorschot',    x: 214, w: 16,  right: true },
+      { label: 'Inhoud.',      x: 230, w: 14,  right: true },
+      { label: 'WKR',          x: 244, w: 12,  right: true },
+      { label: 'Status',       x: 256, w: 12 },
     ];
-    const TE_TABLE_W = 246;
+    const TE_TABLE_W = 268;
 
     // Ritten columns
     const TR_COLS = [
@@ -307,8 +350,8 @@ Deno.serve(async (req) => {
 
         for (const te of section.timeEntries) {
           drawRow(TE_COLS, ML, [
-            fmt(te.start_time),
-            fmt(te.end_time),
+            fmt(te.startDateTimeISO),
+            fmt(te.endDateTimeISO),
             fmtNum(te.break_minutes, 'm'),
             fmtNum(te.total_hours, 'u'),
             fmtNum(te.overtime_hours, 'u'),
@@ -320,7 +363,6 @@ Deno.serve(async (req) => {
             fmtEur(te.advanced_costs),
             fmtEur(te.meals),
             fmtEur(te.wkr),
-            fmtNum(te.travel_allowance_multiplier, 'x'),
             fmt(te.status),
           ]);
         }
@@ -340,7 +382,7 @@ Deno.serve(async (req) => {
           fmtEur(teSum('advanced_costs')),
           fmtEur(teSum('meals')),
           fmtEur(teSum('wkr')),
-          '', '',
+          '',
         ]);
         currentY += 2;
       }
