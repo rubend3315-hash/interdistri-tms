@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
       filename: `ExportInterdistriTMS_${start_date}_${end_date}.xlsx`
     });
   } catch (error) {
-    console.error('Export error:', error.message);
+    console.error('Export error:', error.message, error.stack);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
