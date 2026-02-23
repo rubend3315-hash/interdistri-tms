@@ -100,6 +100,37 @@ function mapStandplaatsWerk(sw) {
   };
 }
 
+/**
+ * Known mapped TimeEntry fields — must match mapTimeEntry keys exactly.
+ * Built-in fields (id, created_date, updated_date, created_by) are always
+ * present and handled, so they are included here as well.
+ * When a NEW field is added to the TimeEntry entity schema, it will NOT
+ * appear in this set → the drift check will catch it and fail loudly.
+ */
+const KNOWN_TIMEENTRY_FIELDS = new Set([
+  'employee_id', 'date', 'end_date', 'week_number', 'year',
+  'start_time', 'end_time', 'break_minutes', 'total_hours',
+  'overtime_hours', 'night_hours', 'weekend_hours', 'holiday_hours',
+  'shift_type', 'project_id', 'customer_id',
+  'departure_location', 'return_location', 'departure_time', 'expected_return_time',
+  'subsistence_allowance', 'advanced_costs', 'meals', 'wkr', 'travel_allowance_multiplier',
+  'notes', 'status', 'signature_url', 'submission_id',
+  'approved_by', 'approved_date', 'rejection_reason', 'edit_history',
+  // Built-in fields always present on every entity record
+  'id', 'created_date', 'updated_date', 'created_by',
+]);
+
+/**
+ * Compare the live TimeEntry entity schema against the known mapped fields.
+ * Returns an array of unknown field names, or empty if all fields are covered.
+ */
+async function checkTimeEntrySchemaAlignment(base44) {
+  const schema = await base44.asServiceRole.entities.TimeEntry.schema();
+  const schemaFields = Object.keys(schema.properties || {});
+  const unknownFields = schemaFields.filter(f => !KNOWN_TIMEENTRY_FIELDS.has(f));
+  return unknownFields;
+}
+
 /** Validate the final report object before returning */
 function validateReport(report) {
   const errors = [];
@@ -167,6 +198,17 @@ Deno.serve(async (req) => {
 
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
+
+    // Schema drift check — fail early if TimeEntry has unmapped fields
+    const unknownFields = await checkTimeEntrySchemaAlignment(base44);
+    if (unknownFields.length > 0) {
+      return Response.json({
+        success: false,
+        error: 'TIMEENTRY_SCHEMA_OUTDATED',
+        message: `TimeEntry entity bevat velden die niet in de mapping staan: ${unknownFields.join(', ')}. Werk mapTimeEntry en KNOWN_TIMEENTRY_FIELDS bij.`,
+        unmappedFields: unknownFields,
+      }, { status: 422 });
+    }
 
     const [employees, allTimeEntries, trips, standplaatsWerk, customers] = await Promise.all([
       base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
