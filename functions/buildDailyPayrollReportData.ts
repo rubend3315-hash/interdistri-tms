@@ -112,7 +112,7 @@ function validateReport(report) {
   if (!Array.isArray(report.employees)) errors.push('employees is geen array');
 
   // Top-level totals numeric check
-  for (const key of ['totalHours', 'totalTripKilometers', 'totalStandplaatsHours']) {
+  for (const key of ['totalHours', 'overtimeHours', 'nightHours', 'weekendHours', 'holidayHours', 'subsistenceAllowance', 'advancedCosts', 'meals', 'wkr', 'totalTripKilometers', 'totalStandplaatsHours']) {
     if (typeof report.totals?.[key] !== 'number') {
       errors.push(`totals.${key} is niet numeriek`);
     }
@@ -128,7 +128,7 @@ function validateReport(report) {
     for (let i = 0; i < report.employees.length; i++) {
       const emp = report.employees[i];
       const prefix = `employees[${i}]`;
-      for (const key of ['totalHours', 'totalTripKilometers', 'totalStandplaatsHours']) {
+      for (const key of ['totalHours', 'overtimeHours', 'nightHours', 'weekendHours', 'holidayHours', 'subsistenceAllowance', 'advancedCosts', 'meals', 'wkr', 'totalTripKilometers', 'totalStandplaatsHours']) {
         if (typeof emp.totals?.[key] !== 'number') {
           errors.push(`${prefix}.totals.${key} is niet numeriek`);
         }
@@ -168,13 +168,16 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    const [employees, timeEntries, trips, standplaatsWerk, customers] = await Promise.all([
+    const [employees, allTimeEntries, trips, standplaatsWerk, customers] = await Promise.all([
       base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
       base44.asServiceRole.entities.TimeEntry.filter({ date }),
       base44.asServiceRole.entities.Trip.filter({ date }),
       base44.asServiceRole.entities.StandplaatsWerk.filter({ date }),
       base44.asServiceRole.entities.Customer.filter({}),
     ]);
+
+    // Only include approved time entries
+    const timeEntries = allTimeEntries.filter(te => te.status === 'Goedgekeurd');
 
     const customerMap = {};
     for (const c of customers) customerMap[c.id] = c.company_name || '';
@@ -188,6 +191,14 @@ Deno.serve(async (req) => {
     let grandTotalHours = 0;
     let grandTotalTripKm = 0;
     let grandTotalStandplaatsHours = 0;
+    let grandTotalOvertimeHours = 0;
+    let grandTotalNightHours = 0;
+    let grandTotalWeekendHours = 0;
+    let grandTotalHolidayHours = 0;
+    let grandTotalSubsistenceAllowance = 0;
+    let grandTotalAdvancedCosts = 0;
+    let grandTotalMeals = 0;
+    let grandTotalWkr = 0;
 
     const employeesWithData = [];
 
@@ -204,12 +215,28 @@ Deno.serve(async (req) => {
 
       // Employee-level totals
       const empTotalHours = mappedTimeEntries.reduce((sum, te) => sum + (te.total_hours || 0), 0);
+      const empTotalOvertimeHours = mappedTimeEntries.reduce((sum, te) => sum + (te.overtime_hours || 0), 0);
+      const empTotalNightHours = mappedTimeEntries.reduce((sum, te) => sum + (te.night_hours || 0), 0);
+      const empTotalWeekendHours = mappedTimeEntries.reduce((sum, te) => sum + (te.weekend_hours || 0), 0);
+      const empTotalHolidayHours = mappedTimeEntries.reduce((sum, te) => sum + (te.holiday_hours || 0), 0);
+      const empTotalSubsistenceAllowance = mappedTimeEntries.reduce((sum, te) => sum + (te.subsistence_allowance || 0), 0);
+      const empTotalAdvancedCosts = mappedTimeEntries.reduce((sum, te) => sum + (te.advanced_costs || 0), 0);
+      const empTotalMeals = mappedTimeEntries.reduce((sum, te) => sum + (te.meals || 0), 0);
+      const empTotalWkr = mappedTimeEntries.reduce((sum, te) => sum + (te.wkr || 0), 0);
       const empTotalTripKm = mappedTrips.reduce((sum, tr) => sum + (tr.total_km || 0), 0);
       const empTotalStandplaatsHours = mappedStandplaats.reduce((sum, sw) => {
         return sum + calcHoursFromTimes(sw.start_time, sw.end_time);
       }, 0);
 
       grandTotalHours += empTotalHours;
+      grandTotalOvertimeHours += empTotalOvertimeHours;
+      grandTotalNightHours += empTotalNightHours;
+      grandTotalWeekendHours += empTotalWeekendHours;
+      grandTotalHolidayHours += empTotalHolidayHours;
+      grandTotalSubsistenceAllowance += empTotalSubsistenceAllowance;
+      grandTotalAdvancedCosts += empTotalAdvancedCosts;
+      grandTotalMeals += empTotalMeals;
+      grandTotalWkr += empTotalWkr;
       grandTotalTripKm += empTotalTripKm;
       grandTotalStandplaatsHours += empTotalStandplaatsHours;
 
@@ -222,6 +249,14 @@ Deno.serve(async (req) => {
         department: emp.department || null,
         totals: {
           totalHours: Math.round(empTotalHours * 100) / 100,
+          overtimeHours: Math.round(empTotalOvertimeHours * 100) / 100,
+          nightHours: Math.round(empTotalNightHours * 100) / 100,
+          weekendHours: Math.round(empTotalWeekendHours * 100) / 100,
+          holidayHours: Math.round(empTotalHolidayHours * 100) / 100,
+          subsistenceAllowance: Math.round(empTotalSubsistenceAllowance * 100) / 100,
+          advancedCosts: Math.round(empTotalAdvancedCosts * 100) / 100,
+          meals: Math.round(empTotalMeals * 100) / 100,
+          wkr: Math.round(empTotalWkr * 100) / 100,
           totalTripKilometers: Math.round(empTotalTripKm * 100) / 100,
           totalStandplaatsHours: Math.round(empTotalStandplaatsHours * 100) / 100,
         },
@@ -249,6 +284,14 @@ Deno.serve(async (req) => {
       employeeCount: employeesWithData.length,
       totals: {
         totalHours: Math.round(grandTotalHours * 100) / 100,
+        overtimeHours: Math.round(grandTotalOvertimeHours * 100) / 100,
+        nightHours: Math.round(grandTotalNightHours * 100) / 100,
+        weekendHours: Math.round(grandTotalWeekendHours * 100) / 100,
+        holidayHours: Math.round(grandTotalHolidayHours * 100) / 100,
+        subsistenceAllowance: Math.round(grandTotalSubsistenceAllowance * 100) / 100,
+        advancedCosts: Math.round(grandTotalAdvancedCosts * 100) / 100,
+        meals: Math.round(grandTotalMeals * 100) / 100,
+        wkr: Math.round(grandTotalWkr * 100) / 100,
         totalTripKilometers: Math.round(grandTotalTripKm * 100) / 100,
         totalStandplaatsHours: Math.round(grandTotalStandplaatsHours * 100) / 100,
       },
