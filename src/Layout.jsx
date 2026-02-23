@@ -231,6 +231,7 @@ const menuItems = [
           { name: "Security & Privacy", icon: Lock, page: "SecurityPrivacy" },
           { name: "Trust & Security", icon: ShieldCheck, page: "Trust" },
           { name: "Encryptie Migratie", icon: Lock, page: "EncryptionMigration" },
+          { name: "Rollen & Rechten", icon: ShieldCheck, page: "RBACMatrix" },
           { name: "Audit Log", icon: ClipboardList, page: "AuditLog" },
         ]
       },
@@ -351,6 +352,7 @@ export default function Layout({ children, currentPageName }) {
       'Trust': 'helppage',
       'SecureDownload': 'public',
       'EncryptionMigration': 'admin_only',
+      'RBACMatrix': 'admin_only',
       'Activiteiten': 'customers',
       'StandplaatsWerk': 'timetracking',
       'PayCheckedAudit': 'reports',
