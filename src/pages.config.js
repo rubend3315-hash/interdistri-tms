@@ -62,6 +62,7 @@ import Contracts from './pages/Contracts';
 import CustomerDetail from './pages/CustomerDetail';
 import Customers from './pages/Customers';
 import Dagstaat from './pages/Dagstaat';
+import DailyPayrollExportDocs from './pages/DailyPayrollExportDocs';
 import Dashboard from './pages/Dashboard';
 import DataMigration from './pages/DataMigration';
 import DeploymentStatus from './pages/DeploymentStatus';
@@ -109,7 +110,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import DailyPayrollExportDocs from './pages/DailyPayrollExportDocs';
 import __Layout from './Layout.jsx';
 
 
@@ -129,6 +129,7 @@ export const PAGES = {
     "CustomerDetail": CustomerDetail,
     "Customers": Customers,
     "Dagstaat": Dagstaat,
+    "DailyPayrollExportDocs": DailyPayrollExportDocs,
     "Dashboard": Dashboard,
     "DataMigration": DataMigration,
     "DeploymentStatus": DeploymentStatus,
@@ -176,7 +177,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "DailyPayrollExportDocs": DailyPayrollExportDocs,
 }
 
 export const pagesConfig = {

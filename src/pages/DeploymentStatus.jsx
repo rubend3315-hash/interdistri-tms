@@ -132,7 +132,7 @@ export default function DeploymentStatus() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.results.map((row, idx) => (
+                    {(data.results || []).map((row, idx) => (
                       <tr key={row.function} className="border-b border-slate-100 hover:bg-slate-50">
                         <td className="py-3 px-4 text-slate-400 font-mono text-xs">{idx + 1}</td>
                         <td className="py-3 px-4 font-mono text-slate-800">{row.function}</td>
