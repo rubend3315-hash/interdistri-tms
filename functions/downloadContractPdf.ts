@@ -1,4 +1,4 @@
-// downloadContractPdf v3 - redeployed
+// downloadContractPdf v4
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.1';
 
@@ -20,36 +20,22 @@ function formatDateShort(dateStr) {
   }
 }
 
-// Fetch signature and add it to PDF directly
-// Returns true if signature was added, false otherwise
 async function addSignatureToPdf(pdf, url, x, y, w, h) {
   try {
-    console.log('Fetching signature from:', url);
     const resp = await fetch(url);
-    if (!resp.ok) {
-      console.error('Signature fetch failed:', resp.status);
-      return false;
-    }
+    if (!resp.ok) return false;
     
     const arrayBuf = await resp.arrayBuffer();
     const uint8 = new Uint8Array(arrayBuf);
-    console.log('Fetched bytes:', uint8.length, 'first 4:', uint8[0], uint8[1], uint8[2], uint8[3]);
     
-    if (uint8.length < 100) {
-      console.error('Image too small, likely not a valid image');
-      return false;
-    }
+    if (uint8.length < 100) return false;
 
     const isJpeg = uint8[0] === 0xFF && uint8[1] === 0xD8;
     const isPng = uint8[0] === 0x89 && uint8[1] === 0x50;
     const format = isJpeg ? 'JPEG' : isPng ? 'PNG' : null;
     
-    if (!format) {
-      console.error('Unknown image format');
-      return false;
-    }
+    if (!format) return false;
 
-    // Convert to base64 in chunks to avoid stack overflow
     let binary = '';
     const chunkSize = 8192;
     for (let i = 0; i < uint8.length; i += chunkSize) {
@@ -61,33 +47,25 @@ async function addSignatureToPdf(pdf, url, x, y, w, h) {
     }
     const b64 = btoa(binary);
     
-    console.log('Base64 length:', b64.length, 'format:', format);
-    
-    // Use the raw base64 data directly with format parameter
     pdf.addImage(b64, format, x, y, w, h);
-    console.log('Signature added to PDF successfully');
     return true;
   } catch (e) {
-    console.error('addSignatureToPdf error:', e.message, e.stack);
+    console.error('addSignatureToPdf error:', e.message);
     return false;
   }
 }
 
-// Strip HTML to plain text sections
 function parseContractContent(html) {
   if (!html) return [];
   
-  // Remove "Voor akkoord" blocks from the end
   let cleaned = html
     .replace(/Voor akkoord werkgever[\s\S]*$/gi, '')
     .replace(/<div\s+style[^>]*>[\s\S]*?Voor akkoord[\s\S]*?<\/div>/gi, '')
     .replace(/<p[^>]*>\s*<strong>\s*Voor akkoord werkgever\s*<\/strong>\s*<\/p>[\s\S]*$/i, '');
   
-  // Mark headings
   cleaned = cleaned.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '\n###H###$1\n');
   cleaned = cleaned.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '\n###H###$1\n');
   
-  // Convert block elements
   cleaned = cleaned
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
@@ -105,11 +83,6 @@ function parseContractContent(html) {
     .replace(/\u00e9/g, 'e').replace(/\u00eb/g, 'e').replace(/\u00e8/g, 'e')
     .replace(/\u00ef/g, 'i').replace(/\u00fc/g, 'u').replace(/\u00f6/g, 'o')
     .replace(/\u00e4/g, 'a').replace(/\u00e0/g, 'a')
-    .replace(/ï¿½ï¿½n/g, 'een').replace(/ï¿½/g, 'EUR ')
-    .replace(/Ã«n/g, 'en').replace(/Ã«/g, 'e').replace(/Ã©/g, 'e')
-    .replace(/Ã¯/g, 'i').replace(/Ã¼/g, 'u').replace(/Ã¶/g, 'o')
-    .replace(/Ã /g, 'a').replace(/â‚¬/g, 'EUR ')
-    .replace(/be[^\w\s]{1,6}indig/g, 'beeindig')
     .replace(/\.{10,}/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
@@ -137,7 +110,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { contract_id } = await req.json();
+    const body = await req.json();
+    const contract_id = body.contract_id;
     if (!contract_id) {
       return Response.json({ error: 'contract_id is verplicht' }, { status: 400 });
     }
@@ -158,7 +132,7 @@ Deno.serve(async (req) => {
     if (contract.employee_id) {
       const emp = await base44.asServiceRole.entities.Employee.get(contract.employee_id);
       if (emp) {
-        employeeName = `${emp.first_name} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name}`;
+        employeeName = [emp.first_name, emp.prefix, emp.last_name].filter(Boolean).join(' ');
       }
     }
 
@@ -169,7 +143,7 @@ Deno.serve(async (req) => {
     const usableWidth = pageWidth - margin * 2;
     let y = 20;
 
-    // ===== HEADER =====
+    // HEADER
     pdf.setFillColor(30, 41, 59);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -182,7 +156,7 @@ Deno.serve(async (req) => {
     pdf.setTextColor(0, 0, 0);
     y = 45;
 
-    // ===== INFO BOX =====
+    // INFO BOX
     pdf.setFillColor(248, 250, 252);
     pdf.rect(margin, y, usableWidth, 40, 'F');
     pdf.setDrawColor(226, 232, 240);
@@ -212,7 +186,7 @@ Deno.serve(async (req) => {
     pdf.text(String(contract.hours_per_week || '-'), col2 + 35, infoY + 20);
     y += 50;
 
-    // ===== CONTRACT CONTENT =====
+    // CONTRACT CONTENT
     const sections = parseContractContent(contract.contract_content);
     const lineHeight = 4.5;
 
@@ -236,7 +210,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ===== SIGNATURES =====
+    // SIGNATURES
     y += 10;
     if (y > pageHeight - 90) { pdf.addPage(); y = 20; }
 
@@ -271,7 +245,7 @@ Deno.serve(async (req) => {
     pdf.text('De heer M. Schetters', margin, y);
     if (contract.manager_signed_date) {
       pdf.setTextColor(100, 116, 139);
-      pdf.text(`Ondertekend op ${formatDateShort(contract.manager_signed_date)}`, margin + 50, y);
+      pdf.text('Ondertekend op ' + formatDateShort(contract.manager_signed_date), margin + 50, y);
     }
     y += 12;
 
@@ -297,32 +271,31 @@ Deno.serve(async (req) => {
     pdf.text('................................................................', margin, y);
     y += 5;
     pdf.setTextColor(30, 41, 59);
-    pdf.text(`De heer/mevrouw ${employeeName}`, margin, y);
+    pdf.text('De heer/mevrouw ' + employeeName, margin, y);
     if (contract.employee_signed_date) {
       pdf.setTextColor(100, 116, 139);
-      pdf.text(`Ondertekend op ${formatDateShort(contract.employee_signed_date)}`, margin + 60, y);
+      pdf.text('Ondertekend op ' + formatDateShort(contract.employee_signed_date), margin + 60, y);
     }
 
-    // ===== FOOTER =====
+    // FOOTER
     const pageCount = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
       pdf.setFontSize(8);
       pdf.setTextColor(148, 163, 184);
       pdf.text(
-        `Gegenereerd op ${new Date().toLocaleDateString('nl-NL')} - Pagina ${i} van ${pageCount}`,
+        'Gegenereerd op ' + new Date().toLocaleDateString('nl-NL') + ' - Pagina ' + i + ' van ' + pageCount,
         pageWidth / 2, pageHeight - 10, { align: 'center' }
       );
     }
 
     const pdfBytes = pdf.output('arraybuffer');
-    console.log('PDF generated, size:', pdfBytes.byteLength);
 
     return new Response(pdfBytes, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=contract_${contract.contract_number || contract_id}.pdf`
+        'Content-Disposition': 'attachment; filename=contract_' + (contract.contract_number || contract_id) + '.pdf'
       }
     });
 
