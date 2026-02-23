@@ -15,7 +15,16 @@ export default function DeploymentStatus() {
     setError(null);
     try {
       const res = await base44.functions.invoke("verifyDeployment", {});
-      setData(res.data);
+      const d = res.data;
+      // Normalize: backend returns checkedFunctions, UI expects results
+      if (d && d.checkedFunctions && !d.results) {
+        d.results = d.checkedFunctions.map(f => ({
+          function: f.name,
+          status: f.status,
+          message: f.errorMessage || null,
+        }));
+      }
+      setData(d);
     } catch (err) {
       setError(err?.message || "Onbekende fout");
     } finally {
