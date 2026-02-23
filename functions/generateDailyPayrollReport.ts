@@ -1,6 +1,59 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@4.0.0';
 
+async function fetchReportData(base44, date) {
+  const [employees, timeEntries, trips, standplaatsWerk, customers] = await Promise.all([
+    base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
+    base44.asServiceRole.entities.TimeEntry.filter({ date }),
+    base44.asServiceRole.entities.Trip.filter({ date }),
+    base44.asServiceRole.entities.StandplaatsWerk.filter({ date }),
+    base44.asServiceRole.entities.Customer.filter({}),
+  ]);
+
+  const customerMap = {};
+  for (const c of customers) customerMap[c.id] = c.company_name || '';
+
+  employees.sort((a, b) => {
+    const numA = a.employee_number || '';
+    const numB = b.employee_number || '';
+    return numA.localeCompare(numB, 'nl', { numeric: true });
+  });
+
+  const employeesWithData = [];
+
+  for (const emp of employees) {
+    const empTimeEntries = timeEntries.filter(t => t.employee_id === emp.id);
+    const empTrips = trips.filter(t => t.employee_id === emp.id);
+    const empStandplaats = standplaatsWerk.filter(s => s.employee_id === emp.id);
+
+    if (empTimeEntries.length === 0 && empTrips.length === 0 && empStandplaats.length === 0) continue;
+
+    const empName = [emp.first_name, emp.prefix, emp.last_name].filter(Boolean).join(' ');
+
+    const enrichedTrips = empTrips.map(trip => ({
+      ...trip,
+      customer_name: customerMap[trip.customer_id] || '-',
+    }));
+
+    employeesWithData.push({
+      employeeNumber: emp.employee_number || '-',
+      employeeId: emp.id,
+      name: empName,
+      department: emp.department || '-',
+      timeEntries: empTimeEntries,
+      trips: enrichedTrips,
+      standplaatsWerk: empStandplaats,
+    });
+  }
+
+  return {
+    success: true,
+    reportDate: date,
+    generatedAt: new Date().toISOString(),
+    employees: employeesWithData,
+  };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -14,13 +67,8 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    // Fetch report data from data layer (user context forwarded)
-    const reportData = await base44.functions.invoke('buildDailyPayrollReportData', { date });
-
-    if (!reportData.success) {
-      return Response.json({ error: reportData.error || 'Data ophalen mislukt' }, { status: 500 });
-    }
-
+    // Fetch report data
+    const reportData = await fetchReportData(base44, date);
     const { employees: employeesWithData, reportDate } = reportData;
 
     // Format date for display
@@ -39,19 +87,19 @@ Deno.serve(async (req) => {
       lines += 1; // spacer
 
       if (emp.timeEntries.length > 0) {
-        lines += 1; // header
+        lines += 1;
         lines += emp.timeEntries.length;
-        lines += 1; // spacer
+        lines += 1;
       }
 
       if (emp.trips.length > 0) {
-        lines += 1; // header
+        lines += 1;
         lines += emp.trips.length;
-        lines += 1; // spacer
+        lines += 1;
       }
 
       if (emp.standplaatsWerk.length > 0) {
-        lines += 1; // header
+        lines += 1;
         lines += emp.standplaatsWerk.length;
       }
 
@@ -122,7 +170,6 @@ Deno.serve(async (req) => {
       renderHeader();
     };
 
-    // Render first page header
     renderHeader();
 
     for (const section of sections) {
@@ -130,7 +177,6 @@ Deno.serve(async (req) => {
         addNewPage();
       }
 
-      // Employee header
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.text(`Personeelsnummer: ${section.employeeNumber}`, MARGIN_LEFT, currentY);
@@ -141,7 +187,6 @@ Deno.serve(async (req) => {
       doc.text(`Afdeling: ${section.department}`, MARGIN_LEFT, currentY);
       currentY += LINE_HEIGHT;
 
-      // Tijdregistratie
       if (section.timeEntries.length > 0) {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
@@ -163,7 +208,6 @@ Deno.serve(async (req) => {
         currentY += LINE_HEIGHT * 0.35;
       }
 
-      // Ritten
       if (section.trips.length > 0) {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
@@ -185,7 +229,6 @@ Deno.serve(async (req) => {
         currentY += LINE_HEIGHT * 0.35;
       }
 
-      // Standplaatswerk
       if (section.standplaatsWerk.length > 0) {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
@@ -206,14 +249,12 @@ Deno.serve(async (req) => {
         currentY += LINE_HEIGHT * 0.35;
       }
 
-      // Separator line
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.2);
       doc.line(MARGIN_LEFT, currentY, PAGE_WIDTH - MARGIN_LEFT, currentY);
       currentY += SECTION_SPACING * 0.4;
     }
 
-    // Render footer on last page
     renderFooter();
 
     const fileBase64 = doc.output('datauristring').split(',')[1];
