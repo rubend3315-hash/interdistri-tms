@@ -389,6 +389,7 @@ export default function Layout({ children, currentPageName }) {
       'Trust': '__public__',
       'HelpPage': '__public__',
       'MobileHandleiding': '__public__',
+      'DailyPayrollExportDocs': '__public__',
       'SecureDownload': '__public__',
 
       // Mobiel
