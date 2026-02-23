@@ -23,6 +23,10 @@ export default function DailyPayrollExportDocs() {
             <Code className="w-4 h-4" />
             API Specificatie
           </TabsTrigger>
+          <TabsTrigger value="architecture" className="gap-2">
+            <GitBranch className="w-4 h-4" />
+            Architectuur
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="user-manual">
