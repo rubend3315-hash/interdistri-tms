@@ -41,7 +41,10 @@ import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
 import MobileEntry from "./pages/MobileEntry";
 import { cn } from "@/lib/utils";
-import { getBusinessRole, isNavGroupVisible } from "./components/utils/businessRoles";
+import { isNavGroupVisible } from "./components/utils/businessRoles";
+import { hasPermission, hasAnyPermission, getEffectiveRole } from "./components/core/rbac/requirePermission";
+import { PERMISSIONS } from "./components/core/rbac/permissionRegistry";
+import { ROLES } from "./components/core/rbac/roleDefinitions";
 
 // Service worker registration removed to prevent errors
 
