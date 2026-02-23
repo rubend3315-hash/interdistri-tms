@@ -224,6 +224,8 @@ function validateReport(report) {
   return errors;
 }
 
+const EXPECTED_SCHEMA_VERSION = "2.2";
+
 /** Parse HH:MM times into decimal hours difference */
 function calcHoursFromTimes(startTime, endTime) {
   if (!startTime || !endTime) return 0;
@@ -364,7 +366,7 @@ Deno.serve(async (req) => {
 
     const report = {
       success: true,
-      schemaVersion: "2.2",
+      schemaVersion: EXPECTED_SCHEMA_VERSION,
       reportType: "DAILY_PAYROLL",
       metadata: {
         sourceSystem: "Interdistri TMS",
@@ -393,6 +395,16 @@ Deno.serve(async (req) => {
       },
       employees: employeesWithData,
     };
+
+    // Runtime schema version guard
+    if (report.schemaVersion !== EXPECTED_SCHEMA_VERSION) {
+      return Response.json({
+        success: false,
+        error: 'SCHEMA_VERSION_MISMATCH',
+        expected: EXPECTED_SCHEMA_VERSION,
+        actual: report.schemaVersion,
+      }, { status: 422 });
+    }
 
     // Validate before returning
     const validationErrors = validateReport(report);

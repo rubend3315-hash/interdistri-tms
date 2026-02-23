@@ -39,6 +39,8 @@ function buildISO(dateStr, timeStr) {
   return `${isoBase}${sign}${offHH}:${offMM}`;
 }
 
+const EXPECTED_SCHEMA_VERSION = "2.2";
+
 async function buildReportData(base44, date) {
   const [employees, allTimeEntries, trips, standplaatsWerk, customers] = await Promise.all([
     base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
@@ -120,6 +122,17 @@ Deno.serve(async (req) => {
 
     // Build report data
     const reportData = await buildReportData(base44, date);
+
+    // Runtime schema version guard
+    if (reportData.schemaVersion && reportData.schemaVersion !== EXPECTED_SCHEMA_VERSION) {
+      return Response.json({
+        success: false,
+        error: 'SCHEMA_VERSION_MISMATCH',
+        expected: EXPECTED_SCHEMA_VERSION,
+        actual: reportData.schemaVersion,
+      }, { status: 422 });
+    }
+
     const { employees: employeesWithData, reportDate } = reportData;
 
     // Format date for display

@@ -6,6 +6,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * Returns AZURE_NOT_CONFIGURED in dry-run mode when env vars missing.
  */
 
+const EXPECTED_SCHEMA_VERSION = "2.2";
+
 function buildISO(dateStr, timeStr) {
   if (!dateStr || !timeStr) return null;
   const timeParts = timeStr.split(':');
@@ -153,6 +155,16 @@ Deno.serve(async (req) => {
     const timeEntries = allTimeEntries.filter(te => te.status === 'Goedgekeurd');
 
     const reportData = buildReport(date, employees, timeEntries, trips, standplaatsWerk, customers);
+
+    // Runtime schema version guard
+    if (reportData.schemaVersion !== EXPECTED_SCHEMA_VERSION) {
+      return Response.json({
+        success: false,
+        error: 'SCHEMA_VERSION_MISMATCH',
+        expected: EXPECTED_SCHEMA_VERSION,
+        actual: reportData.schemaVersion,
+      }, { status: 422 });
+    }
 
     // Check Azure configuration
     const azureEndpoint = Deno.env.get('AZURE_PAYROLL_ENDPOINT');
