@@ -13,8 +13,8 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    // Build report data
-    const reportResponse = await base44.functions.invoke('buildDailyPayrollReportData', { date });
+    // Build report data (use asServiceRole to avoid 403 on function-to-function)
+    const reportResponse = await base44.asServiceRole.functions.invoke('buildDailyPayrollReportData', { date });
     const reportData = reportResponse.data;
 
     if (!reportData?.success) {
