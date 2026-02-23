@@ -43,6 +43,7 @@ async function runHealthCheck(base44) {
 
   return {
     status: isHealthy ? 'GREEN' : 'RED',
+    version: '2026-02-23-stable',
     timestamp: new Date().toISOString(),
     base44_connection: base44Connection,
     supabase_connection: supabaseConnection,
@@ -71,6 +72,7 @@ Deno.serve(async (req) => {
       return Response.json({
         alert_sent: false,
         status: 'GREEN',
+        version: '2026-02-23-stable',
         message: 'All systems operational — no alert needed',
         timestamp: new Date().toISOString()
       });
@@ -99,6 +101,7 @@ Deno.serve(async (req) => {
       return Response.json({
         alert_sent: false,
         status: 'RED',
+        version: '2026-02-23-stable',
         message: 'Alert suppressed — already sent within last 30 minutes',
         timestamp: new Date().toISOString()
       });
@@ -148,6 +151,7 @@ Deno.serve(async (req) => {
     return Response.json({
       alert_sent: true,
       status: 'RED',
+      version: '2026-02-23-stable',
       message: 'Alert email sent to ' + user.email,
       health_data: healthData,
       timestamp: new Date().toISOString()

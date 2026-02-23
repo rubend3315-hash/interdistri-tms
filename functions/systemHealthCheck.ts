@@ -43,6 +43,7 @@ async function runHealthCheck(base44) {
 
   return {
     status: isHealthy ? 'GREEN' : 'RED',
+    version: '2026-02-23-stable',
     timestamp: new Date().toISOString(),
     base44_connection: base44Connection,
     supabase_connection: supabaseConnection,
