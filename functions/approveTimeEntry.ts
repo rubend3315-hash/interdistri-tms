@@ -4,6 +4,7 @@
 // ║ Auth: User session (admin only)                                  ║
 // ║ DO NOT USE RAW ENTITY CALLS — USE tenantService for tenant data  ║
 // ║ Do not mix user session and service role access.                 ║
+// ║ Redeployed: 2026-02-23                                           ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
