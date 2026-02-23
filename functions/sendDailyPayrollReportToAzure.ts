@@ -26,6 +26,7 @@ function buildISO(dateStr, timeStr) {
  */
 const REPORT_SCHEMA = {
   type: "object",
+  additionalProperties: false,
   required: ["schemaVersion", "reportType", "metadata", "reportDate", "period", "generatedAt", "employeeCount", "totals", "employees"],
   properties: {
     success: { type: "boolean" },
