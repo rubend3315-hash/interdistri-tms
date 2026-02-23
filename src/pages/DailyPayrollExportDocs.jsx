@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FileText, BookOpen } from "lucide-react";
+import { FileText, BookOpen, Code } from "lucide-react";
 import PayrollDocTechnical from "../components/docs/PayrollDocTechnical";
 import PayrollDocUserManual from "../components/docs/PayrollDocUserManual";
+import PayrollDocApiSpec from "../components/docs/PayrollDocApiSpec";
 
 export default function DailyPayrollExportDocs() {
   return (
