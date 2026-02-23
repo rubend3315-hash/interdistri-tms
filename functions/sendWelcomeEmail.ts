@@ -42,8 +42,16 @@ Deno.serve(async (req) => {
 
     if (templates.length > 0) {
       // Use template via mailService placeholders
+      // Haal CC-adres op uit PayrollSettings
+      let ccAddr = null;
+      try {
+        const s = await base44.asServiceRole.entities.PayrollSettings.list('-created_date', 1);
+        if (s.length > 0 && s[0].admin_email) ccAddr = s[0].admin_email;
+      } catch (_) {}
+
       const result = await base44.functions.invoke('mailService', {
         to: employeeEmail,
+        cc: ccAddr || 'ruben@interdistri.nl',
         subject: emailSubject,
         html: '',
         template_key: 'welkomstmail',
@@ -86,8 +94,18 @@ Deno.serve(async (req) => {
       </div>
     `;
 
+    // Haal CC-adres op uit PayrollSettings (HR-instellingen)
+    let ccAddress = null;
+    try {
+      const settings = await base44.asServiceRole.entities.PayrollSettings.list('-created_date', 1);
+      if (settings.length > 0 && settings[0].admin_email) {
+        ccAddress = settings[0].admin_email;
+      }
+    } catch (_) {}
+
     const result = await base44.functions.invoke('mailService', {
       to: employeeEmail,
+      cc: ccAddress || 'ruben@interdistri.nl',
       subject: emailSubject,
       html: emailBody,
       source_function: 'sendWelcomeEmail',
