@@ -187,6 +187,9 @@ export default function Dashboard({ currentUser }) {
 
   return (
     <div className="space-y-8">
+      {/* System Status */}
+      <SystemStatusCard />
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
