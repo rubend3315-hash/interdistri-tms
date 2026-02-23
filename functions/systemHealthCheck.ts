@@ -10,10 +10,14 @@ Deno.serve(async (req) => {
 
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    
+    // Allow service role calls (from systemHealthMonitor) and admin users
+    const isServiceRole = req.headers.get('x-base44-service-role') === 'true';
+    if (!isServiceRole) {
+      const user = await base44.auth.me();
+      if (!user || user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+      }
     }
 
     // A) Base44 SDK connectivity
