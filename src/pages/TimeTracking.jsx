@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getBreakMinutesForHours } from "../components/utils/breakScheduleUtils";
@@ -38,12 +36,6 @@ export default function TimeTracking() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
   });
-
-  const isAdmin = currentUser?.role === 'admin';
-
-  if (!loadingUser && !isAdmin) {
-    return <Navigate to={createPageUrl("MobileEntry")} replace />;
-  }
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
