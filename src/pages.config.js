@@ -108,6 +108,7 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
+import PayrollReport from './pages/PayrollReport';
 import __Layout from './Layout.jsx';
 
 
@@ -173,6 +174,7 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
+    "PayrollReport": PayrollReport,
 }
 
 export const pagesConfig = {

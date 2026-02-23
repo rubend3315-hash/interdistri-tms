@@ -1,0 +1,114 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { FileText, Download, Eye, Loader2 } from "lucide-react";
+
+export default function PayrollReport() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const defaultDate = yesterday.toISOString().split("T")[0];
+
+  const [selectedDate, setSelectedDate] = useState(defaultDate);
+  const [loading, setLoading] = useState(false);
+  const [lastResult, setLastResult] = useState(null);
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    setLastResult(null);
+    try {
+      const response = await base44.functions.invoke("generateDailyPayrollReport", {
+        date: selectedDate,
+      });
+
+      const { fileBase64, fileName } = response.data;
+
+      const byteCharacters = atob(fileBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      setLastResult({ url, fileName });
+
+      // Open preview
+      window.open(url, "_blank");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!lastResult) return;
+    const link = document.createElement("a");
+    link.href = lastResult.url;
+    link.download = lastResult.fileName;
+    link.click();
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900">Dagrapport Loonadministratie</h1>
+        <p className="text-slate-500 mt-1">
+          Genereer een PDF dagrapport met tijdregistratie, ritten en standplaatswerk per medewerker.
+        </p>
+      </div>
+
+      <Card className="max-w-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-600" />
+            Rapport genereren
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Datum</Label>
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+            <p className="text-xs text-slate-500">
+              Alleen medewerkers met registraties op deze datum worden opgenomen.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={handleGenerate}
+              disabled={loading || !selectedDate}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Eye className="w-4 h-4 mr-2" />
+              )}
+              {loading ? "Bezig met genereren..." : "Rapport genereren"}
+            </Button>
+
+            {lastResult && (
+              <Button variant="outline" onClick={handleDownload}>
+                <Download className="w-4 h-4 mr-2" />
+                Downloaden
+              </Button>
+            )}
+          </div>
+
+          {lastResult && (
+            <p className="text-sm text-green-600 font-medium">
+              ✓ Rapport gegenereerd: {lastResult.fileName}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
