@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: alleen admin en hr_admin' }, { status: 403 });
     }
 
-    const jsonString = JSON.stringify(SCHEMA_V1, null, 2);
+    const jsonString = JSON.stringify(SCHEMA_V2_2, null, 2);
     const encoder = new TextEncoder();
     const bytes = encoder.encode(jsonString);
     let binary = '';
