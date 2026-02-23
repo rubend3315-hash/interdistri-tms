@@ -14,8 +14,18 @@ Deno.serve(async (req) => {
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
     // Build report data (use asServiceRole to avoid 403 on function-to-function)
-    const reportResponse = await base44.asServiceRole.functions.invoke('buildDailyPayrollReportData', { date });
-    const reportData = reportResponse.data;
+    let reportData;
+    try {
+      const reportResponse = await base44.asServiceRole.functions.invoke('buildDailyPayrollReportData', { date });
+      reportData = reportResponse.data;
+    } catch (invokeErr) {
+      console.error('invoke error:', invokeErr.message, invokeErr.response?.status, invokeErr.response?.data);
+      return Response.json({
+        success: false,
+        error: 'REPORT_BUILD_FAILED',
+        details: invokeErr.message,
+      }, { status: 500 });
+    }
 
     if (!reportData?.success) {
       return Response.json({
