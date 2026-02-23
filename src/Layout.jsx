@@ -182,6 +182,7 @@ const menuItems = [
       { name: "CAO-regels", icon: BookOpen, page: "CaoRules" },
       { name: "Loontabellen", icon: DollarSign, page: "SalaryTables" },
       { name: "PayChecked Audit", icon: ShieldCheck, page: "PayCheckedAudit" },
+      { name: "Dagrapport", icon: FileText, page: "PayrollReport" },
     ]
   },
   {
@@ -344,6 +345,7 @@ export default function Layout({ children, currentPageName }) {
       'CaoRules': PERMISSIONS.CONTRACTS_MANAGE,
       'SalaryTables': PERMISSIONS.CONTRACTS_MANAGE,
       'PayCheckedAudit': PERMISSIONS.CONTRACTS_MANAGE,
+      'PayrollReport': PERMISSIONS.CONTRACTS_MANAGE,
 
       // Business
       'Customers': PERMISSIONS.CUSTOMERS_MANAGE,
