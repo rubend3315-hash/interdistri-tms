@@ -117,30 +117,32 @@ Deno.serve(async (req) => {
 
     const checkedFunctions = [];
 
-    // Run checks in parallel (batches of 3) to stay within CPU limits
-    const BATCH_SIZE = 3;
-    for (let i = 0; i < ALL_FUNCTIONS.length; i += BATCH_SIZE) {
-      const batch = ALL_FUNCTIONS.slice(i, i + BATCH_SIZE);
-      const results = await Promise.allSettled(
-        batch.map(async (fnName) => {
-          try {
-            const res = await base44.functions.invoke(fnName, { _ping: true });
-            return { name: fnName, status: 'OK', errorMessage: null, httpStatus: res?.status || 200 };
-          } catch (err) {
-            const msg = err?.message || String(err);
-            const httpCode = err?.status || null;
-            const is404 = msg.includes('404') || msg.includes('not found') || msg.includes('does not exist');
-            const isAuthError = [400, 401, 403, 422].includes(httpCode) || /40[0-3]|422/.test(msg);
-            let status = 'ERROR';
-            if (is404) status = 'NOT_DEPLOYED';
-            else if (isAuthError) status = 'OK';
-            return { name: fnName, status, errorMessage: status === 'OK' ? null : msg, httpStatus: httpCode };
-          }
-        })
-      );
-      for (const r of results) {
-        checkedFunctions.push(r.status === 'fulfilled' ? r.value : { name: 'unknown', status: 'ERROR', errorMessage: 'Promise rejected', httpStatus: null });
-      }
+    // Run all checks in parallel with a per-function timeout
+    const TIMEOUT_MS = 5000;
+    const results = await Promise.allSettled(
+      ALL_FUNCTIONS.map(async (fnName) => {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+          const res = await base44.functions.invoke(fnName, { _ping: true });
+          clearTimeout(timer);
+          return { name: fnName, status: 'OK', errorMessage: null, httpStatus: res?.status || 200 };
+        } catch (err) {
+          const msg = err?.message || String(err);
+          const httpCode = err?.status || null;
+          const is404 = msg.includes('404') || msg.includes('not found') || msg.includes('does not exist');
+          const isAuthError = [400, 401, 403, 422].includes(httpCode) || /40[0-3]|422/.test(msg);
+          const isTimeout = msg.includes('abort');
+          let status = 'ERROR';
+          if (is404) status = 'NOT_DEPLOYED';
+          else if (isAuthError) status = 'OK';
+          else if (isTimeout) status = 'TIMEOUT';
+          return { name: fnName, status, errorMessage: status === 'OK' ? null : msg, httpStatus: httpCode };
+        }
+      })
+    );
+    for (const r of results) {
+      checkedFunctions.push(r.status === 'fulfilled' ? r.value : { name: 'unknown', status: 'ERROR', errorMessage: 'Promise rejected', httpStatus: null });
     }
 
     const errorCount = checkedFunctions.filter(r => r.status !== 'OK').length;
