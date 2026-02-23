@@ -1,4 +1,4 @@
-// verifyDeployment — pings all known backend functions to verify deployment status
+// verifyDeployment v3 — pings critical backend functions to verify deployment status
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Critical user-facing functions to verify
