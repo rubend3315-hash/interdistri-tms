@@ -77,7 +77,7 @@ export default function DeploymentStatus() {
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
                   <div>
                     <p className="text-2xl font-bold text-green-700">{data.summary.ok}</p>
-                    <p className="text-xs text-slate-500">Deployed</p>
+                    <p className="text-xs text-slate-500">Gecontroleerd & OK</p>
                   </div>
                 </div>
               </CardContent>
@@ -88,7 +88,7 @@ export default function DeploymentStatus() {
                   <XCircle className="w-5 h-5 text-red-600" />
                   <div>
                     <p className="text-2xl font-bold text-red-700">{data.summary.failed}</p>
-                    <p className="text-xs text-slate-500">Niet deployed</p>
+                    <p className="text-xs text-slate-500">Fouten</p>
                   </div>
                 </div>
               </CardContent>
