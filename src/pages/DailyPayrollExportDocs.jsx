@@ -31,6 +31,12 @@ export default function DailyPayrollExportDocs() {
             <PayrollDocTechnical />
           </div>
         </TabsContent>
+
+        <TabsContent value="api-spec">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
+            <PayrollDocApiSpec />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
