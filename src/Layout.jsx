@@ -289,83 +289,104 @@ export default function Layout({ children, currentPageName }) {
       const emps = await base44.entities.Employee.filter({ email });
       return emps[0] ?? null;
     },
-    enabled: !!user && user.role !== 'admin',
+    enabled: !!user && getEffectiveRole(user) === ROLES.EMPLOYEE,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
 
 
-  const businessRole = getBusinessRole(user);
+  const effectiveRole = getEffectiveRole(user);
+  const isSuperAdmin = effectiveRole === ROLES.SUPER_ADMIN;
 
-  const hasPermission = (page) => {
+  /**
+   * Permission-based page access check.
+   * Maps pages to required RBAC permissions.
+   * SUPER_ADMIN (wildcard) passes all checks automatically via hasPermission.
+   */
+  const hasPagePermission = (page) => {
     if (!user) return false;
-    if (user.role === 'admin') return true;
-    
-    const pagePermissionMap = {
-      'Dashboard': 'dashboard',
-      'TimeTracking': 'timetracking',
-      'Trips': 'trips',
-      'Planning': 'planning',
-      'Approvals': 'approvals',
-      'ShiftTime': 'shifttime',
-      'Employees': 'employees',
-      'Users': 'users',
-      'Vehicles': 'vehicles',
-      'NiwoPermits': 'niwo',
-      'Customers': 'customers',
-      'Projects': 'projects',
-      'Documents': 'documents',
-      'EmployeeReport': 'reports',
-      'CaoRules': 'cao',
-      'SalaryTables': 'salary',
-      'HRMSettings': 'hrmsettings',
-      'Holidays': 'holidays',
-      'SalaryReports': 'reports',
-      'MobileEntry': 'mobile',
-      'MobileEntryMultiDay': 'mobile',
-      'Messages': 'messages',
-      'Charters': 'charters',
-      'AuditLog': 'users',
-      'Contracts': 'contracts',
-      'ContractTemplates': 'contracts',
-      'ContractWijzigingen': 'contracts',
-      'ContractAnalytics': 'contracts',
-      'CompletedContracts': 'contracts',
-      'HRImport': 'hrimport',
-      'Stamkaart': 'employees',
-      'CustomerDetail': 'customers',
-      'Bedrijfsreglement': 'employees',
-      'PerformanceReviews': 'employees',
-      'Backups': 'admin_only',
-      'DataMigration': 'admin_only',
-      'Recalculations': 'admin_only',
-      'Integrations': 'admin_only',
-      'Dagstaat': 'dagstaat',
-      'HelpPage': 'helppage',
-      'Onboarding': 'employees',
-      'MobileHandleiding': 'helppage',
-      'SecurityArchitecture': 'admin_only',
-      'SecurityAccessControl': 'admin_only',
-      'SecurityRoadmap': 'admin_only',
-      'SystemArchitectureDiagram': 'admin_only',
-      'GovernanceDashboard': 'admin_only',
-      'SecuritySummary': 'admin_only',
-      'SecurityPrivacy': 'public',
-      'Trust': 'helppage',
-      'SecureDownload': 'public',
-      'EncryptionMigration': 'admin_only',
-      'RBACMatrix': 'admin_only',
-      'Activiteiten': 'customers',
-      'StandplaatsWerk': 'timetracking',
-      'PayCheckedAudit': 'reports',
+
+    const PAGE_PERMISSION_MAP = {
+      // Core Operations
+      'Dashboard': PERMISSIONS.DASHBOARD_VIEW,
+      'TimeTracking': PERMISSIONS.PLANNING_MANAGE,
+      'Approvals': PERMISSIONS.PLANNING_MANAGE,
+      'Trips': PERMISSIONS.PLANNING_MANAGE,
+      'StandplaatsWerk': PERMISSIONS.PLANNING_MANAGE,
+      'Planning': PERMISSIONS.PLANNING_MANAGE,
+      'ShiftTime': PERMISSIONS.PLANNING_MANAGE,
+      'Dagstaat': PERMISSIONS.PLANNING_MANAGE,
+
+      // HR
+      'Employees': PERMISSIONS.EMPLOYEES_MANAGE,
+      'Onboarding': PERMISSIONS.ONBOARDING_MANAGE,
+      'Stamkaart': PERMISSIONS.EMPLOYEES_MANAGE,
+      'Contracts': PERMISSIONS.CONTRACTS_MANAGE,
+      'ContractWijzigingen': PERMISSIONS.CONTRACTS_MANAGE,
+      'ContractAnalytics': PERMISSIONS.CONTRACTS_MANAGE,
+      'CompletedContracts': PERMISSIONS.CONTRACTS_MANAGE,
+      'Bedrijfsreglement': PERMISSIONS.EMPLOYEES_MANAGE,
+      'PerformanceReviews': PERMISSIONS.EMPLOYEES_MANAGE,
+      'Documents': PERMISSIONS.DOCUMENTS_MANAGE,
+
+      // Loon & Rapportage
+      'SalaryReports': PERMISSIONS.CONTRACTS_MANAGE,
+      'CaoRules': PERMISSIONS.CONTRACTS_MANAGE,
+      'SalaryTables': PERMISSIONS.CONTRACTS_MANAGE,
+      'PayCheckedAudit': PERMISSIONS.CONTRACTS_MANAGE,
+
+      // Business
+      'Customers': PERMISSIONS.CUSTOMERS_MANAGE,
+      'CustomerDetail': PERMISSIONS.CUSTOMERS_MANAGE,
+      'Projects': PERMISSIONS.CUSTOMERS_MANAGE,
+      'Activiteiten': PERMISSIONS.CUSTOMERS_MANAGE,
+      'Charters': PERMISSIONS.CHARTERS_MANAGE,
+      'EmployeeReport': PERMISSIONS.CUSTOMERS_MANAGE,
+
+      // Communicatie
+      'Messages': PERMISSIONS.MAIL_SEND,
+
+      // Operationeel Beheer
+      'HRMSettings': PERMISSIONS.GOVERNANCE_MANAGE,
+      'HRImport': PERMISSIONS.EMPLOYEES_MANAGE,
+      'ContractTemplates': PERMISSIONS.CONTRACTS_MANAGE,
+      'Holidays': PERMISSIONS.GOVERNANCE_MANAGE,
+      'Integrations': PERMISSIONS.GOVERNANCE_MANAGE,
+      'Recalculations': PERMISSIONS.GOVERNANCE_MANAGE,
+      'DataMigration': PERMISSIONS.GOVERNANCE_MANAGE,
+      'Vehicles': PERMISSIONS.PLANNING_MANAGE,
+      'NiwoPermits': PERMISSIONS.PLANNING_MANAGE,
+      'Users': PERMISSIONS.USERS_MANAGE,
+
+      // Governance & Control
+      'GovernanceDashboard': PERMISSIONS.GOVERNANCE_MANAGE,
+      'SecuritySummary': PERMISSIONS.GOVERNANCE_MANAGE,
+      'SecurityArchitecture': PERMISSIONS.GOVERNANCE_MANAGE,
+      'SecurityAccessControl': PERMISSIONS.GOVERNANCE_MANAGE,
+      'SystemArchitectureDiagram': PERMISSIONS.GOVERNANCE_MANAGE,
+      'SecurityRoadmap': PERMISSIONS.GOVERNANCE_MANAGE,
+      'EncryptionMigration': PERMISSIONS.ENCRYPTION_MANAGE,
+      'RBACMatrix': PERMISSIONS.GOVERNANCE_MANAGE,
+      'AuditLog': PERMISSIONS.AUDIT_READ,
+      'Backups': PERMISSIONS.GOVERNANCE_MANAGE,
+
+      // Publiek / open
+      'SecurityPrivacy': '__public__',
+      'Trust': '__public__',
+      'HelpPage': '__public__',
+      'MobileHandleiding': '__public__',
+      'SecureDownload': '__public__',
+
+      // Mobiel
+      'MobileEntry': PERMISSIONS.MOBILE_OWN,
+      'MobileEntryMultiDay': PERMISSIONS.MOBILE_OWN,
     };
-    
-    const requiredPermission = pagePermissionMap[page];
-    if (!requiredPermission) return user.role === 'admin';
-    if (requiredPermission === 'admin_only') return false;
-    
-    return user.permissions?.includes(requiredPermission) || false;
+
+    const requiredPermission = PAGE_PERMISSION_MAP[page];
+    if (!requiredPermission) return isSuperAdmin; // unknown pages: admin only
+    if (requiredPermission === '__public__') return true;
+    return hasPermission(user, requiredPermission);
   };
 
   const filteredMenu = useMemo(() => {
@@ -375,16 +396,16 @@ export default function Layout({ children, currentPageName }) {
         if (group.subgroups) {
           const filteredSubgroups = group.subgroups.map(sg => ({
             ...sg,
-            items: sg.items.filter(item => hasPermission(item.page))
+            items: sg.items.filter(item => hasPagePermission(item.page))
           })).filter(sg => sg.items.length > 0);
           return { ...group, subgroups: filteredSubgroups };
         }
         return {
           ...group,
-          items: group.items.filter(item => hasPermission(item.page))
+          items: group.items.filter(item => hasPagePermission(item.page))
         };
       }).filter(group => group.subgroups ? group.subgroups.length > 0 : group.items?.length > 0);
-  }, [user?.role, user?.permissions, user?.business_role]);
+  }, [user, effectiveRole]);
 
 
 
@@ -392,8 +413,8 @@ export default function Layout({ children, currentPageName }) {
   const isSecureDownloadPage = currentPageName === "SecureDownload";
   const isPublicSecurityPage = currentPageName === "SecurityPrivacy";
   const isStamkaartDocument = false;
-  const isEmployeeContractPage = user && user.role !== 'admin' && currentPageName === "Contracts";
-  const isEmployeeEditTimeEntry = user && user.role !== 'admin' && currentPageName === "EditTimeEntry";
+  const isEmployeeContractPage = user && effectiveRole === ROLES.EMPLOYEE && currentPageName === "Contracts";
+  const isEmployeeEditTimeEntry = user && effectiveRole === ROLES.EMPLOYEE && currentPageName === "EditTimeEntry";
 
   // Public pages — render immediately, skip all auth
   if (isSecureDownloadPage || isPublicSecurityPage) {
@@ -411,10 +432,10 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
-  // --- Toegangscontrole non-admin ---
+  // --- Toegangscontrole: alleen EMPLOYEE rol vereist employee-link ---
   let showGraceWarning = false;
 
-  if (user?.role !== "admin") {
+  if (effectiveRole === ROLES.EMPLOYEE) {
     if (loadingEmployee) {
       return null;
     }
@@ -473,7 +494,7 @@ export default function Layout({ children, currentPageName }) {
     }
   }
 
-  if (user?.role !== "admin" && currentPageName === "Dashboard") {
+  if (effectiveRole === ROLES.EMPLOYEE && currentPageName === "Dashboard") {
     return <MobileEntry currentUser={user} />;
   }
 
