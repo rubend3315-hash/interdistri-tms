@@ -241,7 +241,7 @@ Deno.serve(async (req) => {
     <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:12px;margin:16px 0;">
       <p style="font-size:12px;color:#92400e;margin:0;">
         ⚠️ <strong>Beveiligingsmelding:</strong> Dit document bevat vertrouwelijke persoonsgegevens. 
-        Deel deze link niet met onbevoegden. De link is maximaal 10 keer te gebruiken.
+        Deel deze link niet met onbevoegden. De link is maximaal 5 keer te gebruiken.
       </p>
     </div>
     <p style="font-size:11px;color:#94a3b8;margin:16px 0 0;">
