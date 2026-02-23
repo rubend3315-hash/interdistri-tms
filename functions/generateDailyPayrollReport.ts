@@ -14,8 +14,8 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    // Fetch report data from data layer (service-to-service call)
-    const reportData = await base44.asServiceRole.functions.invoke('buildDailyPayrollReportData', { date });
+    // Fetch report data from data layer (user context forwarded)
+    const reportData = await base44.functions.invoke('buildDailyPayrollReportData', { date });
 
     if (!reportData.success) {
       return Response.json({ error: reportData.error || 'Data ophalen mislukt' }, { status: 500 });
