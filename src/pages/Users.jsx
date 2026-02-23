@@ -15,9 +15,11 @@ import { Users, Plus, Mail, Shield, User, Search, Edit, CheckSquare, Save, X, Ex
 import { format } from "date-fns";
 import { logAuditEvent } from "../components/utils/auditLogger";
 import UserEmployeeLinkTab from "../components/users/UserEmployeeLinkTab";
-import { BUSINESS_ROLES, ROLE_LABELS, getBusinessRole } from "../components/utils/businessRoles";
+import { ROLE_LABELS } from "../components/utils/businessRoles";
+import { hasPermission } from "../components/core/rbac/requirePermission";
+import { PERMISSIONS } from "../components/core/rbac/permissionRegistry";
 
-const ROLES = {
+const SYSTEM_ROLES = {
   admin: {
     label: 'Administrator',
     color: 'bg-purple-100 text-purple-700',
@@ -66,7 +68,7 @@ const ALL_PERMISSIONS = [
   { id: 'users', label: 'Gebruikers', category: 'Admin' },
 ];
 
-export default function UsersPage() {
+export default function UsersPage({ currentUser }) {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -77,18 +79,8 @@ export default function UsersPage() {
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      if (user.role !== 'admin') {
-        throw new Error('Alleen admins kunnen gebruikers beheren');
-      }
-      return base44.entities.User.list('-created_date');
-    }
-  });
-
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me()
+    queryFn: () => base44.entities.User.list('-created_date'),
+    enabled: !!currentUser && hasPermission(currentUser, PERMISSIONS.USERS_MANAGE),
   });
 
   const { data: employees = [] } = useQuery({
@@ -130,10 +122,10 @@ export default function UsersPage() {
       logAuditEvent({
         action: 'user_invited',
         category: 'Gebruikers',
-        description: `Gebruiker ${data.email} uitgenodigd met rol ${ROLES[data.role]?.label || data.role}`,
+        description: `Gebruiker ${data.email} uitgenodigd met rol ${SYSTEM_ROLES[data.role]?.label || data.role}`,
         targetEntity: 'User',
         targetName: data.email,
-        newValue: ROLES[data.role]?.label || data.role,
+        newValue: SYSTEM_ROLES[data.role]?.label || data.role,
       });
     },
     onError: (error) => {
@@ -180,12 +172,12 @@ export default function UsersPage() {
       logAuditEvent({
         action: 'role_changed',
         category: 'Gebruikers',
-        description: `Rol van ${data.userName} gewijzigd van ${ROLES[data.oldRole]?.label || data.oldRole} naar ${ROLES[data.role]?.label || data.role}`,
+        description: `Rol van ${data.userName} gewijzigd van ${SYSTEM_ROLES[data.oldRole]?.label || data.oldRole} naar ${SYSTEM_ROLES[data.role]?.label || data.role}`,
         targetEntity: 'User',
         targetId: data.userId,
         targetName: data.userName,
-        oldValue: ROLES[data.oldRole]?.label || data.oldRole,
-        newValue: ROLES[data.role]?.label || data.role,
+        oldValue: SYSTEM_ROLES[data.oldRole]?.label || data.oldRole,
+        newValue: SYSTEM_ROLES[data.role]?.label || data.role,
       });
     },
     onError: (error) => {
@@ -271,7 +263,7 @@ export default function UsersPage() {
 
   const handleRoleChange = (userId, newRole) => {
     const targetUser = users.find(u => u.id === userId);
-    if (confirm(`Wil je deze gebruiker de rol "${ROLES[newRole]?.label || newRole}" geven?`)) {
+    if (confirm(`Wil je deze gebruiker de rol "${SYSTEM_ROLES[newRole]?.label || newRole}" geven?`)) {
       updateRoleMutation.mutate({ 
         userId, 
         role: newRole, 
@@ -321,19 +313,20 @@ export default function UsersPage() {
   );
 
   const getRoleBadge = (role) => {
-    return ROLES[role]?.color || 'bg-slate-100 text-slate-700';
+    return SYSTEM_ROLES[role]?.color || 'bg-slate-100 text-slate-700';
   };
 
-  const isUserActive = (user) => user.role !== 'inactive';
+  const isUserActive = (u) => u.role !== 'inactive';
 
-  if (currentUser?.role !== 'admin') {
+  // RBAC Guard — only users.manage permission holders (SUPER_ADMIN) can access
+  if (!currentUser || !hasPermission(currentUser, PERMISSIONS.USERS_MANAGE)) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6 text-center">
             <Shield className="w-12 h-12 mx-auto text-red-500 mb-3" />
             <h2 className="text-xl font-bold text-red-900 mb-2">Geen toegang</h2>
-            <p className="text-red-700">Alleen administrators kunnen gebruikers beheren.</p>
+            <p className="text-red-700">Je hebt geen rechten om gebruikers te beheren.</p>
           </CardContent>
         </Card>
       </div>
@@ -530,7 +523,7 @@ export default function UsersPage() {
                     <td className="py-3 px-4 text-slate-600">{user.email}</td>
                     <td className="py-3 px-4">
                       <Badge className={getRoleBadge(user.role)}>
-                        {ROLES[user.role]?.label || user.role}
+                        {SYSTEM_ROLES[user.role]?.label || user.role}
                       </Badge>
                     </td>
                     <td className="py-3 px-4">
@@ -580,7 +573,7 @@ export default function UsersPage() {
                             <SelectItem value="user">Medewerker</SelectItem>
                           </SelectContent>
                         </Select>
-                        {user.role === 'admin' && user.email === 'rubend3315@gmail.com' && (
+                        {user.email === 'rubend3315@gmail.com' && (
                           <Button
                             size="sm"
                             variant="ghost"
@@ -591,15 +584,13 @@ export default function UsersPage() {
                             </a>
                           </Button>
                         )}
-                        {user.role !== 'admin' && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEditPermissions(user)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditPermissions(user)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -626,7 +617,7 @@ export default function UsersPage() {
                     </div>
                   </div>
                   <Badge className={getRoleBadge(user.role)}>
-                    {ROLES[user.role]?.label || user.role}
+                    {SYSTEM_ROLES[user.role]?.label || user.role}
                   </Badge>
                 </div>
               </CardHeader>
@@ -668,7 +659,7 @@ export default function UsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                {user.role === 'admin' && user.email === 'rubend3315@gmail.com' && (
+                {user.email === 'rubend3315@gmail.com' && (
                   <div className="pt-2 border-t">
                     <Button
                       size="sm"
@@ -683,21 +674,19 @@ export default function UsersPage() {
                     </Button>
                   </div>
                 )}
-                {user.role !== 'admin' && (
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <span className="text-xs text-slate-500">
-                      {user.permissions?.length || 0} permissies
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditPermissions(user)}
-                    >
-                      <Edit className="w-3 h-3 mr-1" />
-                      Permissies
-                    </Button>
-                  </div>
-                )}
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="text-xs text-slate-500">
+                    {user.permissions?.length || 0} permissies
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEditPermissions(user)}
+                  >
+                    <Edit className="w-3 h-3 mr-1" />
+                    Permissies
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
