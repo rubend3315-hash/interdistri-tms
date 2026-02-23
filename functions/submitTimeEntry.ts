@@ -8,7 +8,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
-// submitTimeEntry v3 — Enterprise-grade atomic submission (redeployed 2026-02-23)
+// submitTimeEntry v3.1 — Enterprise-grade atomic submission (redeployed 2026-02-23)
 // ============================================================
 //
 // ARCHITECTURE:
