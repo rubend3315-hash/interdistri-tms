@@ -190,6 +190,51 @@ export default function PayrollReport() {
           )}
         </CardContent>
       </Card>
-    </div>
-  );
-}
+
+        {isAdminOrHr && (
+          <Card className="max-w-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Code className="w-5 h-5 text-slate-600" />
+                Developer & Integratie
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleDownloadJson}
+                  disabled={loadingJson || !selectedDate}
+                >
+                  {loadingJson ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileJson className="w-4 h-4 mr-2" />}
+                  Download JSON payload
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleDownloadSchema}
+                  disabled={loadingSchema}
+                >
+                  {loadingSchema ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+                  Download JSON schema
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleTestAzure}
+                  disabled={loadingAzure || !selectedDate}
+                  className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                >
+                  {loadingAzure ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Cloud className="w-4 h-4 mr-2" />}
+                  Test Azure push
+                </Button>
+              </div>
+              <p className="text-xs text-slate-400">
+                JSON payload en Azure push gebruiken de geselecteerde datum hierboven.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      );
+      }
