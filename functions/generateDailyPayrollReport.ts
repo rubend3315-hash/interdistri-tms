@@ -64,6 +64,8 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    console.log('User role debug:', JSON.stringify({ role: user.role, business_role: user.business_role }));
+
     if (user.role !== 'admin' && !['ADMIN', 'HR_ADMIN'].includes(user.business_role)) {
       return Response.json({ error: 'Forbidden: alleen admin en hr_admin' }, { status: 403 });
     }
