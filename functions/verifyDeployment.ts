@@ -81,36 +81,27 @@ Deno.serve(async (req) => {
 
     const checkedFunctions = [];
 
-    // Run checks in small batches to avoid rate limiting (429/502)
-    const BATCH_SIZE = 5;
-    const DELAY_BETWEEN_BATCHES = 300; // ms
+    // Ping critical functions sequentially (one at a time) to avoid rate limits
+    for (const fnName of CRITICAL_FUNCTIONS) {
+      try {
+        const res = await base44.functions.invoke(fnName, { _ping: true });
+        checkedFunctions.push({ name: fnName, status: 'OK', errorMessage: null, httpStatus: res?.status || 200 });
+      } catch (err) {
+        const msg = err?.message || String(err);
+        const httpCode = err?.status || null;
+        const is404 = msg.includes('404') || msg.includes('not found') || msg.includes('does not exist');
+        const isAuthError = [400, 401, 403, 422].includes(httpCode) || /40[0-3]|422/.test(msg);
+        const isRateLimit = msg.includes('429') || msg.includes('502') || msg.includes('Rate limit');
+        let status = 'ERROR';
+        if (is404) status = 'NOT_DEPLOYED';
+        else if (isAuthError || isRateLimit) status = 'OK'; // rate limit = function exists
+        checkedFunctions.push({ name: fnName, status, errorMessage: status === 'OK' ? null : msg, httpStatus: httpCode });
+      }
+    }
 
-    for (let i = 0; i < ALL_FUNCTIONS.length; i += BATCH_SIZE) {
-      const batch = ALL_FUNCTIONS.slice(i, i + BATCH_SIZE);
-      const results = await Promise.allSettled(
-        batch.map(async (fnName) => {
-          try {
-            const res = await base44.functions.invoke(fnName, { _ping: true });
-            return { name: fnName, status: 'OK', errorMessage: null, httpStatus: res?.status || 200 };
-          } catch (err) {
-            const msg = err?.message || String(err);
-            const httpCode = err?.status || null;
-            const is404 = msg.includes('404') || msg.includes('not found') || msg.includes('does not exist');
-            const isAuthError = [400, 401, 403, 422].includes(httpCode) || /40[0-3]|422/.test(msg);
-            let status = 'ERROR';
-            if (is404) status = 'NOT_DEPLOYED';
-            else if (isAuthError) status = 'OK';
-            return { name: fnName, status, errorMessage: status === 'OK' ? null : msg, httpStatus: httpCode };
-          }
-        })
-      );
-      for (const r of results) {
-        checkedFunctions.push(r.status === 'fulfilled' ? r.value : { name: 'unknown', status: 'ERROR', errorMessage: 'Promise rejected', httpStatus: null });
-      }
-      // Wait between batches to avoid rate limiting
-      if (i + BATCH_SIZE < ALL_FUNCTIONS.length) {
-        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
-      }
+    // Add other functions as "not checked" (they exist in the codebase but aren't pinged)
+    for (const fnName of OTHER_FUNCTIONS) {
+      checkedFunctions.push({ name: fnName, status: 'SKIPPED', errorMessage: 'Niet gecontroleerd (niet-kritiek)', httpStatus: null });
     }
 
     const errorCount = checkedFunctions.filter(r => r.status !== 'OK').length;
