@@ -1,38 +1,19 @@
 // verifyDeployment — pings all known backend functions to verify deployment status
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Keep list small to avoid CPU time limit on Deno Deploy
 const ALL_FUNCTIONS = [
   'submitTimeEntry',
-  'upsertDraftTimeEntry',
   'approveTimeEntry',
-  'rejectTimeEntry',
-  'resubmitTimeEntry',
-  'deleteTimeEntryCascade',
   'systemHealthCheck',
-  'systemHealthMonitor',
   'auditService',
   'mailService',
   'encryptionService',
-  'tenantService',
-  'autoInviteEmployee',
   'createBackup',
-  'exportCriticalData',
-  'exportToSupabase',
-  'sendWelcomeEmail',
-  'sendStamkaartEmail',
-  'sendEmployeeEmail',
-  'sendContractForSigning',
-  'sendTimeEntryRejectionEmail',
   'generateContract',
-  'secureDownload',
-  'shareIdDocument',
   'recalculate',
-  'guardAuditLog',
-  'guardTenantDelete',
-  'guardTenantId',
-  'hrmAutomation',
-  'generateNotifications',
-  'checkExpiringDocuments',
+  'buildDailyPayrollReportData',
+  'sendDailyPayrollReportToAzure',
 ];
 
 Deno.serve(async (req) => {
