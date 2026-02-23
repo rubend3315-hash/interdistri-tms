@@ -7,13 +7,16 @@ import { jsPDF } from 'npm:jspdf@4.0.0';
  * buildDailyPayrollReportData for direct JSON access.
  */
 async function buildReportData(base44, date) {
-  const [employees, timeEntries, trips, standplaatsWerk, customers] = await Promise.all([
+  const [employees, allTimeEntries, trips, standplaatsWerk, customers] = await Promise.all([
     base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
     base44.asServiceRole.entities.TimeEntry.filter({ date }),
     base44.asServiceRole.entities.Trip.filter({ date }),
     base44.asServiceRole.entities.StandplaatsWerk.filter({ date }),
     base44.asServiceRole.entities.Customer.filter({}),
   ]);
+
+  // Only include approved time entries
+  const timeEntries = allTimeEntries.filter(te => te.status === 'Goedgekeurd');
 
   const customerMap = {};
   for (const c of customers) customerMap[c.id] = c.company_name || '';
@@ -91,9 +94,10 @@ Deno.serve(async (req) => {
       lines += 1;
 
       if (emp.timeEntries.length > 0) {
-        lines += 1;
-        lines += emp.timeEntries.length;
-        lines += 1;
+        lines += 1; // header
+        lines += emp.timeEntries.length; // entries
+        lines += 1; // spacing
+        lines += 1; // financial summary line
       }
       if (emp.trips.length > 0) {
         lines += 1;
@@ -200,6 +204,33 @@ Deno.serve(async (req) => {
           const hours = te.total_hours != null ? `${te.total_hours}u` : '-';
           const shift = te.shift_type || '';
           doc.text(`${start} – ${end}  |  ${hours}  |  ${shift}`, MARGIN_LEFT + 4, currentY);
+          currentY += LINE_HEIGHT * 0.65;
+        }
+        // Financial summary for time entries
+        const totalSubsistence = section.timeEntries.reduce((s, te) => s + (te.subsistence_allowance || 0), 0);
+        const totalAdvanced = section.timeEntries.reduce((s, te) => s + (te.advanced_costs || 0), 0);
+        const totalMeals = section.timeEntries.reduce((s, te) => s + (te.meals || 0), 0);
+        const totalWkr = section.timeEntries.reduce((s, te) => s + (te.wkr || 0), 0);
+        const totalOvertime = section.timeEntries.reduce((s, te) => s + (te.overtime_hours || 0), 0);
+        const totalNight = section.timeEntries.reduce((s, te) => s + (te.night_hours || 0), 0);
+        const totalWeekend = section.timeEntries.reduce((s, te) => s + (te.weekend_hours || 0), 0);
+        const totalHoliday = section.timeEntries.reduce((s, te) => s + (te.holiday_hours || 0), 0);
+
+        const financialParts = [];
+        if (totalOvertime) financialParts.push(`Overuren: ${totalOvertime}u`);
+        if (totalNight) financialParts.push(`Nacht: ${totalNight}u`);
+        if (totalWeekend) financialParts.push(`Weekend: ${totalWeekend}u`);
+        if (totalHoliday) financialParts.push(`Feestdag: ${totalHoliday}u`);
+        if (totalSubsistence) financialParts.push(`Verblijf: €${totalSubsistence.toFixed(2)}`);
+        if (totalAdvanced) financialParts.push(`Voorschot: €${totalAdvanced.toFixed(2)}`);
+        if (totalMeals) financialParts.push(`Inhoud.: €${totalMeals.toFixed(2)}`);
+        if (totalWkr) financialParts.push(`WKR: €${totalWkr.toFixed(2)}`);
+
+        if (financialParts.length > 0) {
+          doc.setFontSize(7);
+          doc.setTextColor(80, 80, 80);
+          doc.text(financialParts.join('  |  '), MARGIN_LEFT + 4, currentY);
+          doc.setTextColor(0, 0, 0);
           currentY += LINE_HEIGHT * 0.65;
         }
         currentY += LINE_HEIGHT * 0.35;
