@@ -13,19 +13,10 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    // Build report data (use asServiceRole to avoid 403 on function-to-function)
-    let reportData;
-    try {
-      const reportResponse = await base44.asServiceRole.functions.invoke('buildDailyPayrollReportData', { date });
-      reportData = reportResponse.data;
-    } catch (invokeErr) {
-      console.error('invoke error:', invokeErr.message, invokeErr.response?.status, invokeErr.response?.data);
-      return Response.json({
-        success: false,
-        error: 'REPORT_BUILD_FAILED',
-        details: invokeErr.message,
-      }, { status: 500 });
-    }
+    // Call buildDailyPayrollReportData inline via the same request context
+    // We use the SDK's functions.invoke with the user's own token (not service role)
+    const reportResponse = await base44.functions.invoke('buildDailyPayrollReportData', { date });
+    const reportData = reportResponse.data;
 
     if (!reportData?.success) {
       return Response.json({
@@ -39,8 +30,6 @@ Deno.serve(async (req) => {
     const jsonString = JSON.stringify(reportData, null, 2);
     const encoder = new TextEncoder();
     const bytes = encoder.encode(jsonString);
-
-    // Convert to base64 using Deno's standard btoa on chunks
     let binary = '';
     for (let i = 0; i < bytes.length; i++) {
       binary += String.fromCharCode(bytes[i]);
