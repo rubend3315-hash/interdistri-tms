@@ -104,17 +104,21 @@ Deno.serve(async (req) => {
       checkedFunctions.push({ name: fnName, status: 'SKIPPED', errorMessage: 'Niet gecontroleerd (niet-kritiek)', httpStatus: null });
     }
 
-    const errorCount = checkedFunctions.filter(r => r.status !== 'OK').length;
+    const criticalResults = checkedFunctions.filter(r => r.status !== 'SKIPPED');
+    const errorCount = criticalResults.filter(r => r.status !== 'OK').length;
+    const totalFunctions = CRITICAL_FUNCTIONS.length + OTHER_FUNCTIONS.length;
 
     return Response.json({
       success: true,
       checkedFunctions,
       errorCount,
-      version: '2026-02-23-hardened',
+      version: '2026-02-23-v2',
       timestamp: new Date().toISOString(),
       summary: {
-        total: ALL_FUNCTIONS.length,
-        ok: ALL_FUNCTIONS.length - errorCount,
+        total: totalFunctions,
+        checked: CRITICAL_FUNCTIONS.length,
+        skipped: OTHER_FUNCTIONS.length,
+        ok: criticalResults.filter(r => r.status === 'OK').length,
         failed: errorCount,
         allHealthy: errorCount === 0,
       },
