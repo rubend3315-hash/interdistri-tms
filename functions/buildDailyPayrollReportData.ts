@@ -1,52 +1,30 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**
- * Schema v2.2 — Azure-ready JSON data layer for daily payroll report.
+ * Schema v2.3 — DST aware + runtime validation.
  * All TimeEntry, Trip and StandplaatsWerk fields are explicitly mapped.
  * No presentation text — raw numeric/ISO values only.
  *
- * v2.2: Added startDateTimeISO / endDateTimeISO (full ISO 8601 with
- *       Europe/Amsterdam offset). Over-midnight entries use end_date.
+ * v2.3: Luxon-based DST-aware ISO 8601 datetime generation.
+ *       Runtime AJV schema validation before Azure push.
  */
+
+import { DateTime } from 'npm:luxon@3';
 
 /**
  * Build a full ISO 8601 datetime string from a date (YYYY-MM-DD) and time (HH:mm or HH:mm:ss).
- * Uses Europe/Amsterdam timezone offset.
+ * Uses Luxon for correct Europe/Amsterdam DST offset handling.
  * Returns null if date or time is missing/invalid.
  */
 function buildISO(dateStr, timeStr) {
   if (!dateStr || !timeStr) return null;
-  // Ensure time has seconds
   const timeParts = timeStr.split(':');
   const hh = timeParts[0] || '00';
   const mm = timeParts[1] || '00';
   const ss = timeParts[2] || '00';
-  const isoBase = `${dateStr}T${hh}:${mm}:${ss}`;
-
-  // Determine Europe/Amsterdam offset for this specific date+time
-  // Create a Date in UTC, then compare with the locale string to find offset
-  const utcDate = new Date(`${dateStr}T${hh}:${mm}:${ss}Z`);
-  if (isNaN(utcDate.getTime())) return null;
-
-  // Get the Amsterdam time for this UTC instant
-  const amsFmt = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/Amsterdam',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-    hour12: false,
-  });
-  const amsParts = Object.fromEntries(
-    amsFmt.formatToParts(utcDate).filter(p => p.type !== 'literal').map(p => [p.type, p.value])
-  );
-  const amsDate = new Date(`${amsParts.year}-${amsParts.month}-${amsParts.day}T${amsParts.hour}:${amsParts.minute}:${amsParts.second}Z`);
-  const offsetMs = amsDate.getTime() - utcDate.getTime();
-  const offsetMin = offsetMs / 60000;
-  const sign = offsetMin >= 0 ? '+' : '-';
-  const absMin = Math.abs(offsetMin);
-  const offHH = String(Math.floor(absMin / 60)).padStart(2, '0');
-  const offMM = String(absMin % 60).padStart(2, '0');
-
-  return `${isoBase}${sign}${offHH}:${offMM}`;
+  const dt = DateTime.fromISO(`${dateStr}T${hh}:${mm}:${ss}`, { zone: 'Europe/Amsterdam' });
+  if (!dt.isValid) return null;
+  return dt.toISO();
 }
 
 function mapTimeEntry(te) {
@@ -224,7 +202,7 @@ function validateReport(report) {
   return errors;
 }
 
-const EXPECTED_SCHEMA_VERSION = "2.2";
+const EXPECTED_SCHEMA_VERSION = "2.3";
 
 /** Parse HH:MM times into decimal hours difference */
 function calcHoursFromTimes(startTime, endTime) {

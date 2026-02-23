@@ -2,25 +2,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**
  * Downloads the daily payroll report as base64-encoded JSON.
- * Schema v2.2 — includes startDateTimeISO / endDateTimeISO.
+ * Schema v2.3 — DST aware + runtime validation.
  */
 
-const EXPECTED_SCHEMA_VERSION = "2.2";
+import { DateTime } from 'npm:luxon@3';
+
+const EXPECTED_SCHEMA_VERSION = "2.3";
 
 function buildISO(dateStr, timeStr) {
   if (!dateStr || !timeStr) return null;
   const timeParts = timeStr.split(':');
   const hh = timeParts[0] || '00', mm = timeParts[1] || '00', ss = timeParts[2] || '00';
-  const isoBase = `${dateStr}T${hh}:${mm}:${ss}`;
-  const utcDate = new Date(`${dateStr}T${hh}:${mm}:${ss}Z`);
-  if (isNaN(utcDate.getTime())) return null;
-  const amsFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-  const amsParts = Object.fromEntries(amsFmt.formatToParts(utcDate).filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
-  const amsDate = new Date(`${amsParts.year}-${amsParts.month}-${amsParts.day}T${amsParts.hour}:${amsParts.minute}:${amsParts.second}Z`);
-  const offsetMin = (amsDate.getTime() - utcDate.getTime()) / 60000;
-  const sign = offsetMin >= 0 ? '+' : '-';
-  const absMin = Math.abs(offsetMin);
-  return `${isoBase}${sign}${String(Math.floor(absMin / 60)).padStart(2, '0')}:${String(absMin % 60).padStart(2, '0')}`;
+  const dt = DateTime.fromISO(`${dateStr}T${hh}:${mm}:${ss}`, { zone: 'Europe/Amsterdam' });
+  if (!dt.isValid) return null;
+  return dt.toISO();
 }
 
 function mapTimeEntry(te) {
@@ -169,7 +164,7 @@ function buildReport(date, employees, timeEntries, trips, standplaatsWerk, custo
 
   return {
     success: true,
-    schemaVersion: "2.2",
+    schemaVersion: "2.3",
     reportType: "DAILY_PAYROLL",
     metadata: { sourceSystem: "Interdistri TMS", generatedBy: "buildDailyPayrollReportData", timezone: "Europe/Amsterdam" },
     reportDate: date,

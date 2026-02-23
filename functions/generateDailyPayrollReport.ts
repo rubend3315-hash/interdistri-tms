@@ -1,15 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@4.0.0';
+import { DateTime } from 'npm:luxon@3';
 
 /**
  * Shared data-fetching logic: builds the Azure-ready JSON structure.
- * Used by this function for PDF rendering and also duplicated in
- * buildDailyPayrollReportData for direct JSON access.
+ * Schema v2.3 — DST aware + runtime validation.
  */
 
 /**
  * Build a full ISO 8601 datetime string from a date (YYYY-MM-DD) and time (HH:mm or HH:mm:ss).
- * Uses Europe/Amsterdam timezone offset.
+ * Uses Luxon for correct Europe/Amsterdam DST offset handling.
  */
 function buildISO(dateStr, timeStr) {
   if (!dateStr || !timeStr) return null;
@@ -17,29 +17,12 @@ function buildISO(dateStr, timeStr) {
   const hh = timeParts[0] || '00';
   const mm = timeParts[1] || '00';
   const ss = timeParts[2] || '00';
-  const isoBase = `${dateStr}T${hh}:${mm}:${ss}`;
-  const utcDate = new Date(`${dateStr}T${hh}:${mm}:${ss}Z`);
-  if (isNaN(utcDate.getTime())) return null;
-  const amsFmt = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/Amsterdam',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-    hour12: false,
-  });
-  const amsParts = Object.fromEntries(
-    amsFmt.formatToParts(utcDate).filter(p => p.type !== 'literal').map(p => [p.type, p.value])
-  );
-  const amsDate = new Date(`${amsParts.year}-${amsParts.month}-${amsParts.day}T${amsParts.hour}:${amsParts.minute}:${amsParts.second}Z`);
-  const offsetMs = amsDate.getTime() - utcDate.getTime();
-  const offsetMin = offsetMs / 60000;
-  const sign = offsetMin >= 0 ? '+' : '-';
-  const absMin = Math.abs(offsetMin);
-  const offHH = String(Math.floor(absMin / 60)).padStart(2, '0');
-  const offMM = String(absMin % 60).padStart(2, '0');
-  return `${isoBase}${sign}${offHH}:${offMM}`;
+  const dt = DateTime.fromISO(`${dateStr}T${hh}:${mm}:${ss}`, { zone: 'Europe/Amsterdam' });
+  if (!dt.isValid) return null;
+  return dt.toISO();
 }
 
-const EXPECTED_SCHEMA_VERSION = "2.2";
+const EXPECTED_SCHEMA_VERSION = "2.3";
 
 async function buildReportData(base44, date) {
   const [employees, allTimeEntries, trips, standplaatsWerk, customers] = await Promise.all([

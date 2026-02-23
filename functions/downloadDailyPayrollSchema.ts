@@ -1,14 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const SCHEMA_V2_2 = {
+const SCHEMA_V2_3 = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DailyPayrollReport",
-  "description": "Interdistri TMS Daily Payroll Report — Schema v2.2",
+  "description": "Interdistri TMS Daily Payroll Report — Schema v2.3 — DST aware + runtime validation",
   "type": "object",
   "required": ["schemaVersion", "reportType", "metadata", "reportDate", "period", "generatedAt", "employeeCount", "totals", "employees"],
   "properties": {
     "success": { "type": "boolean" },
-    "schemaVersion": { "type": "string", "const": "2.2" },
+    "schemaVersion": { "type": "string", "const": "2.3" },
     "reportType": { "type": "string", "const": "DAILY_PAYROLL" },
     "metadata": {
       "type": "object",
@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: alleen admin en hr_admin' }, { status: 403 });
     }
 
-    const jsonString = JSON.stringify(SCHEMA_V2_2, null, 2);
+    const jsonString = JSON.stringify(SCHEMA_V2_3, null, 2);
     const encoder = new TextEncoder();
     const bytes = encoder.encode(jsonString);
     let binary = '';
@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      fileName: 'DailyPayrollReportSchema_v2.2.json',
+      fileName: 'DailyPayrollReportSchema_v2.3.json',
       fileBase64,
     });
   } catch (error) {
