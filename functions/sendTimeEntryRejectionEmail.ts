@@ -1,4 +1,4 @@
-// redeploy: 2026-02-23T full_function_redeploy_protocol_v1
+// redeploy: 2026-02-23T full_function_redeploy_protocol_v1 r2
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║ FUNCTION TYPE: SYSTEM_LEVEL                                     ║
 // ║ Called by: Entity automation (TimeEntry update → Afgekeurd)      ║
