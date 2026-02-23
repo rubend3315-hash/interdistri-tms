@@ -38,8 +38,6 @@ async function getTableColumns(table) {
     }
   });
   if (!res.ok) return null; // table doesn't exist
-  // Parse columns from the response headers (content-profile) or use OPTIONS
-  // Simpler: do an OPTIONS/HEAD or just try reading one row
   return true; // table exists
 }
 
@@ -174,7 +172,7 @@ const entityToTable = {
   'Department': 'department'
 };
 
-// Known jsonb columns per table — these must be sent as JSON strings for PostgREST
+// Known jsonb columns per table
 const JSONB_COLUMNS = new Set([
   'drivers_license_categories', 'week_schedule', 'contractregels', 'reiskostenregels',
   'mileage_calibration_history', 'articles', 'column_mapping', 'data', 'calculated_data',
