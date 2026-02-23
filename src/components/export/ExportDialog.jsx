@@ -33,34 +33,37 @@ export default function ExportDialog({ open, onOpenChange }) {
 
   const handleExport = async () => {
     setExporting(true);
-    const response = await base44.functions.invoke('exportTimeAndTrips', {
-      start_date: startDate,
-      end_date: endDate,
-    });
-    
-    const { file_base64, filename } = response.data;
-    
-    // Decode base64 to binary
-    const byteCharacters = atob(file_base64);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    try {
+      const response = await base44.functions.invoke('exportTimeAndTrips', {
+        start_date: startDate,
+        end_date: endDate,
+      });
+      
+      const { file_base64, filename } = response.data;
+      
+      // Decode base64 to binary
+      const byteCharacters = atob(file_base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      
+      const blob = new Blob([byteArray], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      onOpenChange(false);
+    } finally {
+      setExporting(false);
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    
-    const blob = new Blob([byteArray], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    a.remove();
-    setExporting(false);
-    onOpenChange(false);
   };
 
   return (
