@@ -13,6 +13,7 @@ import {
   Shield,
   Link2,
   Car,
+  Server,
   FileText,
   Building2,
   FolderKanban,
@@ -254,6 +255,13 @@ const menuItems = [
           { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
         ]
       },
+      {
+        label: "Systeem",
+        icon: HardDrive,
+        items: [
+          { name: "Deployment Status", icon: Server, page: "DeploymentStatus" },
+        ]
+      },
     ]
   },
 ];
@@ -371,6 +379,7 @@ export default function Layout({ children, currentPageName }) {
       'RBACMatrix': PERMISSIONS.GOVERNANCE_MANAGE,
       'AuditLog': PERMISSIONS.AUDIT_READ,
       'Backups': PERMISSIONS.GOVERNANCE_MANAGE,
+      'DeploymentStatus': PERMISSIONS.GOVERNANCE_MANAGE,
 
       // Publiek / open
       'SecurityPrivacy': '__public__',
