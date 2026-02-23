@@ -2,8 +2,7 @@
 // ║ FUNCTION TYPE: USER_FACING                                      ║
 // ║ Called by: Employee via mobile app (auto-save draft)             ║
 // ║ Auth: User session (any authenticated employee)                  ║
-// ║ DO NOT USE RAW ENTITY CALLS — USE tenantService for tenant data  ║
-// ║ Do not mix user session and service role access.                 ║
+// ║ v2 — re-deployed 2026-02-23                                     ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
