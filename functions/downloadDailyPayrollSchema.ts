@@ -1,14 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const SCHEMA_V1 = {
+const SCHEMA_V2_2 = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DailyPayrollReport",
-  "description": "Interdistri TMS Daily Payroll Report — Schema v1.0",
+  "description": "Interdistri TMS Daily Payroll Report — Schema v2.2",
   "type": "object",
   "required": ["schemaVersion", "reportType", "metadata", "reportDate", "period", "generatedAt", "employeeCount", "totals", "employees"],
   "properties": {
     "success": { "type": "boolean" },
-    "schemaVersion": { "type": "string", "const": "1.0" },
+    "schemaVersion": { "type": "string", "const": "2.2" },
     "reportType": { "type": "string", "const": "DAILY_PAYROLL" },
     "metadata": {
       "type": "object",
