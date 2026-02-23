@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle, ChevronLeft, Loader2, KeyRound, Printer, Send } 
 import { useQuery } from "@tanstack/react-query";
 import { getFullName } from "@/components/utils/employeeUtils";
 import OnboardingPrintView from "./OnboardingPrintView";
-import ShareIdDocumentButton from "./ShareIdDocumentButton";
+
 
 const CHECKLIST = [
   { key: "employee_created", label: "Medewerker aangemaakt" },
@@ -107,12 +107,7 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
               {sendingPayroll ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
               Versturen naar loonadministratie
             </Button>
-            <ShareIdDocumentButton
-              employeeId={onboardingData?._temp_employee_id || employeeData?.id}
-              employeeName={fullName}
-              onboardingDocumentId={onboardingData?.id_document?.document_id}
-              onboardingDocument={onboardingData?.id_document}
-            />
+
           </div>
         </div>
         <p className="text-xs text-slate-500 mb-3">{fullName} — {employeeData.department}</p>
