@@ -23,23 +23,28 @@ export default function SystemStatusCard() {
   let label = 'Controleren...';
   let color = 'bg-slate-100 text-slate-600';
 
-  if (isError || (data && data.success === false) || (data && data.error)) {
+  if (isError || (data && data.error)) {
     status = 'red';
     label = 'Backend failure detected';
     color = 'bg-red-100 text-red-700 border-red-200';
-  } else if (data && data.success === true) {
-    const allGood = data.base44_connection && data.supabase_connection &&
-      data.environment?.SUPABASE_URL && data.environment?.SUPABASE_SERVICE_ROLE_KEY &&
-      (!data.errors || data.errors.length === 0);
+  } else if (data && data.status) {
+    if (data.status === "GREEN") {
+      const allGood = data.base44_connection && data.supabase_connection &&
+        (!data.errors || data.errors.length === 0);
 
-    if (allGood) {
-      status = 'green';
-      label = 'All systems operational';
-      color = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      if (allGood) {
+        status = 'green';
+        label = 'All systems operational';
+        color = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      } else {
+        status = 'orange';
+        label = 'Partial connectivity issue';
+        color = 'bg-amber-50 text-amber-700 border-amber-200';
+      }
     } else {
-      status = 'orange';
-      label = 'Partial connectivity issue';
-      color = 'bg-amber-50 text-amber-700 border-amber-200';
+      status = 'red';
+      label = 'System issue detected';
+      color = 'bg-red-100 text-red-700 border-red-200';
     }
   }
 
