@@ -4,13 +4,17 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Auth check: allow service role (function-to-function) or admin/hr_admin users
-    const isAuthenticated = await base44.auth.isAuthenticated();
-    if (isAuthenticated) {
-      const user = await base44.auth.me();
-      if (user.role !== 'admin' && !['ADMIN', 'HR_ADMIN'].includes(user.business_role)) {
-        return Response.json({ error: 'Forbidden: alleen admin en hr_admin' }, { status: 403 });
-      }
+    // Auth: check if called by user directly (enforce admin/hr_admin)
+    // Service role calls (function-to-function) pass through
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch (_) {
+      // Service role call — no user context, that's OK
+    }
+
+    if (user && user.role !== 'admin' && !['ADMIN', 'HR_ADMIN'].includes(user.business_role)) {
+      return Response.json({ error: 'Forbidden: alleen admin en hr_admin' }, { status: 403 });
     }
 
     const { date } = await req.json();
