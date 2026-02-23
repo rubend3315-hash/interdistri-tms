@@ -100,7 +100,9 @@ const SCHEMA_V2_2 = {
                 "edit_history": { "type": "array" },
                 "created_date": { "type": ["string", "null"] },
                 "updated_date": { "type": ["string", "null"] },
-                "created_by": { "type": ["string", "null"] }
+                "created_by": { "type": ["string", "null"] },
+                "startDateTimeISO": { "type": ["string", "null"], "format": "date-time" },
+                "endDateTimeISO": { "type": ["string", "null"], "format": "date-time" }
               }
             }
           },
