@@ -36,53 +36,90 @@ const ALL_FUNCTIONS = [
 ];
 
 Deno.serve(async (req) => {
+  // verifyDeployment moet ALTIJD 200 retourneren — nooit throwen
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
 
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch (authErr) {
+      return Response.json({
+        success: true,
+        checkedFunctions: [{
+          name: '_auth',
+          status: 'ERROR',
+          errorMessage: authErr?.message || 'Auth failed',
+          httpStatus: null,
+        }],
+        errorCount: 1,
+        version: '2026-02-23-hardened',
+        timestamp: new Date().toISOString(),
+      }, { status: 200 });
     }
 
-    const results = [];
+    if (!user || user.role !== 'admin') {
+      return Response.json({
+        success: true,
+        checkedFunctions: [],
+        errorCount: 0,
+        message: 'Forbidden: Admin access required',
+        version: '2026-02-23-hardened',
+        timestamp: new Date().toISOString(),
+      }, { status: 200 });
+    }
+
+    const checkedFunctions = [];
 
     for (const fnName of ALL_FUNCTIONS) {
       try {
         const res = await base44.functions.invoke(fnName, { _ping: true });
-        // Any non-404 response means the function is deployed
-        results.push({
-          function: fnName,
+        checkedFunctions.push({
+          name: fnName,
           status: 'OK',
-          httpStatus: res.status || 200,
-          message: ''
+          errorMessage: null,
+          httpStatus: res?.status || 200,
         });
       } catch (err) {
         const msg = err?.message || String(err);
         const is404 = msg.includes('404') || msg.includes('not found') || msg.includes('does not exist');
-        results.push({
-          function: fnName,
-          status: is404 ? 'NOT_DEPLOYED' : 'OK',
-          httpStatus: is404 ? 404 : (err?.status || 'error'),
-          message: is404 ? 'Function not deployed' : ''
+        checkedFunctions.push({
+          name: fnName,
+          status: is404 ? 'NOT_DEPLOYED' : 'ERROR',
+          errorMessage: msg,
+          httpStatus: err?.status || null,
         });
       }
     }
 
-    const totalOk = results.filter(r => r.status === 'OK').length;
-    const totalFailed = results.filter(r => r.status !== 'OK').length;
+    const errorCount = checkedFunctions.filter(r => r.status !== 'OK').length;
 
     return Response.json({
-      version: '2026-02-23-stable',
+      success: true,
+      checkedFunctions,
+      errorCount,
+      version: '2026-02-23-hardened',
       timestamp: new Date().toISOString(),
       summary: {
         total: ALL_FUNCTIONS.length,
-        ok: totalOk,
-        failed: totalFailed,
-        allHealthy: totalFailed === 0
+        ok: ALL_FUNCTIONS.length - errorCount,
+        failed: errorCount,
+        allHealthy: errorCount === 0,
       },
-      results
-    });
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    }, { status: 200 });
+  } catch (outerError) {
+    // Absolute safety net — nooit 500/502
+    return Response.json({
+      success: true,
+      checkedFunctions: [{
+        name: '_verifyDeployment',
+        status: 'ERROR',
+        errorMessage: outerError?.message || 'Unknown error',
+        httpStatus: null,
+      }],
+      errorCount: 1,
+      version: '2026-02-23-hardened',
+      timestamp: new Date().toISOString(),
+    }, { status: 200 });
   }
 });
