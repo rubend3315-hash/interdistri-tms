@@ -8,7 +8,7 @@ const SCHEMA_V2_2 = {
   "required": ["schemaVersion", "reportType", "metadata", "reportDate", "period", "generatedAt", "employeeCount", "totals", "employees"],
   "properties": {
     "success": { "type": "boolean" },
-    "schemaVersion": { "type": "string", "const": "1.0" },
+    "schemaVersion": { "type": "string", "const": "2.2" },
     "reportType": { "type": "string", "const": "DAILY_PAYROLL" },
     "metadata": {
       "type": "object",
