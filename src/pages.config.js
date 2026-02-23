@@ -64,6 +64,7 @@ import Customers from './pages/Customers';
 import Dagstaat from './pages/Dagstaat';
 import Dashboard from './pages/Dashboard';
 import DataMigration from './pages/DataMigration';
+import DeploymentStatus from './pages/DeploymentStatus';
 import Documents from './pages/Documents';
 import EditTimeEntry from './pages/EditTimeEntry';
 import EmployeeReport from './pages/EmployeeReport';
@@ -107,7 +108,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import DeploymentStatus from './pages/DeploymentStatus';
 import __Layout from './Layout.jsx';
 
 
@@ -129,6 +129,7 @@ export const PAGES = {
     "Dagstaat": Dagstaat,
     "Dashboard": Dashboard,
     "DataMigration": DataMigration,
+    "DeploymentStatus": DeploymentStatus,
     "Documents": Documents,
     "EditTimeEntry": EditTimeEntry,
     "EmployeeReport": EmployeeReport,
@@ -172,7 +173,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "DeploymentStatus": DeploymentStatus,
 }
 
 export const pagesConfig = {
