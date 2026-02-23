@@ -82,12 +82,17 @@ Deno.serve(async (req) => {
         });
       } catch (err) {
         const msg = err?.message || String(err);
+        const httpCode = err?.status || null;
         const is404 = msg.includes('404') || msg.includes('not found') || msg.includes('does not exist');
+        const isAuthError = [400, 401, 403, 422].includes(httpCode) || /40[0-3]|422/.test(msg);
+        let status = 'ERROR';
+        if (is404) status = 'NOT_DEPLOYED';
+        else if (isAuthError) status = 'OK'; // function is deployed, just rejected the ping
         checkedFunctions.push({
           name: fnName,
-          status: is404 ? 'NOT_DEPLOYED' : 'ERROR',
-          errorMessage: msg,
-          httpStatus: err?.status || null,
+          status,
+          errorMessage: status === 'OK' ? null : msg,
+          httpStatus: httpCode,
         });
       }
     }
