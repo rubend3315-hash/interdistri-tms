@@ -231,19 +231,41 @@ Deno.serve(async (req) => {
       });
     }
 
-    return Response.json({
+    const report = {
       success: true,
       schemaVersion: "1.0",
+      reportType: "DAILY_PAYROLL",
+      metadata: {
+        sourceSystem: "Interdistri TMS",
+        generatedBy: "buildDailyPayrollReportData",
+        timezone: "Europe/Amsterdam",
+      },
       reportDate: date,
+      period: {
+        startDate: date,
+        endDate: date,
+      },
       generatedAt: new Date().toISOString(),
+      employeeCount: employeesWithData.length,
       totals: {
         totalHours: Math.round(grandTotalHours * 100) / 100,
         totalTripKilometers: Math.round(grandTotalTripKm * 100) / 100,
         totalStandplaatsHours: Math.round(grandTotalStandplaatsHours * 100) / 100,
       },
-      employeeCount: employeesWithData.length,
       employees: employeesWithData,
-    });
+    };
+
+    // Validate before returning
+    const validationErrors = validateReport(report);
+    if (validationErrors.length > 0) {
+      return Response.json({
+        success: false,
+        error: "INVALID_REPORT_SCHEMA",
+        details: validationErrors.join('; '),
+      }, { status: 422 });
+    }
+
+    return Response.json(report);
   } catch (error) {
     console.error('buildDailyPayrollReportData error:', error.message, error.stack);
     return Response.json({ error: error.message }, { status: 500 });
