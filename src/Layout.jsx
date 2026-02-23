@@ -40,6 +40,7 @@ import {
 import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
 import MobileEntry from "./pages/MobileEntry";
+import AccessDenied from "./components/security/AccessDenied";
 import { cn } from "@/lib/utils";
 import { isNavGroupVisible } from "./components/utils/businessRoles";
 import { hasPermission, hasAnyPermission, getEffectiveRole, isEmployeeUser } from "./components/core/rbac/requirePermission";
@@ -508,6 +509,11 @@ export default function Layout({ children, currentPageName }) {
 
   if (isEmployeeContractPage || isEmployeeEditTimeEntry) {
     return <>{children}</>;
+  }
+
+  // Permission guard — non-public, non-mobile pages require explicit permission
+  if (!hasPagePermission(currentPageName)) {
+    return <AccessDenied />;
   }
 
   const toggleGroup = (label) => {
