@@ -3,11 +3,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    if (user.role !== 'admin' && !['ADMIN', 'HR_ADMIN'].includes(user.business_role)) {
-      return Response.json({ error: 'Forbidden: alleen admin en hr_admin' }, { status: 403 });
+    // Auth check: allow service role (function-to-function) or admin/hr_admin users
+    const isAuthenticated = await base44.auth.isAuthenticated();
+    if (isAuthenticated) {
+      const user = await base44.auth.me();
+      if (user.role !== 'admin' && !['ADMIN', 'HR_ADMIN'].includes(user.business_role)) {
+        return Response.json({ error: 'Forbidden: alleen admin en hr_admin' }, { status: 403 });
+      }
     }
 
     const { date } = await req.json();
