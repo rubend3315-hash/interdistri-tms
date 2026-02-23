@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**
- * Schema v2 — Azure-ready JSON data layer for daily payroll report.
+ * Schema v2.1 — Azure-ready JSON data layer for daily payroll report.
  * All TimeEntry, Trip and StandplaatsWerk fields are explicitly mapped.
  * No presentation text — raw numeric/ISO values only.
  */
