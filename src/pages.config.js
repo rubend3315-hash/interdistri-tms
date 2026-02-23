@@ -84,6 +84,7 @@ import MobileHandleiding from './pages/MobileHandleiding';
 import NiwoPermits from './pages/NiwoPermits';
 import Onboarding from './pages/Onboarding';
 import PayCheckedAudit from './pages/PayCheckedAudit';
+import PayrollReport from './pages/PayrollReport';
 import PerformanceReviews from './pages/PerformanceReviews';
 import Planning from './pages/Planning';
 import Projects from './pages/Projects';
@@ -108,7 +109,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import PayrollReport from './pages/PayrollReport';
 import __Layout from './Layout.jsx';
 
 
@@ -150,6 +150,7 @@ export const PAGES = {
     "NiwoPermits": NiwoPermits,
     "Onboarding": Onboarding,
     "PayCheckedAudit": PayCheckedAudit,
+    "PayrollReport": PayrollReport,
     "PerformanceReviews": PerformanceReviews,
     "Planning": Planning,
     "Projects": Projects,
@@ -174,7 +175,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "PayrollReport": PayrollReport,
 }
 
 export const pagesConfig = {
