@@ -54,6 +54,13 @@ export function hasAnyPermission(user, permissionList) {
 /**
  * Guard: gooi een error als de permission ontbreekt.
  */
+/**
+ * Identity layer helper — abstracts EMPLOYEE role check.
+ */
+export function isEmployeeUser(user) {
+  return getEffectiveRole(user) === ROLES.EMPLOYEE;
+}
+
 export function requirePermission(user, permission) {
   if (!hasPermission(user, permission)) {
     const role = getEffectiveRole(user);

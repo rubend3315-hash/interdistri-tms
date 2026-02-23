@@ -42,7 +42,7 @@ import { APP_VERSION } from "./components/utils/appVersion";
 import MobileEntry from "./pages/MobileEntry";
 import { cn } from "@/lib/utils";
 import { isNavGroupVisible } from "./components/utils/businessRoles";
-import { hasPermission, hasAnyPermission, getEffectiveRole } from "./components/core/rbac/requirePermission";
+import { hasPermission, hasAnyPermission, getEffectiveRole, isEmployeeUser } from "./components/core/rbac/requirePermission";
 import { PERMISSIONS } from "./components/core/rbac/permissionRegistry";
 import { ROLES } from "./components/core/rbac/roleDefinitions";
 
@@ -289,7 +289,7 @@ export default function Layout({ children, currentPageName }) {
       const emps = await base44.entities.Employee.filter({ email });
       return emps[0] ?? null;
     },
-    enabled: !!user && getEffectiveRole(user) === ROLES.EMPLOYEE,
+    enabled: !!user && isEmployeeUser(user),
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -413,8 +413,8 @@ export default function Layout({ children, currentPageName }) {
   const isSecureDownloadPage = currentPageName === "SecureDownload";
   const isPublicSecurityPage = currentPageName === "SecurityPrivacy";
   const isStamkaartDocument = false;
-  const isEmployeeContractPage = user && effectiveRole === ROLES.EMPLOYEE && currentPageName === "Contracts";
-  const isEmployeeEditTimeEntry = user && effectiveRole === ROLES.EMPLOYEE && currentPageName === "EditTimeEntry";
+  const isEmployeeContractPage = user && isEmployeeUser(user) && currentPageName === "Contracts";
+  const isEmployeeEditTimeEntry = user && isEmployeeUser(user) && currentPageName === "EditTimeEntry";
 
   // Public pages — render immediately, skip all auth
   if (isSecureDownloadPage || isPublicSecurityPage) {
@@ -435,7 +435,7 @@ export default function Layout({ children, currentPageName }) {
   // --- Toegangscontrole: alleen EMPLOYEE rol vereist employee-link ---
   let showGraceWarning = false;
 
-  if (effectiveRole === ROLES.EMPLOYEE) {
+  if (isEmployeeUser(user)) {
     if (loadingEmployee) {
       return null;
     }
@@ -494,7 +494,7 @@ export default function Layout({ children, currentPageName }) {
     }
   }
 
-  if (effectiveRole === ROLES.EMPLOYEE && currentPageName === "Dashboard") {
+  if (isEmployeeUser(user) && currentPageName === "Dashboard") {
     return <MobileEntry currentUser={user} />;
   }
 
