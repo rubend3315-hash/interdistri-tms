@@ -251,9 +251,10 @@ Deno.serve(async (req) => {
       }, { status: 422 });
     }
 
-    // Check Azure configuration
-    const azureEndpoint = Deno.env.get('AZURE_PAYROLL_ENDPOINT');
-    const azureApiKey = Deno.env.get('AZURE_PAYROLL_API_KEY');
+    // Check Azure configuration (late-bound to avoid secret dependency at deploy time)
+    const getEnv = (key) => { try { return Deno.env.get(key); } catch { return undefined; } };
+    const azureEndpoint = getEnv('AZURE_PAYROLL_ENDPOINT');
+    const azureApiKey = getEnv('AZURE_PAYROLL_API_KEY');
 
     if (!azureEndpoint || !azureApiKey) {
       return Response.json({
