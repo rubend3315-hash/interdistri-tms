@@ -1,3 +1,4 @@
+// redeploy: 2026-02-23T full_function_redeploy_protocol_v1
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║ FUNCTION TYPE: SYSTEM_LEVEL (GUARD)                             ║
 // ║ Called by: Entity automation (AuditLog update/delete)            ║
