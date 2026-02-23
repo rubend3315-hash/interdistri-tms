@@ -14,78 +14,59 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    // Fetch all data in parallel
-    const [employees, timeEntries, trips, standplaatsWerk, customers] = await Promise.all([
-      base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
-      base44.asServiceRole.entities.TimeEntry.filter({ date }),
-      base44.asServiceRole.entities.Trip.filter({ date }),
-      base44.asServiceRole.entities.StandplaatsWerk.filter({ date }),
-      base44.asServiceRole.entities.Customer.filter({}),
-    ]);
+    // Fetch report data from data layer
+    const reportData = await base44.functions.invoke('buildDailyPayrollReportData', { date });
 
-    const customerMap = {};
-    for (const c of customers) customerMap[c.id] = c.company_name || '';
+    if (!reportData.success) {
+      return Response.json({ error: reportData.error || 'Data ophalen mislukt' }, { status: 500 });
+    }
 
-    // Sort employees by employee_number ascending
-    employees.sort((a, b) => {
-      const numA = a.employee_number || '';
-      const numB = b.employee_number || '';
-      return numA.localeCompare(numB, 'nl', { numeric: true });
-    });
+    const { employees: employeesWithData, reportDate } = reportData;
 
-    // Build section data per employee
+    // Format date for display
+    const [yyyy, mm, dd] = reportDate.split('-');
+    const displayDate = `${dd}-${mm}-${yyyy}`;
+
+    // Build sections with estimated heights for pagination
     const LINE_HEIGHT = 15;
     const SECTION_SPACING = 25;
 
     const sections = [];
 
-    for (const emp of employees) {
-      const empTimeEntries = timeEntries.filter(t => t.employee_id === emp.id);
-      const empTrips = trips.filter(t => t.employee_id === emp.id);
-      const empStandplaats = standplaatsWerk.filter(s => s.employee_id === emp.id);
-
-      // Skip employees with no data for this date
-      if (empTimeEntries.length === 0 && empTrips.length === 0 && empStandplaats.length === 0) continue;
-
-      // Calculate estimated height
+    for (const emp of employeesWithData) {
       let lines = 0;
       lines += 3; // employee_number, name, department
       lines += 1; // spacer
 
-      if (empTimeEntries.length > 0) {
-        lines += 1; // header "--- Tijdregistratie ---"
-        lines += empTimeEntries.length;
+      if (emp.timeEntries.length > 0) {
+        lines += 1; // header
+        lines += emp.timeEntries.length;
         lines += 1; // spacer
       }
 
-      if (empTrips.length > 0) {
-        lines += 1; // header "--- Ritten ---"
-        lines += empTrips.length;
+      if (emp.trips.length > 0) {
+        lines += 1; // header
+        lines += emp.trips.length;
         lines += 1; // spacer
       }
 
-      if (empStandplaats.length > 0) {
-        lines += 1; // header "--- Standplaatswerk ---"
-        lines += empStandplaats.length;
+      if (emp.standplaatsWerk.length > 0) {
+        lines += 1; // header
+        lines += emp.standplaatsWerk.length;
       }
 
       const estimatedHeight = lines * LINE_HEIGHT + SECTION_SPACING;
-      const empName = [emp.first_name, emp.prefix, emp.last_name].filter(Boolean).join(' ');
 
       sections.push({
-        employeeNumber: emp.employee_number || '-',
-        employeeName: empName,
-        department: emp.department || '-',
-        timeEntries: empTimeEntries,
-        trips: empTrips,
-        standplaatsWerk: empStandplaats,
+        employeeNumber: emp.employeeNumber,
+        employeeName: emp.name,
+        department: emp.department,
+        timeEntries: emp.timeEntries,
+        trips: emp.trips,
+        standplaatsWerk: emp.standplaatsWerk,
         estimatedHeight,
       });
     }
-
-    // Format date for display
-    const [yyyy, mm, dd] = date.split('-');
-    const displayDate = `${dd}-${mm}-${yyyy}`;
 
     // PDF constants
     const PAGE_WIDTH = 210;
@@ -93,8 +74,6 @@ Deno.serve(async (req) => {
     const MARGIN_TOP = 60;
     const MARGIN_BOTTOM = 60;
     const MARGIN_LEFT = 20;
-    const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_LEFT * 2;
-    const USABLE_HEIGHT = PAGE_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM;
 
     // Phase 1: Calculate total pages
     let totalPages = 1;
@@ -121,7 +100,6 @@ Deno.serve(async (req) => {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
       doc.text(`Datum: ${displayDate}`, PAGE_WIDTH / 2, 35, { align: 'center' });
-      // Line under header
       doc.setDrawColor(100, 100, 100);
       doc.setLineWidth(0.3);
       doc.line(MARGIN_LEFT, 42, PAGE_WIDTH - MARGIN_LEFT, 42);
@@ -148,7 +126,6 @@ Deno.serve(async (req) => {
     renderHeader();
 
     for (const section of sections) {
-      // Check if section fits on current page
       if (currentY + section.estimatedHeight > PAGE_HEIGHT - MARGIN_BOTTOM) {
         addNewPage();
       }
@@ -201,7 +178,7 @@ Deno.serve(async (req) => {
           const dep = trip.departure_time || '-';
           const arr = trip.arrival_time || '-';
           const km = trip.total_km != null ? `${trip.total_km} km` : '-';
-          const cust = customerMap[trip.customer_id] || '-';
+          const cust = trip.customer_name || '-';
           doc.text(`${dep} – ${arr}  |  ${km}  |  ${cust}`, MARGIN_LEFT + 4, currentY);
           currentY += LINE_HEIGHT * 0.65;
         }
@@ -229,7 +206,7 @@ Deno.serve(async (req) => {
         currentY += LINE_HEIGHT * 0.35;
       }
 
-      // Separator line between employees
+      // Separator line
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.2);
       doc.line(MARGIN_LEFT, currentY, PAGE_WIDTH - MARGIN_LEFT, currentY);
