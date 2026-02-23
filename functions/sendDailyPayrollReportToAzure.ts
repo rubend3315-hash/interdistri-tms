@@ -22,7 +22,7 @@ function buildReport(date, employees, timeEntries, trips, standplaatsWerk, custo
 
   employees.sort((a, b) => (a.employee_number || '').localeCompare(b.employee_number || '', 'nl', { numeric: true }));
 
-  let grandTotalHours = 0, grandTotalTripKm = 0, grandTotalStandplaatsHours = 0;
+  let grandTotalHours = 0, grandTotalOvertimeHours = 0, grandTotalNightHours = 0, grandTotalWeekendHours = 0, grandTotalHolidayHours = 0, grandTotalSubsistenceAllowance = 0, grandTotalAdvancedCosts = 0, grandTotalMeals = 0, grandTotalWkr = 0, grandTotalTripKm = 0, grandTotalStandplaatsHours = 0;
   const employeesWithData = [];
 
   for (const emp of employees) {
@@ -32,10 +32,26 @@ function buildReport(date, employees, timeEntries, trips, standplaatsWerk, custo
     if (empTE.length === 0 && empTrips.length === 0 && empSW.length === 0) continue;
 
     const empTotalHours = empTE.reduce((s, te) => s + (te.total_hours ?? 0), 0);
+    const empTotalOvertimeHours = empTE.reduce((s, te) => s + (te.overtime_hours ?? 0), 0);
+    const empTotalNightHours = empTE.reduce((s, te) => s + (te.night_hours ?? 0), 0);
+    const empTotalWeekendHours = empTE.reduce((s, te) => s + (te.weekend_hours ?? 0), 0);
+    const empTotalHolidayHours = empTE.reduce((s, te) => s + (te.holiday_hours ?? 0), 0);
+    const empTotalSubsistenceAllowance = empTE.reduce((s, te) => s + (te.subsistence_allowance ?? 0), 0);
+    const empTotalAdvancedCosts = empTE.reduce((s, te) => s + (te.advanced_costs ?? 0), 0);
+    const empTotalMeals = empTE.reduce((s, te) => s + (te.meals ?? 0), 0);
+    const empTotalWkr = empTE.reduce((s, te) => s + (te.wkr ?? 0), 0);
     const empTotalTripKm = empTrips.reduce((s, tr) => s + (tr.total_km ?? 0), 0);
     const empTotalSWHours = empSW.reduce((s, sw) => s + calcHoursFromTimes(sw.start_time, sw.end_time), 0);
 
     grandTotalHours += empTotalHours;
+    grandTotalOvertimeHours += empTotalOvertimeHours;
+    grandTotalNightHours += empTotalNightHours;
+    grandTotalWeekendHours += empTotalWeekendHours;
+    grandTotalHolidayHours += empTotalHolidayHours;
+    grandTotalSubsistenceAllowance += empTotalSubsistenceAllowance;
+    grandTotalAdvancedCosts += empTotalAdvancedCosts;
+    grandTotalMeals += empTotalMeals;
+    grandTotalWkr += empTotalWkr;
     grandTotalTripKm += empTotalTripKm;
     grandTotalStandplaatsHours += empTotalSWHours;
 
@@ -46,6 +62,14 @@ function buildReport(date, employees, timeEntries, trips, standplaatsWerk, custo
       department: emp.department || null,
       totals: {
         totalHours: Math.round(empTotalHours * 100) / 100,
+        overtimeHours: Math.round(empTotalOvertimeHours * 100) / 100,
+        nightHours: Math.round(empTotalNightHours * 100) / 100,
+        weekendHours: Math.round(empTotalWeekendHours * 100) / 100,
+        holidayHours: Math.round(empTotalHolidayHours * 100) / 100,
+        subsistenceAllowance: Math.round(empTotalSubsistenceAllowance * 100) / 100,
+        advancedCosts: Math.round(empTotalAdvancedCosts * 100) / 100,
+        meals: Math.round(empTotalMeals * 100) / 100,
+        wkr: Math.round(empTotalWkr * 100) / 100,
         totalTripKilometers: Math.round(empTotalTripKm * 100) / 100,
         totalStandplaatsHours: Math.round(empTotalSWHours * 100) / 100,
       },
@@ -66,6 +90,14 @@ function buildReport(date, employees, timeEntries, trips, standplaatsWerk, custo
     employeeCount: employeesWithData.length,
     totals: {
       totalHours: Math.round(grandTotalHours * 100) / 100,
+      overtimeHours: Math.round(grandTotalOvertimeHours * 100) / 100,
+      nightHours: Math.round(grandTotalNightHours * 100) / 100,
+      weekendHours: Math.round(grandTotalWeekendHours * 100) / 100,
+      holidayHours: Math.round(grandTotalHolidayHours * 100) / 100,
+      subsistenceAllowance: Math.round(grandTotalSubsistenceAllowance * 100) / 100,
+      advancedCosts: Math.round(grandTotalAdvancedCosts * 100) / 100,
+      meals: Math.round(grandTotalMeals * 100) / 100,
+      wkr: Math.round(grandTotalWkr * 100) / 100,
       totalTripKilometers: Math.round(grandTotalTripKm * 100) / 100,
       totalStandplaatsHours: Math.round(grandTotalStandplaatsHours * 100) / 100,
     },
@@ -86,13 +118,16 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    const [employees, timeEntries, trips, standplaatsWerk, customers] = await Promise.all([
+    const [employees, allTimeEntries, trips, standplaatsWerk, customers] = await Promise.all([
       base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
       base44.asServiceRole.entities.TimeEntry.filter({ date }),
       base44.asServiceRole.entities.Trip.filter({ date }),
       base44.asServiceRole.entities.StandplaatsWerk.filter({ date }),
       base44.asServiceRole.entities.Customer.filter({}),
     ]);
+
+    // Only include approved time entries
+    const timeEntries = allTimeEntries.filter(te => te.status === 'Goedgekeurd');
 
     const reportData = buildReport(date, employees, timeEntries, trips, standplaatsWerk, customers);
 
