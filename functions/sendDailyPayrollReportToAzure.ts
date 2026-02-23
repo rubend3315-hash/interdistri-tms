@@ -228,6 +228,9 @@ Deno.serve(async (req) => {
 
     const reportData = buildReport(date, employees, timeEntries, trips, standplaatsWerk, customers);
 
+    // TEMP: inject fake field to test schema validation
+    reportData.fakeField = "TEST_BREAK_SCHEMA";
+
     // Runtime schema version guard
     if (reportData.schemaVersion !== EXPECTED_SCHEMA_VERSION) {
       return Response.json({
