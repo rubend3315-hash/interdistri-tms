@@ -30,7 +30,7 @@ const renderDate = new Date().toLocaleDateString("nl-NL", {
   minute: "2-digit",
 });
 
-const LAATSTE_REVIEW = "22 februari 2026";
+const LAATSTE_REVIEW = "23 februari 2026";
 
 // --- Status card data ---
 const STATUS_CARDS = [
@@ -46,7 +46,7 @@ const STATUS_CARDS = [
     icon: Download,
     status: "operationeel",
     detail: "Token-based, 48 uur geldig",
-    sub: "Max 10 downloads per token, IP-logging",
+    sub: "Max 5 downloads per token, private storage, signed URL",
   },
   {
     title: "Audit Logging",
@@ -281,6 +281,36 @@ export default function GovernanceDashboard() {
                   </Link>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Release History */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-slate-900 mb-3">Release History</h2>
+        <div className="space-y-2">
+          <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <ShieldCheck className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-blue-900">v2.1.0</span>
+                <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px]">Security Hardening</Badge>
+                <span className="text-[10px] text-slate-500">23 feb 2026</span>
+              </div>
+              <p className="text-xs text-slate-600 mt-1">ID-document private storage hardening — legacy file_url verwijderd, signed URLs enforced, max downloads 5, dead code cleanup</p>
+              <Badge className="mt-1.5 bg-green-50 text-green-700 border-green-200 text-[10px]">Risk level: Reduced</Badge>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <Shield className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-slate-700">v2.0.0</span>
+                <Badge variant="outline" className="text-[10px]">Stable Release</Badge>
+                <span className="text-[10px] text-slate-500">21 feb 2026</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">Stable Grace Architecture — RBAC enterprise, AES-256 encryptie, secure downloads</p>
             </div>
           </div>
         </div>

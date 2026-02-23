@@ -32,7 +32,7 @@ const ITEMS = [
     icon: Mail,
     title: "Documentverzending",
     status: "Gemitigeerd",
-    description: "Persoonsgevoelige documenten worden niet per e-mail verzonden. In plaats daarvan wordt een tijdelijke, token-gebaseerde beveiligde downloadlink gebruikt (48 uur geldig, maximaal 10 downloads).",
+    description: "Persoonsgevoelige documenten worden niet per e-mail verzonden. In plaats daarvan wordt een tijdelijke, token-gebaseerde beveiligde downloadlink gebruikt (48 uur geldig, maximaal 5 downloads). Vanaf v2.1.0 is publieke storage volledig uitgefaseerd voor ID-documenten.",
   },
   {
     icon: Key,
@@ -134,6 +134,30 @@ export default function SecuritySummary() {
             </div>
           );
         })}
+      </div>
+
+      {/* Security Update v2.1.0 */}
+      <div className="bg-white border border-blue-200 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-blue-800 mb-2">Security Update v2.1.0 — ID Document Hardening</h2>
+        <p className="text-xs text-slate-600 mb-2">Release datum: 23 februari 2026</p>
+        <ul className="space-y-1 text-xs text-slate-700">
+          {[
+            "Legacy file_url fallback verwijderd",
+            "Private storage verplicht (UploadPrivateFile)",
+            "Signed URL (5 min) enforced voor document downloads",
+            "Token expiry 48 uur",
+            "Max downloads verlaagd naar 5",
+            "Onversleutelde ID-documenten geblokkeerd bij download",
+            "Audit logging bij security violations",
+            "Dead code verwijderd (ShareIdDocumentButton)",
+            "Single entry point voor payroll share (sendStamkaartEmail)",
+          ].map((item, i) => (
+            <li key={i} className="flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+              {item}
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* Conclusie */}

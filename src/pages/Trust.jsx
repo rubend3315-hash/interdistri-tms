@@ -37,8 +37,9 @@ const SECTIONS = [
       "Geen persoonsgegevens via e-mail — uitsluitend beveiligde links",
       "Tijdelijke downloadtokens met cryptografisch random keys (256-bit)",
       "Links verlopen automatisch na 48 uur",
-      "Maximaal 10 downloads per link",
+      "Maximaal 5 downloads per link",
       "Volledige logging van elke download (IP-adres, tijdstip)",
+      "Vanaf v2.1.0: publieke storage volledig uitgefaseerd voor identiteitsdocumenten — alle downloads via private storage en tijdelijke signed URLs (5 min geldig)",
     ],
   },
   {

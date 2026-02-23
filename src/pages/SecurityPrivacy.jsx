@@ -30,6 +30,7 @@ const SECTIONS = [
       "Gevoelige persoonsgegevens zoals BSN en IBAN worden versleuteld opgeslagen via AES-256-GCM encryptie.",
       "Decryptie is uitsluitend toegestaan voor bevoegde rollen.",
       "Encryptiesleutels worden server-side beheerd en nooit blootgesteld aan de frontend.",
+      "Identiteitsdocumenten worden opgeslagen in private storage en uitsluitend gedeeld via tijdgebonden downloadtokens (max 5 downloads, 48 uur geldig).",
     ],
   },
   {
@@ -142,6 +143,10 @@ export default function SecurityPrivacy() {
             <div className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
               <span>Security versie: {SECURITY_VERSION}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5" />
+              <span>Applicatieversie: v2.1.0</span>
             </div>
           </div>
         </div>

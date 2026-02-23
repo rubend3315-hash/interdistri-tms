@@ -338,9 +338,9 @@ export default function SecurityArchitecture() {
           rows={[
             ["BSN/IBAN opgeslagen in plaintext (Employee)", <Badge className="bg-red-100 text-red-700 text-[10px]">Hoog</Badge>, "Rolrestricties (admin-only) + TLS transport"],
             ["Backup entity bevat alle gevoelige data", <Badge className="bg-red-100 text-red-700 text-[10px]">Hoog</Badge>, "Admin-only toegang, bevestigingscodes"],
-            ["E-mail (stamkaart) bevat BSN/IBAN", <Badge className="bg-red-100 text-red-700 text-[10px]">Hoog</Badge>, "OAuth 2.0 + TLS, idempotency check"],
+            ["E-mail (stamkaart) bevat beveiligde link", <Badge className="bg-green-100 text-green-700 text-[10px]">Gemitigeerd</Badge>, "Token-based link, geen BSN/IBAN in e-mail (v2.1.0)"],
             ["Sleutelkastpincode in plaintext", <Badge className="bg-orange-100 text-orange-700 text-[10px]">Medium</Badge>, "Audit logging, 30s view, bevestigingsdialoog"],
-            ["File Storage URLs publiek toegankelijk", <Badge className="bg-orange-100 text-orange-700 text-[10px]">Medium</Badge>, "URLs zijn uniek/onvoorspelbaar"],
+            ["ID-documenten in publieke storage", <Badge className="bg-green-100 text-green-700 text-[10px]">Gemitigeerd</Badge>, "Private storage verplicht, signed URL (5 min), legacy fallback verwijderd (v2.1.0)"],
             ["Geen field-level encryptie", <Badge className="bg-red-100 text-red-700 text-[10px]">Hoog</Badge>, "Platformbeperking — TLS als compensatie"],
           ]}
         />
@@ -357,9 +357,14 @@ export default function SecurityArchitecture() {
           <li>Dubbele backup-strategie (intern + Supabase)</li>
           <li>Volledige omgevingsscheiding (productie vs. test)</li>
         </ul>
-        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 mt-3">
+        <div className="p-3 bg-green-50 rounded-lg border border-green-200 mt-3">
+          <p className="text-xs text-green-800">
+            <strong>v2.1.0 Update:</strong> ID-documenten worden opgeslagen in private storage. Toegang verloopt uitsluitend via SecureDownloadToken (48 uur geldig), max 5 downloads, signed URL (5 minuten geldig), IP logging en server-side RBAC validatie. Public file_url fallback is volledig verwijderd. Geen publieke fallback mogelijk.
+          </p>
+        </div>
+        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 mt-2">
           <p className="text-xs text-amber-800">
-            <strong>Aanbeveling bij schaalvergroting:</strong> Field-level encryptie implementeren voor BSN, IBAN en pincode-velden. Signed URLs implementeren voor File Storage. E-mail met gevoelige data vervangen door beveiligde portaal-links.
+            <strong>Aanbeveling bij schaalvergroting:</strong> Field-level encryptie implementeren voor BSN, IBAN en pincode-velden.
           </p>
         </div>
         <p className="text-xs text-slate-400 mt-4 italic">
