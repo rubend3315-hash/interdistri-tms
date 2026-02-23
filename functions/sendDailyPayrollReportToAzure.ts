@@ -13,9 +13,9 @@ Deno.serve(async (req) => {
     const { date } = await req.json();
     if (!date) return Response.json({ error: 'date is verplicht (YYYY-MM-DD)' }, { status: 400 });
 
-    // Call buildDailyPayrollReportData with user's own token
-    const reportResponse = await base44.functions.invoke('buildDailyPayrollReportData', { date });
-    const reportData = reportResponse.data;
+    // Fetch report data via service role
+    const reportResponse = await base44.asServiceRole.functions.invoke('buildDailyPayrollReportData', { date });
+    const reportData = reportResponse.data ?? reportResponse;
 
     if (!reportData?.success) {
       return Response.json({
