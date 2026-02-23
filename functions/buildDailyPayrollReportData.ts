@@ -116,8 +116,9 @@ const KNOWN_TIMEENTRY_FIELDS = new Set([
   'subsistence_allowance', 'advanced_costs', 'meals', 'wkr', 'travel_allowance_multiplier',
   'notes', 'status', 'signature_url', 'submission_id',
   'approved_by', 'approved_date', 'rejection_reason', 'edit_history',
-  // Built-in fields always present on every entity record
+  // Built-in / platform-internal fields always present on every entity record
   'id', 'created_date', 'updated_date', 'created_by',
+  'created_by_id', 'is_sample',
 ]);
 
 /**
