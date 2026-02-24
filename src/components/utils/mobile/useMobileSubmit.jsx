@@ -41,23 +41,46 @@ function toAbsoluteMinutes(timeOrMinutes, serviceStart) {
  * No direct entity calls.
  */
 export function useMobileSubmit({
-  formData, trips, standplaatsWerk, signature, setSignature,
+  formData, trips, standplaatsWerk, dienstRegels = [], signature, setSignature,
   currentEmployee, isMultiDay, resetForm, setActiveTab, queryClient
 }) {
   const { submitEntry, saveDraft, isSubmitting, submittingRef } = useEntrySubmit();
 
   // --- Client-side validation before submit ---
   const validateBeforeSubmit = useCallback(() => {
-    console.log('[validateBeforeSubmit] ENTERED — trips:', trips.length, 'isMultiDay:', isMultiDay);
-    if (trips.length === 0) {
-      console.log('[validateBeforeSubmit] FAIL: no trips');
-      toast.error('Je moet minimaal één rit invoeren.');
+    console.log('[validateBeforeSubmit] ENTERED — dienstRegels:', dienstRegels.length, 'isMultiDay:', isMultiDay);
+    if (dienstRegels.length === 0) {
+      console.log('[validateBeforeSubmit] FAIL: no dienstRegels');
+      toast.error('Voer minimaal één rit of standplaatswerk in voordat je de dienst indient.');
       setActiveTab("ritten");
       return false;
     }
 
-    for (let i = 0; i < trips.length; i++) {
-      const trip = trips[i];
+    // Overlap check across all regels
+    for (let i = 0; i < dienstRegels.length; i++) {
+      const regel = dienstRegels[i];
+      const rStart = timeToMinutes(regel.start_time);
+      const rEnd = timeToMinutes(regel.end_time);
+      if (rStart === null || rEnd === null) continue;
+      const rEndN = rEnd <= rStart ? rEnd + 1440 : rEnd;
+      for (let j = i + 1; j < dienstRegels.length; j++) {
+        const other = dienstRegels[j];
+        const oStart = timeToMinutes(other.start_time);
+        const oEnd = timeToMinutes(other.end_time);
+        if (oStart === null || oEnd === null) continue;
+        const oEndN = oEnd <= oStart ? oEnd + 1440 : oEnd;
+        if (rStart < oEndN && rEndN > oStart) {
+          toast.error(`Tijden overlappen: regel ${i + 1} en regel ${j + 1}. Pas de tijden aan.`);
+          setActiveTab("ritten");
+          return false;
+        }
+      }
+    }
+
+    // Validate each rit has times
+    const ritRegels = dienstRegels.filter(r => r.type === "rit");
+    for (let i = 0; i < ritRegels.length; i++) {
+      const trip = ritRegels[i];
       if (!trip.start_time || !trip.end_time) {
         toast.error(`Rit ${i + 1}: Vul zowel start- als eindtijd in.`);
         setActiveTab("ritten");
@@ -121,7 +144,7 @@ export function useMobileSubmit({
 
     console.log('[validateBeforeSubmit] PASSED');
     return true;
-  }, [trips, standplaatsWerk, formData, isMultiDay, setActiveTab]);
+  }, [dienstRegels, trips, standplaatsWerk, formData, isMultiDay, setActiveTab]);
 
   // --- Error mapping for backend HTTP status codes ---
   const mapErrorToMessage = useCallback((result) => {
