@@ -394,8 +394,8 @@ export default function Layout({ children, currentPageName }) {
       'SecureDownload': '__public__',
 
       // Mobiel
-      'MobileEntry': PERMISSIONS.MOBILE_OWN,
-      'MobileEntryMultiDay': PERMISSIONS.MOBILE_OWN,
+      'MobileEntry': PERMISSIONS.TIMETRACKING_MANAGE,
+      'MobileEntryMultiDay': PERMISSIONS.TIMETRACKING_MANAGE,
     };
 
     const requiredPermission = PAGE_PERMISSION_MAP[page];
