@@ -38,6 +38,7 @@ export default function MobileDienstTab({
   );
 
   const hasRegels = geenRit ? true : dienstRegels.length > 0;
+  const hasOpenRit = dienstRegels.some(r => r.openRit && !r.end_time);
   const tripsCount = dienstRegels.filter(r => r.type === "rit").length;
   const standplaatsCount = dienstRegels.filter(r => r.type === "standplaats").length;
 
@@ -47,7 +48,7 @@ export default function MobileDienstTab({
     validateDienstRegels(dienstRegels, formData.start_time, formData.end_time, isSingleDay),
     [dienstRegels, formData.start_time, formData.end_time, isSingleDay, geenRit]
   );
-  const submitBlocked = validation.hasOverlap || validation.hasGap || validation.hasMarginError;
+  const submitBlocked = validation.hasOverlap || validation.hasGap || validation.hasMarginError || hasOpenRit;
   const allErrors = [...validation.overlaps, ...validation.gaps, ...validation.margins];
   const geenRitValid = !geenRit || (geenRitReden && geenRitReden.trim().length >= 5);
   const canSubmit = formData.end_time && hasRegels && !submitBlocked && !isSubmitting && geenRitValid;
@@ -174,27 +175,35 @@ export default function MobileDienstTab({
         )}
 
         {formData.start_time && !geenRit && (
-          <button
-            type="button"
-            onClick={() => setActiveTab("ritten")}
-            className="w-full flex items-center justify-between py-3"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-[13px] text-slate-900 font-medium">
-                {postNLAuto && dienstRegels.length > 0 ? 'Rit bewerken' : 'Dienstregels'}
-              </span>
-              {dienstRegels.length > 0 && (
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                  {tripsCount > 0 && <span className="flex items-center gap-0.5"><Truck className="w-3 h-3 text-blue-500" />{tripsCount}</span>}
-                  {standplaatsCount > 0 && <span className="flex items-center gap-0.5"><Package className="w-3 h-3 text-amber-500" />{standplaatsCount}</span>}
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-blue-600">{dienstRegels.length === 0 ? 'Toevoegen' : 'Bewerken'}</span>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
-            </div>
-          </button>
+          <div>
+            <button
+              type="button"
+              onClick={() => setActiveTab("ritten")}
+              className="w-full flex items-center justify-between py-3"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-[13px] text-slate-900 font-medium">
+                  {postNLAuto && dienstRegels.length > 0 ? 'Rit bewerken' : 'Dienstregels'}
+                </span>
+                {dienstRegels.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                    {tripsCount > 0 && <span className="flex items-center gap-0.5"><Truck className="w-3 h-3 text-blue-500" />{tripsCount}</span>}
+                    {standplaatsCount > 0 && <span className="flex items-center gap-0.5"><Package className="w-3 h-3 text-amber-500" />{standplaatsCount}</span>}
+                    {hasOpenRit && <span className="text-[10px] text-amber-600 font-medium">⏳ open</span>}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-blue-600">{dienstRegels.length === 0 ? 'Toevoegen' : 'Bewerken'}</span>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </div>
+            </button>
+            {hasOpenRit && (
+              <p className="text-[11px] text-amber-700 -mt-1 mb-1">
+                ⏳ Open rit — vul eindtijd en eind km in om af te sluiten en in te dienen
+              </p>
+            )}
+          </div>
         )}
 
         {formData.start_time && <div className="border-b border-slate-100" />}
@@ -230,14 +239,17 @@ export default function MobileDienstTab({
         {(hasRegels || geenRit) && formData.end_time && (
           <div className="space-y-2">
             {submitBlocked && (
-              <div className="px-3 py-2 bg-red-50 border-l-2 border-red-400 rounded-r-xl">
-                <div className="flex items-center gap-1.5 text-red-700 font-semibold text-[11px]">
+              <div className={`px-3 py-2 ${hasOpenRit && allErrors.length === 0 ? 'bg-amber-50 border-l-2 border-amber-400' : 'bg-red-50 border-l-2 border-red-400'} rounded-r-xl`}>
+                <div className={`flex items-center gap-1.5 ${hasOpenRit && allErrors.length === 0 ? 'text-amber-700' : 'text-red-700'} font-semibold text-[11px]`}>
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>Kan niet indienen:</span>
+                  <span>{hasOpenRit && allErrors.length === 0 ? 'Open rit afsluiten om in te dienen' : 'Kan niet indienen:'}</span>
                 </div>
                 {allErrors.map((msg, i) => (
                   <p key={i} className="text-[10px] text-red-600 ml-5 mt-0.5">• {msg}</p>
                 ))}
+                {hasOpenRit && allErrors.length === 0 && (
+                  <p className="text-[10px] text-amber-600 ml-5 mt-0.5">• Vul eindtijd en eind km in bij je rit</p>
+                )}
               </div>
             )}
 
@@ -278,19 +290,33 @@ export default function MobileDienstTab({
         )}
         {step === "submit" && (
           <div className="space-y-1.5">
-            <button type="button" onClick={onSubmit} disabled={!canSubmit}
-              className={`w-full h-[48px] rounded-xl text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${
-                canSubmit
-                  ? 'bg-blue-600 text-white active:bg-blue-700 ring-2 ring-blue-300 ring-offset-1'
-                  : 'bg-slate-200 text-slate-400'
-              }`}>
-              <Send className="w-4 h-4" />
-              {signature ? 'Dienst Indienen' : 'Handtekening & Indienen'}
-            </button>
-            <button type="button" onClick={onSaveDraft} disabled={isSubmitting}
-              className="w-full text-center text-[12px] text-emerald-700 font-medium py-1.5">
-              <Save className="w-3 h-3 inline mr-1" />Tussentijds opslaan
-            </button>
+            {hasOpenRit ? (
+              <>
+                <button type="button" onClick={onSaveDraft} disabled={isSubmitting}
+                  className="w-full h-[48px] rounded-xl bg-emerald-600 text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:bg-emerald-700">
+                  <Save className="w-4 h-4" /> Tussentijds opslaan
+                </button>
+                <p className="text-[11px] text-amber-600 text-center">
+                  ⏳ Open rit — sluit eerst af om in te dienen
+                </p>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={onSubmit} disabled={!canSubmit}
+                  className={`w-full h-[48px] rounded-xl text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${
+                    canSubmit
+                      ? 'bg-blue-600 text-white active:bg-blue-700 ring-2 ring-blue-300 ring-offset-1'
+                      : 'bg-slate-200 text-slate-400'
+                  }`}>
+                  <Send className="w-4 h-4" />
+                  {signature ? 'Dienst Indienen' : 'Handtekening & Indienen'}
+                </button>
+                <button type="button" onClick={onSaveDraft} disabled={isSubmitting}
+                  className="w-full text-center text-[12px] text-emerald-700 font-medium py-1.5">
+                  <Save className="w-3 h-3 inline mr-1" />Tussentijds opslaan
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
