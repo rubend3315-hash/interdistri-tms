@@ -553,6 +553,20 @@ export default function Layout({ children, currentPageName }) {
     return <>{children}</>;
   }
 
+  // DEBUG: Permission guard diagnose
+  console.log("---- PERMISSION DEBUG ----");
+  console.log("CURRENT PAGE NAME:", currentPageName);
+  const _requiredPerm = (() => {
+    const PAGE_PERMISSION_MAP_DBG = {
+      'Dashboard': 'dashboard.view', 'MobileEntry': 'mobile.own', 'MobileEntryMultiDay': 'mobile.own',
+    };
+    return PAGE_PERMISSION_MAP_DBG[currentPageName] || 'CHECK_FULL_MAP';
+  })();
+  console.log("REQUIRED PERMISSION:", _requiredPerm);
+  console.log("IS SUPER ADMIN:", isSuperAdmin);
+  console.log("HAS PAGE PERMISSION:", hasPagePermission(currentPageName));
+  console.log("--------------------------");
+
   // Permission guard — non-public, non-mobile pages require explicit permission
   if (!hasPagePermission(currentPageName)) {
     return <AccessDenied />;
