@@ -49,11 +49,16 @@ export default function MobileEntry({ currentUser }) {
   const { isOnline, syncStatus, pendingCount } = useOfflineSync();
 
   const data = useMobileData(currentUser);
-  const form = useMobileForm({ isMultiDay: false, currentEmployee: data.currentEmployee });
+
+  // Determine multi-day mode from employee setting
+  const mobileType = (data.currentEmployee?.mobile_entry_type || "").toLowerCase();
+  const isMultiDay = mobileType.includes("meerdaags") || mobileType === "multi_day";
+
+  const form = useMobileForm({ isMultiDay, currentEmployee: data.currentEmployee });
   const submit = useMobileSubmit({
     formData: form.formData, trips: form.trips, standplaatsWerk: form.standplaatsWerk,
     signature: form.signature, setSignature: form.setSignature,
-    currentEmployee: data.currentEmployee, isMultiDay: false,
+    currentEmployee: data.currentEmployee, isMultiDay,
     resetForm: form.resetForm, setActiveTab, queryClient: data.queryClient,
   });
 
@@ -63,7 +68,7 @@ export default function MobileEntry({ currentUser }) {
 
   useEffect(() => {
     if (data.currentEmployee?.id) {
-      base44.analytics.track({ eventName: "mobile_entry_page_loaded", properties: { employeeId: data.currentEmployee.id, entryType: "single_day" } });
+      base44.analytics.track({ eventName: "mobile_entry_page_loaded", properties: { employeeId: data.currentEmployee.id, entryType: isMultiDay ? "multi_day" : "single_day" } });
     }
   }, [data.currentEmployee?.id]);
 
@@ -103,7 +108,7 @@ export default function MobileEntry({ currentUser }) {
             <MobileFrontpage onNavigate={setActiveTab} />
           </div>
         )}
-        {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} trips={form.trips} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={false} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
+        {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} trips={form.trips} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={isMultiDay} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
         {activeTab === "ritten" && <MobileRittenTab trips={form.trips} setTrips={form.setTrips} standplaatsWerk={form.standplaatsWerk} setStandplaatsWerk={form.setStandplaatsWerk} vehicles={data.vehicles} customers={data.customers} routes={data.routes} tiModelRoutes={data.tiModelRoutes} projects={data.projects} activiteiten={data.activiteiten} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} isSubmitting={submit.isSubmitting} storageKey={form.storageKey} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
         {activeTab === "inspectie" && <MobileInspectionTab inspectionData={form.inspectionData} setInspectionData={form.setInspectionData} vehicles={data.vehicles} currentEmployee={data.currentEmployee} />}
         {activeTab === "declaratie" && <MobileExpenseTab expenseData={form.expenseData} setExpenseData={form.setExpenseData} currentEmployee={data.currentEmployee} />}
