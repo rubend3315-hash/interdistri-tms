@@ -120,7 +120,7 @@ export default function DienstRegelsTab({
   }, [deleteTarget, dienstRegels, setDienstRegels]);
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-160px)]">
+    <div className="flex flex-col">
       {/* Nav bar */}
       <div className="flex items-center justify-between mb-3">
         <button type="button" onClick={() => setActiveTab("dienst")} className="flex items-center gap-1 text-[13px] text-blue-600 font-medium">
@@ -149,7 +149,7 @@ export default function DienstRegelsTab({
       </div>
 
       {/* Content — edge-to-edge rows */}
-      <div className="flex-1 -mx-4">
+      <div className="-mx-4">
         {sorted.length === 0 ? (
           <div className="text-center py-10 text-slate-400">
             <p className="text-[13px]">Nog geen regels</p>
@@ -171,8 +171,8 @@ export default function DienstRegelsTab({
         )}
       </div>
 
-      {/* Sticky bottom */}
-      <div className="sticky bottom-0 left-0 right-0 bg-white pt-2 pb-1 -mx-4 px-4 border-t border-slate-100 mt-2 space-y-2">
+      {/* Bottom actions */}
+      <div className="bg-white pt-2 pb-1 -mx-4 px-4 border-t border-slate-100 mt-2 space-y-1.5">
         {/* PostNL mode with existing regels: no big "add" button */}
         {postNLAuto && dienstRegels.length > 0 ? (
           <>
@@ -230,9 +230,9 @@ export default function DienstRegelsTab({
               <button
                 type="button"
                 onClick={() => setAddMenuOpen(prev => !prev)}
-                className="w-full h-[44px] rounded-lg bg-blue-600 text-white text-[13px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700"
+                className="w-full h-[36px] rounded-lg bg-blue-600 text-white text-[13px] font-medium flex items-center justify-center gap-1.5 active:bg-blue-700"
               >
-                <Plus className="w-4 h-4" /> Regel toevoegen
+                <Plus className="w-3.5 h-3.5" /> Regel toevoegen
               </button>
             </div>
 

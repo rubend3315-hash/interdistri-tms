@@ -132,7 +132,7 @@ export default function MobileEntry({ currentUser }) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-white">
       <MobileMenu menuOpen={menuOpen} setMenuOpen={setMenuOpen} activeTab={activeTab} setActiveTab={setActiveTab} menuItems={menuItems} />
       <MobileHeader todayShift={data.todayShift} todayStr={data.todayStr} isOnline={isOnline} syncStatus={syncStatus} pendingCount={pendingCount} onMenuOpen={() => setMenuOpen(true)} />
 
@@ -144,8 +144,7 @@ export default function MobileEntry({ currentUser }) {
       )}
 
       <motion.div
-        className="px-4 pt-3 pb-6"
-        style={{ minHeight: 'calc(100vh - 120px)' }}
+        className="flex-1 overflow-y-auto px-4 pt-3 pb-4"
         drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.2}
         onDragEnd={(e, info) => {
           if (info.offset.x < -80 && info.velocity.x < -300) handleSwipe("left");

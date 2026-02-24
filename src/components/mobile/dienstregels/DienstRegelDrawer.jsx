@@ -63,23 +63,22 @@ export default function DienstRegelDrawer({
       return;
     }
 
-    // 2. For OPEN rit (no end_time): only validate start margin + start_km
-    if (isRit && !draft.end_time) {
-      // Start margin check: rit.start >= dienst.start + 1 min
+    // 2. For OPEN rit/standplaats (no end_time): only validate start + start_km
+    if (!draft.end_time) {
+      // Start margin check: regel.start >= dienst.start + 1 min
       const svcStart = timeToMinutes(dienstStartTime);
       if (svcStart !== null && sMin < svcStart + 1) {
-        toast.error("Starttijd rit moet na start dienst liggen.");
+        toast.error("Starttijd moet na start dienst liggen.");
         return;
       }
-      // Begin km verplicht bij voertuig
-      if (draft.vehicle_id && !draft.start_km) {
+      // Begin km verplicht bij voertuig (rit only)
+      if (isRit && draft.vehicle_id && !draft.start_km) {
         toast.error("Begin km is verplicht bij rit met voertuig.");
         return;
       }
-      // Save as OPEN rit → go home
+      // Save as OPEN regel
       onSave({ ...draft, openRit: true });
       onOpenChange(false);
-      if (onSaveAndGoHome) onSaveAndGoHome();
       return;
     }
 
@@ -186,7 +185,7 @@ export default function DienstRegelDrawer({
         )}
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2 bg-white">
+        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5 bg-white">
           {/* Type toggle */}
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={() => handleTypeSwitch("rit")}
