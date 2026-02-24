@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 
 const ALLOWED_TARGET_PAGES = [
   "MobileEntry",
-  "MobileEntryMultiDay",
   "Contracts",
   "EditTimeEntry",
   "Planning",
