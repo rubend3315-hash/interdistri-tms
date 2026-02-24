@@ -121,9 +121,9 @@ export default function DienstRegelDrawer({
     // Mark openRit as closed when end_time is now provided
     onSave({ ...draft, openRit: false });
     onOpenChange(false);
-    // Closing an open rit: PostNL → go to dienst eindtijd, otherwise → home
+    // Closing an open rit: PostNL → prefill dienst eindtijd +2min, otherwise → home
     if (draft.openRit && draft.end_time) {
-      if (onCloseOpenRitToDienst) onCloseOpenRitToDienst();
+      if (onCloseOpenRitToDienst) onCloseOpenRitToDienst(draft.end_time);
       else if (onSaveAndGoHome) onSaveAndGoHome();
     }
   };
