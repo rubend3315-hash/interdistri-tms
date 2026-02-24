@@ -92,14 +92,12 @@ export default function MobileDienstTab({
       )}
 
       {/* Content */}
-      <div className="flex-1 px-4 py-3 space-y-4">
+      <div className="flex-1 px-4 py-2 space-y-2">
         {/* ── BLOK 1: Datum & Start ── */}
-        <div className="space-y-2">
-          <h3 className="text-[13px] font-semibold text-slate-900">Datum & starttijd</h3>
-
+        <div className="space-y-1.5">
           {/* Meerdaags toggle — only for authorized employees */}
           {isMultiDayAllowed && (
-            <div className="flex items-center justify-between py-1">
+            <div className="flex items-center justify-between py-0.5">
               <span className="text-[12px] text-slate-600">Meerdaagse dienst</span>
               <Switch checked={multiDayEnabled} onCheckedChange={handleMultiDayToggle} />
             </div>
@@ -107,47 +105,54 @@ export default function MobileDienstTab({
 
           {/* Date fields — side by side when multiday */}
           {multiDayEnabled && isMultiDayAllowed ? (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[11px] text-slate-500 mb-0.5">Startdatum</Label>
+                  <Input type="date" className="h-[40px] bg-white" value={formData.date} onChange={(e) => {
+                    const d = e.target.value;
+                    setFormData(prev => ({ ...prev, date: d, end_date: (!prev.end_date || prev.end_date < d) ? d : prev.end_date }));
+                  }} />
+                </div>
+                <div>
+                  <Label className="text-[11px] text-slate-500 mb-0.5">Einddatum</Label>
+                  <Input type="date" className="h-[40px] bg-white" value={formData.end_date || formData.date} min={formData.date} max={maxEndDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))} />
+                </div>
+              </div>
+              {formData.end_date && formData.end_date !== formData.date && (
+                <p className="text-[11px] text-amber-700 font-medium">
+                  ⚡ {format(new Date(formData.date), "d MMM", { locale: nl })} t/m {format(new Date(formData.end_date), "d MMM", { locale: nl })}
+                </p>
+              )}
+              <div>
+                <Label className="text-[11px] text-slate-500 mb-0.5">Start dienst *</Label>
+                <TimeInput value={formData.start_time} onChange={(v) => setFormData(prev => ({ ...prev, start_time: v }))} placeholder="08:30" />
+              </div>
+            </>
+          ) : (
+            /* Single day: datum + starttijd naast elkaar */
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label className="text-[11px] text-slate-500">Startdatum</Label>
-                <Input type="date" className="h-[44px] mt-0.5 bg-white" value={formData.date} onChange={(e) => {
+                <Label className="text-[11px] text-slate-500 mb-0.5">Datum</Label>
+                <Input type="date" className="h-[40px] bg-white" value={formData.date} onChange={(e) => {
                   const d = e.target.value;
-                  setFormData(prev => ({ ...prev, date: d, end_date: (!prev.end_date || prev.end_date < d) ? d : prev.end_date }));
+                  setFormData(prev => ({ ...prev, date: d, end_date: d }));
                 }} />
               </div>
               <div>
-                <Label className="text-[11px] text-slate-500">Einddatum</Label>
-                <Input type="date" className="h-[44px] mt-0.5 bg-white" value={formData.end_date || formData.date} min={formData.date} max={maxEndDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))} />
+                <Label className="text-[11px] text-slate-500 mb-0.5">Start dienst *</Label>
+                <TimeInput value={formData.start_time} onChange={(v) => setFormData(prev => ({ ...prev, start_time: v }))} placeholder="08:30" />
               </div>
             </div>
-          ) : (
-            <div>
-              <Label className="text-[11px] text-slate-500">Datum</Label>
-              <Input type="date" className="h-[44px] mt-0.5 bg-white" value={formData.date} onChange={(e) => {
-                const d = e.target.value;
-                setFormData(prev => ({ ...prev, date: d, end_date: d }));
-              }} />
-            </div>
           )}
-
-          {multiDayEnabled && formData.end_date && formData.end_date !== formData.date && (
-            <p className="text-[11px] text-amber-700 font-medium">
-              ⚡ {format(new Date(formData.date), "d MMM", { locale: nl })} t/m {format(new Date(formData.end_date), "d MMM", { locale: nl })}
-            </p>
-          )}
-
-          <div>
-            <Label className="text-[11px] text-slate-500">Start dienst *</Label>
-            <TimeInput value={formData.start_time} onChange={(v) => setFormData(prev => ({ ...prev, start_time: v }))} placeholder="08:30" />
-          </div>
         </div>
 
         <div className="border-b border-slate-100" />
 
         {/* ── PostNL auto-rit checkbox ── */}
         {formData.start_time && v2 && setPostNLAuto && (
-          <label className="flex items-center gap-3 py-1 cursor-pointer">
+          <label className="flex items-center gap-2 py-0.5 cursor-pointer">
             <Checkbox checked={postNLAuto} onCheckedChange={(checked) => setPostNLAuto(!!checked)} />
             <span className="text-[13px] text-slate-700">PostNL – automatische rit aanmaken</span>
           </label>
@@ -156,7 +161,7 @@ export default function MobileDienstTab({
         {/* ── BLOK 2: Geen rit + Dienstregels samenvatting ── */}
         {formData.start_time && v2 && (
           <div>
-            <label className="flex items-center gap-3 py-2 cursor-pointer">
+            <label className="flex items-center gap-2 py-0.5 cursor-pointer">
               <Checkbox checked={geenRit} onCheckedChange={(checked) => setGeenRit(!!checked)} />
               <span className="text-[13px] text-slate-700">Geen rit / standplaats (kantoor, opleiding, etc.)</span>
             </label>
@@ -183,7 +188,7 @@ export default function MobileDienstTab({
             <button
               type="button"
               onClick={() => setActiveTab("ritten")}
-              className="w-full flex items-center justify-between py-3"
+              className="w-full flex items-center justify-between py-2"
             >
               <div className="flex items-center gap-3">
                 <span className="text-[13px] text-slate-900 font-medium">
@@ -203,8 +208,8 @@ export default function MobileDienstTab({
               </div>
             </button>
             {hasOpenRit && (
-              <p className="text-[11px] text-amber-700 -mt-1 mb-1">
-                ⏳ Open rit — vul eindtijd en eind km in om af te sluiten en in te dienen
+              <p className="text-[10px] text-amber-700 -mt-0.5 mb-0.5">
+                🟡 Open rit – eindtijd later invullen
               </p>
             )}
           </div>
@@ -214,34 +219,30 @@ export default function MobileDienstTab({
 
         {/* ── BLOK 3: Eind & Pauze ── */}
         {(hasRegels || geenRit) && formData.start_time && (
-          <div className="space-y-2">
-            <h3 className="text-[13px] font-semibold text-slate-900">Eindtijd & pauze</h3>
-
+          <div className="space-y-1.5">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label className="text-[11px] text-slate-500">Eind dienst *</Label>
+                <Label className="text-[11px] text-slate-500 mb-0.5">Eind dienst *</Label>
                 <TimeInput value={formData.end_time} onChange={(v) => setFormData(prev => ({ ...prev, end_time: v }))} placeholder="16:30" />
               </div>
               <div>
-                <Label className="text-[11px] text-slate-500">Pauze (min)</Label>
-                <Input type="number" className="h-[44px] mt-0.5 bg-white" value={formData.break_minutes}
+                <Label className="text-[11px] text-slate-500 mb-0.5">Pauze (min)</Label>
+                <Input type="number" className="h-[40px] bg-white" value={formData.break_minutes}
                   onChange={(e) => setFormData(prev => ({ ...prev, break_minutes: parseInt(e.target.value, 10) || 0 }))} />
               </div>
             </div>
 
             {formData.end_time && (
-              <div className="text-center py-1">
-                <span className="text-[13px] text-blue-700 font-semibold">
-                  Totaal: {calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date)} uur
-                </span>
-              </div>
+              <p className="text-[12px] text-blue-700 font-semibold text-center">
+                Totaal: {calculateHours(formData.start_time, formData.end_time, formData.break_minutes, formData.date, formData.end_date)} uur
+              </p>
             )}
           </div>
         )}
 
         {/* Validation + notes */}
         {(hasRegels || geenRit) && formData.end_time && (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {submitBlocked && (
               <div className={`px-3 py-2 ${hasOpenRit && allErrors.length === 0 ? 'bg-amber-50 border-l-2 border-amber-400' : 'bg-red-50 border-l-2 border-red-400'} rounded-r-xl`}>
                 <div className={`flex items-center gap-1.5 ${hasOpenRit && allErrors.length === 0 ? 'text-amber-700' : 'text-red-700'} font-semibold text-[11px]`}>
@@ -270,7 +271,7 @@ export default function MobileDienstTab({
       </div>
 
       {/* ── STICKY BOTTOM CTA ── */}
-      <div className="sticky bottom-0 left-0 right-0 bg-white pt-2 pb-1 px-4 border-t border-slate-100">
+      <div className="sticky bottom-0 left-0 right-0 bg-white pt-1.5 pb-1 px-4 border-t border-slate-100">
         {step === "start" && (
           <button disabled className="w-full h-[44px] rounded-xl bg-slate-200 text-slate-400 text-[13px] font-semibold flex items-center justify-center">
             Vul starttijd in om door te gaan
