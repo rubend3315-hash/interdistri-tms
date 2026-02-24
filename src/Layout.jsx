@@ -298,9 +298,7 @@ export default function Layout({ children, currentPageName }) {
     queryKey: ['currentEmployee', user?.email],
     queryFn: async ({ queryKey }) => {
       const [, email] = queryKey;
-      console.log("🔍 EMPLOYEE QUERY RUNNING FOR:", email);
       const emps = await base44.entities.Employee.filter({ email });
-      console.log("🔍 EMPLOYEE QUERY RESULT:", emps?.length, "records found", emps?.[0]?.id);
       return emps[0] ?? null;
     },
     enabled: !!user && isEmployeeUser(user),
