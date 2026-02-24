@@ -1,37 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Truck, Package, Plus, Trash2, Save, Clock, ChevronDown, ChevronRight, MapPin } from "lucide-react";
+import { Truck, Package, Plus, Trash2, Save, Clock, ChevronDown, ChevronRight, MapPin, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import ProgressSteps from "@/components/mobile/ProgressSteps";
 import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
-
-const timeToMinutes = (time) => {
-  if (!time || time.length < 5) return null;
-  const [h, m] = time.split(':').map(Number);
-  return (isNaN(h) || isNaN(m)) ? null : h * 60 + m;
-};
-
-function hasOverlap(newRule, existingRules, excludeId) {
-  const newStart = timeToMinutes(newRule.start_time);
-  const newEnd = timeToMinutes(newRule.end_time);
-  if (newStart === null || newEnd === null) return false;
-  // Normalize: if end <= start, treat as next-day
-  const nEnd = newEnd <= newStart ? newEnd + 1440 : newEnd;
-
-  return existingRules.some(rule => {
-    if (rule.id === excludeId) return false;
-    const rStart = timeToMinutes(rule.start_time);
-    const rEnd = timeToMinutes(rule.end_time);
-    if (rStart === null || rEnd === null) return false;
-    const rEndN = rEnd <= rStart ? rEnd + 1440 : rEnd;
-    return newStart < rEndN && nEnd > rStart;
-  });
-}
+import { validateDienstRegels, findOverlaps } from "@/components/utils/mobile/dienstRegelValidation";
 
 const EMPTY_TRIP = {
   start_time: "", end_time: "", departure_location: "Standplaats",
@@ -54,11 +32,20 @@ export default function DienstRegelsTab({
   dienstRegels, setDienstRegels,
   vehicles, customers, routes, tiModelRoutes, projects, activiteiten,
   progressStep, lastSavedAt, isSaving, isSubmitting,
-  storageKey, onSaveDraft, setActiveTab
+  storageKey, onSaveDraft, setActiveTab,
+  formData
 }) {
   const [collapsed, setCollapsed] = useState({});
 
   const activeActiviteiten = (activiteiten || []).filter(a => a.status !== "Inactief");
+
+  // Real-time validation for UI banner
+  const isSingleDay = !formData?.end_date || formData.end_date === formData.date;
+  const validation = useMemo(() =>
+    validateDienstRegels(dienstRegels, formData?.start_time, formData?.end_time, isSingleDay),
+    [dienstRegels, formData?.start_time, formData?.end_time, isSingleDay]
+  );
+  const hasValidationErrors = validation.hasOverlap || validation.hasGap;
 
   const addRegel = (type) => {
     const newRegel = {
@@ -79,10 +66,10 @@ export default function DienstRegelsTab({
         return newR;
       });
 
-      // Check overlap on time field changes
+      // Show toast on overlap when editing time fields
       if (field === "start_time" || field === "end_time") {
-        const changed = updated.find(r => r.id === id);
-        if (changed?.start_time && changed?.end_time && hasOverlap(changed, updated, id)) {
+        const overlaps = findOverlaps(updated);
+        if (overlaps.length > 0) {
           toast.error("Tijden overlappen. Je kunt geen rit en standplaats tegelijk registreren.");
         }
       }
@@ -125,6 +112,19 @@ export default function DienstRegelsTab({
     <div className="space-y-4">
       <ProgressSteps steps={["Start dienst", "Dienstregels", "Eindtijd", "Indienen"]} currentStep={progressStep} />
       <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
+
+      {/* Validation banner */}
+      {hasValidationErrors && (
+        <div className="p-3 bg-red-50 border-2 border-red-300 rounded-lg space-y-1">
+          <div className="flex items-center gap-2 text-red-700 font-semibold text-sm">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span>Corrigeer de volgende problemen:</span>
+          </div>
+          {[...validation.overlaps, ...validation.gaps].map((msg, i) => (
+            <p key={i} className="text-xs text-red-600 ml-6">• {msg}</p>
+          ))}
+        </div>
+      )}
 
       <Card className="bg-slate-800 text-white">
         <CardContent className="p-3">
@@ -213,11 +213,13 @@ export default function DienstRegelsTab({
           <Button variant="outline" className="w-full py-3 border-emerald-300 bg-emerald-50" onClick={onSaveDraft} disabled={isSubmitting}>
             <Save className="w-4 h-4 mr-2" /> Tussentijds Opslaan & Terug naar Home
           </Button>
-          {hasTrips && (
-            <Button className="w-full py-3 bg-blue-600 hover:bg-blue-700" onClick={async () => { await onSaveDraft(); setActiveTab("dienst"); }} disabled={isSubmitting}>
-              <Clock className="w-4 h-4 mr-2" /> Volgende → Einde diensttijd invoeren
-            </Button>
-          )}
+          <Button
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700"
+            onClick={async () => { await onSaveDraft(); setActiveTab("dienst"); }}
+            disabled={isSubmitting || validation.hasOverlap}
+          >
+            <Clock className="w-4 h-4 mr-2" /> Volgende → Einde diensttijd invoeren
+          </Button>
         </div>
       )}
     </div>
