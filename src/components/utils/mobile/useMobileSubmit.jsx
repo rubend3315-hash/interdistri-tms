@@ -30,6 +30,12 @@ export function useMobileSubmit({
       return true;
     }
 
+    // 0b. Multi-day safety: block if not authorized
+    if (!isMultiDay && formData.end_date && formData.end_date !== formData.date) {
+      toast.error('Meerdaagse dienst is niet toegestaan voor deze medewerker.');
+      return false;
+    }
+
     // 1. Minimaal 1 regel
     if (dienstRegels.length === 0) {
       toast.error('Voer minimaal één rit of standplaatswerk in.');
