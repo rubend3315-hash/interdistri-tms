@@ -64,41 +64,26 @@ export default function MobileEntry({ currentUser }) {
 
   const form = useMobileForm({ isMultiDay, currentEmployee: data.currentEmployee, businessMode: MOBILE_ENTRY_V2 ? businessMode : "HANDMATIG" });
 
-  // PostNL auto-rit: when postNLAuto=true, no geenRit, 0 regels, and start_time filled
-  // Open Rit model: only needs start_time, no end_time required
-  useEffect(() => {
-    if (!MOBILE_ENTRY_V2) return;
-    if (!postNLAuto) return;
-    if (geenRit) return;
-    if (form.dienstRegels.length > 0) return;
-    if (form.autoRitDismissed) return;
-    if (!form.formData.start_time) return;
-
-    const postNLCustomer = (data.customers || []).find(c => c.company_name?.toLowerCase().includes("postnl"));
-    form.generateAutoRit(form.formData.start_time, form.formData.end_time, postNLCustomer?.id || "");
-  }, [postNLAuto, geenRit, form.dienstRegels.length, form.formData.start_time, form.autoRitDismissed]);
-
   // Mutual exclusion: PostNL off when geenRit on
   const handleSetGeenRit = useCallback((val) => {
     setGeenRit(val);
     if (val) setPostNLAuto(false);
   }, []);
 
+  // Direct toggle handler — no useEffect, deterministic
   const handleSetPostNLAuto = useCallback((val) => {
     setPostNLAuto(val);
     if (val) {
       setGeenRit(false);
       setGeenRitReden("");
-      // If starttijd filled and no regels yet → create OPEN auto-rit and navigate directly to rit drawer
-      if (form.formData.start_time && form.dienstRegels.length === 0 && !form.autoRitDismissed) {
+      if (form.formData.start_time && !form.autoRitDismissed) {
         const postNLCustomer = (data.customers || []).find(c => c.company_name?.toLowerCase().includes("postnl"));
         form.generateAutoRit(form.formData.start_time, form.formData.end_time, postNLCustomer?.id || "");
-        // Direct to ritten tab + open drawer — no tussenstap
         setActiveTab("ritten");
         setPostNLOpenDrawer(true);
       }
     }
-  }, [form.formData.start_time, form.formData.end_time, form.dienstRegels.length, form.autoRitDismissed, data.customers]);
+  }, [form.formData.start_time, form.formData.end_time, form.autoRitDismissed, data.customers]);
 
   const submit = useMobileSubmit({
     formData: form.formData, trips: form.trips, standplaatsWerk: form.standplaatsWerk,
