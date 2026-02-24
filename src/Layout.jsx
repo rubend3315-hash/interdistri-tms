@@ -509,13 +509,22 @@ export default function Layout({ children, currentPageName }) {
     }
   }
 
-  if (isEmployeeUser(user) && currentPageName === "Dashboard") {
-    // Must wait for employee data to load before deciding which mobile app to show
+  // --- Deterministic Mobile Routing (SAFE) ---
+  if (
+    isEmployeeUser(user) &&
+    (currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay")
+  ) {
     if (loadingEmployee || !currentEmployee) return null;
-    if (currentEmployee.mobile_entry_type === 'multi_day') {
-      return <MobileEntryMultiDay currentUser={user} />;
+
+    const isMultiDay = currentEmployee.mobile_entry_type === "multi_day";
+
+    if (currentPageName === "MobileEntry" && isMultiDay) {
+      return <Navigate to={createPageUrl("MobileEntryMultiDay")} replace />;
     }
-    return <MobileEntry currentUser={user} />;
+
+    if (currentPageName === "MobileEntryMultiDay" && !isMultiDay) {
+      return <Navigate to={createPageUrl("MobileEntry")} replace />;
+    }
   }
 
   // PLANNER landing page: redirect Dashboard → Planning
