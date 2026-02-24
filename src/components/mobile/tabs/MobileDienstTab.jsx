@@ -33,10 +33,8 @@ export default function MobileDienstTab({
   geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
   postNLAuto = false, setPostNLAuto
 }) {
-  // Only show multi-day toggle for authorized employees; default OFF
-  const [multiDayEnabled, setMultiDayEnabled] = useState(
-    isMultiDayAllowed && formData.end_date && formData.end_date !== formData.date
-  );
+  // Only show multi-day toggle for authorized employees; default ON for multi_day employees
+  const [multiDayEnabled, setMultiDayEnabled] = useState(isMultiDayAllowed);
 
   const hasRegels = geenRit ? true : dienstRegels.length > 0;
   const hasOpenRit = dienstRegels.some(r => r.openRit && !r.end_time);
