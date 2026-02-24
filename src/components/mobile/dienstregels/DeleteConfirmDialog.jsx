@@ -12,7 +12,7 @@ export default function DeleteConfirmDialog({ open, onOpenChange, onConfirm }) {
         <AlertDialogHeader>
           <AlertDialogTitle className="text-base">Regel verwijderen?</AlertDialogTitle>
           <AlertDialogDescription className="text-sm">
-            Deze dienstregel wordt definitief verwijderd.
+            Weet je zeker dat je deze regel wilt verwijderen?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
