@@ -125,19 +125,27 @@ export function useMobileData(user) {
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
+  // Merge myTimeEntries + employeeTimeEntries, deduplicate by id
+  const allMyEntries = useMemo(() => {
+    const map = new Map();
+    for (const e of myTimeEntries) map.set(e.id, e);
+    for (const e of employeeTimeEntries) map.set(e.id, e);
+    return Array.from(map.values());
+  }, [myTimeEntries, employeeTimeEntries]);
+
   const submittedTodayEntries = useMemo(() => {
-    if (!currentEmployee?.id || !myTimeEntries.length) return [];
-    return myTimeEntries.filter(e =>
+    if (!currentEmployee?.id || !allMyEntries.length) return [];
+    return allMyEntries.filter(e =>
       e.employee_id === currentEmployee.id &&
       e.date === todayStr &&
       (e.status === 'Ingediend' || e.status === 'Goedgekeurd') &&
       e.signature_url
     );
-  }, [myTimeEntries, currentEmployee?.id, todayStr]);
+  }, [allMyEntries, currentEmployee?.id, todayStr]);
 
   const approvedEntries = useMemo(() =>
-    myTimeEntries.filter(e => e.status === 'Goedgekeurd'),
-  [myTimeEntries]);
+    allMyEntries.filter(e => e.status === 'Goedgekeurd'),
+  [allMyEntries]);
 
   // Mark message as read
   const markMessageRead = async (messageId) => {
