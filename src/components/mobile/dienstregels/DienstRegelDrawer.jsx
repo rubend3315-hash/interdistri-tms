@@ -30,6 +30,7 @@ export default function DienstRegelDrawer({
   onSave, onDelete, vehicles, customers, routes, tiModelRoutes, projects, activiteiten
 }) {
   const [draft, setDraft] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => { if (open && regel) setDraft({ ...regel }); }, [open, regel?.id]);
   if (!draft) return null;
@@ -70,8 +71,6 @@ export default function DienstRegelDrawer({
       })
     }));
   };
-
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleDelete = () => { setShowDeleteConfirm(true); };
   const confirmDelete = () => { onDelete?.(draft.id); setShowDeleteConfirm(false); onOpenChange(false); };
