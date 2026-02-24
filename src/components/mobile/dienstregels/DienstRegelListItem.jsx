@@ -57,7 +57,7 @@ export default function DienstRegelListItem({ regel, customers, hasOverlap, onTa
       {/* Card */}
       <div
         className={cn(
-          "relative flex items-center gap-2.5 bg-white pl-3 pr-1.5 py-2 rounded-lg border transition-transform",
+          "relative flex items-center gap-2 bg-white pl-2.5 pr-1 py-1.5 rounded-lg border transition-transform",
           hasOverlap ? "border-red-400 bg-red-50" : isRit ? "border-blue-100" : "border-amber-100"
         )}
         style={{ transform: `translateX(${offsetX}px)`, transition: swiping ? 'none' : 'transform 200ms ease' }}
@@ -67,12 +67,12 @@ export default function DienstRegelListItem({ regel, customers, hasOverlap, onTa
       >
         {/* Tappable area */}
         <div
-          className="flex items-center gap-2.5 flex-1 min-w-0"
+          className="flex items-center gap-2 flex-1 min-w-0"
           onClick={() => { if (Math.abs(offsetX) < 5) onTap(); }}
         >
           {/* Icon */}
           <div className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+            "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0",
             isRit ? "bg-blue-100" : "bg-amber-100"
           )}>
             {isRit
@@ -92,7 +92,7 @@ export default function DienstRegelListItem({ regel, customers, hasOverlap, onTa
                 {isRit ? "Rit" : "Standplaats"}
               </span>
             </div>
-            <p className="text-xs text-slate-500 truncate mt-0.5">{subtitle}</p>
+            <p className="text-[11px] text-slate-500 truncate">{subtitle}</p>
           </div>
 
           {/* Chevron */}
@@ -105,7 +105,7 @@ export default function DienstRegelListItem({ regel, customers, hasOverlap, onTa
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="p-2 rounded-lg hover:bg-red-50 active:bg-red-100 flex-shrink-0 transition"
+          className="p-1.5 rounded-lg hover:bg-red-50 active:bg-red-100 flex-shrink-0 transition"
         >
           <Trash2 className="w-4 h-4 text-red-400" />
         </button>

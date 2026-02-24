@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Trash2, Check } from "lucide-react";
+import { Trash2, Check, X } from "lucide-react";
 
 export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
   const canvasRef = useRef(null);
@@ -9,18 +9,15 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
   const [hasDrawn, setHasDrawn] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Initialize canvas when dialog opens
   useEffect(() => {
     if (!open) return;
-    // Small delay to ensure dialog is rendered and canvas has dimensions
     const timer = setTimeout(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const container = canvas.parentElement;
       const width = container.clientWidth;
-      const height = Math.max(200, Math.min(280, window.innerHeight * 0.3));
-      
-      // Set actual canvas resolution (important for sharp lines)
+      const height = Math.max(180, Math.min(260, window.innerHeight * 0.35));
+
       const dpr = window.devicePixelRatio || 1;
       canvas.width = width * dpr;
       canvas.height = height * dpr;
@@ -47,10 +44,7 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
     const touch = e.touches?.[0];
     const clientX = touch ? touch.clientX : e.clientX;
     const clientY = touch ? touch.clientY : e.clientY;
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
-    };
+    return { x: clientX - rect.left, y: clientY - rect.top };
   }, []);
 
   const handleStart = useCallback((e) => {
@@ -100,25 +94,28 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
     const dataUrl = canvas.toDataURL("image/png");
     try {
       const result = await onSave(dataUrl);
-      // Only close dialog on success
-      if (result?.success) {
-        onOpenChange(false);
-      }
-      // On failure: dialog stays open, signature canvas intact
+      if (result?.success) onOpenChange(false);
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-md p-4">
-        <DialogHeader>
-          <DialogTitle className="text-base">Handtekening zetten</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <p className="text-xs text-slate-500">
-            Gebruik je vinger om hieronder je handtekening te zetten
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="h-[100dvh] max-h-[100dvh] p-0 flex flex-col rounded-none">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+          <button type="button" onClick={() => onOpenChange(false)} className="p-1 -ml-1 rounded-lg hover:bg-slate-100">
+            <X className="w-5 h-5 text-slate-500" />
+          </button>
+          <span className="text-sm font-semibold text-slate-900">Handtekening zetten</span>
+          <div className="w-7" />
+        </div>
+
+        {/* Canvas area */}
+        <div className="flex-1 flex flex-col justify-center px-4 py-4 bg-slate-50">
+          <p className="text-xs text-slate-500 text-center mb-3">
+            Gebruik je vinger om hieronder te tekenen
           </p>
           <div className="border-2 border-dashed border-slate-300 rounded-lg overflow-hidden bg-white">
             <canvas
@@ -133,17 +130,16 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
               onTouchEnd={handleEnd}
             />
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t bg-white space-y-2">
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={clearCanvas}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Wissen
+            <Button variant="outline" className="flex-1 h-[44px]" onClick={clearCanvas}>
+              <Trash2 className="w-4 h-4 mr-1.5" /> Wissen
             </Button>
             <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 h-[44px] bg-blue-600 hover:bg-blue-700"
               onClick={handleSave}
               disabled={!hasDrawn || isSaving}
             >
@@ -153,15 +149,12 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
                   Indienen...
                 </span>
               ) : (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Opslaan & Indienen
-                </>
+                <><Check className="w-4 h-4 mr-1.5" /> Opslaan & Indienen</>
               )}
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

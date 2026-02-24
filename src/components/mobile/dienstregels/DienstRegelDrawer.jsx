@@ -89,7 +89,7 @@ export default function DienstRegelDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh] rounded-t-2xl p-0 flex flex-col">
         {/* Sticky header */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-b bg-white sticky top-0 z-10 rounded-t-2xl">
+        <div className="flex items-center justify-between px-3 py-2 border-b bg-white sticky top-0 z-10 rounded-t-2xl">
           <button type="button" onClick={() => onOpenChange(false)} className="p-1.5 -ml-1.5 rounded-lg hover:bg-slate-100">
             <X className="w-5 h-5 text-slate-500" />
           </button>
@@ -102,7 +102,7 @@ export default function DienstRegelDrawer({
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5">
+        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2">
           {/* Type toggle */}
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={() => handleTypeSwitch("rit")}
@@ -148,8 +148,8 @@ export default function DienstRegelDrawer({
         </div>
 
         {/* Sticky footer */}
-        <div className="px-4 py-3 border-t bg-white sticky bottom-0">
-          <Button className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-sm font-semibold" onClick={handleSave}>
+        <div className="px-3 py-2.5 border-t bg-white sticky bottom-0">
+          <Button className="w-full h-[44px] bg-blue-600 hover:bg-blue-700 text-[13px] font-semibold" onClick={handleSave}>
             <Check className="w-4 h-4 mr-1.5" /> Opslaan
           </Button>
         </div>

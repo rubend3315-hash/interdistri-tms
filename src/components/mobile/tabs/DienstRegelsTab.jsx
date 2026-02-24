@@ -153,28 +153,23 @@ export default function DienstRegelsTab({
       )}
 
       {/* Header */}
-      <Card className="bg-slate-800 text-white">
-        <CardContent className="p-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <div>
-                <p className="text-sm font-semibold">Dienstregels</p>
-                <p className="text-[11px] text-slate-300">{dienstRegels.length} regel{dienstRegels.length !== 1 ? 's' : ''} · Tik om te bewerken, veeg om te verwijderen</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between bg-slate-800 text-white rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4" />
+          <span className="text-[13px] font-semibold">Dienstregels</span>
+          <span className="text-[11px] text-slate-300">({dienstRegels.length})</span>
+        </div>
+        <span className="text-[10px] text-slate-400">Tik = bewerk · Veeg = verwijder</span>
+      </div>
 
       {/* List */}
       {sorted.length === 0 ? (
-        <div className="text-center py-8 text-slate-400">
-          <p className="text-sm">Nog geen regels toegevoegd</p>
-          <p className="text-xs mt-1">Tik op '+ Regel toevoegen' hieronder</p>
+        <div className="text-center py-6 text-slate-400">
+          <p className="text-[13px]">Nog geen regels</p>
+          <p className="text-[11px] mt-0.5">Tik hieronder om toe te voegen</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {sorted.map((regel) => (
             <DienstRegelListItem
               key={regel.id}
@@ -222,25 +217,25 @@ export default function DienstRegelsTab({
         )}
         <Button
           variant="outline"
-          className="w-full py-3 border-dashed border-2 border-slate-300 text-slate-600"
+          className="w-full h-[44px] border-dashed border-2 border-slate-300 text-slate-600 text-[13px]"
           onClick={() => setAddMenuOpen(prev => !prev)}
         >
-          <Plus className="w-4 h-4 mr-2" /> Regel toevoegen
+          <Plus className="w-4 h-4 mr-1.5" /> Regel toevoegen
         </Button>
       </div>
 
       {/* Bottom actions */}
       {hasAnyRegels && (
-        <div className="space-y-2 pt-3 border-t">
-          <Button variant="outline" className="w-full py-2.5 border-emerald-300 bg-emerald-50 text-sm" onClick={onSaveDraft} disabled={isSubmitting}>
-            <Save className="w-4 h-4 mr-2" /> Opslaan & Terug
+        <div className="space-y-1.5 pt-2 border-t">
+          <Button variant="outline" className="w-full h-[40px] border-emerald-300 bg-emerald-50 text-[12px]" onClick={onSaveDraft} disabled={isSubmitting}>
+            <Save className="w-3.5 h-3.5 mr-1.5" /> Opslaan & Terug
           </Button>
           <Button
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-sm"
+            className="w-full h-[44px] bg-blue-600 hover:bg-blue-700 text-[13px]"
             onClick={async () => { await onSaveDraft(); setActiveTab("dienst"); }}
             disabled={isSubmitting || hasValidationErrors}
           >
-            <Clock className="w-4 h-4 mr-2" /> Volgende → Eindtijd invoeren
+            <Clock className="w-3.5 h-3.5 mr-1.5" /> Volgende → Eindtijd
           </Button>
         </div>
       )}
