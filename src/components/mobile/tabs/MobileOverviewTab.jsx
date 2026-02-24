@@ -43,9 +43,12 @@ function buildWeeks(entries) {
   return Array.from(weekMap.values()).sort((a, b) => b.weekStart - a.weekStart);
 }
 
+const STORAGE_KEY = "mobile_active_week_key";
+
 export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
   const weeks = useMemo(() => buildWeeks(approvedEntries), [approvedEntries]);
   const now = new Date();
+  const initialized = useRef(false);
 
   // Find index of current week in weeks array
   const currentWeekIdx = useMemo(() => {
@@ -53,8 +56,40 @@ export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
     return idx >= 0 ? idx : 0;
   }, [weeks, now]);
 
-  const [focusIdx, setFocusIdx] = useState(0);
+  // Initialize focusIdx from localStorage or currentWeek
+  const [focusIdx, setFocusIdx] = useState(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && weeks.length > 0) {
+      const idx = weeks.findIndex(w => w.key === stored);
+      if (idx >= 0) return idx;
+    }
+    return 0;
+  });
+
+  // When weeks data loads/changes, resolve stored key to index
+  useEffect(() => {
+    if (weeks.length === 0) return;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const idx = weeks.findIndex(w => w.key === stored);
+      if (idx >= 0) {
+        setFocusIdx(idx);
+      } else if (!initialized.current) {
+        setFocusIdx(currentWeekIdx);
+      }
+    } else if (!initialized.current) {
+      setFocusIdx(currentWeekIdx);
+    }
+    initialized.current = true;
+  }, [weeks, currentWeekIdx]);
+
+  // Persist focusIdx to localStorage
   const focusWeek = weeks[focusIdx] || null;
+  useEffect(() => {
+    if (focusWeek) {
+      localStorage.setItem(STORAGE_KEY, focusWeek.key);
+    }
+  }, [focusWeek?.key]);
 
   const goPrev = useCallback(() => setFocusIdx(i => Math.min(i + 1, weeks.length - 1)), [weeks.length]);
   const goNext = useCallback(() => setFocusIdx(i => Math.max(i - 1, 0)), []);
