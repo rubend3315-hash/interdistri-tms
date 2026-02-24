@@ -2,38 +2,7 @@ import { useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { useEntrySubmit } from "./useEntrySubmit";
-
-const timeToMinutes = (time) => {
-  if (!time || time.length < 5) return null;
-  const [h, m] = time.split(':').map(Number);
-  if (isNaN(h) || isNaN(m)) return null;
-  return h * 60 + m;
-};
-
-/**
- * Build service range for single-day only.
- * Handles overnight shifts (end_time <= start_time → +1440).
- */
-function buildSingleDayServiceRange(formData) {
-  const sMin = timeToMinutes(formData.start_time);
-  const eMin = timeToMinutes(formData.end_time);
-  if (sMin === null || eMin === null) return null;
-  return {
-    serviceStart: sMin,
-    serviceEnd: eMin <= sMin ? eMin + 1440 : eMin,
-  };
-}
-
-/**
- * Convert minutes to absolute offset for single-day validation.
- * If m < serviceStart, treat as next day (+1440) for overnight shifts.
- * Accepts raw minutes (number) or time string.
- */
-function toAbsoluteMinutes(timeOrMinutes, serviceStart) {
-  const m = typeof timeOrMinutes === 'number' ? timeOrMinutes : timeToMinutes(timeOrMinutes);
-  if (m === null) return null;
-  return m < serviceStart ? m + 1440 : m;
-}
+import { findOverlaps, findGaps } from "./dienstRegelValidation";
 
 /**
  * useMobileSubmit — Handles validation + submit + draft save.
@@ -49,94 +18,42 @@ export function useMobileSubmit({
   // --- Client-side validation before submit ---
   const validateBeforeSubmit = useCallback(() => {
     console.log('[validateBeforeSubmit] ENTERED — dienstRegels:', dienstRegels.length, 'isMultiDay:', isMultiDay);
+
+    // 1. Minimaal 1 regel
     if (dienstRegels.length === 0) {
-      console.log('[validateBeforeSubmit] FAIL: no dienstRegels');
-      toast.error('Voer minimaal één rit of standplaatswerk in voordat je de dienst indient.');
+      toast.error('Voer minimaal één rit of standplaatswerk in.');
       setActiveTab("ritten");
       return false;
     }
 
-    // Overlap check across all regels
-    for (let i = 0; i < dienstRegels.length; i++) {
-      const regel = dienstRegels[i];
-      const rStart = timeToMinutes(regel.start_time);
-      const rEnd = timeToMinutes(regel.end_time);
-      if (rStart === null || rEnd === null) continue;
-      const rEndN = rEnd <= rStart ? rEnd + 1440 : rEnd;
-      for (let j = i + 1; j < dienstRegels.length; j++) {
-        const other = dienstRegels[j];
-        const oStart = timeToMinutes(other.start_time);
-        const oEnd = timeToMinutes(other.end_time);
-        if (oStart === null || oEnd === null) continue;
-        const oEndN = oEnd <= oStart ? oEnd + 1440 : oEnd;
-        if (rStart < oEndN && rEndN > oStart) {
-          toast.error(`Tijden overlappen: regel ${i + 1} en regel ${j + 1}. Pas de tijden aan.`);
-          setActiveTab("ritten");
-          return false;
-        }
-      }
-    }
-
-    // Validate each rit has times
+    // 2. Elke rit moet tijden hebben
     const ritRegels = dienstRegels.filter(r => r.type === "rit");
     for (let i = 0; i < ritRegels.length; i++) {
-      const trip = ritRegels[i];
-      if (!trip.start_time || !trip.end_time) {
+      if (!ritRegels[i].start_time || !ritRegels[i].end_time) {
         toast.error(`Rit ${i + 1}: Vul zowel start- als eindtijd in.`);
         setActiveTab("ritten");
         return false;
       }
     }
 
-    // Single-day only: validate trip + standplaatswerk times vs service range.
-    // Multi-day is skipped — trips have no date field, backend handles full validation.
+    // 3. Overlap check (hard block)
+    const overlapPairs = findOverlaps(dienstRegels);
+    if (overlapPairs.length > 0) {
+      const { i, j } = overlapPairs[0];
+      toast.error(`Tijden overlappen: regel ${i + 1} en regel ${j + 1}. Pas de tijden aan.`);
+      setActiveTab("ritten");
+      return false;
+    }
+
+    // 4. Gap check (single-day only, 5 min tolerance)
     const isSingleDay = !isMultiDay || !formData.end_date || formData.end_date === formData.date;
-    console.log('[validateBeforeSubmit] isSingleDay:', isSingleDay);
-    if (isSingleDay) {
-      const range = buildSingleDayServiceRange(formData);
-      console.log('[validateBeforeSubmit] range:', range);
-      if (range) {
-        const { serviceStart, serviceEnd } = range;
-        const dienstLabel = `${formData.start_time}–${formData.end_time}`;
-        const errors = [];
-
-        for (let i = 0; i < trips.length; i++) {
-          const trip = trips[i];
-          const rawTs = timeToMinutes(trip.start_time);
-          const rawTe = timeToMinutes(trip.end_time);
-
-          const absTs = toAbsoluteMinutes(rawTs, serviceStart);
-          const absTe = toAbsoluteMinutes(rawTe, serviceStart);
-          console.log(`[validateBeforeSubmit] Rit ${i+1}: rawTs=${rawTs}, rawTe=${rawTe}, absTs=${absTs}, absTe=${absTe}, serviceStart=${serviceStart}, serviceEnd=${serviceEnd}`);
-          if (rawTs !== null && rawTs < serviceStart && absTs > serviceEnd) {
-            errors.push(`Rit ${i + 1} start vóór je diensttijd (${dienstLabel}).`);
-          }
-          if (rawTe !== null && absTe > serviceEnd) {
-            errors.push(`Rit ${i + 1} eindigt na je diensttijd (${dienstLabel}).`);
-          }
-        }
-
-        for (let i = 0; i < (standplaatsWerk || []).length; i++) {
-          const spw = standplaatsWerk[i];
-          if (!spw.start_time && !spw.end_time) continue;
-          const rawSs = timeToMinutes(spw.start_time);
-          const rawSe = timeToMinutes(spw.end_time);
-
-          const absSs = toAbsoluteMinutes(rawSs, serviceStart);
-          const absSe = toAbsoluteMinutes(rawSe, serviceStart);
-          console.log(`[validateBeforeSubmit] SPW ${i+1}: rawSs=${rawSs}, rawSe=${rawSe}, absSs=${absSs}, absSe=${absSe}, serviceStart=${serviceStart}, serviceEnd=${serviceEnd}`);
-          if (rawSs !== null && rawSs < serviceStart && absSs > serviceEnd) {
-            errors.push(`Standplaatswerk ${i + 1} start vóór je diensttijd (${dienstLabel}).`);
-          }
-          if (rawSe !== null && absSe > serviceEnd) {
-            errors.push(`Standplaatswerk ${i + 1} eindigt na je diensttijd (${dienstLabel}).`);
-          }
-        }
-
-        if (errors.length > 0) {
-          console.log('[validateBeforeSubmit] ERRORS:', errors);
+    if (isSingleDay && formData.start_time && formData.end_time) {
+      const allHaveTimes = dienstRegels.every(r => r.start_time && r.end_time);
+      if (allHaveTimes) {
+        const { valid, errors } = findGaps(dienstRegels, formData.start_time, formData.end_time);
+        if (!valid) {
           errors.forEach(e => toast.error(e, { duration: 6000 }));
-          setTimeout(() => setActiveTab("ritten"), 0);
+          setActiveTab("ritten");
           return false;
         }
       }
@@ -144,7 +61,7 @@ export function useMobileSubmit({
 
     console.log('[validateBeforeSubmit] PASSED');
     return true;
-  }, [dienstRegels, trips, standplaatsWerk, formData, isMultiDay, setActiveTab]);
+  }, [dienstRegels, formData, isMultiDay, setActiveTab]);
 
   // --- Error mapping for backend HTTP status codes ---
   const mapErrorToMessage = useCallback((result) => {
