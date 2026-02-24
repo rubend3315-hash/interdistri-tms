@@ -273,53 +273,53 @@ export default function MobileDienstTab({
       {/* ── STICKY BOTTOM CTA ── */}
       <div className="sticky bottom-0 left-0 right-0 bg-white pt-1.5 pb-1 px-4 border-t border-slate-100">
         {step === "start" && (
-          <button disabled className="w-full h-[44px] rounded-xl bg-slate-200 text-slate-400 text-[13px] font-semibold flex items-center justify-center">
+          <button disabled className="w-full h-[44px] rounded-[10px] bg-slate-200 text-slate-400 text-[13px] font-semibold flex items-center justify-center">
             Vul starttijd in om door te gaan
           </button>
         )}
         {step === "regels" && !geenRit && !postNLAuto && (
           <button type="button" onClick={() => setActiveTab("ritten")}
-            className="w-full h-[44px] rounded-xl bg-blue-600 text-white text-[13px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700">
+            className="w-full h-[44px] rounded-[10px] bg-blue-600 text-white text-[13px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700">
             <Truck className="w-4 h-4" /> Dienstregels toevoegen
           </button>
         )}
         {step === "regels" && !geenRit && postNLAuto && (
-          <button disabled className="w-full h-[44px] rounded-xl bg-slate-200 text-slate-400 text-[13px] font-semibold flex items-center justify-center">
+          <button disabled className="w-full h-[44px] rounded-[10px] bg-slate-200 text-slate-400 text-[13px] font-semibold flex items-center justify-center">
             Vul eindtijd in voor PostNL rit
           </button>
         )}
         {step === "end" && !hasOpenRit && (
-          <button disabled className="w-full h-[44px] rounded-xl bg-slate-200 text-slate-400 text-[13px] font-semibold flex items-center justify-center">
+          <button disabled className="w-full h-[44px] rounded-[10px] bg-slate-200 text-slate-400 text-[13px] font-semibold flex items-center justify-center">
             Vul eindtijd in om in te dienen
           </button>
         )}
         {step === "end" && hasOpenRit && (
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <button type="button" onClick={onSaveDraft} disabled={isSubmitting}
-              className="w-full h-[44px] rounded-xl bg-emerald-600 text-white text-[13px] font-semibold flex items-center justify-center gap-2 active:bg-emerald-700">
+              className="w-full h-[44px] rounded-[10px] bg-emerald-600 text-white text-[13px] font-semibold flex items-center justify-center gap-2 active:bg-emerald-700">
               <Save className="w-4 h-4" /> Opslaan & naar Home
             </button>
-            <p className="text-[11px] text-amber-600 text-center">
-              ⏳ Kom later terug om eindtijd, eind km en diensttijd in te vullen
+            <p className="text-[10px] text-amber-600 text-center">
+              🟡 Kom later terug om af te sluiten
             </p>
           </div>
         )}
         {step === "submit" && (
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {hasOpenRit ? (
               <>
                 <button type="button" onClick={onSaveDraft} disabled={isSubmitting}
-                  className="w-full h-[44px] rounded-xl bg-emerald-600 text-white text-[13px] font-semibold flex items-center justify-center gap-2 active:bg-emerald-700">
+                  className="w-full h-[44px] rounded-[10px] bg-emerald-600 text-white text-[13px] font-semibold flex items-center justify-center gap-2 active:bg-emerald-700">
                   <Save className="w-4 h-4" /> Opslaan & naar Home
                 </button>
-                <p className="text-[11px] text-amber-600 text-center">
-                  ⏳ Open rit — sluit eerst af om in te dienen
+                <p className="text-[10px] text-amber-600 text-center">
+                  🟡 Open rit — sluit eerst af om in te dienen
                 </p>
               </>
             ) : (
               <>
                 <button type="button" onClick={onSubmit} disabled={!canSubmit}
-                  className={`w-full h-[44px] rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2 transition-all ${
+                  className={`w-full h-[44px] rounded-[10px] text-[13px] font-semibold flex items-center justify-center gap-2 transition-all ${
                     canSubmit
                       ? 'bg-blue-600 text-white active:bg-blue-700 ring-2 ring-blue-300 ring-offset-1'
                       : 'bg-slate-200 text-slate-400'
@@ -328,7 +328,7 @@ export default function MobileDienstTab({
                   {signature ? 'Dienst Indienen' : 'Handtekening & Indienen'}
                 </button>
                 <button type="button" onClick={onSaveDraft} disabled={isSubmitting}
-                  className="w-full text-center text-[12px] text-emerald-700 font-medium py-1.5">
+                  className="w-full text-center text-[11px] text-emerald-700 font-medium py-1">
                   <Save className="w-3 h-3 inline mr-1" />Tussentijds opslaan
                 </button>
               </>
