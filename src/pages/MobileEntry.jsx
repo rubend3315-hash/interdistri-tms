@@ -57,7 +57,8 @@ export default function MobileEntry({ currentUser }) {
 
   const data = useMobileData(currentUser);
   const { isMultiDay } = useMobileEntryMode(data.currentEmployee);
-  const businessMode = MOBILE_ENTRY_V2 ? useBusinessMode(data.currentEmployee) : "HANDMATIG";
+  const rawBusinessMode = useBusinessMode(data.currentEmployee);
+  const businessMode = MOBILE_ENTRY_V2 ? rawBusinessMode : "HANDMATIG";
 
   const form = useMobileForm({ isMultiDay, currentEmployee: data.currentEmployee, businessMode: MOBILE_ENTRY_V2 ? businessMode : "HANDMATIG" });
   const submit = useMobileSubmit({
