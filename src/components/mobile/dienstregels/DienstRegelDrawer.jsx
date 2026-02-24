@@ -249,6 +249,7 @@ export default function DienstRegelDrawer({
 /* ── Rit fields ── */
 function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiModelRoutes }) {
   const [showExtra, setShowExtra] = useState(false);
+  const isOpen = draft.openRit && !draft.end_time;
   return (
     <div className="space-y-2">
       <div>
@@ -263,10 +264,12 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
           <Label className="text-[11px] text-slate-500">Begin km {draft.vehicle_id ? '*' : ''}</Label>
           <Input type="number" className="h-[44px] bg-white" value={draft.start_km || ""} onChange={(e) => update('start_km', e.target.value)} />
         </div>
-        <div>
-          <Label className="text-[11px] text-slate-500">Eind km</Label>
-          <Input type="number" className="h-[44px] bg-white" value={draft.end_km || ""} onChange={(e) => update('end_km', e.target.value)} />
-        </div>
+        {!isOpen && (
+          <div>
+            <Label className="text-[11px] text-slate-500">Eind km {draft.end_time && draft.vehicle_id ? '*' : ''}</Label>
+            <Input type="number" className="h-[44px] bg-white" value={draft.end_km || ""} onChange={(e) => update('end_km', e.target.value)} />
+          </div>
+        )}
       </div>
       <div>
         <Label className="text-[11px] text-slate-500">Schade gereden?</Label>
