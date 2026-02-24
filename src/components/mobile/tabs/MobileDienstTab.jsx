@@ -221,7 +221,7 @@ export default function MobileDienstTab({
         {(hasRegels || geenRit) && formData.start_time && (
           <div className="space-y-1.5">
             <div className="grid grid-cols-2 gap-2">
-              <div>
+              <div id="dienst-eindtijd">
                 <Label className="text-[11px] text-slate-500 mb-0.5">Eind dienst *</Label>
                 <TimeInput value={formData.end_time} onChange={(v) => setFormData(prev => ({ ...prev, end_time: v }))} placeholder="16:30" />
               </div>

@@ -53,7 +53,7 @@ export default function DienstRegelsTab({
   storageKey, onSaveDraft, setActiveTab,
   formData,
   postNLAuto = false, postNLOpenDrawer = false, setPostNLOpenDrawer,
-  onSaveAndGoHome
+  onSaveAndGoHome, onCloseOpenRitToDienst
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingRegel, setEditingRegel] = useState(null);
@@ -266,6 +266,7 @@ export default function DienstRegelsTab({
         dienstEndTime={formData?.end_time}
         isNewRegel={isNewRegel}
         onSaveAndGoHome={onSaveAndGoHome}
+        onCloseOpenRitToDienst={onCloseOpenRitToDienst}
       />
 
       <DeleteConfirmDialog

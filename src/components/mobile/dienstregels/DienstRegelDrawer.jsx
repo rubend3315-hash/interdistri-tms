@@ -29,7 +29,7 @@ export default function DienstRegelDrawer({
   open, onOpenChange, regel, allRegels,
   onSave, onDelete, vehicles, customers, routes, tiModelRoutes, projects, activiteiten,
   dienstStartTime, dienstEndTime, isNewRegel,
-  onSaveAndGoHome
+  onSaveAndGoHome, onCloseOpenRitToDienst
 }) {
   const [draft, setDraft] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -121,8 +121,11 @@ export default function DienstRegelDrawer({
     // Mark openRit as closed when end_time is now provided
     onSave({ ...draft, openRit: false });
     onOpenChange(false);
-    // Closing an open rit → also save & go home
-    if (draft.openRit && draft.end_time && onSaveAndGoHome) onSaveAndGoHome();
+    // Closing an open rit: PostNL → go to dienst eindtijd, otherwise → home
+    if (draft.openRit && draft.end_time) {
+      if (onCloseOpenRitToDienst) onCloseOpenRitToDienst();
+      else if (onSaveAndGoHome) onSaveAndGoHome();
+    }
   };
 
   const handleTypeSwitch = (newType) => {
