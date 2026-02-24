@@ -20,7 +20,7 @@ const TimeInput = ({ value, onChange, placeholder, autoFocus }) => {
         onChange(v);
       }}
       placeholder={placeholder}
-      className="text-[15px] h-[44px] bg-white"
+      className="text-[14px] h-[40px] bg-white"
     />
   );
 };

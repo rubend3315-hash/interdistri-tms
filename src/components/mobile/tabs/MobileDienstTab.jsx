@@ -15,7 +15,7 @@ import MobileStepIndicator from "@/components/mobile/MobileStepIndicator";
 const TimeInput = ({ value, onChange, placeholder }) => (
   <Input
     type="text" inputMode="numeric" maxLength="5" value={value}
-    className="h-[44px] text-[15px] bg-white"
+    className="h-[40px] text-[14px] bg-white"
     onChange={(e) => {
       let v = e.target.value.replace(/[^0-9]/g, '');
       if (v.length >= 3) v = v.slice(0, 2) + ':' + v.slice(2, 4);

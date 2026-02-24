@@ -16,8 +16,8 @@ export default function DienstRegelRow({ regel, customers, hasOverlap, onTap, on
 
   return (
     <div className={cn(
-      "flex items-center gap-3 bg-white px-4",
-      isOpen ? "py-2.5" : "h-[56px]",
+      "flex items-center gap-2 bg-white px-3",
+      isOpen ? "py-2" : "h-[48px]",
       hasOverlap && "bg-red-50",
       isOpen && "bg-amber-50/50"
     )}>
@@ -53,13 +53,13 @@ export default function DienstRegelRow({ regel, customers, hasOverlap, onTap, on
         </div>
       </div>
 
-      {/* Delete button */}
+      {/* Delete button — clean icon, no overlay */}
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); onDelete(); }}
-        className="p-2 -mr-1 rounded-lg active:bg-red-50 min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+        className="p-1.5 rounded-lg active:bg-red-50 flex items-center justify-center flex-shrink-0"
       >
-        <Trash2 className="w-4 h-4 text-slate-400" />
+        <Trash2 className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.5} />
       </button>
     </div>
   );
