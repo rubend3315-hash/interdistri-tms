@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { useEntrySubmit } from "./useEntrySubmit";
 import { findOverlaps, validateBounds } from "./dienstRegelValidation";
+import { validateTimeEntryCore } from "../validation/timeEntryValidation";
 
 /**
  * useMobileSubmit — Handles validation + submit + draft save.
@@ -20,12 +21,23 @@ export function useMobileSubmit({
   const validateBeforeSubmit = useCallback(() => {
     console.log('[validateBeforeSubmit] ENTERED — dienstRegels:', dienstRegels.length, 'isMultiDay:', isMultiDay, 'geenRit:', geenRit);
 
-    // GEEN_RIT mode: skip regel validations, require reden
+    // 0. Shared core validation (single source of truth)
+    const ritRegelsForCore = dienstRegels.filter(r => r.type === "rit");
+    const standplaatsRegels = dienstRegels.filter(r => r.type === "standplaats");
+    const coreErrors = validateTimeEntryCore({
+      trips: ritRegelsForCore,
+      standplaatsen: standplaatsRegels,
+      geenRit,
+      reden: geenRitReden,
+    });
+    if (coreErrors.length > 0) {
+      coreErrors.forEach(e => toast.error(e));
+      if (!geenRit) setActiveTab("ritten");
+      return false;
+    }
+
+    // GEEN_RIT passed core → skip further regel validations
     if (geenRit) {
-      if (!geenRitReden || geenRitReden.trim().length < 5) {
-        toast.error('Vul een reden in (minimaal 5 tekens).');
-        return false;
-      }
       console.log('[validateBeforeSubmit] PASSED (GEEN_RIT)');
       return true;
     }
@@ -33,13 +45,6 @@ export function useMobileSubmit({
     // 0b. Multi-day safety: block if not authorized
     if (!isMultiDay && formData.end_date && formData.end_date !== formData.date) {
       toast.error('Meerdaagse dienst is niet toegestaan voor deze medewerker.');
-      return false;
-    }
-
-    // 1. Minimaal 1 regel
-    if (dienstRegels.length === 0) {
-      toast.error('Voer minimaal één rit of standplaatswerk in.');
-      setActiveTab("ritten");
       return false;
     }
 

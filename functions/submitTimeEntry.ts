@@ -115,11 +115,16 @@ function validate(p) {
   if (p.break_minutes != null && (typeof p.break_minutes !== 'number' || p.break_minutes < 0 || p.break_minutes > 480))
     err.push('Pauze: 0-480 minuten');
 
-  const isGeenRit = typeof p.notes === 'string' && p.notes.startsWith('[GEEN_RIT]');
-  const hasStandplaats = Array.isArray(p.standplaats_werk) && p.standplaats_werk.length > 0;
-
+  // --- Shared core validation (mirrors components/utils/validation/timeEntryValidation.js) ---
   if (!Array.isArray(p.trips)) p.trips = [];
-  if (p.trips.length === 0 && !isGeenRit && !hasStandplaats) err.push('Voer minimaal één rit of standplaatswerk in, of vink "geen rit" aan.');
+  const isGeenRit = typeof p.notes === 'string' && p.notes.startsWith('[GEEN_RIT]');
+  const geenRitReden = isGeenRit ? p.notes.replace('[GEEN_RIT]', '').trim() : '';
+  const hasTrips = p.trips.length > 0;
+  const hasStandplaatsen = Array.isArray(p.standplaats_werk) && p.standplaats_werk.length > 0;
+  const hasGeenRit = isGeenRit && typeof geenRitReden === 'string' && geenRitReden.trim().length >= 5;
+  if (!hasTrips && !hasStandplaatsen && !hasGeenRit) err.push('Minimaal één dienstregel vereist');
+  // --- End shared core validation ---
+
   if (p.trips.length > 20) err.push('Max 20 ritten');
   if (p.trips.length > 0) p.trips.forEach((t, i) => {
     const px = `Rit ${i + 1}`;
