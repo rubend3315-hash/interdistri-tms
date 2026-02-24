@@ -512,12 +512,7 @@ export default function Layout({ children, currentPageName }) {
   if (isEmployeeUser(user) && currentPageName === "Dashboard") {
     if (loadingEmployee) return null;
     if (currentEmployee?.mobile_entry_type === 'multi_day') {
-      const MobileEntryMultiDay = React.lazy(() => import('./pages/MobileEntryMultiDay'));
-      return (
-        <React.Suspense fallback={null}>
-          <MobileEntryMultiDay currentUser={user} />
-        </React.Suspense>
-      );
+      return <MobileEntryMultiDay currentUser={user} />;
     }
     return <MobileEntry currentUser={user} />;
   }
