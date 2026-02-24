@@ -54,6 +54,7 @@ export default function MobileDienstTab({
   const canSubmit = formData.end_time && hasRegels && !submitBlocked && !isSubmitting && geenRitValid;
   const maxEndDate = formData.date ? format(addDays(new Date(formData.date), 7), 'yyyy-MM-dd') : undefined;
 
+  // Open rit: allow saving draft without end_time, show "end" step but don't block save
   const step = !formData.start_time ? "start" : (!hasRegels && !geenRit) ? "regels" : !formData.end_time ? "end" : "submit";
 
   const handleMultiDayToggle = (enabled) => {
@@ -283,10 +284,21 @@ export default function MobileDienstTab({
             Vul eindtijd in voor PostNL rit
           </button>
         )}
-        {step === "end" && (
+        {step === "end" && !hasOpenRit && (
           <button disabled className="w-full h-[48px] rounded-xl bg-slate-200 text-slate-400 text-[14px] font-semibold flex items-center justify-center">
             Vul eindtijd in om in te dienen
           </button>
+        )}
+        {step === "end" && hasOpenRit && (
+          <div className="space-y-1.5">
+            <button type="button" onClick={onSaveDraft} disabled={isSubmitting}
+              className="w-full h-[48px] rounded-xl bg-emerald-600 text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:bg-emerald-700">
+              <Save className="w-4 h-4" /> Tussentijds opslaan (open rit)
+            </button>
+            <p className="text-[11px] text-amber-600 text-center">
+              ⏳ Kom later terug om eindtijd, eind km en diensttijd in te vullen
+            </p>
+          </div>
         )}
         {step === "submit" && (
           <div className="space-y-1.5">
