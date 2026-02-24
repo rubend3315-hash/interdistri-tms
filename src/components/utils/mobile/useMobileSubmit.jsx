@@ -11,13 +11,24 @@ import { findOverlaps, findGaps } from "./dienstRegelValidation";
  */
 export function useMobileSubmit({
   formData, trips, standplaatsWerk, dienstRegels = [], signature, setSignature,
-  currentEmployee, isMultiDay, resetForm, setActiveTab, queryClient
+  currentEmployee, isMultiDay, resetForm, setActiveTab, queryClient,
+  geenRit = false, geenRitReden = ""
 }) {
   const { submitEntry, saveDraft, isSubmitting, submittingRef } = useEntrySubmit();
 
   // --- Client-side validation before submit ---
   const validateBeforeSubmit = useCallback(() => {
-    console.log('[validateBeforeSubmit] ENTERED — dienstRegels:', dienstRegels.length, 'isMultiDay:', isMultiDay);
+    console.log('[validateBeforeSubmit] ENTERED — dienstRegels:', dienstRegels.length, 'isMultiDay:', isMultiDay, 'geenRit:', geenRit);
+
+    // GEEN_RIT mode: skip regel validations, require reden
+    if (geenRit) {
+      if (!geenRitReden || geenRitReden.trim().length < 5) {
+        toast.error('Vul een reden in (minimaal 5 tekens).');
+        return false;
+      }
+      console.log('[validateBeforeSubmit] PASSED (GEEN_RIT)');
+      return true;
+    }
 
     // 1. Minimaal 1 regel
     if (dienstRegels.length === 0) {
@@ -61,7 +72,7 @@ export function useMobileSubmit({
 
     console.log('[validateBeforeSubmit] PASSED');
     return true;
-  }, [dienstRegels, formData, isMultiDay, setActiveTab]);
+  }, [dienstRegels, formData, isMultiDay, setActiveTab, geenRit, geenRitReden]);
 
   // --- Error mapping for backend HTTP status codes ---
   const mapErrorToMessage = useCallback((result) => {
@@ -98,10 +109,15 @@ export function useMobileSubmit({
       properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length }
     });
 
+    // Build final formData with GEEN_RIT prefix if applicable
+    const finalFormData = geenRit
+      ? { ...formData, notes: `[GEEN_RIT] ${geenRitReden}${formData.notes ? '\n' + formData.notes : ''}` }
+      : formData;
+
     const result = await submitEntry({
-      formData,
-      trips,
-      standplaatsWerk,
+      formData: finalFormData,
+      trips: geenRit ? [] : trips,
+      standplaatsWerk: geenRit ? [] : standplaatsWerk,
       signature: finalSignature,
     });
 
