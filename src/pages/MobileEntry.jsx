@@ -27,6 +27,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useMobileEntryMode } from "@/components/hooks/useMobileEntryMode";
 import { useBusinessMode } from "@/components/utils/mobile/useBusinessMode";
 import WeekHeader from "@/components/mobile/WeekHeader";
+import { calcDienstEndFromRit } from "@/components/utils/mobile/syncDienstEndTime";
 
 const MOBILE_ENTRY_V2 = true;
 
@@ -154,17 +155,9 @@ export default function MobileEntry({ currentUser }) {
         )}
         {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} dienstRegels={form.dienstRegels} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={isMultiDay} isMultiDayAllowed={isMultiDay} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} geenRit={MOBILE_ENTRY_V2 ? geenRit : false} setGeenRit={handleSetGeenRit} geenRitReden={geenRitReden} setGeenRitReden={setGeenRitReden} v2={MOBILE_ENTRY_V2} postNLAuto={postNLAuto} setPostNLAuto={handleSetPostNLAuto} />}
         {activeTab === "ritten" && <DienstRegelsTab dienstRegels={form.dienstRegels} setDienstRegels={form.setDienstRegels} vehicles={data.vehicles} customers={data.customers} routes={data.routes} tiModelRoutes={data.tiModelRoutes} projects={data.projects} activiteiten={data.activiteiten} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} isSubmitting={submit.isSubmitting} storageKey={form.storageKey} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} formData={form.formData} postNLAuto={postNLAuto} postNLOpenDrawer={postNLOpenDrawer} setPostNLOpenDrawer={setPostNLOpenDrawer} onSaveAndGoHome={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} onCloseOpenRitToDienst={postNLAuto && !form.formData.end_time ? async (ritEndTime) => {
-              // Auto-fill dienst eindtijd = rit eindtijd + 2 min
-              if (ritEndTime) {
-                const [h, m] = ritEndTime.split(':').map(Number);
-                if (!isNaN(h) && !isNaN(m)) {
-                  const total = h * 60 + m + 2;
-                  const eH = Math.floor(total / 60) % 24;
-                  const eM = total % 60;
-                  const endStr = `${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
-                  form.setFormData(prev => ({ ...prev, end_time: endStr }));
-                }
-              }
+              // REGEL 2: +2 min dienst sync — enige plek via calcDienstEndFromRit
+              const endStr = calcDienstEndFromRit(ritEndTime);
+              if (endStr) form.setFormData(prev => ({ ...prev, end_time: endStr }));
               await submit.handleSaveDraft();
               setActiveTab("dienst");
               requestAnimationFrame(() => { document.getElementById("dienst-eindtijd")?.scrollIntoView({ behavior: "smooth" }); });
