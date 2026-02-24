@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Zap, Layers, Users, Clock, CheckSquare, Truck, CalendarDays, Shield, Smartphone, CircleDot, Download, FileText, Building2, FolderKanban, DollarSign, FileSpreadsheet, Mail, Car, Settings, Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import HelpMobileEntryCard from '../components/help/HelpMobileEntryCard';
+import HelpMobileEntryGuide from '../components/help/HelpMobileEntryGuide';
 
 export default function HelpPage() {
   const [activeTab, setActiveTab] = useState('functions');
@@ -425,33 +427,7 @@ export default function HelpPage() {
 
             {/* Mobile Entry */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Smartphone className="w-5 h-5 text-blue-600" />
-                  Mobiele Invoer
-                </CardTitle>
-                <CardDescription>Onderweg uren en ritten registreren</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-slate-600">
-                  Complete mobiele app voor chauffeurs:
-                </p>
-                <ul className="text-sm space-y-2 text-slate-600">
-                  <li>✓ Diensttijd en ritten invoeren</li>
-                  <li>✓ <strong>Meerdere diensten per dag:</strong> Na het indienen en ondertekenen van een dienst kun je een nieuwe dienst op dezelfde dag starten</li>
-                  <li>✓ <strong>Overzicht ingediende diensten:</strong> Banner met eerder ingediende diensten van dezelfde dag (tijden en status)</li>
-                  <li>✓ Voertuiginspectie met foto's</li>
-                  <li>✓ Declaraties indienen</li>
-                  <li>✓ <strong>Planning:</strong> Weekoverzicht met shift, route, voertuig, opmerkingen en afwezigheid (Ziek, Verlof, ATV, Opleiding) per dag</li>
-                  <li>✓ <strong>Feestdagen en vrije dagen:</strong> Automatisch weergegeven in de planning</li>
-                  <li>✓ Shifttijd weergave</li>
-                  <li>✓ Offline synchronisatie</li>
-                  <li>✓ Handtekening functionaliteit</li>
-                  <li>✓ Berichten en notificaties</li>
-                  <li>✓ Meerdaagse diensten (aparte app via profiel)</li>
-                  <li>✓ <strong>Bedrijfsreglement:</strong> Artikelen doorzoeken en lezen per hoofdstuk</li>
-                </ul>
-              </CardContent>
+              <HelpMobileEntryCard />
             </Card>
 
             {/* Contracten */}
@@ -1692,93 +1668,7 @@ export default function HelpPage() {
             </AccordionItem>
 
             {/* Mobile Entry Handleiding */}
-            <AccordionItem value="mobile-entry-guide">
-              <AccordionTrigger className="text-base font-semibold">
-                <Smartphone className="w-4 h-4 mr-2" />
-                Hoe gebruik ik de Mobiele App?
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">1. Toegang tot de mobiele app</h4>
-                    <p className="text-sm text-slate-600 mb-3">
-                      De mobiele app opent automatisch wanneer je de app bezoekt op je smartphone. Op desktop zie je een link "Mobiele Invoer" in het menu.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">2. Starttijd van dienst checken</h4>
-                    <p className="text-sm text-slate-600 mb-2">
-                      De app toont je automatisch:
-                    </p>
-                    <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• De officiële service starttijd (geel/amber blok)</li>
-                      <li>• Dit is ingesteld per afdeling door je manager</li>
-                      <li>• Het bericht van vandaag (indien ingesteld)</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">3. Diensttijd registreren</h4>
-                    <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• <strong>Stap 1:</strong> Voer je starttijd in bij "Diensttijd"</li>
-                      <li>• <strong>Stap 2:</strong> Ga naar "Ritten" en voeg minimaal één rit toe</li>
-                      <li>• <strong>Stap 3:</strong> Terug naar "Diensttijd" en voer eindtijd in</li>
-                      <li>• <strong>Stap 4:</strong> Plaats je handtekening en dien in</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">4. Ritten invoeren</h4>
-                    <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• Voeg een rit toe met "Regel Toevoegen"</li>
-                      <li>• Vul starttijd en eindtijd van de rit in</li>
-                      <li>• Selecteer kenteken en klant</li>
-                      <li>• Voer begin- en eind kilometerstand in</li>
-                      <li>• Optioneel: brandstof, AdBlue, laadgegevens</li>
-                      <li>• Voeg route details en opmerkingen toe</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">5. Validaties</h4>
-                    <p className="text-sm text-slate-600 mb-2">
-                      De app controleert automatisch:
-                    </p>
-                    <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• Minimaal één rit moet zijn ingevoerd</li>
-                      <li>• Elke rit moet een start- én eindtijd hebben</li>
-                      <li>• Rit tijden moeten binnen dienst tijden vallen</li>
-                      <li>• Handtekening is verplicht bij indienen</li>
-                      <li>• <strong>Tijdoverlap detectie:</strong> Waarschuwing als standplaatswerk of ritten overlappen met eerder ingediende diensten</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">6. Overige functies</h4>
-                    <ul className="text-sm text-slate-600 space-y-2">
-                      <li>• <strong>Voertuiginspectie:</strong> Controleer je voertuig en maak foto's van schade</li>
-                      <li>• <strong>Declaratie:</strong> Dien kosten in met bon/foto</li>
-                      <li>• <strong>Overzicht:</strong> Bekijk goedgekeurde diensten</li>
-                      <li>• <strong>Planning:</strong> Zie je weekrooster met shift, route, voertuig, opmerkingen, afwezigheid (Ziek/Verlof/ATV/Opleiding), feestdagen en vrije dagen</li>
-                      <li>• <strong>Berichten:</strong> Ontvang berichten van je manager</li>
-                      <li>• <strong>Links:</strong> Snelle toegang tot Bumper en Werknemersloket</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">7. Offline werken</h4>
-                    <p className="text-sm text-slate-600">
-                      De app werkt ook offline. Je gegevens worden automatisch gesynchroniseerd zodra je weer online bent. Een indicator toont je verbindingsstatus.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-blue-700">
-                      💡 <strong>Tip:</strong> Gebruik "Tussentijds Opslaan" bij het invoeren van ritten om je gegevens veilig op te slaan voordat je verder gaat.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <p className="text-sm text-amber-700">
-                      ⚠️ <strong>Let op:</strong> Als je schade rijdt, wordt automatisch de Bumper-link geopend na het indienen.
-                    </p>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+            <HelpMobileEntryGuide />
 
             {/* Onboarding Handleiding */}
             <AccordionItem value="onboarding-guide">
