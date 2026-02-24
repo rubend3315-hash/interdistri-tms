@@ -732,7 +732,7 @@ export default function Layout({ children, currentPageName }) {
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200"
                     >
                       <Smartphone className="w-5 h-5 text-slate-400" />
-                      <span className="text-sm">Mobiele Invoer ({currentEmployee.mobile_entry_type === 'multi_day' ? 'Multi Day' : 'Single Day'})</span>
+                      <span className="text-sm">Mobiele Invoer ({(currentEmployee.mobile_entry_type || "").toLowerCase().includes("meerdaags") || (currentEmployee.mobile_entry_type || "").toLowerCase() === "multi_day" ? 'Multi Day' : 'Single Day'})</span>
                     </Link>
                   </div>
                 )}
