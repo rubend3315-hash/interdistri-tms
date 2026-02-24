@@ -4,7 +4,10 @@ import { cn } from "@/lib/utils";
 
 export default function DienstRegelRow({ regel, customers, hasOverlap, onTap, onDelete }) {
   const isRit = regel.type === "rit";
-  const timeLabel = `${regel.start_time || '—'} – ${regel.end_time || '—'}`;
+  const isOpen = isRit && regel.openRit && !regel.end_time;
+  const timeLabel = isOpen
+    ? `${regel.start_time || '—'} – ⏳`
+    : `${regel.start_time || '—'} – ${regel.end_time || '—'}`;
 
   const customer = regel.customer_id ? customers.find(c => c.id === regel.customer_id) : null;
   const subtitle = isRit
@@ -33,9 +36,9 @@ export default function DienstRegelRow({ regel, customers, hasOverlap, onTap, on
             <span className="text-[14px] font-semibold text-slate-900 tabular-nums">{timeLabel}</span>
             <span className={cn(
               "text-[10px] px-1.5 py-0.5 rounded font-medium",
-              isRit ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+              isOpen ? "bg-amber-50 text-amber-600" : isRit ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
             )}>
-              {isRit ? "Rit" : "Standplaats"}
+              {isOpen ? "Open rit" : isRit ? "Rit" : "Standplaats"}
             </span>
           </div>
           <p className="text-[11px] text-slate-500 truncate">{subtitle}</p>
