@@ -126,6 +126,14 @@ export default function MobileDienstTab({
               </div>
 
               <div className="space-y-3">
+                {isMultiDay && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Einddatum dienst</Label>
+                    <Input type="date" value={formData.end_date} min={formData.date} max={maxEndDate}
+                      onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} />
+                    <p className="text-xs text-slate-500 mt-1">Op welke dag eindigt de dienst?</p>
+                  </div>
+                )}
                 <div className="space-y-1">
                   <Label className="text-xs">Eind dienst *</Label>
                   {timeInput(formData.end_time, (v) => setFormData({ ...formData, end_time: v }), "16:30")}
