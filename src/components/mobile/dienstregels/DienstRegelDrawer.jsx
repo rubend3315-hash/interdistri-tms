@@ -50,23 +50,52 @@ export default function DienstRegelDrawer({
     });
   };
 
+  const isOpenRit = isRit && !draft.end_time;
+  const isClosingOpenRit = isRit && draft.openRit && draft.end_time;
+
   const handleSave = () => {
-    // 1. Check start < end
     const sMin = timeToMinutes(draft.start_time);
-    const eMin = timeToMinutes(draft.end_time);
-    if (sMin === null || eMin === null) {
-      toast.error("Vul start- en eindtijd in.");
+
+    // 1. Start time always required
+    if (sMin === null) {
+      toast.error("Vul een starttijd in.");
       return;
     }
 
-    // 2. Check 5-min inner margin
+    // 2. For OPEN rit (no end_time): only validate start margin + start_km
+    if (isRit && !draft.end_time) {
+      // Start margin check: rit.start >= dienst.start + 1 min
+      const svcStart = timeToMinutes(dienstStartTime);
+      if (svcStart !== null && sMin < svcStart + 1) {
+        toast.error("Starttijd rit moet na start dienst liggen.");
+        return;
+      }
+      // Begin km verplicht bij voertuig
+      if (draft.vehicle_id && !draft.start_km) {
+        toast.error("Begin km is verplicht bij rit met voertuig.");
+        return;
+      }
+      // Save as OPEN rit
+      onSave({ ...draft, openRit: true });
+      onOpenChange(false);
+      return;
+    }
+
+    // 3. Full validation for closed rit / standplaats
+    const eMin = timeToMinutes(draft.end_time);
+    if (eMin === null) {
+      toast.error("Vul een eindtijd in.");
+      return;
+    }
+
+    // 4. Check 5-min inner margin (full)
     const marginError = validateSingleRegelMargin(draft, dienstStartTime, dienstEndTime);
     if (marginError) {
       toast.error(marginError);
       return;
     }
 
-    // 3. Check overlap
+    // 5. Check overlap
     const otherRegels = allRegels.filter(r => r.id !== draft.id);
     const overlaps = findOverlaps([...otherRegels, draft]);
     if (overlaps.length > 0) {
@@ -74,13 +103,20 @@ export default function DienstRegelDrawer({
       return;
     }
 
-    // 4. KM validation for rit with vehicle
-    if (isRit && draft.vehicle_id && !draft.start_km) {
-      toast.error("Kilometerstand is verplicht bij rit met voertuig.");
-      return;
+    // 6. KM validation
+    if (isRit && draft.vehicle_id) {
+      if (!draft.start_km) {
+        toast.error("Begin km is verplicht bij rit met voertuig.");
+        return;
+      }
+      if (draft.end_km && Number(draft.end_km) < Number(draft.start_km)) {
+        toast.error("Eind km moet groter of gelijk zijn aan begin km.");
+        return;
+      }
     }
 
-    onSave(draft);
+    // Mark openRit as closed when end_time is now provided
+    onSave({ ...draft, openRit: false });
     onOpenChange(false);
   };
 
@@ -163,6 +199,13 @@ export default function DienstRegelDrawer({
             </button>
           </div>
 
+          {/* OPEN rit banner */}
+          {isRit && draft.openRit && !draft.end_time && (
+            <div className="px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-[12px] text-amber-800 font-medium">⏳ Open rit — eindtijd en eind km later invullen</p>
+            </div>
+          )}
+
           {/* Times */}
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -170,7 +213,7 @@ export default function DienstRegelDrawer({
               <TimeInput value={draft.start_time} onChange={(v) => update('start_time', v)} placeholder="09:00" autoFocus />
             </div>
             <div>
-              <Label className="text-[11px] text-slate-500">Eindtijd *</Label>
+              <Label className="text-[11px] text-slate-500">Eindtijd {isRit && draft.openRit && !draft.end_time ? '' : '*'}</Label>
               <TimeInput value={draft.end_time} onChange={(v) => update('end_time', v)} placeholder="15:00" />
             </div>
           </div>
@@ -195,7 +238,7 @@ export default function DienstRegelDrawer({
         <div className="px-4 py-2.5 border-t bg-white">
           <button type="button" onClick={handleSave}
             className="w-full h-[48px] rounded-lg bg-blue-600 text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700">
-            <Check className="w-4 h-4" /> Opslaan
+            <Check className="w-4 h-4" /> {isRit && !draft.end_time ? 'Opslaan (open rit)' : 'Opslaan'}
           </button>
         </div>
       </SheetContent>
