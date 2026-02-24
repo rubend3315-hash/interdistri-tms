@@ -515,10 +515,10 @@ export default function Layout({ children, currentPageName }) {
   if (isEmployeeUser(user) && currentPageName === "Dashboard") {
     if (loadingEmployee || !currentEmployee) return null;
 
-    const target =
-      currentEmployee.mobile_entry_type === "multi_day"
-        ? "MobileEntryMultiDay"
-        : "MobileEntry";
+    const mobileType = (currentEmployee.mobile_entry_type || "").toLowerCase();
+    const target = mobileType.includes("meerdaags") || mobileType === "multi_day"
+      ? "MobileEntryMultiDay"
+      : "MobileEntry";
 
     return <Navigate to={createPageUrl(target)} replace />;
   }
