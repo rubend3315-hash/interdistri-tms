@@ -1,7 +1,7 @@
 /**
  * syncDienstEndTime — PostNL service-logica.
  *
- * ENIGE plek waar +2 minuten wordt toegepast.
+ * ENIGE plek waar dienst-sync offset wordt toegepast (via TimePolicy).
  * Reden: administratieve afronding tussen rit-einde en dienst-afmelding.
  *
  * Gebruik ALLEEN bij:
@@ -18,10 +18,10 @@
  * - backend mapping
  */
 
-const DIENST_END_OFFSET_MINUTES = 2;
+import { applyDienstSyncOffset, formatMinutes } from "./timePolicy";
 
 /**
- * Bereken dienst eindtijd op basis van de laatst afgesloten regel + 2 minuten.
+ * Bereken dienst eindtijd op basis van de laatst afgesloten regel + offset.
  *
  * @param {string} ritEndTime - Eindtijd van de afgesloten regel (HH:MM)
  * @returns {string|null} - Nieuwe dienst eindtijd (HH:MM) of null bij ongeldige invoer
@@ -32,9 +32,5 @@ export function calcDienstEndFromRit(ritEndTime) {
   const [h, m] = ritEndTime.split(':').map(Number);
   if (isNaN(h) || isNaN(m)) return null;
 
-  const total = h * 60 + m + DIENST_END_OFFSET_MINUTES;
-  const eH = Math.floor(total / 60) % 24;
-  const eM = total % 60;
-
-  return `${String(eH).padStart(2, '0')}:${String(eM).padStart(2, '0')}`;
+  return formatMinutes(applyDienstSyncOffset(h * 60 + m));
 }

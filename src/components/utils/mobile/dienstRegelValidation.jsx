@@ -5,7 +5,9 @@
  * with overnight handling (+1440 when end <= start).
  */
 
-const MARGIN_MINUTES = 5;
+import { TimePolicy } from "./timePolicy";
+
+const MARGIN_MINUTES = TimePolicy.VALIDATION_MARGIN_MIN;
 
 /**
  * Parse "HH:MM" → minutes since midnight, or null.

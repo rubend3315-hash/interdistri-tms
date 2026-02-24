@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
+import { applyPostnlOffset, formatMinutes } from "./timePolicy";
 
 /**
  * useMobileForm — Form state, localStorage autosave, and server draft loading.
@@ -124,18 +125,13 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       const [sH, sM] = startTime.split(':').map(Number);
       if (isNaN(sH) || isNaN(sM)) return prev;
 
-      // SINGLE offset point: PostNL auto-rit starts dienst.start + 1 min
-      const startMin = sH * 60 + sM + 1;
-      const fmt = (m) => {
-        const h = Math.floor(((m % 1440) + 1440) % 1440 / 60);
-        const mm = ((m % 1440) + 1440) % 1440 % 60;
-        return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-      };
+      // SINGLE offset point: PostNL auto-rit starts dienst.start + offset via TimePolicy
+      const startMin = applyPostnlOffset(sH * 60 + sM);
 
       return [{
         id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
         type: "rit",
-        start_time: fmt(startMin),
+        start_time: formatMinutes(startMin),
         end_time: "", // OPEN — filled later at end of day
         departure_location: "Standplaats",
         vehicle_id: "", damage_occurred: "Nee",
