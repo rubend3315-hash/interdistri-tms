@@ -124,12 +124,12 @@ export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
       ) : (
         <>
           {/* Week selector header */}
-          {focusWeek && (
+          {activeWeek && (
             <div className="px-4">
               <WeekSelector
-                weekLabel={`Week ${focusWeek.weekNumber}`}
-                rangeLabel={focusWeek.rangeLabel}
-                isCurrentWeek={focusIdx === currentWeekIdx}
+                weekLabel={`Week ${activeWeek.weekNumber}`}
+                rangeLabel={activeWeek.rangeLabel}
+                isCurrentWeek={activeWeekKey === currentWeekKey}
                 onPrev={goPrev}
                 onNext={goNext}
                 onDragEnd={handleSwipe}
@@ -139,12 +139,12 @@ export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
 
           {/* Week cards */}
           <div className="px-4 pb-4 space-y-3">
-            {weeks.map((week, idx) => (
+            {weeks.map((week) => (
               <WeekCard
                 key={week.key}
                 week={week}
-                isCurrentWeek={idx === currentWeekIdx}
-                defaultOpen={idx === currentWeekIdx}
+                isCurrentWeek={week.key === currentWeekKey}
+                defaultOpen={week.key === activeWeekKey}
               />
             ))}
           </div>
