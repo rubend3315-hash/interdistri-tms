@@ -31,14 +31,10 @@ export default function DienstRegelListItem({ regel, customers, hasOverlap, onTa
     if (!swiping) return;
     const dx = e.touches[0].clientX - startX.current;
     const dy = e.touches[0].clientY - startY.current;
-
-    // Determine direction lock on first significant move
     if (isHorizontal.current === null && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
       isHorizontal.current = Math.abs(dx) > Math.abs(dy);
     }
     if (!isHorizontal.current) return;
-
-    // Only swipe left
     if (dx < 0) setOffsetX(Math.max(dx, -100));
   };
 
@@ -61,46 +57,58 @@ export default function DienstRegelListItem({ regel, customers, hasOverlap, onTa
       {/* Card */}
       <div
         className={cn(
-          "relative flex items-center gap-3 bg-white px-3 py-2.5 rounded-lg border transition-transform",
+          "relative flex items-center gap-2.5 bg-white pl-3 pr-1.5 py-2 rounded-lg border transition-transform",
           hasOverlap ? "border-red-400 bg-red-50" : isRit ? "border-blue-100" : "border-amber-100"
         )}
         style={{ transform: `translateX(${offsetX}px)`, transition: swiping ? 'none' : 'transform 200ms ease' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={() => { if (Math.abs(offsetX) < 5) onTap(); }}
       >
-        {/* Icon */}
-        <div className={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-          isRit ? "bg-blue-100" : "bg-amber-100"
-        )}>
-          {isRit
-            ? <Truck className="w-4 h-4 text-blue-600" />
-            : <Package className="w-4 h-4 text-amber-600" />
-          }
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-slate-900">
-              {timeLabel}
-            </span>
-            <span className={cn(
-              "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
-              isRit ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"
-            )}>
-              {isRit ? "Rit" : "Standplaats"}
-            </span>
+        {/* Tappable area */}
+        <div
+          className="flex items-center gap-2.5 flex-1 min-w-0"
+          onClick={() => { if (Math.abs(offsetX) < 5) onTap(); }}
+        >
+          {/* Icon */}
+          <div className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+            isRit ? "bg-blue-100" : "bg-amber-100"
+          )}>
+            {isRit
+              ? <Truck className="w-4 h-4 text-blue-600" />
+              : <Package className="w-4 h-4 text-amber-600" />
+            }
           </div>
-          <p className="text-xs text-slate-500 truncate mt-0.5">{subtitle}</p>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-slate-900">{timeLabel}</span>
+              <span className={cn(
+                "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                isRit ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"
+              )}>
+                {isRit ? "Rit" : "Standplaats"}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 truncate mt-0.5">{subtitle}</p>
+          </div>
+
+          {/* Chevron */}
+          <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
         </div>
 
-        {/* Chevron */}
-        <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
+        {/* Delete button */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="p-2 rounded-lg hover:bg-red-50 active:bg-red-100 flex-shrink-0 transition"
+        >
+          <Trash2 className="w-4 h-4 text-red-400" />
+        </button>
       </div>
     </div>
   );
