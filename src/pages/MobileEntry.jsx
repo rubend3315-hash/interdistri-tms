@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
@@ -62,6 +62,21 @@ export default function MobileEntry({ currentUser }) {
   const businessMode = MOBILE_ENTRY_V2 ? rawBusinessMode : "HANDMATIG";
 
   const form = useMobileForm({ isMultiDay, currentEmployee: data.currentEmployee, businessMode: MOBILE_ENTRY_V2 ? businessMode : "HANDMATIG" });
+
+  // PostNL auto-rit: when klantType=PostNL, no geenRit, 0 regels, and both times filled
+  useEffect(() => {
+    if (!MOBILE_ENTRY_V2) return;
+    if (klantType !== "PostNL") return;
+    if (geenRit) return;
+    if (form.dienstRegels.length > 0) return;
+    if (form.autoRitDismissed) return;
+    if (!form.formData.start_time || !form.formData.end_time) return;
+
+    // Find PostNL customer id
+    const postNLCustomer = (data.customers || []).find(c => c.company_name?.toLowerCase().includes("postnl"));
+    form.generateAutoRit(form.formData.start_time, form.formData.end_time, postNLCustomer?.id || "");
+  }, [klantType, geenRit, form.dienstRegels.length, form.formData.start_time, form.formData.end_time, form.autoRitDismissed]);
+
   const submit = useMobileSubmit({
     formData: form.formData, trips: form.trips, standplaatsWerk: form.standplaatsWerk,
     dienstRegels: form.dienstRegels,

@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { useEntrySubmit } from "./useEntrySubmit";
-import { findOverlaps, findGaps } from "./dienstRegelValidation";
+import { findOverlaps, findGaps, validateMargin } from "./dienstRegelValidation";
 
 /**
  * useMobileSubmit — Handles validation + submit + draft save.
@@ -56,17 +56,35 @@ export function useMobileSubmit({
       return false;
     }
 
-    // 4. Gap check (single-day only, 5 min tolerance)
+    // 4. 5-min inner margin check
     const isSingleDay = !isMultiDay || !formData.end_date || formData.end_date === formData.date;
     if (isSingleDay && formData.start_time && formData.end_time) {
       const allHaveTimes = dienstRegels.every(r => r.start_time && r.end_time);
       if (allHaveTimes) {
+        // Margin check
+        const { valid: marginValid, errors: marginErrors } = validateMargin(dienstRegels, formData.start_time, formData.end_time);
+        if (!marginValid) {
+          marginErrors.forEach(e => toast.error(e, { duration: 6000 }));
+          setActiveTab("ritten");
+          return false;
+        }
+
+        // Gap check
         const { valid, errors } = findGaps(dienstRegels, formData.start_time, formData.end_time);
         if (!valid) {
           errors.forEach(e => toast.error(e, { duration: 6000 }));
           setActiveTab("ritten");
           return false;
         }
+      }
+    }
+
+    // 5. KM validation for ritten with vehicle
+    for (let i = 0; i < ritRegels.length; i++) {
+      if (ritRegels[i].vehicle_id && !ritRegels[i].start_km) {
+        toast.error(`Rit ${i + 1}: Kilometerstand is verplicht bij rit met voertuig.`);
+        setActiveTab("ritten");
+        return false;
       }
     }
 
