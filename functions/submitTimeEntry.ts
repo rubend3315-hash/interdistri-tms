@@ -115,8 +115,12 @@ function validate(p) {
   if (p.break_minutes != null && (typeof p.break_minutes !== 'number' || p.break_minutes < 0 || p.break_minutes > 480))
     err.push('Pauze: 0-480 minuten');
 
-  if (!Array.isArray(p.trips) || !p.trips.length) err.push('Minimaal één rit vereist');
-  else if (p.trips.length > 20) err.push('Max 20 ritten');
+  const isGeenRit = typeof p.notes === 'string' && p.notes.startsWith('[GEEN_RIT]');
+  const hasStandplaats = Array.isArray(p.standplaats_werk) && p.standplaats_werk.length > 0;
+
+  if (!Array.isArray(p.trips)) p.trips = [];
+  if (p.trips.length === 0 && !isGeenRit && !hasStandplaats) err.push('Voer minimaal één rit of standplaatswerk in, of vink "geen rit" aan.');
+  if (p.trips.length > 20) err.push('Max 20 ritten');
   else p.trips.forEach((t, i) => {
     const px = `Rit ${i + 1}`;
     if (!isTime(t.start_time)) err.push(`${px}: ongeldige starttijd`);
