@@ -59,6 +59,13 @@ export function useMobileData(user) {
     enabled: !!user?.email
   });
 
+  // Also fetch entries created by admin for this employee (employee_id based)
+  const { data: employeeTimeEntries = [], isLoading: loadingEmployeeEntries } = useQuery({
+    queryKey: ['employeeTimeEntries', currentEmployee?.id],
+    queryFn: () => base44.entities.TimeEntry.filter({ employee_id: currentEmployee.id }),
+    enabled: !!currentEmployee?.id
+  });
+
   const { data: myMessages = [] } = useQuery({
     queryKey: ['myMessages', currentEmployee?.id],
     queryFn: () => base44.entities.Message.filter({ to_employee_id: currentEmployee?.id }),
