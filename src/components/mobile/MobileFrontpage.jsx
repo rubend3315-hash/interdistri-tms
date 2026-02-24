@@ -37,18 +37,10 @@ export default function MobileFrontpage({ onNavigate }) {
     },
     {
       id: "ritten",
-      title: "Ritten",
-      description: "Voer je ritten in",
+      title: "Dienstregels",
+      description: "Ritten & standplaatswerk invoeren",
       icon: Truck,
       color: "from-emerald-500 to-emerald-600"
-    },
-    {
-      id: "ritten_standplaats",
-      navigateTo: "ritten",
-      title: "Standplaatswerk",
-      description: "Loodswerk registreren",
-      icon: Package,
-      color: "from-amber-600 to-amber-700"
     },
     {
       id: "inspectie",
