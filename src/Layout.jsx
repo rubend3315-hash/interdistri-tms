@@ -518,6 +518,18 @@ export default function Layout({ children, currentPageName }) {
     }
   }
 
+  // --- EMPLOYEE landing: redirect Dashboard → correct mobile page ---
+  if (isEmployeeUser(user) && currentPageName === "Dashboard") {
+    if (loadingEmployee || !currentEmployee) return null;
+
+    const target =
+      currentEmployee.mobile_entry_type === "multi_day"
+        ? "MobileEntryMultiDay"
+        : "MobileEntry";
+
+    return <Navigate to={createPageUrl(target)} replace />;
+  }
+
   // --- Deterministic Mobile Routing (SAFE) ---
   if (
     isEmployeeUser(user) &&
