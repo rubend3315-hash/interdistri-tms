@@ -29,7 +29,7 @@ import { useMobileEntryMode } from "@/components/hooks/useMobileEntryMode";
 const MENU_ITEMS = [
   { id: "home", label: "Home", icon: Home },
   { id: "dienst", label: "Diensttijd", icon: Clock },
-  { id: "ritten", label: "Ritten", icon: Truck },
+  { id: "ritten", label: "Dienstregels", icon: Truck },
   { id: "inspectie", label: "Voertuiginspectie", icon: ClipboardCheck },
   { id: "declaratie", label: "Declaratie", icon: FileText },
   { id: "overzicht", label: "Overzicht", icon: CheckCircle },
