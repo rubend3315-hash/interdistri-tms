@@ -24,7 +24,7 @@ function generateId() {
   return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 }
 
-function getPrefillTimes(dienstRegels, dienstStartTime) {
+function getPrefillStartTime(dienstRegels, dienstStartTime) {
   const sorted = [...dienstRegels]
     .map(r => ({ ...r, _min: timeToMinutes(r.end_time) }))
     .filter(r => r._min !== null)
@@ -38,13 +38,12 @@ function getPrefillTimes(dienstRegels, dienstStartTime) {
   }
   if (startMin === null) return { start_time: "", end_time: "" };
 
-  const endMin = startMin + 60;
   const fmt = (m) => {
     const h = Math.floor(m / 60) % 24;
     const mm = m % 60;
     return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
   };
-  return { start_time: fmt(startMin), end_time: fmt(endMin) };
+  return { start_time: fmt(startMin), end_time: "" };
 }
 
 export default function DienstRegelsTab({
@@ -97,7 +96,7 @@ export default function DienstRegelsTab({
   );
 
   const addRegel = (type) => {
-    const prefill = getPrefillTimes(dienstRegels, formData?.start_time);
+    const prefill = getPrefillStartTime(dienstRegels, formData?.start_time);
     const newRegel = { id: generateId(), type, ...(type === "rit" ? { ...EMPTY_TRIP } : { ...EMPTY_STANDPLAATS }), ...prefill };
     setDienstRegels(prev => [...prev, newRegel]);
     setEditingRegel(newRegel);
