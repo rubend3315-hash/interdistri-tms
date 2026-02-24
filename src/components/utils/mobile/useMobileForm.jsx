@@ -30,29 +30,33 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
     };
   });
 
-  // --- Trips ---
-  const [trips, setTrips] = useState(() => {
+  // --- DienstRegels (unified rit + standplaats) ---
+  const [dienstRegels, setDienstRegels] = useState(() => {
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.formData?.date === todayStr && parsed.trips?.length) return parsed.trips;
+        if (parsed.formData?.date === todayStr) {
+          // Support new format
+          if (parsed.dienstRegels?.length) return parsed.dienstRegels;
+          // Migrate legacy format
+          const rules = [];
+          if (parsed.trips?.length) {
+            parsed.trips.forEach(t => rules.push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, type: "rit", ...t }));
+          }
+          if (parsed.standplaatsWerk?.length) {
+            parsed.standplaatsWerk.forEach(s => rules.push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, type: "standplaats", ...s }));
+          }
+          if (rules.length > 0) return rules;
+        }
       }
     } catch {}
     return [];
   });
 
-  // --- Standplaatswerk ---
-  const [standplaatsWerk, setStandplaatsWerk] = useState(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.formData?.date === todayStr && parsed.standplaatsWerk?.length) return parsed.standplaatsWerk;
-      }
-    } catch {}
-    return [];
-  });
+  // Derived: trips and standplaatsWerk for backwards compatibility with submit/save
+  const trips = dienstRegels.filter(r => r.type === "rit");
+  const standplaatsWerk = dienstRegels.filter(r => r.type === "standplaats");
 
   // --- Signature ---
   const [signature, setSignature] = useState(null);
@@ -89,19 +93,19 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
     const timer = setTimeout(() => {
       try {
         localStorage.setItem(storageKey, JSON.stringify({
-          formData, trips, standplaatsWerk, savedAt: Date.now()
+          formData, dienstRegels, savedAt: Date.now()
         }));
         setLastSavedAt(Date.now());
       } catch {}
       setIsSaving(false);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [formData, trips, standplaatsWerk, storageKey, draftLoaded]);
+  }, [formData, dienstRegels, storageKey, draftLoaded]);
 
   // --- Progress ---
   const progressStep = (() => {
     if (!formData.start_time) return 0;
-    if (trips.length === 0) return 1;
+    if (dienstRegels.length === 0) return 1;
     if (!formData.end_time) return 2;
     if (!signature) return 3;
     return 4;
@@ -136,8 +140,11 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
           employee_id: currentEmployee.id, date: todayStr
         });
         const draftTrips = existingTrips.filter(t => t.status === 'Gepland');
+        const loadedRegels = [];
         if (draftTrips.length > 0) {
-          setTrips(draftTrips.map(t => ({
+          draftTrips.forEach(t => loadedRegels.push({
+            id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+            type: "rit",
             start_time: t.departure_time || "",
             end_time: t.arrival_time || "",
             departure_location: t.departure_location || "Standplaats",
@@ -154,14 +161,16 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
             planned_stops: t.planned_stops ? String(t.planned_stops) : "",
             notes: t.notes || "",
             _existingId: t.id
-          })));
+          }));
         }
 
         const existingSpw = await base44.entities.StandplaatsWerk.filter({
           employee_id: currentEmployee.id, date: todayStr
         });
         if (existingSpw.length > 0) {
-          setStandplaatsWerk(existingSpw.map(s => ({
+          existingSpw.forEach(s => loadedRegels.push({
+            id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+            type: "standplaats",
             start_time: s.start_time || "",
             end_time: s.end_time || "",
             customer_id: s.customer_id || "",
@@ -169,8 +178,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
             activity_id: s.activity_id || "",
             notes: s.notes || "",
             _existingId: s.id
-          })));
+          }));
         }
+        if (loadedRegels.length > 0) setDienstRegels(loadedRegels);
       } catch (error) {
         console.error('Draft laden mislukt:', error);
       } finally {
@@ -199,8 +209,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
 
   // --- Reset after successful submit ---
   const resetForm = useCallback(() => {
-    setTrips([]);
-    setStandplaatsWerk([]);
+    setDienstRegels([]);
     setSignature(null);
     setFormData({
       date: todayStr,
@@ -213,8 +222,8 @@ export function useMobileForm({ isMultiDay = false, currentEmployee }) {
 
   return {
     formData, setFormData,
-    trips, setTrips,
-    standplaatsWerk, setStandplaatsWerk,
+    dienstRegels, setDienstRegels,
+    trips, standplaatsWerk,
     signature, setSignature,
     inspectionData, setInspectionData,
     expenseData, setExpenseData,
