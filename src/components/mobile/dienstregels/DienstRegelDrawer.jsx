@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Truck, Package, Check, ChevronLeft, ChevronDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { findOverlaps, timeToMinutes, validateSingleRegelMargin } from "@/components/utils/mobile/dienstRegelValidation";
+import { findOverlaps, timeToMinutes, validateSingleRegelBounds } from "@/components/utils/mobile/dienstRegelValidation";
 
 const TimeInput = ({ value, onChange, placeholder, autoFocus }) => {
   const ref = useRef(null);
@@ -91,10 +91,10 @@ export default function DienstRegelDrawer({
       return;
     }
 
-    // 4. Check 5-min inner margin (full)
-    const marginError = validateSingleRegelMargin(draft, dienstStartTime, dienstEndTime);
-    if (marginError) {
-      toast.error(marginError);
+    // 4. Bounds check: regel within dienst times
+    const boundsError = validateSingleRegelBounds(draft, dienstStartTime, dienstEndTime);
+    if (boundsError) {
+      toast.error(boundsError);
       return;
     }
 

@@ -3,11 +3,12 @@
  * Uses minute-based arithmetic (no string comparisons).
  * All times normalized to an absolute minute offset from midnight,
  * with overnight handling (+1440 when end <= start).
+ *
+ * Validates:
+ * - Overlaps between regels
+ * - Bounds: regel.start >= dienst.start, regel.end <= dienst.end
+ * - NO margin/gap validation (removed v23)
  */
-
-import { TimePolicy } from "./timePolicy";
-
-const MARGIN_MINUTES = TimePolicy.VALIDATION_MARGIN_MIN;
 
 /**
  * Parse "HH:MM" → minutes since midnight, or null.
@@ -61,20 +62,17 @@ export function findOverlaps(dienstRegels) {
 }
 
 /**
- * Validate that all dienstRegels fall within dienst times + 5 min inner margin.
- * regel.start >= dienst.start + 5
- * regel.end   <= dienst.end - 5
+ * Validate that all dienstRegels fall within dienst bounds (no margin).
+ * regel.start >= dienst.start
+ * regel.end   <= dienst.end
  *
  * Returns { valid: boolean, errors: string[] }
  */
-export function validateMargin(dienstRegels, dienstStartTime, dienstEndTime) {
+export function validateBounds(dienstRegels, dienstStartTime, dienstEndTime) {
   const svcStart = timeToMinutes(dienstStartTime);
   const svcEnd = timeToMinutes(dienstEndTime);
   if (svcStart === null || svcEnd === null) return { valid: true, errors: [] };
   const svcEndN = normalizeEnd(svcStart, svcEnd);
-
-  const minStart = svcStart + MARGIN_MINUTES;
-  const maxEnd = svcEndN - MARGIN_MINUTES;
 
   const errors = [];
   const intervals = buildIntervals(dienstRegels);
@@ -83,11 +81,11 @@ export function validateMargin(dienstRegels, dienstStartTime, dienstEndTime) {
     const regelStart = iv.start < svcStart ? iv.start + 1440 : iv.start;
     const regelEnd = iv.end < svcStart ? iv.end + 1440 : iv.end;
 
-    if (regelStart < minStart) {
-      errors.push(`Regel ${iv.index + 1}: starttijd valt buiten de 5-minuten marge na start dienst.`);
+    if (regelStart < svcStart) {
+      errors.push(`Regel ${iv.index + 1}: starttijd valt voor start dienst.`);
     }
-    if (regelEnd > maxEnd) {
-      errors.push(`Regel ${iv.index + 1}: eindtijd valt buiten de 5-minuten marge voor eind dienst.`);
+    if (regelEnd > svcEndN) {
+      errors.push(`Regel ${iv.index + 1}: eindtijd valt na eind dienst.`);
     }
   }
 
@@ -95,122 +93,80 @@ export function validateMargin(dienstRegels, dienstStartTime, dienstEndTime) {
 }
 
 /**
- * Validate a single regel against dienst margin.
- * For OPEN rits (no end_time), only validate start margin.
+ * Validate a single regel against dienst bounds (no margin).
+ * For OPEN rits (no end_time), only validate start bound.
  * Returns error string or null.
  */
-export function validateSingleRegelMargin(regel, dienstStartTime, dienstEndTime) {
+export function validateSingleRegelBounds(regel, dienstStartTime, dienstEndTime) {
   const svcStart = timeToMinutes(dienstStartTime);
   const rStart = timeToMinutes(regel.start_time);
   const rEnd = timeToMinutes(regel.end_time);
 
   if (svcStart === null || rStart === null) return null;
 
-  const minStart = svcStart + MARGIN_MINUTES;
   const regelStart = rStart < svcStart ? rStart + 1440 : rStart;
 
-  // OPEN rit: only check start margin
+  // OPEN rit: only check start bound
   if (rEnd === null) {
-    if (regelStart < minStart) {
-      return "Starttijd moet minimaal 5 minuten na start dienst liggen.";
+    if (regelStart < svcStart) {
+      return "Starttijd moet na start dienst liggen.";
     }
     return null;
   }
 
-  // Closed rit: full margin check
+  // Closed rit: full bounds check
   const svcEnd = timeToMinutes(dienstEndTime);
   if (svcEnd === null) return null;
 
   const svcEndN = normalizeEnd(svcStart, svcEnd);
-  const maxEnd = svcEndN - MARGIN_MINUTES;
 
   const regelEnd = normalizeEnd(rStart, rEnd);
   const regelEndN = regelEnd < svcStart ? regelEnd + 1440 : regelEnd;
 
-  if (regelStart < minStart || regelEndN > maxEnd) {
-    return "Dienstregel moet minimaal 5 minuten binnen de diensttijd vallen.";
+  if (regelStart < svcStart) {
+    return "Starttijd moet na start dienst liggen.";
+  }
+  if (regelEndN > svcEndN) {
+    return "Eindtijd moet voor eind dienst liggen.";
   }
   return null;
 }
 
-/**
- * Check gaps between dienstRegels and dienst start/end times.
- * Only for single-day entries (multi-day skips gap validation).
- *
- * Returns { valid: boolean, errors: string[] }
- */
-export function findGaps(dienstRegels, dienstStartTime, dienstEndTime) {
-  const svcStart = timeToMinutes(dienstStartTime);
-  const svcEnd = timeToMinutes(dienstEndTime);
-  if (svcStart === null || svcEnd === null) return { valid: true, errors: [] };
-  const svcEndN = normalizeEnd(svcStart, svcEnd);
-
-  const intervals = buildIntervals(dienstRegels);
-  if (intervals.length === 0) return { valid: true, errors: [] };
-
-  const errors = [];
-
-  // a) Gap between dienst start and first regel
-  const firstStart = intervals[0].start < svcStart ? intervals[0].start + 1440 : intervals[0].start;
-  const startGap = firstStart - svcStart;
-  if (startGap > MARGIN_MINUTES) {
-    errors.push(`Er zit ${startGap} minuten tussen start dienst (${dienstStartTime}) en je eerste regel. Max ${MARGIN_MINUTES} min toegestaan.`);
-  }
-
-  // b) Gap between last regel and dienst end
-  const lastEnd = intervals[intervals.length - 1].end;
-  const endGap = svcEndN - lastEnd;
-  if (endGap > MARGIN_MINUTES) {
-    errors.push(`Er zit ${endGap} minuten tussen je laatste regel en eind dienst (${dienstEndTime}). Max ${MARGIN_MINUTES} min toegestaan.`);
-  }
-
-  // c) Gaps between consecutive regels
-  for (let i = 0; i < intervals.length - 1; i++) {
-    const gap = intervals[i + 1].start - intervals[i].end;
-    if (gap > MARGIN_MINUTES) {
-      errors.push(`Er zit ${gap} minuten tussen regel ${intervals[i].index + 1} en regel ${intervals[i + 1].index + 1}. Max ${MARGIN_MINUTES} min toegestaan.`);
-    }
-  }
-
-  return { valid: errors.length === 0, errors };
-}
+// Legacy exports for backward compatibility — these are now no-ops
+export function validateMargin() { return { valid: true, errors: [] }; }
+export function findGaps() { return { valid: true, errors: [] }; }
 
 /**
  * Full validation for UI display (non-blocking, returns all issues).
- * Skips gap/margin validation if any regel has openRit status (no end_time).
+ * Checks overlaps and bounds only. No margin/gap validation.
  * Returns { overlaps, gaps, margins, hasOverlap, hasGap, hasMarginError, hasOpenRit }
  */
 export function validateDienstRegels(dienstRegels, dienstStartTime, dienstEndTime, isSingleDay) {
   const hasOpenRit = dienstRegels.some(r => r.openRit && !r.end_time);
 
-  // Only check overlaps for closed regels (open rits excluded from buildIntervals)
+  // Overlap check
   const overlapPairs = findOverlaps(dienstRegels);
   const overlapMessages = overlapPairs.map(({ i, j }) =>
     `Dienstregels mogen elkaar niet overlappen (regel ${i + 1} en ${j + 1}).`
   );
 
-  let gapMessages = [];
-  let marginMessages = [];
-
-  // Skip gap/margin checks if any open rit exists (end_time not yet known)
-  if (!hasOpenRit && isSingleDay && dienstStartTime && dienstEndTime && dienstRegels.length > 0) {
+  // Bounds check (replaces margin check)
+  let boundsMessages = [];
+  if (!hasOpenRit && dienstStartTime && dienstEndTime && dienstRegels.length > 0) {
     const allHaveTimes = dienstRegels.every(r => r.start_time && r.end_time);
     if (allHaveTimes) {
-      const { errors: gapErrors } = findGaps(dienstRegels, dienstStartTime, dienstEndTime);
-      gapMessages = gapErrors;
-
-      const { errors: marginErrors } = validateMargin(dienstRegels, dienstStartTime, dienstEndTime);
-      marginMessages = marginErrors;
+      const { errors } = validateBounds(dienstRegels, dienstStartTime, dienstEndTime);
+      boundsMessages = errors;
     }
   }
 
   return {
     overlaps: overlapMessages,
-    gaps: gapMessages,
-    margins: marginMessages,
+    gaps: [],           // no gap validation
+    margins: boundsMessages,
     hasOverlap: overlapMessages.length > 0,
-    hasGap: gapMessages.length > 0,
-    hasMarginError: marginMessages.length > 0,
+    hasGap: false,      // no gap validation
+    hasMarginError: boundsMessages.length > 0,
     hasOpenRit,
   };
 }

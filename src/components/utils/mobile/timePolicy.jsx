@@ -3,7 +3,6 @@
  *
  * +1 minuut  → Alleen PostNL eerste autorit (generateAutoRit)
  * +2 minuten → Alleen dienst-eindtijd sync (calcDienstEndFromRit)
- * 5 minuten  → Alleen validatiecontrole (dienstRegelValidation)
  *
  * NOOIT:
  * - offset toepassen in overlap checks
@@ -15,7 +14,6 @@
 export const TimePolicy = Object.freeze({
   POSTNL_OFFSET_MIN: 1,
   DIENST_SYNC_OFFSET_MIN: 2,
-  VALIDATION_MARGIN_MIN: 5,
 });
 
 /**
@@ -34,15 +32,6 @@ export function applyPostnlOffset(startMin) {
  */
 export function applyDienstSyncOffset(endMin) {
   return endMin + TimePolicy.DIENST_SYNC_OFFSET_MIN;
-}
-
-/**
- * Validatie: verschil binnen marge?
- * @param {number} diffMin - verschil in minuten
- * @returns {boolean}
- */
-export function isWithinMargin(diffMin) {
-  return diffMin <= TimePolicy.VALIDATION_MARGIN_MIN;
 }
 
 /**

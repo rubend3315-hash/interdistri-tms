@@ -4,7 +4,7 @@
  * Runtime regressietests voor:
  * A) PostNL autorit +1 offset
  * B) Dienst sync +2 offset
- * C) 5-minuten validatie
+ * C) Bounds validatie (geen marge)
  * D) Overlap detectie
  * E) Timeline consistency
  *
@@ -12,9 +12,9 @@
  *          const results = runTimeLogicTests();
  */
 
-import { TimePolicy, applyPostnlOffset, applyDienstSyncOffset, isWithinMargin, formatMinutes } from "./timePolicy";
+import { TimePolicy, applyPostnlOffset, applyDienstSyncOffset, formatMinutes } from "./timePolicy";
 import { calcDienstEndFromRit } from "./syncDienstEndTime";
-import { findOverlaps, findGaps, validateMargin, timeToMinutes } from "./dienstRegelValidation";
+import { findOverlaps, validateBounds, validateDienstRegels, timeToMinutes } from "./dienstRegelValidation";
 import { assertTimeline } from "./assertTimelineConsistency";
 
 function assert(condition, name) {
@@ -70,36 +70,53 @@ function testB6_applyDienstSyncDirect() {
   return assert(result === 15 * 60 + 2, "B6: applyDienstSyncOffset(15:00) === 902");
 }
 
-// ─── BLOK C: 5-Minuten Validatie ───
+// ─── BLOK C: Bounds Validatie (geen marge) ───
 
-function testC1_gapWithinMargin() {
-  return assert(isWithinMargin(3), "C1: Gap 3 min → binnen marge");
+function testC1_withinBoundsAllowed() {
+  // Rit 08:16-15:00 within dienst 08:15-15:02 → no error
+  const regels = [{ start_time: "08:16", end_time: "15:00" }];
+  const { valid } = validateBounds(regels, "08:15", "15:02");
+  return assert(valid, "C1: Rit binnen dienst → geen fout");
 }
 
-function testC2_gapExceedsMargin() {
-  return assert(!isWithinMargin(6), "C2: Gap 6 min → buiten marge");
+function testC2_startBeforeDienstBlocked() {
+  const regels = [{ start_time: "08:14", end_time: "15:00" }];
+  const { valid } = validateBounds(regels, "08:15", "15:02");
+  return assert(!valid, "C2: Rit start voor dienst → fout");
 }
 
-function testC3_gapExactMargin() {
-  return assert(isWithinMargin(5), "C3: Gap 5 min → exact op marge (toegestaan)");
+function testC3_endAfterDienstBlocked() {
+  const regels = [{ start_time: "08:16", end_time: "15:05" }];
+  const { valid } = validateBounds(regels, "08:15", "15:02");
+  return assert(!valid, "C3: Rit eind na dienst → fout");
 }
 
-function testC4_marginValueIsExactlyFive() {
-  return assert(TimePolicy.VALIDATION_MARGIN_MIN === 5, "C4: Validatie marge === 5");
+function testC4_exactBoundsAllowed() {
+  // Rit exact on dienst bounds → allowed
+  const regels = [{ start_time: "08:15", end_time: "15:02" }];
+  const { valid } = validateBounds(regels, "08:15", "15:02");
+  return assert(valid, "C4: Rit exact op dienst grenzen → geen fout");
 }
 
-function testC5_validateMarginNoMutation() {
+function testC5_gapAllowed() {
+  // 30 min gap between regels → allowed (no gap validation)
+  const regels = [
+    { start_time: "08:16", end_time: "12:00" },
+    { start_time: "12:30", end_time: "15:00" },
+  ];
+  const result = validateDienstRegels(regels, "08:15", "15:02", true);
+  return assert(!result.hasGap, "C5: 30 min gat → toegestaan (geen gapvalidatie)");
+}
+
+function testC6_boundsNoMutation() {
   const regels = [{ start_time: "08:20", end_time: "15:00" }];
   const original = JSON.stringify(regels);
-  validateMargin(regels, "08:15", "15:05");
-  return assert(JSON.stringify(regels) === original, "C5: validateMargin muteert input niet");
+  validateBounds(regels, "08:15", "15:05");
+  return assert(JSON.stringify(regels) === original, "C6: validateBounds muteert input niet");
 }
 
-function testC6_findGapsNoMutation() {
-  const regels = [{ start_time: "08:20", end_time: "14:00" }, { start_time: "14:30", end_time: "15:00" }];
-  const original = JSON.stringify(regels);
-  findGaps(regels, "08:15", "15:05");
-  return assert(JSON.stringify(regels) === original, "C6: findGaps muteert input niet");
+function testC7_noMarginProperty() {
+  return assert(!('VALIDATION_MARGIN_MIN' in TimePolicy), "C7: Geen VALIDATION_MARGIN_MIN in TimePolicy");
 }
 
 // ─── BLOK D: Overlap ───
@@ -164,8 +181,8 @@ export function runTimeLogicTests() {
     testA1_postNLOffset, testA2_offsetValueIsExactlyOne, testA3_formatMinutesCorrect,
     testB1_dienstSync, testB2_dienstSyncMidnight, testB3_dienstSyncNull,
     testB4_dienstSyncEmpty, testB5_offsetValueIsExactlyTwo, testB6_applyDienstSyncDirect,
-    testC1_gapWithinMargin, testC2_gapExceedsMargin, testC3_gapExactMargin,
-    testC4_marginValueIsExactlyFive, testC5_validateMarginNoMutation, testC6_findGapsNoMutation,
+    testC1_withinBoundsAllowed, testC2_startBeforeDienstBlocked, testC3_endAfterDienstBlocked,
+    testC4_exactBoundsAllowed, testC5_gapAllowed, testC6_boundsNoMutation, testC7_noMarginProperty,
     testD1_overlapDetected, testD2_noOverlap, testD3_overlapNoMutation,
     testE1_validTimeline, testE2_invalidTimeline, testE3_emptyTimeline,
   ];

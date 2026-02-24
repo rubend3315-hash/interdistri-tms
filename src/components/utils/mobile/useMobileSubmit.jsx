@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { useEntrySubmit } from "./useEntrySubmit";
-import { findOverlaps, findGaps, validateMargin } from "./dienstRegelValidation";
+import { findOverlaps, validateBounds } from "./dienstRegelValidation";
 
 /**
  * useMobileSubmit — Handles validation + submit + draft save.
@@ -68,21 +68,11 @@ export function useMobileSubmit({
       return false;
     }
 
-    // 4. 5-min inner margin check
-    const isSingleDay = !isMultiDay || !formData.end_date || formData.end_date === formData.date;
-    if (isSingleDay && formData.start_time && formData.end_time) {
+    // 4. Bounds check: regels within dienst times
+    if (formData.start_time && formData.end_time) {
       const allHaveTimes = dienstRegels.every(r => r.start_time && r.end_time);
       if (allHaveTimes) {
-        // Margin check
-        const { valid: marginValid, errors: marginErrors } = validateMargin(dienstRegels, formData.start_time, formData.end_time);
-        if (!marginValid) {
-          marginErrors.forEach(e => toast.error(e, { duration: 6000 }));
-          setActiveTab("ritten");
-          return false;
-        }
-
-        // Gap check
-        const { valid, errors } = findGaps(dienstRegels, formData.start_time, formData.end_time);
+        const { valid, errors } = validateBounds(dienstRegels, formData.start_time, formData.end_time);
         if (!valid) {
           errors.forEach(e => toast.error(e, { duration: 6000 }));
           setActiveTab("ritten");
