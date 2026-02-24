@@ -28,7 +28,8 @@ const TimeInput = ({ value, onChange, placeholder, autoFocus }) => {
 export default function DienstRegelDrawer({
   open, onOpenChange, regel, allRegels,
   onSave, onDelete, vehicles, customers, routes, tiModelRoutes, projects, activiteiten,
-  dienstStartTime, dienstEndTime, isNewRegel
+  dienstStartTime, dienstEndTime, isNewRegel,
+  onSaveAndGoHome
 }) {
   const [draft, setDraft] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -75,9 +76,10 @@ export default function DienstRegelDrawer({
         toast.error("Begin km is verplicht bij rit met voertuig.");
         return;
       }
-      // Save as OPEN rit
+      // Save as OPEN rit → go home
       onSave({ ...draft, openRit: true });
       onOpenChange(false);
+      if (onSaveAndGoHome) onSaveAndGoHome();
       return;
     }
 
@@ -118,6 +120,8 @@ export default function DienstRegelDrawer({
     // Mark openRit as closed when end_time is now provided
     onSave({ ...draft, openRit: false });
     onOpenChange(false);
+    // Closing an open rit → also save & go home
+    if (draft.openRit && draft.end_time && onSaveAndGoHome) onSaveAndGoHome();
   };
 
   const handleTypeSwitch = (newType) => {

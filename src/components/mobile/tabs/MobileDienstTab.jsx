@@ -34,7 +34,7 @@ export default function MobileDienstTab({
   postNLAuto = false, setPostNLAuto
 }) {
   const [multiDayEnabled, setMultiDayEnabled] = useState(
-    isMultiDay || (formData.end_date && formData.end_date !== formData.date)
+    formData.end_date && formData.end_date !== formData.date
   );
 
   const hasRegels = geenRit ? true : dienstRegels.length > 0;

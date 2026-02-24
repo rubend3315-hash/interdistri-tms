@@ -153,9 +153,13 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   }, []);
 
   // --- Progress ---
+  // Open rit: treat "Regels" step as complete for morning phase
+  const hasOpenRit = dienstRegels.some(r => r.openRit && !r.end_time);
   const progressStep = (() => {
     if (!formData.start_time) return 0;
     if (dienstRegels.length === 0) return 1;
+    // With open rit and no end_time yet → step 2 (Regels done, Eind pending)
+    if (hasOpenRit && !formData.end_time) return 2;
     if (!formData.end_time) return 2;
     if (!signature) return 3;
     return 4;

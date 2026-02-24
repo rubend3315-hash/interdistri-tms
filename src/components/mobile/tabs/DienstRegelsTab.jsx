@@ -53,7 +53,8 @@ export default function DienstRegelsTab({
   progressStep, lastSavedAt, isSaving, isSubmitting,
   storageKey, onSaveDraft, setActiveTab,
   formData,
-  postNLAuto = false, postNLOpenDrawer = false, setPostNLOpenDrawer
+  postNLAuto = false, postNLOpenDrawer = false, setPostNLOpenDrawer,
+  onSaveAndGoHome
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingRegel, setEditingRegel] = useState(null);
@@ -173,19 +174,13 @@ export default function DienstRegelsTab({
 
       {/* Sticky bottom */}
       <div className="sticky bottom-0 left-0 right-0 bg-white pt-2 pb-1 -mx-4 px-4 border-t border-slate-100 mt-2 space-y-2">
-        {/* Primary: Opslaan dienst (when PostNL + regels exist) */}
+        {/* PostNL mode with existing regels: no big "add" button */}
         {postNLAuto && dienstRegels.length > 0 ? (
           <>
-            <button type="button"
-              onClick={async () => { await onSaveDraft(); setActiveTab("dienst"); }}
-              disabled={isSubmitting || hasValidationErrors}
-              className="w-full h-[48px] rounded-lg bg-blue-600 text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400">
-              <Save className="w-4 h-4" /> Opslaan & terug
-            </button>
-            {/* Tertiary: add more rules */}
+            {/* Secondary: add more rules — small link, not dominant */}
             <button type="button"
               onClick={() => setAddMenuOpen(prev => !prev)}
-              className="w-full text-center text-[12px] text-slate-500 font-medium py-1">
+              className="w-full text-center text-[12px] text-slate-500 font-medium py-1.5">
               <Plus className="w-3 h-3 inline mr-1" />Extra regel toevoegen
             </button>
             {addMenuOpen && (
@@ -211,7 +206,7 @@ export default function DienstRegelsTab({
           </>
         ) : (
           <>
-            {/* Default: "Regel toevoegen" primary */}
+            {/* Default: "Regel toevoegen" — compact add menu */}
             <div className="relative">
               {addMenuOpen && (
                 <div className="absolute bottom-full left-0 right-0 mb-1 bg-white rounded-xl border shadow-lg p-1.5 z-10">
@@ -236,7 +231,7 @@ export default function DienstRegelsTab({
               <button
                 type="button"
                 onClick={() => setAddMenuOpen(prev => !prev)}
-                className="w-full h-[48px] rounded-lg bg-blue-600 text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700"
+                className="w-full h-[44px] rounded-lg bg-blue-600 text-white text-[13px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700"
               >
                 <Plus className="w-4 h-4" /> Regel toevoegen
               </button>
@@ -271,6 +266,7 @@ export default function DienstRegelsTab({
         dienstStartTime={formData?.start_time}
         dienstEndTime={formData?.end_time}
         isNewRegel={isNewRegel}
+        onSaveAndGoHome={onSaveAndGoHome}
       />
 
       <DeleteConfirmDialog
