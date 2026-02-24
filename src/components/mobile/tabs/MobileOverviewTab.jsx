@@ -9,7 +9,6 @@ import WeekDetail from "../overview/WeekDetail";
 const WEEKS_BACK = 7;
 const WEEKS_FORWARD = 1;
 const STORAGE_KEY = "mobile_active_week_idx";
-const WEEK_NORM = 40;
 
 function buildTimeline(entries) {
   const now = new Date();
@@ -48,8 +47,17 @@ function buildTimeline(entries) {
   return timeline; // oldest first, index 0 = oldest
 }
 
-export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
+function getWeekNorm(employee) {
+  const regels = employee?.contractregels;
+  if (!Array.isArray(regels) || regels.length === 0) return 40;
+  const actief = regels.find(r => r.status === "Actief");
+  const regel = actief || regels[regels.length - 1];
+  return regel?.uren_per_week || employee?.contract_hours || 40;
+}
+
+export default function MobileOverviewTab({ approvedEntries, loadingEntries, currentEmployee }) {
   const timeline = useMemo(() => buildTimeline(approvedEntries), [approvedEntries]);
+  const weekNorm = useMemo(() => getWeekNorm(currentEmployee), [currentEmployee]);
 
   const currentIdx = useMemo(() => {
     const idx = timeline.findIndex(w => w.isCurrent);
@@ -126,7 +134,7 @@ export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
           />
           <WeekDetail
             week={activeWeek}
-            norm={WEEK_NORM}
+            norm={weekNorm}
           />
         </div>
       ) : null}

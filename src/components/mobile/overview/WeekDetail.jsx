@@ -13,11 +13,10 @@ function fmtH(h) {
 
 function getNormStatus(totalHours, norm, isPastWeek) {
   const diff = Math.round((totalHours - norm) * 10) / 10;
-  if (diff === 0) return { status: "exact", diff, color: "bg-emerald-500", text: "text-emerald-600", label: "Norm behaald" };
-  if (diff > 0) return { status: "over", diff, color: "bg-orange-500", text: "text-orange-600", label: `+${fmtH(diff)} overuren` };
-  // Under norm
-  if (isPastWeek) return { status: "past_under", diff, color: "bg-red-500", text: "text-red-600", label: `${fmtH(Math.abs(diff))} onder norm` };
-  return { status: "under", diff, color: "bg-blue-500", text: "text-blue-600", label: `${fmtH(Math.abs(diff))} onder norm` };
+  if (diff === 0) return { status: "exact", diff, color: "bg-emerald-500", text: "text-emerald-600", label: "Contracturen behaald" };
+  if (diff > 0) return { status: "over", diff, color: "bg-orange-500", text: "text-orange-600", label: `+${fmtH(diff)} overwerk` };
+  if (isPastWeek) return { status: "past_under", diff, color: "bg-red-500", text: "text-red-600", label: `${fmtH(Math.abs(diff))} onder contract` };
+  return { status: "under", diff, color: "bg-blue-500", text: "text-blue-600", label: `${fmtH(Math.abs(diff))} onder contract` };
 }
 
 export default function WeekDetail({ week, norm }) {
