@@ -121,7 +121,7 @@ function validate(p) {
   if (!Array.isArray(p.trips)) p.trips = [];
   if (p.trips.length === 0 && !isGeenRit && !hasStandplaats) err.push('Voer minimaal één rit of standplaatswerk in, of vink "geen rit" aan.');
   if (p.trips.length > 20) err.push('Max 20 ritten');
-  else p.trips.forEach((t, i) => {
+  if (p.trips.length > 0) p.trips.forEach((t, i) => {
     const px = `Rit ${i + 1}`;
     if (!isTime(t.start_time)) err.push(`${px}: ongeldige starttijd`);
     if (!isTime(t.end_time)) err.push(`${px}: ongeldige eindtijd`);
@@ -158,7 +158,7 @@ function validate(p) {
   if (typeof p.notes === 'string' && p.notes.length > 2000) err.push('Opmerkingen max 2000 tekens');
 
   // Trip time vs service time (single-day, with overnight shift support)
-  if (!err.length && Array.isArray(p.trips) && (!p.end_date || p.end_date === p.date)) {
+  if (!err.length && p.trips.length > 0 && (!p.end_date || p.end_date === p.date)) {
     const ds = timeMin(p.start_time);
     let de = timeMin(p.end_time);
     if (ds !== null && de !== null) {
