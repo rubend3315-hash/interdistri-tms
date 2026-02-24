@@ -313,6 +313,13 @@ export default function Layout({ children, currentPageName }) {
   const effectiveRole = getEffectiveRole(user);
   const isSuperAdmin = effectiveRole === ROLES.SUPER_ADMIN;
 
+  // DEBUG: Acting-as diagnose
+  if (user && isEmployeeUser(user)) {
+    console.log("🔍 DEBUG USER:", user?.email, "| role:", user?.role, "| business_role:", user?.business_role);
+    console.log("🔍 DEBUG effectiveRole:", effectiveRole, "| isEmployee:", isEmployeeUser(user));
+    console.log("🔍 DEBUG currentEmployee:", currentEmployee?.id ?? "NULL", "| loading:", loadingEmployee);
+  }
+
   /**
    * Permission-based page access check.
    * Maps pages to required RBAC permissions.
