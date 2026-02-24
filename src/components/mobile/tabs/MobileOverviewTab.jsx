@@ -48,51 +48,50 @@ const STORAGE_KEY = "mobile_active_week_key";
 export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
   const weeks = useMemo(() => buildWeeks(approvedEntries), [approvedEntries]);
   const now = new Date();
-  const initialized = useRef(false);
 
-  // Find index of current week in weeks array
-  const currentWeekIdx = useMemo(() => {
-    const idx = weeks.findIndex(w => isSameWeek(w.weekStart, now, { weekStartsOn: 1 }));
-    return idx >= 0 ? idx : 0;
+  // Current calendar week key
+  const currentWeekKey = useMemo(() => {
+    const w = weeks.find(w => isSameWeek(w.weekStart, now, { weekStartsOn: 1 }));
+    return w?.key || (weeks[0]?.key ?? null);
   }, [weeks, now]);
 
-  // Initialize focusIdx from localStorage or currentWeek
-  const [focusIdx, setFocusIdx] = useState(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && weeks.length > 0) {
-      const idx = weeks.findIndex(w => w.key === stored);
-      if (idx >= 0) return idx;
-    }
-    return 0;
+  // Single source of truth: activeWeekKey
+  const [activeWeekKey, setActiveWeekKey] = useState(() => {
+    return localStorage.getItem(STORAGE_KEY) || null;
   });
 
-  // When weeks data loads/changes, resolve stored key to index
+  // When weeks load/change, validate activeWeekKey
   useEffect(() => {
     if (weeks.length === 0) return;
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const idx = weeks.findIndex(w => w.key === stored);
-      if (idx >= 0) {
-        setFocusIdx(idx);
-      } else if (!initialized.current) {
-        setFocusIdx(currentWeekIdx);
-      }
-    } else if (!initialized.current) {
-      setFocusIdx(currentWeekIdx);
+    const exists = weeks.some(w => w.key === activeWeekKey);
+    if (!exists) {
+      setActiveWeekKey(currentWeekKey);
     }
-    initialized.current = true;
-  }, [weeks, currentWeekIdx]);
+  }, [weeks, activeWeekKey, currentWeekKey]);
 
-  // Persist focusIdx to localStorage
-  const focusWeek = weeks[focusIdx] || null;
+  // Persist to localStorage
   useEffect(() => {
-    if (focusWeek) {
-      localStorage.setItem(STORAGE_KEY, focusWeek.key);
+    if (activeWeekKey) {
+      localStorage.setItem(STORAGE_KEY, activeWeekKey);
     }
-  }, [focusWeek?.key]);
+  }, [activeWeekKey]);
 
-  const goPrev = useCallback(() => setFocusIdx(i => Math.min(i + 1, weeks.length - 1)), [weeks.length]);
-  const goNext = useCallback(() => setFocusIdx(i => Math.max(i - 1, 0)), []);
+  // Derived: active week object and index
+  const activeIdx = useMemo(() => {
+    const idx = weeks.findIndex(w => w.key === activeWeekKey);
+    return idx >= 0 ? idx : 0;
+  }, [weeks, activeWeekKey]);
+  const activeWeek = weeks[activeIdx] || null;
+
+  const goPrev = useCallback(() => {
+    const newIdx = Math.min(activeIdx + 1, weeks.length - 1);
+    if (weeks[newIdx]) setActiveWeekKey(weeks[newIdx].key);
+  }, [activeIdx, weeks]);
+
+  const goNext = useCallback(() => {
+    const newIdx = Math.max(activeIdx - 1, 0);
+    if (weeks[newIdx]) setActiveWeekKey(weeks[newIdx].key);
+  }, [activeIdx, weeks]);
 
   const handleSwipe = useCallback((dir) => {
     if (dir === "left") goPrev();
