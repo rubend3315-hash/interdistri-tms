@@ -24,6 +24,7 @@ import MobileMessagesTab from "@/components/mobile/tabs/MobileMessagesTab";
 import MobilePlanningTab from "@/components/mobile/MobilePlanningTab";
 import MobileLinksTab from "@/components/mobile/tabs/MobileLinksTab";
 import { Toaster } from "@/components/ui/sonner";
+import { useMobileEntryMode } from "@/components/hooks/useMobileEntryMode";
 
 const MENU_ITEMS = [
   { id: "home", label: "Home", icon: Home },
@@ -49,10 +50,7 @@ export default function MobileEntry({ currentUser }) {
   const { isOnline, syncStatus, pendingCount } = useOfflineSync();
 
   const data = useMobileData(currentUser);
-
-  // Determine multi-day mode from employee setting
-  const mobileType = (data.currentEmployee?.mobile_entry_type || "").toLowerCase();
-  const isMultiDay = mobileType.includes("meerdaags") || mobileType === "multi_day";
+  const { isMultiDay } = useMobileEntryMode(data.currentEmployee);
 
   const form = useMobileForm({ isMultiDay, currentEmployee: data.currentEmployee });
   const submit = useMobileSubmit({

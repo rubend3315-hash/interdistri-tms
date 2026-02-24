@@ -80,7 +80,6 @@ import Integrations from './pages/Integrations';
 import Messages from './pages/Messages';
 import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import MobileEntry from './pages/MobileEntry';
-import MobileEntryMultiDay from './pages/MobileEntryMultiDay';
 import MobileHandleiding from './pages/MobileHandleiding';
 import NiwoPermits from './pages/NiwoPermits';
 import Onboarding from './pages/Onboarding';
@@ -147,7 +146,6 @@ export const PAGES = {
     "Messages": Messages,
     "MobileBedrijfsreglement": MobileBedrijfsreglement,
     "MobileEntry": MobileEntry,
-    "MobileEntryMultiDay": MobileEntryMultiDay,
     "MobileHandleiding": MobileHandleiding,
     "NiwoPermits": NiwoPermits,
     "Onboarding": Onboarding,
