@@ -6,8 +6,8 @@ import { CheckCircle } from "lucide-react";
 import WeekSelector from "../overview/WeekSelector";
 import WeekCard from "../overview/WeekCard";
 
-const WEEKS_BACK = 12;
-const WEEKS_FORWARD = 4;
+const WEEKS_BACK = 7;
+const WEEKS_FORWARD = 1;
 const STORAGE_KEY = "mobile_active_week_key";
 
 /** Build a fixed calendar timeline of weeks (-12 to +4 from now), with entry data merged in. */
