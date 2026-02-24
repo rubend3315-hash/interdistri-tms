@@ -95,6 +95,11 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
     try {
       const result = await onSave(dataUrl);
       if (result?.success) onOpenChange(false);
+      // If failed but not needsSignature, close dialog anyway (error toast is already shown by submit handler)
+      else if (result && !result.needsSignature) onOpenChange(false);
+    } catch (err) {
+      console.error('[MobileSignatureDialog] onSave error:', err);
+      onOpenChange(false);
     } finally {
       setIsSaving(false);
     }
