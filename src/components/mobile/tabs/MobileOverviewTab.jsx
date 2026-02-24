@@ -116,15 +116,6 @@ export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
         <div className="px-4 py-3 space-y-3">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
         </div>
-      ) : weeks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-6">
-          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-            <CheckCircle className="w-6 h-6 text-slate-300" />
-          </div>
-          <p className="text-[14px] text-slate-400 text-center">
-            Nog geen goedgekeurde diensten
-          </p>
-        </div>
       ) : (
         <>
           {/* Week selector header */}
@@ -141,16 +132,16 @@ export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
             </div>
           )}
 
-          {/* Week cards */}
-          <div className="px-4 pb-4 space-y-3">
-            {weeks.map((week) => (
+          {/* Active week card */}
+          <div className="px-4 pb-4">
+            {activeWeek && (
               <WeekCard
-                key={week.key}
-                week={week}
-                isCurrentWeek={week.key === currentWeekKey}
-                defaultOpen={week.key === activeWeekKey}
+                key={activeWeek.key}
+                week={activeWeek}
+                isCurrentWeek={activeWeek.key === currentWeekKey}
+                defaultOpen={true}
               />
-            ))}
+            )}
           </div>
         </>
       )}
