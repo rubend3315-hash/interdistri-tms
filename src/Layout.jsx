@@ -727,7 +727,7 @@ export default function Layout({ children, currentPageName }) {
                 {currentEmployee && (
                   <div className="mt-4 pt-4 border-t border-slate-100">
                     <Link
-                      to={createPageUrl(currentEmployee.mobile_entry_type === 'multi_day' ? "MobileEntryMultiDay" : "MobileEntry")}
+                      to={createPageUrl((currentEmployee.mobile_entry_type || "").toLowerCase().includes("meerdaags") || (currentEmployee.mobile_entry_type || "").toLowerCase() === "multi_day" ? "MobileEntryMultiDay" : "MobileEntry")}
                       onClick={() => setSidebarOpen(false)}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200"
                     >
