@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Save, Clock, AlertTriangle } from "lucide-react";
@@ -8,6 +8,7 @@ import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
 import { validateDienstRegels, findOverlaps, timeToMinutes } from "@/components/utils/mobile/dienstRegelValidation";
 import DienstRegelListItem from "@/components/mobile/dienstregels/DienstRegelListItem";
 import DienstRegelDrawer from "@/components/mobile/dienstregels/DienstRegelDrawer";
+import DeleteConfirmDialog from "@/components/mobile/dienstregels/DeleteConfirmDialog";
 
 const EMPTY_TRIP = {
   start_time: "", end_time: "", departure_location: "Standplaats",
@@ -64,6 +65,7 @@ export default function DienstRegelsTab({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingRegel, setEditingRegel] = useState(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Real-time validation
   const isSingleDay = !formData?.end_date || formData.end_date === formData.date;
@@ -116,13 +118,19 @@ export default function DienstRegelsTab({
     setDienstRegels(prev => prev.map(r => r.id === updatedRegel.id ? updatedRegel : r));
   };
 
-  const removeRegel = async (id) => {
-    const regel = dienstRegels.find(r => r.id === id);
+  const requestDelete = useCallback((id) => {
+    setDeleteTarget(id);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    const regel = dienstRegels.find(r => r.id === deleteTarget);
     if (regel?._existingId && regel.type === "standplaats") {
       try { await (await import("@/api/base44Client")).base44.entities.StandplaatsWerk.delete(regel._existingId); } catch {}
     }
-    setDienstRegels(prev => prev.filter(r => r.id !== id));
-  };
+    setDienstRegels(prev => prev.filter(r => r.id !== deleteTarget));
+    setDeleteTarget(null);
+  }, [deleteTarget, dienstRegels, setDienstRegels]);
 
   const hasAnyRegels = dienstRegels.length > 0;
 
@@ -174,7 +182,7 @@ export default function DienstRegelsTab({
               customers={customers}
               hasOverlap={overlapSet.has(regel.id)}
               onTap={() => handleTap(regel)}
-              onDelete={() => removeRegel(regel.id)}
+              onDelete={() => requestDelete(regel.id)}
             />
           ))}
         </div>
@@ -244,12 +252,20 @@ export default function DienstRegelsTab({
         regel={editingRegel}
         allRegels={dienstRegels}
         onSave={handleSaveRegel}
+        onDelete={requestDelete}
         vehicles={vehicles}
         customers={customers}
         routes={routes}
         tiModelRoutes={tiModelRoutes}
         projects={projects}
         activiteiten={activiteiten}
+      />
+
+      {/* Delete confirmation */}
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onConfirm={confirmDelete}
       />
     </div>
   );
