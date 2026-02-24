@@ -25,20 +25,13 @@ const TimeInput = ({ value, onChange, placeholder }) => (
   />
 );
 
-const KLANTTYPE_OPTIONS = [
-  { value: "PostNL", label: "PostNL" },
-  { value: "Spotta", label: "Spotta" },
-  { value: "DPG Media", label: "DPG Media" },
-  { value: "Overig", label: "Overig" },
-];
-
 export default function MobileDienstTab({
   formData, setFormData, dienstRegels = [], signature,
   submittedTodayEntries, progressStep, lastSavedAt, isSaving,
   calculateHours, isMultiDay, isSubmitting,
   onSubmit, onSaveDraft, setActiveTab,
   geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
-  klantType = "", setKlantType
+  postNLAuto = false, setPostNLAuto
 }) {
   const [multiDayEnabled, setMultiDayEnabled] = useState(
     isMultiDay || (formData.end_date && formData.end_date !== formData.date)
@@ -147,26 +140,12 @@ export default function MobileDienstTab({
 
         <div className="border-b border-slate-100" />
 
-        {/* ── Klanttype dienst ── */}
-        {formData.start_time && v2 && setKlantType && (
-          <div className="space-y-1.5">
-            <Label className="text-[11px] text-slate-500">Klanttype dienst</Label>
-            <div className="grid grid-cols-2 gap-1.5">
-              {KLANTTYPE_OPTIONS.map(opt => (
-                <label key={opt.value}
-                  className={`flex items-center justify-center h-[38px] rounded-xl border text-[12px] font-medium cursor-pointer transition ${
-                    klantType === opt.value
-                      ? 'bg-blue-50 border-blue-300 text-blue-700'
-                      : 'bg-white border-slate-200 text-slate-500'
-                  }`}
-                >
-                  <input type="radio" name="klanttype" value={opt.value} checked={klantType === opt.value}
-                    onChange={() => setKlantType(opt.value)} className="sr-only" />
-                  {opt.label}
-                </label>
-              ))}
-            </div>
-          </div>
+        {/* ── PostNL auto-rit checkbox ── */}
+        {formData.start_time && v2 && setPostNLAuto && (
+          <label className="flex items-center gap-3 py-1 cursor-pointer">
+            <Checkbox checked={postNLAuto} onCheckedChange={(checked) => setPostNLAuto(!!checked)} />
+            <span className="text-[13px] text-slate-700">PostNL – automatische rit aanmaken</span>
+          </label>
         )}
 
         {/* ── BLOK 2: Geen rit + Dienstregels samenvatting ── */}
