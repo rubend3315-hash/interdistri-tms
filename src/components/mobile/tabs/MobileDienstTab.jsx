@@ -25,12 +25,20 @@ const TimeInput = ({ value, onChange, placeholder }) => (
   />
 );
 
+const KLANTTYPE_OPTIONS = [
+  { value: "PostNL", label: "PostNL" },
+  { value: "Spotta", label: "Spotta" },
+  { value: "DPG Media", label: "DPG Media" },
+  { value: "Overig", label: "Overig" },
+];
+
 export default function MobileDienstTab({
   formData, setFormData, dienstRegels = [], signature,
   submittedTodayEntries, progressStep, lastSavedAt, isSaving,
   calculateHours, isMultiDay, isSubmitting,
   onSubmit, onSaveDraft, setActiveTab,
-  geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false
+  geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
+  klantType = "", setKlantType
 }) {
   const [multiDayEnabled, setMultiDayEnabled] = useState(
     isMultiDay || (formData.end_date && formData.end_date !== formData.date)
@@ -42,11 +50,12 @@ export default function MobileDienstTab({
 
   const isSingleDay = !multiDayEnabled || !formData.end_date || formData.end_date === formData.date;
   const validation = useMemo(() =>
-    geenRit ? { overlaps: [], gaps: [], hasOverlap: false, hasGap: false } :
+    geenRit ? { overlaps: [], gaps: [], margins: [], hasOverlap: false, hasGap: false, hasMarginError: false } :
     validateDienstRegels(dienstRegels, formData.start_time, formData.end_time, isSingleDay),
     [dienstRegels, formData.start_time, formData.end_time, isSingleDay, geenRit]
   );
-  const submitBlocked = validation.hasOverlap || validation.hasGap;
+  const submitBlocked = validation.hasOverlap || validation.hasGap || validation.hasMarginError;
+  const allErrors = [...validation.overlaps, ...validation.gaps, ...validation.margins];
   const geenRitValid = !geenRit || (geenRitReden && geenRitReden.trim().length >= 5);
   const canSubmit = formData.end_time && hasRegels && !submitBlocked && !isSubmitting && geenRitValid;
   const maxEndDate = formData.date ? format(addDays(new Date(formData.date), 7), 'yyyy-MM-dd') : undefined;
@@ -92,31 +101,42 @@ export default function MobileDienstTab({
         <div className="space-y-2">
           <h3 className="text-[13px] font-semibold text-slate-900">Datum & starttijd</h3>
 
-          <div>
-            <Label className="text-[11px] text-slate-500">Startdatum</Label>
-            <Input type="date" className="h-[44px] mt-0.5 bg-white" value={formData.date} onChange={(e) => {
-              const d = e.target.value;
-              setFormData(prev => ({ ...prev, date: d, end_date: (!prev.end_date || prev.end_date < d) ? d : prev.end_date }));
-            }} />
-          </div>
-
           {/* Meerdaags toggle */}
           <div className="flex items-center justify-between py-1">
             <span className="text-[12px] text-slate-600">Meerdaagse dienst</span>
             <Switch checked={multiDayEnabled} onCheckedChange={handleMultiDayToggle} />
           </div>
 
-          {multiDayEnabled && (
-            <div>
-              <Label className="text-[11px] text-slate-500">Einddatum</Label>
-              <Input type="date" className="h-[44px] mt-0.5 bg-white" value={formData.end_date || formData.date} min={formData.date} max={maxEndDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))} />
-              {formData.end_date && formData.end_date !== formData.date && (
-                <p className="text-[11px] text-amber-700 font-medium mt-1">
-                  ⚡ {format(new Date(formData.date), "d MMM", { locale: nl })} t/m {format(new Date(formData.end_date), "d MMM", { locale: nl })}
-                </p>
-              )}
+          {/* Date fields — side by side when multiday */}
+          {multiDayEnabled ? (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-[11px] text-slate-500">Startdatum</Label>
+                <Input type="date" className="h-[44px] mt-0.5 bg-white" value={formData.date} onChange={(e) => {
+                  const d = e.target.value;
+                  setFormData(prev => ({ ...prev, date: d, end_date: (!prev.end_date || prev.end_date < d) ? d : prev.end_date }));
+                }} />
+              </div>
+              <div>
+                <Label className="text-[11px] text-slate-500">Einddatum</Label>
+                <Input type="date" className="h-[44px] mt-0.5 bg-white" value={formData.end_date || formData.date} min={formData.date} max={maxEndDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))} />
+              </div>
             </div>
+          ) : (
+            <div>
+              <Label className="text-[11px] text-slate-500">Datum</Label>
+              <Input type="date" className="h-[44px] mt-0.5 bg-white" value={formData.date} onChange={(e) => {
+                const d = e.target.value;
+                setFormData(prev => ({ ...prev, date: d, end_date: d }));
+              }} />
+            </div>
+          )}
+
+          {multiDayEnabled && formData.end_date && formData.end_date !== formData.date && (
+            <p className="text-[11px] text-amber-700 font-medium">
+              ⚡ {format(new Date(formData.date), "d MMM", { locale: nl })} t/m {format(new Date(formData.end_date), "d MMM", { locale: nl })}
+            </p>
           )}
 
           <div>
@@ -126,6 +146,28 @@ export default function MobileDienstTab({
         </div>
 
         <div className="border-b border-slate-100" />
+
+        {/* ── Klanttype dienst ── */}
+        {formData.start_time && v2 && setKlantType && (
+          <div className="space-y-1.5">
+            <Label className="text-[11px] text-slate-500">Klanttype dienst</Label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {KLANTTYPE_OPTIONS.map(opt => (
+                <label key={opt.value}
+                  className={`flex items-center justify-center h-[38px] rounded-xl border text-[12px] font-medium cursor-pointer transition ${
+                    klantType === opt.value
+                      ? 'bg-blue-50 border-blue-300 text-blue-700'
+                      : 'bg-white border-slate-200 text-slate-500'
+                  }`}
+                >
+                  <input type="radio" name="klanttype" value={opt.value} checked={klantType === opt.value}
+                    onChange={() => setKlantType(opt.value)} className="sr-only" />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── BLOK 2: Geen rit + Dienstregels samenvatting ── */}
         {formData.start_time && v2 && (
@@ -212,7 +254,7 @@ export default function MobileDienstTab({
                   <AlertTriangle className="w-3.5 h-3.5" />
                   <span>Kan niet indienen:</span>
                 </div>
-                {[...validation.overlaps, ...validation.gaps].map((msg, i) => (
+                {allErrors.map((msg, i) => (
                   <p key={i} className="text-[10px] text-red-600 ml-5 mt-0.5">• {msg}</p>
                 ))}
               </div>

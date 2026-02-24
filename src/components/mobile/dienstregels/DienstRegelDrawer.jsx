@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Truck, Package, Check, ChevronLeft, ChevronDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { findOverlaps } from "@/components/utils/mobile/dienstRegelValidation";
+import { findOverlaps, timeToMinutes, validateSingleRegelMargin } from "@/components/utils/mobile/dienstRegelValidation";
 
 const TimeInput = ({ value, onChange, placeholder, autoFocus }) => {
   const ref = useRef(null);
@@ -27,7 +27,8 @@ const TimeInput = ({ value, onChange, placeholder, autoFocus }) => {
 
 export default function DienstRegelDrawer({
   open, onOpenChange, regel, allRegels,
-  onSave, onDelete, vehicles, customers, routes, tiModelRoutes, projects, activiteiten
+  onSave, onDelete, vehicles, customers, routes, tiModelRoutes, projects, activiteiten,
+  dienstStartTime, dienstEndTime, isNewRegel
 }) {
   const [draft, setDraft] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -50,9 +51,35 @@ export default function DienstRegelDrawer({
   };
 
   const handleSave = () => {
+    // 1. Check start < end
+    const sMin = timeToMinutes(draft.start_time);
+    const eMin = timeToMinutes(draft.end_time);
+    if (sMin === null || eMin === null) {
+      toast.error("Vul start- en eindtijd in.");
+      return;
+    }
+
+    // 2. Check 5-min inner margin
+    const marginError = validateSingleRegelMargin(draft, dienstStartTime, dienstEndTime);
+    if (marginError) {
+      toast.error(marginError);
+      return;
+    }
+
+    // 3. Check overlap
     const otherRegels = allRegels.filter(r => r.id !== draft.id);
     const overlaps = findOverlaps([...otherRegels, draft]);
-    if (overlaps.length > 0) { toast.error("Tijden overlappen. Pas aan."); return; }
+    if (overlaps.length > 0) {
+      toast.error("Dienstregels mogen elkaar niet overlappen.");
+      return;
+    }
+
+    // 4. KM validation for rit with vehicle
+    if (isRit && draft.vehicle_id && !draft.start_km) {
+      toast.error("Kilometerstand is verplicht bij rit met voertuig.");
+      return;
+    }
+
     onSave(draft);
     onOpenChange(false);
   };
@@ -78,7 +105,7 @@ export default function DienstRegelDrawer({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[100dvh] max-h-[100dvh] p-0 flex flex-col rounded-none">
-        {/* Native-style header */}
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b bg-white">
           <button type="button" onClick={() => onOpenChange(false)} className="flex items-center gap-0.5 text-[13px] text-blue-600 font-medium min-w-[60px]">
             <ChevronLeft className="w-4 h-4" /> Terug
@@ -86,19 +113,26 @@ export default function DienstRegelDrawer({
           <span className="text-[13px] font-semibold text-slate-900">
             {isRit ? "Rit" : "Standplaats"}
           </span>
-          <button type="button" onClick={handleDelete} className="p-1.5 rounded-lg hover:bg-red-50 active:bg-red-100 min-w-[60px] flex justify-end">
-            <Trash2 className="w-4 h-4 text-[#D32F2F]" />
-          </button>
+          {/* Delete only visible for existing regels (not new) */}
+          {!isNewRegel ? (
+            <button type="button" onClick={handleDelete} className="p-1.5 rounded-lg hover:bg-red-50 active:bg-red-100 min-w-[60px] flex justify-end">
+              <Trash2 className="w-4 h-4 text-[#D32F2F]" />
+            </button>
+          ) : (
+            <div className="min-w-[60px]" />
+          )}
         </div>
 
         {/* Delete confirm overlay */}
         {showDeleteConfirm && (
-          <div className="absolute inset-0 bg-black/40 z-50 flex items-center justify-center px-6">
-            <div className="bg-white rounded-2xl p-5 w-full max-w-[320px] shadow-xl">
+          <div className="absolute inset-0 bg-black/40 z-50 flex items-center justify-center px-6"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl p-5 w-full max-w-[320px] shadow-xl"
+              onClick={(e) => e.stopPropagation()}>
               <h3 className="text-[15px] font-semibold text-slate-900">Regel verwijderen?</h3>
-              <p className="text-[13px] text-slate-500 mt-1">Weet je zeker dat je deze regel wilt verwijderen?</p>
+              <p className="text-[13px] text-slate-500 mt-1">Deze actie kan niet ongedaan worden gemaakt.</p>
               <div className="flex gap-2 mt-4">
-                <button type="button" onClick={() => setShowDeleteConfirm(false)}
+                <button type="button" onClick={() => setShowDeleteConfirm(false)} autoFocus
                   className="flex-1 h-[44px] rounded-xl border border-slate-200 text-[13px] font-medium text-slate-700 active:bg-slate-50">
                   Annuleren
                 </button>
@@ -183,7 +217,7 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label className="text-[11px] text-slate-500">Begin km *</Label>
+          <Label className="text-[11px] text-slate-500">Begin km {draft.vehicle_id ? '*' : ''}</Label>
           <Input type="number" className="h-[44px] bg-white" value={draft.start_km || ""} onChange={(e) => update('start_km', e.target.value)} />
         </div>
         <div>
