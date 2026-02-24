@@ -83,11 +83,13 @@ export default function MobileEntry({ currentUser }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-white">
       <MobileMenu menuOpen={menuOpen} setMenuOpen={setMenuOpen} activeTab={activeTab} setActiveTab={setActiveTab} menuItems={menuItems} />
       <MobileHeader todayShift={data.todayShift} todayStr={data.todayStr} isOnline={isOnline} syncStatus={syncStatus} pendingCount={pendingCount} onMenuOpen={() => setMenuOpen(true)} />
 
-      <motion.div className="px-3 pt-2 pb-4" style={{ minHeight: 'calc(100vh - 140px)' }}
+      <motion.div
+        className="px-4 pt-3 pb-6"
+        style={{ minHeight: 'calc(100vh - 120px)' }}
         drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.2}
         onDragEnd={(e, info) => {
           if (info.offset.x < -80 && info.velocity.x < -300) handleSwipe("left");
@@ -95,13 +97,16 @@ export default function MobileEntry({ currentUser }) {
         }}
       >
         {activeTab === "home" && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-lg p-2.5 text-slate-900 mb-2 border-2 border-blue-200">
-              <h2 className="font-bold text-base mb-1">Welkom in de Interdistri TMS app</h2>
+          <div>
+            {/* Welcome — flat, no card */}
+            <div className="mb-3">
+              <h2 className="font-bold text-[15px] text-slate-900">
+                {data.welcomeMessage ? '' : `Welkom, ${data.currentEmployee?.first_name || data.user?.full_name || 'Medewerker'}!`}
+              </h2>
               {data.welcomeMessage ? (
-                <p className="text-sm text-slate-600 whitespace-pre-line">{data.welcomeMessage.message}</p>
+                <p className="text-[13px] text-slate-600 whitespace-pre-line">{data.welcomeMessage.message}</p>
               ) : (
-                <p className="text-sm text-slate-600">Welkom op je werkdag, {data.currentEmployee ? `${data.currentEmployee.first_name} ${data.currentEmployee.last_name}` : data.user?.full_name}! Werk met plezier en rijd veilig. 🚛</p>
+                <p className="text-[13px] text-slate-500">Werk met plezier en rijd veilig. 🚛</p>
               )}
             </div>
             <MobileFrontpage onNavigate={setActiveTab} />

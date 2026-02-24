@@ -77,7 +77,7 @@ export default function DienstRegelDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[100dvh] max-h-[100dvh] p-0 flex flex-col rounded-none">
         {/* Native-style header */}
-        <div className="flex items-center justify-between px-3 py-2.5 border-b bg-white">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b bg-white">
           <button type="button" onClick={() => onOpenChange(false)} className="flex items-center gap-0.5 text-[13px] text-blue-600 font-medium">
             <ChevronLeft className="w-4 h-4" /> Terug
           </button>
@@ -90,7 +90,7 @@ export default function DienstRegelDrawer({
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-slate-50">
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-white">
           {/* Type toggle */}
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={() => handleTypeSwitch("rit")}
@@ -136,7 +136,7 @@ export default function DienstRegelDrawer({
         </div>
 
         {/* Sticky save */}
-        <div className="px-3 py-2.5 border-t bg-white">
+        <div className="px-4 py-2.5 border-t bg-white">
           <button type="button" onClick={handleSave}
             className="w-full h-[48px] rounded-lg bg-blue-600 text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700">
             <Check className="w-4 h-4" /> Opslaan

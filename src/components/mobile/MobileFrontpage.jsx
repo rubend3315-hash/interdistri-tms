@@ -1,124 +1,56 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
-  Clock,
-  Truck,
-  ClipboardCheck,
-  FileText,
-  CheckCircle,
-  CalendarDays,
-  ExternalLink,
-  ArrowRight,
-  Package
+  Clock, Truck, ClipboardCheck, FileText,
+  CheckCircle, CalendarDays, ExternalLink, ChevronRight
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const menuItems = [
+  { id: "dienst", title: "Diensttijd", desc: "Registreer je werktijden", icon: Clock, color: "text-blue-600 bg-blue-50" },
+  { id: "ritten", title: "Dienstregels", desc: "Ritten & standplaatswerk", icon: Truck, color: "text-emerald-600 bg-emerald-50" },
+  { id: "inspectie", title: "Voertuiginspectie", desc: "Controleer je voertuig", icon: ClipboardCheck, color: "text-amber-600 bg-amber-50" },
+  { id: "declaratie", title: "Declaraties", desc: "Dien kosten in", icon: FileText, color: "text-purple-600 bg-purple-50" },
+  { id: "overzicht", title: "Overzicht", desc: "Goedgekeurde diensten", icon: CheckCircle, color: "text-teal-600 bg-teal-50" },
+  { id: "planning", title: "Mijn Planning", desc: "Bekijk je weekrooster", icon: CalendarDays, color: "text-indigo-600 bg-indigo-50" },
+  { id: "links", title: "Snelle Links", desc: "Handige links", icon: ExternalLink, color: "text-slate-600 bg-slate-100" },
+];
 
 export default function MobileFrontpage({ onNavigate }) {
-  // Cache-warming: reuse the same query keys as useMobileData to hit cache, no new fetches
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
+  // Cache-warming
+  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
   useQuery({
     queryKey: ['currentEmployee', user?.email],
     queryFn: () => base44.entities.Employee.filter({ email: user.email }),
-    enabled: !!user?.email
+    enabled: !!user?.email,
   });
 
-  const menuItems = [
-    {
-      id: "dienst",
-      title: "Diensttijd",
-      description: "Registreer je werktijden",
-      icon: Clock,
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      id: "ritten",
-      title: "Dienstregels",
-      description: "Ritten & standplaatswerk invoeren",
-      icon: Truck,
-      color: "from-emerald-500 to-emerald-600"
-    },
-    {
-      id: "inspectie",
-      title: "Voertuiginspectie",
-      description: "Controleer je voertuig",
-      icon: ClipboardCheck,
-      color: "from-amber-500 to-amber-600"
-    },
-    {
-      id: "declaratie",
-      title: "Declaraties",
-      description: "Dien kosten in",
-      icon: FileText,
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      id: "overzicht",
-      title: "Overzicht",
-      description: "Bekijk goedgekeurde diensten",
-      icon: CheckCircle,
-      color: "from-teal-500 to-teal-600"
-    },
-    {
-      id: "planning",
-      title: "Mijn Planning",
-      description: "Bekijk je weekrooster",
-      icon: CalendarDays,
-      color: "from-indigo-500 to-indigo-600"
-    },
-    {
-      id: "links",
-      title: "Snelle Links",
-      description: "Handige externe links",
-      icon: ExternalLink,
-      color: "from-slate-500 to-slate-600"
-    }
-  ];
-
   return (
-    <div className="space-y-1.5">
-      <Card className="border-l-4 border-l-blue-600">
-        <CardContent className="p-2">
-          <h2 className="font-bold text-sm text-slate-900 mb-0.5">
-            Wat wil je doen?
-          </h2>
-          <p className="text-xs text-slate-600">
-            Kies een optie om direct aan de slag te gaan
-          </p>
-        </CardContent>
-        </Card>
+    <div className="-mx-3">
+      {/* Section header */}
+      <div className="px-4 py-2">
+        <h2 className="text-[15px] font-semibold text-slate-900">Wat wil je doen?</h2>
+      </div>
 
-        <div className="grid grid-cols-1 gap-1.5">
+      {/* Edge-to-edge list */}
+      <div className="divide-y divide-slate-100">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.navigateTo || item.id)}
-              className="text-left"
+              onClick={() => onNavigate(item.id)}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-white active:bg-slate-50 text-left"
             >
-              <Card className="hover:shadow-lg transition-all duration-200 border hover:border-blue-300">
-                <CardContent className="p-0">
-                  <div className="flex items-center gap-2.5 p-2">
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center flex-shrink-0`}>
-                      <Icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-slate-900">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        {item.description}
-                      </p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                  </div>
-                </CardContent>
-              </Card>
+              <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0", item.color)}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-slate-900">{item.title}</p>
+                <p className="text-[11px] text-slate-500">{item.desc}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0" />
             </button>
           );
         })}

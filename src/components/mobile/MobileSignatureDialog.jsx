@@ -113,7 +113,7 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
         </div>
 
         {/* Canvas area */}
-        <div className="flex-1 flex flex-col justify-center px-4 py-4 bg-slate-50">
+        <div className="flex-1 flex flex-col justify-center px-4 py-4 bg-white">
           <p className="text-xs text-slate-500 text-center mb-3">
             Gebruik je vinger om hieronder te tekenen
           </p>

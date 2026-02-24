@@ -104,7 +104,7 @@ export default function DienstRegelsTab({
   }, [deleteTarget, dienstRegels, setDienstRegels]);
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-200px)]">
+    <div className="flex flex-col min-h-[calc(100vh-160px)]">
       {/* Nav bar */}
       <div className="flex items-center justify-between mb-3">
         <button type="button" onClick={() => setActiveTab("dienst")} className="flex items-center gap-1 text-[13px] text-blue-600 font-medium">
@@ -133,7 +133,7 @@ export default function DienstRegelsTab({
       </div>
 
       {/* Content — edge-to-edge rows */}
-      <div className="flex-1 -mx-3">
+      <div className="flex-1 -mx-4">
         {sorted.length === 0 ? (
           <div className="text-center py-10 text-slate-400">
             <p className="text-[13px]">Nog geen regels</p>
@@ -156,7 +156,7 @@ export default function DienstRegelsTab({
       </div>
 
       {/* Sticky bottom */}
-      <div className="sticky bottom-0 left-0 right-0 bg-slate-100 pt-2 pb-1 -mx-3 px-3 border-t border-slate-200 mt-2 space-y-2">
+      <div className="sticky bottom-0 left-0 right-0 bg-white pt-2 pb-1 -mx-4 px-4 border-t border-slate-100 mt-2 space-y-2">
         {/* Add menu */}
         <div className="relative">
           {addMenuOpen && (

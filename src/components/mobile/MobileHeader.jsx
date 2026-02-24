@@ -16,57 +16,43 @@ export default function MobileHeader({ todayShift, todayStr, isOnline, syncStatu
   return (
     <>
       <OfflineSyncIndicator isOnline={isOnline} syncStatus={syncStatus} pendingCount={pendingCount} />
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-2.5 pb-3">
-        <div className="flex items-center justify-between mb-2">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 pt-2 pb-2.5">
+        {/* Top row: logo + time + menu */}
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-              <Truck className="w-5 h-5" />
+            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+              <Truck className="w-4 h-4" />
             </div>
             <div>
-              <h1 className="font-bold text-sm flex items-center gap-2">
-                <span>Interdistri TMS</span>
-                <span className="text-xs opacity-70 font-normal">v{APP_VERSION}</span>
-              </h1>
-              <p className="text-xs text-blue-100">Mobiele App</p>
+              <h1 className="font-bold text-[13px] leading-tight">Interdistri TMS</h1>
+              <p className="text-[10px] text-blue-200">{format(new Date(), "EEEE d MMMM", { locale: nl })}</p>
             </div>
           </div>
-          <button
-            onClick={onMenuOpen}
-            className="p-3 -m-1 hover:bg-white/20 rounded-lg active:bg-white/30 min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Menu openen"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="bg-white/10 rounded-lg p-2 mb-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-blue-100">Vandaag</p>
-              <p className="font-semibold text-sm">{format(new Date(), "EEEE d MMMM yyyy", { locale: nl })}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-blue-100">Tijd</p>
-              <p className="font-semibold text-lg">{format(currentTime, "HH:mm")}</p>
-            </div>
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-semibold tabular-nums">{format(currentTime, "HH:mm")}</span>
+            <button
+              onClick={onMenuOpen}
+              className="p-2 -mr-1 hover:bg-white/20 rounded-lg active:bg-white/30 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Menu openen"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
+        {/* Shift notification — compact inline */}
         {todayShift && (
-          <div className="mt-2 bg-amber-400 text-amber-900 rounded-lg p-2">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <div>
-                <p className="text-xs font-medium">
-                  {todayShift.date === todayStr ? 'Dienst starttijd vandaag' : `Dienst ${format(new Date(todayShift.date), "EEEE d MMMM", { locale: nl })}`}
-                </p>
-                <p className="font-bold text-lg">{todayShift.service_start_time}</p>
-                {todayShift.start_time && todayShift.end_time && (
-                  <p className="text-xs mt-1"><strong>Shift:</strong> {todayShift.start_time} - {todayShift.end_time}</p>
-                )}
-              </div>
+          <div className="mt-2 flex items-center gap-2 bg-amber-400/90 text-amber-900 rounded-lg px-3 py-1.5">
+            <Clock className="w-4 h-4 flex-shrink-0" />
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <span className="font-bold text-[15px]">{todayShift.service_start_time}</span>
+              <span className="text-[11px] truncate">
+                {todayShift.date === todayStr ? 'Start dienst vandaag' : `Dienst ${format(new Date(todayShift.date), "EEE d MMM", { locale: nl })}`}
+              </span>
             </div>
-            {todayShift.message && <p className="mt-1 text-xs">{todayShift.message}</p>}
+            {todayShift.start_time && todayShift.end_time && (
+              <span className="text-[10px] flex-shrink-0">Shift {todayShift.start_time}-{todayShift.end_time}</span>
+            )}
           </div>
         )}
       </div>

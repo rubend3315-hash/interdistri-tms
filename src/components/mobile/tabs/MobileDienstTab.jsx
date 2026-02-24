@@ -46,7 +46,7 @@ export default function MobileDienstTab({
   const step = !formData.start_time ? "start" : !hasRegels ? "regels" : !formData.end_time ? "end" : "submit";
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-200px)]">
+    <div className="flex flex-col min-h-[calc(100vh-160px)]">
       {/* Top bar */}
       <div className="flex items-center justify-between mb-2">
         <MobileStepIndicator steps={["Start", "Regels", "Eind", "Indienen"]} currentStep={progressStep} />
@@ -199,7 +199,7 @@ export default function MobileDienstTab({
       </div>
 
       {/* === STICKY BOTTOM CTA === */}
-      <div className="sticky bottom-0 left-0 right-0 bg-slate-100 pt-2 pb-1 -mx-3 px-3 border-t border-slate-200 mt-4">
+      <div className="sticky bottom-0 left-0 right-0 bg-white pt-2 pb-1 -mx-4 px-4 border-t border-slate-100 mt-4">
         {step === "start" && (
           <button
             disabled
