@@ -28,6 +28,7 @@ import { useMobileEntryMode } from "@/components/hooks/useMobileEntryMode";
 import { useBusinessMode } from "@/components/utils/mobile/useBusinessMode";
 import WeekHeader from "@/components/mobile/WeekHeader";
 import { calcDienstEndFromRit } from "@/components/utils/mobile/syncDienstEndTime";
+import { runTimeLogicTests } from "@/components/utils/mobile/timeLogicTests";
 
 const MOBILE_ENTRY_V2 = true;
 
@@ -99,6 +100,17 @@ export default function MobileEntry({ currentUser }) {
   const menuItems = useMemo(() =>
     MENU_ITEMS.map(i => i.id === 'berichten' ? { ...i, badge: data.unreadCount } : i),
   [data.unreadCount]);
+
+  // Dev-mode: run time logic tests once on mount
+  useEffect(() => {
+    const r = runTimeLogicTests();
+    if (r.allPassed) {
+      console.log(`[TimeLogicTests] ✅ ${r.passed}/${r.total} passed`);
+    } else {
+      console.error(`[TimeLogicTests] ❌ ${r.failed}/${r.total} FAILED:`);
+      r.results.filter(t => !t.passed).forEach(t => console.error(`  FAIL: ${t.name}`, t.error || ''));
+    }
+  }, []);
 
   useEffect(() => {
     if (data.currentEmployee?.id) {
