@@ -7,59 +7,88 @@ const sections = [
     title: "1. Wat moet ik vandaag doen?",
     bullets: [
       "Open de app en ga naar Diensttijd",
-      "Vul je starttijd in",
-      "Voeg je ritten / standplaatswerk toe",
+      "Vul je starttijd in (PostNL? Vink aan voor automatische rit)",
+      "Voeg dienstregels toe: ritten en/of standplaatswerk",
       "Vul eindtijd en pauze in",
       "Teken je handtekening en dien in"
     ]
   },
   {
     id: "dagdienst",
-    title: "2. Dagdienst invoeren",
+    title: "2. Dienst invoeren",
     bullets: [
-      "Ga naar Diensttijd → vul startdatum en starttijd in",
-      "Tik op Dienstregels → voeg ritten of standplaatswerk toe",
-      "Ga terug → vul eindtijd en pauze in",
+      "Kies datum en vul starttijd in",
+      "Voeg ritten en/of standplaatswerk toe — rit is niet verplicht",
+      "Vul eindtijd en pauze in",
       "Controleer het totaal aantal uren",
-      "Tik Handtekening & Indienen"
-    ]
-  },
-  {
-    id: "meerdaags",
-    title: "3. Meerdaagse dienst invoeren",
-    bullets: [
-      "Zet de schakelaar 'Meerdaags' aan in het diensttijd-scherm",
-      "Selecteer je startdatum en einddatum",
-      "Voeg per dag je ritten toe",
-      "Vul eindtijd in op je laatste werkdag",
-      "Dien in met handtekening"
+      "Tik Dienst Indienen → handtekening"
     ]
   },
   {
     id: "rit",
-    title: "4. Rit toevoegen",
+    title: "3. Rit toevoegen",
     bullets: [
       "Ga naar Dienstregels → Regel toevoegen → Rit",
-      "Vul start- en eindtijd in (UU:MM)",
-      "Selecteer voertuig en vul kilometerstanden in",
-      "Kies klant en route (optioneel)",
-      "Tik Opslaan"
+      "Starttijd wordt automatisch ingevuld, eindtijd kan later",
+      "Selecteer voertuig en vul begin km in",
+      "Eind km verplicht bij afsluiten rit",
+      "Kies klant en route (optioneel)"
     ]
   },
   {
     id: "standplaats",
-    title: "5. Standplaats toevoegen",
+    title: "4. Standplaats toevoegen",
     bullets: [
       "Ga naar Dienstregels → Regel toevoegen → Standplaats",
+      "Standplaats telt als geldige dienstregel — rit is niet verplicht",
       "Vul start- en eindtijd in",
       "Selecteer klant, project en activiteit",
-      "Voeg eventueel een opmerking toe",
-      "Tik Opslaan"
+      "Voeg eventueel een opmerking toe"
+    ]
+  },
+  {
+    id: "geenrit",
+    title: "5. Geen rit / standplaats",
+    bullets: [
+      "Gebruik bij kantoorwerk, opleiding of overige werkzaamheden",
+      "Vink 'Geen rit / standplaats' aan in het diensttijd-scherm",
+      "Vul een duidelijke reden in (minimaal 5 tekens)",
+      "Je kunt indienen zonder dienstregels"
+    ]
+  },
+  {
+    id: "tijdregels",
+    title: "6. Tijdregels",
+    bullets: [
+      "Regels mogen niet overlappen",
+      "Regels moeten binnen de diensttijd vallen",
+      "Dienst-eindtijd mag niet vóór de laatste regel liggen",
+      "Er is géén 5-minutenmarge meer"
+    ]
+  },
+  {
+    id: "indienen",
+    title: "7. Dienst indienen",
+    bullets: [
+      "Minimaal één dienstregel (rit of standplaats) vereist",
+      "OF: geen rit aangevinkt met geldige reden",
+      "Handtekening is verplicht bij indienen",
+      "Na indienen kun je een nieuwe dienst starten"
+    ]
+  },
+  {
+    id: "meerdaags",
+    title: "8. Meerdaagse dienst",
+    bullets: [
+      "Alleen beschikbaar als dit in je profiel is toegestaan",
+      "Toggle staat standaard aan voor geautoriseerde medewerkers",
+      "Selecteer startdatum en einddatum (max 7 dagen)",
+      "Voeg per dag je dienstregels toe"
     ]
   },
   {
     id: "inspectie",
-    title: "6. Inspectie uitvoeren",
+    title: "9. Inspectie uitvoeren",
     bullets: [
       "Ga naar Voertuiginspectie → selecteer voertuig",
       "Vul kilometerstand in",
@@ -70,24 +99,23 @@ const sections = [
   },
   {
     id: "declaratie",
-    title: "7. Declaratie indienen",
+    title: "10. Declaratie indienen",
     bullets: [
       "Ga naar Declaratie → selecteer categorie",
       "Vul omschrijving en bedrag in",
       "Upload een foto van je bon",
-      "Tik Declaratie indienen",
-      "Je leidinggevende keurt de declaratie goed"
+      "Tik Declaratie indienen"
     ]
   },
   {
     id: "faq",
-    title: "8. Veelgestelde vragen",
+    title: "11. Veelgestelde vragen",
     bullets: [
       "Tijdformaat: typ 4 cijfers (bijv. 0830), de : komt automatisch",
       "Offline: de app werkt zonder internet, data wordt later verstuurd",
       "Concept opslaan: tik 'Tussentijds opslaan' om later verder te gaan",
       "Schade? Bij 'Ja' opent Bumper automatisch na indienen",
-      "Swipen: veeg links/rechts om tussen tabs te wisselen"
+      "PostNL: automatische rit (+1 min), dienst-eind synct (+2 min)"
     ]
   }
 ];

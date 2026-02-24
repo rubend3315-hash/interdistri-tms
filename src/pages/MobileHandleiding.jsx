@@ -73,28 +73,28 @@ const sections = [
   },
   {
     id: "diensttijd",
-    title: "Diensttijd invoeren",
+    title: "Dienst starten",
     icon: Clock,
     color: "bg-blue-100 text-blue-700",
     content: (
       <div className="space-y-3">
-        <p className="font-medium">Dit is het belangrijkste onderdeel. Volg deze stappen:</p>
+        <p className="font-medium">Volg deze stappen om je dienst te registreren:</p>
         
         <div className="space-y-2">
           <div className="flex gap-3 items-start">
             <Badge className="bg-blue-600 text-white flex-shrink-0">1</Badge>
             <div>
-              <p className="font-medium text-sm">Starttijd invoeren</p>
-              <p className="text-xs text-slate-600">Ga naar <strong>Diensttijd</strong> en voer je starttijd in (formaat UU:MM, bijv. 08:30). De datum staat standaard op vandaag.</p>
-              <p className="text-xs text-slate-500 mt-1"><em>Multi Day: je kunt ook een startdatum en einddatum kiezen (max 7 dagen verschil).</em></p>
+              <p className="font-medium text-sm">Kies datum en starttijd</p>
+              <p className="text-xs text-slate-600">Ga naar <strong>Diensttijd</strong> en voer je starttijd in (UU:MM). De datum staat standaard op vandaag.</p>
+              <p className="text-xs text-slate-500 mt-1"><em>PostNL: vink aan om automatisch een open rit aan te maken.</em></p>
             </div>
           </div>
           
           <div className="flex gap-3 items-start">
             <Badge className="bg-emerald-600 text-white flex-shrink-0">2</Badge>
             <div>
-              <p className="font-medium text-sm">Ritten invoeren</p>
-              <p className="text-xs text-slate-600">Tik op <strong>"Volgende → Ritten invoeren"</strong>. Je wordt naar het ritten-scherm gebracht.</p>
+              <p className="font-medium text-sm">Dienstregels invoeren</p>
+              <p className="text-xs text-slate-600">Voeg <strong>ritten en/of standplaatswerk</strong> toe via "Regel toevoegen". Rit is niet verplicht — alleen standplaatswerk is ook geldig.</p>
             </div>
           </div>
           
@@ -102,7 +102,7 @@ const sections = [
             <Badge className="bg-amber-600 text-white flex-shrink-0">3</Badge>
             <div>
               <p className="font-medium text-sm">Eindtijd & pauze invoeren</p>
-              <p className="text-xs text-slate-600">Na het invoeren van ritten, ga terug naar <strong>Diensttijd</strong>. Vul je eindtijd en pauze (minuten) in. Het totaal aantal uren wordt automatisch berekend.</p>
+              <p className="text-xs text-slate-600">Vul je eindtijd en pauze (minuten) in. Het totaal wordt automatisch berekend.</p>
             </div>
           </div>
           
@@ -110,17 +110,17 @@ const sections = [
             <Badge className="bg-blue-600 text-white flex-shrink-0">4</Badge>
             <div>
               <p className="font-medium text-sm">Indienen met handtekening</p>
-              <p className="text-xs text-slate-600">Tik op <strong>"Met Handtekening Indienen"</strong>. Er verschijnt een venster waarin je je handtekening tekent. Na opslaan wordt alles ingediend.</p>
+              <p className="text-xs text-slate-600">Tik op <strong>"Dienst Indienen"</strong>. Teken je handtekening en bevestig.</p>
             </div>
           </div>
         </div>
 
         <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-          <p className="text-sm text-emerald-800"><strong>💾 Tussentijds opslaan:</strong> Je kunt altijd op "Tussentijds Opslaan" tikken. Je gegevens worden als concept bewaard en de volgende keer dat je de app opent automatisch geladen (alleen Single Day).</p>
+          <p className="text-sm text-emerald-800"><strong>💾 Tussentijds opslaan:</strong> Je kunt altijd op "Tussentijds Opslaan" tikken. Je gegevens worden als concept bewaard.</p>
         </div>
 
-        <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-          <p className="text-sm text-red-800"><strong>⚠️ Let op:</strong> Je moet minimaal één rit hebben ingevoerd voordat je kunt indienen. De rittijden mogen niet buiten je diensttijd vallen.</p>
+        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-800"><strong>📝 Geen rit:</strong> Gebruik "Geen rit / standplaats" voor kantoorwerk of opleiding. Vul een duidelijke reden in (minimaal 5 tekens).</p>
         </div>
       </div>
     )
@@ -132,15 +132,15 @@ const sections = [
     color: "bg-emerald-100 text-emerald-700",
     content: (
       <div className="space-y-3">
-        <p>Voer per rit de volgende gegevens in:</p>
+        <p>Voer per rit de volgende gegevens in. <strong>Rit is niet verplicht</strong> — alleen standplaatswerk is ook geldig.</p>
         
         <div className="space-y-2">
           {[
-            { label: "Start/Eind rit", desc: "Tijdstip vertrek en aankomst (UU:MM)", required: true },
-            { label: "Vertreklocatie", desc: "Bijv. 'Standplaats' of depot naam", required: false },
+            { label: "Start/Eind rit", desc: "Starttijd wordt automatisch ingevuld. Eindtijd kan later worden ingevoerd.", required: true },
             { label: "Kenteken", desc: "Selecteer het voertuig uit de lijst", required: true },
+            { label: "Begin/Eind km", desc: "Begin km verplicht, eind km verplicht bij afsluiten rit", required: true },
             { label: "Schade gereden?", desc: "Kies 'Ja' als er schade is ontstaan", required: false },
-            { label: "Begin/Eind km", desc: "Kilometerstand bij vertrek en aankomst", required: true },
+            { label: "Vertreklocatie", desc: "Bijv. 'Standplaats' of depot naam", required: false },
             { label: "Brandstof/AdBlue", desc: "Alleen invullen als je hebt getankt", required: false },
             { label: "Km-stand tanken", desc: "Kilometerstand op moment van tanken", required: false },
             { label: "E-laden (kWh)", desc: "Alleen bij elektrisch voertuig aan laadpaal", required: false },
@@ -160,7 +160,7 @@ const sections = [
             Route Details
           </p>
           <div className="space-y-1">
-            <p className="text-xs text-slate-600">• <strong>Klant</strong> - Selecteer de klant uit de lijst (verplicht)</p>
+            <p className="text-xs text-slate-600">• <strong>Klant</strong> - Selecteer de klant uit de lijst</p>
             <p className="text-xs text-slate-600">• <strong>Route</strong> - Naam van de gereden route</p>
             <p className="text-xs text-slate-600">• <strong>Bestelde stops</strong> - Aantal geplande afleveradressen</p>
             <p className="text-xs text-slate-600">• <strong>Opmerkingen</strong> - Bijzonderheden, vertragingen, problemen</p>
@@ -168,15 +168,15 @@ const sections = [
         </div>
 
         <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-800"><strong>➕ Meerdere ritten:</strong> Tik op "Regel Toevoegen" om een extra rit toe te voegen. Elke rit heeft zijn eigen voertuig, tijden en kilometerstanden.</p>
+          <p className="text-sm text-blue-800"><strong>➕ Meerdere ritten:</strong> Tik op "Regel Toevoegen" om een extra rit toe te voegen.</p>
         </div>
 
         <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-          <p className="text-sm text-amber-800"><strong>🚗 Schade?</strong> Als je "Ja" selecteert bij schade, wordt na het indienen automatisch de Bumper schadepagina geopend zodat je direct de schade kunt melden.</p>
+          <p className="text-sm text-amber-800"><strong>🚗 Schade?</strong> Als je "Ja" selecteert bij schade, wordt na het indienen automatisch de Bumper schadepagina geopend.</p>
         </div>
 
         <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-          <p className="text-sm text-red-800"><strong>⚠️ Rittijden controleren:</strong> De app controleert of je rittijden binnen je diensttijd vallen. Als een rit buiten je dienst valt, zie je bovenaan het Ritten-scherm een <strong>rode waarschuwing</strong> met precies welke ritten niet kloppen. Ook bij het indienen wordt dit geblokkeerd — je krijgt dan een duidelijke foutmelding en wordt automatisch naar het Ritten-scherm gestuurd om het aan te passen.</p>
+          <p className="text-sm text-red-800"><strong>⚠️ Tijdregels:</strong> Regels moeten binnen de diensttijd vallen en mogen niet overlappen. Er is géén 5-minutenmarge.</p>
         </div>
       </div>
     )
