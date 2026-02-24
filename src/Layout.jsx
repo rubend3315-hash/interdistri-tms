@@ -530,7 +530,8 @@ export default function Layout({ children, currentPageName }) {
   ) {
     if (loadingEmployee || !currentEmployee) return null;
 
-    const isMultiDay = currentEmployee.mobile_entry_type === "multi_day";
+    const mobileTypeRouting = (currentEmployee.mobile_entry_type || "").toLowerCase();
+    const isMultiDay = mobileTypeRouting.includes("meerdaags") || mobileTypeRouting === "multi_day";
 
     if (currentPageName === "MobileEntry" && isMultiDay) {
       return <Navigate to={createPageUrl("MobileEntryMultiDay")} replace />;
