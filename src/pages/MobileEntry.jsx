@@ -53,6 +53,7 @@ export default function MobileEntry({ currentUser }) {
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [geenRit, setGeenRit] = useState(false);
   const [geenRitReden, setGeenRitReden] = useState("");
+  const [klantType, setKlantType] = useState("");
   const { isOnline, syncStatus, pendingCount } = useOfflineSync();
 
   const data = useMobileData(currentUser);
@@ -129,7 +130,7 @@ export default function MobileEntry({ currentUser }) {
             <MobileFrontpage onNavigate={setActiveTab} />
           </div>
         )}
-        {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} dienstRegels={form.dienstRegels} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={isMultiDay} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} geenRit={MOBILE_ENTRY_V2 ? geenRit : false} setGeenRit={setGeenRit} geenRitReden={geenRitReden} setGeenRitReden={setGeenRitReden} v2={MOBILE_ENTRY_V2} />}
+        {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} dienstRegels={form.dienstRegels} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={isMultiDay} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} geenRit={MOBILE_ENTRY_V2 ? geenRit : false} setGeenRit={setGeenRit} geenRitReden={geenRitReden} setGeenRitReden={setGeenRitReden} v2={MOBILE_ENTRY_V2} klantType={klantType} setKlantType={setKlantType} />}
         {activeTab === "ritten" && <DienstRegelsTab dienstRegels={form.dienstRegels} setDienstRegels={form.setDienstRegels} vehicles={data.vehicles} customers={data.customers} routes={data.routes} tiModelRoutes={data.tiModelRoutes} projects={data.projects} activiteiten={data.activiteiten} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} isSubmitting={submit.isSubmitting} storageKey={form.storageKey} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} formData={form.formData} />}
         {activeTab === "inspectie" && <MobileInspectionTab inspectionData={form.inspectionData} setInspectionData={form.setInspectionData} vehicles={data.vehicles} currentEmployee={data.currentEmployee} />}
         {activeTab === "declaratie" && <MobileExpenseTab expenseData={form.expenseData} setExpenseData={form.setExpenseData} currentEmployee={data.currentEmployee} />}
