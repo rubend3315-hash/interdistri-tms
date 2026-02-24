@@ -510,7 +510,8 @@ export default function Layout({ children, currentPageName }) {
   }
 
   if (isEmployeeUser(user) && currentPageName === "Dashboard") {
-    if (loadingEmployee) return null;
+    // Wait until employee data is actually loaded (not just "not loading" but also resolved)
+    if (loadingEmployee || currentEmployee === undefined) return null;
     if (currentEmployee?.mobile_entry_type === 'multi_day') {
       return <MobileEntryMultiDay currentUser={user} />;
     }
