@@ -156,7 +156,7 @@ export function useMobileData(user) {
   return {
     user, currentEmployee,
     vehicles, customers, projects, routes, tiModelRoutes, activiteiten,
-    myTimeEntries, loadingEntries, approvedEntries,
+    myTimeEntries: allMyEntries, loadingEntries: loadingEntries || loadingEmployeeEntries, approvedEntries,
     myMessages, unreadCount, markMessageRead,
     todayShift, schedules, welcomeMessage,
     submittedTodayEntries, todayStr,
