@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { format, addDays } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,15 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Clock, Send, Save } from "lucide-react";
+import { Clock, Send, Save, AlertTriangle } from "lucide-react";
 import ProgressSteps from "@/components/mobile/ProgressSteps";
 import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
-
-const timeToMinutes = (time) => {
-  if (!time || time.length < 5) return null;
-  const [h, m] = time.split(':').map(Number);
-  return (isNaN(h) || isNaN(m)) ? null : h * 60 + m;
-};
+import { validateDienstRegels } from "@/components/utils/mobile/dienstRegelValidation";
 
 export default function MobileDienstTab({
   formData, setFormData, dienstRegels = [], signature,
@@ -26,6 +21,13 @@ export default function MobileDienstTab({
   const hasRegels = dienstRegels.length > 0;
   const tripsCount = dienstRegels.filter(r => r.type === "rit").length;
   const standplaatsCount = dienstRegels.filter(r => r.type === "standplaats").length;
+
+  const isSingleDay = !isMultiDay || !formData.end_date || formData.end_date === formData.date;
+  const validation = useMemo(() =>
+    validateDienstRegels(dienstRegels, formData.start_time, formData.end_time, isSingleDay),
+    [dienstRegels, formData.start_time, formData.end_time, isSingleDay]
+  );
+  const submitBlocked = validation.hasOverlap || validation.hasGap;
   const timeInput = (value, onChange, placeholder) => (
     <Input
       type="text" inputMode="numeric" maxLength="5"
@@ -159,6 +161,19 @@ export default function MobileDienstTab({
                 </div>
               )}
 
+              {/* Validation warnings */}
+              {submitBlocked && (
+                <div className="p-3 bg-red-50 border-2 border-red-300 rounded-lg space-y-1">
+                  <div className="flex items-center gap-2 text-red-700 font-semibold text-sm">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                    <span>Kan niet indienen:</span>
+                  </div>
+                  {[...validation.overlaps, ...validation.gaps].map((msg, i) => (
+                    <p key={i} className="text-xs text-red-600 ml-6">• {msg}</p>
+                  ))}
+                </div>
+              )}
+
               <div className="space-y-1">
                 <Label className="text-xs">Opmerkingen</Label>
                 <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={2} placeholder="Extra informatie..." />
@@ -173,10 +188,10 @@ export default function MobileDienstTab({
 
               <Button
                 className={`w-full py-4 text-base font-semibold transition-all duration-300 ${
-                  formData.end_time && hasRegels ? 'bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-300 ring-offset-2' : 'bg-blue-600 hover:bg-blue-700'
+                  formData.end_time && hasRegels && !submitBlocked ? 'bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-300 ring-offset-2' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
                 onClick={onSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || submitBlocked}
               >
                 <Send className="w-5 h-5 mr-2" />
                 {signature ? 'Dienst Indienen' : 'Met Handtekening Indienen'}
