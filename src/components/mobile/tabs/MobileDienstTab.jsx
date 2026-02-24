@@ -18,11 +18,14 @@ const timeToMinutes = (time) => {
 };
 
 export default function MobileDienstTab({
-  formData, setFormData, trips, signature,
+  formData, setFormData, dienstRegels = [], signature,
   submittedTodayEntries, progressStep, lastSavedAt, isSaving,
   calculateHours, isMultiDay, isSubmitting,
   onSubmit, onSaveDraft, setActiveTab
 }) {
+  const hasRegels = dienstRegels.length > 0;
+  const tripsCount = dienstRegels.filter(r => r.type === "rit").length;
+  const standplaatsCount = dienstRegels.filter(r => r.type === "standplaats").length;
   const timeInput = (value, onChange, placeholder) => (
     <Input
       type="text" inputMode="numeric" maxLength="5"
@@ -112,17 +115,19 @@ export default function MobileDienstTab({
           )}
 
           <Button className="w-full bg-emerald-600 hover:bg-emerald-700" onClick={() => setActiveTab("ritten")} disabled={!formData.start_time}>
-            Volgende → Ritten invoeren
+            Volgende → Dienstregels invoeren
           </Button>
 
-          {trips.length > 0 && (
+          {hasRegels && (
             <>
               <div className="border-t my-4" />
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-700 font-medium">Stap 2: Voer eindtijd in</p>
               </div>
               <div className="p-3 bg-emerald-50 rounded-lg">
-                <p className="text-xs text-emerald-700 font-medium">✓ {trips.length} rit(ten) toegevoegd</p>
+                <p className="text-xs text-emerald-700 font-medium">
+                  ✓ {dienstRegels.length} regel(s) — {tripsCount > 0 ? `${tripsCount} rit(ten)` : ''}{tripsCount > 0 && standplaatsCount > 0 ? ', ' : ''}{standplaatsCount > 0 ? `${standplaatsCount} standplaats` : ''}
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -168,7 +173,7 @@ export default function MobileDienstTab({
 
               <Button
                 className={`w-full py-4 text-base font-semibold transition-all duration-300 ${
-                  formData.end_time && trips.length > 0 ? 'bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-300 ring-offset-2' : 'bg-blue-600 hover:bg-blue-700'
+                  formData.end_time && hasRegels ? 'bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-300 ring-offset-2' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
                 onClick={onSubmit}
                 disabled={isSubmitting}
