@@ -180,7 +180,9 @@ export default function MobileDienstTab({
             className="w-full flex items-center justify-between py-3"
           >
             <div className="flex items-center gap-3">
-              <span className="text-[13px] text-slate-900 font-medium">Dienstregels</span>
+              <span className="text-[13px] text-slate-900 font-medium">
+                {postNLAuto && dienstRegels.length > 0 ? 'Rit bewerken' : 'Dienstregels'}
+              </span>
               {dienstRegels.length > 0 && (
                 <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                   {tripsCount > 0 && <span className="flex items-center gap-0.5"><Truck className="w-3 h-3 text-blue-500" />{tripsCount}</span>}
@@ -258,10 +260,15 @@ export default function MobileDienstTab({
             Vul starttijd in om door te gaan
           </button>
         )}
-        {step === "regels" && !geenRit && (
+        {step === "regels" && !geenRit && !postNLAuto && (
           <button type="button" onClick={() => setActiveTab("ritten")}
             className="w-full h-[48px] rounded-xl bg-blue-600 text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700">
             <Truck className="w-4 h-4" /> Dienstregels toevoegen
+          </button>
+        )}
+        {step === "regels" && !geenRit && postNLAuto && (
+          <button disabled className="w-full h-[48px] rounded-xl bg-slate-200 text-slate-400 text-[14px] font-semibold flex items-center justify-center">
+            Vul eindtijd in voor PostNL rit
           </button>
         )}
         {step === "end" && (
