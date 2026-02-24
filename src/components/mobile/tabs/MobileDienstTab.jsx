@@ -57,7 +57,7 @@ export default function MobileDienstTab({
         </div>
       )}
 
-      <ProgressSteps steps={["Start dienst", "Ritten", "Eindtijd", "Indienen"]} currentStep={progressStep} />
+      <ProgressSteps steps={["Start dienst", "Dienstregels", "Eindtijd", "Indienen"]} currentStep={progressStep} />
       <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
 
       <Card>
