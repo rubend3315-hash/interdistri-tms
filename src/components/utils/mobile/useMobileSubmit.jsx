@@ -37,11 +37,17 @@ export function useMobileSubmit({
       return false;
     }
 
-    // 2. Elke rit moet tijden hebben
+    // 2. Elke rit moet starttijd hebben; eindtijd verplicht tenzij openRit
     const ritRegels = dienstRegels.filter(r => r.type === "rit");
     for (let i = 0; i < ritRegels.length; i++) {
-      if (!ritRegels[i].start_time || !ritRegels[i].end_time) {
-        toast.error(`Rit ${i + 1}: Vul zowel start- als eindtijd in.`);
+      if (!ritRegels[i].start_time) {
+        toast.error(`Rit ${i + 1}: Vul een starttijd in.`);
+        setActiveTab("ritten");
+        return false;
+      }
+      // Open rit without end_time: block final submit, must close first
+      if (!ritRegels[i].end_time) {
+        toast.error(`Rit ${i + 1}: Vul eerst de eindtijd in om in te dienen.`);
         setActiveTab("ritten");
         return false;
       }
@@ -82,7 +88,19 @@ export function useMobileSubmit({
     // 5. KM validation for ritten with vehicle
     for (let i = 0; i < ritRegels.length; i++) {
       if (ritRegels[i].vehicle_id && !ritRegels[i].start_km) {
-        toast.error(`Rit ${i + 1}: Kilometerstand is verplicht bij rit met voertuig.`);
+        toast.error(`Rit ${i + 1}: Begin km is verplicht bij rit met voertuig.`);
+        setActiveTab("ritten");
+        return false;
+      }
+      // Eind km verplicht bij afsluiten (closed rit)
+      if (ritRegels[i].vehicle_id && ritRegels[i].end_time && !ritRegels[i].end_km) {
+        toast.error(`Rit ${i + 1}: Eind km is verplicht bij afgesloten rit.`);
+        setActiveTab("ritten");
+        return false;
+      }
+      // Eind km >= begin km
+      if (ritRegels[i].end_km && ritRegels[i].start_km && Number(ritRegels[i].end_km) < Number(ritRegels[i].start_km)) {
+        toast.error(`Rit ${i + 1}: Eind km moet groter of gelijk zijn aan begin km.`);
         setActiveTab("ritten");
         return false;
       }
