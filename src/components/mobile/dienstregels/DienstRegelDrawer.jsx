@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,23 +71,46 @@ export default function DienstRegelDrawer({
     }));
   };
 
-  const handleDelete = () => { onDelete?.(draft.id); onOpenChange(false); };
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDelete = () => { setShowDeleteConfirm(true); };
+  const confirmDelete = () => { onDelete?.(draft.id); setShowDeleteConfirm(false); onOpenChange(false); };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[100dvh] max-h-[100dvh] p-0 flex flex-col rounded-none">
         {/* Native-style header */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b bg-white">
-          <button type="button" onClick={() => onOpenChange(false)} className="flex items-center gap-0.5 text-[13px] text-blue-600 font-medium">
+          <button type="button" onClick={() => onOpenChange(false)} className="flex items-center gap-0.5 text-[13px] text-blue-600 font-medium min-w-[60px]">
             <ChevronLeft className="w-4 h-4" /> Terug
           </button>
           <span className="text-[13px] font-semibold text-slate-900">
             {isRit ? "Rit" : "Standplaats"}
           </span>
-          <button type="button" onClick={handleDelete} className="p-1.5 rounded-lg hover:bg-red-50 active:bg-red-100">
-            <Trash2 className="w-4 h-4 text-red-400" />
+          <button type="button" onClick={handleDelete} className="p-1.5 rounded-lg hover:bg-red-50 active:bg-red-100 min-w-[60px] flex justify-end">
+            <Trash2 className="w-4 h-4 text-[#D32F2F]" />
           </button>
         </div>
+
+        {/* Delete confirm overlay */}
+        {showDeleteConfirm && (
+          <div className="absolute inset-0 bg-black/40 z-50 flex items-center justify-center px-6">
+            <div className="bg-white rounded-2xl p-5 w-full max-w-[320px] shadow-xl">
+              <h3 className="text-[15px] font-semibold text-slate-900">Regel verwijderen?</h3>
+              <p className="text-[13px] text-slate-500 mt-1">Weet je zeker dat je deze regel wilt verwijderen?</p>
+              <div className="flex gap-2 mt-4">
+                <button type="button" onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 h-[44px] rounded-xl border border-slate-200 text-[13px] font-medium text-slate-700 active:bg-slate-50">
+                  Annuleren
+                </button>
+                <button type="button" onClick={confirmDelete}
+                  className="flex-1 h-[44px] rounded-xl bg-[#D32F2F] text-white text-[13px] font-semibold active:bg-red-800">
+                  Verwijderen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-white">
