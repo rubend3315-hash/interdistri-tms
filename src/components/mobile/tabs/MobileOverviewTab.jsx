@@ -6,68 +6,71 @@ import { CheckCircle } from "lucide-react";
 import WeekSelector from "../overview/WeekSelector";
 import WeekCard from "../overview/WeekCard";
 
-function buildWeeks(entries) {
-  if (!entries.length) return [];
-
-  const weekMap = new Map();
-
-  for (const entry of entries) {
-    if (!entry.date) continue;
-    const d = new Date(entry.date + "T12:00:00");
-    const wStart = startOfWeek(d, { weekStartsOn: 1 });
-    const key = format(wStart, "yyyy-ww");
-
-    if (!weekMap.has(key)) {
-      const wEnd = endOfWeek(d, { weekStartsOn: 1 });
-      const allDays = eachDayOfInterval({ start: wStart, end: wEnd });
-      weekMap.set(key, {
-        key,
-        weekNumber: getWeek(d, { weekStartsOn: 1 }),
-        year: getYear(d),
-        weekStart: wStart,
-        rangeLabel: `${format(wStart, "d MMM", { locale: nl })} – ${format(wEnd, "d MMM", { locale: nl })}`,
-        days: allDays.map(day => ({
-          date: format(day, "yyyy-MM-dd"),
-          hours: 0,
-        })),
-      });
-    }
-
-    const week = weekMap.get(key);
-    const dayIdx = week.days.findIndex(day => day.date === entry.date);
-    if (dayIdx !== -1) {
-      week.days[dayIdx].hours += (entry.total_hours || 0);
-    }
-  }
-
-  return Array.from(weekMap.values()).sort((a, b) => b.weekStart - a.weekStart);
-}
-
+const WEEKS_BACK = 12;
+const WEEKS_FORWARD = 4;
 const STORAGE_KEY = "mobile_active_week_key";
 
+/** Build a fixed calendar timeline of weeks (-12 to +4 from now), with entry data merged in. */
+function buildTimeline(entries) {
+  const now = new Date();
+  const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });
+
+  // Index entry hours by date for fast lookup
+  const hoursByDate = new Map();
+  for (const entry of entries) {
+    if (!entry.date) continue;
+    hoursByDate.set(entry.date, (hoursByDate.get(entry.date) || 0) + (entry.total_hours || 0));
+  }
+
+  const timeline = [];
+  for (let offset = -WEEKS_BACK; offset <= WEEKS_FORWARD; offset++) {
+    const wStart = addWeeks(thisWeekStart, offset);
+    const wEnd = endOfWeek(wStart, { weekStartsOn: 1 });
+    const allDays = eachDayOfInterval({ start: wStart, end: wEnd });
+    const days = allDays.map(day => {
+      const dateStr = format(day, "yyyy-MM-dd");
+      return { date: dateStr, hours: hoursByDate.get(dateStr) || 0 };
+    });
+    const totalHours = days.reduce((s, d) => s + d.hours, 0);
+
+    timeline.push({
+      key: format(wStart, "yyyy-ww"),
+      weekNumber: getWeek(wStart, { weekStartsOn: 1 }),
+      year: getYear(wStart),
+      weekStart: wStart,
+      rangeLabel: `${format(wStart, "d MMM", { locale: nl })} – ${format(wEnd, "d MMM", { locale: nl })}`,
+      days,
+      totalHours,
+    });
+  }
+
+  // Sorted newest first (consistent with previous behavior)
+  return timeline.reverse();
+}
+
 export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
-  const weeks = useMemo(() => buildWeeks(approvedEntries), [approvedEntries]);
+  const timeline = useMemo(() => buildTimeline(approvedEntries), [approvedEntries]);
   const now = new Date();
 
-  // Current calendar week key
+  // Current calendar week key (always exists in timeline)
   const currentWeekKey = useMemo(() => {
-    const w = weeks.find(w => isSameWeek(w.weekStart, now, { weekStartsOn: 1 }));
-    return w?.key || (weeks[0]?.key ?? null);
-  }, [weeks, now]);
+    const w = timeline.find(w => isSameWeek(w.weekStart, now, { weekStartsOn: 1 }));
+    return w?.key || timeline[0]?.key;
+  }, [timeline, now]);
 
   // Single source of truth: activeWeekKey
   const [activeWeekKey, setActiveWeekKey] = useState(() => {
     return localStorage.getItem(STORAGE_KEY) || null;
   });
 
-  // When weeks load/change, validate activeWeekKey
+  // On mount / timeline change: validate stored key, fallback to current week
   useEffect(() => {
-    if (weeks.length === 0) return;
-    const exists = weeks.some(w => w.key === activeWeekKey);
+    if (timeline.length === 0) return;
+    const exists = timeline.some(w => w.key === activeWeekKey);
     if (!exists) {
       setActiveWeekKey(currentWeekKey);
     }
-  }, [weeks, activeWeekKey, currentWeekKey]);
+  }, [timeline, activeWeekKey, currentWeekKey]);
 
   // Persist to localStorage
   useEffect(() => {
@@ -76,22 +79,23 @@ export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
     }
   }, [activeWeekKey]);
 
-  // Derived: active week object and index
+  // Derived
   const activeIdx = useMemo(() => {
-    const idx = weeks.findIndex(w => w.key === activeWeekKey);
+    const idx = timeline.findIndex(w => w.key === activeWeekKey);
     return idx >= 0 ? idx : 0;
-  }, [weeks, activeWeekKey]);
-  const activeWeek = weeks[activeIdx] || null;
+  }, [timeline, activeWeekKey]);
+  const activeWeek = timeline[activeIdx] || null;
 
+  // Older = higher index (timeline is newest-first)
   const goPrev = useCallback(() => {
-    const newIdx = Math.min(activeIdx + 1, weeks.length - 1);
-    if (weeks[newIdx]) setActiveWeekKey(weeks[newIdx].key);
-  }, [activeIdx, weeks]);
+    const newIdx = Math.min(activeIdx + 1, timeline.length - 1);
+    setActiveWeekKey(timeline[newIdx].key);
+  }, [activeIdx, timeline]);
 
   const goNext = useCallback(() => {
     const newIdx = Math.max(activeIdx - 1, 0);
-    if (weeks[newIdx]) setActiveWeekKey(weeks[newIdx].key);
-  }, [activeIdx, weeks]);
+    setActiveWeekKey(timeline[newIdx].key);
+  }, [activeIdx, timeline]);
 
   const handleSwipe = useCallback((dir) => {
     if (dir === "left") goPrev();
