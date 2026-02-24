@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Send, Save, AlertTriangle, Truck, Package, ChevronRight } from "lucide-react";
 import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
 import { validateDienstRegels } from "@/components/utils/mobile/dienstRegelValidation";
@@ -27,23 +28,26 @@ export default function MobileDienstTab({
   formData, setFormData, dienstRegels = [], signature,
   submittedTodayEntries, progressStep, lastSavedAt, isSaving,
   calculateHours, isMultiDay, isSubmitting,
-  onSubmit, onSaveDraft, setActiveTab
+  onSubmit, onSaveDraft, setActiveTab,
+  geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false
 }) {
-  const hasRegels = dienstRegels.length > 0;
+  const hasRegels = geenRit ? true : dienstRegels.length > 0;
   const tripsCount = dienstRegels.filter(r => r.type === "rit").length;
   const standplaatsCount = dienstRegels.filter(r => r.type === "standplaats").length;
 
   const isSingleDay = !isMultiDay || !formData.end_date || formData.end_date === formData.date;
   const validation = useMemo(() =>
+    geenRit ? { overlaps: [], gaps: [], hasOverlap: false, hasGap: false } :
     validateDienstRegels(dienstRegels, formData.start_time, formData.end_time, isSingleDay),
-    [dienstRegels, formData.start_time, formData.end_time, isSingleDay]
+    [dienstRegels, formData.start_time, formData.end_time, isSingleDay, geenRit]
   );
   const submitBlocked = validation.hasOverlap || validation.hasGap;
-  const canSubmit = formData.end_time && hasRegels && !submitBlocked && !isSubmitting;
+  const geenRitValid = !geenRit || (geenRitReden && geenRitReden.trim().length >= 5);
+  const canSubmit = formData.end_time && hasRegels && !submitBlocked && !isSubmitting && geenRitValid;
   const maxEndDate = formData.date ? format(addDays(new Date(formData.date), 7), 'yyyy-MM-dd') : undefined;
 
   // Determine which "screen" to show
-  const step = !formData.start_time ? "start" : !hasRegels ? "regels" : !formData.end_time ? "end" : "submit";
+  const step = !formData.start_time ? "start" : (!hasRegels && !geenRit) ? "regels" : !formData.end_time ? "end" : "submit";
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-160px)]">
@@ -107,8 +111,35 @@ export default function MobileDienstTab({
           </div>
         </div>
 
-        {/* === SECTION 2: Dienstregels summary (only when filled) === */}
-        {formData.start_time && (
+        {/* === SECTION 2: Geen rit checkbox (V2 only) + Dienstregels summary === */}
+        {formData.start_time && v2 && (
+          <div className="border-b border-slate-100 pb-3">
+            <label className="flex items-center gap-3 py-2 cursor-pointer">
+              <Checkbox
+                checked={geenRit}
+                onCheckedChange={(checked) => setGeenRit(!!checked)}
+              />
+              <span className="text-[13px] text-slate-700">Geen rit / standplaats (kantoor, opleiding, etc.)</span>
+            </label>
+            {geenRit && (
+              <div className="mt-2">
+                <Label className="text-[11px] text-slate-500">Reden werkzaamheden *</Label>
+                <Textarea
+                  value={geenRitReden}
+                  onChange={(e) => setGeenRitReden(e.target.value)}
+                  rows={2}
+                  placeholder="Beschrijf je werkzaamheden (min. 5 tekens)..."
+                  className="text-sm mt-0.5 bg-white"
+                />
+                {geenRitReden.length > 0 && geenRitReden.trim().length < 5 && (
+                  <p className="text-[10px] text-red-500 mt-0.5">Minimaal 5 tekens vereist</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {formData.start_time && !geenRit && (
           <button
             type="button"
             onClick={() => setActiveTab("ritten")}
@@ -118,7 +149,7 @@ export default function MobileDienstTab({
               <div className="flex items-center gap-1.5 text-[13px] text-slate-900 font-medium">
                 Dienstregels
               </div>
-              {hasRegels && (
+              {dienstRegels.length > 0 && (
                 <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                   {tripsCount > 0 && <span className="flex items-center gap-0.5"><Truck className="w-3 h-3 text-blue-500" />{tripsCount}</span>}
                   {standplaatsCount > 0 && <span className="flex items-center gap-0.5"><Package className="w-3 h-3 text-amber-500" />{standplaatsCount}</span>}
@@ -126,8 +157,8 @@ export default function MobileDienstTab({
               )}
             </div>
             <div className="flex items-center gap-1">
-              {!hasRegels && <span className="text-[11px] text-blue-600">Toevoegen</span>}
-              {hasRegels && <span className="text-[11px] text-slate-400">Bewerken</span>}
+              {dienstRegels.length === 0 && <span className="text-[11px] text-blue-600">Toevoegen</span>}
+              {dienstRegels.length > 0 && <span className="text-[11px] text-slate-400">Bewerken</span>}
               <ChevronRight className="w-4 h-4 text-slate-400" />
             </div>
           </button>
