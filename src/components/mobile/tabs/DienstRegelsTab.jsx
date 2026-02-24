@@ -56,6 +56,7 @@ export default function DienstRegelsTab({
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingRegel, setEditingRegel] = useState(null);
+  const [isNewRegel, setIsNewRegel] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -85,11 +86,12 @@ export default function DienstRegelsTab({
     const newRegel = { id: generateId(), type, ...(type === "rit" ? { ...EMPTY_TRIP } : { ...EMPTY_STANDPLAATS }), ...prefill };
     setDienstRegels(prev => [...prev, newRegel]);
     setEditingRegel(newRegel);
+    setIsNewRegel(true);
     setDrawerOpen(true);
     setAddMenuOpen(false);
   };
 
-  const handleTap = (regel) => { setEditingRegel(regel); setDrawerOpen(true); };
+  const handleTap = (regel) => { setEditingRegel(regel); setIsNewRegel(false); setDrawerOpen(true); };
   const handleSaveRegel = (updatedRegel) => { setDienstRegels(prev => prev.map(r => r.id === updatedRegel.id ? updatedRegel : r)); };
 
   const requestDelete = useCallback((id) => setDeleteTarget(id), []);
@@ -212,6 +214,9 @@ export default function DienstRegelsTab({
         vehicles={vehicles} customers={customers}
         routes={routes} tiModelRoutes={tiModelRoutes}
         projects={projects} activiteiten={activiteiten}
+        dienstStartTime={formData?.start_time}
+        dienstEndTime={formData?.end_time}
+        isNewRegel={isNewRegel}
       />
 
       <DeleteConfirmDialog
