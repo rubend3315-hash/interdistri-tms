@@ -511,35 +511,9 @@ export default function Layout({ children, currentPageName }) {
     }
   }
 
-  // --- EMPLOYEE landing: redirect Dashboard → correct mobile page ---
+  // --- EMPLOYEE landing: redirect Dashboard → MobileEntry ---
   if (isEmployeeUser(user) && currentPageName === "Dashboard") {
-    if (loadingEmployee || !currentEmployee) return null;
-
-    const mobileType = (currentEmployee.mobile_entry_type || "").toLowerCase();
-    const target = mobileType.includes("meerdaags") || mobileType === "multi_day"
-      ? "MobileEntryMultiDay"
-      : "MobileEntry";
-
-    return <Navigate to={createPageUrl(target)} replace />;
-  }
-
-  // --- Deterministic Mobile Routing (SAFE) ---
-  if (
-    isEmployeeUser(user) &&
-    (currentPageName === "MobileEntry" || currentPageName === "MobileEntryMultiDay")
-  ) {
-    if (loadingEmployee || !currentEmployee) return null;
-
-    const mobileTypeRouting = (currentEmployee.mobile_entry_type || "").toLowerCase();
-    const isMultiDay = mobileTypeRouting.includes("meerdaags") || mobileTypeRouting === "multi_day";
-
-    if (currentPageName === "MobileEntry" && isMultiDay) {
-      return <Navigate to={createPageUrl("MobileEntryMultiDay")} replace />;
-    }
-
-    if (currentPageName === "MobileEntryMultiDay" && !isMultiDay) {
-      return <Navigate to={createPageUrl("MobileEntry")} replace />;
-    }
+    return <Navigate to={createPageUrl("MobileEntry")} replace />;
   }
 
   // PLANNER landing page: redirect Dashboard → Planning
