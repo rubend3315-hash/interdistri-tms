@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { format, startOfWeek, endOfWeek, addWeeks, getWeek, getYear, eachDayOfInterval, isSameWeek, isPast } from "date-fns";
 import { nl } from "date-fns/locale";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle } from "lucide-react";
 import WeekNavigator from "../overview/WeekNavigator";
@@ -55,7 +57,22 @@ function getWeekNorm(employee) {
   return regel?.uren_per_week || employee?.contract_hours || 40;
 }
 
-export default function MobileOverviewTab({ approvedEntries, loadingEntries, currentEmployee }) {
+export default function MobileOverviewTab({ approvedEntries, loadingEntries }) {
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: currentEmployee } = useQuery({
+    queryKey: ['overviewEmployee', user?.email],
+    queryFn: async () => {
+      const emps = await base44.entities.Employee.filter({ email: user.email });
+      return emps[0] ?? null;
+    },
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const timeline = useMemo(() => buildTimeline(approvedEntries), [approvedEntries]);
   const weekNorm = useMemo(() => getWeekNorm(currentEmployee), [currentEmployee]);
 
