@@ -89,10 +89,11 @@ export default function MobileEntry({ currentUser }) {
     if (val) {
       setGeenRit(false);
       setGeenRitReden("");
-      // If starttijd filled and no regels yet → create OPEN auto-rit and navigate to drawer
+      // If starttijd filled and no regels yet → create OPEN auto-rit and navigate directly to rit drawer
       if (form.formData.start_time && form.dienstRegels.length === 0 && !form.autoRitDismissed) {
         const postNLCustomer = (data.customers || []).find(c => c.company_name?.toLowerCase().includes("postnl"));
         form.generateAutoRit(form.formData.start_time, form.formData.end_time, postNLCustomer?.id || "");
+        // Direct to ritten tab + open drawer — no tussenstap
         setActiveTab("ritten");
         setPostNLOpenDrawer(true);
       }
