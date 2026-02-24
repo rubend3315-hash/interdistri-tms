@@ -28,13 +28,14 @@ const TimeInput = ({ value, onChange, placeholder }) => (
 export default function MobileDienstTab({
   formData, setFormData, dienstRegels = [], signature,
   submittedTodayEntries, progressStep, lastSavedAt, isSaving,
-  calculateHours, isMultiDay, isSubmitting,
+  calculateHours, isMultiDay, isMultiDayAllowed = false, isSubmitting,
   onSubmit, onSaveDraft, setActiveTab,
   geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
   postNLAuto = false, setPostNLAuto
 }) {
+  // Only show multi-day toggle for authorized employees; default OFF
   const [multiDayEnabled, setMultiDayEnabled] = useState(
-    formData.end_date && formData.end_date !== formData.date
+    isMultiDayAllowed && formData.end_date && formData.end_date !== formData.date
   );
 
   const hasRegels = geenRit ? true : dienstRegels.length > 0;
@@ -96,14 +97,16 @@ export default function MobileDienstTab({
         <div className="space-y-2">
           <h3 className="text-[13px] font-semibold text-slate-900">Datum & starttijd</h3>
 
-          {/* Meerdaags toggle */}
-          <div className="flex items-center justify-between py-1">
-            <span className="text-[12px] text-slate-600">Meerdaagse dienst</span>
-            <Switch checked={multiDayEnabled} onCheckedChange={handleMultiDayToggle} />
-          </div>
+          {/* Meerdaags toggle — only for authorized employees */}
+          {isMultiDayAllowed && (
+            <div className="flex items-center justify-between py-1">
+              <span className="text-[12px] text-slate-600">Meerdaagse dienst</span>
+              <Switch checked={multiDayEnabled} onCheckedChange={handleMultiDayToggle} />
+            </div>
+          )}
 
           {/* Date fields — side by side when multiday */}
-          {multiDayEnabled ? (
+          {multiDayEnabled && isMultiDayAllowed ? (
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-[11px] text-slate-500">Startdatum</Label>
