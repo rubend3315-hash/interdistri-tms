@@ -27,6 +27,7 @@ function normalizeEnd(startMin, endMin) {
 /**
  * Build sorted intervals from dienstRegels.
  * Each interval: { index, start, end } (absolute minutes).
+ * Open rits (no end_time) are excluded from interval-based validation.
  */
 function buildIntervals(dienstRegels) {
   return dienstRegels
@@ -93,21 +94,34 @@ export function validateMargin(dienstRegels, dienstStartTime, dienstEndTime) {
 
 /**
  * Validate a single regel against dienst margin.
+ * For OPEN rits (no end_time), only validate start margin.
  * Returns error string or null.
  */
 export function validateSingleRegelMargin(regel, dienstStartTime, dienstEndTime) {
   const svcStart = timeToMinutes(dienstStartTime);
-  const svcEnd = timeToMinutes(dienstEndTime);
   const rStart = timeToMinutes(regel.start_time);
   const rEnd = timeToMinutes(regel.end_time);
 
-  if (svcStart === null || svcEnd === null || rStart === null || rEnd === null) return null;
+  if (svcStart === null || rStart === null) return null;
+
+  const minStart = svcStart + MARGIN_MINUTES;
+  const regelStart = rStart < svcStart ? rStart + 1440 : rStart;
+
+  // OPEN rit: only check start margin
+  if (rEnd === null) {
+    if (regelStart < minStart) {
+      return "Starttijd moet minimaal 5 minuten na start dienst liggen.";
+    }
+    return null;
+  }
+
+  // Closed rit: full margin check
+  const svcEnd = timeToMinutes(dienstEndTime);
+  if (svcEnd === null) return null;
 
   const svcEndN = normalizeEnd(svcStart, svcEnd);
-  const minStart = svcStart + MARGIN_MINUTES;
   const maxEnd = svcEndN - MARGIN_MINUTES;
 
-  const regelStart = rStart < svcStart ? rStart + 1440 : rStart;
   const regelEnd = normalizeEnd(rStart, rEnd);
   const regelEndN = regelEnd < svcStart ? regelEnd + 1440 : regelEnd;
 
@@ -161,9 +175,13 @@ export function findGaps(dienstRegels, dienstStartTime, dienstEndTime) {
 
 /**
  * Full validation for UI display (non-blocking, returns all issues).
- * Returns { overlaps, gaps, margins, hasOverlap, hasGap, hasMarginError }
+ * Skips gap/margin validation if any regel has openRit status (no end_time).
+ * Returns { overlaps, gaps, margins, hasOverlap, hasGap, hasMarginError, hasOpenRit }
  */
 export function validateDienstRegels(dienstRegels, dienstStartTime, dienstEndTime, isSingleDay) {
+  const hasOpenRit = dienstRegels.some(r => r.openRit && !r.end_time);
+
+  // Only check overlaps for closed regels (open rits excluded from buildIntervals)
   const overlapPairs = findOverlaps(dienstRegels);
   const overlapMessages = overlapPairs.map(({ i, j }) =>
     `Dienstregels mogen elkaar niet overlappen (regel ${i + 1} en ${j + 1}).`
@@ -172,7 +190,8 @@ export function validateDienstRegels(dienstRegels, dienstStartTime, dienstEndTim
   let gapMessages = [];
   let marginMessages = [];
 
-  if (isSingleDay && dienstStartTime && dienstEndTime && dienstRegels.length > 0) {
+  // Skip gap/margin checks if any open rit exists (end_time not yet known)
+  if (!hasOpenRit && isSingleDay && dienstStartTime && dienstEndTime && dienstRegels.length > 0) {
     const allHaveTimes = dienstRegels.every(r => r.start_time && r.end_time);
     if (allHaveTimes) {
       const { errors: gapErrors } = findGaps(dienstRegels, dienstStartTime, dienstEndTime);
@@ -190,5 +209,6 @@ export function validateDienstRegels(dienstRegels, dienstStartTime, dienstEndTim
     hasOverlap: overlapMessages.length > 0,
     hasGap: gapMessages.length > 0,
     hasMarginError: marginMessages.length > 0,
+    hasOpenRit,
   };
 }
