@@ -54,6 +54,7 @@ export default function MobileEntry({ currentUser }) {
   const [geenRit, setGeenRit] = useState(false);
   const [geenRitReden, setGeenRitReden] = useState("");
   const [postNLAuto, setPostNLAuto] = useState(false);
+  const [postNLOpenDrawer, setPostNLOpenDrawer] = useState(false);
   const { isOnline, syncStatus, pendingCount } = useOfflineSync();
 
   const data = useMobileData(currentUser);
@@ -109,8 +110,22 @@ export default function MobileEntry({ currentUser }) {
 
   const handleSetPostNLAuto = useCallback((val) => {
     setPostNLAuto(val);
-    if (val) { setGeenRit(false); setGeenRitReden(""); }
-  }, []);
+    if (val) {
+      setGeenRit(false);
+      setGeenRitReden("");
+      // If starttijd filled and no regels yet → create auto-rit and navigate to ritten
+      if (form.formData.start_time && form.dienstRegels.length === 0 && !form.autoRitDismissed) {
+        // Need end_time for margin calc; if missing, just navigate to ritten tab
+        if (form.formData.end_time) {
+          const postNLCustomer = (data.customers || []).find(c => c.company_name?.toLowerCase().includes("postnl"));
+          form.generateAutoRit(form.formData.start_time, form.formData.end_time, postNLCustomer?.id || "");
+        }
+        // Navigate to ritten tab so drawer opens automatically
+        setActiveTab("ritten");
+        setPostNLOpenDrawer(true);
+      }
+    }
+  }, [form.formData.start_time, form.formData.end_time, form.dienstRegels.length, form.autoRitDismissed, data.customers]);
 
   const submit = useMobileSubmit({
     formData: form.formData, trips: form.trips, standplaatsWerk: form.standplaatsWerk,
@@ -181,7 +196,7 @@ export default function MobileEntry({ currentUser }) {
           </div>
         )}
         {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} dienstRegels={form.dienstRegels} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={isMultiDay} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} geenRit={MOBILE_ENTRY_V2 ? geenRit : false} setGeenRit={handleSetGeenRit} geenRitReden={geenRitReden} setGeenRitReden={setGeenRitReden} v2={MOBILE_ENTRY_V2} postNLAuto={postNLAuto} setPostNLAuto={handleSetPostNLAuto} />}
-        {activeTab === "ritten" && <DienstRegelsTab dienstRegels={form.dienstRegels} setDienstRegels={form.setDienstRegels} vehicles={data.vehicles} customers={data.customers} routes={data.routes} tiModelRoutes={data.tiModelRoutes} projects={data.projects} activiteiten={data.activiteiten} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} isSubmitting={submit.isSubmitting} storageKey={form.storageKey} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} formData={form.formData} />}
+        {activeTab === "ritten" && <DienstRegelsTab dienstRegels={form.dienstRegels} setDienstRegels={form.setDienstRegels} vehicles={data.vehicles} customers={data.customers} routes={data.routes} tiModelRoutes={data.tiModelRoutes} projects={data.projects} activiteiten={data.activiteiten} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} isSubmitting={submit.isSubmitting} storageKey={form.storageKey} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} formData={form.formData} postNLAuto={postNLAuto} postNLOpenDrawer={postNLOpenDrawer} setPostNLOpenDrawer={setPostNLOpenDrawer} />}
         {activeTab === "inspectie" && <MobileInspectionTab inspectionData={form.inspectionData} setInspectionData={form.setInspectionData} vehicles={data.vehicles} currentEmployee={data.currentEmployee} />}
         {activeTab === "declaratie" && <MobileExpenseTab expenseData={form.expenseData} setExpenseData={form.setExpenseData} currentEmployee={data.currentEmployee} />}
         {activeTab === "overzicht" && <MobileOverviewTab approvedEntries={data.approvedEntries} loadingEntries={data.loadingEntries} />}
