@@ -41,6 +41,7 @@ import {
 import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
 import MobileEntry from "./pages/MobileEntry";
+import MobileEntryMultiDay from "./pages/MobileEntryMultiDay";
 import AccessDenied from "./components/security/AccessDenied";
 import { cn } from "@/lib/utils";
 import { isNavGroupVisible } from "./components/utils/businessRoles";
