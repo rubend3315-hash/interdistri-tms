@@ -1,12 +1,9 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Save, Clock, AlertTriangle } from "lucide-react";
+import { Plus, Save, ChevronLeft, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import ProgressSteps from "@/components/mobile/ProgressSteps";
 import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
 import { validateDienstRegels, findOverlaps, timeToMinutes } from "@/components/utils/mobile/dienstRegelValidation";
-import DienstRegelListItem from "@/components/mobile/dienstregels/DienstRegelListItem";
+import DienstRegelRow from "@/components/mobile/dienstregels/DienstRegelRow";
 import DienstRegelDrawer from "@/components/mobile/dienstregels/DienstRegelDrawer";
 import DeleteConfirmDialog from "@/components/mobile/dienstregels/DeleteConfirmDialog";
 
@@ -27,10 +24,6 @@ function generateId() {
   return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 }
 
-/**
- * Compute prefill times for a new regel based on existing ones.
- * start = lastRegel.end_time, end = start + 1h
- */
 function getPrefillTimes(dienstRegels, dienstStartTime) {
   const sorted = [...dienstRegels]
     .map(r => ({ ...r, _min: timeToMinutes(r.end_time) }))
@@ -43,7 +36,6 @@ function getPrefillTimes(dienstRegels, dienstStartTime) {
   } else if (dienstStartTime) {
     startMin = timeToMinutes(dienstStartTime);
   }
-
   if (startMin === null) return { start_time: "", end_time: "" };
 
   const endMin = startMin + 60;
@@ -67,7 +59,6 @@ export default function DienstRegelsTab({
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // Real-time validation
   const isSingleDay = !formData?.end_date || formData.end_date === formData.date;
   const validation = useMemo(() =>
     validateDienstRegels(dienstRegels, formData?.start_time, formData?.end_time, isSingleDay),
@@ -75,11 +66,9 @@ export default function DienstRegelsTab({
   );
   const hasValidationErrors = validation.hasOverlap || validation.hasGap;
 
-  // Overlap set for highlighting
   const overlapSet = useMemo(() => {
     const set = new Set();
-    const pairs = findOverlaps(dienstRegels);
-    pairs.forEach(({ i, j }) => {
+    findOverlaps(dienstRegels).forEach(({ i, j }) => {
       if (dienstRegels[i]) set.add(dienstRegels[i].id);
       if (dienstRegels[j]) set.add(dienstRegels[j].id);
     });
@@ -87,41 +76,23 @@ export default function DienstRegelsTab({
   }, [dienstRegels]);
 
   const sorted = useMemo(() =>
-    [...dienstRegels].sort((a, b) => {
-      const aMin = timeToMinutes(a.start_time) ?? 9999;
-      const bMin = timeToMinutes(b.start_time) ?? 9999;
-      return aMin - bMin;
-    }),
+    [...dienstRegels].sort((a, b) => (timeToMinutes(a.start_time) ?? 9999) - (timeToMinutes(b.start_time) ?? 9999)),
     [dienstRegels]
   );
 
   const addRegel = (type) => {
     const prefill = getPrefillTimes(dienstRegels, formData?.start_time);
-    const newRegel = {
-      id: generateId(),
-      type,
-      ...(type === "rit" ? { ...EMPTY_TRIP } : { ...EMPTY_STANDPLAATS }),
-      ...prefill,
-    };
+    const newRegel = { id: generateId(), type, ...(type === "rit" ? { ...EMPTY_TRIP } : { ...EMPTY_STANDPLAATS }), ...prefill };
     setDienstRegels(prev => [...prev, newRegel]);
     setEditingRegel(newRegel);
     setDrawerOpen(true);
     setAddMenuOpen(false);
   };
 
-  const handleTap = (regel) => {
-    setEditingRegel(regel);
-    setDrawerOpen(true);
-  };
+  const handleTap = (regel) => { setEditingRegel(regel); setDrawerOpen(true); };
+  const handleSaveRegel = (updatedRegel) => { setDienstRegels(prev => prev.map(r => r.id === updatedRegel.id ? updatedRegel : r)); };
 
-  const handleSaveRegel = (updatedRegel) => {
-    setDienstRegels(prev => prev.map(r => r.id === updatedRegel.id ? updatedRegel : r));
-  };
-
-  const requestDelete = useCallback((id) => {
-    setDeleteTarget(id);
-  }, []);
-
+  const requestDelete = useCallback((id) => setDeleteTarget(id), []);
   const confirmDelete = useCallback(async () => {
     if (!deleteTarget) return;
     const regel = dienstRegels.find(r => r.id === deleteTarget);
@@ -132,131 +103,117 @@ export default function DienstRegelsTab({
     setDeleteTarget(null);
   }, [deleteTarget, dienstRegels, setDienstRegels]);
 
-  const hasAnyRegels = dienstRegels.length > 0;
-
   return (
-    <div className="space-y-3">
-      <ProgressSteps steps={["Start dienst", "Dienstregels", "Eindtijd", "Indienen"]} currentStep={progressStep} />
-      <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
+    <div className="flex flex-col min-h-[calc(100vh-200px)]">
+      {/* Nav bar */}
+      <div className="flex items-center justify-between mb-3">
+        <button type="button" onClick={() => setActiveTab("dienst")} className="flex items-center gap-1 text-[13px] text-blue-600 font-medium">
+          <ChevronLeft className="w-4 h-4" /> Diensttijd
+        </button>
+        <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
+      </div>
 
       {/* Validation banner */}
       {hasValidationErrors && (
-        <div className="p-2.5 bg-red-50 border border-red-300 rounded-lg space-y-1">
-          <div className="flex items-center gap-2 text-red-700 font-semibold text-xs">
-            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Corrigeer de volgende problemen:</span>
+        <div className="px-2.5 py-2 bg-red-50 border-l-2 border-red-400 rounded-r-lg mb-2">
+          <div className="flex items-center gap-1.5 text-red-700 font-semibold text-[11px]">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>Corrigeer:</span>
           </div>
           {[...validation.overlaps, ...validation.gaps].map((msg, i) => (
-            <p key={i} className="text-[11px] text-red-600 ml-5">• {msg}</p>
+            <p key={i} className="text-[10px] text-red-600 ml-5">• {msg}</p>
           ))}
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between bg-slate-800 text-white rounded-lg px-3 py-2">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          <span className="text-[13px] font-semibold">Dienstregels</span>
-          <span className="text-[11px] text-slate-300">({dienstRegels.length})</span>
-        </div>
-        <span className="text-[10px] text-slate-400">Tik = bewerk · Veeg = verwijder</span>
+      {/* Title */}
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-[15px] font-semibold text-slate-900">Dienstregels</h3>
+        <span className="text-[11px] text-slate-400">{dienstRegels.length} regel{dienstRegels.length !== 1 ? 's' : ''}</span>
       </div>
 
-      {/* List */}
-      {sorted.length === 0 ? (
-        <div className="text-center py-6 text-slate-400">
-          <p className="text-[13px]">Nog geen regels</p>
-          <p className="text-[11px] mt-0.5">Tik hieronder om toe te voegen</p>
-        </div>
-      ) : (
-        <div className="space-y-1.5">
-          {sorted.map((regel) => (
-            <DienstRegelListItem
-              key={regel.id}
-              regel={regel}
-              customers={customers}
-              hasOverlap={overlapSet.has(regel.id)}
-              onTap={() => handleTap(regel)}
-              onDelete={() => requestDelete(regel.id)}
-            />
-          ))}
-        </div>
-      )}
+      {/* Content — edge-to-edge rows */}
+      <div className="flex-1 -mx-3">
+        {sorted.length === 0 ? (
+          <div className="text-center py-10 text-slate-400">
+            <p className="text-[13px]">Nog geen regels</p>
+            <p className="text-[11px] mt-1">Tik hieronder om toe te voegen</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {sorted.map((regel) => (
+              <DienstRegelRow
+                key={regel.id}
+                regel={regel}
+                customers={customers}
+                hasOverlap={overlapSet.has(regel.id)}
+                onTap={() => handleTap(regel)}
+                onDelete={() => requestDelete(regel.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
-      {/* Add button */}
-      <div className="relative">
-        {addMenuOpen && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg border shadow-lg p-2 space-y-1 z-10">
-            <button
-              type="button"
-              onClick={() => addRegel("rit")}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-blue-50 transition text-left"
-            >
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <span className="text-base">🚛</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-900">Rit</p>
-                <p className="text-[11px] text-slate-500">Transport / bezorging</p>
-              </div>
+      {/* Sticky bottom */}
+      <div className="sticky bottom-0 left-0 right-0 bg-slate-100 pt-2 pb-1 -mx-3 px-3 border-t border-slate-200 mt-2 space-y-2">
+        {/* Add menu */}
+        <div className="relative">
+          {addMenuOpen && (
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-white rounded-xl border shadow-lg p-1.5 z-10">
+              <button type="button" onClick={() => addRegel("rit")}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-blue-50 active:bg-blue-100 text-left">
+                <span className="text-lg">🚛</span>
+                <div>
+                  <p className="text-[13px] font-medium text-slate-900">Rit toevoegen</p>
+                  <p className="text-[10px] text-slate-500">Transport / bezorging</p>
+                </div>
+              </button>
+              <button type="button" onClick={() => addRegel("standplaats")}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-amber-50 active:bg-amber-100 text-left">
+                <span className="text-lg">📦</span>
+                <div>
+                  <p className="text-[13px] font-medium text-slate-900">Standplaats toevoegen</p>
+                  <p className="text-[10px] text-slate-500">Werk op locatie</p>
+                </div>
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setAddMenuOpen(prev => !prev)}
+            className="w-full h-[48px] rounded-lg bg-blue-600 text-white text-[14px] font-semibold flex items-center justify-center gap-2 active:bg-blue-700"
+          >
+            <Plus className="w-4 h-4" /> Regel toevoegen
+          </button>
+        </div>
+
+        {dienstRegels.length > 0 && (
+          <div className="flex items-center justify-between">
+            <button type="button" onClick={onSaveDraft} disabled={isSubmitting}
+              className="text-[12px] text-emerald-700 font-medium py-1">
+              <Save className="w-3 h-3 inline mr-1" />Opslaan
             </button>
-            <button
-              type="button"
-              onClick={() => addRegel("standplaats")}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-amber-50 transition text-left"
-            >
-              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                <span className="text-base">📦</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-900">Standplaats</p>
-                <p className="text-[11px] text-slate-500">Werk op locatie</p>
-              </div>
+            <button type="button"
+              onClick={async () => { await onSaveDraft(); setActiveTab("dienst"); }}
+              disabled={isSubmitting || hasValidationErrors}
+              className="text-[12px] text-blue-600 font-medium py-1 disabled:text-slate-400">
+              Volgende → Eindtijd
             </button>
           </div>
         )}
-        <Button
-          variant="outline"
-          className="w-full h-[44px] border-dashed border-2 border-slate-300 text-slate-600 text-[13px]"
-          onClick={() => setAddMenuOpen(prev => !prev)}
-        >
-          <Plus className="w-4 h-4 mr-1.5" /> Regel toevoegen
-        </Button>
       </div>
 
-      {/* Bottom actions */}
-      {hasAnyRegels && (
-        <div className="space-y-1.5 pt-2 border-t">
-          <Button variant="outline" className="w-full h-[40px] border-emerald-300 bg-emerald-50 text-[12px]" onClick={onSaveDraft} disabled={isSubmitting}>
-            <Save className="w-3.5 h-3.5 mr-1.5" /> Opslaan & Terug
-          </Button>
-          <Button
-            className="w-full h-[44px] bg-blue-600 hover:bg-blue-700 text-[13px]"
-            onClick={async () => { await onSaveDraft(); setActiveTab("dienst"); }}
-            disabled={isSubmitting || hasValidationErrors}
-          >
-            <Clock className="w-3.5 h-3.5 mr-1.5" /> Volgende → Eindtijd
-          </Button>
-        </div>
-      )}
-
-      {/* Drawer */}
+      {/* Fullscreen drawer */}
       <DienstRegelDrawer
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        regel={editingRegel}
-        allRegels={dienstRegels}
-        onSave={handleSaveRegel}
-        onDelete={requestDelete}
-        vehicles={vehicles}
-        customers={customers}
-        routes={routes}
-        tiModelRoutes={tiModelRoutes}
-        projects={projects}
-        activiteiten={activiteiten}
+        open={drawerOpen} onOpenChange={setDrawerOpen}
+        regel={editingRegel} allRegels={dienstRegels}
+        onSave={handleSaveRegel} onDelete={requestDelete}
+        vehicles={vehicles} customers={customers}
+        routes={routes} tiModelRoutes={tiModelRoutes}
+        projects={projects} activiteiten={activiteiten}
       />
 
-      {/* Delete confirmation */}
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}

@@ -87,7 +87,7 @@ export default function MobileEntry({ currentUser }) {
       <MobileMenu menuOpen={menuOpen} setMenuOpen={setMenuOpen} activeTab={activeTab} setActiveTab={setActiveTab} menuItems={menuItems} />
       <MobileHeader todayShift={data.todayShift} todayStr={data.todayStr} isOnline={isOnline} syncStatus={syncStatus} pendingCount={pendingCount} onMenuOpen={() => setMenuOpen(true)} />
 
-      <motion.div className="p-3 pb-32" style={{ minHeight: 'calc(100vh - 140px)' }}
+      <motion.div className="px-3 pt-2 pb-4" style={{ minHeight: 'calc(100vh - 140px)' }}
         drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.2}
         onDragEnd={(e, info) => {
           if (info.offset.x < -80 && info.velocity.x < -300) handleSwipe("left");
