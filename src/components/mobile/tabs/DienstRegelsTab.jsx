@@ -9,7 +9,7 @@ import { Truck, Package, Plus, Trash2, Save, Clock, ChevronDown, ChevronRight, M
 import { toast } from "sonner";
 import ProgressSteps from "@/components/mobile/ProgressSteps";
 import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
-import { validateDienstRegels, findOverlaps } from "@/components/utils/mobile/dienstRegelValidation";
+import { validateDienstRegels, findOverlaps, timeToMinutes } from "@/components/utils/mobile/dienstRegelValidation";
 
 const EMPTY_TRIP = {
   start_time: "", end_time: "", departure_location: "Standplaats",
