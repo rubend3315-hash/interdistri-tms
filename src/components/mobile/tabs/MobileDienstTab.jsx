@@ -164,8 +164,8 @@ export default function MobileDienstTab({
           </button>
         )}
 
-        {/* === SECTION 3: Eindtijd (only when regels exist) === */}
-        {hasRegels && (
+        {/* === SECTION 3: Eindtijd (only when regels exist or geenRit) === */}
+        {(hasRegels || geenRit) && formData.start_time && (
           <div className="space-y-2">
             <h3 className="text-[13px] font-semibold text-slate-900">Eindtijd & pauze</h3>
 
@@ -202,7 +202,7 @@ export default function MobileDienstTab({
         )}
 
         {/* === SECTION 4: Notes + validation (only when end time filled) === */}
-        {hasRegels && formData.end_time && (
+        {(hasRegels || geenRit) && formData.end_time && (
           <div className="space-y-2">
             {/* Validation errors */}
             {submitBlocked && (
@@ -239,7 +239,7 @@ export default function MobileDienstTab({
             Vul starttijd in om door te gaan
           </button>
         )}
-        {step === "regels" && (
+        {step === "regels" && !geenRit && (
           <button
             type="button"
             onClick={() => setActiveTab("ritten")}
