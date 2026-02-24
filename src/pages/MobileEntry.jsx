@@ -16,7 +16,7 @@ import MobileSignatureDialog from "@/components/mobile/MobileSignatureDialog";
 import MobileReglementTab from "@/components/mobile/MobileReglementTab";
 import MobileHandleidingTab from "@/components/mobile/MobileHandleidingTab";
 import MobileDienstTab from "@/components/mobile/tabs/MobileDienstTab";
-import MobileRittenTab from "@/components/mobile/tabs/MobileRittenTab";
+import DienstRegelsTab from "@/components/mobile/tabs/DienstRegelsTab";
 import MobileInspectionTab from "@/components/mobile/tabs/MobileInspectionTab";
 import MobileExpenseTab from "@/components/mobile/tabs/MobileExpenseTab";
 import MobileOverviewTab from "@/components/mobile/tabs/MobileOverviewTab";
@@ -55,6 +55,7 @@ export default function MobileEntry({ currentUser }) {
   const form = useMobileForm({ isMultiDay, currentEmployee: data.currentEmployee });
   const submit = useMobileSubmit({
     formData: form.formData, trips: form.trips, standplaatsWerk: form.standplaatsWerk,
+    dienstRegels: form.dienstRegels,
     signature: form.signature, setSignature: form.setSignature,
     currentEmployee: data.currentEmployee, isMultiDay,
     resetForm: form.resetForm, setActiveTab, queryClient: data.queryClient,
@@ -106,8 +107,8 @@ export default function MobileEntry({ currentUser }) {
             <MobileFrontpage onNavigate={setActiveTab} />
           </div>
         )}
-        {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} trips={form.trips} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={isMultiDay} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
-        {activeTab === "ritten" && <MobileRittenTab trips={form.trips} setTrips={form.setTrips} standplaatsWerk={form.standplaatsWerk} setStandplaatsWerk={form.setStandplaatsWerk} vehicles={data.vehicles} customers={data.customers} routes={data.routes} tiModelRoutes={data.tiModelRoutes} projects={data.projects} activiteiten={data.activiteiten} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} isSubmitting={submit.isSubmitting} storageKey={form.storageKey} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
+        {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} dienstRegels={form.dienstRegels} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={isMultiDay} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
+        {activeTab === "ritten" && <DienstRegelsTab dienstRegels={form.dienstRegels} setDienstRegels={form.setDienstRegels} vehicles={data.vehicles} customers={data.customers} routes={data.routes} tiModelRoutes={data.tiModelRoutes} projects={data.projects} activiteiten={data.activiteiten} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} isSubmitting={submit.isSubmitting} storageKey={form.storageKey} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
         {activeTab === "inspectie" && <MobileInspectionTab inspectionData={form.inspectionData} setInspectionData={form.setInspectionData} vehicles={data.vehicles} currentEmployee={data.currentEmployee} />}
         {activeTab === "declaratie" && <MobileExpenseTab expenseData={form.expenseData} setExpenseData={form.setExpenseData} currentEmployee={data.currentEmployee} />}
         {activeTab === "overzicht" && <MobileOverviewTab approvedEntries={data.approvedEntries} loadingEntries={data.loadingEntries} />}
