@@ -25,6 +25,10 @@ import MobilePlanningTab from "@/components/mobile/MobilePlanningTab";
 import MobileLinksTab from "@/components/mobile/tabs/MobileLinksTab";
 import { Toaster } from "@/components/ui/sonner";
 import { useMobileEntryMode } from "@/components/hooks/useMobileEntryMode";
+import { useBusinessMode } from "@/components/utils/mobile/useBusinessMode";
+import WeekHeader from "@/components/mobile/WeekHeader";
+
+const MOBILE_ENTRY_V2 = true;
 
 const MENU_ITEMS = [
   { id: "home", label: "Home", icon: Home },
@@ -47,18 +51,23 @@ export default function MobileEntry({ currentUser }) {
   const [activeTab, setActiveTab] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
+  const [geenRit, setGeenRit] = useState(false);
+  const [geenRitReden, setGeenRitReden] = useState("");
   const { isOnline, syncStatus, pendingCount } = useOfflineSync();
 
   const data = useMobileData(currentUser);
   const { isMultiDay } = useMobileEntryMode(data.currentEmployee);
+  const businessMode = MOBILE_ENTRY_V2 ? useBusinessMode(data.currentEmployee) : "HANDMATIG";
 
-  const form = useMobileForm({ isMultiDay, currentEmployee: data.currentEmployee });
+  const form = useMobileForm({ isMultiDay, currentEmployee: data.currentEmployee, businessMode: MOBILE_ENTRY_V2 ? businessMode : "HANDMATIG" });
   const submit = useMobileSubmit({
     formData: form.formData, trips: form.trips, standplaatsWerk: form.standplaatsWerk,
     dienstRegels: form.dienstRegels,
     signature: form.signature, setSignature: form.setSignature,
     currentEmployee: data.currentEmployee, isMultiDay,
     resetForm: form.resetForm, setActiveTab, queryClient: data.queryClient,
+    geenRit: MOBILE_ENTRY_V2 ? geenRit : false,
+    geenRitReden: MOBILE_ENTRY_V2 ? geenRitReden : "",
   });
 
   const menuItems = useMemo(() =>
@@ -87,6 +96,13 @@ export default function MobileEntry({ currentUser }) {
       <MobileMenu menuOpen={menuOpen} setMenuOpen={setMenuOpen} activeTab={activeTab} setActiveTab={setActiveTab} menuItems={menuItems} />
       <MobileHeader todayShift={data.todayShift} todayStr={data.todayStr} isOnline={isOnline} syncStatus={syncStatus} pendingCount={pendingCount} onMenuOpen={() => setMenuOpen(true)} />
 
+      {MOBILE_ENTRY_V2 && (activeTab === "dienst" || activeTab === "ritten") && (
+        <WeekHeader
+          selectedDate={form.formData.date}
+          onSelectDate={(d) => form.setFormData(prev => ({ ...prev, date: d }))}
+        />
+      )}
+
       <motion.div
         className="px-4 pt-3 pb-6"
         style={{ minHeight: 'calc(100vh - 120px)' }}
@@ -112,7 +128,7 @@ export default function MobileEntry({ currentUser }) {
             <MobileFrontpage onNavigate={setActiveTab} />
           </div>
         )}
-        {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} dienstRegels={form.dienstRegels} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={isMultiDay} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} />}
+        {activeTab === "dienst" && <MobileDienstTab formData={form.formData} setFormData={form.setFormData} dienstRegels={form.dienstRegels} signature={form.signature} submittedTodayEntries={data.submittedTodayEntries} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} calculateHours={form.calculateHours} isMultiDay={isMultiDay} isSubmitting={submit.isSubmitting} onSubmit={handleSubmitClick} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} geenRit={MOBILE_ENTRY_V2 ? geenRit : false} setGeenRit={setGeenRit} geenRitReden={geenRitReden} setGeenRitReden={setGeenRitReden} v2={MOBILE_ENTRY_V2} />}
         {activeTab === "ritten" && <DienstRegelsTab dienstRegels={form.dienstRegels} setDienstRegels={form.setDienstRegels} vehicles={data.vehicles} customers={data.customers} routes={data.routes} tiModelRoutes={data.tiModelRoutes} projects={data.projects} activiteiten={data.activiteiten} progressStep={form.progressStep} lastSavedAt={form.lastSavedAt} isSaving={form.isSaving} isSubmitting={submit.isSubmitting} storageKey={form.storageKey} onSaveDraft={async () => { await submit.handleSaveDraft(); setActiveTab("home"); }} setActiveTab={setActiveTab} formData={form.formData} />}
         {activeTab === "inspectie" && <MobileInspectionTab inspectionData={form.inspectionData} setInspectionData={form.setInspectionData} vehicles={data.vehicles} currentEmployee={data.currentEmployee} />}
         {activeTab === "declaratie" && <MobileExpenseTab expenseData={form.expenseData} setExpenseData={form.setExpenseData} currentEmployee={data.currentEmployee} />}
