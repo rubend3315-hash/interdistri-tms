@@ -159,8 +159,6 @@ export default function LoonrapportDetail({
     return code ? ` (${code})` : "";
   };
 
-  const handlePrint = () => window.print();
-
   const fmt = (v) => {
     if (v === 0 || v === undefined || v === null) return "-";
     if (Number.isInteger(v)) return v.toString();
@@ -178,8 +176,16 @@ export default function LoonrapportDetail({
         <Button variant="outline" onClick={onBack} size="sm">
           <ArrowLeft className="w-4 h-4 mr-1" /> Terug naar overzicht
         </Button>
-        <Button variant="outline" size="sm" onClick={handlePrint}>
-          <Printer className="w-4 h-4 mr-1" /> Print
+        <Button
+          size="sm"
+          onClick={() =>
+            window.open(
+              createPageUrl("LoonstrookPrint") + `&year=${year}&periode=${selectedPeriode}&employeeId=${employee.id}`,
+              "_blank"
+            )
+          }
+        >
+          <FileText className="w-4 h-4 mr-1" /> Loonstrook printen
         </Button>
       </div>
 
