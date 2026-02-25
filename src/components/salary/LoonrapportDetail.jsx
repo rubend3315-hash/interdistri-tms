@@ -107,20 +107,22 @@ export default function LoonrapportDetail({
   }, [wekenDetail, periodeTotals]);
 
   // Toeslag bedragen berekenen uit periodeTotals
+  // Oproepkracht: functieloon + 8% VB als basisloon (CAO art. 10)
   const toeslagBedragen = useMemo(() => {
-    const calc = (key, pct) => Math.round((periodeTotals[key] || 0) * hourlyRate * pct * 100) / 100;
+    const basisLoon = isOproepkracht ? oproepUurloonInclVB : hourlyRate;
+    const calc = (key, pct) => Math.round((periodeTotals[key] || 0) * basisLoon * pct * 100) / 100;
     return {
       toeslagenmatrix_19: calc("toeslagenmatrix_19", 0.19),
       toeslag_za_50: calc("toeslag_za_50", 0.50),
-      za_overwerk_150: calc("za_overwerk_150", 0.50), // 50% toeslag op 150%
+      za_overwerk_150: calc("za_overwerk_150", 0.50),
       toeslag_zo_100: calc("toeslag_zo_100", 1.00),
-      zo_overwerk_200: calc("zo_overwerk_200", 1.00), // 100% toeslag op 200%
+      zo_overwerk_200: calc("zo_overwerk_200", 1.00),
       toeslag_feestdag_100: calc("toeslag_feestdag_100", 1.00),
       feestdag_overwerk_200: calc("feestdag_overwerk_200", 1.00),
-      overwerk_130: calc("overwerk_130", 0.30), // 30% toeslag op 130%
-      variabele_uren_100: isOproepkracht ? Math.round((periodeTotals.variabele_uren_100 || 0) * hourlyRate * 100) / 100 : 0,
+      overwerk_130: calc("overwerk_130", 0.30),
+      variabele_uren_100: isOproepkracht ? Math.round((periodeTotals.variabele_uren_100 || 0) * basisLoon * 100) / 100 : 0,
     };
-  }, [periodeTotals, hourlyRate, isOproepkracht]);
+  }, [periodeTotals, hourlyRate, isOproepkracht, oproepUurloonInclVB]);
 
   const handlePrint = () => window.print();
 
