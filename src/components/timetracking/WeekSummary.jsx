@@ -182,8 +182,13 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
 
   return (
     <div className="bg-white border rounded-xl overflow-hidden">
-      <div className="px-4 py-3 bg-slate-800 text-white font-semibold">
-        Weeksamenvatting
+      <div className="px-4 py-3 bg-slate-800 text-white font-semibold flex items-center justify-between">
+        <span>Weeksamenvatting</span>
+        {isOproep && (
+          <span className="text-[10px] font-bold tracking-wider uppercase bg-orange-500 text-white px-2 py-0.5 rounded">
+            Oproepkracht
+          </span>
+        )}
       </div>
       <div className="p-4 space-y-1">
 
