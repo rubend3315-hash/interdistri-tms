@@ -278,74 +278,89 @@ export default function Bedrijfsreglement() {
                   </div>
                 </CardHeader>
                 {expandedHoofdstuk === hoofdstuk && (
-                  <CardContent className="pt-0 space-y-2">
-                    {arts.map((art) => (
-                      <div
-                        key={art.id}
-                        id={`artikel-${art.id}`}
-                        className={`border rounded-lg p-3 hover:bg-slate-50 transition-colors ${selectedArtikel === art.id ? "ring-2 ring-blue-400 bg-blue-50/50" : ""}`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge className="bg-blue-100 text-blue-700 text-[10px] px-1.5">
-                                Art. {art.artikel_nummer}
-                              </Badge>
-                              <span className="text-sm font-medium text-slate-900">{art.titel}</span>
-                              <Badge variant="outline" className="text-[10px]">v{art.versie || 1}</Badge>
-                            </div>
-                            {selectedArtikel === art.id ? (
-                              <div
-                                className="text-sm text-slate-600 prose prose-sm max-w-none mt-2"
-                                dangerouslySetInnerHTML={{ __html: art.inhoud }}
-                              />
-                            ) : (
-                              <p className="text-xs text-slate-500 line-clamp-2"
-                                dangerouslySetInnerHTML={{
-                                  __html: art.inhoud?.replace(/<[^>]*>/g, " ").slice(0, 150) + "..."
-                                }}
-                              />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              variant="ghost" size="icon"
-                              className="h-7 w-7"
-                              onClick={(e) => { e.stopPropagation(); setSelectedArtikel(selectedArtikel === art.id ? null : art.id); }}
-                              title="Bekijken"
-                            >
-                              <Eye className="w-3.5 h-3.5 text-slate-400" />
-                            </Button>
-                            {(art.versie_geschiedenis || []).length > 0 && (
-                              <Button
-                                variant="ghost" size="icon"
-                                className="h-7 w-7"
-                                onClick={(e) => { e.stopPropagation(); setHistoryArtikel(art); }}
-                                title="Versiegeschiedenis"
-                              >
-                                <History className="w-3.5 h-3.5 text-blue-400" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost" size="icon"
-                              className="h-7 w-7"
-                              onClick={(e) => { e.stopPropagation(); setEditingArtikel(art); }}
-                              title="Bewerken"
-                            >
-                              <Pencil className="w-3.5 h-3.5 text-slate-400" />
-                            </Button>
-                            <Button
-                              variant="ghost" size="icon"
-                              className="h-7 w-7"
-                              onClick={(e) => { e.stopPropagation(); setDeleteArtikel(art); }}
-                              title="Verwijderen"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                            </Button>
-                          </div>
+                  <CardContent className="pt-0">
+                    <Droppable droppableId={hoofdstuk}>
+                      {(provided) => (
+                        <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
+                          {arts.map((art, index) => (
+                            <Draggable key={art.id} draggableId={art.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  id={`artikel-${art.id}`}
+                                  className={`border rounded-lg p-3 hover:bg-slate-50 transition-colors ${selectedArtikel === art.id ? "ring-2 ring-blue-400 bg-blue-50/50" : ""} ${snapshot.isDragging ? "shadow-lg bg-white" : ""}`}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div {...provided.dragHandleProps} className="pt-1 cursor-grab">
+                                      <GripVertical className="w-4 h-4 text-slate-300" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Badge className="bg-blue-100 text-blue-700 text-[10px] px-1.5">
+                                          Art. {art.artikelNummer}
+                                        </Badge>
+                                        <span className="text-sm font-medium text-slate-900">{art.titel}</span>
+                                        <Badge variant="outline" className="text-[10px]">v{art.versie || 1}</Badge>
+                                      </div>
+                                      {selectedArtikel === art.id ? (
+                                        <div
+                                          className="text-sm text-slate-600 prose prose-sm max-w-none mt-2"
+                                          dangerouslySetInnerHTML={{ __html: art.inhoud }}
+                                        />
+                                      ) : (
+                                        <p className="text-xs text-slate-500 line-clamp-2"
+                                          dangerouslySetInnerHTML={{
+                                            __html: art.inhoud?.replace(/<[^>]*>/g, " ").slice(0, 150) + "..."
+                                          }}
+                                        />
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <Button
+                                        variant="ghost" size="icon"
+                                        className="h-7 w-7"
+                                        onClick={(e) => { e.stopPropagation(); setSelectedArtikel(selectedArtikel === art.id ? null : art.id); }}
+                                        title="Bekijken"
+                                      >
+                                        <Eye className="w-3.5 h-3.5 text-slate-400" />
+                                      </Button>
+                                      {(art.versie_geschiedenis || []).length > 0 && (
+                                        <Button
+                                          variant="ghost" size="icon"
+                                          className="h-7 w-7"
+                                          onClick={(e) => { e.stopPropagation(); setHistoryArtikel(art); }}
+                                          title="Versiegeschiedenis"
+                                        >
+                                          <History className="w-3.5 h-3.5 text-blue-400" />
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="ghost" size="icon"
+                                        className="h-7 w-7"
+                                        onClick={(e) => { e.stopPropagation(); setEditingArtikel(art); }}
+                                        title="Bewerken"
+                                      >
+                                        <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost" size="icon"
+                                        className="h-7 w-7"
+                                        onClick={(e) => { e.stopPropagation(); setDeleteArtikel(art); }}
+                                        title="Verwijderen"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
                         </div>
-                      </div>
-                    ))}
+                      )}
+                    </Droppable>
                   </CardContent>
                 )}
               </Card>
