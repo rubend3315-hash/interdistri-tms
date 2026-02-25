@@ -169,7 +169,7 @@ export default function Urenbalans({
       return {
         periode: periode.periode,
         maand: periode.maand,
-        weken: `${periode.weken[0]}-${periode.weken[periode.weken.length - 1]}`,
+        weken: periode.weken.length > 0 ? periode.weken.join(", ") : "—",
         wekenNrs: periode.weken,
         weekDetails,
         aantalWeken: periode.weken.length,
