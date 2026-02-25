@@ -29,7 +29,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       date: todayStr,
       ...(isMultiDay ? { end_date: todayStr } : {}),
       start_time: "", end_time: "",
-      break_minutes: 30, notes: ""
+      break_minutes: 0, notes: ""
     };
   });
 
@@ -272,7 +272,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       date: todayStr,
       ...(isMultiDay ? { end_date: todayStr } : {}),
       start_time: "", end_time: "",
-      break_minutes: 30, notes: ""
+      break_minutes: 0, notes: ""
     });
     try { localStorage.removeItem(storageKey); } catch {}
   }, [todayStr, isMultiDay, storageKey]);
