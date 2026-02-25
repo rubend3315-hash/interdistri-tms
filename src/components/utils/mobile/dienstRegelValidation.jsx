@@ -115,10 +115,9 @@ export function validateBounds(dienstRegels, dienstStartTime, dienstEndTime) {
   const intervals = buildAnchoredIntervals(dienstRegels, svcStart);
 
   for (const iv of intervals) {
-    if (iv.start < svcStart) {
-      errors.push(`Regel ${iv.index + 1}: starttijd valt voor start dienst.`);
-    }
-    if (iv.end > svcEndN) {
+    if (iv.start < svcStart || iv.start > svcEndN) {
+      errors.push(`Regel ${iv.index + 1}: starttijd valt buiten dienst.`);
+    } else if (iv.end > svcEndN) {
       errors.push(`Regel ${iv.index + 1}: eindtijd valt na eind dienst.`);
     }
   }
@@ -159,9 +158,9 @@ export function validateSingleRegelBounds(regel, dienstStartTime, dienstEndTime)
   // If rit-end wraps past rit-start within the anchored frame
   const regelEndFinal = regelEndN <= regelStartN ? regelEndN + 1440 : regelEndN;
 
-  if (regelStartN < svcStart) {
-    console.warn(`[Bounds] ROOD: rit ${regel.start_time}-${regel.end_time} start(${regelStartN}) < dienst_start(${svcStart})`);
-    return "Starttijd moet na start dienst liggen.";
+  if (regelStartN < svcStart || regelStartN > svcEndN) {
+    console.warn(`[Bounds] ROOD: rit ${regel.start_time}-${regel.end_time} start(${regelStartN}) buiten dienst [${svcStart}-${svcEndN}] | dienst ${dienstStartTime}-${dienstEndTime}`);
+    return "Starttijd moet binnen dienst liggen.";
   }
   if (regelEndFinal > svcEndN) {
     console.warn(`[Bounds] ROOD: rit ${regel.start_time}-${regel.end_time} end(${regelEndFinal}) > dienst_end(${svcEndN}) | dienst ${dienstStartTime}-${dienstEndTime}`);
