@@ -17,6 +17,7 @@ import PincodeBeheerTab from "../components/settings/PincodeBeheerTab";
 import SecurityDirectieTab from "../components/settings/SecurityDirectieTab";
 import ReportSettingsTab from "../components/settings/ReportSettingsTab";
 import PauzestaffelTab from "../components/settings/PauzestaffelTab";
+import UursoortMappingTab from "../components/settings/UursoortMappingTab";
 
 export default function HRMSettings() {
   return (
@@ -38,6 +39,7 @@ export default function HRMSettings() {
           <TabsTrigger value="emailsjablonen">E-mail Sjablonen</TabsTrigger>
           <TabsTrigger value="pauzestaffel">Pauzestaffel</TabsTrigger>
           <TabsTrigger value="pincodebeheer">Pincodebeheer</TabsTrigger>
+          <TabsTrigger value="uursoortmapping">Uursoort Mapping</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
 
@@ -79,6 +81,10 @@ export default function HRMSettings() {
 
         <TabsContent value="pincodebeheer" className="mt-6">
           <PincodeBeheerTab />
+        </TabsContent>
+
+        <TabsContent value="uursoortmapping" className="mt-6">
+          <UursoortMappingTab />
         </TabsContent>
 
         <TabsContent value="security" className="mt-6">
