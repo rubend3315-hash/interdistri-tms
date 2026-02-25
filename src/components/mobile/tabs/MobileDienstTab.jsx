@@ -1,6 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { format, addDays } from "date-fns";
 import { nl } from "date-fns/locale";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,11 +33,50 @@ export default function MobileDienstTab({
   calculateHours, isMultiDay, isMultiDayAllowed = false, isSubmitting,
   onSubmit, onSaveDraft, setActiveTab,
   geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
-  postNLAuto = false, setPostNLAuto,
-  manualBreak = false, setManualBreak
+  postNLAuto = false, setPostNLAuto
 }) {
   // Only show multi-day toggle for authorized employees; default ON for multi_day employees
   const [multiDayEnabled, setMultiDayEnabled] = useState(isMultiDayAllowed);
+
+  // --- Break staffel (self-contained, no parent prop needed) ---
+  const { data: breakSchedules = [] } = useQuery({
+    queryKey: ['breakSchedules'],
+    queryFn: () => base44.entities.BreakSchedule.list(),
+    staleTime: 10 * 60 * 1000,
+  });
+  const [manualBreak, setManualBreak] = useState(false);
+  const manualBreakRef = useRef(false);
+
+  const handleSetManualBreak = (val) => {
+    manualBreakRef.current = val;
+    setManualBreak(val);
+  };
+
+  // Auto-calculate break from staffel
+  useEffect(() => {
+    if (manualBreakRef.current) return;
+    if (!formData.start_time || !formData.end_time) return;
+    if (formData.start_time.length < 5 || formData.end_time.length < 5) return;
+    const [sH, sM] = formData.start_time.split(':').map(Number);
+    const [eH, eM] = formData.end_time.split(':').map(Number);
+    if (isNaN(sH) || isNaN(sM) || isNaN(eH) || isNaN(eM)) return;
+    let dienstMin = (eH * 60 + eM) - (sH * 60 + sM);
+    if (isMultiDay && formData.end_date && formData.end_date > formData.date) {
+      const d1 = new Date(formData.date + 'T12:00:00');
+      const d2 = new Date(formData.end_date + 'T12:00:00');
+      dienstMin += Math.round((d2 - d1) / 864e5) * 1440;
+    } else if (dienstMin < 0) {
+      dienstMin += 1440;
+    }
+    const dienstHours = dienstMin / 60;
+    const active = breakSchedules.filter(s => s.status === 'Actief').sort((a, b) => a.min_hours - b.min_hours);
+    const match = active.find(s => dienstHours >= s.min_hours && (s.max_hours == null || dienstHours < s.max_hours));
+    const newBreak = match ? match.break_minutes : 0;
+    setFormData(prev => {
+      if (prev.break_minutes === newBreak) return prev;
+      return { ...prev, break_minutes: newBreak };
+    });
+  }, [formData.start_time, formData.end_time, formData.date, formData.end_date, breakSchedules, isMultiDay, setFormData]);
 
   const hasRegels = geenRit ? true : dienstRegels.length > 0;
   const hasOpenRit = dienstRegels.some(r => r.openRit && !r.end_time);
