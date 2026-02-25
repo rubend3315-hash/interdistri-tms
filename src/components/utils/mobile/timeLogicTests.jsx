@@ -300,6 +300,9 @@ export function runTimeLogicTests() {
     testC10_overnightRitEndsAfterDienst, testC11_overnightExactBounds,
     testD1_overlapDetected, testD2_noOverlap, testD3_overlapNoMutation,
     testE1_validTimeline, testE2_invalidTimeline, testE3_emptyTimeline,
+    testF1_caseA_splitSundayMonday, testF2_caseA_weekNumberIsStartDate,
+    testF3_caseB_breakOnTotalDuration, testF4_caseB_proportionalSplit,
+    testF5_nightHoursFullShift, testF6_noDoubleCountConsecutiveNights,
   ];
 
   const results = tests.map(fn => {
