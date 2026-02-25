@@ -362,7 +362,17 @@ export default function LoonrapportOverzicht({
     const currentPeriodeData = periodeData.find(p => p.periode === selectedPeriode);
     if (!currentPeriodeData) return;
 
-    const headers = ["Periode", "Weken", "Medewerker", ...visibleColumns.map(c => c.label)];
+    const headers = ["Periode", "Weken", "Medewerker", ...visibleColumns.map(c => {
+      const mappingKey = c.key === "toeslag_za_50" ? "toeslag_za_50"
+        : c.key === "za_overwerk_150" ? "overwerk_zaterdag_150"
+        : c.key === "toeslag_zo_100" ? "toeslag_zo_100"
+        : c.key === "zo_overwerk_200" ? "overwerk_zondag_200"
+        : c.key === "diensttoeslag_za_150" ? "diensturen_zaterdag_150"
+        : c.key === "diensttoeslag_zo_200" ? "diensturen_zondag_200"
+        : c.key;
+      const code = uursoortMapping?.[mappingKey];
+      return code ? `${c.label} (${code})` : c.label;
+    })];
     const rows = [];
 
     const wekenStr = currentPeriodeData.weken.join(", ");
