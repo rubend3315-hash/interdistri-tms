@@ -207,7 +207,7 @@ export default function LoonrapportDetail({
         <CardContent className="p-0">
           <div className="px-6 py-3 border-b bg-slate-50">
             <p className="font-semibold text-slate-700">Basis loongegevens</p>
-            <p className="text-sm text-slate-500">Loonrun {year}-{String(selectedPeriode).padStart(2, "0")} · {currentPeriode.maand}</p>
+            <p className="text-sm text-slate-500">Loonrun {year}-{String(selectedPeriode).padStart(2, "0")} · Weken: {currentPeriode.weken.length > 0 ? currentPeriode.weken.join(", ") : "—"}</p>
           </div>
           <div className="divide-y">
             <Row label="Uren" value={isOproepkracht ? "Oproepcontract (variabel)" : contractHours >= 40 ? "Vast" : `Parttime (${contractHours} uur)`} />

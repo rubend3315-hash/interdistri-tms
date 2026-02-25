@@ -426,9 +426,16 @@ export default function LoonrapportOverzicht({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between mb-3">
-        <Badge className="bg-blue-100 text-blue-700 px-3 py-1">
-          {activeEmployees.length} medewerkers · {year}
-        </Badge>
+        <div>
+          <h2 className="text-lg font-bold text-slate-800">Loonrun {year}-{String(selectedPeriode).padStart(2, "0")}</h2>
+          <p className="text-xs text-slate-500">
+            {(() => {
+              const sp = periodes.find(p => p.periode === selectedPeriode);
+              return sp && sp.weken.length > 0 ? `Weken: ${sp.weken.join(", ")}` : "Geen weekmapping";
+            })()}
+            {" · "}{activeEmployees.length} medewerkers
+          </p>
+        </div>
         <Button size="sm" variant="outline" onClick={exportCSV}>
           <Download className="w-3 h-3 mr-1" /> Export CSV
         </Button>
