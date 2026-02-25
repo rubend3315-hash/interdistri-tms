@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { format, addDays } from "date-fns";
 import { nl } from "date-fns/locale";
 import { base44 } from "@/api/base44Client";
