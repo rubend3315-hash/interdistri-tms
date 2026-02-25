@@ -1,5 +1,6 @@
 import React from "react";
 import RecalculationCard from "@/components/recalculation/RecalculationCard";
+import BreakRecalcCard from "@/components/recalculation/BreakRecalcCard";
 
 export default function Recalculations() {
   return (
@@ -10,6 +11,8 @@ export default function Recalculations() {
           Gebruik deze functies om gegevens opnieuw te berekenen na wijzigingen in tarieven, contracten of CAO-regels.
         </p>
       </div>
+
+      <BreakRecalcCard />
 
       <RecalculationCard
         title="Tijdregistraties opnieuw berekenen"
