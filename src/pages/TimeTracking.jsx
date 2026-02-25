@@ -178,7 +178,7 @@ export default function TimeTracking() {
   const [dialogCategory, setDialogCategory] = useState("gewerkt");
   const [formData, setFormData] = useState({
     employee_id: "", date: "", end_date: "", start_time: "", end_time: "",
-    break_minutes: 30, shift_type: "Gewerkte dag", project_id: "", customer_id: "",
+    break_minutes: 0, shift_type: "Gewerkte dag", project_id: "", customer_id: "",
     travel_allowance_multiplier: 0, advanced_costs: 0, meals: 0, wkr: 0, notes: ""
   });
   const [autoBreak, setAutoBreak] = useState(null);
