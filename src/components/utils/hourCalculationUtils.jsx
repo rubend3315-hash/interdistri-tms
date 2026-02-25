@@ -30,6 +30,9 @@ export function calculateOvertimeHours(totalHours, maxDailyHours = 9) {
 
 /**
  * Calculate night hours (22:00 - 06:00)
+ * Uses a linear timeline approach to correctly handle overnight shifts.
+ * The shift is mapped onto a 48-hour timeline (0-2880 minutes) so that
+ * overnight crossings are handled naturally without special-case logic.
  */
 export function calculateNightHours(startTime, endTime, date) {
   if (!startTime || !endTime) return 0;
@@ -37,45 +40,33 @@ export function calculateNightHours(startTime, endTime, date) {
   const [startH, startM] = startTime.split(':').map(Number);
   const [endH, endM] = endTime.split(':').map(Number);
   
-  const nightStart = 22 * 60; // 22:00
-  const nightEnd = 6 * 60;   // 06:00
+  let startMin = startH * 60 + startM;
+  let endMin = endH * 60 + endM;
   
-  const startMinutes = startH * 60 + startM;
-  const endMinutes = endH * 60 + endM;
+  // If end <= start, shift crosses midnight → map end to next day
+  if (endMin <= startMin) {
+    endMin += 1440;
+  }
+  
+  // Night windows on the 48-hour timeline:
+  // Window 1: 00:00 (0) – 06:00 (360)     (day 1 early morning)
+  // Window 2: 22:00 (1320) – 30:00 (1800)  (day 1 evening → day 2 06:00)
+  // Window 3: 46:00 (2760) – 54:00 (3240)  (day 2 evening, unlikely but safe)
+  const nightWindows = [
+    [0, 360],
+    [1320, 1800],
+    [2760, 3240],
+  ];
   
   let nightMinutes = 0;
-  
-  // Handle overnight shifts
-  if (endMinutes < startMinutes) {
-    // Shift crosses midnight
-    // Night hours from start to end of day
-    if (startMinutes < nightStart) {
-      nightMinutes += (24 * 60 - startMinutes) - (24 * 60 - nightStart);
-    } else {
-      nightMinutes += 24 * 60 - startMinutes;
-    }
-    // Night hours from start of day to end
-    nightMinutes += endMinutes - nightEnd;
-  } else {
-    // Same day shift
-    // Check if shift overlaps with night hours
-    if (startMinutes < nightEnd) {
-      // Starts before 06:00
-      if (endMinutes <= nightEnd) {
-        nightMinutes = endMinutes - startMinutes;
-      } else {
-        nightMinutes = nightEnd - startMinutes;
-      }
-    }
-    if (startMinutes < nightStart && endMinutes > nightStart) {
-      // Ends after 22:00
-      nightMinutes += endMinutes - nightStart;
-    } else if (startMinutes >= nightStart) {
-      nightMinutes = endMinutes - startMinutes;
+  for (const [wStart, wEnd] of nightWindows) {
+    const overlapStart = Math.max(startMin, wStart);
+    const overlapEnd = Math.min(endMin, wEnd);
+    if (overlapEnd > overlapStart) {
+      nightMinutes += overlapEnd - overlapStart;
     }
   }
   
-  // Convert to hours and round
   return Math.round(Math.max(0, nightMinutes) / 60 * 100) / 100;
 }
 
