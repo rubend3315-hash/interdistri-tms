@@ -7,6 +7,8 @@ import { ArrowLeft, Printer } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { getWeek, getDay, format } from "date-fns";
 import { calculateWeekData, VARIABELE_KOLOMMEN } from "./LoonrapportOverzicht";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function LoonrapportDetail({
   employee, year, selectedPeriode, periodes, timeEntries, holidays, salaryTables, onBack
