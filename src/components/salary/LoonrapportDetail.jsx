@@ -60,7 +60,25 @@ export default function LoonrapportDetail({
   const inServiceDate = employee.in_service_since || employee.contract_start_date ||
     ((employee.contractregels || []).filter(c => c.startdatum).sort((a, b) => new Date(a.startdatum) - new Date(b.startdatum))[0]?.startdatum || "");
 
-  const currentPeriode = periodes.find(p => p.periode === selectedPeriode) || periodes[0];
+  const currentPeriode = periodes.find(p => p.periode === selectedPeriode);
+
+  // Geen weekmapping → foutmelding
+  if (!currentPeriode || currentPeriode.weken.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between print:hidden">
+          <Button variant="outline" onClick={onBack} size="sm">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Terug naar overzicht
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="p-6 text-center text-red-500 font-medium">
+            Geen weekmapping ingesteld voor Periode {selectedPeriode}. Configureer de weken via "Periodes inzien".
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Bereken data per week in de geselecteerde periode
   const wekenDetail = useMemo(() => {

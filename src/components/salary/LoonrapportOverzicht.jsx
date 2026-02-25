@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, FileSpreadsheet, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { getWeek, getDay } from "date-fns";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { getLooncomponentLabel } from "@/components/utils/uursoortMapping";
@@ -289,88 +289,95 @@ export default function LoonrapportOverzicht({
     queryFn: () => base44.entities.PayrollSettings.list(),
   });
   const uursoortMapping = payrollSettings[0]?.looncomponent_uursoort_mapping || null;
-  const [expandedPeriodes, setExpandedPeriodes] = useState(new Set([selectedPeriode]));
-
   const activeEmployees = useMemo(() =>
     employees.filter(e => e.status === "Actief" && e.department !== "Charters" && e.opnemen_in_loonrapport !== false),
   [employees]);
 
-  // Get all entries for the year grouped by week
+  // Huidige geselecteerde periode
+  const currentPeriode = periodes.find(p => p.periode === selectedPeriode);
+
+  // Validatie: totaal weken = 52 en geen periode > 5 weken
+  const validationErrors = useMemo(() => {
+    const errors = [];
+    const totalWeken = periodes.reduce((s, p) => s + p.weken.length, 0);
+    if (totalWeken !== 52) errors.push(`Totaal weken = ${totalWeken}, verwacht 52.`);
+    periodes.forEach(p => {
+      if (p.weken.length > 5 && !p.allow_empty_weeks) {
+        errors.push(`Periode ${p.periode} heeft ${p.weken.length} weken (max 5).`);
+      }
+    });
+    return errors;
+  }, [periodes]);
+
+  // Filter entries uitsluitend op weeknummers van de geselecteerde periode
   const entriesByWeek = useMemo(() => {
+    if (!currentPeriode) return {};
+    const wekenSet = new Set(currentPeriode.weken);
     const map = {};
     timeEntries.forEach(e => {
       if (!e.date || e.status !== "Goedgekeurd") return;
       const d = new Date(e.date);
       if (d.getFullYear() !== year) return;
       const wk = e.week_number || getWeek(d, { weekStartsOn: 1 });
+      if (!wekenSet.has(wk)) return;
       if (!map[wk]) map[wk] = [];
       map[wk].push(e);
     });
     return map;
-  }, [timeEntries, year]);
+  }, [timeEntries, year, currentPeriode]);
 
-  const togglePeriode = (p) => {
-    const next = new Set(expandedPeriodes);
-    next.has(p) ? next.delete(p) : next.add(p);
-    setExpandedPeriodes(next);
-  };
+  // Bereken data voor alleen de geselecteerde periode
+  const periodeResult = useMemo(() => {
+    if (!currentPeriode || currentPeriode.weken.length === 0) return null;
 
-  // Bereken totalen per periode
-  const periodeData = useMemo(() => {
-    return periodes.map(periode => {
-      const wekenData = periode.weken.map(weekNr => {
-        const weekEntries = entriesByWeek[weekNr] || [];
-        const jan4 = new Date(year, 0, 4);
-        const weekStart = new Date(jan4);
-        weekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
-        const weekStartStr = weekStart.toISOString().split("T")[0];
+    const wekenData = currentPeriode.weken.map(weekNr => {
+      const weekEntries = entriesByWeek[weekNr] || [];
+      const jan4 = new Date(year, 0, 4);
+      const weekStart = new Date(jan4);
+      weekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
+      const weekStartStr = weekStart.toISOString().split("T")[0];
 
-        const perEmployee = activeEmployees.map(emp => {
-          const empEntries = weekEntries.filter(e => e.employee_id === emp.id);
-          const data = calculateWeekData(emp, empEntries, holidays, weekStartStr);
-          return { employee: emp, ...data };
-        });
-
-        const totals = {};
-        VARIABELE_KOLOMMEN.forEach(k => {
-          totals[k.key] = perEmployee.reduce((s, e) => s + (e[k.key] || 0), 0);
-        });
-
-        return { weekNr, perEmployee, totals };
+      const perEmployee = activeEmployees.map(emp => {
+        const empEntries = weekEntries.filter(e => e.employee_id === emp.id);
+        const data = calculateWeekData(emp, empEntries, holidays, weekStartStr);
+        return { employee: emp, ...data };
       });
 
-      // Per medewerker: tel alle weken in de periode op
-      const perEmployeeTotals = activeEmployees.map(emp => {
-        const empTotals = {};
-        VARIABELE_KOLOMMEN.forEach(col => {
-          empTotals[col.key] = wekenData.reduce((s, w) => {
-            const empData = w.perEmployee.find(e => e.employee.id === emp.id);
-            return s + ((empData && empData[col.key]) || 0);
-          }, 0);
-        });
-        return { employee: emp, ...empTotals };
-      });
-
-      // Periode totalen
-      const periodeTotals = {};
+      const totals = {};
       VARIABELE_KOLOMMEN.forEach(k => {
-        periodeTotals[k.key] = perEmployeeTotals.reduce((s, e) => s + (e[k.key] || 0), 0);
+        totals[k.key] = perEmployee.reduce((s, e) => s + (e[k.key] || 0), 0);
       });
 
-      return { ...periode, wekenData, perEmployeeTotals, periodeTotals };
+      return { weekNr, perEmployee, totals };
     });
-  }, [periodes, entriesByWeek, activeEmployees, holidays]);
+
+    const perEmployeeTotals = activeEmployees.map(emp => {
+      const empTotals = {};
+      VARIABELE_KOLOMMEN.forEach(col => {
+        empTotals[col.key] = wekenData.reduce((s, w) => {
+          const empData = w.perEmployee.find(e => e.employee.id === emp.id);
+          return s + ((empData && empData[col.key]) || 0);
+        }, 0);
+      });
+      return { employee: emp, ...empTotals };
+    });
+
+    const periodeTotals = {};
+    VARIABELE_KOLOMMEN.forEach(k => {
+      periodeTotals[k.key] = perEmployeeTotals.reduce((s, e) => s + (e[k.key] || 0), 0);
+    });
+
+    return { ...currentPeriode, wekenData, perEmployeeTotals, periodeTotals };
+  }, [currentPeriode, entriesByWeek, activeEmployees, holidays, year]);
 
   // Bepaal welke kolommen data hebben (>0) om lege kolommen te verbergen
   const visibleColumns = useMemo(() => {
-    return VARIABELE_KOLOMMEN.filter(col => {
-      return periodeData.some(p => p.periodeTotals[col.key] > 0);
-    });
-  }, [periodeData]);
+    if (!periodeResult) return [];
+    return VARIABELE_KOLOMMEN.filter(col => periodeResult.periodeTotals[col.key] > 0);
+  }, [periodeResult]);
 
   const exportCSV = () => {
-    const currentPeriodeData = periodeData.find(p => p.periode === selectedPeriode);
-    if (!currentPeriodeData) return;
+    if (!periodeResult) return;
 
     const headers = ["Periode", "Weken", "Medewerker", ...visibleColumns.map(c => {
       const mappingKey = c.key === "toeslag_za_50" ? "toeslag_za_50"
@@ -385,12 +392,12 @@ export default function LoonrapportOverzicht({
     })];
     const rows = [];
 
-    const wekenStr = currentPeriodeData.weken.join(", ");
-    currentPeriodeData.perEmployeeTotals.forEach(emp => {
+    const wekenStr = periodeResult.weken.join(", ");
+    periodeResult.perEmployeeTotals.forEach(emp => {
       const hasData = visibleColumns.some(c => emp[c.key] > 0);
       if (!hasData) return;
       rows.push([
-        `${year}-${String(currentPeriodeData.periode).padStart(2, "0")}`,
+        `${year}-${String(periodeResult.periode).padStart(2, "0")}`,
         wekenStr,
         getFullName(emp.employee),
         ...visibleColumns.map(c => emp[c.key] || 0)
@@ -425,14 +432,23 @@ export default function LoonrapportOverzicht({
 
   return (
     <div className="space-y-2">
+      {/* Validatie waarschuwingen */}
+      {validationErrors.length > 0 && (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardContent className="p-3">
+            <p className="text-sm font-semibold text-amber-800 mb-1">Weekmapping validatie</p>
+            {validationErrors.map((err, i) => (
+              <p key={i} className="text-xs text-amber-700">⚠ {err}</p>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex items-center justify-between mb-3">
         <div>
           <h2 className="text-lg font-bold text-slate-800">Loonrun {year}-{String(selectedPeriode).padStart(2, "0")}</h2>
           <p className="text-xs text-slate-500">
-            {(() => {
-              const sp = periodes.find(p => p.periode === selectedPeriode);
-              return sp && sp.weken.length > 0 ? `Weken: ${sp.weken.join(", ")}` : "Geen weekmapping";
-            })()}
+            {currentPeriode && currentPeriode.weken.length > 0 ? `Weken: ${currentPeriode.weken.join(", ")}` : "Geen weekmapping"}
             {" · "}{activeEmployees.length} medewerkers
           </p>
         </div>
@@ -441,123 +457,95 @@ export default function LoonrapportOverzicht({
         </Button>
       </div>
 
-      {periodeData.map(p => (
-        <Card key={p.periode} className="overflow-hidden">
-          {/* Periode header - klikbaar */}
-          <button
-            onClick={() => togglePeriode(p.periode)}
-            className="w-full flex items-center justify-between px-4 py-3 bg-slate-700 text-white hover:bg-slate-600 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              {expandedPeriodes.has(p.periode) ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-              <div>
-                <span className="font-semibold">Periode {p.periode} – {year}</span>
-                {p.weken.length > 0 ? (
-                  <span className="text-slate-300 text-xs ml-3">Weken: {p.weken.join(", ")}</span>
-                ) : (
-                  <span className="text-slate-400 text-xs italic ml-3">— geen weekmapping</span>
-                )}
-              </div>
-            </div>
-            {p.weken.length > 0 && (
-              <div className="flex items-center gap-4 text-sm">
-                <span>{p.periodeTotals.gewerkte_dagen || 0} dagen</span>
-                <span>{fmt(p.periodeTotals.uren_100)} uren</span>
-                {visibleColumns.filter(c => c.key !== "gewerkte_dagen" && c.key !== "uren_100").map(col => {
-                  const val = p.periodeTotals[col.key];
-                  if (!val) return null;
-                  return (
-                    <span key={col.key} className="text-slate-300">
-                      {formatCell(col, val)}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-          </button>
-
-          {/* Uitklapbare inhoud */}
-          {expandedPeriodes.has(p.periode) && p.weken.length === 0 && (
-            <CardContent className="p-6 text-center text-slate-400 italic">
-              Geen weekmapping ingesteld voor deze periode
-            </CardContent>
-          )}
-          {expandedPeriodes.has(p.periode) && p.weken.length > 0 && (
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-100">
-                      <TableHead className="sticky left-0 bg-slate-100 z-10">Medewerker</TableHead>
-                      <TableHead className="text-center text-xs whitespace-nowrap">Weken</TableHead>
-                      {visibleColumns.map(col => {
-                        // Map looncomponent keys → VARIABELE_KOLOMMEN key mapping
-                        const mappingKey = col.key === "toeslag_za_50" ? "toeslag_za_50"
-                          : col.key === "za_overwerk_150" ? "overwerk_zaterdag_150"
-                          : col.key === "toeslag_zo_100" ? "toeslag_zo_100"
-                          : col.key === "zo_overwerk_200" ? "overwerk_zondag_200"
-                          : col.key === "diensttoeslag_za_150" ? "diensturen_zaterdag_150"
-                          : col.key === "diensttoeslag_zo_200" ? "diensturen_zondag_200"
-                          : col.key;
-                        const code = uursoortMapping?.[mappingKey];
-                        return (
-                          <TableHead key={col.key} className="text-right text-xs whitespace-nowrap">
-                            {col.label}{code ? ` (${code})` : ""}
-                          </TableHead>
-                        );
-                      })}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {p.perEmployeeTotals
-                      .filter(emp => emp.uren_100 > 0 || emp.verlof > 0 || emp.ziek > 0 || emp.feestdag > 0 || emp.atv > 0 || emp.bijzonder_verlof > 0)
-                      .map(emp => (
-                        <TableRow
-                          key={emp.employee.id}
-                          className="hover:bg-blue-50 cursor-pointer"
-                          onClick={() => {
-                            if (onChangePeriode && p.periode !== selectedPeriode) {
-                              onChangePeriode(p.periode);
-                            }
-                            onSelectEmployee?.(emp.employee);
-                          }}
-                        >
-                          <TableCell className="sticky left-0 bg-white z-10 text-sm font-medium">
-                            {getFullName(emp.employee)}
-                          </TableCell>
-                          <TableCell className="text-center text-xs text-slate-500">
-                            {p.wekenNrs ? p.wekenNrs.join(", ") : p.weken.join(", ")}
-                          </TableCell>
-                          {visibleColumns.map(col => (
-                            <TableCell key={col.key} className="text-right text-sm text-slate-600">
-                              {formatCell(col, emp[col.key])}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))}
-                    {/* Periode totaal */}
-                    <TableRow className="bg-slate-200 font-bold border-t-2">
-                      <TableCell className="sticky left-0 bg-slate-200 z-10">
-                        Totaal Periode {p.periode}
-                      </TableCell>
-                      <TableCell className="bg-slate-200" />
-                      {visibleColumns.map(col => (
-                        <TableCell key={col.key} className="text-right">
-                          {formatCell(col, p.periodeTotals[col.key])}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          )}
+      {/* Geen geldige periode */}
+      {!periodeResult && (
+        <Card>
+          <CardContent className="p-6 text-center text-slate-400 italic">
+            Geen weekmapping ingesteld voor Periode {selectedPeriode}
+          </CardContent>
         </Card>
-      ))}
+      )}
+
+      {/* Geselecteerde periode */}
+      {periodeResult && (
+        <Card className="overflow-hidden">
+          <div className="w-full flex items-center justify-between px-4 py-3 bg-slate-700 text-white">
+            <div>
+              <span className="font-semibold">Periode {periodeResult.periode} – {year}</span>
+              <span className="text-slate-300 text-xs ml-3">Weken: {periodeResult.weken.join(", ")}</span>
+            </div>
+            <div className="flex items-center gap-4 text-sm">
+              <span>{periodeResult.periodeTotals.gewerkte_dagen || 0} dagen</span>
+              <span>{fmt(periodeResult.periodeTotals.uren_100)} uren</span>
+            </div>
+          </div>
+
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-100">
+                    <TableHead className="sticky left-0 bg-slate-100 z-10">Medewerker</TableHead>
+                    <TableHead className="text-center text-xs whitespace-nowrap">Weken</TableHead>
+                    {visibleColumns.map(col => {
+                      const mappingKey = col.key === "toeslag_za_50" ? "toeslag_za_50"
+                        : col.key === "za_overwerk_150" ? "overwerk_zaterdag_150"
+                        : col.key === "toeslag_zo_100" ? "toeslag_zo_100"
+                        : col.key === "zo_overwerk_200" ? "overwerk_zondag_200"
+                        : col.key === "diensttoeslag_za_150" ? "diensturen_zaterdag_150"
+                        : col.key === "diensttoeslag_zo_200" ? "diensturen_zondag_200"
+                        : col.key;
+                      const code = uursoortMapping?.[mappingKey];
+                      return (
+                        <TableHead key={col.key} className="text-right text-xs whitespace-nowrap">
+                          {col.label}{code ? ` (${code})` : ""}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {periodeResult.perEmployeeTotals
+                    .filter(emp => emp.uren_100 > 0 || emp.verlof > 0 || emp.ziek > 0 || emp.feestdag > 0 || emp.atv > 0 || emp.bijzonder_verlof > 0)
+                    .map(emp => (
+                      <TableRow
+                        key={emp.employee.id}
+                        className="hover:bg-blue-50 cursor-pointer"
+                        onClick={() => {
+                          onSelectEmployee?.(emp.employee);
+                        }}
+                      >
+                        <TableCell className="sticky left-0 bg-white z-10 text-sm font-medium">
+                          {getFullName(emp.employee)}
+                        </TableCell>
+                        <TableCell className="text-center text-xs text-slate-500">
+                          {periodeResult.weken.join(", ")}
+                        </TableCell>
+                        {visibleColumns.map(col => (
+                          <TableCell key={col.key} className="text-right text-sm text-slate-600">
+                            {formatCell(col, emp[col.key])}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  {/* Periode totaal */}
+                  <TableRow className="bg-slate-200 font-bold border-t-2">
+                    <TableCell className="sticky left-0 bg-slate-200 z-10">
+                      Totaal Periode {periodeResult.periode}
+                    </TableCell>
+                    <TableCell className="bg-slate-200" />
+                    {visibleColumns.map(col => (
+                      <TableCell key={col.key} className="text-right">
+                        {formatCell(col, periodeResult.periodeTotals[col.key])}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
