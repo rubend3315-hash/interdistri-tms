@@ -112,12 +112,21 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
     if (st.includes("atv")) atvHours += hours;
   });
 
-  // Aanvulling contract: als weekdaguren < contract, aanvullen vanuit za/zo
-  const regularHours = weekdayHours;
+  // === Aanvulling contracturen & compensatieuren (za/zo) ===
+  // contract_shortage = contracturen - doordeweeks gewerkt (ma-vr)
+  const weekendWorked = saturdayHours + sundayHours;
+  const contractShortage = Math.max(0, contractHours - weekdayHours);
+
+  // aanvulling = MIN(weekenduren, tekort)  →  mag nooit > weekenduren
+  const aanvulling = Math.min(weekendWorked, contractShortage);
+
+  // compensatieuren = weekenduren boven de aanvulling
+  const compensatieUren = Math.max(0, weekendWorked - aanvulling);
+
+  // Verdeel aanvulling proportioneel over za/zo (zaterdag eerst)
   let aanvullingZa = 0;
   let aanvullingZo = 0;
-  let remaining = Math.max(0, contractHours - regularHours);
-
+  let remaining = aanvulling;
   if (remaining > 0 && saturdayHours > 0) {
     aanvullingZa = Math.min(remaining, saturdayHours);
     remaining -= aanvullingZa;
@@ -126,23 +135,22 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
     aanvullingZo = Math.min(remaining, sundayHours);
     remaining -= aanvullingZo;
   }
-  const aanvulling = aanvullingZa + aanvullingZo;
 
-  // Diensturen = uren op die dag (voor aanvulling)
+  // Diensturen = totale uren op die dag
   const dienstZa = saturdayHours;
   const dienstZo = sundayHours;
   const dienstFeestdag = holidayHoursWorked;
 
   // Toeslag berekening: over aanvullings-uren
-  const toeslagZa50 = aanvullingZa; // uren die aanvullen uit zaterdag → 50% toeslag
-  const toeslagZo100 = aanvullingZo; // uren die aanvullen uit zondag → 100% toeslag
-  const toeslagFeestdag100 = Math.min(holidayHoursWorked, Math.max(0, contractHours - regularHours - aanvullingZa - aanvullingZo));
+  const toeslagZa50 = aanvullingZa;
+  const toeslagZo100 = aanvullingZo;
+  const toeslagFeestdag100 = Math.min(holidayHoursWorked, Math.max(0, contractHours - weekdayHours - aanvulling));
 
-  // Overwerk: uren boven contracturen
+  // Overwerk: uren boven contracturen (compensatieuren per dag)
   const overwerkZa150 = Math.max(0, saturdayHours - aanvullingZa);
   const overwerkZo200 = Math.max(0, sundayHours - aanvullingZo);
   const overwerkFeestdag200 = Math.max(0, holidayHoursWorked - toeslagFeestdag100);
-  const overwerk130 = Math.max(0, regularHours - contractHours);
+  const overwerk130 = Math.max(0, weekdayHours - contractHours);
 
   // Oproepkracht: check op basis van het actieve contract voor deze week
   const isOproep = employee.contract_type === "Oproep" ||
