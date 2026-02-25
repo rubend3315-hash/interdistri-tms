@@ -2,9 +2,10 @@ import React from "react";
 import { format } from "date-fns";
 
 export default function ReglementPrintView({ artikelen }) {
-  const sorted = [...artikelen].sort((a, b) => a.artikel_nummer - b.artikel_nummer);
+  // artikelen already come sorted with artikelNummer from parent
+  const sorted = artikelen;
 
-  // Group by hoofdstuk
+  // Group by hoofdstuk (preserving order)
   const hoofdstukken = {};
   sorted.forEach((art) => {
     const h = art.hoofdstuk || "Overig";
@@ -34,7 +35,7 @@ export default function ReglementPrintView({ artikelen }) {
             <div className="ml-4 space-y-0.5">
               {arts.map((art) => (
                 <div key={art.id} className="text-xs text-slate-600 flex items-baseline gap-2">
-                  <span className="font-mono min-w-[24px]">Art. {art.artikel_nummer}</span>
+                  <span className="font-mono min-w-[24px]">Art. {art.artikelNummer ?? art.artikel_nummer}</span>
                   <span className="flex-1 border-b border-dotted border-slate-300" />
                   <span>{art.titel}</span>
                 </div>
@@ -53,7 +54,7 @@ export default function ReglementPrintView({ artikelen }) {
           {arts.map((art) => (
             <div key={art.id} className="mb-6">
               <h3 className="text-sm font-bold text-slate-800 mb-1">
-                Artikel {art.artikel_nummer} – {art.titel}
+                Artikel {art.artikelNummer ?? art.artikel_nummer} – {art.titel}
               </h3>
               <div
                 className="text-sm text-slate-700 prose prose-sm max-w-none leading-relaxed"

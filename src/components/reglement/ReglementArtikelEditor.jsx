@@ -29,7 +29,7 @@ export default function ReglementArtikelEditor({ artikel, onSave, onClose, onSho
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-slate-900">
-            {artikel ? `Artikel ${artikel.artikel_nummer} bewerken` : "Nieuw artikel"}
+            {artikel ? `Art. ${artikel.artikelNummer || artikel.artikel_nummer || ""} bewerken` : "Nieuw artikel"}
           </h2>
           {artikel && (
             <Badge variant="outline" className="text-xs">

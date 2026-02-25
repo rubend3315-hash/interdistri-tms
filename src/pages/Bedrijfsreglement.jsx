@@ -378,7 +378,7 @@ export default function Bedrijfsreglement() {
           <AlertDialogHeader>
             <AlertDialogTitle>Artikel verwijderen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Weet u zeker dat u artikel {deleteArtikel?.artikel_nummer} "{deleteArtikel?.titel}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
+              Weet u zeker dat u Art. {deleteArtikel?.artikelNummer} "{deleteArtikel?.titel}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
