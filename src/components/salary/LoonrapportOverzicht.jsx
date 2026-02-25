@@ -449,24 +449,34 @@ export default function LoonrapportOverzicht({
               )}
               <span className="font-semibold">{year}-{String(p.periode).padStart(2, "0")}</span>
               <span className="text-slate-300 text-sm">{p.maand}</span>
+              {p.weken.length === 0 && (
+                <span className="text-slate-400 text-xs italic ml-2">— geen weekmapping</span>
+              )}
             </div>
-            <div className="flex items-center gap-4 text-sm">
-              <span>{p.periodeTotals.gewerkte_dagen || 0} dagen</span>
-              <span>{fmt(p.periodeTotals.uren_100)} uren</span>
-              {visibleColumns.filter(c => c.key !== "gewerkte_dagen" && c.key !== "uren_100").map(col => {
-                const val = p.periodeTotals[col.key];
-                if (!val) return null;
-                return (
-                  <span key={col.key} className="text-slate-300">
-                    {formatCell(col, val)}
-                  </span>
-                );
-              })}
-            </div>
+            {p.weken.length > 0 && (
+              <div className="flex items-center gap-4 text-sm">
+                <span>{p.periodeTotals.gewerkte_dagen || 0} dagen</span>
+                <span>{fmt(p.periodeTotals.uren_100)} uren</span>
+                {visibleColumns.filter(c => c.key !== "gewerkte_dagen" && c.key !== "uren_100").map(col => {
+                  const val = p.periodeTotals[col.key];
+                  if (!val) return null;
+                  return (
+                    <span key={col.key} className="text-slate-300">
+                      {formatCell(col, val)}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </button>
 
           {/* Uitklapbare inhoud */}
-          {expandedPeriodes.has(p.periode) && (
+          {expandedPeriodes.has(p.periode) && p.weken.length === 0 && (
+            <CardContent className="p-6 text-center text-slate-400 italic">
+              Geen weekmapping ingesteld voor deze periode
+            </CardContent>
+          )}
+          {expandedPeriodes.has(p.periode) && p.weken.length > 0 && (
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
@@ -505,7 +515,7 @@ export default function LoonrapportOverzicht({
                             {getFullName(emp.employee)}
                           </TableCell>
                           <TableCell className="text-center text-xs text-slate-500">
-                            {p.weken.join(", ")}
+                            {p.wekenNrs ? p.wekenNrs.join(", ") : p.weken.join(", ")}
                           </TableCell>
                           {visibleColumns.map(col => (
                             <TableCell key={col.key} className="text-right text-sm text-slate-600">
