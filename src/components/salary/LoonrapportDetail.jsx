@@ -176,14 +176,16 @@ export default function LoonrapportDetail({
             <p className="text-sm text-slate-500">Loonrun {year}-{String(selectedPeriode).padStart(2, "0")} · {currentPeriode.maand}</p>
           </div>
           <div className="divide-y">
-            <Row label="Uren" value={isOproepkracht ? "Oproep (variabel)" : contractHours >= 40 ? "Vast" : `Parttime (${contractHours} uur)`} />
+            <Row label="Uren" value={isOproepkracht ? "Oproepcontract (variabel)" : contractHours >= 40 ? "Vast" : `Parttime (${contractHours} uur)`} />
             <Row label="Loonschaal" value={loonschaal || "-"} />
-            <Row label="Parttime percentage" value={`${parttime},00 %`} />
-            <Row label="Contracturen per week" value={contractHours.toFixed(2)} />
-            <Row label="Bruto jaarloon" value={`€ ${yearlyRate.toFixed(2)}`} isCurrency />
-            <Row label="Bruto maandloon" value={`€ ${monthlyRate.toFixed(2)}`} isCurrency />
-            <Row label="Bruto dagloon" value={`€ ${dailyRate.toFixed(2)}`} isCurrency />
-            <Row label="Bruto uurloon" value={`€ ${hourlyRate.toFixed(2)}`} isCurrency />
+            {!isOproepkracht && <Row label="Parttime percentage" value={`${parttime},00 %`} />}
+            {!isOproepkracht && <Row label="Contracturen per week" value={contractHours.toFixed(2)} />}
+            {!isOproepkracht && <Row label="Bruto jaarloon" value={`€ ${yearlyRate.toFixed(2)}`} isCurrency />}
+            {!isOproepkracht && <Row label="Bruto maandloon" value={`€ ${monthlyRate.toFixed(2)}`} isCurrency />}
+            {!isOproepkracht && <Row label="Bruto dagloon" value={`€ ${dailyRate.toFixed(2)}`} isCurrency />}
+            <Row label="Bruto uurloon (functieloon)" value={`€ ${hourlyRate.toFixed(2)}`} isCurrency />
+            {isOproepkracht && <Row label="Uurloon incl. 8% VB (CAO art. 10)" value={`€ ${oproepUurloonInclVB.toFixed(2)}`} isCurrency />}
+            {isOproepkracht && <Row label="Overuren drempel" value="8 uur per kalenderdag" />}
           </div>
         </CardContent>
       </Card>
