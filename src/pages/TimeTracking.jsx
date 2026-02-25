@@ -511,6 +511,7 @@ export default function TimeTracking() {
       weekend_hours: isNonWorked ? 0 : (calculatedHours?.weekend_hours || 0),
       holiday_hours: isNonWorked ? 0 : (calculatedHours?.holiday_hours || 0),
       break_minutes: isNonWorked ? 0 : breakMinutes,
+      break_manual: isNonWorked ? false : manualBreak,
       start_time: isNonWorked ? "" : formData.start_time,
       end_time: isNonWorked ? "" : formData.end_time,
       status: 'Goedgekeurd',
