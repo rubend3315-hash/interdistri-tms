@@ -365,8 +365,7 @@ export default function Bedrijfsreglement() {
                   </CardContent>
                 )}
               </Card>
-            ))
-            }
+            ))}
             </DragDropContext>
           )}
         </div>
