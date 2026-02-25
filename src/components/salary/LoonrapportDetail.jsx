@@ -3,8 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, FileText } from "lucide-react";
-import { createPageUrl } from "@/utils";
+import { ArrowLeft } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { getWeek, getDay, format } from "date-fns";
 import { calculateWeekData, VARIABELE_KOLOMMEN } from "./LoonrapportOverzicht";
@@ -190,20 +189,9 @@ export default function LoonrapportDetail({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between print:hidden">
+      <div className="flex items-center print:hidden">
         <Button variant="outline" onClick={onBack} size="sm">
           <ArrowLeft className="w-4 h-4 mr-1" /> Terug naar overzicht
-        </Button>
-        <Button
-          size="sm"
-          onClick={() =>
-            window.open(
-              createPageUrl("LoonstrookPrint") + `&year=${year}&periode=${selectedPeriode}&employeeId=${employee.id}`,
-              "_blank"
-            )
-          }
-        >
-          <FileText className="w-4 h-4 mr-1" /> Loonstrook printen
         </Button>
       </div>
 
