@@ -187,16 +187,28 @@ export default function TimeTracking() {
   const [showHourDetails, setShowHourDetails] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  // Track initial start/end times set when dialog opens to skip first auto-break run
+  const initialTimesRef = React.useRef(null);
 
-  // Auto-calculate break
+  // Auto-calculate break — only when user changes start/end time, not on initial load
   useEffect(() => {
     const calculateAutoBreak = async () => {
       if (dialogCategory === "gewerkt" && formData.start_time && formData.end_time) {
+        // Skip auto-calculation on initial load of existing entry
+        if (initialTimesRef.current) {
+          const { start, end } = initialTimesRef.current;
+          if (formData.start_time === start && formData.end_time === end) {
+            // Still on initial values → don't recalculate
+            initialTimesRef.current = null; // clear so next change triggers
+            return;
+          }
+          initialTimesRef.current = null;
+        }
         const hours = calculateHours(formData.start_time, formData.end_time, 0, formData.date, formData.end_date);
         const auto = await getBreakMinutesForHours(hours);
-        setAutoBreak(auto || 30);
+        setAutoBreak(auto || 0);
         if (!manualBreak) {
-          setFormData(prev => ({ ...prev, break_minutes: auto || 30 }));
+          setFormData(prev => ({ ...prev, break_minutes: auto || 0 }));
         }
       } else {
         setAutoBreak(null);
