@@ -10,6 +10,13 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 
 export default function SalaryExportMutation({ employees, timeEntries, salaryTables, selectedMonth }) {
+  // Uursoort-mapping ophalen
+  const { data: payrollSettings = [] } = useQuery({
+    queryKey: ['payrollSettings'],
+    queryFn: () => base44.entities.PayrollSettings.list(),
+  });
+  const uursoortMapping = payrollSettings[0]?.looncomponent_uursoort_mapping || null;
+
   const [yearNum, monthNum] = selectedMonth.split("-").map(Number);
   const monthStart = startOfMonth(new Date(yearNum, monthNum - 1));
   const monthEnd = endOfMonth(new Date(yearNum, monthNum - 1));
