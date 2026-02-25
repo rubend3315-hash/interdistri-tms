@@ -131,12 +131,21 @@ export default function Urenbalans({
         return { weekNr, weekData, contractHours: weekIsOproep ? 0 : weekContractHours };
       });
 
-      // Compensatieuren = contracturen - gewerkt (alleen als positief, d.w.z. contracturen niet gehaald)
-      const compensatieUren = contractUren > 0 && gewerkteUren < contractUren
-        ? contractUren - gewerkteUren : 0;
+      // Oproepkracht: compensatie en saldo altijd 0
+      // Contractmedewerker: compensatie = max(0, gewerkt - contract), saldo = contract - gewerkt
+      const compensatieUren = isOproepkracht ? 0 : Math.max(0, gewerkteUren - contractUren);
+      const saldo = isOproepkracht ? 0 : contractUren - gewerkteUren;
+      if (!isOproepkracht) {
+        saldoCumulatief += saldo;
+      }
 
-      const saldo = gewerkteUren - contractUren;
-      saldoCumulatief += saldo;
+      // Saldo uren voor vakantiebijslag/verlofuren: per week min(basis_uren, 40), opgeteld
+      let saldoVakantieUren = 0;
+      weekDetails.forEach(w => {
+        const basisUren = w.weekData.uren_100 || 0;
+        saldoVakantieUren += Math.min(basisUren, 40);
+      });
+      saldoVakantieUren = Math.round(saldoVakantieUren * 100) / 100;
 
       // Oproepkracht: variabele uren
       let variabeleUren = 0;
@@ -173,7 +182,8 @@ export default function Urenbalans({
         feestdagUren: Math.round(feestdagUren * 100) / 100,
         bijzonderVerlof: Math.round(bijzonderVerlof * 100) / 100,
         saldo: Math.round(saldo * 100) / 100,
-        saldoCumulatief: Math.round(saldoCumulatief * 100) / 100,
+        saldoCumulatief: isOproepkracht ? 0 : Math.round(saldoCumulatief * 100) / 100,
+        saldoVakantieUren,
         variabeleUren: Math.round(variabeleUren * 100) / 100,
         variabeleBedrag,
       };
@@ -191,7 +201,7 @@ export default function Urenbalans({
 
   // Jaartotalen
   const totalen = useMemo(() => {
-    const t = { contractUren: 0, gewerkteUren: 0, compensatieUren: 0, verlofUren: 0, ziekUren: 0, atvUren: 0, feestdagUren: 0, bijzonderVerlof: 0, saldo: 0, variabeleUren: 0, variabeleBedrag: 0 };
+    const t = { contractUren: 0, gewerkteUren: 0, compensatieUren: 0, verlofUren: 0, ziekUren: 0, atvUren: 0, feestdagUren: 0, bijzonderVerlof: 0, saldo: 0, saldoVakantieUren: 0, variabeleUren: 0, variabeleBedrag: 0 };
     periodeBalans.forEach(p => {
       t.contractUren += p.contractUren;
       t.gewerkteUren += p.gewerkteUren;
@@ -202,6 +212,7 @@ export default function Urenbalans({
       t.feestdagUren += p.feestdagUren;
       t.bijzonderVerlof += p.bijzonderVerlof;
       t.saldo += p.saldo;
+      t.saldoVakantieUren += p.saldoVakantieUren;
       t.variabeleUren += p.variabeleUren;
       t.variabeleBedrag += p.variabeleBedrag;
     });
