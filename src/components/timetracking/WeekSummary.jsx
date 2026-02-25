@@ -35,21 +35,69 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
   const totalFeestdaguren = gewerkt.reduce((s, e) => s + (e.holiday_hours || 0), 0);
   const gewerkeDagen = new Set(gewerkt.map(e => e.date)).size;
 
-  // Overwerk 130%: berekend over ma-vr totaal, boven contracturen per week
-  // Alleen ma-vr dagen (index 0-4 in weekDays = ma t/m vr)
+  // Oproepkracht detectie
+  const activeContracts = (employee.contractregels || [])
+    .filter(c => c.status !== "Inactief")
+    .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum));
+  const weekStart = weekDays[0] ? format(weekDays[0], 'yyyy-MM-dd') : null;
+  let activeContract = activeContracts[0] || {};
+  if (weekStart && activeContracts.length > 1) {
+    const ref = new Date(weekStart);
+    activeContract = activeContracts.find(c => {
+      const s = new Date(c.startdatum);
+      const e = c.einddatum ? new Date(c.einddatum) : new Date("2099-12-31");
+      return ref >= s && ref <= e;
+    }) || activeContracts[0] || {};
+  }
+  const isOproep = employee.contract_type === "Oproep" ||
+    ((activeContract.type_contract || "").toLowerCase().includes("oproep"));
+
+  // Overwerk 130%: oproepkracht = per kalenderdag > 8 uur, regulier = weekbasis ma-vr
   const maVrDays = weekDays.filter(day => {
     const d = new Date(day);
     const dayOfWeek = d.getDay();
-    return dayOfWeek >= 1 && dayOfWeek <= 5; // ma=1 t/m vr=5
+    return dayOfWeek >= 1 && dayOfWeek <= 5;
   });
   const maVrOverwerkTotal = maVrDays.reduce((sum, day) => {
     const dateStr = format(day, 'yyyy-MM-dd');
     const dayEntries = overwerkEntries.filter(e => e.date === dateStr);
     return sum + dayEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
   }, 0);
-  const totalOveruren = contractWeekTotal > 0 
-    ? Math.max(0, maVrOverwerkTotal - contractWeekTotal) 
-    : 0;
+
+  let totalOveruren = 0;
+  if (isOproep) {
+    // Per kalenderdag > 8 uur netto → overuren
+    const dayMap = {};
+    gewerkt.forEach(e => {
+      if (!e.date) return;
+      const startDate = e.date;
+      const endDate = e.end_date || e.date;
+      const hours = e.total_hours || 0;
+      if (startDate !== endDate && hours > 0 && e.start_time && e.end_time) {
+        const [sH, sM] = e.start_time.split(':').map(Number);
+        const [eH, eM] = e.end_time.split(':').map(Number);
+        const startMin = sH * 60 + sM;
+        let endMin = eH * 60 + eM;
+        if (endMin <= startMin) endMin += 1440;
+        const minutesBefore = 1440 - startMin;
+        const minutesAfter = endMin - 1440;
+        const breakMin = e.break_minutes || 0;
+        const breakBefore = Math.round(breakMin * (minutesBefore / (minutesBefore + minutesAfter)));
+        const breakAfter = breakMin - breakBefore;
+        dayMap[startDate] = (dayMap[startDate] || 0) + Math.max(0, (minutesBefore - breakBefore) / 60);
+        dayMap[endDate] = (dayMap[endDate] || 0) + Math.max(0, (minutesAfter - breakAfter) / 60);
+      } else {
+        dayMap[startDate] = (dayMap[startDate] || 0) + hours;
+      }
+    });
+    for (const [, dayHours] of Object.entries(dayMap)) {
+      if (dayHours > 8) totalOveruren += dayHours - 8;
+    }
+  } else {
+    totalOveruren = contractWeekTotal > 0
+      ? Math.max(0, maVrOverwerkTotal - contractWeekTotal)
+      : 0;
+  }
 
   // Aanvulling contracturen = contracturen - totaal alle uren (als positief)
   const totalAllesForAanvulling = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
