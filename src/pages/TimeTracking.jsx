@@ -319,29 +319,35 @@ export default function TimeTracking() {
 
     if (existing) {
       setSelectedEntry(existing);
+      // break_manual uitsluitend gebaseerd op databaseveld, NIET afgeleid
+      const dbBreakManual = existing.break_manual === true;
       setFormData({
         employee_id: existing.employee_id, date: existing.date,
         end_date: existing.end_date || existing.date,
         start_time: existing.start_time || "", end_time: existing.end_time || "",
-        break_minutes: existing.break_minutes || 30, shift_type: existing.shift_type || defaultShiftType,
+        break_minutes: existing.break_minutes ?? 0, shift_type: existing.shift_type || defaultShiftType,
         project_id: existing.project_id || "", customer_id: existing.customer_id || "",
         travel_allowance_multiplier: existing.travel_allowance_multiplier ?? 0,
         advanced_costs: existing.advanced_costs || 0, meals: existing.meals || 0,
         wkr: existing.wkr || 0, notes: existing.notes || "",
         total_hours_override: isNonWorked ? (existing.total_hours || scheduleHours) : 0
       });
+      setManualBreak(dbBreakManual);
+      setAutoBreak(null);
+      // Mark initial times so auto-break useEffect skips first run
+      initialTimesRef.current = { start: existing.start_time || "", end: existing.end_time || "" };
     } else {
       setSelectedEntry(null);
       setFormData({
         employee_id: employeeId, date: dateStr, end_date: dateStr, start_time: "", end_time: "",
-        break_minutes: 30, shift_type: defaultShiftType, project_id: "", customer_id: "",
+        break_minutes: 0, shift_type: defaultShiftType, project_id: "", customer_id: "",
         travel_allowance_multiplier: defaultReisMultiplier, advanced_costs: 0, meals: 0, wkr: 0, notes: "",
         total_hours_override: isNonWorked ? scheduleHours : 0
       });
+      setManualBreak(false);
+      setAutoBreak(null);
+      initialTimesRef.current = null;
     }
-    // Bij bestaande entry: bewaar de opgeslagen pauze (niet opnieuw berekenen)
-    setManualBreak(!!existing);
-    setAutoBreak(null);
     setIsDialogOpen(true);
   };
 
