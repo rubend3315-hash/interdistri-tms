@@ -6,6 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Download, RefreshCw, FileSpreadsheet, AlertTriangle } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function SalaryExportMutation({ employees, timeEntries, salaryTables, selectedMonth }) {
   const [yearNum, monthNum] = selectedMonth.split("-").map(Number);
