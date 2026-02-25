@@ -687,8 +687,8 @@ export default function TimeTracking() {
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
-                      value={manualBreak ? formData.break_minutes : (autoBreak !== null ? autoBreak : '')}
-                      onChange={(e) => { if (manualBreak) setFormData({ ...formData, break_minutes: e.target.value || 0 }); }}
+                      value={formData.break_minutes}
+                      onChange={(e) => { if (manualBreak) setFormData({ ...formData, break_minutes: Number(e.target.value) || 0 }); }}
                       disabled={!manualBreak}
                       className="flex-1"
                     />
