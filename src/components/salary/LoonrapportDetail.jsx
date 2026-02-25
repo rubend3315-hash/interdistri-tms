@@ -47,6 +47,9 @@ export default function LoonrapportDetail({
     return match?.monthly_salary || (hourlyRate * contractHours * 52 / 12);
   }, [loonschaal, salaryTables, hourlyRate, contractHours]);
 
+  // Oproepkracht: uurloon incl. 8% vakantiebijslag (CAO art. 10)
+  const oproepUurloonInclVB = isOproepkracht ? Math.round(hourlyRate * 1.08 * 100) / 100 : 0;
+
   const yearlyRate = monthlyRate * 12;
   const dailyRate = monthlyRate / 21.75;
   const parttime = contractHours >= 40 ? 100 : Math.round((contractHours / 40) * 100);
