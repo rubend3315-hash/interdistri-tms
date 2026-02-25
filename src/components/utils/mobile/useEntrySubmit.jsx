@@ -50,6 +50,7 @@ export function useEntrySubmit() {
         start_time: formData.start_time,
         end_time: formData.end_time,
         break_minutes: Number(formData.break_minutes) || 0,
+        break_manual: formData.break_manual === true,
         notes: formData.notes || '',
         signature_url: signatureUrl || null,
         trips: trips.map(t => ({
