@@ -120,6 +120,23 @@ export default function Bedrijfsreglement() {
     await saveMutation.mutateAsync({ id, data });
   };
 
+  // Drag & drop: herschik sort_order binnen een sectie
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+    const hoofdstuk = result.source.droppableId;
+    const arts = [...(hoofdstukken[hoofdstuk] || [])];
+    const [moved] = arts.splice(result.source.index, 1);
+    arts.splice(result.destination.index, 0, moved);
+
+    // Update sort_order sequentieel
+    const updates = arts.map((a, i) => ({ id: a.id, sort_order: i + 1 }));
+    // Optimistic: invalidate after all updates
+    for (const u of updates) {
+      await base44.entities.BedrijfsreglementArtikel.update(u.id, { sort_order: u.sort_order });
+    }
+    queryClient.invalidateQueries({ queryKey: ["bedrijfsreglementArtikelen"] });
+  };
+
   const handleRevert = async (artikel, versionData) => {
     // Revert saves current as history then applies old version data
     const existing = artikelen.find(a => a.id === artikel.id);
