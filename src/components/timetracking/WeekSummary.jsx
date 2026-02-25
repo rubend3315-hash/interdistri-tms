@@ -376,22 +376,22 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         <SummaryRow label="Verblijfskosten ééndaags lange dag toeslag" value={fmtEuro(subsistenceLangeDag)} />
         <SummaryRow label="Verblijfskosten meerdaags" value={fmtEuro(0)} />
         <SummaryRow label="Toeslagenmatrix 19%" value={fmt(toeslagMatrix19)} />
-        <SummaryRow label="Overwerk 130%" value={fmt(totalOveruren)} />
+        <SummaryRow label={`Overwerk 130%${codeLabel("overwerk_130")}`} value={fmt(totalOveruren)} />
         {isOproep ? (
           <>
-            <SummaryRow label="Toeslag diensturen zaterdag 150%" value={fmt(zaterdagDiensturen)} />
-            <SummaryRow label="Toeslag diensturen zondag 200%" value={fmt(zondagDiensturen)} />
+            <SummaryRow label={`Toeslag diensturen zaterdag 150%${codeLabel("diensturen_zaterdag_150")}`} value={fmt(zaterdagDiensturen)} />
+            <SummaryRow label={`Toeslag diensturen zondag 200%${codeLabel("diensturen_zondag_200")}`} value={fmt(zondagDiensturen)} />
           </>
         ) : (
           <>
-            <SummaryRow label="Toeslag diensturen zaterdag 50%" value={fmt(zaterdagDiensturen)} />
-            <SummaryRow label="Zaterdag overwerk 150%" value={fmt(zaterdagOverwerk)} />
-            <SummaryRow label="Toeslag diensturen zondag 100%" value={fmt(zondagDiensturen)} />
-            <SummaryRow label="Zondag overwerk 200%" value={fmt(zondagOverwerk)} />
+            <SummaryRow label={`Toeslag diensturen zaterdag 50%${codeLabel("toeslag_za_50")}`} value={fmt(zaterdagDiensturen)} />
+            <SummaryRow label={`Zaterdag overwerk 150%${codeLabel("overwerk_zaterdag_150")}`} value={fmt(zaterdagOverwerk)} />
+            <SummaryRow label={`Toeslag diensturen zondag 100%${codeLabel("toeslag_zo_100")}`} value={fmt(zondagDiensturen)} />
+            <SummaryRow label={`Zondag overwerk 200%${codeLabel("overwerk_zondag_200")}`} value={fmt(zondagOverwerk)} />
           </>
         )}
-        <SummaryRow label="Toeslag diensturen feestdag 100%" value={fmt(feestdagDiensturen)} />
-        <SummaryRow label="Feestdag overwerk 200%" value={fmt(feestdagOverwerk)} />
+        <SummaryRow label={`Toeslag diensturen feestdag 100%${codeLabel("toeslag_feestdag_100")}`} value={fmt(feestdagDiensturen)} />
+        <SummaryRow label={`Feestdag overwerk 200%${codeLabel("feestdag_overwerk_200")}`} value={fmt(feestdagOverwerk)} />
         <SummaryRow label="Nachturen" value={fmt(totalNachturen)} />
         <SummaryRow label="Voorgeschoten kosten" value={fmtEuro(totalVoorgeschoten)} />
         <SummaryRow label="Inhoudingen" value={fmtEuro(totalInhoudingen)} />
