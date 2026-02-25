@@ -10,13 +10,11 @@ export default function ReglementArtikelEditor({ artikel, onSave, onClose, onSho
   const [titel, setTitel] = useState(artikel?.titel || "");
   const [inhoud, setInhoud] = useState(artikel?.inhoud || "");
   const [hoofdstuk, setHoofdstuk] = useState(artikel?.hoofdstuk || "");
-  const [artikelNummer, setArtikelNummer] = useState(artikel?.artikel_nummer || "");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
     await onSave({
-      artikel_nummer: Number(artikelNummer),
       hoofdstuk,
       titel,
       inhoud,
@@ -54,16 +52,7 @@ export default function ReglementArtikelEditor({ artikel, onSave, onClose, onSho
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <Label className="text-xs font-medium text-slate-600">Artikelnummer</Label>
-          <Input
-            type="number"
-            value={artikelNummer}
-            onChange={(e) => setArtikelNummer(e.target.value)}
-            placeholder="Nr"
-          />
-        </div>
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <Label className="text-xs font-medium text-slate-600">Hoofdstuk</Label>
           <Input
