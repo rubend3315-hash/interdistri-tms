@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   BookOpen, Plus, Pencil, Printer, Search, ChevronDown, ChevronRight,
-  FileText, Trash2, Eye, History
+  FileText, Trash2, Eye, History, GripVertical
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
@@ -17,10 +17,12 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import ReglementArtikelEditor from "../components/reglement/ReglementArtikelEditor";
 import ReglementLegenda from "../components/reglement/ReglementLegenda";
 import ReglementPrintView from "../components/reglement/ReglementPrintView";
 import VersionHistoryPanel from "../components/reglement/VersionHistoryPanel";
+import { getSortedWithNumbers, getNextSortOrder } from "../components/reglement/artikelNummering";
 
 export default function Bedrijfsreglement() {
   const [editingArtikel, setEditingArtikel] = useState(null);
