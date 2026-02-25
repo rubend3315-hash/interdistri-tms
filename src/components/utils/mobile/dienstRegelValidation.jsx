@@ -1,8 +1,8 @@
 /**
  * Dienstregel validation utilities.
  * Uses minute-based arithmetic (no string comparisons).
- * All times normalized to an absolute minute offset from midnight,
- * with overnight handling (+1440 when end <= start).
+ * All times normalized relative to dienst-start to correctly handle
+ * overnight shifts crossing midnight.
  *
  * Validates:
  * - Overlaps between regels
@@ -18,6 +18,15 @@ export function timeToMinutes(time) {
   const [h, m] = time.split(':').map(Number);
   if (isNaN(h) || isNaN(m)) return null;
   return h * 60 + m;
+}
+
+/**
+ * Normalize a time relative to an anchor (dienst start).
+ * If the time is before the anchor, it's treated as next-day (+1440).
+ * This ensures all times are on a single linear axis starting from the anchor.
+ */
+function normalizeToAnchor(anchor, timeMin) {
+  return timeMin < anchor ? timeMin + 1440 : timeMin;
 }
 
 /**
@@ -45,6 +54,26 @@ function buildIntervals(dienstRegels) {
 }
 
 /**
+ * Build intervals normalized to dienst-start anchor.
+ * This ensures overnight comparisons are correct.
+ */
+function buildAnchoredIntervals(dienstRegels, anchor) {
+  return dienstRegels
+    .map((regel, index) => {
+      const s = timeToMinutes(regel.start_time);
+      const e = timeToMinutes(regel.end_time);
+      if (s === null || e === null) return null;
+      const sN = normalizeToAnchor(anchor, s);
+      const eN = normalizeToAnchor(anchor, e);
+      // If end <= start after anchoring, it wraps another day
+      const eFinal = eN <= sN ? eN + 1440 : eN;
+      return { index, start: sN, end: eFinal };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.start - b.start);
+}
+
+/**
  * Check for overlaps between any two dienstRegels.
  * Returns array of { i, j } pairs that overlap.
  */
@@ -62,9 +91,9 @@ export function findOverlaps(dienstRegels) {
 }
 
 /**
- * Validate that all dienstRegels fall within dienst bounds (no margin).
- * regel.start >= dienst.start
- * regel.end   <= dienst.end
+ * Validate that all dienstRegels fall within dienst bounds.
+ * All times are normalized relative to dienst-start so overnight shifts
+ * are handled correctly without special-case logic.
  *
  * Returns { valid: boolean, errors: string[] }
  */
@@ -72,19 +101,20 @@ export function validateBounds(dienstRegels, dienstStartTime, dienstEndTime) {
   const svcStart = timeToMinutes(dienstStartTime);
   const svcEnd = timeToMinutes(dienstEndTime);
   if (svcStart === null || svcEnd === null) return { valid: true, errors: [] };
-  const svcEndN = normalizeEnd(svcStart, svcEnd);
+
+  // Normalize dienst-end relative to dienst-start
+  const svcEndN = normalizeToAnchor(svcStart, svcEnd);
+  // If dienst-end wraps (e.g. 23:30-03:45), svcEndN = 03:45+1440 only if < svcStart
+  // normalizeToAnchor already handles this
 
   const errors = [];
-  const intervals = buildIntervals(dienstRegels);
+  const intervals = buildAnchoredIntervals(dienstRegels, svcStart);
 
   for (const iv of intervals) {
-    const regelStart = iv.start < svcStart ? iv.start + 1440 : iv.start;
-    const regelEnd = iv.end < svcStart ? iv.end + 1440 : iv.end;
-
-    if (regelStart < svcStart) {
+    if (iv.start < svcStart) {
       errors.push(`Regel ${iv.index + 1}: starttijd valt voor start dienst.`);
     }
-    if (regelEnd > svcEndN) {
+    if (iv.end > svcEndN) {
       errors.push(`Regel ${iv.index + 1}: eindtijd valt na eind dienst.`);
     }
   }
@@ -93,22 +123,22 @@ export function validateBounds(dienstRegels, dienstStartTime, dienstEndTime) {
 }
 
 /**
- * Validate a single regel against dienst bounds (no margin).
+ * Validate a single regel against dienst bounds.
  * For OPEN rits (no end_time), only validate start bound.
+ * All times normalized to dienst-start anchor for correct overnight handling.
  * Returns error string or null.
  */
 export function validateSingleRegelBounds(regel, dienstStartTime, dienstEndTime) {
   const svcStart = timeToMinutes(dienstStartTime);
   const rStart = timeToMinutes(regel.start_time);
-  const rEnd = timeToMinutes(regel.end_time);
 
   if (svcStart === null || rStart === null) return null;
 
-  const regelStart = rStart < svcStart ? rStart + 1440 : rStart;
+  const regelStartN = normalizeToAnchor(svcStart, rStart);
 
   // OPEN rit: only check start bound
-  if (rEnd === null) {
-    if (regelStart < svcStart) {
+  if (timeToMinutes(regel.end_time) === null) {
+    if (regelStartN < svcStart) {
       return "Starttijd moet na start dienst liggen.";
     }
     return null;
@@ -118,15 +148,19 @@ export function validateSingleRegelBounds(regel, dienstStartTime, dienstEndTime)
   const svcEnd = timeToMinutes(dienstEndTime);
   if (svcEnd === null) return null;
 
-  const svcEndN = normalizeEnd(svcStart, svcEnd);
+  const svcEndN = normalizeToAnchor(svcStart, svcEnd);
 
-  const regelEnd = normalizeEnd(rStart, rEnd);
-  const regelEndN = regelEnd < svcStart ? regelEnd + 1440 : regelEnd;
+  const rEnd = timeToMinutes(regel.end_time);
+  const regelEndN = normalizeToAnchor(svcStart, rEnd);
+  // If rit-end wraps past rit-start within the anchored frame
+  const regelEndFinal = regelEndN <= regelStartN ? regelEndN + 1440 : regelEndN;
 
-  if (regelStart < svcStart) {
+  if (regelStartN < svcStart) {
+    console.warn(`[Bounds] ROOD: rit ${regel.start_time}-${regel.end_time} start(${regelStartN}) < dienst_start(${svcStart})`);
     return "Starttijd moet na start dienst liggen.";
   }
-  if (regelEndN > svcEndN) {
+  if (regelEndFinal > svcEndN) {
+    console.warn(`[Bounds] ROOD: rit ${regel.start_time}-${regel.end_time} end(${regelEndFinal}) > dienst_end(${svcEndN}) | dienst ${dienstStartTime}-${dienstEndTime}`);
     return "Eindtijd moet voor eind dienst liggen.";
   }
   return null;
