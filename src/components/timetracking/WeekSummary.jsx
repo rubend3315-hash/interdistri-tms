@@ -297,11 +297,14 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
     feestdagDiensturen = totalFeestdaguren;
     feestdagOverwerk = 0;
   } else {
-    // Regulier: contracttekort bepaalt verdeling diensturen vs overwerk
+    // Contractmedewerker: weekenduren binnen contracttekort = basis + toeslag,
+    // weekenduren boven contracttekort = overwerk
     const contractTekort = contractWeekTotal > 0 ? Math.max(0, contractWeekTotal - maVrOverwerkTotal) : 0;
+    // Zaterdag: binnen tekort → basis_100 + toeslag_za_50; boven tekort → overwerk_za_150
     zaterdagDiensturen = Math.min(zaterdagUrenTotaal, contractTekort);
     zaterdagOverwerk = Math.max(0, zaterdagUrenTotaal - contractTekort);
     const contractTekortNaZaterdag = Math.max(0, contractTekort - zaterdagUrenTotaal);
+    // Zondag: binnen tekort → basis_100 + toeslag_zo_100; boven tekort → overwerk_zo_200
     zondagDiensturen = Math.min(zondagUren, contractTekortNaZaterdag);
     zondagOverwerk = Math.max(0, zondagUren - contractTekortNaZaterdag);
     const contractTekortNaZondag = Math.max(0, contractTekortNaZaterdag - zondagUren);
