@@ -327,7 +327,8 @@ export default function TimeTracking() {
         total_hours_override: isNonWorked ? scheduleHours : 0
       });
     }
-    setManualBreak(false);
+    // Bij bestaande entry: bewaar de opgeslagen pauze (niet opnieuw berekenen)
+    setManualBreak(!!existing);
     setAutoBreak(null);
     setIsDialogOpen(true);
   };
