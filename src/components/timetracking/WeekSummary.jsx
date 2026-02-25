@@ -236,8 +236,8 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         <SummaryRow label={`Overwerk 130%${codeLabel("overwerk_130")}`} value={fmt(result.overwerk_130)} />
         {isOproep ? (
           <>
-            <SummaryRow label={`Toeslag diensturen zaterdag 150%${codeLabel("diensturen_zaterdag_150")}`} value={fmt(result.diensttoeslag_za_150)} />
-            <SummaryRow label={`Toeslag diensturen zondag 200%${codeLabel("diensturen_zondag_200")}`} value={fmt(result.diensttoeslag_zo_200)} />
+            <SummaryRow label={`Diensturen zaterdag 150%${codeLabel("diensturen_zaterdag_150")}`} value={fmt(result.diensttoeslag_za_150)} />
+            <SummaryRow label={`Diensturen zondag 200%${codeLabel("diensturen_zondag_200")}`} value={fmt(result.diensttoeslag_zo_200)} />
           </>
         ) : (
           <>
