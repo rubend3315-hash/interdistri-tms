@@ -86,11 +86,18 @@ export default function LoonrapportPrintItem({ employee, year, selectedPeriode, 
     return totals;
   }, [wekenDetail]);
 
+  // Oproepkracht: verberg toeslag_za_50/toeslag_zo_100 (dubbel met diensttoeslag)
+  // Contractmedewerker: verberg diensttoeslag_za_150/diensttoeslag_zo_200
+  const hiddenKeys = isOproepkracht
+    ? new Set(["toeslag_za_50", "toeslag_zo_100"])
+    : new Set(["diensttoeslag_za_150", "diensttoeslag_zo_200"]);
+
   const visibleColumns = useMemo(() => {
     return VARIABELE_KOLOMMEN.filter(col => {
+      if (hiddenKeys.has(col.key)) return false;
       return wekenDetail.some(w => (w[col.key] || 0) !== 0) || (periodeTotals[col.key] || 0) !== 0;
     });
-  }, [wekenDetail, periodeTotals]);
+  }, [wekenDetail, periodeTotals, isOproepkracht]);
 
   const toeslagBedragen = useMemo(() => {
     const calc = (key, pct) => Math.round((periodeTotals[key] || 0) * hourlyRate * pct * 100) / 100;

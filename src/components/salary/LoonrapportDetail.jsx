@@ -102,11 +102,18 @@ export default function LoonrapportDetail({
   }, [wekenDetail]);
 
   // Kolommen met data voor deze medewerker
+  // Oproepkracht: verberg toeslag_za_50/toeslag_zo_100 (dubbel met diensttoeslag)
+  // Contractmedewerker: verberg diensttoeslag_za_150/diensttoeslag_zo_200
+  const hiddenKeys = isOproepkracht
+    ? new Set(["toeslag_za_50", "toeslag_zo_100"])
+    : new Set(["diensttoeslag_za_150", "diensttoeslag_zo_200"]);
+
   const visibleColumns = useMemo(() => {
     return VARIABELE_KOLOMMEN.filter(col => {
+      if (hiddenKeys.has(col.key)) return false;
       return wekenDetail.some(w => (w[col.key] || 0) !== 0) || (periodeTotals[col.key] || 0) !== 0;
     });
-  }, [wekenDetail, periodeTotals]);
+  }, [wekenDetail, periodeTotals, isOproepkracht]);
 
   // Toeslag bedragen berekenen uit periodeTotals
   // Oproepkracht: functieloon + 8% VB als basisloon (CAO art. 10)
