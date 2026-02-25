@@ -106,10 +106,11 @@ export default function SalaryExportMutation({ employees, timeEntries, salaryTab
   }, [activeEmployees, monthEntries, salaryTables]);
 
   const exportMutationCSV = () => {
+    const owCode = uursoortMapping?.overwerk_130 || "OW";
     const headers = [
       "Personeelsnummer", "Naam", "Afdeling", "Loonschaal",
       "Contract uren/wk", "Verwachte uren", "Gewerkte uren", "Verschil",
-      "Overwerk uren", "Nacht uren", "Weekend uren", "Feestdag uren",
+      `Overwerk (${owCode})`, "Nacht uren", "Weekend uren", "Feestdag uren",
       "Uurloon", "Basisloon",
       "Werkdagen", "Reiskosten/dag", "Totaal reiskosten",
       "Verblijfskosten", "Voorgeschoten kosten", "Inhoudingen", "WKR"
