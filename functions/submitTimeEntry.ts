@@ -373,10 +373,41 @@ Deno.serve(async (req) => {
     }
 
     // ========================================
-    // 6. COMPUTE SERVER-SIDE DERIVED FIELDS
+    // 6. COMPUTE SERVER-SIDE DERIVED FIELDS + BREAK STAFFEL
     // ========================================
-    const brk = Math.max(0, Math.round(payload.break_minutes || 0));
     const endD = payload.end_date || null;
+
+    // 6a. Calculate gross dienst duration in minutes
+    const sMin = timeMin(payload.start_time);
+    const eMin = timeMin(payload.end_time);
+    let dienstMinutes = eMin - sMin;
+    if (endD && payload.date && endD > payload.date) {
+      const dayDiff = Math.round((new Date(endD + 'T12:00:00') - new Date(payload.date + 'T12:00:00')) / 864e5);
+      dienstMinutes += dayDiff * 1440;
+    } else if (dienstMinutes < 0) {
+      dienstMinutes += 1440;
+    }
+    const dienstHours = dienstMinutes / 60;
+
+    // 6b. Server-side break staffel calculation
+    const isManualBreak = payload.break_manual === true;
+    let brk;
+    let breakStaffelId = null;
+
+    if (isManualBreak) {
+      // Handmatige override: respecteer client-waarde
+      brk = Math.max(0, Math.round(payload.break_minutes || 0));
+      console.log(`[BREAK] Manual override: ${brk} min for ${dienstHours.toFixed(2)}h dienst`);
+    } else {
+      // Staffelberekening: ophalen uit BreakSchedule entity
+      const breakSchedules = await svc.entities.BreakSchedule.filter({ status: 'Actief' });
+      const sorted = breakSchedules.sort((a, b) => a.min_hours - b.min_hours);
+      const match = sorted.find(s => dienstHours >= s.min_hours && (s.max_hours == null || dienstHours < s.max_hours));
+      brk = match ? match.break_minutes : 0;
+      breakStaffelId = match ? match.id : null;
+      console.log(`[BREAK] Staffel: ${brk} min for ${dienstHours.toFixed(2)}h dienst (rule: ${breakStaffelId || 'none'})`);
+    }
+
     const totalHours = calcHours(payload.start_time, payload.end_time, brk, payload.date, endD);
     const st = shiftType(payload.start_time, payload.end_time);
     const wk = isoWeek(payload.date);
@@ -401,6 +432,9 @@ Deno.serve(async (req) => {
         start_time: payload.start_time,
         end_time: payload.end_time,
         break_minutes: brk,
+        break_manual: isManualBreak,
+        break_staffel_id: breakStaffelId,
+        calculated_dienst_minutes: dienstMinutes,
         total_hours: totalHours,
         shift_type: st,
         notes: (payload.notes || '').slice(0, 2000) || null,
