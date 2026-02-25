@@ -31,7 +31,8 @@ export default function MobileDienstTab({
   calculateHours, isMultiDay, isMultiDayAllowed = false, isSubmitting,
   onSubmit, onSaveDraft, setActiveTab,
   geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
-  postNLAuto = false, setPostNLAuto
+  postNLAuto = false, setPostNLAuto,
+  manualBreak = false, setManualBreak
 }) {
   // Only show multi-day toggle for authorized employees; default ON for multi_day employees
   const [multiDayEnabled, setMultiDayEnabled] = useState(isMultiDayAllowed);
@@ -225,10 +226,21 @@ export default function MobileDienstTab({
               </div>
               <div>
                 <Label className="text-[11px] text-slate-500 mb-0.5">Pauze (min)</Label>
-                <Input type="number" className="h-[40px] bg-white" value={formData.break_minutes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, break_minutes: parseInt(e.target.value, 10) || 0 }))} />
+                <Input type="number" className={`h-[40px] ${manualBreak ? 'bg-white' : 'bg-slate-50'}`} value={formData.break_minutes}
+                  readOnly={!manualBreak}
+                  onChange={(e) => { if (manualBreak) setFormData(prev => ({ ...prev, break_minutes: parseInt(e.target.value, 10) || 0 })); }} />
+                {!manualBreak && (
+                  <p className="text-[10px] text-blue-600 mt-0.5">📋 CAO-staffel</p>
+                )}
               </div>
             </div>
+
+            {setManualBreak && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox checked={manualBreak} onCheckedChange={(checked) => setManualBreak(!!checked)} />
+                <span className="text-[12px] text-slate-600">Pauze handmatig invullen</span>
+              </label>
+            )}
 
             {formData.end_time && (
               <p className="text-[12px] text-blue-700 font-semibold text-center">
