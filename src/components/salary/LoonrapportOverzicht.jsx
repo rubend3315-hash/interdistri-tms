@@ -42,6 +42,15 @@ export const VARIABELE_KOLOMMEN = [
   { key: "verblijfkosten", label: "Verblijfkosten" },
 ];
 
+/**
+ * calculateWeekData — Single Source of Truth voor loonberekening.
+ *
+ * Alle looncomponenten (overwerk, weekend-/feestdagtoeslagen, aanvulling,
+ * compensatie, variabele uren, nachturen, etc.) worden UITSLUITEND hier berekend.
+ *
+ * WeekSummary, LoonrapportDetail, LoonrapportPrint en Export mogen
+ * GEEN eigen berekeningen uitvoeren — alleen het resultaat renderen.
+ */
 export function calculateWeekData(employee, entries, holidays, weekStartDate) {
   // Bepaal welk contract actief was voor deze week
   const activeContracts = (employee.contractregels || [])
