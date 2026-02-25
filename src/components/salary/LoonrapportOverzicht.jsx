@@ -447,11 +447,14 @@ export default function LoonrapportOverzicht({
               ) : (
                 <ChevronRight className="w-4 h-4" />
               )}
-              <span className="font-semibold">{year}-{String(p.periode).padStart(2, "0")}</span>
-              <span className="text-slate-300 text-sm">{p.maand}</span>
-              {p.weken.length === 0 && (
-                <span className="text-slate-400 text-xs italic ml-2">— geen weekmapping</span>
-              )}
+              <div>
+                <span className="font-semibold">Periode {p.periode} – {year}</span>
+                {p.weken.length > 0 ? (
+                  <span className="text-slate-300 text-xs ml-3">Weken: {p.weken.join(", ")}</span>
+                ) : (
+                  <span className="text-slate-400 text-xs italic ml-3">— geen weekmapping</span>
+                )}
+              </div>
             </div>
             {p.weken.length > 0 && (
               <div className="flex items-center gap-4 text-sm">

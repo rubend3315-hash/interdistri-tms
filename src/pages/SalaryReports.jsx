@@ -181,7 +181,7 @@ export default function SalaryReports() {
                         <SelectContent>
                           {periodes.map(p => (
                             <SelectItem key={p.periode} value={String(p.periode)}>
-                              Periode {p.periode} – {p.maand} {p.weken.length > 0 ? `(wk ${p.weken.join(", ")})` : "(geen weken)"}
+                              Periode {p.periode} {p.weken.length > 0 ? `– wk ${p.weken.join(", ")}` : "– geen weken"}
                             </SelectItem>
                           ))}
                         </SelectContent>
