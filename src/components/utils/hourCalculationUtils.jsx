@@ -19,7 +19,9 @@ export function calculateTotalHours(startTime, endTime, breakMinutes = 0) {
 }
 
 /**
- * Calculate overtime hours (anything above 9 hours per day)
+ * Calculate overtime hours
+ * Default threshold is 9 hours per day for regular employees.
+ * For oproepkrachten (CAO art. 10), threshold is 8 hours per day.
  */
 export function calculateOvertimeHours(totalHours, maxDailyHours = 9) {
   if (totalHours > maxDailyHours) {
