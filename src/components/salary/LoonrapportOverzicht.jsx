@@ -165,6 +165,8 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
       }
     }
 
+    // Oproepkracht: toeslagen za/zo/feestdag/nacht blijven ongewijzigd
+    // Alleen overuren = per kalenderdag > 8 uur, geen aanvulling/compensatie/weekvergelijking
     return {
       gewerkte_dagen: gewerkteDagen,
       uren_100: r(totalHours),
@@ -184,12 +186,12 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
       ouderschapsverlof_onbetaald: r(ouderschapsOnbetaald),
       variabele_uren_100: r(totalHours),
       toeslagenmatrix_19: (employee.is_chauffeur !== false) ? r(nightHours) : 0,
-      toeslag_za_50: 0,
+      toeslag_za_50: r(saturdayHours),
       za_overwerk_150: 0,
-      toeslag_zo_100: 0,
+      toeslag_zo_100: r(sundayHours),
       zo_overwerk_200: 0,
       diensturen_feestdag_200: r(holidayHoursWorked),
-      toeslag_feestdag_100: 0,
+      toeslag_feestdag_100: r(holidayHoursWorked),
       feestdag_overwerk_200: 0,
       overwerk_130: r(oproepOveruren),
       partnerverlof_week: r(partnerverlofWeek),
