@@ -163,7 +163,8 @@ export default function LoonrapportPrintItem({ employee, year, selectedPeriode, 
     return s + weekEntries.reduce((ms, e) => ms + (e.meals || 0), 0);
   }, 0);
 
-  const saldoMeeruren = Math.round(((periodeTotals.overwerk_130 || 0) + (periodeTotals.variabele_uren_100 || 0) + (periodeTotals.diensttoeslag_za_150 || 0)) * 10000) / 10000;
+  // Saldo uren voor vakantiebijslag/verlof = som van min(weekuren, 40) per week
+  const saldoVakantieUren = Math.round(wekenDetail.reduce((s, w) => s + (w.saldo_vakantie_uren || 0), 0) * 10000) / 10000;
 
   return (
     <div className="print-report-item" style={{ pageBreakAfter: "always", pageBreakInside: "avoid" }}>
@@ -220,11 +221,11 @@ export default function LoonrapportPrintItem({ employee, year, selectedPeriode, 
             <td style={{ padding: "6px 20px", textAlign: "right", fontWeight: 500 }}>{currentPeriode.weken.join(", ")}</td>
             <td style={{ width: "100px" }}></td>
           </tr>
-          {saldoMeeruren > 0 && (
+          {saldoVakantieUren > 0 && (
             <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
-              <td style={{ padding: "6px 20px", color: "#475569" }}>Saldo meeruren t.b.v. vakantiebijslag/verlof</td>
-              <td style={{ padding: "6px 20px", textAlign: "right", fontWeight: 500 }}>{fmt(saldoMeeruren)} uur</td>
-              <td style={{ padding: "6px 20px", textAlign: "right", fontSize: "10px", color: "#64748b" }}>Meeruren/variabele uren + diensturen zaterdag 150%</td>
+              <td style={{ padding: "6px 20px", color: "#475569" }}>Saldo uren voor berekening vakantiebijslag en verlofuren</td>
+              <td style={{ padding: "6px 20px", textAlign: "right", fontWeight: 500 }}>{fmt(saldoVakantieUren)} uur</td>
+              <td></td>
             </tr>
           )}
           {visibleColumns.map(col => {

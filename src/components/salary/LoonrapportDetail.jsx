@@ -244,16 +244,15 @@ export default function LoonrapportDetail({
               </span>
             </div>
 
-            {/* Saldo meeruren */}
+            {/* Saldo uren voor vakantiebijslag en verlofuren */}
             {(() => {
-              const saldoMeeruren = Math.round(((periodeTotals.overwerk_130 || 0) + (periodeTotals.variabele_uren_100 || 0) + (periodeTotals.diensttoeslag_za_150 || 0)) * 10000) / 10000;
-              if (saldoMeeruren > 0) {
+              const saldoVakantieUren = Math.round(wekenDetail.reduce((s, w) => s + (w.saldo_vakantie_uren || 0), 0) * 10000) / 10000;
+              if (saldoVakantieUren > 0) {
                 return (
                   <div className="flex items-center justify-between px-6 py-2.5 hover:bg-slate-50">
-                    <span className="text-sm text-slate-600">Saldo meeruren t.b.v. vakantiebijslag/verlof</span>
+                    <span className="text-sm text-slate-600">Saldo uren voor berekening vakantiebijslag en verlofuren</span>
                     <div className="flex items-center gap-8">
-                      <span className="text-sm font-medium text-slate-700">{fmt(saldoMeeruren)} uur</span>
-                      <span className="text-xs text-slate-500">Meeruren/variabele uren + diensturen zaterdag 150%</span>
+                      <span className="text-sm font-medium text-slate-700">{fmt(saldoVakantieUren)} uur</span>
                     </div>
                   </div>
                 );

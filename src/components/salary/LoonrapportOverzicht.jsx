@@ -181,6 +181,9 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
 
     // Oproepkracht: toeslagen za/zo/feestdag/nacht blijven ongewijzigd
     // Alleen overuren = per kalenderdag > 8 uur, geen aanvulling/compensatie/weekvergelijking
+    // Saldo uren voor vakantiebijslag/verlof = min(totaal gewerkte basisuren, 40)
+    const saldoVakantieUren = r(Math.min(totalHours, 40));
+
     return {
       gewerkte_dagen: gewerkteDagen,
       uren_100: r(totalHours),
@@ -210,6 +213,7 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
       overwerk_130: r(oproepOveruren),
       partnerverlof_week: r(partnerverlofWeek),
       verblijfkosten: Math.round(subsistence * 100) / 100,
+      saldo_vakantie_uren: saldoVakantieUren,
     };
   }
 
@@ -240,6 +244,9 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
 
   const variabeleUren100 = 0;
 
+  // Saldo uren voor vakantiebijslag/verlof = min(totaal gewerkte basisuren, 40)
+  const saldoVakantieUren = r(Math.min(totalHours, 40));
+
   return {
     gewerkte_dagen: gewerkteDagen,
     uren_100: r(totalHours),
@@ -269,8 +276,9 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
     overwerk_130: r(overwerk130),
     partnerverlof_week: r(partnerverlofWeek),
     verblijfkosten: Math.round(subsistence * 100) / 100,
+    saldo_vakantie_uren: saldoVakantieUren,
   };
-}
+  }
 
 export default function LoonrapportOverzicht({
   year, selectedPeriode, periodes, employees, timeEntries, holidays, salaryTables, onSelectEmployee
