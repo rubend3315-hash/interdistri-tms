@@ -454,11 +454,22 @@ export default function LoonrapportOverzicht({
                     <TableRow className="bg-slate-100">
                       <TableHead className="sticky left-0 bg-slate-100 z-10">Medewerker</TableHead>
                       <TableHead className="text-center text-xs whitespace-nowrap">Weken</TableHead>
-                      {visibleColumns.map(col => (
-                        <TableHead key={col.key} className="text-right text-xs whitespace-nowrap">
-                          {col.label}
-                        </TableHead>
-                      ))}
+                      {visibleColumns.map(col => {
+                        // Map looncomponent keys → VARIABELE_KOLOMMEN key mapping
+                        const mappingKey = col.key === "toeslag_za_50" ? "toeslag_za_50"
+                          : col.key === "za_overwerk_150" ? "overwerk_zaterdag_150"
+                          : col.key === "toeslag_zo_100" ? "toeslag_zo_100"
+                          : col.key === "zo_overwerk_200" ? "overwerk_zondag_200"
+                          : col.key === "diensttoeslag_za_150" ? "diensturen_zaterdag_150"
+                          : col.key === "diensttoeslag_zo_200" ? "diensturen_zondag_200"
+                          : col.key;
+                        const code = uursoortMapping?.[mappingKey];
+                        return (
+                          <TableHead key={col.key} className="text-right text-xs whitespace-nowrap">
+                            {col.label}{code ? ` (${code})` : ""}
+                          </TableHead>
+                        );
+                      })}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
