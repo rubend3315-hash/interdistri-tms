@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { applyPostnlOffset, formatMinutes } from "./timePolicy";
 
 /**
@@ -13,6 +14,15 @@ import { applyPostnlOffset, formatMinutes } from "./timePolicy";
 export function useMobileForm({ isMultiDay = false, currentEmployee, businessMode = "HANDMATIG" }) {
   const storageKey = isMultiDay ? 'mobile-entry-multiday-draft' : 'mobile-entry-draft';
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  // --- Break schedule staffel ---
+  const { data: breakSchedules = [] } = useQuery({
+    queryKey: ['breakSchedules'],
+    queryFn: () => base44.entities.BreakSchedule.list(),
+    staleTime: 10 * 60 * 1000,
+  });
+  const [manualBreak, setManualBreak] = useState(false);
+  const manualBreakRef = useRef(false); // stable ref for effects
 
   // --- Form data ---
   const [formData, setFormData] = useState(() => {
