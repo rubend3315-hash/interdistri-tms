@@ -4,6 +4,7 @@ import { isWeekend } from "../utils/hourCalculationUtils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { calculateSubsistenceAllowance } from "../utils/subsistenceUtils";
+import { getLooncomponentLabel } from "../utils/uursoortMapping";
 
 export default function WeekSummary({ employee, weekDays, timeEntries, contractHours, contractWeekTotal, trips = [], reiskostenTotal = 0 }) {
   const empEntries = timeEntries.filter(e => e.employee_id === employee.id);
