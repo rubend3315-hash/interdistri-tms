@@ -442,6 +442,7 @@ export default function TimeTracking() {
         start_time: formData.start_time,
         end_time: midnightTime,
         break_minutes: break1,
+        break_manual: manualBreak,
         total_hours: netHours1,
         overtime_hours: hourCalc1?.overtime_hours ?? 0,
         night_hours: hourCalc1?.night_hours ?? 0,
