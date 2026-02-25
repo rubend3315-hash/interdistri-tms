@@ -239,17 +239,17 @@ export default function Urenbalans({
   const exportCSV = () => {
     const baseHeaders = ["Periode", "Maand", "Weken", "Contract", "Gewerkt", "Verlof", "Ziek", "ATV", "Feestdag", "Bijz. verlof"];
     const oproepHeaders = isOproepkracht ? ["Var. uren", "Var. bedrag"] : [];
-    const headers = [...baseHeaders, ...oproepHeaders, "Compensatie uren", "Saldo", "Saldo cumulatief"];
+    const headers = [...baseHeaders, ...oproepHeaders, "Compensatie uren", "Saldo vak./verlof", "Saldo", "Saldo cumulatief"];
     const rows = periodeBalans.map(p => {
       const base = [p.periode, p.maand, p.weken, p.contractUren, p.gewerkteUren,
         p.verlofUren, p.ziekUren, p.atvUren, p.feestdagUren, p.bijzonderVerlof];
       const oproep = isOproepkracht ? [p.variabeleUren, p.variabeleBedrag] : [];
-      return [...base, ...oproep, p.compensatieUren, p.saldo, p.saldoCumulatief];
+      return [...base, ...oproep, p.compensatieUren, p.saldoVakantieUren, p.saldo, p.saldoCumulatief];
     });
     const totalBase = [totalen.contractUren, totalen.gewerkteUren,
       totalen.verlofUren, totalen.ziekUren, totalen.atvUren, totalen.feestdagUren, totalen.bijzonderVerlof];
     const totalOproep = isOproepkracht ? [totalen.variabeleUren, totalen.variabeleBedrag] : [];
-    rows.push(["Totaal", "", "", ...totalBase, ...totalOproep, totalen.compensatieUren, totalen.saldo, ""]);
+    rows.push(["Totaal", "", "", ...totalBase, ...totalOproep, totalen.compensatieUren, totalen.saldoVakantieUren, totalen.saldo, ""]);
 
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(";")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -348,6 +348,7 @@ export default function Urenbalans({
                   {isOproepkracht && <TableHead className="text-xs text-right">Var. uren</TableHead>}
                   {isOproepkracht && <TableHead className="text-xs text-right">Var. bedrag</TableHead>}
                   <TableHead className="text-xs text-right">Compensatie uren</TableHead>
+                  <TableHead className="text-xs text-right whitespace-nowrap" title="Saldo uren voor berekening vakantiebijslag en verlofuren">Saldo vak./verlof</TableHead>
                   <TableHead className="text-xs text-right">Saldo</TableHead>
                   <TableHead className="text-xs text-right">Cumulatief</TableHead>
                 </TableRow>
@@ -381,6 +382,7 @@ export default function Urenbalans({
                       {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmt(p.variabeleUren)}</TableCell>}
                       {isOproepkracht && <TableCell className="text-sm text-right font-medium text-indigo-600">{fmtEuro(p.variabeleBedrag)}</TableCell>}
                       <TableCell className="text-sm text-right text-green-600">{fmt(p.compensatieUren)}</TableCell>
+                      <TableCell className="text-sm text-right text-cyan-600">{fmt(p.saldoVakantieUren)}</TableCell>
                       <TableCell className={`text-sm text-right font-semibold ${p.saldo > 0 ? "text-emerald-600" : p.saldo < 0 ? "text-red-600" : "text-slate-400"}`}>
                         {fmtSaldo(p.saldo)}
                       </TableCell>
@@ -392,7 +394,7 @@ export default function Urenbalans({
                     {/* Uitklapbare weekdetails */}
                     {expandedPeriodes.has(p.periode) && (
                       <TableRow>
-                        <TableCell colSpan={11 + (isOproepkracht ? 2 : 0) + 2} className="p-0 bg-slate-50">
+                        <TableCell colSpan={12 + (isOproepkracht ? 2 : 0) + 2} className="p-0 bg-slate-50">
                           <div className="overflow-x-auto">
                             <Table>
                               <TableHeader>
@@ -446,6 +448,7 @@ export default function Urenbalans({
                   {isOproepkracht && <TableCell className="text-sm text-right text-indigo-600">{fmt(totalen.variabeleUren)}</TableCell>}
                   {isOproepkracht && <TableCell className="text-sm text-right text-indigo-600">{fmtEuro(totalen.variabeleBedrag)}</TableCell>}
                   <TableCell className="text-sm text-right text-green-600">{fmt(totalen.compensatieUren)}</TableCell>
+                  <TableCell className="text-sm text-right text-cyan-600">{fmt(totalen.saldoVakantieUren)}</TableCell>
                   <TableCell className={`text-sm text-right font-bold ${totalen.saldo > 0 ? "text-emerald-600" : totalen.saldo < 0 ? "text-red-600" : ""}`}>
                     {fmtSaldo(totalen.saldo)}
                   </TableCell>
