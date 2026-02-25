@@ -22,11 +22,15 @@ export function timeToMinutes(time) {
 
 /**
  * Normalize a time relative to an anchor (dienst start).
- * If the time is before the anchor, it's treated as next-day (+1440).
- * This ensures all times are on a single linear axis starting from the anchor.
+ * Maps all times into a 24h window starting from the anchor.
+ * E.g. anchor=23:30 (1410): 01:00 → 1500, 22:30 → 2790 (next day), 23:30 → 1410.
+ *
+ * We compute the offset from the anchor modulo 1440 and add it back.
+ * This correctly places all times on a linear axis [anchor, anchor+1440).
  */
 function normalizeToAnchor(anchor, timeMin) {
-  return timeMin < anchor ? timeMin + 1440 : timeMin;
+  const offset = ((timeMin - anchor) % 1440 + 1440) % 1440;
+  return anchor + offset;
 }
 
 /**
