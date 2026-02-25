@@ -124,13 +124,20 @@ export default function StandplaatsWerk() {
     });
   };
 
+  // Normalize a time relative to an anchor using modulo arithmetic.
+  const normalizeToAnchor = (anchor, timeMin) => {
+    const offset = ((timeMin - anchor) % 1440 + 1440) % 1440;
+    return anchor + offset;
+  };
+
   // Validate standplaatswerk times against time entries
   const validateAgainstTimeEntry = (record) => {
     if (!record.start_time || !record.end_time || !record.employee_id || !record.date) {
       return { valid: null, message: "Geen tijden ingevuld" };
     }
     const matchingEntries = timeEntries.filter(
-      (te) => te.employee_id === record.employee_id && te.date === record.date
+      (te) => te.employee_id === record.employee_id && 
+      (te.date === record.date || te.end_date === record.date)
     );
     if (matchingEntries.length === 0) {
       return { valid: false, message: "Geen tijdregistratie gevonden voor deze datum" };
@@ -144,11 +151,18 @@ export default function StandplaatsWerk() {
       if (!te.start_time || !te.end_time) continue;
       const [teStartH, teStartM] = te.start_time.split(":").map(Number);
       const [teEndH, teEndM] = te.end_time.split(":").map(Number);
-      const teStartMin = teStartH * 60 + teStartM;
-      const teEndMin = teEndH * 60 + teEndM;
+      const teStart = teStartH * 60 + teStartM;
+      const teEnd = teEndH * 60 + teEndM;
 
-      const startOk = swStartMin >= teStartMin;
-      const endOk = teEndMin >= teStartMin ? swEndMin <= teEndMin : true;
+      // Normalize all times relative to dienst-start anchor
+      const anchor = teStart;
+      const svcEndN = normalizeToAnchor(anchor, teEnd);
+      const swStartN = normalizeToAnchor(anchor, swStartMin);
+      const swEndN = normalizeToAnchor(anchor, swEndMin);
+      const swEndFinal = swEndN <= swStartN ? swEndN + 1440 : swEndN;
+
+      const startOk = swStartN >= anchor && swStartN <= svcEndN;
+      const endOk = swEndFinal <= svcEndN;
 
       if (startOk && endOk) {
         return { valid: true, message: `Binnen tijdregistratie (${te.start_time} - ${te.end_time})` };
