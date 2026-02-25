@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { getWeek, getDay, format } from "date-fns";
 import { calculateWeekData, VARIABELE_KOLOMMEN } from "./LoonrapportOverzicht";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function LoonrapportPrintItem({ employee, year, selectedPeriode, periodes, timeEntries, holidays, salaryTables }) {
   const contract = useMemo(() => {
