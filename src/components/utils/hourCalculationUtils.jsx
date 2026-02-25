@@ -148,8 +148,8 @@ export function validateHourCalculations(hours) {
     errors.push('Overuren kunnen niet negatief zijn');
   }
   
-  if (hours.night_hours < 0 || hours.night_hours > hours.total_hours) {
-    errors.push('Nachturen moeten tussen 0 en totaal uren liggen');
+  if (hours.night_hours < 0) {
+    errors.push('Nachturen kunnen niet negatief zijn');
   }
   
   if (hours.weekend_hours < 0 || hours.weekend_hours > hours.total_hours) {
