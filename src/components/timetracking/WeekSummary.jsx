@@ -99,24 +99,27 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
       : 0;
   }
 
-  // Aanvulling contracturen = contracturen - totaal alle uren (als positief)
-  const totalAllesForAanvulling = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
-  const aanvullingContract = contractWeekTotal > 0 && totalAllesForAanvulling < contractWeekTotal 
-    ? contractWeekTotal - totalAllesForAanvulling : 0;
-  
   // Totaal niet gewerkt = alle uren behalve gewerkte dag types
   const nietGewerktEntries = empEntries.filter(e => !gewerktTypes.includes(e.shift_type));
   const totalNietGewerkt = nietGewerktEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
 
-  // Compensatieuren = contracturen - totaal uren (alleen positief, nooit negatief)
-  // Als contracturen niet gehaald: compensatie = verschil. Als wel gehaald: 0.
-  const totalAlles = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
-  const compensatie = contractWeekTotal > 0 && totalAlles < contractWeekTotal 
-    ? contractWeekTotal - totalAlles : 0;
+  // Oproepkracht: geen aanvulling, compensatie of variabele uren
+  let aanvullingContract = 0;
+  let compensatie = 0;
+  let variabeleUren = 0;
 
-  // Variabele uren (gewerkte uren boven contract)
-  const variabeleUren = totalGewerkt > contractWeekTotal && contractWeekTotal > 0 
-    ? totalGewerkt - contractWeekTotal : 0;
+  if (!isOproep) {
+    const totalAllesForAanvulling = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+    aanvullingContract = contractWeekTotal > 0 && totalAllesForAanvulling < contractWeekTotal
+      ? contractWeekTotal - totalAllesForAanvulling : 0;
+
+    const totalAlles = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
+    compensatie = contractWeekTotal > 0 && totalAlles < contractWeekTotal
+      ? contractWeekTotal - totalAlles : 0;
+
+    variabeleUren = totalGewerkt > contractWeekTotal && contractWeekTotal > 0
+      ? totalGewerkt - contractWeekTotal : 0;
+  }
 
   // Verlof per type
   const getVerlofByType = (type) => verlofEntries.filter(e => e.shift_type === type).reduce((s, e) => s + (e.total_hours || 0), 0);
