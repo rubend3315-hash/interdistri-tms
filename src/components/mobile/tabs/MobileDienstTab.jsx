@@ -47,16 +47,8 @@ export default function MobileDienstTab({
   const [manualBreak, setManualBreak] = useState(false);
   const manualBreakRef = useRef(false);
 
-  const handleSetManualBreak = (val) => {
-    manualBreakRef.current = val;
-    setManualBreak(val);
-    // Persist manual flag in formData for server-side validation
-    setFormData(prev => ({ ...prev, break_manual: val }));
-  };
-
-  // Auto-calculate break from staffel
-  useEffect(() => {
-    if (manualBreakRef.current) return;
+  // Recalculate break from staffel helper
+  const recalcBreakFromStaffel = useCallback(() => {
     if (!formData.start_time || !formData.end_time) return;
     if (formData.start_time.length < 5 || formData.end_time.length < 5) return;
     const [sH, sM] = formData.start_time.split(':').map(Number);
@@ -74,11 +66,25 @@ export default function MobileDienstTab({
     const active = breakSchedules.filter(s => s.status === 'Actief').sort((a, b) => a.min_hours - b.min_hours);
     const match = active.find(s => dienstHours >= s.min_hours && (s.max_hours == null || dienstHours < s.max_hours));
     const newBreak = match ? match.break_minutes : 0;
-    setFormData(prev => {
-      if (prev.break_minutes === newBreak) return prev;
-      return { ...prev, break_minutes: newBreak };
-    });
+    setFormData(prev => ({ ...prev, break_minutes: newBreak, break_manual: false }));
   }, [formData.start_time, formData.end_time, formData.date, formData.end_date, breakSchedules, isMultiDay, setFormData]);
+
+  const handleSetManualBreak = (val) => {
+    manualBreakRef.current = val;
+    setManualBreak(val);
+    // Persist manual flag in formData for server-side validation
+    setFormData(prev => ({ ...prev, break_manual: val }));
+    // When switching OFF manual → immediately recalculate from staffel
+    if (!val) recalcBreakFromStaffel();
+  };
+
+  // Auto-calculate break from staffel when times change
+  useEffect(() => {
+    if (manualBreakRef.current) return;
+    if (!formData.start_time || !formData.end_time) return;
+    if (formData.start_time.length < 5 || formData.end_time.length < 5) return;
+    recalcBreakFromStaffel();
+  }, [formData.start_time, formData.end_time, formData.date, formData.end_date, breakSchedules, isMultiDay]);
 
   const hasRegels = geenRit ? true : dienstRegels.length > 0;
   const hasOpenRit = dienstRegels.some(r => r.openRit && !r.end_time);
