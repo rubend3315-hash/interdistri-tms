@@ -112,18 +112,98 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
     if (st.includes("atv")) atvHours += hours;
   });
 
-  // === Aanvulling contracturen & compensatieuren (za/zo) ===
-  // contract_shortage = contracturen - doordeweeks gewerkt (ma-vr)
+  // Oproepkracht: check op basis van het actieve contract voor deze week
+  const isOproep = employee.contract_type === "Oproep" ||
+    ((contract.type_contract || "").toLowerCase().includes("oproep"));
+
+  const r = (v) => Math.round(v * 10000) / 10000;
+
+  // === OPROEPKRACHT LOGICA (CAO art. 10) ===
+  // Overuren per kalenderdag > 8 uur. Geen aanvulling, geen compensatie, geen weekvergelijking.
+  if (isOproep) {
+    // Groepeer entries per kalenderdag voor dagelijkse > 8 uur toetsing
+    const dayMap = {};
+    entries.forEach(e => {
+      if (!e.date) return;
+      // Splits dienst over middernacht als end_date verschilt van date
+      const startDate = e.date;
+      const endDate = e.end_date || e.date;
+      const hours = e.total_hours || 0;
+
+      if (startDate !== endDate && hours > 0 && e.start_time && e.end_time) {
+        // Nachtdienst: split proportioneel per kalenderdag
+        const [sH, sM] = e.start_time.split(':').map(Number);
+        const [eH, eM] = e.end_time.split(':').map(Number);
+        const startMin = sH * 60 + sM;
+        let endMin = eH * 60 + eM;
+        if (endMin <= startMin) endMin += 1440;
+        const totalMin = endMin - startMin - (e.break_minutes || 0);
+        if (totalMin <= 0) {
+          if (!dayMap[startDate]) dayMap[startDate] = 0;
+          return;
+        }
+        const minutesBefore = 1440 - startMin; // minuten vóór middernacht
+        const minutesAfter = endMin - 1440;    // minuten na middernacht
+        const breakMin = e.break_minutes || 0;
+        // Verdeel pauze proportioneel
+        const breakBefore = Math.round(breakMin * (minutesBefore / (minutesBefore + minutesAfter)));
+        const breakAfter = breakMin - breakBefore;
+        const hoursBefore = Math.max(0, (minutesBefore - breakBefore) / 60);
+        const hoursAfter = Math.max(0, (minutesAfter - breakAfter) / 60);
+        dayMap[startDate] = (dayMap[startDate] || 0) + hoursBefore;
+        dayMap[endDate] = (dayMap[endDate] || 0) + hoursAfter;
+      } else {
+        dayMap[startDate] = (dayMap[startDate] || 0) + hours;
+      }
+    });
+
+    // Per kalenderdag > 8 uur → overuren
+    let oproepOveruren = 0;
+    for (const [, dayHours] of Object.entries(dayMap)) {
+      if (dayHours > 8) {
+        oproepOveruren += dayHours - 8;
+      }
+    }
+
+    return {
+      gewerkte_dagen: gewerkteDagen,
+      uren_100: r(totalHours),
+      compensatie_uren: 0,
+      aanvulling_contract: 0,
+      diensttoeslag_za_150: r(saturdayHours),
+      diensttoeslag_zo_200: r(sundayHours),
+      vakantiedag: 0,
+      ziek: r(ziekHours),
+      verlof: r(verlofHours),
+      feestdag: r(holidayHoursWorked),
+      atv: r(atvHours),
+      bijzonder_verlof: r(bijzonderVerlof),
+      partner_verlof: r(partnerVerlof),
+      onbetaald_verlof: r(onbetaaldVerlof),
+      ouderschapsverlof_betaald: r(ouderschapsBetaald),
+      ouderschapsverlof_onbetaald: r(ouderschapsOnbetaald),
+      variabele_uren_100: r(totalHours),
+      toeslagenmatrix_19: (employee.is_chauffeur !== false) ? r(nightHours) : 0,
+      toeslag_za_50: 0,
+      za_overwerk_150: 0,
+      toeslag_zo_100: 0,
+      zo_overwerk_200: 0,
+      diensturen_feestdag_200: r(holidayHoursWorked),
+      toeslag_feestdag_100: 0,
+      feestdag_overwerk_200: 0,
+      overwerk_130: r(oproepOveruren),
+      partnerverlof_week: r(partnerverlofWeek),
+      verblijfkosten: Math.round(subsistence * 100) / 100,
+    };
+  }
+
+  // === REGULIERE LOGICA (niet-oproepkracht) ===
   const weekendWorked = saturdayHours + sundayHours;
   const contractShortage = Math.max(0, contractHours - weekdayHours);
 
-  // aanvulling = MIN(weekenduren, tekort)  →  mag nooit > weekenduren
   const aanvulling = Math.min(weekendWorked, contractShortage);
-
-  // compensatieuren = weekenduren boven de aanvulling
   const compensatieUren = Math.max(0, weekendWorked - aanvulling);
 
-  // Verdeel aanvulling proportioneel over za/zo (zaterdag eerst)
   let aanvullingZa = 0;
   let aanvullingZo = 0;
   let remaining = aanvulling;
@@ -136,34 +216,26 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
     remaining -= aanvullingZo;
   }
 
-  // Diensturen = totale uren op die dag
   const dienstZa = saturdayHours;
   const dienstZo = sundayHours;
   const dienstFeestdag = holidayHoursWorked;
 
-  // Toeslag berekening: over aanvullings-uren
   const toeslagZa50 = aanvullingZa;
   const toeslagZo100 = aanvullingZo;
   const toeslagFeestdag100 = Math.min(holidayHoursWorked, Math.max(0, contractHours - weekdayHours - aanvulling));
 
-  // Overwerk: uren boven contracturen (compensatieuren per dag)
   const overwerkZa150 = Math.max(0, saturdayHours - aanvullingZa);
   const overwerkZo200 = Math.max(0, sundayHours - aanvullingZo);
   const overwerkFeestdag200 = Math.max(0, holidayHoursWorked - toeslagFeestdag100);
   const overwerk130 = Math.max(0, weekdayHours - contractHours);
 
-  // Oproepkracht: check op basis van het actieve contract voor deze week
-  const isOproep = employee.contract_type === "Oproep" ||
-    ((contract.type_contract || "").toLowerCase().includes("oproep"));
-  const variabeleUren100 = isOproep ? totalHours : 0;
-
-  const r = (v) => Math.round(v * 10000) / 10000;
+  const variabeleUren100 = 0;
 
   return {
     gewerkte_dagen: gewerkteDagen,
     uren_100: r(totalHours),
-    compensatie_uren: isOproep ? 0 : r(compensatieUren),
-    aanvulling_contract: isOproep ? 0 : r(aanvulling),
+    compensatie_uren: r(compensatieUren),
+    aanvulling_contract: r(aanvulling),
     diensttoeslag_za_150: r(dienstZa),
     diensttoeslag_zo_200: r(dienstZo),
     vakantiedag: 0,
