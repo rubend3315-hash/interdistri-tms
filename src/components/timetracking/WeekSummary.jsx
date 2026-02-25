@@ -66,7 +66,7 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
 
   let totalOveruren = 0;
   if (isOproep) {
-    // Per kalenderdag > 8 uur netto → overuren
+    // Per kalenderdag ma-vr > 8 uur netto → overuren. Za/zo tellen NIET mee voor overwerk.
     const dayMap = {};
     gewerkt.forEach(e => {
       if (!e.date) return;
@@ -90,8 +90,12 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         dayMap[startDate] = (dayMap[startDate] || 0) + hours;
       }
     });
-    for (const [, dayHours] of Object.entries(dayMap)) {
-      if (dayHours > 8) totalOveruren += dayHours - 8;
+    for (const [dateStr, dayHours] of Object.entries(dayMap)) {
+      const dow = new Date(dateStr).getDay();
+      // Alleen ma(1)-vr(5): overwerk. Za(6)/zo(0) = diensturen, geen overwerk 130%
+      if (dow >= 1 && dow <= 5 && dayHours > 8) {
+        totalOveruren += dayHours - 8;
+      }
     }
   } else {
     totalOveruren = contractWeekTotal > 0
