@@ -126,6 +126,31 @@ export default function LoonrapportDetail({
     };
   }, [periodeTotals, hourlyRate, isOproepkracht, oproepUurloonInclVB]);
 
+  // Uursoort-mapping ophalen
+  const { data: payrollSettings = [] } = useQuery({
+    queryKey: ['payrollSettings'],
+    queryFn: () => base44.entities.PayrollSettings.list(),
+  });
+  const uursoortMapping = payrollSettings[0]?.looncomponent_uursoort_mapping || null;
+
+  // Map VARIABELE_KOLOMMEN keys naar mapping keys
+  const getMappingKey = (colKey) => {
+    const keyMap = {
+      toeslag_za_50: "toeslag_za_50",
+      za_overwerk_150: "overwerk_zaterdag_150",
+      toeslag_zo_100: "toeslag_zo_100",
+      zo_overwerk_200: "overwerk_zondag_200",
+      diensttoeslag_za_150: "diensturen_zaterdag_150",
+      diensttoeslag_zo_200: "diensturen_zondag_200",
+    };
+    return keyMap[colKey] || colKey;
+  };
+
+  const getCodeSuffix = (colKey) => {
+    const code = uursoortMapping?.[getMappingKey(colKey)];
+    return code ? ` (${code})` : "";
+  };
+
   const handlePrint = () => window.print();
 
   const fmt = (v) => {
