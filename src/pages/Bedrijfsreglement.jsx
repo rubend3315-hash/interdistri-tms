@@ -93,24 +93,27 @@ export default function Bedrijfsreglement() {
   // Sorted list with auto-calculated article numbers
   const sorted = useMemo(() => getSortedWithNumbers(artikelen), [artikelen]);
 
-  const filtered = sorted.filter((art) => {
+  const filtered = useMemo(() => sorted.filter((art) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (
       art.titel?.toLowerCase().includes(q) ||
       art.hoofdstuk?.toLowerCase().includes(q) ||
       art.inhoud?.toLowerCase().includes(q) ||
-      String(art.artikel_nummer).includes(q)
+      String(art.artikelNummer).includes(q)
     );
-  });
+  }), [sorted, searchQuery]);
 
-  // Group by hoofdstuk
-  const hoofdstukken = {};
-  filtered.forEach((art) => {
-    const h = art.hoofdstuk || "Overig";
-    if (!hoofdstukken[h]) hoofdstukken[h] = [];
-    hoofdstukken[h].push(art);
-  });
+  // Group by hoofdstuk (preserving sort order)
+  const hoofdstukken = useMemo(() => {
+    const map = {};
+    filtered.forEach((art) => {
+      const h = art.hoofdstuk || "Overig";
+      if (!map[h]) map[h] = [];
+      map[h].push(art);
+    });
+    return map;
+  }, [filtered]);
 
   const handleSave = async (data) => {
     const id = editingArtikel?.id || null;
