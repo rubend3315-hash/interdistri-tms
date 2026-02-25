@@ -205,35 +205,28 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
   }
 
   // === REGULIERE LOGICA (niet-oproepkracht) ===
-  const weekendWorked = saturdayHours + sundayHours;
-  const contractShortage = Math.max(0, contractHours - weekdayHours);
+  // Contracttekort = hoeveel uren nog nodig zijn om contracturen vol te maken
+  // na doordeweekse uren + feestdaguren (feestdag telt mee als gewerkt).
+  const contractTekort = Math.max(0, contractHours - weekdayHours);
 
-  const aanvulling = Math.min(weekendWorked, contractShortage);
-  const compensatieUren = Math.max(0, weekendWorked - aanvulling);
+  // Weekenduren binnen contracttekort → basis_100 + toeslag (za 50% / zo 100%)
+  // Weekenduren boven contracttekort → overwerk (za 150% / zo 200%)
+  // Volgorde aanvulling: eerst zaterdag, dan zondag
+  const zaAanvulling = Math.min(saturdayHours, contractTekort);
+  const zaOverwerk = Math.max(0, saturdayHours - zaAanvulling);
+  const restTekortNaZa = Math.max(0, contractTekort - zaAanvulling);
 
-  let aanvullingZa = 0;
-  let aanvullingZo = 0;
-  let remaining = aanvulling;
-  if (remaining > 0 && saturdayHours > 0) {
-    aanvullingZa = Math.min(remaining, saturdayHours);
-    remaining -= aanvullingZa;
-  }
-  if (remaining > 0 && sundayHours > 0) {
-    aanvullingZo = Math.min(remaining, sundayHours);
-    remaining -= aanvullingZo;
-  }
+  const zoAanvulling = Math.min(sundayHours, restTekortNaZa);
+  const zoOverwerk = Math.max(0, sundayHours - zoAanvulling);
+  const restTekortNaZo = Math.max(0, restTekortNaZa - zoAanvulling);
 
-  const dienstZa = saturdayHours;
-  const dienstZo = sundayHours;
-  const dienstFeestdag = holidayHoursWorked;
+  // Feestdag: binnen restant contracttekort → diensturen + toeslag, boven → overwerk
+  const feestdagDienst = Math.min(holidayHoursWorked, restTekortNaZo);
+  const feestdagOverwerk = Math.max(0, holidayHoursWorked - feestdagDienst);
 
-  const toeslagZa50 = aanvullingZa;
-  const toeslagZo100 = aanvullingZo;
-  const toeslagFeestdag100 = Math.min(holidayHoursWorked, Math.max(0, contractHours - weekdayHours - aanvulling));
+  const aanvulling = zaAanvulling + zoAanvulling;
 
-  const overwerkZa150 = Math.max(0, saturdayHours - aanvullingZa);
-  const overwerkZo200 = Math.max(0, sundayHours - aanvullingZo);
-  const overwerkFeestdag200 = Math.max(0, holidayHoursWorked - toeslagFeestdag100);
+  // Overwerk 130% = doordeweekse uren boven contracturen
   const overwerk130 = Math.max(0, weekdayHours - contractHours);
 
   const variabeleUren100 = 0;
@@ -241,10 +234,10 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
   return {
     gewerkte_dagen: gewerkteDagen,
     uren_100: r(totalHours),
-    compensatie_uren: r(compensatieUren),
+    compensatie_uren: 0,
     aanvulling_contract: r(aanvulling),
-    diensttoeslag_za_150: r(dienstZa),
-    diensttoeslag_zo_200: r(dienstZo),
+    diensttoeslag_za_150: 0,
+    diensttoeslag_zo_200: 0,
     vakantiedag: 0,
     ziek: r(ziekHours),
     verlof: r(verlofHours),
@@ -257,13 +250,13 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
     ouderschapsverlof_onbetaald: r(ouderschapsOnbetaald),
     variabele_uren_100: r(variabeleUren100),
     toeslagenmatrix_19: (employee.is_chauffeur !== false) ? r(nightHours) : 0,
-    toeslag_za_50: r(toeslagZa50),
-    za_overwerk_150: r(overwerkZa150),
-    toeslag_zo_100: r(toeslagZo100),
-    zo_overwerk_200: r(overwerkZo200),
-    diensturen_feestdag_200: r(dienstFeestdag),
-    toeslag_feestdag_100: r(toeslagFeestdag100),
-    feestdag_overwerk_200: r(overwerkFeestdag200),
+    toeslag_za_50: r(zaAanvulling),
+    za_overwerk_150: r(zaOverwerk),
+    toeslag_zo_100: r(zoAanvulling),
+    zo_overwerk_200: r(zoOverwerk),
+    diensturen_feestdag_200: r(holidayHoursWorked),
+    toeslag_feestdag_100: r(feestdagDienst),
+    feestdag_overwerk_200: r(feestdagOverwerk),
     overwerk_130: r(overwerk130),
     partnerverlof_week: r(partnerverlofWeek),
     verblijfkosten: Math.round(subsistence * 100) / 100,
