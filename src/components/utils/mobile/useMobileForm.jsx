@@ -187,7 +187,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
             ...(isMultiDay ? { end_date: draft.end_date || todayStr } : {}),
             start_time: draft.start_time || "",
             end_time: draft.end_time || "",
-            break_minutes: draft.break_minutes ?? 30,
+            break_minutes: draft.break_minutes ?? 0,
             notes: draft.notes || ""
           }));
           if (draft.signature_url) setSignature(draft.signature_url);
