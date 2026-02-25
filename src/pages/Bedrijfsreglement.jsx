@@ -48,7 +48,6 @@ export default function Bedrijfsreglement() {
   const saveMutation = useMutation({
     mutationFn: async ({ id, data }) => {
       if (id) {
-        // Existing article - save old version
         const existing = artikelen.find(a => a.id === id);
         const versieGeschiedenis = [...(existing.versie_geschiedenis || [])];
         versieGeschiedenis.push({
@@ -64,8 +63,10 @@ export default function Bedrijfsreglement() {
           versie_geschiedenis: versieGeschiedenis,
         });
       } else {
+        const sortOrder = getNextSortOrder(artikelen, data.hoofdstuk);
         return base44.entities.BedrijfsreglementArtikel.create({
           ...data,
+          sort_order: sortOrder,
           versie: 1,
           versie_geschiedenis: [],
           status: "Actief",
@@ -82,14 +83,6 @@ export default function Bedrijfsreglement() {
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       await base44.entities.BedrijfsreglementArtikel.delete(id);
-      // Hernummer alle overgebleven artikelen
-      const remaining = sorted.filter(a => a.id !== id);
-      for (let i = 0; i < remaining.length; i++) {
-        const newNr = i + 1;
-        if (remaining[i].artikel_nummer !== newNr) {
-          await base44.entities.BedrijfsreglementArtikel.update(remaining[i].id, { artikel_nummer: newNr });
-        }
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bedrijfsreglementArtikelen"] });
@@ -97,8 +90,8 @@ export default function Bedrijfsreglement() {
     },
   });
 
-  const sorted = [...artikelen]
-    .sort((a, b) => a.artikel_nummer - b.artikel_nummer);
+  // Sorted list with auto-calculated article numbers
+  const sorted = useMemo(() => getSortedWithNumbers(artikelen), [artikelen]);
 
   const filtered = sorted.filter((art) => {
     if (!searchQuery) return true;
