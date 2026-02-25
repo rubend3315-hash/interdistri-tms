@@ -273,7 +273,6 @@ export default function SalaryReports() {
                 holidays={holidays}
                 salaryTables={salaryTables}
                 onSelectEmployee={setSelectedEmployee}
-                onChangePeriode={setSelectedPeriode}
               />
             )}
           </div>

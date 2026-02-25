@@ -281,7 +281,7 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
   }
 
 export default function LoonrapportOverzicht({
-  year, selectedPeriode, periodes, employees, timeEntries, holidays, salaryTables, onSelectEmployee, onChangePeriode
+  year, selectedPeriode, periodes, employees, timeEntries, holidays, salaryTables, onSelectEmployee
 }) {
   // Haal uursoort-mapping op uit PayrollSettings
   const { data: payrollSettings = [] } = useQuery({
