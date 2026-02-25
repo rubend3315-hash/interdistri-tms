@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, FileSpreadsheet, Download } from "lucide-react";
 import { getWeek, getDay } from "date-fns";
 import { getFullName } from "@/components/utils/employeeUtils";
+import { getLooncomponentLabel } from "@/components/utils/uursoortMapping";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 
 // Kolom-definities voor de variabele componenten (op basis van Urensoort entity)
 export const VARIABELE_KOLOMMEN = [
