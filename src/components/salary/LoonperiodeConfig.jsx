@@ -110,8 +110,8 @@ export default function LoonperiodeConfig({ periodes, onSave }) {
                     ) : (
                       <span className="text-sm text-slate-700">
                         {p.weken.length > 0
-                          ? `Week ${p.weken[0]} t/m ${p.weken[p.weken.length - 1]}`
-                          : <span className="text-slate-400 italic">Geen weken</span>
+                          ? p.weken.join(", ")
+                          : <span className="text-slate-400 italic">—</span>
                         }
                       </span>
                     )}
