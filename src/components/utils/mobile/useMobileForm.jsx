@@ -325,5 +325,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     storageKey,
     generateAutoRit,
     autoRitDismissed,
+    manualBreak,
+    setManualBreak: (val) => { manualBreakRef.current = val; setManualBreak(val); },
   };
 }
