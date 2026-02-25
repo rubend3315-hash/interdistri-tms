@@ -256,6 +256,32 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     loadDraft();
   }, [currentEmployee?.id, draftLoaded, todayStr, isMultiDay]);
 
+  // --- Auto-calculate break from staffel when not manual ---
+  useEffect(() => {
+    if (manualBreakRef.current) return;
+    if (!formData.start_time || !formData.end_time) return;
+    if (formData.start_time.length < 5 || formData.end_time.length < 5) return;
+    const [sH, sM] = formData.start_time.split(':').map(Number);
+    const [eH, eM] = formData.end_time.split(':').map(Number);
+    if (isNaN(sH) || isNaN(sM) || isNaN(eH) || isNaN(eM)) return;
+    let dienstMinutes = (eH * 60 + eM) - (sH * 60 + sM);
+    if (isMultiDay && formData.end_date && formData.end_date > formData.date) {
+      const d1 = new Date(formData.date + 'T12:00:00');
+      const d2 = new Date(formData.end_date + 'T12:00:00');
+      dienstMinutes += Math.round((d2 - d1) / 864e5) * 1440;
+    } else if (dienstMinutes < 0) {
+      dienstMinutes += 1440;
+    }
+    const dienstHours = dienstMinutes / 60;
+    const activeStaffels = breakSchedules.filter(s => s.status === 'Actief').sort((a, b) => a.min_hours - b.min_hours);
+    const match = activeStaffels.find(s => dienstHours >= s.min_hours && (s.max_hours == null || dienstHours < s.max_hours));
+    const newBreak = match ? match.break_minutes : 0;
+    setFormData(prev => {
+      if (prev.break_minutes === newBreak) return prev;
+      return { ...prev, break_minutes: newBreak };
+    });
+  }, [formData.start_time, formData.end_time, formData.date, formData.end_date, breakSchedules, isMultiDay]);
+
   // --- Calculate hours (client-side for display only) ---
   const calculateHours = useCallback((start, end, breakMin, startDate, endDate) => {
     if (!start || !end) return 0;
