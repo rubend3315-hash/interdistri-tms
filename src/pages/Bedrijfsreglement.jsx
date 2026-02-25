@@ -244,7 +244,6 @@ export default function Bedrijfsreglement() {
         {/* Sidebar - Legenda */}
         <div className="lg:col-span-1">
           <ReglementLegenda artikelen={sorted} onArtikelClick={(art) => {
-            // Legenda receives sorted list with artikelNummer already set
             setExpandedHoofdstuk(art.hoofdstuk || "Overig");
             setSelectedArtikel(art.id);
             setTimeout(() => {
