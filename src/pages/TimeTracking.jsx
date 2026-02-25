@@ -360,40 +360,50 @@ export default function TimeTracking() {
       && formData.end_date !== formData.date 
       && areDifferentWeeks(formData.date, formData.end_date);
 
-    if (spansWeekBoundary) {
-      // Split into two entries: one for each week
+    // Dienst over middernacht: altijd splitsen in dagdelen (ongeacht weekgrens)
+    const crossesMidnight = !isNonWorked && formData.end_date && formData.date
+      && formData.end_date !== formData.date;
+
+    if (crossesMidnight) {
       const startDate = formData.date;
       const endDate = formData.end_date;
       const midnightTime = "00:00";
 
-      // Part 1: startDate start_time → 00:00 (midnight)
-      const hours1Raw = calculateHours(formData.start_time, midnightTime, 0, startDate, endDate);
-      const hours1 = Math.max(0, hours1Raw);
-      
-      // Part 2: 00:00 → end_time on endDate
-      const totalHoursRaw = calculateHours(formData.start_time, formData.end_time, 0, startDate, endDate);
-      const hours2Raw = totalHoursRaw - hours1;
-      
-      // Calculate total break based on total raw hours
+      // 1. Bereken bruto minuten per dagdeel (vóór pauze)
+      const grossMinutes1 = calculateHours(formData.start_time, midnightTime, 0, startDate, endDate) * 60;
+      const grossMinutes2 = calculateHours(midnightTime, formData.end_time, 0, endDate, endDate) * 60;
+      const totalGrossMinutes = grossMinutes1 + grossMinutes2;
+      const totalGrossHours = totalGrossMinutes / 60;
+
+      // 2. Pauze op totale dienstduur (conform CAO)
       let breakMinutes = Number(formData.break_minutes) || 0;
       if (!manualBreak && dialogCategory === "gewerkt") {
-        const ab = await getBreakMinutesForHours(totalHoursRaw);
+        const ab = await getBreakMinutesForHours(totalGrossHours);
         breakMinutes = ab || breakMinutes;
       }
-      // Assign all break to the longer part of the shift
-      const break1 = hours1 >= hours2Raw ? breakMinutes : 0;
-      const break2 = hours1 >= hours2Raw ? 0 : breakMinutes;
-      
-      const finalHours1 = Math.max(0, hours1 - break1 / 60);
-      const finalHours2 = Math.max(0, hours2Raw - break2 / 60);
 
+      // 3. Netto minuten = bruto − pauze, daarna proportioneel splitsen
+      const totalNetMinutes = Math.max(0, totalGrossMinutes - breakMinutes);
+      const ratio1 = totalGrossMinutes > 0 ? grossMinutes1 / totalGrossMinutes : 0;
+      const netMinutes1 = Math.round(totalNetMinutes * ratio1 * 100) / 100;
+      const netMinutes2 = Math.round((totalNetMinutes - netMinutes1) * 100) / 100;
+      const netHours1 = Math.round(netMinutes1 / 60 * 100) / 100;
+      const netHours2 = Math.round(netMinutes2 / 60 * 100) / 100;
+
+      // Pauze proportioneel toerekenen (voor rapportage)
+      const break1 = Math.round(breakMinutes * ratio1);
+      const break2 = breakMinutes - break1;
+
+      // 4. Weeknummer: dienst hoort bij startdatum
       const d1 = new Date(startDate);
       const w1 = getWeek(d1, { weekStartsOn: 1 });
       const y1 = getYear(d1);
+      // Deel 2 behoudt eigen datum maar week = startdatum-week
       const d2 = new Date(endDate);
-      const w2 = getWeek(d2, { weekStartsOn: 1 });
-      const y2 = getYear(d2);
+      const w2 = spansWeekBoundary ? getWeek(d2, { weekStartsOn: 1 }) : w1;
+      const y2 = spansWeekBoundary ? getYear(d2) : y1;
 
+      // 5. Uurtype-berekening per dagdeel
       const hourCalc1 = await calculateAllHours(formData.start_time, midnightTime, break1, startDate, finalShiftType);
       const hourCalc2 = await calculateAllHours(midnightTime, formData.end_time, break2, endDate, finalShiftType);
 
@@ -406,7 +416,7 @@ export default function TimeTracking() {
         status: 'Ingediend',
       };
 
-      // Entry 1: start day (e.g. Sunday)
+      // Entry 1: startdag (bijv. zondag 23:30 – 00:00)
       const entry1 = {
         ...baseData,
         date: startDate,
@@ -414,20 +424,21 @@ export default function TimeTracking() {
         start_time: formData.start_time,
         end_time: midnightTime,
         break_minutes: break1,
-        total_hours: hourCalc1?.total_hours ?? finalHours1,
+        total_hours: netHours1,
         overtime_hours: hourCalc1?.overtime_hours ?? 0,
         night_hours: hourCalc1?.night_hours ?? 0,
         weekend_hours: hourCalc1?.weekend_hours ?? 0,
         holiday_hours: hourCalc1?.holiday_hours ?? 0,
         week_number: w1,
         year: y1,
+        calculated_dienst_minutes: Math.round(grossMinutes1),
         travel_allowance_multiplier: formData.travel_allowance_multiplier || 0,
         advanced_costs: formData.advanced_costs || 0,
         meals: formData.meals || 0,
         wkr: formData.wkr || 0,
       };
 
-      // Entry 2: end day (e.g. Monday)
+      // Entry 2: volgende dag (bijv. maandag 00:00 – 03:45)
       const entry2 = {
         ...baseData,
         date: endDate,
@@ -435,27 +446,27 @@ export default function TimeTracking() {
         start_time: midnightTime,
         end_time: formData.end_time,
         break_minutes: break2,
-        total_hours: hourCalc2?.total_hours ?? finalHours2,
+        total_hours: netHours2,
         overtime_hours: hourCalc2?.overtime_hours ?? 0,
         night_hours: hourCalc2?.night_hours ?? 0,
         weekend_hours: hourCalc2?.weekend_hours ?? 0,
         holiday_hours: hourCalc2?.holiday_hours ?? 0,
         week_number: w2,
         year: y2,
+        calculated_dienst_minutes: Math.round(grossMinutes2),
         travel_allowance_multiplier: 0,
         advanced_costs: 0,
         meals: 0,
         wkr: 0,
       };
 
-      // If editing existing entry, cascade delete the old one first
+      // Bestaande entry eerst verwijderen
       if (selectedEntry) {
         await base44.functions.invoke('deleteTimeEntryCascade', { id: selectedEntry.id });
       }
 
       const created1 = await base44.entities.TimeEntry.create(entry1);
       const created2 = await base44.entities.TimeEntry.create(entry2);
-      // Approve both via server-side status transition
       await base44.functions.invoke('approveTimeEntry', { time_entry_id: created1.id });
       await base44.functions.invoke('approveTimeEntry', { time_entry_id: created2.id });
       queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
