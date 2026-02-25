@@ -189,6 +189,14 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
     queryFn: () => base44.entities.CaoRule.list()
   });
 
+  // Uursoort-mapping uit PayrollSettings
+  const { data: payrollSettings = [] } = useQuery({
+    queryKey: ['payrollSettings'],
+    queryFn: () => base44.entities.PayrollSettings.list(),
+  });
+  const uursoortMapping = payrollSettings[0]?.looncomponent_uursoort_mapping || null;
+  const codeLabel = (key) => uursoortMapping?.[key] ? ` (${uursoortMapping[key]})` : "";
+
   // Filter alleen verblijfkosten regels
   const verblijfRules = caoRules.filter(r => r.category === 'Verblijfkosten' && r.status === 'Actief');
 
