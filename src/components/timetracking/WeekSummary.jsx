@@ -110,17 +110,15 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
 
   // Oproepkracht: geen aanvulling, compensatie of variabele uren
   let aanvullingContract = 0;
-  let compensatie = 0;
+  let compensatie = 0; // Altijd 0 — alleen vullen bij expliciet saldo-mechanisme
   let variabeleUren = 0;
 
   if (!isOproep) {
-    const totalAllesForAanvulling = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
-    aanvullingContract = contractWeekTotal > 0 && totalAllesForAanvulling < contractWeekTotal
-      ? contractWeekTotal - totalAllesForAanvulling : 0;
-
     const totalAlles = empEntries.reduce((s, e) => s + (e.total_hours || 0), 0);
-    compensatie = contractWeekTotal > 0 && totalAlles < contractWeekTotal
+    aanvullingContract = contractWeekTotal > 0 && totalAlles < contractWeekTotal
       ? contractWeekTotal - totalAlles : 0;
+
+    // compensatie_uren = 0 (geen automatische toekenning, conform loonengine)
 
     variabeleUren = totalGewerkt > contractWeekTotal && contractWeekTotal > 0
       ? totalGewerkt - contractWeekTotal : 0;
