@@ -162,7 +162,7 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
   return {
     gewerkte_dagen: gewerkteDagen,
     uren_100: r(totalHours),
-    compensatie_uren: 0,
+    compensatie_uren: isOproep ? 0 : r(compensatieUren),
     aanvulling_contract: isOproep ? 0 : r(aanvulling),
     diensttoeslag_za_150: r(dienstZa),
     diensttoeslag_zo_200: r(dienstZo),
