@@ -519,7 +519,12 @@ export default function LoonrapportOverzicht({
                         <TableRow
                           key={emp.employee.id}
                           className="hover:bg-blue-50 cursor-pointer"
-                          onClick={() => onSelectEmployee?.(emp.employee)}
+                          onClick={() => {
+                            if (onChangePeriode && p.periode !== selectedPeriode) {
+                              onChangePeriode(p.periode);
+                            }
+                            onSelectEmployee?.(emp.employee);
+                          }}
                         >
                           <TableCell className="sticky left-0 bg-white z-10 text-sm font-medium">
                             {getFullName(emp.employee)}
