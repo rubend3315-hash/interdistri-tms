@@ -472,19 +472,26 @@ export default function Trips() {
     return totalAllowance;
   };
 
+  // Normalize a time relative to an anchor using modulo arithmetic.
+  // Maps all times into a 24h window [anchor, anchor+1440).
+  const normalizeToAnchor = (anchor, timeMin) => {
+    const offset = ((timeMin - anchor) % 1440 + 1440) % 1440;
+    return anchor + offset;
+  };
+
   // Validate trip times against time entries
   const validateTripAgainstTimeEntry = (trip) => {
     if (!trip.departure_time || !trip.arrival_time || !trip.employee_id || !trip.date) {
       return { valid: null, message: "Geen rittijden" }; // can't validate
     }
-    // Find matching time entry for this employee on this date
+    // Find matching time entry for this employee on this date (or end_date for overnight)
     const matchingEntries = timeEntries.filter(te => 
-      te.employee_id === trip.employee_id && te.date === trip.date
+      te.employee_id === trip.employee_id && 
+      (te.date === trip.date || te.end_date === trip.date)
     );
     if (matchingEntries.length === 0) {
       return { valid: false, message: "Geen tijdregistratie gevonden voor deze datum" };
     }
-    // Check if trip times fall within any matching time entry
     const [tripDepH, tripDepM] = trip.departure_time.split(':').map(Number);
     const [tripArrH, tripArrM] = trip.arrival_time.split(':').map(Number);
     const tripDepMinutes = tripDepH * 60 + tripDepM;
@@ -494,13 +501,18 @@ export default function Trips() {
       if (!te.start_time || !te.end_time) continue;
       const [teStartH, teStartM] = te.start_time.split(':').map(Number);
       const [teEndH, teEndM] = te.end_time.split(':').map(Number);
-      const teStartMinutes = teStartH * 60 + teStartM;
-      const teEndMinutes = teEndH * 60 + teEndM;
+      const teStart = teStartH * 60 + teStartM;
+      const teEnd = teEndH * 60 + teEndM;
 
-      const depOk = tripDepMinutes >= teStartMinutes;
-      const arrOk = teEndMinutes >= teStartMinutes 
-        ? tripArrMinutes <= teEndMinutes  // same day
-        : true; // overnight shift, arrival always ok
+      // Normalize all times relative to dienst-start anchor
+      const anchor = teStart;
+      const svcEndN = normalizeToAnchor(anchor, teEnd);
+      const tripDepN = normalizeToAnchor(anchor, tripDepMinutes);
+      const tripArrN = normalizeToAnchor(anchor, tripArrMinutes);
+      const tripArrFinal = tripArrN <= tripDepN ? tripArrN + 1440 : tripArrN;
+
+      const depOk = tripDepN >= anchor && tripDepN <= svcEndN;
+      const arrOk = tripArrFinal <= svcEndN;
 
       if (depOk && arrOk) {
         return { valid: true, message: `Binnen tijdregistratie (${te.start_time} - ${te.end_time})` };
