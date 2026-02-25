@@ -157,10 +157,12 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
       }
     });
 
-    // Per kalenderdag > 8 uur → overuren
+    // Per kalenderdag ma-vr > 8 uur → overuren. Za/zo = diensturen, GEEN overwerk.
     let oproepOveruren = 0;
-    for (const [, dayHours] of Object.entries(dayMap)) {
-      if (dayHours > 8) {
+    for (const [dateStr, dayHours] of Object.entries(dayMap)) {
+      const dow = new Date(dateStr).getDay();
+      // Alleen ma(1)-vr(5): overwerk 130%. Za(6)/zo(0) gaan naar diensturen-toeslag.
+      if (dow >= 1 && dow <= 5 && dayHours > 8) {
         oproepOveruren += dayHours - 8;
       }
     }
