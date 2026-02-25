@@ -119,6 +119,36 @@ function testC7_noMarginProperty() {
   return assert(!('VALIDATION_MARGIN_MIN' in TimePolicy), "C7: Geen VALIDATION_MARGIN_MIN in TimePolicy");
 }
 
+// ─── BLOK C-overnight: Middernacht / Nachtdienst Bounds ───
+
+function testC8_overnightRitWithinDienst() {
+  // Scenario A: Dienst 23:30-03:45, Rit 01:33-02:42 → GROEN
+  const regels = [{ start_time: "01:33", end_time: "02:42" }];
+  const { valid } = validateBounds(regels, "23:30", "03:45");
+  return assert(valid, "C8: Nachtdienst 23:30-03:45, rit 01:33-02:42 → GROEN");
+}
+
+function testC9_overnightRitStartsBeforeDienst() {
+  // Scenario B: Dienst 23:30-03:45, Rit 22:30-02:00 → ROOD
+  const regels = [{ start_time: "22:30", end_time: "02:00" }];
+  const { valid } = validateBounds(regels, "23:30", "03:45");
+  return assert(!valid, "C9: Nachtdienst 23:30-03:45, rit 22:30-02:00 → ROOD (start voor dienst)");
+}
+
+function testC10_overnightRitEndsAfterDienst() {
+  // Scenario C: Dienst 23:30-03:45, Rit 01:00-05:00 → ROOD
+  const regels = [{ start_time: "01:00", end_time: "05:00" }];
+  const { valid } = validateBounds(regels, "23:30", "03:45");
+  return assert(!valid, "C10: Nachtdienst 23:30-03:45, rit 01:00-05:00 → ROOD (eind na dienst)");
+}
+
+function testC11_overnightExactBounds() {
+  // Rit exact op dienst grenzen over middernacht → GROEN
+  const regels = [{ start_time: "23:30", end_time: "03:45" }];
+  const { valid } = validateBounds(regels, "23:30", "03:45");
+  return assert(valid, "C11: Nachtdienst exact 23:30-03:45 → GROEN");
+}
+
 // ─── BLOK D: Overlap ───
 
 function testD1_overlapDetected() {
@@ -183,6 +213,8 @@ export function runTimeLogicTests() {
     testB4_dienstSyncEmpty, testB5_offsetValueIsExactlyTwo, testB6_applyDienstSyncDirect,
     testC1_withinBoundsAllowed, testC2_startBeforeDienstBlocked, testC3_endAfterDienstBlocked,
     testC4_exactBoundsAllowed, testC5_gapAllowed, testC6_boundsNoMutation, testC7_noMarginProperty,
+    testC8_overnightRitWithinDienst, testC9_overnightRitStartsBeforeDienst,
+    testC10_overnightRitEndsAfterDienst, testC11_overnightExactBounds,
     testD1_overlapDetected, testD2_noOverlap, testD3_overlapNoMutation,
     testE1_validTimeline, testE2_invalidTimeline, testE3_emptyTimeline,
   ];
