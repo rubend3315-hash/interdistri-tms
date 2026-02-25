@@ -6,20 +6,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Settings, Save, RotateCcw } from "lucide-react";
 
 // Standaard CAO Beroepsgoederenvervoer: 13 periodes, 52 weken
+// Periode 1 (januari) heeft geen weken (allow_empty_weeks).
+// Weken 1-52 verdeeld over periodes 2-13.
 const DEFAULT_PERIODES = [
-  { periode: 1, maand: "Januari", weken: [1, 2, 3, 4, 5] },
-  { periode: 2, maand: "Februari", weken: [6, 7, 8, 9] },
-  { periode: 3, maand: "Maart", weken: [10, 11, 12, 13] },
-  { periode: 4, maand: "April", weken: [14, 15, 16, 17] },
-  { periode: 5, maand: "Mei", weken: [18, 19, 20, 21] },
-  { periode: 6, maand: "Juni", weken: [22, 23, 24, 25] },
-  { periode: 7, maand: "Juli", weken: [26, 27, 28, 29] },
-  { periode: 8, maand: "Augustus", weken: [30, 31, 32, 33] },
-  { periode: 9, maand: "September", weken: [34, 35, 36, 37] },
-  { periode: 10, maand: "Oktober", weken: [38, 39, 40, 41] },
-  { periode: 11, maand: "November", weken: [42, 43, 44, 45] },
-  { periode: 12, maand: "December (1)", weken: [46, 47, 48, 49] },
-  { periode: 13, maand: "December (2)", weken: [50, 51, 52] },
+  { periode: 1, maand: "Januari", weken: [], allow_empty_weeks: true },
+  { periode: 2, maand: "Februari", weken: [1, 2, 3, 4, 5] },
+  { periode: 3, maand: "Maart", weken: [6, 7, 8, 9] },
+  { periode: 4, maand: "April", weken: [10, 11, 12, 13] },
+  { periode: 5, maand: "Mei", weken: [14, 15, 16, 17] },
+  { periode: 6, maand: "Juni", weken: [18, 19, 20, 21] },
+  { periode: 7, maand: "Juli", weken: [22, 23, 24, 25, 26] },
+  { periode: 8, maand: "Augustus", weken: [27, 28, 29, 30] },
+  { periode: 9, maand: "September", weken: [31, 32, 33, 34, 35] },
+  { periode: 10, maand: "Oktober", weken: [36, 37, 38, 39] },
+  { periode: 11, maand: "November", weken: [40, 41, 42, 43] },
+  { periode: 12, maand: "December (1)", weken: [44, 45, 46, 47, 48] },
+  { periode: 13, maand: "December (2)", weken: [49, 50, 51, 52] },
 ];
 
 export function getDefaultPeriodes() {
@@ -103,10 +105,14 @@ export default function LoonperiodeConfig({ periodes, onSave }) {
                         value={p.wekenStr}
                         onChange={(e) => handleWekenChange(idx, e.target.value)}
                         className="h-7 text-xs"
+                        placeholder={p.allow_empty_weeks ? "Geen weken (optioneel)" : ""}
                       />
                     ) : (
                       <span className="text-sm text-slate-700">
-                        Week {p.weken[0]} t/m {p.weken[p.weken.length - 1]}
+                        {p.weken.length > 0
+                          ? `Week ${p.weken[0]} t/m ${p.weken[p.weken.length - 1]}`
+                          : <span className="text-slate-400 italic">Geen weken</span>
+                        }
                       </span>
                     )}
                   </TableCell>
