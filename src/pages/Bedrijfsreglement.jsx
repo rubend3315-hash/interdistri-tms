@@ -259,7 +259,8 @@ export default function Bedrijfsreglement() {
           ) : Object.keys(hoofdstukken).length === 0 ? (
             <Card><CardContent className="py-8 text-center text-slate-500">Geen artikelen gevonden</CardContent></Card>
           ) : (
-            Object.entries(hoofdstukken).map(([hoofdstuk, arts]) => (
+            <DragDropContext onDragEnd={handleDragEnd}>
+            {Object.entries(hoofdstukken).map(([hoofdstuk, arts]) => (
               <Card key={hoofdstuk}>
                 <CardHeader
                   className="cursor-pointer hover:bg-slate-50 transition-colors py-3"
