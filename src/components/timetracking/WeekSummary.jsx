@@ -323,15 +323,16 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
 
         {/* Gewerkte uren */}
         <SectionHeader title="Gewerkte uren" />
-        <SummaryRow label="Aanvulling contracturen" value={fmt(aanvullingContract)} />
-        <SummaryRow label="Compensatieuren" value={
+        {!isOproep && <SummaryRow label="Aanvulling contracturen" value={fmt(aanvullingContract)} />}
+        {!isOproep && <SummaryRow label="Compensatieuren" value={
           contractWeekTotal > 0 
             ? <span className={compensatie > 0 ? 'text-red-500 font-semibold' : 'text-green-600 font-semibold'}>
                 {compensatie.toFixed(4).replace('.', ',')} uur
               </span>
             : '- uur'
-        } />
-        <SummaryRow label="Variabele uren" value={fmt(variabeleUren)} />
+        } />}
+        {isOproep && <SummaryRow label="Variabele uren 100%" value={fmt(totalGewerkt)} />}
+        {!isOproep && <SummaryRow label="Variabele uren" value={fmt(variabeleUren)} />}
         <SummaryRow label="Gewerkte dagen" value={`${gewerkeDagen} dag(en)`} />
         <SummaryRow label="Totaal gewerkt" value={fmt(totalGewerkt)} bold />
         <SummaryRow label="Totaal niet gewerkt" value={fmt(totalNietGewerkt)} />
