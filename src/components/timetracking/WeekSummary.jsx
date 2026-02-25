@@ -144,7 +144,8 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
     'uren_100', 'compensatie_uren', 'aanvulling_contract', 'overwerk_130',
     'toeslag_za_50', 'za_overwerk_150', 'toeslag_zo_100', 'zo_overwerk_200',
     'toeslag_feestdag_100', 'feestdag_overwerk_200', 'toeslagenmatrix_19',
-    'variabele_uren_100', 'gewerkte_dagen', 'diensttoeslag_za_150', 'diensttoeslag_zo_200'
+    'variabele_uren_100', 'gewerkte_dagen', 'diensttoeslag_za_150', 'diensttoeslag_zo_200',
+    'saldo_vakantie_uren'
   ];
   const missingKeys = requiredKeys.filter(k => result[k] === undefined);
 
@@ -204,6 +205,7 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
         } />}
         {isOproep && <SummaryRow label="Variabele uren 100%" value={fmt(result.variabele_uren_100)} />}
         {!isOproep && <SummaryRow label="Variabele uren" value={fmt(result.variabele_uren_100)} />}
+        <SummaryRow label="Saldo uren voor berekening vakantiebijslag en verlofuren" value={fmt(result.saldo_vakantie_uren)} />
         <SummaryRow label="Gewerkte dagen" value={`${result.gewerkte_dagen} dag(en)`} />
         <SummaryRow label="Totaal gewerkt" value={fmt(totalGewerkt)} bold />
         <SummaryRow label="Totaal niet gewerkt" value={fmt(totalNietGewerkt)} />
