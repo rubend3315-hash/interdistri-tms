@@ -271,7 +271,7 @@ export default function LoonrapportDetail({
 
               return (
                 <div key={col.key} className="flex items-center justify-between px-6 py-2.5 hover:bg-slate-50">
-                  <span className="text-sm text-slate-600">{col.label}</span>
+                  <span className="text-sm text-slate-600">{col.label}{getCodeSuffix(col.key)}</span>
                   <div className="flex items-center gap-8">
                     <span className="text-sm font-medium text-slate-700 min-w-[100px] text-right">
                       {isEuro ? `€ ${total.toFixed(2)}` : isDagen ? `${fmt(total)} ${total === 1 ? 'dag' : 'dagen'}` : `${fmt(total)} uur`}
