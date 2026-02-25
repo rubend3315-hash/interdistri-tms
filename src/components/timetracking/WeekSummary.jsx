@@ -269,26 +269,29 @@ export default function WeekSummary({ employee, weekDays, timeEntries, contractH
     return d.getDay() === 0;
   }).reduce((s, e) => s + (e.total_hours || 0), 0);
 
-  // Contracttekort na ma-vr
-  const contractTekort = contractWeekTotal > 0 ? Math.max(0, contractWeekTotal - maVrOverwerkTotal) : 0;
+  // Weekend/feestdag toeslag-logica
+  let zaterdagDiensturen, zaterdagOverwerk, zondagDiensturen, zondagOverwerk, feestdagDiensturen, feestdagOverwerk;
 
-  // Zaterdag: tekort wordt aangevuld (diensturen 100% + 50% toeslag), rest = overwerk 150%
-  const zaterdagDiensturen = Math.min(zaterdagUrenTotaal, contractTekort); // uren die contract aanvullen
-  const zaterdagOverwerk = Math.max(0, zaterdagUrenTotaal - contractTekort); // uren boven contract = overwerk
-
-  // Resterend tekort na zaterdag
-  const contractTekortNaZaterdag = Math.max(0, contractTekort - zaterdagUrenTotaal);
-
-  // Zondag: tekort wordt aangevuld (diensturen 100% + 100% toeslag), rest = overwerk 200%
-  const zondagDiensturen = Math.min(zondagUren, contractTekortNaZaterdag);
-  const zondagOverwerk = Math.max(0, zondagUren - contractTekortNaZaterdag);
-
-  // Resterend tekort na zondag
-  const contractTekortNaZondag = Math.max(0, contractTekortNaZaterdag - zondagUren);
-
-  // Feestdag: tekort wordt aangevuld (100% toeslag), rest = overwerk 200%
-  const feestdagDiensturen = Math.min(totalFeestdaguren, contractTekortNaZondag);
-  const feestdagOverwerk = Math.max(0, totalFeestdaguren - contractTekortNaZondag);
+  if (isOproep) {
+    // Oproepkracht: geen contracturenvergelijking, alle za/zo/feestdag uren zijn diensturen met toeslag
+    zaterdagDiensturen = zaterdagUrenTotaal;
+    zaterdagOverwerk = 0;
+    zondagDiensturen = zondagUren;
+    zondagOverwerk = 0;
+    feestdagDiensturen = totalFeestdaguren;
+    feestdagOverwerk = 0;
+  } else {
+    // Regulier: contracttekort bepaalt verdeling diensturen vs overwerk
+    const contractTekort = contractWeekTotal > 0 ? Math.max(0, contractWeekTotal - maVrOverwerkTotal) : 0;
+    zaterdagDiensturen = Math.min(zaterdagUrenTotaal, contractTekort);
+    zaterdagOverwerk = Math.max(0, zaterdagUrenTotaal - contractTekort);
+    const contractTekortNaZaterdag = Math.max(0, contractTekort - zaterdagUrenTotaal);
+    zondagDiensturen = Math.min(zondagUren, contractTekortNaZaterdag);
+    zondagOverwerk = Math.max(0, zondagUren - contractTekortNaZaterdag);
+    const contractTekortNaZondag = Math.max(0, contractTekortNaZaterdag - zondagUren);
+    feestdagDiensturen = Math.min(totalFeestdaguren, contractTekortNaZondag);
+    feestdagOverwerk = Math.max(0, totalFeestdaguren - contractTekortNaZondag);
+  }
 
   const fmt = (val) => val > 0 ? `${val.toFixed(4).replace('.', ',')} uur` : '- uur';
   const fmtEuro = (val) => `€ ${val.toFixed(2).replace('.', ',')}`;
