@@ -50,6 +50,8 @@ export default function MobileDienstTab({
   const handleSetManualBreak = (val) => {
     manualBreakRef.current = val;
     setManualBreak(val);
+    // Persist manual flag in formData for server-side validation
+    setFormData(prev => ({ ...prev, break_manual: val }));
   };
 
   // Auto-calculate break from staffel
