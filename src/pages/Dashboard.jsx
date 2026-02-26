@@ -6,7 +6,6 @@ import { createPageUrl } from "@/utils";
 import { format, differenceInDays } from "date-fns";
 import { nl } from "date-fns/locale";
 import { StatCard } from "@/components/ui/stat-card";
-import { AlertCard } from "@/components/ui/alert-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +15,14 @@ import {
   Truck,
   Clock,
   CheckSquare,
-  AlertTriangle,
   ArrowRight,
   Calendar,
-    Car,
+  Car,
   Bell,
-  Download
+  Download,
+  AlertTriangle,
+  FileText,
+  Smartphone
 } from "lucide-react";
 import CharterOverview from "../components/dashboard/CharterOverview";
 import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
@@ -29,6 +30,7 @@ import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
 import SystemStatusCard from "../components/dashboard/SystemStatusCard";
 import MobileEntryStatusCard from "../components/dashboard/MobileEntryStatusCard";
+import NotificationsCard from "../components/dashboard/NotificationsCard";
 
 export default function Dashboard({ currentUser }) {
   const today = new Date();
@@ -40,7 +42,6 @@ export default function Dashboard({ currentUser }) {
     return null;
   }
 
-  // Only fetch dashboard data for admin users
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
     queryFn: () => base44.entities.Employee.list(),
@@ -65,7 +66,7 @@ export default function Dashboard({ currentUser }) {
     enabled: isAdmin
   });
 
-  const { data: niwoPermits = [], isLoading: loadingNiwo } = useQuery({
+  const { data: niwoPermits = [] } = useQuery({
     queryKey: ['niwoPermits'],
     queryFn: () => base44.entities.NiwoPermit.list(),
     enabled: isAdmin
@@ -77,19 +78,7 @@ export default function Dashboard({ currentUser }) {
     enabled: isAdmin
   });
 
-  const { data: notifications = [], isLoading: loadingNotifications } = useQuery({
-    queryKey: ['notifications', currentUser?.id],
-    queryFn: async () => {
-      if (!currentUser?.id) return [];
-      const allNotifications = await base44.entities.Notification.list('-created_date', 50);
-      return allNotifications.filter(n => 
-        n.user_ids && n.user_ids.includes(currentUser.id)
-      );
-    },
-    enabled: isAdmin && !!currentUser?.id,
-  });
-
-  const isLoading = loadingEmployees || loadingVehicles || loadingTimeEntries || loadingTrips || loadingNiwo;
+  const isLoading = loadingEmployees || loadingVehicles || loadingTimeEntries || loadingTrips;
 
   // Calculate statistics
   const activeEmployees = employees.filter(e => e.status === 'Actief').length;
@@ -97,32 +86,34 @@ export default function Dashboard({ currentUser }) {
   const pendingApprovals = timeEntries.filter(t => t.status === 'Ingediend').length;
   const todayTrips = trips.filter(t => t.date === format(today, 'yyyy-MM-dd')).length;
 
-  // Find expiring documents
-  const expiringDocuments = [];
+  // Build notification items from expiring documents + system alerts
+  const notificationItems = [];
   const warningDays = 30;
 
   employees.forEach(emp => {
     if (emp.drivers_license_expiry) {
       const daysUntil = differenceInDays(new Date(emp.drivers_license_expiry), today);
       if (daysUntil <= warningDays && daysUntil >= 0) {
-        expiringDocuments.push({
+        notificationItems.push({
           type: 'Rijbewijs',
           name: `${emp.first_name} ${emp.last_name}`,
           expiry: emp.drivers_license_expiry,
           daysUntil,
-          link: `Employees?id=${emp.id}`
+          link: `Employees?id=${emp.id}`,
+          severity: daysUntil <= 7 ? 'red' : 'amber'
         });
       }
     }
     if (emp.code95_expiry) {
       const daysUntil = differenceInDays(new Date(emp.code95_expiry), today);
       if (daysUntil <= warningDays && daysUntil >= 0) {
-        expiringDocuments.push({
+        notificationItems.push({
           type: 'Code 95',
           name: `${emp.first_name} ${emp.last_name}`,
           expiry: emp.code95_expiry,
           daysUntil,
-          link: `Employees?id=${emp.id}`
+          link: `Employees?id=${emp.id}`,
+          severity: daysUntil <= 7 ? 'red' : 'amber'
         });
       }
     }
@@ -132,12 +123,13 @@ export default function Dashboard({ currentUser }) {
     if (v.apk_expiry) {
       const daysUntil = differenceInDays(new Date(v.apk_expiry), today);
       if (daysUntil <= warningDays && daysUntil >= 0) {
-        expiringDocuments.push({
+        notificationItems.push({
           type: 'APK',
           name: v.license_plate,
           expiry: v.apk_expiry,
           daysUntil,
-          link: `Vehicles?id=${v.id}`
+          link: `Vehicles?id=${v.id}`,
+          severity: daysUntil <= 7 ? 'red' : 'amber'
         });
       }
     }
@@ -147,36 +139,51 @@ export default function Dashboard({ currentUser }) {
     if (p.validity_date) {
       const daysUntil = differenceInDays(new Date(p.validity_date), today);
       if (daysUntil <= warningDays && daysUntil >= 0) {
-        expiringDocuments.push({
-          type: 'NIWO Vergunning',
+        notificationItems.push({
+          type: 'NIWO',
           name: p.permit_number,
           expiry: p.validity_date,
           daysUntil,
-          link: `NiwoPermits?id=${p.id}`
+          link: `NiwoPermits?id=${p.id}`,
+          severity: daysUntil <= 7 ? 'red' : 'amber'
         });
       }
     }
   });
 
-  // Documents from Documentenbeheer
   managedDocuments.forEach(doc => {
     if (doc.expiry_date) {
       const daysUntil = differenceInDays(new Date(doc.expiry_date), today);
       if (daysUntil <= warningDays && daysUntil >= 0) {
-        expiringDocuments.push({
+        notificationItems.push({
           type: doc.document_type || 'Document',
           name: doc.linked_entity_name || doc.name,
           expiry: doc.expiry_date,
           daysUntil,
-          link: 'Documents'
+          link: 'Documents',
+          severity: daysUntil <= 7 ? 'red' : 'amber'
         });
       }
     }
   });
 
-  expiringDocuments.sort((a, b) => a.daysUntil - b.daysUntil);
+  // Add pending approvals as system alert
+  if (pendingApprovals > 0) {
+    notificationItems.push({
+      type: 'Systeem',
+      name: `${pendingApprovals} goedkeuringen open`,
+      daysUntil: null,
+      link: 'Approvals',
+      severity: 'blue'
+    });
+  }
 
-  // Recent activities - only show submitted and approved entries, deduplicated by employee+date
+  notificationItems.sort((a, b) => {
+    const sevOrder = { red: 0, amber: 1, blue: 2 };
+    return (sevOrder[a.severity] ?? 3) - (sevOrder[b.severity] ?? 3) || (a.daysUntil ?? 999) - (b.daysUntil ?? 999);
+  });
+
+  // Recent activities
   const recentTimeEntries = [...timeEntries]
     .filter(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd')
     .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
@@ -187,38 +194,38 @@ export default function Dashboard({ currentUser }) {
     .slice(0, 5);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* System Status */}
       <SystemStatusCard />
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-500 mt-1">
-            Welkom terug! Hier is een overzicht van vandaag.
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-sm text-slate-500">
+            Welkom terug! Overzicht van vandaag.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => setShowExport(true)}>
-            <Download className="w-4 h-4 mr-2" />
-            Exporteer Excel
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowExport(true)}>
+            <Download className="w-4 h-4 mr-1.5" />
+            Exporteer
           </Button>
           <Link to={createPageUrl("TimeTracking")}>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Clock className="w-4 h-4 mr-2" />
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+              <Clock className="w-4 h-4 mr-1.5" />
               Tijdregistratie
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {isLoading ? (
           <>
             {[1, 2, 3, 4, 5].map(i => (
-              <Skeleton key={i} className="h-32 rounded-2xl" />
+              <Skeleton key={i} className="h-24 rounded-xl" />
             ))}
           </>
         ) : (
@@ -230,7 +237,7 @@ export default function Dashboard({ currentUser }) {
               subtitle={`${employees.length} totaal`}
             />
             <StatCard
-              title="Beschikbare Voertuigen"
+              title="Voertuigen"
               value={availableVehicles}
               icon={Car}
               subtitle={`${vehicles.length} totaal`}
@@ -239,87 +246,65 @@ export default function Dashboard({ currentUser }) {
               title="Ritten Vandaag"
               value={todayTrips}
               icon={Truck}
-              subtitle={format(today, "EEEE d MMMM", { locale: nl })}
+              subtitle={format(today, "EEEE d MMM", { locale: nl })}
             />
             <StatCard
-              title="Ter Goedkeuring"
+              title="Goedkeuringen"
               value={pendingApprovals}
               icon={CheckSquare}
-              subtitle="Openstaande uren"
-              className={pendingApprovals > 0 ? "ring-2 ring-amber-200" : ""}
+              subtitle="Openstaand"
+              className={pendingApprovals > 0 ? "ring-1 ring-amber-200" : ""}
             />
             <MobileEntryStatusCard />
           </>
         )}
       </div>
 
-      {/* Alerts Section */}
-      {expiringDocuments.length > 0 && (
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
-              Verlopende Documenten
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {expiringDocuments.slice(0, 5).map((doc, index) => (
-              <AlertCard
-                key={index}
-                variant={doc.daysUntil <= 7 ? "error" : "warning"}
-                title={`${doc.type} - ${doc.name}`}
-                description={`Verloopt over ${doc.daysUntil} dagen (${format(new Date(doc.expiry), "d MMMM yyyy", { locale: nl })})`}
-                action="Bekijken"
-                onAction={() => window.location.href = createPageUrl(doc.link)}
-              />
-            ))}
-            {expiringDocuments.length > 5 && (
-              <p className="text-sm text-slate-500 text-center pt-2">
-                En nog {expiringDocuments.length - 5} andere documenten...
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Contract Warnings */}
+      {/* Contract Warnings - compact */}
       {!isLoading && <ContractWarnings employees={employees} />}
 
-      {/* Revenue per Customer */}
-      <RevenuePerCustomer />
+      {/* Second Row: Meldingen (4 col) + Klanten (8 col) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-4">
+          <NotificationsCard items={notificationItems} />
+        </div>
+        <div className="lg:col-span-8">
+          <RevenuePerCustomer />
+        </div>
+      </div>
 
-      {/* Quick Actions & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* Third Row: Quick Actions + Recent + Charters */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Quick Actions */}
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Snelle Acties</CardTitle>
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 px-4 pt-4">
+            <CardTitle className="text-sm">Snelle Acties</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
+          <CardContent className="grid grid-cols-2 gap-2 px-4 pb-4">
             <Link to={createPageUrl("Employees")}>
-              <Button variant="outline" className="w-full h-20 flex-col gap-2">
-                <Users className="w-6 h-6 text-blue-600" />
-                <span className="text-sm">Medewerkers</span>
+              <Button variant="outline" className="w-full h-16 flex-col gap-1.5 text-xs">
+                <Users className="w-5 h-5 text-blue-600" />
+                Medewerkers
               </Button>
             </Link>
             <Link to={createPageUrl("Vehicles")}>
-              <Button variant="outline" className="w-full h-20 flex-col gap-2">
-                <Car className="w-6 h-6 text-emerald-600" />
-                <span className="text-sm">Voertuigen</span>
+              <Button variant="outline" className="w-full h-16 flex-col gap-1.5 text-xs">
+                <Car className="w-5 h-5 text-emerald-600" />
+                Voertuigen
               </Button>
             </Link>
             <Link to={createPageUrl("Planning")}>
-              <Button variant="outline" className="w-full h-20 flex-col gap-2">
-                <Calendar className="w-6 h-6 text-purple-600" />
-                <span className="text-sm">Planning</span>
+              <Button variant="outline" className="w-full h-16 flex-col gap-1.5 text-xs">
+                <Calendar className="w-5 h-5 text-purple-600" />
+                Planning
               </Button>
             </Link>
             <Link to={createPageUrl("Approvals")}>
-              <Button variant="outline" className="w-full h-20 flex-col gap-2 relative">
-                <CheckSquare className="w-6 h-6 text-amber-600" />
-                <span className="text-sm">Goedkeuringen</span>
+              <Button variant="outline" className="w-full h-16 flex-col gap-1.5 text-xs relative">
+                <CheckSquare className="w-5 h-5 text-amber-600" />
+                Goedkeuringen
                 {pendingApprovals > 0 && (
-                  <Badge className="absolute -top-1 -right-1 bg-amber-500 text-white">
+                  <Badge className="absolute -top-1 -right-1 bg-amber-500 text-white text-[10px] px-1.5 py-0">
                     {pendingApprovals}
                   </Badge>
                 )}
@@ -329,58 +314,58 @@ export default function Dashboard({ currentUser }) {
         </Card>
 
         {/* Recent Time Entries */}
-        <Card>
-          <CardHeader className="pb-4">
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 px-4 pt-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Recente Tijdregistraties</CardTitle>
+              <CardTitle className="text-sm">Recente Tijdregistraties</CardTitle>
               <Link to={createPageUrl("TimeTracking")}>
-                <Button variant="ghost" size="sm" className="text-blue-600">
-                  Alles bekijken
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                <Button variant="ghost" size="sm" className="text-blue-600 h-7 text-xs px-2">
+                  Alles
+                  <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
               </Link>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 pb-4">
             {isLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-14" />
+                  <Skeleton key={i} className="h-10" />
                 ))}
               </div>
             ) : recentTimeEntries.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">
+              <p className="text-xs text-slate-500 text-center py-6">
                 Nog geen tijdregistraties
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-1.5">
                 {recentTimeEntries.map(entry => {
                   const employee = employees.find(e => e.id === entry.employee_id);
                   return (
                     <Link key={entry.id} to={createPageUrl("TimeTracking")}>
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 cursor-pointer transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-slate-400" />
+                      <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 bg-white rounded-md flex items-center justify-center flex-shrink-0">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
                           </div>
-                          <div>
-                            <p className="font-medium text-slate-900">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-slate-900 truncate">
                               {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
                             </p>
-                            <p className="text-sm text-slate-500">
-                              {entry.date ? format(new Date(entry.date), "d MMM yyyy", { locale: nl }) : '-'}
+                            <p className="text-[10px] text-slate-500">
+                              {entry.date ? format(new Date(entry.date), "d MMM", { locale: nl }) : '-'}
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-slate-900">
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-xs font-semibold text-slate-900">
                             {entry.total_hours ? `${entry.total_hours}u` : '-'}
                           </p>
                           <Badge variant={
                             entry.status === 'Goedgekeurd' ? 'success' :
                             entry.status === 'Afgekeurd' ? 'destructive' :
                             entry.status === 'Ingediend' ? 'warning' : 'secondary'
-                          } className="text-xs">
+                          } className="text-[9px] px-1 py-0">
                             {entry.status}
                           </Badge>
                         </div>
@@ -388,79 +373,6 @@ export default function Dashboard({ currentUser }) {
                     </Link>
                   );
                 })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Notifications */}
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Bell className="w-5 h-5 text-blue-600" />
-                Meldingen
-              </CardTitle>
-              <Link to={createPageUrl("Messages")}>
-                <Button variant="ghost" size="sm" className="text-blue-600">
-                  Alles bekijken
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loadingNotifications ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-14" />
-                ))}
-              </div>
-            ) : notifications.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">
-                Geen meldingen
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {notifications.slice(0, 5).map(notification => (
-                  <div
-                    key={notification.id}
-                    className={`p-3 rounded-xl cursor-pointer transition-colors ${
-                      !notification.is_read 
-                        ? 'bg-blue-50 hover:bg-blue-100' 
-                        : 'bg-slate-50 hover:bg-slate-100'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      {!notification.is_read && (
-                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0"></div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 text-sm truncate">
-                          {notification.title}
-                        </p>
-                        {notification.description && (
-                          <p className="text-xs text-slate-600 mt-1 line-clamp-2">
-                            {notification.description}
-                          </p>
-                        )}
-                        <p className="text-xs text-slate-400 mt-1">
-                          {format(new Date(notification.created_date), "d MMM, HH:mm", { locale: nl })}
-                        </p>
-                      </div>
-                      {notification.priority === 'urgent' && (
-                        <Badge className="bg-red-100 text-red-700 text-xs flex-shrink-0">
-                          Urgent
-                        </Badge>
-                      )}
-                      {notification.priority === 'high' && (
-                        <Badge className="bg-amber-100 text-amber-700 text-xs flex-shrink-0">
-                          Hoog
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
               </div>
             )}
           </CardContent>

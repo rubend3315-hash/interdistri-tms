@@ -14,7 +14,7 @@ function DeltaVal({ value, prefix = "" }) {
   if (value === 0) return <span className="text-slate-300">—</span>;
   const pos = value > 0;
   return (
-    <span className={pos ? "text-emerald-600" : "text-red-500"}>
+    <span className={pos ? "text-emerald-500/80" : "text-red-400/80"}>
       {pos ? "+" : ""}{prefix}{fmt(Math.abs(value))}
     </span>
   );
@@ -321,62 +321,53 @@ export default function RevenuePerCustomer() {
   }, [customers, projects, timeEntries, prevTimeEntries, trips, prevTrips, spws, prevSpws, importResults, prevImportResults, articles, isLoading]);
 
   return (
-    <Card>
-      <CardHeader className="pb-2 px-4 pt-4">
+    <Card className="shadow-sm h-full">
+      <CardHeader className="pb-1 px-4 pt-4">
         <CardTitle className="text-sm flex items-center gap-2">
           <Building2 className="w-4 h-4 text-blue-600" />
           Omzet & Uren per Klant — Wk {currentWeek}
         </CardTitle>
-        <p className="text-[10px] text-slate-400 mt-0.5">Δ t.o.v. wk {prevWeek} · gebaseerd op ritten & standplaatswerk</p>
+        <p className="text-[10px] text-slate-400 mt-0.5">Δ t.o.v. wk {prevWeek} · ritten & standplaatswerk</p>
       </CardHeader>
       <CardContent className="px-3 pb-3 pt-0">
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-7" />
+              <Skeleton key={i} className="h-6" />
             ))}
           </div>
         ) : customerData.length === 0 ? (
-          <p className="text-[11px] text-slate-500 text-center py-3">Geen klantdata deze week</p>
+          <p className="text-[11px] text-slate-400 text-center py-3">Geen klantdata deze week</p>
         ) : (
-          <div className="max-h-[320px] overflow-y-auto">
+          <div className="max-h-[260px] overflow-y-auto">
             <table className="w-full text-[11px]">
               <thead>
-                <tr className="text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                  <th className="text-left py-1 pr-2 font-medium">Klant</th>
+                <tr className="text-[9px] text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  <th className="text-left py-1 pr-1 font-medium">Klant</th>
                   <th className="text-right py-1 px-1 font-medium">Uren</th>
                   <th className="text-right py-1 px-1 font-medium">Δ</th>
-                  <th className="text-right py-1 px-1 font-medium">%</th>
                   <th className="text-right py-1 px-1 font-medium">Omzet</th>
-                  <th className="text-right py-1 px-1 font-medium">Δ</th>
-                  <th className="text-right py-1 px-1 font-medium">%</th>
                   <th className="text-right py-1 pl-1 font-medium">€/uur</th>
                 </tr>
               </thead>
               <tbody>
                 {customerData.map((c) => (
-                  <tr key={c.id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                    <td className="py-1 pr-2 font-medium text-slate-800 truncate max-w-[120px]">{c.name}</td>
-                    <td className="py-1 px-1 text-right text-slate-700 font-medium">{c.hours.toFixed(1)}</td>
-                    <td className="py-1 px-1 text-right"><DeltaVal value={c.hoursDelta} /></td>
-                    <td className="py-1 px-1 text-right"><DeltaPct pct={c.hoursPct} /></td>
-                    <td className="py-1 px-1 text-right text-slate-700 font-medium">€{fmt(c.revenue)}</td>
-                    <td className="py-1 px-1 text-right"><DeltaVal value={c.revenueDelta} prefix="€" /></td>
-                    <td className="py-1 px-1 text-right"><DeltaPct pct={c.revenuePct} /></td>
-                    <td className="py-1 pl-1 text-right text-slate-700">€{fmt(c.rate)}</td>
+                  <tr key={c.id} className="border-b border-slate-50/80 hover:bg-slate-50/40" title={c.hoursPct !== null ? `Uren ${c.hoursPct > 0 ? '+' : ''}${c.hoursPct?.toFixed(1)}% | Omzet ${c.revenuePct > 0 ? '+' : ''}${c.revenuePct?.toFixed(1) || '—'}%` : ''}>
+                    <td className="py-0.5 pr-1 font-medium text-slate-800 truncate max-w-[130px]">{c.name}</td>
+                    <td className="py-0.5 px-1 text-right text-slate-700">{c.hours.toFixed(1)}</td>
+                    <td className="py-0.5 px-1 text-right"><DeltaVal value={c.hoursDelta} /></td>
+                    <td className="py-0.5 px-1 text-right text-slate-700">€{fmt(c.revenue)}</td>
+                    <td className="py-0.5 pl-1 text-right text-slate-600">€{fmt(c.rate)}</td>
                   </tr>
                 ))}
               </tbody>
               {totals && (
                 <tfoot>
-                  <tr className="bg-blue-50/80 font-semibold text-blue-900 text-[11px]">
-                    <td className="py-1 pr-2">Totaal</td>
+                  <tr className="border-t border-slate-200 text-slate-600 font-medium text-[10px]">
+                    <td className="py-1 pr-1">Totaal</td>
                     <td className="py-1 px-1 text-right">{totals.hours.toFixed(1)}</td>
                     <td className="py-1 px-1 text-right"><DeltaVal value={totals.hoursDelta} /></td>
-                    <td className="py-1 px-1 text-right"><DeltaPct pct={totals.hoursPct} /></td>
                     <td className="py-1 px-1 text-right">€{fmt(totals.revenue)}</td>
-                    <td className="py-1 px-1 text-right"><DeltaVal value={totals.revenueDelta} prefix="€" /></td>
-                    <td className="py-1 px-1 text-right"><DeltaPct pct={totals.revenuePct} /></td>
                     <td className="py-1 pl-1 text-right">€{fmt(totals.rate)}</td>
                   </tr>
                 </tfoot>

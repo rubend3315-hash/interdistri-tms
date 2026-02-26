@@ -47,22 +47,24 @@ export default function MobileEntryStatusCard() {
   const health = getHealthLevel(stats.failed, stats.p95);
   const s = HEALTH_STYLES[health];
 
+  const showRing = stats.failed > 0;
+
   return (
-    <Card className={cn("ring-2", s.ring)}>
-      <CardContent className="pt-5 pb-4">
-        <div className="flex items-center justify-between mb-3">
+    <Card className={cn(showRing ? "ring-1" : "", showRing ? s.ring : "")}>
+      <CardContent className="pt-4 pb-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Smartphone className="w-5 h-5 text-slate-400" />
-            <span className="text-sm font-medium text-slate-500">Mobile Entry</span>
+            <Smartphone className="w-4 h-4 text-slate-400" />
+            <span className="text-xs font-medium text-slate-500">Mobile Entry</span>
           </div>
-          <div className={cn("w-2.5 h-2.5 rounded-full", s.dot)} />
+          <div className={cn("w-2 h-2 rounded-full", s.dot)} />
         </div>
         <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-        <p className="text-xs text-slate-500 mt-0.5">submissions vandaag</p>
-        <div className="flex items-center gap-3 mt-2 text-xs">
+        <p className="text-[10px] text-slate-500 mt-0.5">submissions vandaag</p>
+        <div className="flex items-center gap-2.5 mt-1.5 text-[10px]">
           <span className="text-emerald-600 font-medium">{stats.success} ✓</span>
           <span className={stats.failed > 0 ? "text-red-600 font-medium" : "text-slate-400"}>{stats.failed} ✗</span>
-          <span className={cn("font-mono", s.text)}>p95: {stats.p95}ms</span>
+          <span className="text-slate-400 font-mono">p95 {stats.p95}ms</span>
         </div>
       </CardContent>
     </Card>
