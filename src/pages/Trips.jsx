@@ -572,12 +572,12 @@ export default function Trips() {
   };
 
   return (
-    <div className="space-y-4 max-w-[1400px] mx-auto pb-6">
+    <div className="max-w-[1400px] mx-auto pb-6" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-page-gap)' }}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Ritten</h1>
-          <p className="text-sm text-slate-500">Registratie van ritten, km-standen en brandstof</p>
+          <h1 style={{ fontSize: 'var(--d-header-font)' }} className="font-bold text-slate-900">Ritten</h1>
+          <p style={{ fontSize: 'var(--d-meta-font)' }} className="text-slate-500">Registratie van ritten, km-standen en brandstof</p>
         </div>
         <Button onClick={openNewDialog} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
@@ -586,9 +586,9 @@ export default function Trips() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="px-4 py-3">
-          <div className="flex flex-col md:flex-row gap-3">
+      <Card style={{ borderRadius: 'var(--d-card-radius)' }}>
+        <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
+          <div className="flex flex-col md:flex-row" style={{ gap: 'var(--d-card-gap)' }}>
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
@@ -632,7 +632,7 @@ export default function Trips() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="voltooid" className="space-y-3 mt-3">
+          <TabsContent value="voltooid" className="mt-3" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
             {voltooideTrips.length === 0 ? (
               <Card className="p-12 text-center">
                 <Truck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -652,19 +652,20 @@ export default function Trips() {
                 
                 return (
                   <Card 
-                    key={trip.id} 
-                    className={`transition-shadow ${tripLocked ? "opacity-75" : "hover:shadow-sm cursor-pointer"}`}
-                    onClick={() => !tripLocked && openEditDialog(trip)}
+                   key={trip.id} 
+                   className={`transition-shadow ${tripLocked ? "opacity-75" : "hover:shadow-sm cursor-pointer"}`}
+                   style={{ borderRadius: 'var(--d-card-radius)' }}
+                   onClick={() => !tripLocked && openEditDialog(trip)}
                   >
-                    <CardContent className="px-4 py-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Truck className="w-5 h-5 text-slate-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="text-sm font-semibold text-slate-900 truncate">
+                   <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
+                     <div className="flex items-center justify-between" style={{ gap: 'var(--d-card-gap)' }}>
+                       <div className="flex items-center min-w-0 flex-1" style={{ gap: 'var(--d-card-gap)' }}>
+                         <div className="bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-avatar)', height: 'var(--d-avatar)' }}>
+                           <Truck style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-600" />
+                         </div>
+                         <div className="min-w-0 flex-1">
+                           <div className="flex items-center gap-2 flex-wrap">
+                             <h3 className="font-semibold text-slate-900 truncate" style={{ fontSize: 'var(--d-title-font)' }}>
                                 {trip.route_name || 'Rit'}
                               </h3>
                               <Badge className={`text-[11px] px-2 py-0 leading-5 ${getStatusColor(trip.status)}`}>
@@ -685,20 +686,20 @@ export default function Trips() {
                                 <AlertTriangle className="w-4 h-4 text-amber-500" title={`Overlap met ${tripOverlaps.length} andere rit(ten)`} />
                               )}
                             </div>
-                            <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+                            <div className="flex items-center gap-3 mt-0.5 text-slate-500 flex-wrap" style={{ fontSize: 'var(--d-meta-font)' }}>
                               <span className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                <Calendar style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-400" />
                                 {trip.date && format(new Date(trip.date), "d MMM", { locale: nl })}
                               </span>
                               {employee && (
                                 <span className="flex items-center gap-1">
-                                  <User className="w-3.5 h-3.5 text-slate-400" />
+                                  <User style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-400" />
                                   {getFullName(employee)}
                                 </span>
                               )}
                               {vehicle && (
                                 <span className="flex items-center gap-1">
-                                  <Truck className="w-3.5 h-3.5 text-slate-400" />
+                                  <Truck style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-400" />
                                   {vehicle.license_plate}
                                 </span>
                               )}
@@ -736,7 +737,7 @@ export default function Trips() {
                                   )}
                                   </TabsContent>
 
-                                  <TabsContent value="concept" className="space-y-3 mt-3">
+                                  <TabsContent value="concept" className="mt-3" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
                                   {conceptTrips.length === 0 ? (
                                   <Card className="p-8 text-center">
                                   <Truck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -756,16 +757,17 @@ export default function Trips() {
                                   <Card 
                                   key={trip.id} 
                                   className="hover:shadow-sm transition-shadow cursor-pointer"
+                                  style={{ borderRadius: 'var(--d-card-radius)' }}
                                   onClick={() => openEditDialog(trip)}
                                   >
-                                  <CardContent className="px-4 py-3">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Truck className="w-5 h-5 text-slate-600" />
+                                  <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
+                                    <div className="flex items-center" style={{ gap: 'var(--d-card-gap)' }}>
+                                      <div className="bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-avatar)', height: 'var(--d-avatar)' }}>
+                                        <Truck style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-600" />
                                       </div>
                                       <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                          <h3 className="text-sm font-semibold text-slate-900 truncate">{trip.route_name || 'Rit'}</h3>
+                                          <h3 className="font-semibold text-slate-900 truncate" style={{ fontSize: 'var(--d-title-font)' }}>{trip.route_name || 'Rit'}</h3>
                                           <Badge className={`text-[11px] px-2 py-0 leading-5 ${getStatusColor(trip.status)}`}>{trip.status}</Badge>
                                           {validation.valid === true && <CheckCircle2 className="w-4 h-4 text-green-500" title={validation.message} />}
                                           {validation.valid === false && <XCircle className="w-4 h-4 text-red-500" title={validation.message} />}

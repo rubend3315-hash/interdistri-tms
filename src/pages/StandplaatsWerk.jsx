@@ -286,12 +286,12 @@ export default function StandplaatsWerk() {
   const uniqueEmployees = [...new Set(records.map((r) => r.employee_id).filter(Boolean))];
 
   return (
-    <div className="space-y-4 max-w-[1400px] mx-auto pb-6">
+    <div className="max-w-[1400px] mx-auto pb-6" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-page-gap)' }}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Standplaatswerk</h1>
-          <p className="text-sm text-slate-500">Registratie van werk op de standplaats (loodswerk)</p>
+          <h1 style={{ fontSize: 'var(--d-header-font)' }} className="font-bold text-slate-900">Standplaatswerk</h1>
+          <p style={{ fontSize: 'var(--d-meta-font)' }} className="text-slate-500">Registratie van werk op de standplaats (loodswerk)</p>
         </div>
         <Button onClick={openNewDialog} className="bg-amber-600 hover:bg-amber-700">
           <Plus className="w-4 h-4 mr-2" />
@@ -300,9 +300,9 @@ export default function StandplaatsWerk() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="px-4 py-3">
-          <div className="flex flex-col md:flex-row gap-3">
+      <Card style={{ borderRadius: 'var(--d-card-radius)' }}>
+        <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
+          <div className="flex flex-col md:flex-row" style={{ gap: 'var(--d-card-gap)' }}>
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
@@ -355,7 +355,7 @@ export default function StandplaatsWerk() {
           <p className="text-slate-500 mt-1">Er zijn nog geen registraties of de filters leveren geen resultaat.</p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
           {filtered.map((record) => {
             const employee = getEmployee(record.employee_id);
             const recYear = record.date ? new Date(record.date).getFullYear() : null;
@@ -366,16 +366,17 @@ export default function StandplaatsWerk() {
               <Card
                 key={record.id}
                 className={`transition-shadow ${isLocked ? "opacity-75" : "hover:shadow-sm cursor-pointer"}`}
+                style={{ borderRadius: 'var(--d-card-radius)' }}
                 onClick={() => !isLocked && openEditDialog(record)}
               >
-                <CardContent className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Package className="w-[18px] h-[18px] text-amber-700" />
+                <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
+                  <div className="flex items-center" style={{ gap: 'var(--d-card-gap)' }}>
+                    <div className="bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-stat-icon)', height: 'var(--d-stat-icon)' }}>
+                      <Package style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-amber-700" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-semibold text-slate-900 truncate">
+                        <h3 className="font-semibold text-slate-900 truncate" style={{ fontSize: 'var(--d-title-font)' }}>
                           {record.activity_id ? getActiviteitName(record.activity_id) : "Standplaatswerk"}
                         </h3>
                         <Badge className="text-[11px] px-2 py-0 leading-5 bg-amber-100 text-amber-700">Loodswerk</Badge>

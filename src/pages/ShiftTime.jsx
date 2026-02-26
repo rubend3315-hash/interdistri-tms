@@ -125,12 +125,12 @@ export default function ShiftTime() {
   }, {});
 
   return (
-    <div className="space-y-4 max-w-[1400px] mx-auto pb-6">
+    <div className="max-w-[1400px] mx-auto pb-6" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-page-gap)' }}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dienst-Shifttijd</h1>
-          <p className="text-sm text-slate-500">Communicatie van starttijden voor PakketDistributie</p>
+          <h1 style={{ fontSize: 'var(--d-header-font)' }} className="font-bold text-slate-900">Dienst-Shifttijd</h1>
+          <p style={{ fontSize: 'var(--d-meta-font)' }} className="text-slate-500">Communicatie van starttijden voor PakketDistributie</p>
         </div>
         <Button onClick={openNewDialog} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
@@ -139,8 +139,8 @@ export default function ShiftTime() {
       </div>
 
       {/* Shift List - Grouped by Department */}
-      <Card>
-        <CardContent className="p-4">
+      <Card style={{ borderRadius: 'var(--d-card-radius)' }}>
+        <CardContent style={{ padding: 'var(--d-card-px)' }}>
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
@@ -152,7 +152,7 @@ export default function ShiftTime() {
               <p className="text-xs text-slate-500 mt-1">Voeg een shifttijd toe om te beginnen.</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-page-gap)' }}>
               {Object.entries(shiftsByDepartment).map(([department, shifts]) => (
                 <div key={department}>
                   <div className="flex items-center gap-2 mb-2">
@@ -161,22 +161,23 @@ export default function ShiftTime() {
                     </Badge>
                     <span className="text-xs text-slate-400">({shifts.length})</span>
                   </div>
-                  <div className="space-y-2 pl-3 border-l-2 border-slate-200">
+                  <div className="pl-3 border-l-2 border-slate-200" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
                     {shifts.map(shift => (
                       <div 
                         key={shift.id}
-                        className={`px-4 py-3 rounded-xl border transition-colors ${
+                        style={{ padding: 'var(--d-card-py) var(--d-card-px)', borderRadius: 'var(--d-card-radius)' }}
+                        className={`border transition-colors ${
                           shift.date === todayStr 
                             ? 'bg-blue-50 border-blue-200' 
                             : 'bg-white border-slate-200 hover:border-slate-300'
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        <div className="flex items-center justify-between" style={{ gap: 'var(--d-card-gap)' }}>
+                          <div className="flex items-center min-w-0 flex-1" style={{ gap: 'var(--d-card-gap)' }}>
+                            <div className={`rounded-lg flex items-center justify-center flex-shrink-0 ${
                               shift.date === todayStr ? 'bg-blue-100' : 'bg-slate-100'
-                            }`}>
-                              <Clock className={`w-[18px] h-[18px] ${
+                            }`} style={{ width: 'var(--d-stat-icon)', height: 'var(--d-stat-icon)' }}>
+                              <Clock style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className={`${
                                 shift.date === todayStr ? 'text-blue-600' : 'text-slate-600'
                               }`} />
                             </div>
