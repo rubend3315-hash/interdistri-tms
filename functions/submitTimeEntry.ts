@@ -818,6 +818,30 @@ Deno.serve(async (req) => {
       perf.total = Date.now() - t0;
       console.log('[PERF]', JSON.stringify(perf));
 
+      // Persist perf log if total > 1500ms
+      if (perf.total > 1500) {
+        try {
+          await svc.entities.MobileEntryPerformanceLog.create({
+            submission_id: payload.submission_id,
+            user_email: user.email,
+            employee_id: empId,
+            auth_ms: perf.auth || null,
+            idempotency_guard_ms: perf.idempotency_guard_and_received_log || null,
+            employee_lookup_ms: perf.employee_lookup || null,
+            te_idempotency_check_ms: perf.te_idempotency_check || null,
+            overlap_fetch_ms: perf.overlap_fetch || null,
+            overlap_check_ms: perf.overlap_check_total || null,
+            timeentry_create_ms: perf.timeentry_create || null,
+            trips_and_spw_create_ms: perf.trips_and_spw_create || null,
+            commit_ms: perf.commit || null,
+            write_verify_ms: perf.write_verify || null,
+            post_commit_guard_ms: perf.post_commit_guard || null,
+            total_ms: perf.total,
+            outcome: 'SUCCESS',
+          });
+        } catch (perfErr) { console.error('[PERF_LOG]', perfErr.message); }
+      }
+
       await logSubmission(svc, {
         ...submissionLog,
         status: 'SUCCESS',
@@ -844,6 +868,31 @@ Deno.serve(async (req) => {
       // ========================================
       perf.total = Date.now() - t0;
       console.log('[PERF]', JSON.stringify(perf));
+
+      // Persist perf log if total > 1500ms
+      if (perf.total > 1500) {
+        try {
+          await svc.entities.MobileEntryPerformanceLog.create({
+            submission_id: payload.submission_id,
+            user_email: user.email,
+            employee_id: empId,
+            auth_ms: perf.auth || null,
+            idempotency_guard_ms: perf.idempotency_guard_and_received_log || null,
+            employee_lookup_ms: perf.employee_lookup || null,
+            te_idempotency_check_ms: perf.te_idempotency_check || null,
+            overlap_fetch_ms: perf.overlap_fetch || null,
+            overlap_check_ms: perf.overlap_check_total || null,
+            timeentry_create_ms: perf.timeentry_create || null,
+            trips_and_spw_create_ms: perf.trips_and_spw_create || null,
+            commit_ms: perf.commit || null,
+            write_verify_ms: perf.write_verify || null,
+            post_commit_guard_ms: perf.post_commit_guard || null,
+            total_ms: perf.total,
+            outcome: 'FAILED',
+          });
+        } catch (perfErr) { console.error('[PERF_LOG]', perfErr.message); }
+      }
+
       console.error('[TX FAILED] Rolling back:', txError.message);
       for (const sid of created.spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'rb-spw');
       for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'rb-trip');
