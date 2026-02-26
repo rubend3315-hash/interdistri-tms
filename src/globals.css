@@ -69,92 +69,144 @@ html[data-density="compact"] {
   --cc-val-font: 12px;
 }
 
-/* Control Center row base */
-.cc-row {
-  padding: var(--cc-row-py) var(--cc-row-px);
-  border-bottom: 1px solid var(--cc-border);
-  display: flex;
-  flex-direction: column;
-  gap: var(--cc-row-gap);
-  transition: background-color 120ms ease;
-}
-.cc-row:last-child { border-bottom: none; }
-.cc-row:hover { background-color: #f8fafc; }
-.cc-row--clickable { cursor: pointer; }
-.cc-row--locked { opacity: 0.65; cursor: default; }
-.cc-row--locked:hover { background-color: transparent; }
+/* ===== Rail Layout v2 ===== */
 
-/* Row 1: id + badges + check */
-.cc-row-header {
+/* Rail row — single horizontal bar */
+.rail-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--cc-border);
+  transition: background-color 120ms ease;
+  gap: 0;
+}
+.rail-row:last-child { border-bottom: none; }
+.rail-row:hover { background-color: #f8fafc; }
+.rail-row--clickable { cursor: pointer; }
+.rail-row--locked { opacity: 0.65; cursor: default; }
+.rail-row--locked:hover { background-color: transparent; }
+
+/* Zone 1: Identity (35%) — name, dept, badges */
+.rail-z1 {
+  flex: 0 0 35%;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
-.cc-row-id {
-  font-size: var(--cc-id-font);
+
+/* Zone 2: Temporal (30%) — date, time */
+.rail-z2 {
+  flex: 0 0 30%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+/* Zone 3: Metric (10%) — hours, right-aligned */
+.rail-z3 {
+  flex: 0 0 10%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Zone 4: Actions (25%) — buttons, right-aligned */
+.rail-z4 {
+  flex: 0 0 25%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Rail container */
+.rail-list {
+  background: white;
+  border: 1px solid var(--cc-border);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/* Rail text primitives */
+.rail-name {
+  font-size: 14px;
   font-weight: 600;
   color: #0f172a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 280px;
 }
-.cc-badge {
-  font-size: var(--cc-badge-font);
-  padding: var(--cc-badge-py) var(--cc-badge-px);
+.rail-dept {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+.rail-meta {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+.rail-val {
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  white-space: nowrap;
+}
+.rail-val--accent { color: #1d4ed8; }
+.rail-val--success { color: #059669; }
+.rail-val--warning { color: #d97706; }
+.rail-val--danger { color: #dc2626; }
+.rail-val--muted { color: #94a3b8; font-weight: 400; }
+
+.rail-hours {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.rail-badge {
+  font-size: 11px;
+  padding: 2px 7px;
   border-radius: 4px;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
 }
+
+/* Legacy check icon sizing */
 .cc-check {
   width: var(--cc-check-size);
   height: var(--cc-check-size);
   flex-shrink: 0;
 }
 
-/* Row 2: data values */
-.cc-row-data {
-  display: flex;
-  align-items: center;
-  gap: var(--cc-data-gap);
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
+/* Mobile responsive: stack zones vertically */
+@media (max-width: 768px) {
+  .rail-row {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .rail-z1 { flex: 1 1 100%; }
+  .rail-z2 { flex: 1 1 60%; }
+  .rail-z3 { flex: 0 0 auto; }
+  .rail-z4 { flex: 0 0 auto; margin-left: auto; }
 }
-.cc-row-data::-webkit-scrollbar { display: none; }
 
-.cc-name {
-  font-size: var(--cc-name-font);
-  font-weight: 500;
-  color: #334155;
-  white-space: nowrap;
-}
-.cc-meta {
-  font-size: var(--cc-meta-font);
-  color: #94a3b8;
-  white-space: nowrap;
-}
-.cc-val {
-  font-size: var(--cc-val-font);
-  font-weight: 500;
-  color: #334155;
-  white-space: nowrap;
-}
-.cc-val--accent { color: #1d4ed8; }
-.cc-val--success { color: #059669; }
-.cc-val--warning { color: #d97706; }
-.cc-val--danger { color: #dc2626; }
-.cc-val--muted { color: #94a3b8; font-weight: 400; }
-
-/* Control center container */
-.cc-list {
-  background: white;
-  border: 1px solid var(--cc-border);
-  border-radius: var(--d-card-radius);
-  overflow: hidden;
-}
+/* Legacy aliases for backwards compat */
+.cc-row { composes: rail-row; }
+.cc-list { composes: rail-list; }
+.cc-name { composes: rail-name; }
+.cc-meta { composes: rail-meta; }
+.cc-val { composes: rail-val; }
+.cc-badge { composes: rail-badge; }
 
 /* ===== Interdistri Enterprise Design System ===== */
 
