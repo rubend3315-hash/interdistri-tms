@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   XCircle
 } from "lucide-react";
+import CCRow, { CCRowHeader, CCRowData, CCId, CCBadge, CCName, CCMeta, CCVal, CCList } from "@/components/control-center/CCRow";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import { checkEmployeeActiveRules } from "@/components/utils/employeeContractCheck";
@@ -632,7 +633,7 @@ export default function Trips() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="voltooid" className="mt-3" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
+          <TabsContent value="voltooid" className="mt-3">
             {voltooideTrips.length === 0 ? (
               <Card className="p-12 text-center">
                 <Truck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -640,162 +641,88 @@ export default function Trips() {
                 <p className="text-slate-500 mt-1">Er zijn nog geen voltooide ritten.</p>
               </Card>
             ) : (
-              voltooideTrips.map(trip => {
-                const employee = getEmployee(trip.employee_id);
-                const vehicle = getVehicle(trip.vehicle_id);
-                const customer = getCustomer(trip.customer_id);
-                const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
-                const tripYear = trip.date ? new Date(trip.date).getFullYear() : null;
-                const tripLocked = trip.date && tripYear && isDateInDefinitiefPeriode(trip.date, tripYear, loonperiodeStatuses);
-                const validation = validateTripAgainstTimeEntry(trip);
-                const tripOverlaps = getTripOverlaps(trip);
-                
-                return (
-                  <Card 
-                   key={trip.id} 
-                   className={`transition-shadow ${tripLocked ? "opacity-75" : "hover:shadow-sm cursor-pointer"}`}
-                   style={{ borderRadius: 'var(--d-card-radius)' }}
-                   onClick={() => !tripLocked && openEditDialog(trip)}
-                  >
-                   <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
-                     <div className="flex items-center justify-between" style={{ gap: 'var(--d-card-gap)' }}>
-                       <div className="flex items-center min-w-0 flex-1" style={{ gap: 'var(--d-card-gap)' }}>
-                         <div className="bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-avatar)', height: 'var(--d-avatar)' }}>
-                           <Truck style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-600" />
-                         </div>
-                         <div className="min-w-0 flex-1">
-                           <div className="flex items-center gap-2 flex-wrap">
-                             <h3 className="font-semibold text-slate-900 truncate" style={{ fontSize: 'var(--d-title-font)' }}>
-                                {trip.route_name || 'Rit'}
-                              </h3>
-                              <Badge className={`text-[11px] px-2 py-0 leading-5 ${getStatusColor(trip.status)}`}>
-                                {trip.status}
-                              </Badge>
-                              {tripLocked && (
-                                <Badge className="text-[11px] px-2 py-0 leading-5 bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
-                                  <Lock className="w-2.5 h-2.5" /> Vergrendeld
-                                </Badge>
-                              )}
-                              {validation.valid === true && (
-                                <CheckCircle2 className="w-4 h-4 text-green-500" title={validation.message} />
-                              )}
-                              {validation.valid === false && (
-                                <XCircle className="w-4 h-4 text-red-500" title={validation.message} />
-                              )}
-                              {tripOverlaps.length > 0 && (
-                                <AlertTriangle className="w-4 h-4 text-amber-500" title={`Overlap met ${tripOverlaps.length} andere rit(ten)`} />
-                              )}
-                            </div>
-                            <div className="flex items-center gap-3 mt-0.5 text-slate-500 flex-wrap" style={{ fontSize: 'var(--d-meta-font)' }}>
-                              <span className="flex items-center gap-1">
-                                <Calendar style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-400" />
-                                {trip.date && format(new Date(trip.date), "d MMM", { locale: nl })}
-                              </span>
-                              {employee && (
-                                <span className="flex items-center gap-1">
-                                  <User style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-400" />
-                                  {getFullName(employee)}
-                                </span>
-                              )}
-                              {vehicle && (
-                                <span className="flex items-center gap-1">
-                                  <Truck style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-400" />
-                                  {vehicle.license_plate}
-                                </span>
-                              )}
-                              {trip.start_km != null && trip.end_km != null && (
-                                <span>{trip.start_km}–{trip.end_km} km</span>
-                              )}
-                              {trip.total_km > 0 && <span className="font-medium text-slate-700">{trip.total_km} km</span>}
-                              {trip.departure_time && trip.arrival_time && (
-                                <span>{trip.departure_time}–{trip.arrival_time}</span>
-                              )}
-                              {trip.departure_time && trip.arrival_time && (() => {
-                                const [dH, dM] = trip.departure_time.split(':').map(Number);
-                                const [aH, aM] = trip.arrival_time.split(':').map(Number);
-                                let m = (aH * 60 + aM) - (dH * 60 + dM);
-                                if (m < 0) m += 1440;
-                                return <span className="font-medium text-blue-600">{(m / 60).toFixed(1)}u</span>;
-                              })()}
-                              {subsistence > 0 && (
-                                <span className="font-medium text-emerald-600">€{subsistence.toFixed(2)}</span>
-                              )}
-                            </div>
-                            {tripOverlaps.length > 0 && (
-                              <span className="inline-flex items-center gap-1 mt-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
-                                <AlertTriangle className="w-3 h-3" />
-                                Overlap ({tripOverlaps.length})
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                                  );
-                                  })
-                                  )}
-                                  </TabsContent>
+              <CCList>
+                {voltooideTrips.map(trip => {
+                  const employee = getEmployee(trip.employee_id);
+                  const vehicle = getVehicle(trip.vehicle_id);
+                  const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
+                  const tripYear = trip.date ? new Date(trip.date).getFullYear() : null;
+                  const tripLocked = trip.date && tripYear && isDateInDefinitiefPeriode(trip.date, tripYear, loonperiodeStatuses);
+                  const validation = validateTripAgainstTimeEntry(trip);
+                  const tripOverlaps = getTripOverlaps(trip);
+                  const hours = trip.departure_time && trip.arrival_time ? (() => {
+                    const [dH, dM] = trip.departure_time.split(':').map(Number);
+                    const [aH, aM] = trip.arrival_time.split(':').map(Number);
+                    let m = (aH * 60 + aM) - (dH * 60 + dM);
+                    if (m < 0) m += 1440;
+                    return (m / 60).toFixed(1);
+                  })() : null;
 
-                                  <TabsContent value="concept" className="mt-3" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
-                                  {conceptTrips.length === 0 ? (
-                                  <Card className="p-8 text-center">
-                                  <Truck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                                  <h3 className="text-sm font-medium text-slate-900">Geen concept ritten</h3>
-                                  <p className="text-xs text-slate-500 mt-1">Er zijn geen concept ritten (status: Gepland).</p>
-                                  </Card>
-                                  ) : (
-                                  conceptTrips.map(trip => {
-                                  const employee = getEmployee(trip.employee_id);
-                                  const vehicle = getVehicle(trip.vehicle_id);
-                                  const customer = getCustomer(trip.customer_id);
-                                  const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
-                                  const validation = validateTripAgainstTimeEntry(trip);
-                                  const tripOverlaps = getTripOverlaps(trip);
+                  return (
+                    <CCRow key={trip.id} onClick={() => openEditDialog(trip)} locked={tripLocked}>
+                      <CCRowHeader>
+                        <CCId>{trip.route_name || 'Rit'}</CCId>
+                        <CCBadge className={getStatusColor(trip.status)}>{trip.status}</CCBadge>
+                        {tripLocked && <CCBadge className="bg-emerald-100 text-emerald-700">Vergrendeld</CCBadge>}
+                        {validation.valid === true && <CheckCircle2 className="cc-check text-green-500" title={validation.message} />}
+                        {validation.valid === false && <XCircle className="cc-check text-red-500" title={validation.message} />}
+                        {tripOverlaps.length > 0 && <AlertTriangle className="cc-check text-amber-500" title={`Overlap met ${tripOverlaps.length} rit(ten)`} />}
+                      </CCRowHeader>
+                      <CCRowData>
+                        <CCMeta>{trip.date && format(new Date(trip.date), "d MMM", { locale: nl })}</CCMeta>
+                        {employee && <CCName>{getFullName(employee)}{vehicle ? ` • ${vehicle.license_plate}` : ''}</CCName>}
+                        {trip.start_km != null && trip.end_km != null && <CCMeta>{trip.start_km}–{trip.end_km} km</CCMeta>}
+                        {trip.total_km > 0 && <CCVal>{trip.total_km} km</CCVal>}
+                        {trip.departure_time && trip.arrival_time && <CCMeta>{trip.departure_time}–{trip.arrival_time}</CCMeta>}
+                        {hours && <CCVal variant="accent">{hours}u</CCVal>}
+                        {subsistence > 0 && <CCVal variant="success">€{subsistence.toFixed(2)}</CCVal>}
+                        {tripOverlaps.length > 0 && <CCBadge className="bg-amber-50 text-amber-700 border border-amber-200">Overlap ({tripOverlaps.length})</CCBadge>}
+                      </CCRowData>
+                    </CCRow>
+                  );
+                })}
+              </CCList>
+            )}
+          </TabsContent>
 
-                                  return (
-                                  <Card 
-                                  key={trip.id} 
-                                  className="hover:shadow-sm transition-shadow cursor-pointer"
-                                  style={{ borderRadius: 'var(--d-card-radius)' }}
-                                  onClick={() => openEditDialog(trip)}
-                                  >
-                                  <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
-                                    <div className="flex items-center" style={{ gap: 'var(--d-card-gap)' }}>
-                                      <div className="bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-avatar)', height: 'var(--d-avatar)' }}>
-                                        <Truck style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-600" />
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <h3 className="font-semibold text-slate-900 truncate" style={{ fontSize: 'var(--d-title-font)' }}>{trip.route_name || 'Rit'}</h3>
-                                          <Badge className={`text-[11px] px-2 py-0 leading-5 ${getStatusColor(trip.status)}`}>{trip.status}</Badge>
-                                          {validation.valid === true && <CheckCircle2 className="w-4 h-4 text-green-500" title={validation.message} />}
-                                          {validation.valid === false && <XCircle className="w-4 h-4 text-red-500" title={validation.message} />}
-                                          {tripOverlaps.length > 0 && <AlertTriangle className="w-4 h-4 text-amber-500" title={`Overlap met ${tripOverlaps.length} rit(ten)`} />}
-                                        </div>
-                                        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
-                                          <span className="flex items-center gap-1">
-                                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                            {trip.date && format(new Date(trip.date), "d MMM", { locale: nl })}
-                                          </span>
-                                          {employee && <span className="flex items-center gap-1"><User className="w-3.5 h-3.5 text-slate-400" />{getFullName(employee)}</span>}
-                                          {vehicle && <span className="flex items-center gap-1"><Truck className="w-3.5 h-3.5 text-slate-400" />{vehicle.license_plate}</span>}
-                                          {trip.start_km != null && trip.end_km != null && <span>{trip.start_km}–{trip.end_km} km</span>}
-                                          {trip.total_km > 0 && <span className="font-medium text-slate-700">{trip.total_km} km</span>}
-                                          {trip.departure_time && trip.arrival_time && <span>{trip.departure_time}–{trip.arrival_time}</span>}
-                                          {subsistence > 0 && <span className="font-medium text-emerald-600">€{subsistence.toFixed(2)}</span>}
-                                        </div>
-                                        {tripOverlaps.length > 0 && (
-                                          <span className="inline-flex items-center gap-1 mt-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
-                                            <AlertTriangle className="w-3 h-3" /> Overlap ({tripOverlaps.length})
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                );
-              })
+          <TabsContent value="concept" className="mt-3">
+            {conceptTrips.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Truck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-slate-900">Geen concept ritten</h3>
+                <p className="text-xs text-slate-500 mt-1">Er zijn geen concept ritten (status: Gepland).</p>
+              </Card>
+            ) : (
+              <CCList>
+                {conceptTrips.map(trip => {
+                  const employee = getEmployee(trip.employee_id);
+                  const vehicle = getVehicle(trip.vehicle_id);
+                  const subsistence = calculateSubsistenceAllowance(trip.departure_time, trip.arrival_time, trip.date);
+                  const validation = validateTripAgainstTimeEntry(trip);
+                  const tripOverlaps = getTripOverlaps(trip);
+
+                  return (
+                    <CCRow key={trip.id} onClick={() => openEditDialog(trip)}>
+                      <CCRowHeader>
+                        <CCId>{trip.route_name || 'Rit'}</CCId>
+                        <CCBadge className={getStatusColor(trip.status)}>{trip.status}</CCBadge>
+                        {validation.valid === true && <CheckCircle2 className="cc-check text-green-500" title={validation.message} />}
+                        {validation.valid === false && <XCircle className="cc-check text-red-500" title={validation.message} />}
+                        {tripOverlaps.length > 0 && <AlertTriangle className="cc-check text-amber-500" title={`Overlap met ${tripOverlaps.length} rit(ten)`} />}
+                      </CCRowHeader>
+                      <CCRowData>
+                        <CCMeta>{trip.date && format(new Date(trip.date), "d MMM", { locale: nl })}</CCMeta>
+                        {employee && <CCName>{getFullName(employee)}{vehicle ? ` • ${vehicle.license_plate}` : ''}</CCName>}
+                        {trip.start_km != null && trip.end_km != null && <CCMeta>{trip.start_km}–{trip.end_km} km</CCMeta>}
+                        {trip.total_km > 0 && <CCVal>{trip.total_km} km</CCVal>}
+                        {trip.departure_time && trip.arrival_time && <CCMeta>{trip.departure_time}–{trip.arrival_time}</CCMeta>}
+                        {subsistence > 0 && <CCVal variant="success">€{subsistence.toFixed(2)}</CCVal>}
+                        {tripOverlaps.length > 0 && <CCBadge className="bg-amber-50 text-amber-700 border border-amber-200">Overlap ({tripOverlaps.length})</CCBadge>}
+                      </CCRowData>
+                    </CCRow>
+                  );
+                })}
+              </CCList>
             )}
           </TabsContent>
         </Tabs>
