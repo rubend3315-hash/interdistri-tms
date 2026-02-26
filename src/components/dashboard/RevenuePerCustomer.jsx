@@ -150,8 +150,25 @@ export default function RevenuePerCustomer() {
   const { customerData, totals } = useMemo(() => {
     if (isLoading) return { customerData: [], totals: null };
 
+    // DEBUG: log raw entry counts and unique customer mappings
+    const projectCustomerMap = {};
+    projects.forEach((p) => { if (p.customer_id) projectCustomerMap[p.id] = p.customer_id; });
+
+    const approvedCurrent = timeEntries.filter(te => te.status === "Goedgekeurd");
+    const uniqueCustIds = [...new Set(approvedCurrent.map(te => te.customer_id || projectCustomerMap[te.project_id]).filter(Boolean))];
+    const unmappedEntries = approvedCurrent.filter(te => !te.customer_id && !projectCustomerMap[te.project_id]);
+
+    console.log("[RevenuePerCustomer] Week entries (all):", timeEntries.length);
+    console.log("[RevenuePerCustomer] Week entries (Goedgekeurd):", approvedCurrent.length);
+    console.log("[RevenuePerCustomer] Unique customer_ids from entries:", uniqueCustIds.length, uniqueCustIds);
+    console.log("[RevenuePerCustomer] Entries without customer mapping:", unmappedEntries.length, unmappedEntries.map(e => ({ id: e.id, employee_id: e.employee_id, customer_id: e.customer_id, project_id: e.project_id, status: e.status })));
+    console.log("[RevenuePerCustomer] Active customers in DB:", customers.length, customers.map(c => ({ id: c.id, name: c.company_name })));
+
     const currentMap = buildWeekMap(timeEntries, importResults, customers, projects);
     const prevMap = buildWeekMap(prevTimeEntries, prevImportResults, customers, projects);
+
+    const finalWithData = Object.entries(currentMap).filter(([_, v]) => v.hours > 0 || v.revenue > 0);
+    console.log("[RevenuePerCustomer] Customers with data in currentMap:", finalWithData.length, finalWithData.map(([id, v]) => ({ id, name: v.name, hours: v.hours })));
 
     const merged = Object.entries(currentMap)
       .filter(([_, v]) => v.hours > 0 || v.revenue > 0 || (prevMap[_] && (prevMap[_].hours > 0 || prevMap[_].revenue > 0)))
