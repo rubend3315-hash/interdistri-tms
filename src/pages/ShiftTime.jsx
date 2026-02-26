@@ -20,6 +20,7 @@ import {
   Edit,
   Trash2
 } from "lucide-react";
+import CCRow, { CCRowHeader, CCRowData, CCId, CCBadge, CCMeta, CCList } from "@/components/control-center/CCRow";
 
 export default function ShiftTime() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
