@@ -161,53 +161,21 @@ export default function ShiftTime() {
                     </Badge>
                     <span className="text-xs text-slate-400">({shifts.length})</span>
                   </div>
-                  <div className="pl-3 border-l-2 border-slate-200" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
+                  <CCList>
                     {shifts.map(shift => (
-                      <div 
-                        key={shift.id}
-                        style={{ padding: 'var(--d-card-py) var(--d-card-px)', borderRadius: 'var(--d-card-radius)' }}
-                        className={`border transition-colors ${
-                          shift.date === todayStr 
-                            ? 'bg-blue-50 border-blue-200' 
-                            : 'bg-white border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between" style={{ gap: 'var(--d-card-gap)' }}>
-                          <div className="flex items-center min-w-0 flex-1" style={{ gap: 'var(--d-card-gap)' }}>
-                            <div className={`rounded-lg flex items-center justify-center flex-shrink-0 ${
-                              shift.date === todayStr ? 'bg-blue-100' : 'bg-slate-100'
-                            }`} style={{ width: 'var(--d-stat-icon)', height: 'var(--d-stat-icon)' }}>
-                              <Clock style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className={`${
-                                shift.date === todayStr ? 'text-blue-600' : 'text-slate-600'
-                              }`} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-lg leading-tight text-slate-900">
-                                  {shift.service_start_time}
-                                </span>
-                                {shift.date === todayStr && (
-                                  <Badge className="bg-blue-600 text-[11px] px-2 py-0 leading-5">Vandaag</Badge>
-                                )}
-                                {shift.start_time && shift.end_time && (
-                                  <span className="text-xs text-slate-400">({shift.start_time}–{shift.end_time})</span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                  {format(new Date(shift.date), "EEE d MMM", { locale: nl })}
-                                </span>
-                                {shift.message && (
-                                  <span className="hidden md:flex items-center gap-1 truncate max-w-[280px]" title={shift.message}>
-                                    <MessageSquare className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                    {shift.message}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
+                      <CCRow key={shift.id} className={shift.date === todayStr ? '!bg-blue-50/50' : ''}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0 flex-1 flex flex-col" style={{ gap: 'var(--cc-row-gap)' }}>
+                            <CCRowHeader>
+                              <CCId>{shift.service_start_time}</CCId>
+                              {shift.date === todayStr && <CCBadge className="bg-blue-600 text-white">Vandaag</CCBadge>}
+                              {shift.start_time && shift.end_time && <CCMeta>({shift.start_time}–{shift.end_time})</CCMeta>}
+                            </CCRowHeader>
+                            <CCRowData>
+                              <CCMeta>{format(new Date(shift.date), "EEE d MMM", { locale: nl })}</CCMeta>
+                              {shift.message && <span className="cc-meta hidden md:inline truncate max-w-[280px]" title={shift.message}>{shift.message}</span>}
+                            </CCRowData>
                           </div>
-                          
                           <div className="flex items-center gap-1.5 flex-shrink-0">
                             <button 
                               className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
@@ -227,15 +195,14 @@ export default function ShiftTime() {
                             </button>
                           </div>
                         </div>
-                        
                         {shift.message && (
-                          <p className="md:hidden text-[11px] text-slate-500 mt-1.5 bg-slate-50 rounded px-2 py-1 truncate">
+                          <p className="md:hidden text-[11px] text-slate-500 bg-slate-50 rounded px-2 py-1 truncate">
                             {shift.message}
                           </p>
                         )}
-                      </div>
+                      </CCRow>
                     ))}
-                  </div>
+                  </CCList>
                 </div>
               ))}
             </div>
