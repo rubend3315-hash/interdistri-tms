@@ -236,16 +236,6 @@ async function logSubmission(svc, data) {
 // --- MAIN HANDLER ---
 
 Deno.serve(async (req) => {
-  // === ISOLATION LOG — first possible line, no deps, no try/catch ===
-  const _isoBase44 = createClientFromRequest(req);
-  await _isoBase44.asServiceRole.entities.MobileEntrySubmissionLog.create({
-    submission_id: crypto.randomUUID(),
-    status: 'FUNCTION_ENTRY_ISOLATION',
-    timestamp_received: new Date().toISOString(),
-    user_agent: (req.headers.get('user-agent') || '').slice(0, 200),
-  });
-  // === END ISOLATION LOG ===
-
   const t0 = Date.now();
   const userAgent = req.headers.get('user-agent') || '';
   const submissionLog = {
