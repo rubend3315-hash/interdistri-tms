@@ -165,42 +165,34 @@ export default function ShiftTime() {
                   <CCList>
                     {shifts.map(shift => (
                       <CCRow key={shift.id} className={shift.date === todayStr ? '!bg-blue-50/50' : ''}>
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0 flex-1 flex flex-col" style={{ gap: 'var(--cc-row-gap)' }}>
-                            <CCRowHeader>
-                              <CCId>{shift.service_start_time}</CCId>
-                              {shift.date === todayStr && <CCBadge className="bg-blue-600 text-white">Vandaag</CCBadge>}
-                              {shift.start_time && shift.end_time && <CCMeta>({shift.start_time}–{shift.end_time})</CCMeta>}
-                            </CCRowHeader>
-                            <CCRowData>
-                              <CCMeta>{format(new Date(shift.date), "EEE d MMM", { locale: nl })}</CCMeta>
-                              {shift.message && <span className="cc-meta hidden md:inline truncate max-w-[280px]" title={shift.message}>{shift.message}</span>}
-                            </CCRowData>
-                          </div>
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <button 
-                              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
-                              onClick={() => openEditDialog(shift)}
-                            >
-                              <Edit className="w-4 h-4 text-slate-500" />
-                            </button>
-                            <button 
-                              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors"
-                              onClick={() => {
-                                if (confirm('Weet je zeker dat je deze shifttijd wilt verwijderen?')) {
-                                  deleteMutation.mutate(shift.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </button>
-                          </div>
-                        </div>
-                        {shift.message && (
-                          <p className="md:hidden text-[11px] text-slate-500 bg-slate-50 rounded px-2 py-1 truncate">
-                            {shift.message}
-                          </p>
-                        )}
+                        <CCZone1>
+                          <CCId>{shift.service_start_time}</CCId>
+                          {shift.date === todayStr && <CCBadge className="bg-blue-600 text-white">Vandaag</CCBadge>}
+                          {shift.message && <span className="rail-meta hidden md:inline truncate max-w-[200px]" title={shift.message}>{shift.message}</span>}
+                        </CCZone1>
+                        <CCZone2>
+                          <CCMeta>{format(new Date(shift.date), "EEE d MMM", { locale: nl })}</CCMeta>
+                          {shift.start_time && shift.end_time && <CCMeta>{shift.start_time}–{shift.end_time}</CCMeta>}
+                        </CCZone2>
+                        <CCZone3 />
+                        <CCZone4>
+                          <button 
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
+                            onClick={() => openEditDialog(shift)}
+                          >
+                            <Edit className="w-4 h-4 text-slate-500" />
+                          </button>
+                          <button 
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors"
+                            onClick={() => {
+                              if (confirm('Weet je zeker dat je deze shifttijd wilt verwijderen?')) {
+                                deleteMutation.mutate(shift.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </button>
+                        </CCZone4>
                       </CCRow>
                     ))}
                   </CCList>

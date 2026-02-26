@@ -660,24 +660,27 @@ export default function Trips() {
 
                   return (
                     <CCRow key={trip.id} onClick={() => openEditDialog(trip)} locked={tripLocked}>
-                      <CCRowHeader>
+                      <CCZone1>
                         <CCId>{trip.route_name || 'Rit'}</CCId>
                         <CCBadge className={getStatusColor(trip.status)}>{trip.status}</CCBadge>
                         {tripLocked && <CCBadge className="bg-emerald-100 text-emerald-700">Vergrendeld</CCBadge>}
+                        {employee && <CCName>{getFullName(employee)}</CCName>}
+                        {vehicle && <CCMeta>{vehicle.license_plate}</CCMeta>}
                         {validation.valid === true && <CheckCircle2 className="cc-check text-green-500" title={validation.message} />}
                         {validation.valid === false && <XCircle className="cc-check text-red-500" title={validation.message} />}
                         {tripOverlaps.length > 0 && <AlertTriangle className="cc-check text-amber-500" title={`Overlap met ${tripOverlaps.length} rit(ten)`} />}
-                      </CCRowHeader>
-                      <CCRowData>
+                      </CCZone1>
+                      <CCZone2>
                         <CCMeta>{trip.date && format(new Date(trip.date), "d MMM", { locale: nl })}</CCMeta>
-                        {employee && <CCName>{getFullName(employee)}{vehicle ? ` • ${vehicle.license_plate}` : ''}</CCName>}
-                        {trip.start_km != null && trip.end_km != null && <CCMeta>{trip.start_km}–{trip.end_km} km</CCMeta>}
+                        {trip.departure_time && trip.arrival_time && <CCVal>{trip.departure_time}–{trip.arrival_time}</CCVal>}
+                      </CCZone2>
+                      <CCZone3>
+                        {hours && <CCHours>{hours}u</CCHours>}
+                      </CCZone3>
+                      <CCZone4>
                         {trip.total_km > 0 && <CCVal>{trip.total_km} km</CCVal>}
-                        {trip.departure_time && trip.arrival_time && <CCMeta>{trip.departure_time}–{trip.arrival_time}</CCMeta>}
-                        {hours && <CCVal variant="accent">{hours}u</CCVal>}
                         {subsistence > 0 && <CCVal variant="success">€{subsistence.toFixed(2)}</CCVal>}
-                        {tripOverlaps.length > 0 && <CCBadge className="bg-amber-50 text-amber-700 border border-amber-200">Overlap ({tripOverlaps.length})</CCBadge>}
-                      </CCRowData>
+                      </CCZone4>
                     </CCRow>
                   );
                 })}
@@ -703,22 +706,24 @@ export default function Trips() {
 
                   return (
                     <CCRow key={trip.id} onClick={() => openEditDialog(trip)}>
-                      <CCRowHeader>
+                      <CCZone1>
                         <CCId>{trip.route_name || 'Rit'}</CCId>
                         <CCBadge className={getStatusColor(trip.status)}>{trip.status}</CCBadge>
+                        {employee && <CCName>{getFullName(employee)}</CCName>}
+                        {vehicle && <CCMeta>{vehicle.license_plate}</CCMeta>}
                         {validation.valid === true && <CheckCircle2 className="cc-check text-green-500" title={validation.message} />}
                         {validation.valid === false && <XCircle className="cc-check text-red-500" title={validation.message} />}
                         {tripOverlaps.length > 0 && <AlertTriangle className="cc-check text-amber-500" title={`Overlap met ${tripOverlaps.length} rit(ten)`} />}
-                      </CCRowHeader>
-                      <CCRowData>
+                      </CCZone1>
+                      <CCZone2>
                         <CCMeta>{trip.date && format(new Date(trip.date), "d MMM", { locale: nl })}</CCMeta>
-                        {employee && <CCName>{getFullName(employee)}{vehicle ? ` • ${vehicle.license_plate}` : ''}</CCName>}
-                        {trip.start_km != null && trip.end_km != null && <CCMeta>{trip.start_km}–{trip.end_km} km</CCMeta>}
+                        {trip.departure_time && trip.arrival_time && <CCVal>{trip.departure_time}–{trip.arrival_time}</CCVal>}
+                      </CCZone2>
+                      <CCZone3 />
+                      <CCZone4>
                         {trip.total_km > 0 && <CCVal>{trip.total_km} km</CCVal>}
-                        {trip.departure_time && trip.arrival_time && <CCMeta>{trip.departure_time}–{trip.arrival_time}</CCMeta>}
                         {subsistence > 0 && <CCVal variant="success">€{subsistence.toFixed(2)}</CCVal>}
-                        {tripOverlaps.length > 0 && <CCBadge className="bg-amber-50 text-amber-700 border border-amber-200">Overlap ({tripOverlaps.length})</CCBadge>}
-                      </CCRowData>
+                      </CCZone4>
                     </CCRow>
                   );
                 })}

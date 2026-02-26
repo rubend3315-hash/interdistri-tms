@@ -363,25 +363,35 @@ export default function StandplaatsWerk() {
             const isLocked = record.date && recYear && isDateInDefinitiefPeriode(record.date, recYear, loonperiodeStatuses);
             const validation = validateAgainstTimeEntry(record);
             const overlaps = getOverlaps(record);
+            const spwHours = record.start_time && record.end_time ? (() => {
+              const [sH, sM] = record.start_time.split(':').map(Number);
+              const [eH, eM] = record.end_time.split(':').map(Number);
+              let m = (eH * 60 + eM) - (sH * 60 + sM);
+              if (m < 0) m += 1440;
+              return (m / 60).toFixed(1);
+            })() : null;
             return (
               <CCRow key={record.id} onClick={() => openEditDialog(record)} locked={isLocked}>
-                <CCRowHeader>
+                <CCZone1>
                   <CCId>{record.activity_id ? getActiviteitName(record.activity_id) : "Standplaatswerk"}</CCId>
+                  {employee && <CCName>{getFullName(employee)}</CCName>}
                   <CCBadge className="bg-amber-100 text-amber-700">Loodswerk</CCBadge>
                   {isLocked && <CCBadge className="bg-emerald-100 text-emerald-700">Vergrendeld</CCBadge>}
                   {validation.valid === true && <CheckCircle2 className="cc-check text-green-500" title={validation.message} />}
                   {validation.valid === false && <XCircle className="cc-check text-red-500" title={validation.message} />}
                   {overlaps.length > 0 && <AlertTriangle className="cc-check text-amber-500" title={`Overlap met ${overlaps.length} record(s)`} />}
-                </CCRowHeader>
-                <CCRowData>
+                </CCZone1>
+                <CCZone2>
                   <CCMeta>{record.date ? format(new Date(record.date), "d MMM", { locale: nl }) : "-"}</CCMeta>
-                  {employee && <CCName>{getFullName(employee)}</CCName>}
-                  {record.customer_id && <CCMeta>{getCustomerName(record.customer_id)}</CCMeta>}
                   {(record.start_time || record.end_time) && <CCVal>{record.start_time || "?"} – {record.end_time || "?"}</CCVal>}
+                </CCZone2>
+                <CCZone3>
+                  {spwHours && <CCHours>{spwHours}u</CCHours>}
+                </CCZone3>
+                <CCZone4>
+                  {record.customer_id && <CCMeta>{getCustomerName(record.customer_id)}</CCMeta>}
                   {record.project_id && <CCMeta>{getProjectName(record.project_id)}</CCMeta>}
-                  {overlaps.length > 0 && <CCBadge className="bg-amber-50 text-amber-700 border border-amber-200">Overlap ({overlaps.length})</CCBadge>}
-                  {record.notes && <span className="cc-meta truncate max-w-[200px]" title={record.notes}>{record.notes}</span>}
-                </CCRowData>
+                </CCZone4>
               </CCRow>
             );
           })}

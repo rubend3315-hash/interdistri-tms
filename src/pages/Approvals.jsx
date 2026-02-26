@@ -297,63 +297,56 @@ export default function Approvals() {
 
     return (
       <CCRow key={entry.id} locked={entryLocked}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1 flex flex-col" style={{ gap: 'var(--cc-row-gap)' }}>
-            <CCRowHeader>
-              <CCId>{employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}</CCId>
-              {employee?.department && <CCMeta>{employee.department}</CCMeta>}
-              {entry.shift_type && <CCBadge className={shiftColor}>{entry.shift_type}</CCBadge>}
-              {entryLocked && <CCBadge className="bg-emerald-100 text-emerald-700">Vergrendeld</CCBadge>}
-            </CCRowHeader>
-            <CCRowData>
-              <CCMeta>{entry.date ? (() => {
-                try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
-                catch { return entry.date; }
-              })() : '–'}</CCMeta>
-              <CCVal>{entry.start_time || '-'} – {entry.end_time || '-'}</CCVal>
-              {entry.total_hours > 0 && <CCVal variant="accent">{entry.total_hours}u</CCVal>}
-              {vehicle && <CCName>{vehicle.license_plate}</CCName>}
-              {entry.travel_allowance_multiplier > 0 && <CCMeta>Reis: {entry.travel_allowance_multiplier}x</CCMeta>}
-              {entry.approved_by && <CCMeta>door {entry.approved_by}</CCMeta>}
-              {overlaps.length > 0 && <CCBadge className="bg-amber-50 text-amber-700 border border-amber-200">Overlap ({overlaps.length})</CCBadge>}
-              {entry.notes && <span className="cc-meta truncate max-w-[200px]" title={entry.notes}>{entry.notes}</span>}
-              {entry.rejection_reason && <span className="cc-meta text-red-500 truncate max-w-[200px]" title={entry.rejection_reason}>Afkeuring: {entry.rejection_reason}</span>}
-            </CCRowData>
-          </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              className="px-2.5" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
-              onClick={(e) => { e.stopPropagation(); openDetailDialog(entry); }}
-            >
-              <Eye className="w-3.5 h-3.5 mr-1" />
-              Bekijk
-            </Button>
-            {showActions && !entryLocked && (
-              <>
-                <Button
-                  size="sm"
-                  className="px-2.5 bg-emerald-600 hover:bg-emerald-700" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
-                  onClick={(e) => { e.stopPropagation(); handleApprove(entry); }}
-                  disabled={approvingIds.has(entry.id) || approveMutation.isPending}
-                >
-                  <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                  Goed
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="px-2.5 text-red-600 border-red-200 hover:bg-red-50" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
-                  onClick={(e) => { e.stopPropagation(); openRejectDialog(entry); }}
-                >
-                  <XCircle className="w-3.5 h-3.5 mr-1" />
-                  Afkeur
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+        <CCZone1>
+          <CCId>{employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}</CCId>
+          {employee?.department && <CCDept>{employee.department}</CCDept>}
+          {entry.shift_type && <CCBadge className={shiftColor}>{entry.shift_type}</CCBadge>}
+          {entryLocked && <CCBadge className="bg-emerald-100 text-emerald-700">Vergrendeld</CCBadge>}
+          {overlaps.length > 0 && <CCBadge className="bg-amber-50 text-amber-700 border border-amber-200">Overlap</CCBadge>}
+        </CCZone1>
+        <CCZone2>
+          <CCMeta>{entry.date ? (() => {
+            try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
+            catch { return entry.date; }
+          })() : '–'}</CCMeta>
+          <CCVal>{entry.start_time || '-'} – {entry.end_time || '-'}</CCVal>
+        </CCZone2>
+        <CCZone3>
+          {entry.total_hours > 0 && <CCHours>{entry.total_hours}u</CCHours>}
+        </CCZone3>
+        <CCZone4>
+          <Button
+            size="sm"
+            variant="outline"
+            className="px-2.5 h-8 text-xs"
+            onClick={(e) => { e.stopPropagation(); openDetailDialog(entry); }}
+          >
+            <Eye className="w-3.5 h-3.5 mr-1" />
+            Bekijk
+          </Button>
+          {showActions && !entryLocked && (
+            <>
+              <Button
+                size="sm"
+                className="px-2.5 h-8 text-xs bg-emerald-600 hover:bg-emerald-700"
+                onClick={(e) => { e.stopPropagation(); handleApprove(entry); }}
+                disabled={approvingIds.has(entry.id) || approveMutation.isPending}
+              >
+                <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                Goed
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="px-2.5 h-8 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                onClick={(e) => { e.stopPropagation(); openRejectDialog(entry); }}
+              >
+                <XCircle className="w-3.5 h-3.5 mr-1" />
+                Afkeur
+              </Button>
+            </>
+          )}
+        </CCZone4>
       </CCRow>
     );
   };
