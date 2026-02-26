@@ -8,7 +8,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
-// submitTimeEntry v3.1 — Enterprise-grade atomic submission (redeployed 2026-02-23)
+// submitTimeEntry v4.0 — Multi-day hardening (2026-02-26)
 // ============================================================
 //
 // ARCHITECTURE:
@@ -53,6 +53,50 @@ function isOptStr(v) { return v === undefined || v === null || typeof v === 'str
 function isOptNum(v) { return v === undefined || v === null || (typeof v === 'number' && isFinite(v)); }
 function clamp(v, lo, hi) { if (v == null) return null; const n = Number(v); return isFinite(n) ? Math.max(lo, Math.min(hi, n)) : null; }
 function timeMin(t) { if (!isTime(t)) return null; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+
+// --- DATE HELPERS (pure string arithmetic, no timezone) ---
+function addDays(dateStr, days) {
+  const d = new Date(dateStr + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+// --- UNIFIED OVERLAP ENGINE ---
+// Single function used by BOTH pre-commit and post-commit checks.
+// All comparisons use YYYY-MM-DD strings and minute integers — no Date offsets.
+function servicesOverlap(existing, incoming) {
+  const exStart = existing.date;
+  const exEnd = existing.end_date || existing.date;
+  const newStart = incoming.date;
+  const newEnd = incoming.end_date || incoming.date;
+
+  // Both single-day on same date → time-level check
+  if (exStart === exEnd && newStart === newEnd && exStart === newStart) {
+    const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
+    const es = timeMin(existing.start_time), ee = timeMin(existing.end_time);
+    if (ns === null || ne === null || es === null || ee === null) return false;
+    return ns < ee && ne > es;
+  }
+
+  // Check if date ranges merely touch at a boundary (adjacent)
+  if (exEnd === newStart || newEnd === exStart) {
+    // Boundary day: compare times on the shared day
+    const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
+    const es = timeMin(existing.start_time), ee = timeMin(existing.end_time);
+    if (exEnd === newStart && ee !== null && ns !== null) {
+      // Existing ends on the day new starts → overlap if ex.end_time > new.start_time
+      return ee > ns;
+    }
+    if (newEnd === exStart && ne !== null && es !== null) {
+      // New ends on the day existing starts → overlap if new.end_time > ex.start_time
+      return ne > es;
+    }
+    return false; // can't determine times → treat as non-overlapping
+  }
+
+  // True date range overlap (ranges cross more than just a boundary)
+  return exStart <= newEnd && exEnd >= newStart;
+}
 
 function shiftType(start, end) {
   if (!isTime(start)) return 'Dag';
@@ -111,6 +155,13 @@ function validate(p) {
     if (isDate(p.date) && isDate(p.end_date)) {
       const diff = Math.round((new Date(p.end_date + 'T12:00:00') - new Date(p.date + 'T12:00:00')) / 864e5);
       if (diff > 7) err.push('Dienst max 7 dagen');
+      // Max 48 uur dienstduur safety guard
+      if (isTime(p.start_time) && isTime(p.end_time)) {
+        const sM = timeMin(p.start_time), eM = timeMin(p.end_time);
+        let totalMin = eM - sM + diff * 1440;
+        if (totalMin < 0) totalMin += 1440;
+        if (totalMin > 48 * 60) err.push('Dienstduur overschrijdt maximale toegestane lengte (48 uur)');
+      }
     }
   }
 
@@ -278,17 +329,15 @@ Deno.serve(async (req) => {
     // Log RECEIVED immediately (separate immutable record)
     await logSubmission(svcEarly, { ...submissionLog });
 
-    // DEBUG: Log incoming payload customer/project mapping
-    console.log(`[SUBMIT_DEBUG] Payload keys: ${Object.keys(payload).join(', ')}`);
-    console.log(`[SUBMIT_DEBUG] payload.customer_id: ${JSON.stringify(payload.customer_id)}`);
-    console.log(`[SUBMIT_DEBUG] payload.project_id: ${JSON.stringify(payload.project_id)}`);
-    console.log(`[SUBMIT_DEBUG] trips count: ${(payload.trips || []).length}`);
-    (payload.trips || []).forEach((t, i) => {
-      console.log(`[SUBMIT_DEBUG] trip[${i}].customer_id: ${JSON.stringify(t.customer_id)}, trip[${i}].project_id: ${JSON.stringify(t.project_id)}`);
-    });
-    console.log(`[SUBMIT_DEBUG] standplaats_werk count: ${(payload.standplaats_werk || []).length}`);
-    (payload.standplaats_werk || []).forEach((s, i) => {
-      console.log(`[SUBMIT_DEBUG] spw[${i}].customer_id: ${JSON.stringify(s.customer_id)}, spw[${i}].project_id: ${JSON.stringify(s.project_id)}`);
+    // DEBUG: Log incoming payload summary
+    console.debug('[SUBMIT_PAYLOAD]', {
+      date: payload.date,
+      end_date: payload.end_date,
+      start_time: payload.start_time,
+      end_time: payload.end_time,
+      trips: (payload.trips || []).length,
+      spw: (payload.standplaats_werk || []).length,
+      submission_id: payload.submission_id,
     });
 
     const errors = validate(payload);
@@ -388,92 +437,54 @@ Deno.serve(async (req) => {
     // ========================================
     // 5. OVERLAP DETECTION — against committed entries
     // ========================================
-    // Full range overlap: A.start <= B.end AND A.end >= B.start
-    // We need to find ALL committed entries for this employee where:
-    //   existing.date <= newEntryEnd  AND  existing.effectiveEnd >= newEntryStart
-    //
-    // Since end_date can be null (= single day, so effectiveEnd = date),
-    // we query all entries where date <= entryEnd (covers the left side of the overlap formula).
-    // The right side (existing end >= new start) is checked in-memory because
-    // end_date is nullable and requires coalescing with date.
-    //
-    // Single query — no N+1, no intermediate dates missed.
+    // Query window: payload.date - 1 day to payload.end_date + 1 day
+    // This captures all entries that could possibly overlap, including adjacent
+    // multi-day shifts, without scanning the full history.
     const entryEnd = payload.end_date || payload.date;
+    const queryStart = addDays(payload.date, -1);
+    const queryEnd = addDays(entryEnd, 1);
 
     const candidateEntries = await svc.entities.TimeEntry.filter({
       employee_id: empId,
-      date: { $lte: entryEnd },
+      date: { $gte: queryStart, $lte: queryEnd },
+    });
+
+    console.debug('[OVERLAP_CHECK]', {
+      employeeId: empId,
+      entryStart: payload.date,
+      entryEnd,
+      queryWindow: `${queryStart} → ${queryEnd}`,
+      candidates: candidateEntries.length,
     });
 
     // Filter to committed entries whose effective end_date >= payload.date
     const committedOverlaps = candidateEntries.filter(e => {
       if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
       const exEnd = e.end_date || e.date;
-      return exEnd >= payload.date; // completes the range overlap check
+      return exEnd >= payload.date && e.date <= entryEnd;
     });
 
+    const incomingEntry = {
+      date: payload.date,
+      end_date: payload.end_date || null,
+      start_time: payload.start_time,
+      end_time: payload.end_time,
+    };
+
     for (const ex of committedOverlaps) {
-      const exEnd = ex.end_date || ex.date;
-      // Both are single-day entries on the same date → check time overlap
-      if (!payload.end_date && !ex.end_date && payload.date === ex.date) {
-        const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
-        const es = timeMin(ex.start_time), ee = timeMin(ex.end_time);
-        if (ns !== null && ne !== null && es !== null && ee !== null && ns < ee && ne > es) {
-          return Response.json({
-            success: false, error: 'TIME_OVERLAP',
-            message: `Overlapt met dienst ${ex.start_time}-${ex.end_time} op ${ex.date}`,
-            details: [`Bestaande dienst: ${ex.id}`]
-          }, { status: 409 });
-        }
-      } else {
-        // At least one side is multi-day.
-        // Adjacent night shifts (e.g. 24→25 and 25→26) share a boundary date
-        // but don't truly overlap. Check if the date ranges STRICTLY overlap
-        // by also comparing actual times on the shared boundary date.
-        const newStart = payload.date;
-        const newEnd = payload.end_date || payload.date;
-
-        // Check if ranges merely touch (adjacent) vs truly overlap
-        // Adjacent means: exEnd == newStart OR newEnd == ex.date
-        // In that case, compare times to determine true overlap
-        if (exEnd === newStart || newEnd === ex.date) {
-          // Boundary day: check if times actually overlap on that shared day
-          const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
-          const es = timeMin(ex.start_time), ee = timeMin(ex.end_time);
-
-          // For multi-day entries: start_time is on date, end_time is on end_date.
-          // On the shared boundary day:
-          // - If exEnd == newStart: existing ends (end_time) on same day new starts (start_time)
-          //   → overlap only if ex.end_time > new.start_time
-          // - If newEnd == ex.date: new ends (end_time) on same day existing starts (start_time)
-          //   → overlap only if new.end_time > ex.start_time
-          let isTimeOverlap = false;
-          if (exEnd === newStart && es !== null && ee !== null && ns !== null) {
-            // Existing entry's end_time is on the shared day, new entry's start_time is on the same day
-            isTimeOverlap = ee > ns;
-          } else if (newEnd === ex.date && ns !== null && ne !== null && es !== null) {
-            // New entry's end_time is on the shared day, existing entry's start_time is on the same day
-            isTimeOverlap = ne > es;
-          }
-
-          if (isTimeOverlap) {
-            console.log(`[OVERLAP] Boundary time overlap: existing ${ex.id} (${ex.date}→${exEnd} ${ex.start_time}-${ex.end_time}) vs new (${newStart}→${newEnd} ${payload.start_time}-${payload.end_time})`);
-            return Response.json({
-              success: false, error: 'DATE_OVERLAP',
-              message: `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
-              details: [`Bestaande dienst: ${ex.id}`]
-            }, { status: 409 });
-          }
-          // Adjacent, no time overlap → allowed
-          console.log(`[OVERLAP] Adjacent shifts allowed: existing ${ex.id} (${ex.date}→${exEnd}) vs new (${newStart}→${newEnd})`);
-        } else {
-          // True date range overlap (not just boundary) → block
-          return Response.json({
-            success: false, error: 'DATE_OVERLAP',
-            message: `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
-            details: [`Bestaande dienst: ${ex.id}`]
-          }, { status: 409 });
-        }
+      if (servicesOverlap(ex, incomingEntry)) {
+        const exEnd = ex.end_date || ex.date;
+        const isSameDay = !payload.end_date && !ex.end_date && payload.date === ex.date;
+        const errorCode = isSameDay ? 'TIME_OVERLAP' : 'DATE_OVERLAP';
+        const errorMsg = isSameDay
+          ? `Overlapt met dienst ${ex.start_time}-${ex.end_time} op ${ex.date}`
+          : `Overlapt met dienst ${ex.date} t/m ${exEnd}`;
+        console.log(`[OVERLAP] ${errorCode}: existing ${ex.id} (${ex.date}→${exEnd} ${ex.start_time}-${ex.end_time}) vs new (${payload.date}→${entryEnd} ${payload.start_time}-${payload.end_time})`);
+        return Response.json({
+          success: false, error: errorCode,
+          message: errorMsg,
+          details: [`Bestaande dienst: ${ex.id}`]
+        }, { status: 409 });
       }
     }
 
@@ -548,16 +559,9 @@ Deno.serve(async (req) => {
         submission_id: payload.submission_id, // <-- DEDICATED FIELD
       };
 
-      // DEBUG: Log what we're about to create — note customer_id/project_id are NOT in the create payload
-      console.log(`[SUBMIT_DEBUG] TimeEntry create data keys: ${Object.keys(teCreateData).join(', ')}`);
-      console.log(`[SUBMIT_DEBUG] TimeEntry create data customer_id: ${JSON.stringify(teCreateData.customer_id)}`);
-      console.log(`[SUBMIT_DEBUG] TimeEntry create data project_id: ${JSON.stringify(teCreateData.project_id)}`);
-
       const te = await svc.entities.TimeEntry.create(teCreateData);
       created.teId = te.id;
-
-      // DEBUG: Log created entry
-      console.log(`[SUBMIT_DEBUG] Created TimeEntry ${te.id} — customer_id: ${JSON.stringify(te.customer_id)}, project_id: ${JSON.stringify(te.project_id)}`);
+      console.debug('[CREATED]', { teId: te.id, date: payload.date, endDate: endD });
 
       // --- POST-CREATE DUPLICATE GUARD ---
       // After creating, re-check if another request with the same submission_id
@@ -674,55 +678,25 @@ Deno.serve(async (req) => {
       }
 
       // ========================================
-      // 9. POST-COMMIT OVERLAP GUARD
+      // 9. POST-COMMIT OVERLAP GUARD (uses same servicesOverlap engine)
       // ========================================
-      // Re-check for overlapping Ingediend entries AFTER our commit.
-      // Uses the same broad range query as pre-commit check.
       const postCommitCandidates = await svc.entities.TimeEntry.filter({
         employee_id: empId,
-        date: { $lte: entryEnd },
+        date: { $gte: queryStart, $lte: queryEnd },
       });
       const postCommitOverlaps = postCommitCandidates.filter(e =>
         e.id !== te.id &&
         (e.status === 'Ingediend' || e.status === 'Goedgekeurd') &&
-        (e.end_date || e.date) >= payload.date
+        (e.end_date || e.date) >= payload.date &&
+        e.date <= entryEnd
       );
 
       for (const oc of postCommitOverlaps) {
-        const ocEnd = oc.end_date || oc.date;
-        let isOverlap = false;
-        let errorCode = 'DATE_OVERLAP';
-        let errorMsg = `Gelijktijdige overlap gedetecteerd met dienst ${oc.date} t/m ${ocEnd}`;
-
-        if (!payload.end_date && !oc.end_date && payload.date === oc.date) {
-          // Both single-day same date → time overlap check
-          const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
-          const es = timeMin(oc.start_time), ee = timeMin(oc.end_time);
-          if (ns !== null && ne !== null && es !== null && ee !== null && ns < ee && ne > es) {
-            isOverlap = true;
-            errorCode = 'TIME_OVERLAP';
-            errorMsg = `Gelijktijdige overlap gedetecteerd met dienst ${oc.start_time}-${oc.end_time}`;
-          }
-        } else {
-          // At least one multi-day — check if truly overlapping or just adjacent
-          const newStart = payload.date;
-          const newEnd = payload.end_date || payload.date;
-          if (ocEnd === newStart || newEnd === oc.date) {
-            // Adjacent boundary — check times
-            const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
-            const es = timeMin(oc.start_time), ee = timeMin(oc.end_time);
-            if (ocEnd === newStart && ee !== null && ns !== null && ee > ns) {
-              isOverlap = true;
-            } else if (newEnd === oc.date && ne !== null && es !== null && ne > es) {
-              isOverlap = true;
-            }
-          } else {
-            // True date range overlap (not just boundary)
-            isOverlap = true;
-          }
-        }
-
-        if (isOverlap && oc.created_date < te.created_date) {
+        if (servicesOverlap(oc, incomingEntry) && oc.created_date < te.created_date) {
+          const ocEnd = oc.end_date || oc.date;
+          const isSameDay = !payload.end_date && !oc.end_date && payload.date === oc.date;
+          const errorCode = isSameDay ? 'TIME_OVERLAP' : 'DATE_OVERLAP';
+          const errorMsg = `Gelijktijdige overlap gedetecteerd met dienst ${isSameDay ? `${oc.start_time}-${oc.end_time}` : `${oc.date} t/m ${ocEnd}`}`;
           console.log(`[POST-COMMIT ${errorCode}] Rolling back ${te.id}, older entry ${oc.id} wins`);
           await svc.entities.TimeEntry.update(te.id, { status: 'Concept' });
           for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
@@ -739,10 +713,17 @@ Deno.serve(async (req) => {
       // ========================================
       // 10. POST-COMMIT CLEANUP (best-effort, non-critical)
       // ========================================
-      // Safe: committed entry exists. Cleanup failures are logged, never fail the response.
+      // Clean ALL Concept entries for this employee that overlap with the
+      // committed dienst range. This catches orphan drafts from date changes.
       try {
-        const oldDrafts = candidateEntries.filter(e => e.status === 'Concept' && e.id !== te.id && e.date === payload.date);
+        const oldDrafts = candidateEntries.filter(e => {
+          if (e.status !== 'Concept' || e.id === te.id) return false;
+          const draftEnd = e.end_date || e.date;
+          // Draft overlaps with committed range?
+          return e.date <= entryEnd && draftEnd >= payload.date;
+        });
         for (const draft of oldDrafts) {
+          console.log(`[CLEANUP] Removing overlapping draft ${draft.id} (${draft.date}→${draft.end_date || draft.date})`);
           const [dTrips, dSpw] = await Promise.all([
             svc.entities.Trip.filter({ time_entry_id: draft.id }),
             svc.entities.StandplaatsWerk.filter({ time_entry_id: draft.id }),
