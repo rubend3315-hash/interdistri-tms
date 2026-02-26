@@ -326,6 +326,46 @@ Deno.serve(async (req) => {
     submissionLog.submission_id = payload.submission_id || 'unknown';
     submissionLog.entry_date = payload.date || null;
 
+    // ========================================
+    // 2b. EARLY IDEMPOTENCY GUARD (submission_id level)
+    // ========================================
+    // Check MobileEntrySubmissionLog BEFORE creating a new RECEIVED log.
+    // This prevents duplicate processing when the client retries rapidly.
+    if (payload.submission_id && UUID_RE.test(payload.submission_id)) {
+      const existingLogs = await svcEarly.entities.MobileEntrySubmissionLog.filter({
+        submission_id: payload.submission_id,
+      });
+
+      // If any log for this submission_id already has SUCCESS → return immediately
+      const successLog = existingLogs.find(l => l.status === 'SUCCESS');
+      if (successLog) {
+        console.log(`[IDEMPOTENCY_GUARD] submission_id=${payload.submission_id} already SUCCESS (log ${successLog.id})`);
+        return Response.json({
+          success: true,
+          idempotent: true,
+          status: 'ALREADY_PROCESSED',
+          data: {
+            time_entry_id: successLog.time_entry_id || null,
+          }
+        });
+      }
+
+      // If a RECEIVED log exists and is < 10 seconds old → still processing
+      const recentReceived = existingLogs.find(l => {
+        if (l.status !== 'RECEIVED') return false;
+        const age = Date.now() - new Date(l.timestamp_received).getTime();
+        return age < 10000;
+      });
+      if (recentReceived) {
+        console.log(`[IDEMPOTENCY_GUARD] submission_id=${payload.submission_id} still RECEIVED (${Math.round((Date.now() - new Date(recentReceived.timestamp_received).getTime()) / 1000)}s old)`);
+        return Response.json({
+          success: true,
+          idempotent: true,
+          status: 'PROCESSING',
+        }, { status: 202 });
+      }
+    }
+
     // Log RECEIVED immediately (separate immutable record)
     await logSubmission(svcEarly, { ...submissionLog });
 
