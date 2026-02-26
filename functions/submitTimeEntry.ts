@@ -589,6 +589,26 @@ Deno.serve(async (req) => {
       await svc.entities.TimeEntry.update(te.id, { status: 'Ingediend' });
 
       // ========================================
+      // 8b. WRITE CONFIRMATION GUARD
+      // ========================================
+      const verifyEntries = await svc.entities.TimeEntry.filter({ employee_id: empId, submission_id: payload.submission_id });
+      const verifyEntry = verifyEntries.find(e => e.id === te.id && e.status === 'Ingediend');
+      if (!verifyEntry) {
+        await logSubmission(svc, {
+          ...submissionLog,
+          status: 'CRITICAL_WRITE_MISSING',
+          http_status: 500,
+          error_code: 'WRITE_VERIFICATION_FAILED',
+          error_message: `TimeEntry create returned ID ${te.id} but record not found or not Ingediend in verification step`,
+          employee_id: empId,
+          time_entry_id: te.id,
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        });
+        throw new Error(`TimeEntry write verification failed for ${te.id}`);
+      }
+
+      // ========================================
       // 9. POST-COMMIT OVERLAP GUARD
       // ========================================
       // Re-check for overlapping Ingediend entries AFTER our commit.
