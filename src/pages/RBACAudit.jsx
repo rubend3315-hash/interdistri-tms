@@ -8,6 +8,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SnapshotOverview from "../components/rbac-audit/SnapshotOverview";
 import RoleChangeDetector from "../components/rbac-audit/RoleChangeDetector";
 import InvariantWarnings from "../components/rbac-audit/InvariantWarnings";
+import IntegrityReports from "../components/rbac-audit/IntegrityReports";
+import MonitoringPolicy from "../components/rbac-audit/MonitoringPolicy";
 
 export default function RBACAudit({ currentUser }) {
   // Audit log: track dashboard view
@@ -52,10 +54,12 @@ export default function RBACAudit({ currentUser }) {
       </div>
 
       <Tabs defaultValue="snapshots" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="snapshots">Snapshot Overzicht</TabsTrigger>
-          <TabsTrigger value="changes">Role Wijzigingen</TabsTrigger>
-          <TabsTrigger value="invariants">Invariant Checks</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="snapshots">Snapshots</TabsTrigger>
+          <TabsTrigger value="integrity">Integrity</TabsTrigger>
+          <TabsTrigger value="changes">Wijzigingen</TabsTrigger>
+          <TabsTrigger value="invariants">Invariants</TabsTrigger>
+          <TabsTrigger value="policy">Policy</TabsTrigger>
         </TabsList>
 
         <TabsContent value="snapshots">
@@ -66,8 +70,16 @@ export default function RBACAudit({ currentUser }) {
           <RoleChangeDetector />
         </TabsContent>
 
+        <TabsContent value="integrity">
+          <IntegrityReports currentUser={currentUser} />
+        </TabsContent>
+
         <TabsContent value="invariants">
           <InvariantWarnings />
+        </TabsContent>
+
+        <TabsContent value="policy">
+          <MonitoringPolicy />
         </TabsContent>
       </Tabs>
     </div>

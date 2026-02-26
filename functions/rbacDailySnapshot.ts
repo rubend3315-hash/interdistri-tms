@@ -1,5 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+/**
+ * Compute SHA-256 hex hash using Web Crypto API (async).
+ */
+async function sha256Hex(input) {
+  const data = new TextEncoder().encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -26,6 +37,7 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date().toISOString();
+    const today = now.slice(0, 10);
     const snapshots = [];
     const violations = [];
 
@@ -41,7 +53,6 @@ Deno.serve(async (req) => {
         effectiveRole = 'EMPLOYEE';
       }
 
-      // Create snapshot
       snapshots.push({
         user_id: u.id,
         email: u.email,
@@ -85,7 +96,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Check 3: business_role null but employee exists (mismatch, not a violation but notable)
+      // Check 3: business_role null but employee exists
       if (!u.business_role && linkedEmp) {
         violations.push({
           user_id: u.id,
@@ -109,14 +120,86 @@ Deno.serve(async (req) => {
       await svc.entities.RBACDecisionLog.bulkCreate(violations);
     }
 
-    console.log(`[RBAC_SNAPSHOT] ${snapshots.length} snapshots created, ${violations.length} findings logged`);
+    // --- Integrity Report with SHA-256 hash ---
+    const violationCount = violations.filter(v => v.result === 'VIOLATION').length;
+    const warningCount = violations.filter(v => v.result === 'WARNING').length;
+    const adminCount = snapshots.filter(s => s.system_role === 'admin').length;
+    const employeeEffectiveCount = snapshots.filter(s => s.effective_role === 'EMPLOYEE').length;
+    const nullEffectiveCount = snapshots.filter(s => !s.effective_role).length;
+
+    // Deterministic hash: sort by user_id, concatenate user_id:effective_role pairs
+    const hashInput = snapshots
+      .slice()
+      .sort((a, b) => a.user_id.localeCompare(b.user_id))
+      .map(s => `${s.user_id}:${s.effective_role || 'NULL'}`)
+      .join('|');
+    const hashSignature = await sha256Hex(hashInput);
+
+    // --- Drift Detection ---
+    const driftAlerts = [];
+
+    // Fetch previous integrity report to compare
+    const previousReports = await svc.entities.RBACIntegrityReport.list('-snapshot_date', 1);
+    const prevReport = previousReports[0];
+
+    if (prevReport) {
+      // Drift: admin count changed
+      if (prevReport.admin_count !== adminCount) {
+        driftAlerts.push(`Admin count changed: ${prevReport.admin_count} → ${adminCount}`);
+      }
+
+      // Drift: >5% role changes (compare total vs previous)
+      if (prevReport.total_users > 0) {
+        const totalChanged = Math.abs(prevReport.total_users - snapshots.length);
+        const pctChange = (totalChanged / prevReport.total_users) * 100;
+        if (pctChange > 5) {
+          driftAlerts.push(`User count changed >5%: ${prevReport.total_users} → ${snapshots.length} (${pctChange.toFixed(1)}%)`);
+        }
+      }
+
+      // Drift: violations detected
+      if (violationCount > 0) {
+        driftAlerts.push(`${violationCount} RBAC violation(s) detected`);
+      }
+    }
+
+    // Log drift alerts to AuditLog
+    if (driftAlerts.length > 0) {
+      await svc.entities.AuditLog.create({
+        action_type: 'role_change',
+        category: 'Security',
+        description: `RBAC_DRIFT_DETECTED: ${driftAlerts.join('; ')}`,
+        performed_by_email: 'system',
+        performed_by_name: 'RBAC Monitor',
+        performed_by_role: 'system',
+        metadata: { drift_alerts: driftAlerts, snapshot_date: today },
+      });
+    }
+
+    // Create integrity report
+    await svc.entities.RBACIntegrityReport.create({
+      snapshot_date: today,
+      total_users: snapshots.length,
+      admin_count: adminCount,
+      employee_effective_count: employeeEffectiveCount,
+      null_effective_count: nullEffectiveCount,
+      violation_count: violationCount,
+      warning_count: warningCount,
+      hash_signature: hashSignature,
+      drift_alerts: driftAlerts,
+      source: 'rbacDailySnapshot',
+    });
+
+    console.log(`[RBAC_SNAPSHOT] ${snapshots.length} snapshots, ${violations.length} findings, hash=${hashSignature.slice(0, 12)}..., ${driftAlerts.length} drift alerts`);
 
     return Response.json({
       timestamp: now,
       snapshots_created: snapshots.length,
       findings: violations.length,
-      violations_count: violations.filter(v => v.result === 'VIOLATION').length,
-      warnings_count: violations.filter(v => v.result === 'WARNING').length,
+      violations_count: violationCount,
+      warnings_count: warningCount,
+      hash_signature: hashSignature,
+      drift_alerts: driftAlerts,
       summary: violations.map(v => ({
         email: v.metadata?.email,
         check_type: v.check_type,
