@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Smartphone, Clock, CheckCircle2, XCircle, AlertTriangle, RotateCcw } from "lucide-react";
+import LatencyOverview from "./LatencyOverview";
 import { format } from "date-fns";
 
 const STATUS_CONFIG = {
@@ -66,6 +67,9 @@ export default function SubmissionLogs() {
 
   return (
     <div className="space-y-4">
+      {/* Latency Overview */}
+      <LatencyOverview />
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <MiniStat label="Totaal" value={stats.total} sub={`${stats.success} success`} color="blue" />
