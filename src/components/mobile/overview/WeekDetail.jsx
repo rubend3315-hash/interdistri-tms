@@ -6,9 +6,8 @@ import { cn } from "@/lib/utils";
 const DAY_LABELS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 
 function fmtH(h) {
-  if (!h || h === 0) return "0u";
-  const r = Math.round(h * 10) / 10;
-  return r % 1 === 0 ? `${Math.round(r)}u` : `${r}u`;
+  if (!h || h === 0) return "0,0000u";
+  return new Intl.NumberFormat('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 4 }).format(h) + "u";
 }
 
 function getNormStatus(totalHours, norm, isPastWeek) {

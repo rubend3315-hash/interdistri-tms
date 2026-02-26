@@ -6,9 +6,8 @@ import { cn } from "@/lib/utils";
 const DAY_LABELS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 
 function formatHours(h) {
-  if (!h || h === 0) return "0u";
-  const rounded = Math.round(h * 10) / 10;
-  return rounded % 1 === 0 ? `${Math.round(rounded)}u` : `${rounded}u`;
+  if (!h || h === 0) return "0,0000u";
+  return new Intl.NumberFormat('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 4 }).format(h) + "u";
 }
 
 export default function WeekCard({ week, isCurrentWeek }) {
