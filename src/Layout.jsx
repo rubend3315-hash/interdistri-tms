@@ -42,6 +42,8 @@ import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
 import AccessDenied from "./components/security/AccessDenied";
 import { cn } from "@/lib/utils";
+import { DensityProvider } from "./components/utils/DensityContext";
+import DensityToggle from "./components/utils/DensityToggle";
 import { isNavGroupVisible } from "./components/utils/businessRoles";
 import { hasPermission, hasAnyPermission, getEffectiveRole, isEmployeeUser } from "./components/core/rbac/requirePermission";
 import { PERMISSIONS } from "./components/core/rbac/permissionRegistry";
