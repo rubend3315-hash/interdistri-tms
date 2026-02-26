@@ -415,45 +415,45 @@ export default function Approvals() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-[1400px] mx-auto pb-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Goedkeuringen</h1>
-        <p className="text-slate-500 mt-1">Beheer en keur ingediende uren goed of af</p>
+        <h1 className="text-2xl font-bold text-slate-900">Goedkeuringen</h1>
+        <p className="text-sm text-slate-500">Beheer en keur ingediende uren goed of af</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         <Card className="bg-amber-50 border-amber-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-              <Clock className="w-6 h-6 text-amber-600" />
+          <CardContent className="px-4 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Clock className="w-[18px] h-[18px] text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-amber-700">{pendingEntries.length}</p>
-              <p className="text-sm text-amber-600">Ter goedkeuring</p>
+              <p className="text-xl font-semibold text-amber-700 leading-tight">{pendingEntries.length}</p>
+              <p className="text-xs text-amber-600">Ter goedkeuring</p>
             </div>
           </CardContent>
         </Card>
         <Card className="bg-emerald-50 border-emerald-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-emerald-600" />
+          <CardContent className="px-4 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-[18px] h-[18px] text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-emerald-700">{approvedEntries.length}</p>
-              <p className="text-sm text-emerald-600">Goedgekeurd</p>
+              <p className="text-xl font-semibold text-emerald-700 leading-tight">{approvedEntries.length}</p>
+              <p className="text-xs text-emerald-600">Goedgekeurd</p>
             </div>
           </CardContent>
         </Card>
         <Card className="bg-red-50 border-red-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-              <XCircle className="w-6 h-6 text-red-600" />
+          <CardContent className="px-4 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <XCircle className="w-[18px] h-[18px] text-red-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-red-700">{rejectedEntries.length}</p>
-              <p className="text-sm text-red-600">Afgekeurd</p>
+              <p className="text-xl font-semibold text-red-700 leading-tight">{rejectedEntries.length}</p>
+              <p className="text-xs text-red-600">Afgekeurd</p>
             </div>
           </CardContent>
         </Card>
