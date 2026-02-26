@@ -211,82 +211,59 @@ export default function RevenuePerCustomer() {
         </CardTitle>
         <p className="text-xs text-slate-400 mt-0.5">Δ = verschil t.o.v. week {currentWeek - 1 > 0 ? currentWeek - 1 : 52} (alleen goedgekeurde uren)</p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-3 pb-3 pt-0">
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-14" />
+              <Skeleton key={i} className="h-8" />
             ))}
           </div>
         ) : customerData.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-6">Geen data deze week</p>
+          <p className="text-xs text-slate-500 text-center py-4">Geen data deze week</p>
         ) : (
-          <div className="space-y-3">
-            {customerData.map((c) => (
-              <div key={c.id} className="p-3 bg-slate-50 rounded-xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-slate-400" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-900">{c.name}</p>
-                      <p className="text-xs text-slate-500">{c.entries} registraties</p>
-                    </div>
-                  </div>
-                </div>
-                {/* Metrics row */}
-                <div className="mt-2 grid grid-cols-3 gap-2 pl-[52px]">
-                  {/* Uren */}
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide">Uren</p>
-                    <p className="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {c.hours.toFixed(1)}
-                    </p>
-                    <DeltaGroup delta={c.hoursDelta} pct={c.hoursPct} suffix="uur" />
-                  </div>
-                  {/* Omzet */}
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide">Omzet</p>
-                    <p className="text-sm font-semibold text-emerald-700 flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />€ {fmt(c.revenue)}
-                    </p>
-                    <DeltaGroup delta={c.revenueDelta} pct={c.revenuePct} prefix="€ " />
-                  </div>
-                  {/* Gem. €/uur */}
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide">€/uur</p>
-                    <p className="text-sm font-semibold text-slate-700">€ {fmt(c.rate)}</p>
-                    <DeltaGroup delta={c.rateDelta} pct={c.ratePct} prefix="€ " />
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Totals */}
-            {totals && (
-              <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 mt-2">
-                <p className="font-semibold text-blue-900 mb-2">Totaal</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <p className="text-[10px] text-blue-400 uppercase tracking-wide">Uren</p>
-                    <p className="text-sm font-bold text-blue-800">{totals.hours.toFixed(1)}</p>
-                    <DeltaGroup delta={totals.hoursDelta} pct={totals.hoursPct} suffix="uur" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-blue-400 uppercase tracking-wide">Omzet</p>
-                    <p className="text-sm font-bold text-emerald-700">€ {fmt(totals.revenue)}</p>
-                    <DeltaGroup delta={totals.revenueDelta} pct={totals.revenuePct} prefix="€ " />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-blue-400 uppercase tracking-wide">€/uur (gew.)</p>
-                    <p className="text-sm font-bold text-blue-800">€ {fmt(totals.rate)}</p>
-                    <DeltaGroup delta={totals.rateDelta} pct={totals.ratePct} prefix="€ " />
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="max-h-[400px] overflow-y-auto">
+            <table className="w-full text-[11px]">
+              <thead>
+                <tr className="text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  <th className="text-left py-1.5 pr-2 font-medium">Klant</th>
+                  <th className="text-right py-1.5 px-1 font-medium">Uren</th>
+                  <th className="text-right py-1.5 px-1 font-medium">Δ</th>
+                  <th className="text-right py-1.5 px-1 font-medium">%</th>
+                  <th className="text-right py-1.5 px-1 font-medium">Omzet</th>
+                  <th className="text-right py-1.5 px-1 font-medium">Δ</th>
+                  <th className="text-right py-1.5 px-1 font-medium">%</th>
+                  <th className="text-right py-1.5 pl-1 font-medium">€/uur</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customerData.map((c) => (
+                  <tr key={c.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                    <td className="py-1.5 pr-2 font-medium text-slate-800 truncate max-w-[140px]">{c.name}</td>
+                    <td className="py-1.5 px-1 text-right text-slate-700 font-medium">{c.hours.toFixed(1)}</td>
+                    <td className="py-1.5 px-1 text-right"><DeltaVal value={c.hoursDelta} /></td>
+                    <td className="py-1.5 px-1 text-right"><DeltaPct pct={c.hoursPct} /></td>
+                    <td className="py-1.5 px-1 text-right text-slate-700 font-medium">€{fmt(c.revenue)}</td>
+                    <td className="py-1.5 px-1 text-right"><DeltaVal value={c.revenueDelta} prefix="€" /></td>
+                    <td className="py-1.5 px-1 text-right"><DeltaPct pct={c.revenuePct} /></td>
+                    <td className="py-1.5 pl-1 text-right text-slate-700">€{fmt(c.rate)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {totals && (
+                <tfoot>
+                  <tr className="bg-blue-50 font-semibold text-blue-900">
+                    <td className="py-1.5 pr-2">Totaal</td>
+                    <td className="py-1.5 px-1 text-right">{totals.hours.toFixed(1)}</td>
+                    <td className="py-1.5 px-1 text-right"><DeltaVal value={totals.hoursDelta} /></td>
+                    <td className="py-1.5 px-1 text-right"><DeltaPct pct={totals.hoursPct} /></td>
+                    <td className="py-1.5 px-1 text-right">€{fmt(totals.revenue)}</td>
+                    <td className="py-1.5 px-1 text-right"><DeltaVal value={totals.revenueDelta} prefix="€" /></td>
+                    <td className="py-1.5 px-1 text-right"><DeltaPct pct={totals.revenuePct} /></td>
+                    <td className="py-1.5 pl-1 text-right">€{fmt(totals.rate)}</td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
           </div>
         )}
       </CardContent>
