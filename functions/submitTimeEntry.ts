@@ -94,9 +94,11 @@ function validate(p) {
   const err = [];
   if (!p) return ['Payload is vereist'];
 
-  // submission_id — dedicated idempotency field
-  if (!p.submission_id || typeof p.submission_id !== 'string' || !UUID_RE.test(p.submission_id))
-    err.push('submission_id is vereist (UUID v4 formaat)');
+  // submission_id — server-side fallback if missing or invalid
+  if (!p.submission_id || typeof p.submission_id !== 'string' || !UUID_RE.test(p.submission_id)) {
+    p.submission_id = crypto.randomUUID();
+    console.log(`[SUBMIT] submission_id ontbrak of ongeldig — server-generated: ${p.submission_id}`);
+  }
 
   if (!isDate(p.date)) err.push('Ongeldige datum (YYYY-MM-DD)');
   if (!isTime(p.start_time)) err.push('Ongeldige starttijd (HH:MM)');
