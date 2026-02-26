@@ -426,12 +426,54 @@ Deno.serve(async (req) => {
           }, { status: 409 });
         }
       } else {
-        // At least one side is multi-day, date ranges overlap → block
-        return Response.json({
-          success: false, error: 'DATE_OVERLAP',
-          message: `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
-          details: [`Bestaande dienst: ${ex.id}`]
-        }, { status: 409 });
+        // At least one side is multi-day.
+        // Adjacent night shifts (e.g. 24→25 and 25→26) share a boundary date
+        // but don't truly overlap. Check if the date ranges STRICTLY overlap
+        // by also comparing actual times on the shared boundary date.
+        const newStart = payload.date;
+        const newEnd = payload.end_date || payload.date;
+
+        // Check if ranges merely touch (adjacent) vs truly overlap
+        // Adjacent means: exEnd == newStart OR newEnd == ex.date
+        // In that case, compare times to determine true overlap
+        if (exEnd === newStart || newEnd === ex.date) {
+          // Boundary day: check if times actually overlap on that shared day
+          const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
+          const es = timeMin(ex.start_time), ee = timeMin(ex.end_time);
+
+          // For multi-day entries: start_time is on date, end_time is on end_date.
+          // On the shared boundary day:
+          // - If exEnd == newStart: existing ends (end_time) on same day new starts (start_time)
+          //   → overlap only if ex.end_time > new.start_time
+          // - If newEnd == ex.date: new ends (end_time) on same day existing starts (start_time)
+          //   → overlap only if new.end_time > ex.start_time
+          let isTimeOverlap = false;
+          if (exEnd === newStart && es !== null && ee !== null && ns !== null) {
+            // Existing entry's end_time is on the shared day, new entry's start_time is on the same day
+            isTimeOverlap = ee > ns;
+          } else if (newEnd === ex.date && ns !== null && ne !== null && es !== null) {
+            // New entry's end_time is on the shared day, existing entry's start_time is on the same day
+            isTimeOverlap = ne > es;
+          }
+
+          if (isTimeOverlap) {
+            console.log(`[OVERLAP] Boundary time overlap: existing ${ex.id} (${ex.date}→${exEnd} ${ex.start_time}-${ex.end_time}) vs new (${newStart}→${newEnd} ${payload.start_time}-${payload.end_time})`);
+            return Response.json({
+              success: false, error: 'DATE_OVERLAP',
+              message: `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
+              details: [`Bestaande dienst: ${ex.id}`]
+            }, { status: 409 });
+          }
+          // Adjacent, no time overlap → allowed
+          console.log(`[OVERLAP] Adjacent shifts allowed: existing ${ex.id} (${ex.date}→${exEnd}) vs new (${newStart}→${newEnd})`);
+        } else {
+          // True date range overlap (not just boundary) → block
+          return Response.json({
+            success: false, error: 'DATE_OVERLAP',
+            message: `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
+            details: [`Bestaande dienst: ${ex.id}`]
+          }, { status: 409 });
+        }
       }
     }
 
