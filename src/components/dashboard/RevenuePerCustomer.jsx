@@ -11,27 +11,23 @@ function fmt(n) {
   return n.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function Delta({ delta, pct, prefix = "", suffix = "" }) {
-  if (delta === 0 && (pct === null || pct === 0)) {
-    return <span className="text-slate-400 text-[10px]"><Minus className="w-2.5 h-2.5 inline" /></span>;
-  }
-  const positive = delta > 0;
-  const color = positive ? "text-emerald-600" : "text-red-500";
-  const Arrow = positive ? TrendingUp : TrendingDown;
-  const sign = positive ? "+" : "";
+function DeltaVal({ value, prefix = "" }) {
+  if (value === 0) return <span className="text-slate-300">—</span>;
+  const pos = value > 0;
   return (
-    <span className={`${color} text-[10px] inline-flex items-center gap-0.5 whitespace-nowrap`}>
-      <Arrow className="w-2.5 h-2.5" />
-      {prefix}{sign}{suffix === "%" ? (pct !== null ? pct.toFixed(1) + "%" : "nieuw") : fmt(delta)}{suffix !== "%" ? suffix : ""}
+    <span className={pos ? "text-emerald-600" : "text-red-500"}>
+      {pos ? "+" : ""}{prefix}{fmt(Math.abs(value))}
     </span>
   );
 }
 
-function DeltaGroup({ delta, pct, prefix = "", suffix = "" }) {
+function DeltaPct({ pct }) {
+  if (pct === null) return <span className="text-slate-300">—</span>;
+  if (pct === 0) return <span className="text-slate-300">0%</span>;
+  const pos = pct > 0;
   return (
-    <span className="inline-flex items-center gap-1.5 ml-1">
-      <Delta delta={delta} pct={pct} prefix={prefix} suffix={suffix === "uur" ? "" : suffix} />
-      {pct !== null && <Delta delta={delta} pct={pct} prefix="" suffix="%" />}
+    <span className={pos ? "text-emerald-600" : "text-red-500"}>
+      {pos ? "+" : ""}{pct.toFixed(1)}%
     </span>
   );
 }
