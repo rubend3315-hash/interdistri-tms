@@ -307,6 +307,23 @@ export default function UsersPage({ currentUser }) {
     return 'some';
   };
 
+  // Build a set of employee emails for quick lookup
+  const employeeEmailSet = React.useMemo(() => {
+    const set = new Set();
+    employees.forEach(emp => {
+      if (emp.email) set.add(emp.email.toLowerCase());
+    });
+    return set;
+  }, [employees]);
+
+  // Determine effective business role: if user has business_role use it,
+  // otherwise if linked to an Employee record via email → "EMPLOYEE"
+  const getEffectiveBusinessRole = (user) => {
+    if (user.business_role) return user.business_role;
+    if (user.email && employeeEmailSet.has(user.email.toLowerCase())) return 'EMPLOYEE';
+    return null;
+  };
+
   const filteredUsers = users.filter(user =>
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())

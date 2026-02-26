@@ -77,6 +77,7 @@ import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
 import Holidays from './pages/Holidays';
 import Integrations from './pages/Integrations';
+import LoonstrookPrint from './pages/LoonstrookPrint';
 import Messages from './pages/Messages';
 import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import MobileEntry from './pages/MobileEntry';
@@ -109,7 +110,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import LoonstrookPrint from './pages/LoonstrookPrint';
 import __Layout from './Layout.jsx';
 
 
@@ -144,6 +144,7 @@ export const PAGES = {
     "HelpPage": HelpPage,
     "Holidays": Holidays,
     "Integrations": Integrations,
+    "LoonstrookPrint": LoonstrookPrint,
     "Messages": Messages,
     "MobileBedrijfsreglement": MobileBedrijfsreglement,
     "MobileEntry": MobileEntry,
@@ -176,7 +177,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "LoonstrookPrint": LoonstrookPrint,
 }
 
 export const pagesConfig = {
