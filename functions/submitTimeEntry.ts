@@ -486,7 +486,7 @@ Deno.serve(async (req) => {
 
     try {
       // --- Create TimeEntry (Concept) with submission_id ---
-      const te = await svc.entities.TimeEntry.create({
+      const teCreateData = {
         employee_id: empId,
         date: payload.date,
         end_date: endD,
@@ -504,8 +504,18 @@ Deno.serve(async (req) => {
         status: 'Concept',
         signature_url: payload.signature_url || null,
         submission_id: payload.submission_id, // <-- DEDICATED FIELD
-      });
+      };
+
+      // DEBUG: Log what we're about to create — note customer_id/project_id are NOT in the create payload
+      console.log(`[SUBMIT_DEBUG] TimeEntry create data keys: ${Object.keys(teCreateData).join(', ')}`);
+      console.log(`[SUBMIT_DEBUG] TimeEntry create data customer_id: ${JSON.stringify(teCreateData.customer_id)}`);
+      console.log(`[SUBMIT_DEBUG] TimeEntry create data project_id: ${JSON.stringify(teCreateData.project_id)}`);
+
+      const te = await svc.entities.TimeEntry.create(teCreateData);
       created.teId = te.id;
+
+      // DEBUG: Log created entry
+      console.log(`[SUBMIT_DEBUG] Created TimeEntry ${te.id} — customer_id: ${JSON.stringify(te.customer_id)}, project_id: ${JSON.stringify(te.project_id)}`);
 
       // --- POST-CREATE DUPLICATE GUARD ---
       // After creating, re-check if another request with the same submission_id
