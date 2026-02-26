@@ -20,7 +20,6 @@ import {
   Edit,
   Trash2
 } from "lucide-react";
-import CCRow, { CCZone1, CCZone2, CCZone3, CCZone4, CCId, CCBadge, CCMeta, CCList } from "@/components/control-center/CCRow";
 
 export default function ShiftTime() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -126,12 +125,12 @@ export default function ShiftTime() {
   }, {});
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-6" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-page-gap)' }}>
+    <div className="space-y-4 max-w-[1400px] mx-auto pb-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 style={{ fontSize: 'var(--d-header-font)' }} className="font-bold text-slate-900">Dienst-Shifttijd</h1>
-          <p style={{ fontSize: 'var(--d-meta-font)' }} className="text-slate-500">Communicatie van starttijden voor PakketDistributie</p>
+          <h1 className="text-2xl font-bold text-slate-900">Dienst-Shifttijd</h1>
+          <p className="text-sm text-slate-500">Communicatie van starttijden voor PakketDistributie</p>
         </div>
         <Button onClick={openNewDialog} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
@@ -140,8 +139,8 @@ export default function ShiftTime() {
       </div>
 
       {/* Shift List - Grouped by Department */}
-      <Card style={{ borderRadius: 'var(--d-card-radius)' }}>
-        <CardContent style={{ padding: 'var(--d-card-px)' }}>
+      <Card>
+        <CardContent className="p-4">
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
@@ -153,7 +152,7 @@ export default function ShiftTime() {
               <p className="text-xs text-slate-500 mt-1">Voeg een shifttijd toe om te beginnen.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-page-gap)' }}>
+            <div className="space-y-4">
               {Object.entries(shiftsByDepartment).map(([department, shifts]) => (
                 <div key={department}>
                   <div className="flex items-center gap-2 mb-2">
@@ -162,40 +161,80 @@ export default function ShiftTime() {
                     </Badge>
                     <span className="text-xs text-slate-400">({shifts.length})</span>
                   </div>
-                  <CCList>
+                  <div className="space-y-2 pl-3 border-l-2 border-slate-200">
                     {shifts.map(shift => (
-                      <CCRow key={shift.id} className={shift.date === todayStr ? '!bg-blue-50/50' : ''}>
-                        <CCZone1>
-                          <CCId>{shift.service_start_time}</CCId>
-                          {shift.date === todayStr && <CCBadge className="bg-blue-600 text-white">Vandaag</CCBadge>}
-                          {shift.message && <span className="rail-meta hidden md:inline truncate max-w-[200px]" title={shift.message}>{shift.message}</span>}
-                        </CCZone1>
-                        <CCZone2>
-                          <CCMeta>{format(new Date(shift.date), "EEE d MMM", { locale: nl })}</CCMeta>
-                          {shift.start_time && shift.end_time && <CCMeta>{shift.start_time}–{shift.end_time}</CCMeta>}
-                        </CCZone2>
-                        <CCZone3 />
-                        <CCZone4>
-                          <button 
-                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
-                            onClick={() => openEditDialog(shift)}
-                          >
-                            <Edit className="w-4 h-4 text-slate-500" />
-                          </button>
-                          <button 
-                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors"
-                            onClick={() => {
-                              if (confirm('Weet je zeker dat je deze shifttijd wilt verwijderen?')) {
-                                deleteMutation.mutate(shift.id);
-                              }
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </button>
-                        </CCZone4>
-                      </CCRow>
+                      <div 
+                        key={shift.id}
+                        className={`px-4 py-3 rounded-xl border transition-colors ${
+                          shift.date === todayStr 
+                            ? 'bg-blue-50 border-blue-200' 
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              shift.date === todayStr ? 'bg-blue-100' : 'bg-slate-100'
+                            }`}>
+                              <Clock className={`w-[18px] h-[18px] ${
+                                shift.date === todayStr ? 'text-blue-600' : 'text-slate-600'
+                              }`} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-lg leading-tight text-slate-900">
+                                  {shift.service_start_time}
+                                </span>
+                                {shift.date === todayStr && (
+                                  <Badge className="bg-blue-600 text-[11px] px-2 py-0 leading-5">Vandaag</Badge>
+                                )}
+                                {shift.start_time && shift.end_time && (
+                                  <span className="text-xs text-slate-400">({shift.start_time}–{shift.end_time})</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                  {format(new Date(shift.date), "EEE d MMM", { locale: nl })}
+                                </span>
+                                {shift.message && (
+                                  <span className="hidden md:flex items-center gap-1 truncate max-w-[280px]" title={shift.message}>
+                                    <MessageSquare className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                                    {shift.message}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button 
+                              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
+                              onClick={() => openEditDialog(shift)}
+                            >
+                              <Edit className="w-4 h-4 text-slate-500" />
+                            </button>
+                            <button 
+                              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors"
+                              onClick={() => {
+                                if (confirm('Weet je zeker dat je deze shifttijd wilt verwijderen?')) {
+                                  deleteMutation.mutate(shift.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {shift.message && (
+                          <p className="md:hidden text-[11px] text-slate-500 mt-1.5 bg-slate-50 rounded px-2 py-1 truncate">
+                            {shift.message}
+                          </p>
+                        )}
+                      </div>
                     ))}
-                  </CCList>
+                  </div>
                 </div>
               ))}
             </div>

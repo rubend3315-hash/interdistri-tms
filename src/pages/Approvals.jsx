@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import CCRow, { CCZone1, CCZone2, CCZone3, CCZone4, CCId, CCBadge, CCDept, CCName, CCMeta, CCVal, CCHours, CCList } from "@/components/control-center/CCRow";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   CheckCircle,
@@ -284,113 +283,177 @@ export default function Approvals() {
     });
   };
 
-  const renderEntryRow = (entry, showActions = false) => {
+  const renderEntryCard = (entry, showActions = false) => {
     const employee = getEmployee(entry.employee_id);
     const vehicle = getVehicle(entry.vehicle_id);
     const entryYear = entry.date ? new Date(entry.date).getFullYear() : null;
     const entryLocked = entry.date && entryYear && isDateInDefinitiefPeriode(entry.date, entryYear, loonperiodeStatuses);
     const overlaps = getEntryOverlaps(entry);
-    const shiftColor = entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
-      entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
-      entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
-      'bg-slate-100 text-slate-700';
 
     return (
-      <CCRow key={entry.id} locked={entryLocked}>
-        <CCZone1>
-          <CCId>{employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}</CCId>
-          {employee?.department && <CCDept>{employee.department}</CCDept>}
-          {entry.shift_type && <CCBadge className={shiftColor}>{entry.shift_type}</CCBadge>}
-          {entryLocked && <CCBadge className="bg-emerald-100 text-emerald-700">Vergrendeld</CCBadge>}
-          {overlaps.length > 0 && <CCBadge className="bg-amber-50 text-amber-700 border border-amber-200">Overlap</CCBadge>}
-        </CCZone1>
-        <CCZone2>
-          <CCMeta>{entry.date ? (() => {
-            try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
-            catch { return entry.date; }
-          })() : '–'}</CCMeta>
-          <CCVal>{entry.start_time || '-'} – {entry.end_time || '-'}</CCVal>
-        </CCZone2>
-        <CCZone3>
-          {entry.total_hours > 0 && <CCHours>{entry.total_hours}u</CCHours>}
-        </CCZone3>
-        <CCZone4>
-          <Button
-            size="sm"
-            variant="outline"
-            className="px-2.5 h-8 text-xs"
-            onClick={(e) => { e.stopPropagation(); openDetailDialog(entry); }}
-          >
-            <Eye className="w-3.5 h-3.5 mr-1" />
-            Bekijk
-          </Button>
-          {showActions && !entryLocked && (
-            <>
-              <Button
-                size="sm"
-                className="px-2.5 h-8 text-xs bg-emerald-600 hover:bg-emerald-700"
-                onClick={(e) => { e.stopPropagation(); handleApprove(entry); }}
-                disabled={approvingIds.has(entry.id) || approveMutation.isPending}
-              >
-                <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                Goed
-              </Button>
+      <Card key={entry.id} className="hover:shadow-sm transition-shadow">
+        <CardContent className="px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: avatar + info */}
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 text-slate-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm font-semibold text-slate-900 truncate">
+                    {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
+                  </h3>
+                  <span className="text-xs text-slate-400">{employee?.department}</span>
+                  {entry.shift_type && (
+                    <Badge className={`text-[11px] px-2 py-0 leading-5 ${
+                      entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
+                      entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
+                      entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
+                      'bg-slate-100 text-slate-700'
+                    }`}>
+                      {entry.shift_type}
+                    </Badge>
+                  )}
+                  {entryLocked && (
+                    <Badge className="text-[11px] px-2 py-0 leading-5 bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
+                      <Lock className="w-2.5 h-2.5" /> Vergrendeld
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    {entry.date ? (() => {
+                      try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
+                      catch { return entry.date; }
+                    })() : '–'}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    {entry.start_time || '-'} – {entry.end_time || '-'}
+                  </span>
+                  {entry.total_hours > 0 && (
+                    <span className="font-medium text-slate-700">{entry.total_hours}u</span>
+                  )}
+                  {vehicle && (
+                    <span className="flex items-center gap-1">
+                      <Car className="w-3.5 h-3.5 text-slate-400" />
+                      {vehicle.license_plate}
+                    </span>
+                  )}
+                  {entry.travel_allowance_multiplier > 0 && (
+                    <span className="text-slate-400">Reis: {entry.travel_allowance_multiplier}x</span>
+                  )}
+                  {entry.approved_by && (
+                    <span className="text-slate-400">door {entry.approved_by}</span>
+                  )}
+                </div>
+
+                {/* Compact warnings row */}
+                {(overlaps.length > 0 || entry.notes || entry.rejection_reason) && (
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    {overlaps.length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                        <AlertTriangle className="w-3 h-3" />
+                        Overlap ({overlaps.length})
+                      </span>
+                    )}
+                    {entry.notes && (
+                      <span className="text-[11px] text-slate-500 bg-slate-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.notes}>
+                        {entry.notes}
+                      </span>
+                    )}
+                    {entry.rejection_reason && (
+                      <span className="text-[11px] text-red-600 bg-red-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.rejection_reason}>
+                        Afkeuring: {entry.rejection_reason}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: actions */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <Button
                 size="sm"
                 variant="outline"
-                className="px-2.5 h-8 text-xs text-red-600 border-red-200 hover:bg-red-50"
-                onClick={(e) => { e.stopPropagation(); openRejectDialog(entry); }}
+                className="h-8 px-2.5 text-xs"
+                onClick={() => openDetailDialog(entry)}
               >
-                <XCircle className="w-3.5 h-3.5 mr-1" />
-                Afkeur
+                <Eye className="w-3.5 h-3.5 mr-1" />
+                Bekijk
               </Button>
-            </>
-          )}
-        </CCZone4>
-      </CCRow>
+              {showActions && !entryLocked && (
+                <>
+                  <Button
+                    size="sm"
+                    className="h-8 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => handleApprove(entry)}
+                    disabled={approvingIds.has(entry.id) || approveMutation.isPending}
+                  >
+                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                    Goed
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2.5 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                    onClick={() => openRejectDialog(entry)}
+                  >
+                    <XCircle className="w-3.5 h-3.5 mr-1" />
+                    Afkeur
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-6" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-page-gap)' }}>
+    <div className="space-y-4 max-w-[1400px] mx-auto pb-6">
       {/* Header */}
       <div>
-        <h1 style={{ fontSize: 'var(--d-header-font)' }} className="font-bold text-slate-900">Goedkeuringen</h1>
-        <p style={{ fontSize: 'var(--d-meta-font)' }} className="text-slate-500">Beheer en keur ingediende uren goed of af</p>
+        <h1 className="text-2xl font-bold text-slate-900">Goedkeuringen</h1>
+        <p className="text-sm text-slate-500">Beheer en keur ingediende uren goed of af</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3" style={{ gap: 'var(--d-card-gap)' }}>
-        <Card className="bg-amber-50 border-amber-200" style={{ borderRadius: 'var(--d-card-radius)' }}>
-          <CardContent className="flex items-center" style={{ padding: 'var(--d-stat-py) var(--d-stat-px)', gap: 'var(--d-card-gap)' }}>
-            <div className="bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-stat-icon)', height: 'var(--d-stat-icon)' }}>
-              <Clock style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-amber-600" />
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="bg-amber-50 border-amber-200">
+          <CardContent className="px-4 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Clock className="w-[18px] h-[18px] text-amber-600" />
             </div>
             <div>
-              <p className="font-semibold text-amber-700 leading-tight" style={{ fontSize: 'var(--d-stat-num)' }}>{pendingEntries.length}</p>
-              <p style={{ fontSize: 'var(--d-badge-font)' }} className="text-amber-600">Ter goedkeuring</p>
+              <p className="text-xl font-semibold text-amber-700 leading-tight">{pendingEntries.length}</p>
+              <p className="text-xs text-amber-600">Ter goedkeuring</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-emerald-50 border-emerald-200" style={{ borderRadius: 'var(--d-card-radius)' }}>
-          <CardContent className="flex items-center" style={{ padding: 'var(--d-stat-py) var(--d-stat-px)', gap: 'var(--d-card-gap)' }}>
-            <div className="bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-stat-icon)', height: 'var(--d-stat-icon)' }}>
-              <CheckCircle style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-emerald-600" />
+        <Card className="bg-emerald-50 border-emerald-200">
+          <CardContent className="px-4 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-[18px] h-[18px] text-emerald-600" />
             </div>
             <div>
-              <p className="font-semibold text-emerald-700 leading-tight" style={{ fontSize: 'var(--d-stat-num)' }}>{approvedEntries.length}</p>
-              <p style={{ fontSize: 'var(--d-badge-font)' }} className="text-emerald-600">Goedgekeurd</p>
+              <p className="text-xl font-semibold text-emerald-700 leading-tight">{approvedEntries.length}</p>
+              <p className="text-xs text-emerald-600">Goedgekeurd</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-red-50 border-red-200" style={{ borderRadius: 'var(--d-card-radius)' }}>
-          <CardContent className="flex items-center" style={{ padding: 'var(--d-stat-py) var(--d-stat-px)', gap: 'var(--d-card-gap)' }}>
-            <div className="bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-stat-icon)', height: 'var(--d-stat-icon)' }}>
-              <XCircle style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-red-600" />
+        <Card className="bg-red-50 border-red-200">
+          <CardContent className="px-4 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <XCircle className="w-[18px] h-[18px] text-red-600" />
             </div>
             <div>
-              <p className="font-semibold text-red-700 leading-tight" style={{ fontSize: 'var(--d-stat-num)' }}>{rejectedEntries.length}</p>
-              <p style={{ fontSize: 'var(--d-badge-font)' }} className="text-red-600">Afgekeurd</p>
+              <p className="text-xl font-semibold text-red-700 leading-tight">{rejectedEntries.length}</p>
+              <p className="text-xs text-red-600">Afgekeurd</p>
             </div>
           </CardContent>
         </Card>
@@ -416,10 +479,10 @@ export default function Approvals() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="mt-4">
+        <TabsContent value="pending" className="mt-4 space-y-3">
           {isLoading ? (
             <div className="space-y-4">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}
             </div>
           ) : pendingEntries.length === 0 ? (
             <Card className="p-12 text-center">
@@ -428,13 +491,11 @@ export default function Approvals() {
               <p className="text-slate-500 mt-1">Er zijn geen uren ter goedkeuring.</p>
             </Card>
           ) : (
-            <CCList>
-              {pendingEntries.map(entry => renderEntryRow(entry, true))}
-            </CCList>
+            pendingEntries.map(entry => renderEntryCard(entry, true))
           )}
         </TabsContent>
 
-        <TabsContent value="approved" className="mt-4">
+        <TabsContent value="approved" className="mt-4 space-y-3">
           {approvedEntries.length === 0 ? (
             <Card className="p-12 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -442,11 +503,9 @@ export default function Approvals() {
             </Card>
           ) : (
             <>
-              <CCList>
-                {approvedEntries.slice(0, 20).map(entry => renderEntryRow(entry, false))}
-              </CCList>
+              {approvedEntries.slice(0, 20).map(entry => renderEntryCard(entry, false))}
               {approvedEntries.length > 20 && (
-                <p className="text-sm text-slate-500 text-center py-2 mt-2">
+                <p className="text-sm text-slate-500 text-center py-2">
                   Toont 20 van {approvedEntries.length} vermeldingen
                 </p>
               )}
@@ -454,7 +513,7 @@ export default function Approvals() {
           )}
         </TabsContent>
 
-        <TabsContent value="rejected" className="mt-4">
+        <TabsContent value="rejected" className="mt-4 space-y-3">
           {rejectedEntries.length === 0 ? (
             <Card className="p-12 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -462,11 +521,9 @@ export default function Approvals() {
             </Card>
           ) : (
             <>
-              <CCList>
-                {rejectedEntries.slice(0, 20).map(entry => renderEntryRow(entry, false))}
-              </CCList>
+              {rejectedEntries.slice(0, 20).map(entry => renderEntryCard(entry, false))}
               {rejectedEntries.length > 20 && (
-                <p className="text-sm text-slate-500 text-center py-2 mt-2">
+                <p className="text-sm text-slate-500 text-center py-2">
                   Toont 20 van {rejectedEntries.length} vermeldingen
                 </p>
               )}

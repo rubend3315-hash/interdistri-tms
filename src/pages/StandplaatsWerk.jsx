@@ -26,7 +26,6 @@ import {
   XCircle,
   AlertTriangle
 } from "lucide-react";
-import CCRow, { CCZone1, CCZone2, CCZone3, CCZone4, CCId, CCBadge, CCName, CCMeta, CCVal, CCHours, CCList } from "@/components/control-center/CCRow";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import { checkEmployeeActiveRules } from "@/components/utils/employeeContractCheck";
@@ -287,12 +286,12 @@ export default function StandplaatsWerk() {
   const uniqueEmployees = [...new Set(records.map((r) => r.employee_id).filter(Boolean))];
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-6" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-page-gap)' }}>
+    <div className="space-y-4 max-w-[1400px] mx-auto pb-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 style={{ fontSize: 'var(--d-header-font)' }} className="font-bold text-slate-900">Standplaatswerk</h1>
-          <p style={{ fontSize: 'var(--d-meta-font)' }} className="text-slate-500">Registratie van werk op de standplaats (loodswerk)</p>
+          <h1 className="text-2xl font-bold text-slate-900">Standplaatswerk</h1>
+          <p className="text-sm text-slate-500">Registratie van werk op de standplaats (loodswerk)</p>
         </div>
         <Button onClick={openNewDialog} className="bg-amber-600 hover:bg-amber-700">
           <Plus className="w-4 h-4 mr-2" />
@@ -301,9 +300,9 @@ export default function StandplaatsWerk() {
       </div>
 
       {/* Filters */}
-      <Card style={{ borderRadius: 'var(--d-card-radius)' }}>
-        <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
-          <div className="flex flex-col md:flex-row" style={{ gap: 'var(--d-card-gap)' }}>
+      <Card>
+        <CardContent className="px-4 py-3">
+          <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
@@ -356,46 +355,81 @@ export default function StandplaatsWerk() {
           <p className="text-slate-500 mt-1">Er zijn nog geen registraties of de filters leveren geen resultaat.</p>
         </Card>
       ) : (
-        <CCList>
+        <div className="space-y-3">
           {filtered.map((record) => {
             const employee = getEmployee(record.employee_id);
             const recYear = record.date ? new Date(record.date).getFullYear() : null;
             const isLocked = record.date && recYear && isDateInDefinitiefPeriode(record.date, recYear, loonperiodeStatuses);
             const validation = validateAgainstTimeEntry(record);
             const overlaps = getOverlaps(record);
-            const spwHours = record.start_time && record.end_time ? (() => {
-              const [sH, sM] = record.start_time.split(':').map(Number);
-              const [eH, eM] = record.end_time.split(':').map(Number);
-              let m = (eH * 60 + eM) - (sH * 60 + sM);
-              if (m < 0) m += 1440;
-              return (m / 60).toFixed(1);
-            })() : null;
             return (
-              <CCRow key={record.id} onClick={() => openEditDialog(record)} locked={isLocked}>
-                <CCZone1>
-                  <CCId>{record.activity_id ? getActiviteitName(record.activity_id) : "Standplaatswerk"}</CCId>
-                  {employee && <CCName>{getFullName(employee)}</CCName>}
-                  <CCBadge className="bg-amber-100 text-amber-700">Loodswerk</CCBadge>
-                  {isLocked && <CCBadge className="bg-emerald-100 text-emerald-700">Vergrendeld</CCBadge>}
-                  {validation.valid === true && <CheckCircle2 className="cc-check text-green-500" title={validation.message} />}
-                  {validation.valid === false && <XCircle className="cc-check text-red-500" title={validation.message} />}
-                  {overlaps.length > 0 && <AlertTriangle className="cc-check text-amber-500" title={`Overlap met ${overlaps.length} record(s)`} />}
-                </CCZone1>
-                <CCZone2>
-                  <CCMeta>{record.date ? format(new Date(record.date), "d MMM", { locale: nl }) : "-"}</CCMeta>
-                  {(record.start_time || record.end_time) && <CCVal>{record.start_time || "?"} – {record.end_time || "?"}</CCVal>}
-                </CCZone2>
-                <CCZone3>
-                  {spwHours && <CCHours>{spwHours}u</CCHours>}
-                </CCZone3>
-                <CCZone4>
-                  {record.customer_id && <CCMeta>{getCustomerName(record.customer_id)}</CCMeta>}
-                  {record.project_id && <CCMeta>{getProjectName(record.project_id)}</CCMeta>}
-                </CCZone4>
-              </CCRow>
+              <Card
+                key={record.id}
+                className={`transition-shadow ${isLocked ? "opacity-75" : "hover:shadow-sm cursor-pointer"}`}
+                onClick={() => !isLocked && openEditDialog(record)}
+              >
+                <CardContent className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Package className="w-[18px] h-[18px] text-amber-700" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-semibold text-slate-900 truncate">
+                          {record.activity_id ? getActiviteitName(record.activity_id) : "Standplaatswerk"}
+                        </h3>
+                        <Badge className="text-[11px] px-2 py-0 leading-5 bg-amber-100 text-amber-700">Loodswerk</Badge>
+                        {isLocked && (
+                          <Badge className="text-[11px] px-2 py-0 leading-5 bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
+                            <Lock className="w-2.5 h-2.5" /> Vergrendeld
+                          </Badge>
+                        )}
+                        {validation.valid === true && <CheckCircle2 className="w-4 h-4 text-green-500" title={validation.message} />}
+                        {validation.valid === false && <XCircle className="w-4 h-4 text-red-500" title={validation.message} />}
+                        {overlaps.length > 0 && <AlertTriangle className="w-4 h-4 text-amber-500" title={`Overlap met ${overlaps.length} record(s)`} />}
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          {record.date ? format(new Date(record.date), "d MMM", { locale: nl }) : "-"}
+                        </span>
+                        {employee && (
+                          <span className="flex items-center gap-1">
+                            <User className="w-3.5 h-3.5 text-slate-400" />
+                            {getFullName(employee)}
+                          </span>
+                        )}
+                        {record.customer_id && (
+                          <span className="flex items-center gap-1">
+                            <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                            {getCustomerName(record.customer_id)}
+                          </span>
+                        )}
+                        {(record.start_time || record.end_time) && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            {record.start_time || "?"} – {record.end_time || "?"}
+                          </span>
+                        )}
+                        {record.project_id && (
+                          <span className="text-slate-400">{getProjectName(record.project_id)}</span>
+                        )}
+                      </div>
+                      {overlaps.length > 0 && (
+                        <span className="inline-flex items-center gap-1 mt-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                          <AlertTriangle className="w-3 h-3" /> Overlap ({overlaps.length})
+                        </span>
+                      )}
+                      {record.notes && (
+                        <p className="text-[11px] text-slate-400 truncate max-w-[300px] mt-0.5">{record.notes}</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
-        </CCList>
+        </div>
       )}
 
       {/* Edit/Create Dialog */}

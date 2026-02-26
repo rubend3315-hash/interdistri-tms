@@ -42,8 +42,6 @@ import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
 import AccessDenied from "./components/security/AccessDenied";
 import { cn } from "@/lib/utils";
-import { DensityProvider } from "./components/utils/DensityContext";
-import DensityToggle from "./components/utils/DensityToggle";
 import { isNavGroupVisible } from "./components/utils/businessRoles";
 import { hasPermission, hasAnyPermission, getEffectiveRole, isEmployeeUser } from "./components/core/rbac/requirePermission";
 import { PERMISSIONS } from "./components/core/rbac/permissionRegistry";
@@ -552,10 +550,9 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-  <DensityProvider>
-  <div className="min-h-screen bg-slate-50">
-    <style>{printStyles}</style>
-    <style>{enterpriseStyles}</style>
+    <div className="min-h-screen bg-slate-50">
+      <style>{printStyles}</style>
+      <style>{enterpriseStyles}</style>
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-50 flex items-center justify-between px-4">
         <button 
@@ -735,7 +732,6 @@ export default function Layout({ children, currentPageName }) {
                     <LogOut className="w-5 h-5" />
                   </button>
                 </div>
-                <DensityToggle />
                 <p className="text-xs text-slate-400 text-center mt-2">Interdistri TMS v{APP_VERSION}</p>
                               <Link
                                 to={createPageUrl("SecurityPrivacy")}
@@ -769,6 +765,5 @@ export default function Layout({ children, currentPageName }) {
         </div>
       </main>
     </div>
-    </DensityProvider>
   );
 }
