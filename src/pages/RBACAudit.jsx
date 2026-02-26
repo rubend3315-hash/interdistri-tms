@@ -10,6 +10,7 @@ import RoleChangeDetector from "../components/rbac-audit/RoleChangeDetector";
 import InvariantWarnings from "../components/rbac-audit/InvariantWarnings";
 import IntegrityReports from "../components/rbac-audit/IntegrityReports";
 import MonitoringPolicy from "../components/rbac-audit/MonitoringPolicy";
+import SubmissionLogs from "../components/rbac-audit/SubmissionLogs";
 
 export default function RBACAudit({ currentUser }) {
   // Audit log: track dashboard view
@@ -54,11 +55,12 @@ export default function RBACAudit({ currentUser }) {
       </div>
 
       <Tabs defaultValue="snapshots" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="snapshots">Snapshots</TabsTrigger>
           <TabsTrigger value="integrity">Integrity</TabsTrigger>
           <TabsTrigger value="changes">Wijzigingen</TabsTrigger>
           <TabsTrigger value="invariants">Invariants</TabsTrigger>
+          <TabsTrigger value="submissions">Submissions</TabsTrigger>
           <TabsTrigger value="policy">Policy</TabsTrigger>
         </TabsList>
 
@@ -76,6 +78,10 @@ export default function RBACAudit({ currentUser }) {
 
         <TabsContent value="invariants">
           <InvariantWarnings />
+        </TabsContent>
+
+        <TabsContent value="submissions">
+          <SubmissionLogs />
         </TabsContent>
 
         <TabsContent value="policy">
