@@ -330,7 +330,7 @@ Deno.serve(async (req) => {
     await logSubmission(svcEarly, { ...submissionLog });
 
     // DEBUG: Log incoming payload summary
-    console.debug('[SUBMIT_PAYLOAD]', {
+    console.log('[SUBMIT_PAYLOAD]', JSON.stringify({
       date: payload.date,
       end_date: payload.end_date,
       start_time: payload.start_time,
@@ -338,7 +338,7 @@ Deno.serve(async (req) => {
       trips: (payload.trips || []).length,
       spw: (payload.standplaats_werk || []).length,
       submission_id: payload.submission_id,
-    });
+    }));
 
     const errors = validate(payload);
     if (errors.length) {
@@ -358,11 +358,13 @@ Deno.serve(async (req) => {
     // 3. AUTHORIZATION — lookup employee
     // ========================================
     const svc = base44.asServiceRole;
+    console.log('[STEP] Looking up employee for:', user.email);
     const employees = await svc.entities.Employee.filter({ email: user.email });
     if (!employees.length) {
       return Response.json({ success: false, error: 'EMPLOYEE_NOT_FOUND', message: 'Geen medewerker voor dit account' }, { status: 403 });
     }
     const employee = employees[0];
+    console.log('[STEP] Employee found:', employee.id);
     if (employee.out_of_service_date) {
       const exitDate = new Date(employee.out_of_service_date);
       exitDate.setHours(0, 0, 0, 0);
@@ -444,22 +446,24 @@ Deno.serve(async (req) => {
     const queryStart = addDays(payload.date, -1);
     const queryEnd = addDays(entryEnd, 1);
 
+    console.log('[STEP] Fetching all entries for employee:', empId);
     // Fetch ALL time entries for this employee — filter in memory to avoid SDK operator issues
     const allEmployeeEntries = await svc.entities.TimeEntry.filter({
       employee_id: empId,
     });
+    console.log('[STEP] Found', allEmployeeEntries.length, 'total entries');
 
     // In-memory filter for the date range window
     const rangedCandidates = allEmployeeEntries.filter(e => e.date >= queryStart && e.date <= queryEnd);
 
-    console.debug('[OVERLAP_CHECK]', {
+    console.log('[OVERLAP_CHECK]', JSON.stringify({
       employeeId: empId,
       entryStart: payload.date,
       entryEnd,
-      queryWindow: `${queryStart} → ${queryEnd}`,
-      rawCandidates: candidateEntries.length,
+      queryWindow: `${queryStart} - ${queryEnd}`,
+      totalEntries: allEmployeeEntries.length,
       rangedCandidates: rangedCandidates.length,
-    });
+    }));
 
     // Filter to committed entries whose effective end_date >= payload.date
     const committedOverlaps = rangedCandidates.filter(e => {
@@ -475,7 +479,9 @@ Deno.serve(async (req) => {
       end_time: payload.end_time,
     };
 
+    console.log('[STEP] committedOverlaps count:', committedOverlaps.length);
     for (const ex of committedOverlaps) {
+      console.log('[OVERLAP_EVAL]', JSON.stringify({ exId: ex.id, exDate: ex.date, exEndDate: ex.end_date, exStart: ex.start_time, exEnd: ex.end_time }));
       if (servicesOverlap(ex, incomingEntry)) {
         const exEnd = ex.end_date || ex.date;
         const isSameDay = !payload.end_date && !ex.end_date && payload.date === ex.date;
