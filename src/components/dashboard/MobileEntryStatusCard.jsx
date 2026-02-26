@@ -2,12 +2,12 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Smartphone } from "lucide-react";
+import { Smartphone, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-function getHealthLevel(failed, p95) {
-  if (failed >= 3 || p95 > 4000) return "red";
-  if (failed > 0 || (p95 >= 3000 && p95 <= 4000)) return "orange";
+function getHealthLevel(failed, p95, stuckCount) {
+  if (stuckCount > 1 || failed >= 3 || p95 > 4000) return "red";
+  if (stuckCount === 1 || failed > 0 || (p95 >= 3000 && p95 <= 4000)) return "orange";
   return "green";
 }
 
@@ -31,6 +31,7 @@ export default function MobileEntryStatusCard() {
     const total = todayLogs.filter(l => l.status !== "RECEIVED").length;
     const success = todayLogs.filter(l => l.status === "SUCCESS").length;
     const failed = todayLogs.filter(l => l.status === "FAILED" || l.status === "VALIDATION_FAILED").length;
+    const stuckCount = todayLogs.filter(l => l.stuck_detected === true).length;
 
     const latencies = todayLogs
       .filter(l => l.status === "SUCCESS" && l.latency_ms > 0)
@@ -41,13 +42,13 @@ export default function MobileEntryStatusCard() {
       ? latencies[Math.min(Math.floor(latencies.length * 0.95), latencies.length - 1)]
       : 0;
 
-    return { total, success, failed, p95 };
+    return { total, success, failed, p95, stuckCount };
   }, [logs, today]);
 
-  const health = getHealthLevel(stats.failed, stats.p95);
+  const health = getHealthLevel(stats.failed, stats.p95, stats.stuckCount);
   const s = HEALTH_STYLES[health];
 
-  const showRing = stats.failed > 0;
+  const showRing = stats.failed > 0 || stats.stuckCount > 0;
 
   return (
     <Card className={cn(showRing ? "ring-1" : "", showRing ? s.ring : "")}>
@@ -66,6 +67,17 @@ export default function MobileEntryStatusCard() {
           <span className={stats.failed > 0 ? "text-red-600 font-medium" : "text-slate-400"}>{stats.failed} ✗</span>
           <span className="text-slate-400 font-mono">p95 {stats.p95}ms</span>
         </div>
+        {stats.stuckCount > 0 && (
+          <div className={cn(
+            "flex items-center gap-1.5 mt-2 px-2 py-1 rounded-md text-[10px] font-medium",
+            stats.stuckCount > 1
+              ? "bg-red-50 text-red-700 border border-red-200"
+              : "bg-amber-50 text-amber-700 border border-amber-200"
+          )}>
+            <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+            <span>{stats.stuckCount} verwerking{stats.stuckCount !== 1 ? 'en' : ''} vastgelopen</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
