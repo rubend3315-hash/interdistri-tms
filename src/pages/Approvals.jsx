@@ -291,17 +291,17 @@ export default function Approvals() {
     const overlaps = getEntryOverlaps(entry);
 
     return (
-      <Card key={entry.id} className="hover:shadow-sm transition-shadow">
-        <CardContent className="px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
+      <Card key={entry.id} className="hover:shadow-sm transition-shadow" style={{ borderRadius: 'var(--d-card-radius)' }}>
+        <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
+          <div className="flex items-center justify-between" style={{ gap: 'var(--d-card-gap)' }}>
             {/* Left: avatar + info */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <User className="w-4 h-4 text-slate-600" />
+            <div className="flex items-center min-w-0 flex-1" style={{ gap: 'var(--d-card-gap)' }}>
+              <div className="bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-avatar)', height: 'var(--d-avatar)' }}>
+                <User style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-600" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-sm font-semibold text-slate-900 truncate">
+                  <h3 className="font-semibold text-slate-900 truncate" style={{ fontSize: 'var(--d-title-font)' }}>
                     {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
                   </h3>
                   <span className="text-xs text-slate-400">{employee?.department}</span>
@@ -321,9 +321,9 @@ export default function Approvals() {
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
+                <div className="flex items-center gap-3 mt-0.5 text-slate-500" style={{ fontSize: 'var(--d-meta-font)' }}>
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    <Calendar style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-400" />
                     {entry.date ? (() => {
                       try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
                       catch { return entry.date; }
@@ -379,7 +379,7 @@ export default function Approvals() {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 px-2.5 text-xs"
+                className="px-2.5" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
                 onClick={() => openDetailDialog(entry)}
               >
                 <Eye className="w-3.5 h-3.5 mr-1" />
@@ -389,7 +389,7 @@ export default function Approvals() {
                 <>
                   <Button
                     size="sm"
-                    className="h-8 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700"
+                    className="px-2.5 bg-emerald-600 hover:bg-emerald-700" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
                     onClick={() => handleApprove(entry)}
                     disabled={approvingIds.has(entry.id) || approveMutation.isPending}
                   >
@@ -399,7 +399,7 @@ export default function Approvals() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 px-2.5 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                    className="px-2.5 text-red-600 border-red-200 hover:bg-red-50" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
                     onClick={() => openRejectDialog(entry)}
                   >
                     <XCircle className="w-3.5 h-3.5 mr-1" />
@@ -415,45 +415,45 @@ export default function Approvals() {
   };
 
   return (
-    <div className="space-y-4 max-w-[1400px] mx-auto pb-6">
+    <div className="max-w-[1400px] mx-auto pb-6" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-page-gap)' }}>
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Goedkeuringen</h1>
-        <p className="text-sm text-slate-500">Beheer en keur ingediende uren goed of af</p>
+        <h1 style={{ fontSize: 'var(--d-header-font)' }} className="font-bold text-slate-900">Goedkeuringen</h1>
+        <p style={{ fontSize: 'var(--d-meta-font)' }} className="text-slate-500">Beheer en keur ingediende uren goed of af</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="bg-amber-50 border-amber-200">
-          <CardContent className="px-4 py-3 flex items-center gap-3">
-            <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Clock className="w-[18px] h-[18px] text-amber-600" />
+      <div className="grid grid-cols-3" style={{ gap: 'var(--d-card-gap)' }}>
+        <Card className="bg-amber-50 border-amber-200" style={{ borderRadius: 'var(--d-card-radius)' }}>
+          <CardContent className="flex items-center" style={{ padding: 'var(--d-stat-py) var(--d-stat-px)', gap: 'var(--d-card-gap)' }}>
+            <div className="bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-stat-icon)', height: 'var(--d-stat-icon)' }}>
+              <Clock style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-amber-600" />
             </div>
             <div>
-              <p className="text-xl font-semibold text-amber-700 leading-tight">{pendingEntries.length}</p>
-              <p className="text-xs text-amber-600">Ter goedkeuring</p>
+              <p className="font-semibold text-amber-700 leading-tight" style={{ fontSize: 'var(--d-stat-num)' }}>{pendingEntries.length}</p>
+              <p style={{ fontSize: 'var(--d-badge-font)' }} className="text-amber-600">Ter goedkeuring</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-emerald-50 border-emerald-200">
-          <CardContent className="px-4 py-3 flex items-center gap-3">
-            <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-[18px] h-[18px] text-emerald-600" />
+        <Card className="bg-emerald-50 border-emerald-200" style={{ borderRadius: 'var(--d-card-radius)' }}>
+          <CardContent className="flex items-center" style={{ padding: 'var(--d-stat-py) var(--d-stat-px)', gap: 'var(--d-card-gap)' }}>
+            <div className="bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-stat-icon)', height: 'var(--d-stat-icon)' }}>
+              <CheckCircle style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-emerald-600" />
             </div>
             <div>
-              <p className="text-xl font-semibold text-emerald-700 leading-tight">{approvedEntries.length}</p>
-              <p className="text-xs text-emerald-600">Goedgekeurd</p>
+              <p className="font-semibold text-emerald-700 leading-tight" style={{ fontSize: 'var(--d-stat-num)' }}>{approvedEntries.length}</p>
+              <p style={{ fontSize: 'var(--d-badge-font)' }} className="text-emerald-600">Goedgekeurd</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-red-50 border-red-200">
-          <CardContent className="px-4 py-3 flex items-center gap-3">
-            <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <XCircle className="w-[18px] h-[18px] text-red-600" />
+        <Card className="bg-red-50 border-red-200" style={{ borderRadius: 'var(--d-card-radius)' }}>
+          <CardContent className="flex items-center" style={{ padding: 'var(--d-stat-py) var(--d-stat-px)', gap: 'var(--d-card-gap)' }}>
+            <div className="bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-stat-icon)', height: 'var(--d-stat-icon)' }}>
+              <XCircle style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-red-600" />
             </div>
             <div>
-              <p className="text-xl font-semibold text-red-700 leading-tight">{rejectedEntries.length}</p>
-              <p className="text-xs text-red-600">Afgekeurd</p>
+              <p className="font-semibold text-red-700 leading-tight" style={{ fontSize: 'var(--d-stat-num)' }}>{rejectedEntries.length}</p>
+              <p style={{ fontSize: 'var(--d-badge-font)' }} className="text-red-600">Afgekeurd</p>
             </div>
           </CardContent>
         </Card>
@@ -479,7 +479,7 @@ export default function Approvals() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="mt-4 space-y-3">
+        <TabsContent value="pending" className="mt-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}
@@ -495,7 +495,7 @@ export default function Approvals() {
           )}
         </TabsContent>
 
-        <TabsContent value="approved" className="mt-4 space-y-3">
+        <TabsContent value="approved" className="mt-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}
           {approvedEntries.length === 0 ? (
             <Card className="p-12 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -513,7 +513,7 @@ export default function Approvals() {
           )}
         </TabsContent>
 
-        <TabsContent value="rejected" className="mt-4 space-y-3">
+        <TabsContent value="rejected" className="mt-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}
           {rejectedEntries.length === 0 ? (
             <Card className="p-12 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
