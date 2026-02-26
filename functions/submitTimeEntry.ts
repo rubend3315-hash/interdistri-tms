@@ -704,8 +704,22 @@ Deno.serve(async (req) => {
             errorMsg = `Gelijktijdige overlap gedetecteerd met dienst ${oc.start_time}-${oc.end_time}`;
           }
         } else {
-          // At least one multi-day, date ranges overlap
-          isOverlap = true;
+          // At least one multi-day — check if truly overlapping or just adjacent
+          const newStart = payload.date;
+          const newEnd = payload.end_date || payload.date;
+          if (ocEnd === newStart || newEnd === oc.date) {
+            // Adjacent boundary — check times
+            const ns = timeMin(payload.start_time), ne = timeMin(payload.end_time);
+            const es = timeMin(oc.start_time), ee = timeMin(oc.end_time);
+            if (ocEnd === newStart && ee !== null && ns !== null && ee > ns) {
+              isOverlap = true;
+            } else if (newEnd === oc.date && ne !== null && es !== null && ne > es) {
+              isOverlap = true;
+            }
+          } else {
+            // True date range overlap (not just boundary)
+            isOverlap = true;
+          }
         }
 
         if (isOverlap && oc.created_date < te.created_date) {
