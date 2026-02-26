@@ -479,7 +479,7 @@ export default function Approvals() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="mt-6 space-y-4">
+        <TabsContent value="pending" className="mt-4 space-y-3">
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}
@@ -495,7 +495,7 @@ export default function Approvals() {
           )}
         </TabsContent>
 
-        <TabsContent value="approved" className="mt-6 space-y-4">
+        <TabsContent value="approved" className="mt-4 space-y-3">
           {approvedEntries.length === 0 ? (
             <Card className="p-12 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -513,7 +513,7 @@ export default function Approvals() {
           )}
         </TabsContent>
 
-        <TabsContent value="rejected" className="mt-6 space-y-4">
+        <TabsContent value="rejected" className="mt-4 space-y-3">
           {rejectedEntries.length === 0 ? (
             <Card className="p-12 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
