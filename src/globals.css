@@ -1,27 +1,7 @@
 /* ===== UI Density System ===== */
+/* Default = standard; compact via html[data-density="compact"] */
 
-:root,
-[data-density="compact"] {
-  --d-card-px: 14px;
-  --d-card-py: 10px;
-  --d-card-gap: 10px;
-  --d-card-radius: 12px;
-  --d-btn-h: 32px;
-  --d-badge-font: 11px;
-  --d-meta-font: 12px;
-  --d-title-font: 14px;
-  --d-icon: 16px;
-  --d-list-gap: 10px;
-  --d-page-gap: 16px;
-  --d-stat-px: 14px;
-  --d-stat-py: 10px;
-  --d-stat-icon: 36px;
-  --d-stat-num: 20px;
-  --d-avatar: 32px;
-  --d-header-font: 24px;
-}
-
-[data-density="standard"] {
+:root {
   --d-card-px: 20px;
   --d-card-py: 16px;
   --d-card-gap: 16px;
@@ -39,6 +19,26 @@
   --d-stat-num: 28px;
   --d-avatar: 40px;
   --d-header-font: 30px;
+}
+
+html[data-density="compact"] {
+  --d-card-px: 14px;
+  --d-card-py: 10px;
+  --d-card-gap: 10px;
+  --d-card-radius: 12px;
+  --d-btn-h: 32px;
+  --d-badge-font: 11px;
+  --d-meta-font: 12px;
+  --d-title-font: 14px;
+  --d-icon: 16px;
+  --d-list-gap: 12px;
+  --d-page-gap: 16px;
+  --d-stat-px: 14px;
+  --d-stat-py: 10px;
+  --d-stat-icon: 36px;
+  --d-stat-num: 20px;
+  --d-avatar: 32px;
+  --d-header-font: 24px;
 }
 
 /* ===== Interdistri Enterprise Design System ===== */
