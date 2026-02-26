@@ -278,6 +278,19 @@ Deno.serve(async (req) => {
     // Log RECEIVED immediately (separate immutable record)
     await logSubmission(svcEarly, { ...submissionLog });
 
+    // DEBUG: Log incoming payload customer/project mapping
+    console.log(`[SUBMIT_DEBUG] Payload keys: ${Object.keys(payload).join(', ')}`);
+    console.log(`[SUBMIT_DEBUG] payload.customer_id: ${JSON.stringify(payload.customer_id)}`);
+    console.log(`[SUBMIT_DEBUG] payload.project_id: ${JSON.stringify(payload.project_id)}`);
+    console.log(`[SUBMIT_DEBUG] trips count: ${(payload.trips || []).length}`);
+    (payload.trips || []).forEach((t, i) => {
+      console.log(`[SUBMIT_DEBUG] trip[${i}].customer_id: ${JSON.stringify(t.customer_id)}, trip[${i}].project_id: ${JSON.stringify(t.project_id)}`);
+    });
+    console.log(`[SUBMIT_DEBUG] standplaats_werk count: ${(payload.standplaats_werk || []).length}`);
+    (payload.standplaats_werk || []).forEach((s, i) => {
+      console.log(`[SUBMIT_DEBUG] spw[${i}].customer_id: ${JSON.stringify(s.customer_id)}, spw[${i}].project_id: ${JSON.stringify(s.project_id)}`);
+    });
+
     const errors = validate(payload);
     if (errors.length) {
       await logSubmission(svcEarly, {
