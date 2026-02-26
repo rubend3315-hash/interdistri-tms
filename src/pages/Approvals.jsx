@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import CCRow, { CCRowHeader, CCRowData, CCId, CCBadge, CCName, CCMeta, CCVal, CCList } from "@/components/control-center/CCRow";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   CheckCircle,
@@ -283,134 +284,77 @@ export default function Approvals() {
     });
   };
 
-  const renderEntryCard = (entry, showActions = false) => {
+  const renderEntryRow = (entry, showActions = false) => {
     const employee = getEmployee(entry.employee_id);
     const vehicle = getVehicle(entry.vehicle_id);
     const entryYear = entry.date ? new Date(entry.date).getFullYear() : null;
     const entryLocked = entry.date && entryYear && isDateInDefinitiefPeriode(entry.date, entryYear, loonperiodeStatuses);
     const overlaps = getEntryOverlaps(entry);
+    const shiftColor = entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
+      entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
+      entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
+      'bg-slate-100 text-slate-700';
 
     return (
-      <Card key={entry.id} className="hover:shadow-sm transition-shadow" style={{ borderRadius: 'var(--d-card-radius)' }}>
-        <CardContent style={{ padding: 'var(--d-card-py) var(--d-card-px)' }}>
-          <div className="flex items-center justify-between" style={{ gap: 'var(--d-card-gap)' }}>
-            {/* Left: avatar + info */}
-            <div className="flex items-center min-w-0 flex-1" style={{ gap: 'var(--d-card-gap)' }}>
-              <div className="bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 'var(--d-avatar)', height: 'var(--d-avatar)' }}>
-                <User style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-slate-900 truncate" style={{ fontSize: 'var(--d-title-font)' }}>
-                    {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
-                  </h3>
-                  <span className="text-xs text-slate-400">{employee?.department}</span>
-                  {entry.shift_type && (
-                    <Badge className={`text-[11px] px-2 py-0 leading-5 ${
-                      entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
-                      entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
-                      entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
-                      'bg-slate-100 text-slate-700'
-                    }`}>
-                      {entry.shift_type}
-                    </Badge>
-                  )}
-                  {entryLocked && (
-                    <Badge className="text-[11px] px-2 py-0 leading-5 bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
-                      <Lock className="w-2.5 h-2.5" /> Vergrendeld
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 mt-0.5 text-slate-500" style={{ fontSize: 'var(--d-meta-font)' }}>
-                  <span className="flex items-center gap-1">
-                    <Calendar style={{ width: 'var(--d-icon)', height: 'var(--d-icon)' }} className="text-slate-400" />
-                    {entry.date ? (() => {
-                      try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
-                      catch { return entry.date; }
-                    })() : '–'}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                    {entry.start_time || '-'} – {entry.end_time || '-'}
-                  </span>
-                  {entry.total_hours > 0 && (
-                    <span className="font-medium text-slate-700">{entry.total_hours}u</span>
-                  )}
-                  {vehicle && (
-                    <span className="flex items-center gap-1">
-                      <Car className="w-3.5 h-3.5 text-slate-400" />
-                      {vehicle.license_plate}
-                    </span>
-                  )}
-                  {entry.travel_allowance_multiplier > 0 && (
-                    <span className="text-slate-400">Reis: {entry.travel_allowance_multiplier}x</span>
-                  )}
-                  {entry.approved_by && (
-                    <span className="text-slate-400">door {entry.approved_by}</span>
-                  )}
-                </div>
-
-                {/* Compact warnings row */}
-                {(overlaps.length > 0 || entry.notes || entry.rejection_reason) && (
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    {overlaps.length > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
-                        <AlertTriangle className="w-3 h-3" />
-                        Overlap ({overlaps.length})
-                      </span>
-                    )}
-                    {entry.notes && (
-                      <span className="text-[11px] text-slate-500 bg-slate-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.notes}>
-                        {entry.notes}
-                      </span>
-                    )}
-                    {entry.rejection_reason && (
-                      <span className="text-[11px] text-red-600 bg-red-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.rejection_reason}>
-                        Afkeuring: {entry.rejection_reason}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right: actions */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <Button
-                size="sm"
-                variant="outline"
-                className="px-2.5" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
-                onClick={() => openDetailDialog(entry)}
-              >
-                <Eye className="w-3.5 h-3.5 mr-1" />
-                Bekijk
-              </Button>
-              {showActions && !entryLocked && (
-                <>
-                  <Button
-                    size="sm"
-                    className="px-2.5 bg-emerald-600 hover:bg-emerald-700" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
-                    onClick={() => handleApprove(entry)}
-                    disabled={approvingIds.has(entry.id) || approveMutation.isPending}
-                  >
-                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                    Goed
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="px-2.5 text-red-600 border-red-200 hover:bg-red-50" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
-                    onClick={() => openRejectDialog(entry)}
-                  >
-                    <XCircle className="w-3.5 h-3.5 mr-1" />
-                    Afkeur
-                  </Button>
-                </>
-              )}
-            </div>
+      <CCRow key={entry.id} locked={entryLocked}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1 flex flex-col" style={{ gap: 'var(--cc-row-gap)' }}>
+            <CCRowHeader>
+              <CCId>{employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}</CCId>
+              {employee?.department && <CCMeta>{employee.department}</CCMeta>}
+              {entry.shift_type && <CCBadge className={shiftColor}>{entry.shift_type}</CCBadge>}
+              {entryLocked && <CCBadge className="bg-emerald-100 text-emerald-700">Vergrendeld</CCBadge>}
+            </CCRowHeader>
+            <CCRowData>
+              <CCMeta>{entry.date ? (() => {
+                try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
+                catch { return entry.date; }
+              })() : '–'}</CCMeta>
+              <CCVal>{entry.start_time || '-'} – {entry.end_time || '-'}</CCVal>
+              {entry.total_hours > 0 && <CCVal variant="accent">{entry.total_hours}u</CCVal>}
+              {vehicle && <CCName>{vehicle.license_plate}</CCName>}
+              {entry.travel_allowance_multiplier > 0 && <CCMeta>Reis: {entry.travel_allowance_multiplier}x</CCMeta>}
+              {entry.approved_by && <CCMeta>door {entry.approved_by}</CCMeta>}
+              {overlaps.length > 0 && <CCBadge className="bg-amber-50 text-amber-700 border border-amber-200">Overlap ({overlaps.length})</CCBadge>}
+              {entry.notes && <span className="cc-meta truncate max-w-[200px]" title={entry.notes}>{entry.notes}</span>}
+              {entry.rejection_reason && <span className="cc-meta text-red-500 truncate max-w-[200px]" title={entry.rejection_reason}>Afkeuring: {entry.rejection_reason}</span>}
+            </CCRowData>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-2.5" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
+              onClick={(e) => { e.stopPropagation(); openDetailDialog(entry); }}
+            >
+              <Eye className="w-3.5 h-3.5 mr-1" />
+              Bekijk
+            </Button>
+            {showActions && !entryLocked && (
+              <>
+                <Button
+                  size="sm"
+                  className="px-2.5 bg-emerald-600 hover:bg-emerald-700" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
+                  onClick={(e) => { e.stopPropagation(); handleApprove(entry); }}
+                  disabled={approvingIds.has(entry.id) || approveMutation.isPending}
+                >
+                  <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                  Goed
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="px-2.5 text-red-600 border-red-200 hover:bg-red-50" style={{ height: 'var(--d-btn-h)', fontSize: 'var(--d-badge-font)' }}
+                  onClick={(e) => { e.stopPropagation(); openRejectDialog(entry); }}
+                >
+                  <XCircle className="w-3.5 h-3.5 mr-1" />
+                  Afkeur
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </CCRow>
     );
   };
 
@@ -479,10 +423,10 @@ export default function Approvals() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="mt-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
+        <TabsContent value="pending" className="mt-4">
           {isLoading ? (
             <div className="space-y-4">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
             </div>
           ) : pendingEntries.length === 0 ? (
             <Card className="p-12 text-center">
@@ -491,11 +435,13 @@ export default function Approvals() {
               <p className="text-slate-500 mt-1">Er zijn geen uren ter goedkeuring.</p>
             </Card>
           ) : (
-            pendingEntries.map(entry => renderEntryCard(entry, true))
+            <CCList>
+              {pendingEntries.map(entry => renderEntryRow(entry, true))}
+            </CCList>
           )}
         </TabsContent>
 
-        <TabsContent value="approved" className="mt-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
+        <TabsContent value="approved" className="mt-4">
           {approvedEntries.length === 0 ? (
             <Card className="p-12 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -503,9 +449,11 @@ export default function Approvals() {
             </Card>
           ) : (
             <>
-              {approvedEntries.slice(0, 20).map(entry => renderEntryCard(entry, false))}
+              <CCList>
+                {approvedEntries.slice(0, 20).map(entry => renderEntryRow(entry, false))}
+              </CCList>
               {approvedEntries.length > 20 && (
-                <p className="text-sm text-slate-500 text-center py-2">
+                <p className="text-sm text-slate-500 text-center py-2 mt-2">
                   Toont 20 van {approvedEntries.length} vermeldingen
                 </p>
               )}
@@ -513,7 +461,7 @@ export default function Approvals() {
           )}
         </TabsContent>
 
-        <TabsContent value="rejected" className="mt-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--d-list-gap)' }}>
+        <TabsContent value="rejected" className="mt-4">
           {rejectedEntries.length === 0 ? (
             <Card className="p-12 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -521,9 +469,11 @@ export default function Approvals() {
             </Card>
           ) : (
             <>
-              {rejectedEntries.slice(0, 20).map(entry => renderEntryCard(entry, false))}
+              <CCList>
+                {rejectedEntries.slice(0, 20).map(entry => renderEntryRow(entry, false))}
+              </CCList>
               {rejectedEntries.length > 20 && (
-                <p className="text-sm text-slate-500 text-center py-2">
+                <p className="text-sm text-slate-500 text-center py-2 mt-2">
                   Toont 20 van {rejectedEntries.length} vermeldingen
                 </p>
               )}
