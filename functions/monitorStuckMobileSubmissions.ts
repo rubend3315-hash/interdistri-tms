@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
     `;
 
     await svc.integrations.Core.SendEmail({
-      to: 'admin@interdistri.nl',
+      to: 'ruben@interdistri.nl',
       subject: `⚠ ${stuckLogs.length} Mobile Entry submission(s) vastgelopen`,
       body: emailBody,
       from_name: 'Interdistri TMS Monitoring',
