@@ -300,6 +300,8 @@ Deno.serve(async (req) => {
     user_agent: userAgent.slice(0, 500),
   };
 
+  const perf = {};
+
   try {
     const base44 = createClientFromRequest(req);
 
@@ -307,6 +309,7 @@ Deno.serve(async (req) => {
     // 1. AUTHENTICATION
     // ========================================
     const user = await base44.auth.me();
+    perf.auth = Date.now() - t0;
     if (!user) {
       return Response.json({ success: false, error: 'UNAUTHORIZED', message: 'Niet ingelogd' }, { status: 401 });
     }
@@ -368,6 +371,7 @@ Deno.serve(async (req) => {
 
     // Log RECEIVED immediately (separate immutable record)
     await logSubmission(svcEarly, { ...submissionLog });
+    perf.idempotency_guard_and_received_log = Date.now() - t0;
 
     // DEBUG: Log incoming payload summary
     console.log('[SUBMIT_PAYLOAD]', JSON.stringify({
@@ -398,12 +402,14 @@ Deno.serve(async (req) => {
     // 3. AUTHORIZATION — lookup employee
     // ========================================
     const svc = base44.asServiceRole;
+    const tEmpLookup = Date.now();
     console.log('[STEP] Looking up employee for:', user.email);
     const employees = await svc.entities.Employee.filter({ email: user.email });
     if (!employees.length) {
       return Response.json({ success: false, error: 'EMPLOYEE_NOT_FOUND', message: 'Geen medewerker voor dit account' }, { status: 403 });
     }
     const employee = employees[0];
+    perf.employee_lookup = Date.now() - tEmpLookup;
     console.log('[STEP] Employee found:', employee.id);
     if (employee.out_of_service_date) {
       const exitDate = new Date(employee.out_of_service_date);
@@ -423,10 +429,12 @@ Deno.serve(async (req) => {
     // ========================================
     // Query by submission_id on this employee. This is the SINGLE source of truth.
     // No notes parsing. Clean, explicit field.
+    const tIdempotency = Date.now();
     const existingBySubId = await svc.entities.TimeEntry.filter({
       employee_id: empId,
       submission_id: payload.submission_id,
     });
+    perf.te_idempotency_check = Date.now() - tIdempotency;
 
     // Check for already-committed entry with this submission_id
     const committed = existingBySubId.find(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd');
@@ -487,10 +495,12 @@ Deno.serve(async (req) => {
     const queryEnd = addDays(entryEnd, 1);
 
     console.log('[STEP] Fetching all entries for employee:', empId);
+    const tOverlap = Date.now();
     // Fetch ALL time entries for this employee — filter in memory to avoid SDK operator issues
     const allEmployeeEntries = await svc.entities.TimeEntry.filter({
       employee_id: empId,
     });
+    perf.overlap_fetch = Date.now() - tOverlap;
     console.log('[STEP] Found', allEmployeeEntries.length, 'total entries');
 
     // In-memory filter for the date range window
@@ -555,6 +565,8 @@ Deno.serve(async (req) => {
     }
     const dienstHours = dienstMinutes / 60;
 
+    perf.overlap_check_total = Date.now() - tOverlap;
+
     // 6b. Server-side break staffel calculation
     const isManualBreak = payload.break_manual === true;
     let brk;
@@ -589,6 +601,7 @@ Deno.serve(async (req) => {
 
     try {
       // --- Create TimeEntry (Concept) with submission_id ---
+      const tCreate = Date.now();
       const teCreateData = {
         employee_id: empId,
         date: payload.date,
@@ -611,6 +624,7 @@ Deno.serve(async (req) => {
 
       const te = await svc.entities.TimeEntry.create(teCreateData);
       created.teId = te.id;
+      perf.timeentry_create = Date.now() - tCreate;
       console.debug('[CREATED]', { teId: te.id, date: payload.date, endDate: endD });
 
       // --- POST-CREATE DUPLICATE GUARD ---
@@ -705,11 +719,15 @@ Deno.serve(async (req) => {
       // ========================================
       // 8. TRANSACTION PHASE 2: COMMIT
       // ========================================
+      const tCommit = Date.now();
+      perf.trips_and_spw_create = tCommit - (tCreate + (perf.timeentry_create || 0));
       await svc.entities.TimeEntry.update(te.id, { status: 'Ingediend' });
+      perf.commit = Date.now() - tCommit;
 
       // ========================================
       // 8b. WRITE CONFIRMATION GUARD
       // ========================================
+      const tVerify = Date.now();
       const verifyEntries = await svc.entities.TimeEntry.filter({ employee_id: empId, submission_id: payload.submission_id });
       const verifyEntry = verifyEntries.find(e => e.id === te.id && e.status === 'Ingediend');
       if (!verifyEntry) {
@@ -727,9 +745,12 @@ Deno.serve(async (req) => {
         throw new Error(`TimeEntry write verification failed for ${te.id}`);
       }
 
+      perf.write_verify = Date.now() - tVerify;
+
       // ========================================
       // 9. POST-COMMIT OVERLAP GUARD (uses same servicesOverlap engine)
       // ========================================
+      const tPostCommit = Date.now();
       // Re-fetch all for this employee for post-commit check (no date operators)
       const postCommitAll = await svc.entities.TimeEntry.filter({
         employee_id: empId,
@@ -760,6 +781,8 @@ Deno.serve(async (req) => {
           }, { status: 409 });
         }
       }
+
+      perf.post_commit_guard = Date.now() - tPostCommit;
 
       // ========================================
       // 10. POST-COMMIT CLEANUP (best-effort, non-critical)
@@ -792,6 +815,9 @@ Deno.serve(async (req) => {
       // ========================================
       // 11. SUCCESS
       // ========================================
+      perf.total = Date.now() - t0;
+      console.log('[PERF]', JSON.stringify(perf));
+
       await logSubmission(svc, {
         ...submissionLog,
         status: 'SUCCESS',
@@ -816,6 +842,8 @@ Deno.serve(async (req) => {
       // ========================================
       // ROLLBACK — clean newly created records only
       // ========================================
+      perf.total = Date.now() - t0;
+      console.log('[PERF]', JSON.stringify(perf));
       console.error('[TX FAILED] Rolling back:', txError.message);
       for (const sid of created.spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'rb-spw');
       for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'rb-trip');
