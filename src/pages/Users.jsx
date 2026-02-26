@@ -545,7 +545,7 @@ export default function UsersPage({ currentUser }) {
                     </td>
                     <td className="py-3 px-4">
                       <Select
-                        value={user.business_role || 'EMPLOYEE'}
+                        value={getEffectiveBusinessRole(user) || 'EMPLOYEE'}
                         onValueChange={(val) => handleBusinessRoleChange(user.id, val)}
                       >
                         <SelectTrigger className="w-44 h-8">
@@ -663,7 +663,7 @@ export default function UsersPage({ currentUser }) {
                     <Briefcase className="w-3 h-3" /> Business rol:
                   </span>
                   <Select
-                    value={user.business_role || 'EMPLOYEE'}
+                    value={getEffectiveBusinessRole(user) || 'EMPLOYEE'}
                     onValueChange={(val) => handleBusinessRoleChange(user.id, val)}
                   >
                     <SelectTrigger className="w-44 h-8">
