@@ -224,9 +224,27 @@ async function safeDelete(entity, id, label) {
   catch (e) { console.error(`Failed to delete ${label} ${id}: ${e.message}`); }
 }
 
+// --- SUBMISSION LOGGING HELPER ---
+
+async function logSubmission(svc, data) {
+  try { await svc.entities.MobileEntrySubmissionLog.create(data); }
+  catch (e) { console.error('[SUBMIT_LOG] Failed to write log:', e.message); }
+}
+
 // --- MAIN HANDLER ---
 
 Deno.serve(async (req) => {
+  const t0 = Date.now();
+  const userAgent = req.headers.get('user-agent') || '';
+  const submissionLog = {
+    submission_id: '',
+    user_id: '',
+    email: '',
+    timestamp_received: new Date().toISOString(),
+    status: 'RECEIVED',
+    user_agent: userAgent.slice(0, 500),
+  };
+
   try {
     const base44 = createClientFromRequest(req);
 
@@ -237,6 +255,8 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ success: false, error: 'UNAUTHORIZED', message: 'Niet ingelogd' }, { status: 401 });
     }
+    submissionLog.user_id = user.id;
+    submissionLog.email = user.email;
 
     // ========================================
     // 2. PARSE & VALIDATE
@@ -245,8 +265,19 @@ Deno.serve(async (req) => {
     try { payload = await req.json(); }
     catch { return Response.json({ success: false, error: 'INVALID_JSON', message: 'Ongeldig JSON' }, { status: 400 }); }
 
+    submissionLog.submission_id = payload.submission_id || 'unknown';
+    submissionLog.entry_date = payload.date || null;
+
     const errors = validate(payload);
     if (errors.length) {
+      const svc = base44.asServiceRole;
+      submissionLog.status = 'VALIDATION_FAILED';
+      submissionLog.http_status = 422;
+      submissionLog.error_code = 'VALIDATION_FAILED';
+      submissionLog.error_message = errors.slice(0, 3).join('; ');
+      submissionLog.timestamp_completed = new Date().toISOString();
+      submissionLog.latency_ms = Date.now() - t0;
+      await logSubmission(svc, submissionLog);
       return Response.json({ success: false, error: 'VALIDATION_FAILED', message: 'Validatie mislukt', details: errors }, { status: 422 });
     }
 
@@ -286,6 +317,12 @@ Deno.serve(async (req) => {
     const committed = existingBySubId.find(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd');
     if (committed) {
       console.log(`[IDEMPOTENT HIT] submission_id=${payload.submission_id} → TimeEntry ${committed.id}`);
+      submissionLog.status = 'IDEMPOTENT_HIT';
+      submissionLog.http_status = 200;
+      submissionLog.time_entry_id = committed.id;
+      submissionLog.timestamp_completed = new Date().toISOString();
+      submissionLog.latency_ms = Date.now() - t0;
+      await logSubmission(svc, submissionLog);
       const [existTrips, existSpw] = await Promise.all([
         svc.entities.Trip.filter({ time_entry_id: committed.id }),
         svc.entities.StandplaatsWerk.filter({ time_entry_id: committed.id }),
@@ -611,6 +648,14 @@ Deno.serve(async (req) => {
       // ========================================
       // 11. SUCCESS
       // ========================================
+      submissionLog.status = 'SUCCESS';
+      submissionLog.http_status = 200;
+      submissionLog.time_entry_id = te.id;
+      submissionLog.employee_id = empId;
+      submissionLog.timestamp_completed = new Date().toISOString();
+      submissionLog.latency_ms = Date.now() - t0;
+      await logSubmission(svc, submissionLog);
+
       return Response.json({
         success: true,
         data: {
@@ -630,6 +675,15 @@ Deno.serve(async (req) => {
       for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'rb-trip');
       if (created.teId) await safeDelete(svc.entities.TimeEntry, created.teId, 'rb-te');
 
+      submissionLog.status = 'FAILED';
+      submissionLog.http_status = 500;
+      submissionLog.error_code = 'TRANSACTION_FAILED';
+      submissionLog.error_message = (txError.message || 'Onbekende fout').slice(0, 500);
+      submissionLog.employee_id = empId;
+      submissionLog.timestamp_completed = new Date().toISOString();
+      submissionLog.latency_ms = Date.now() - t0;
+      await logSubmission(svc, submissionLog);
+
       return Response.json({
         success: false, error: 'TRANSACTION_FAILED',
         message: 'Submit mislukt, wijzigingen teruggedraaid. Probeer opnieuw.',
@@ -639,6 +693,18 @@ Deno.serve(async (req) => {
 
   } catch (outerError) {
     console.error('[UNHANDLED]', outerError);
+    // Best-effort log for unhandled errors
+    try {
+      const base44Fallback = createClientFromRequest(req);
+      const svcFallback = base44Fallback.asServiceRole;
+      submissionLog.status = 'FAILED';
+      submissionLog.http_status = 500;
+      submissionLog.error_code = 'INTERNAL_ERROR';
+      submissionLog.error_message = (outerError.message || 'Onverwachte fout').slice(0, 500);
+      submissionLog.timestamp_completed = new Date().toISOString();
+      submissionLog.latency_ms = Date.now() - t0;
+      await logSubmission(svcFallback, submissionLog);
+    } catch (_) { /* logging itself failed, nothing we can do */ }
     return Response.json({ success: false, error: 'INTERNAL_ERROR', message: 'Onverwachte fout' }, { status: 500 });
   }
 });
