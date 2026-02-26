@@ -238,6 +238,7 @@ const menuItems = [
           { name: "Encryptie Migratie", icon: Lock, page: "EncryptionMigration" },
           { name: "Rollen & Rechten", icon: ShieldCheck, page: "RBACMatrix" },
           { name: "Audit Log", icon: ClipboardList, page: "AuditLog" },
+          { name: "RBAC Audit", icon: ShieldCheck, page: "RBACAudit" },
         ]
       },
       {
@@ -382,6 +383,7 @@ export default function Layout({ children, currentPageName }) {
       'EncryptionMigration': PERMISSIONS.ENCRYPTION_MANAGE,
       'RBACMatrix': PERMISSIONS.GOVERNANCE_MANAGE,
       'AuditLog': PERMISSIONS.AUDIT_READ,
+      'RBACAudit': PERMISSIONS.GOVERNANCE_MANAGE,
       'Backups': PERMISSIONS.GOVERNANCE_MANAGE,
       'DeploymentStatus': PERMISSIONS.GOVERNANCE_MANAGE,
 
