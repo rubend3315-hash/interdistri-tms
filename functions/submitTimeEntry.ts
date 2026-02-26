@@ -444,21 +444,26 @@ Deno.serve(async (req) => {
     const queryStart = addDays(payload.date, -1);
     const queryEnd = addDays(entryEnd, 1);
 
+    // Use $lte only (single operator) — some SDKs don't support combined $gte+$lte on same field
     const candidateEntries = await svc.entities.TimeEntry.filter({
       employee_id: empId,
-      date: { $gte: queryStart, $lte: queryEnd },
+      date: { $lte: queryEnd },
     });
+
+    // In-memory filter for the lower bound (queryStart)
+    const rangedCandidates = candidateEntries.filter(e => e.date >= queryStart);
 
     console.debug('[OVERLAP_CHECK]', {
       employeeId: empId,
       entryStart: payload.date,
       entryEnd,
       queryWindow: `${queryStart} → ${queryEnd}`,
-      candidates: candidateEntries.length,
+      rawCandidates: candidateEntries.length,
+      rangedCandidates: rangedCandidates.length,
     });
 
     // Filter to committed entries whose effective end_date >= payload.date
-    const committedOverlaps = candidateEntries.filter(e => {
+    const committedOverlaps = rangedCandidates.filter(e => {
       if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
       const exEnd = e.end_date || e.date;
       return exEnd >= payload.date && e.date <= entryEnd;
@@ -680,10 +685,11 @@ Deno.serve(async (req) => {
       // ========================================
       // 9. POST-COMMIT OVERLAP GUARD (uses same servicesOverlap engine)
       // ========================================
-      const postCommitCandidates = await svc.entities.TimeEntry.filter({
+      const postCommitCandidatesRaw = await svc.entities.TimeEntry.filter({
         employee_id: empId,
-        date: { $gte: queryStart, $lte: queryEnd },
+        date: { $lte: queryEnd },
       });
+      const postCommitCandidates = postCommitCandidatesRaw.filter(e => e.date >= queryStart);
       const postCommitOverlaps = postCommitCandidates.filter(e =>
         e.id !== te.id &&
         (e.status === 'Ingediend' || e.status === 'Goedgekeurd') &&
@@ -716,7 +722,7 @@ Deno.serve(async (req) => {
       // Clean ALL Concept entries for this employee that overlap with the
       // committed dienst range. This catches orphan drafts from date changes.
       try {
-        const oldDrafts = candidateEntries.filter(e => {
+        const oldDrafts = rangedCandidates.filter(e => {
           if (e.status !== 'Concept' || e.id === te.id) return false;
           const draftEnd = e.end_date || e.date;
           // Draft overlaps with committed range?
