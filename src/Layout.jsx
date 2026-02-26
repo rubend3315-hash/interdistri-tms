@@ -552,9 +552,10 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <style>{printStyles}</style>
-      <style>{enterpriseStyles}</style>
+  <DensityProvider>
+  <div className="min-h-screen bg-slate-50">
+    <style>{printStyles}</style>
+    <style>{enterpriseStyles}</style>
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-50 flex items-center justify-between px-4">
         <button 
@@ -734,6 +735,7 @@ export default function Layout({ children, currentPageName }) {
                     <LogOut className="w-5 h-5" />
                   </button>
                 </div>
+                <DensityToggle />
                 <p className="text-xs text-slate-400 text-center mt-2">Interdistri TMS v{APP_VERSION}</p>
                               <Link
                                 to={createPageUrl("SecurityPrivacy")}
@@ -767,5 +769,6 @@ export default function Layout({ children, currentPageName }) {
         </div>
       </main>
     </div>
+    </DensityProvider>
   );
 }
