@@ -11,7 +11,7 @@ function fmtH(h) {
 }
 
 function getNormStatus(totalHours, norm, isPastWeek) {
-  const diff = Math.round((totalHours - norm) * 10) / 10;
+  const diff = totalHours - norm;
   if (diff === 0) return { status: "exact", diff, color: "bg-emerald-500", text: "text-emerald-600", label: "Contracturen behaald" };
   if (diff > 0) return { status: "over", diff, color: "bg-orange-500", text: "text-orange-600", label: `+${fmtH(diff)} overwerk` };
   if (isPastWeek) return { status: "past_under", diff, color: "bg-red-500", text: "text-red-600", label: `${fmtH(Math.abs(diff))} onder contract` };
