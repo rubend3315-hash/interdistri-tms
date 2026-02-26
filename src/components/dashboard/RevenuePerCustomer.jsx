@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { startOfWeek, endOfWeek, format, getISOWeek, getYear, subWeeks } from "date-fns";
 import { nl } from "date-fns/locale";
 
