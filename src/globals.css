@@ -1,3 +1,4 @@
+
 /* ===== UI Density System ===== */
 /* Default = standard; compact via html[data-density="compact"] */
 
@@ -201,12 +202,7 @@ html[data-density="compact"] {
 }
 
 /* Legacy aliases for backwards compat */
-.cc-row { composes: rail-row; }
-.cc-list { composes: rail-list; }
-.cc-name { composes: rail-name; }
-.cc-meta { composes: rail-meta; }
-.cc-val { composes: rail-val; }
-.cc-badge { composes: rail-badge; }
+.cc-meta { font-size: 12px; color: #94a3b8; white-space: nowrap; }
 
 /* ===== Interdistri Enterprise Design System ===== */
 
