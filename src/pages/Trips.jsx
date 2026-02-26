@@ -26,7 +26,7 @@ import {
   CheckCircle2,
   XCircle
 } from "lucide-react";
-import CCRow, { CCRowHeader, CCRowData, CCId, CCBadge, CCName, CCMeta, CCVal, CCList } from "@/components/control-center/CCRow";
+import CCRow, { CCZone1, CCZone2, CCZone3, CCZone4, CCId, CCBadge, CCName, CCMeta, CCVal, CCHours, CCList } from "@/components/control-center/CCRow";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import { checkEmployeeActiveRules } from "@/components/utils/employeeContractCheck";

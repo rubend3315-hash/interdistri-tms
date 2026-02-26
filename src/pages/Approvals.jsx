@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import CCRow, { CCRowHeader, CCRowData, CCId, CCBadge, CCName, CCMeta, CCVal, CCList } from "@/components/control-center/CCRow";
+import CCRow, { CCZone1, CCZone2, CCZone3, CCZone4, CCId, CCBadge, CCDept, CCName, CCMeta, CCVal, CCHours, CCList } from "@/components/control-center/CCRow";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   CheckCircle,
