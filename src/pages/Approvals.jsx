@@ -291,137 +291,121 @@ export default function Approvals() {
     const overlaps = getEntryOverlaps(entry);
 
     return (
-      <Card key={entry.id} className="hover:shadow-md transition-shadow">
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-                <User className="w-6 h-6 text-slate-600" />
+      <Card key={entry.id} className="hover:shadow-sm transition-shadow">
+        <CardContent className="px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: avatar + info */}
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 text-slate-600" />
               </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">
-                  {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
-                </h3>
-                <p className="text-sm text-slate-500">{employee?.department}</p>
-                
-                <div className="mt-3 space-y-1.5">
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Calendar className="w-4 h-4 text-slate-400" />
-                    {entry.date ? (
-                      (() => {
-                        try {
-                          return format(new Date(entry.date), "EEEE d MMMM yyyy", { locale: nl });
-                        } catch (error) {
-                          return entry.date;
-                        }
-                      })()
-                    ) : 'Geen datum'}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Clock className="w-4 h-4 text-slate-400" />
-                    {entry.start_time || '-'} - {entry.end_time || '-'} ({entry.total_hours || 0} uur)
-                  </div>
-                  {vehicle && (
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Car className="w-4 h-4 text-slate-400" />
-                      {vehicle.license_plate}
-                    </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm font-semibold text-slate-900 truncate">
+                    {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
+                  </h3>
+                  <span className="text-xs text-slate-400">{employee?.department}</span>
+                  {entry.shift_type && (
+                    <Badge className={`text-[11px] px-2 py-0 leading-5 ${
+                      entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
+                      entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
+                      entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
+                      'bg-slate-100 text-slate-700'
+                    }`}>
+                      {entry.shift_type}
+                    </Badge>
                   )}
-                  {entry.travel_allowance_multiplier && entry.travel_allowance_multiplier > 0 && (
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <FileText className="w-4 h-4 text-slate-400" />
-                      Reiskosten: {entry.travel_allowance_multiplier}x
-                    </div>
+                  {entryLocked && (
+                    <Badge className="text-[11px] px-2 py-0 leading-5 bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
+                      <Lock className="w-2.5 h-2.5" /> Vergrendeld
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    {entry.date ? (() => {
+                      try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
+                      catch { return entry.date; }
+                    })() : '–'}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    {entry.start_time || '-'} – {entry.end_time || '-'}
+                  </span>
+                  {entry.total_hours > 0 && (
+                    <span className="font-medium text-slate-700">{entry.total_hours}u</span>
+                  )}
+                  {vehicle && (
+                    <span className="flex items-center gap-1">
+                      <Car className="w-3.5 h-3.5 text-slate-400" />
+                      {vehicle.license_plate}
+                    </span>
+                  )}
+                  {entry.travel_allowance_multiplier > 0 && (
+                    <span className="text-slate-400">Reis: {entry.travel_allowance_multiplier}x</span>
+                  )}
+                  {entry.approved_by && (
+                    <span className="text-slate-400">door {entry.approved_by}</span>
                   )}
                 </div>
 
-                {overlaps.length > 0 && (
-                  <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div className="text-xs text-amber-800">
-                      <p className="font-medium">Tijdoverlap met andere dienst(en):</p>
-                      {overlaps.map((o) => {
-                        const oEmp = getEmployee(o.employee_id);
-                        return (
-                          <p key={o.id}>
-                            {o.start_time} - {o.end_time} ({o.status})
-                          </p>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {entry.notes && (
-                  <p className="mt-3 text-sm text-slate-500 bg-slate-50 p-2 rounded-lg">
-                    {entry.notes}
-                  </p>
-                )}
-
-                {entry.rejection_reason && (
-                  <div className="mt-3 p-2 bg-red-50 rounded-lg">
-                    <p className="text-sm text-red-700">
-                      <strong>Reden afkeuring:</strong> {entry.rejection_reason}
-                    </p>
+                {/* Compact warnings row */}
+                {(overlaps.length > 0 || entry.notes || entry.rejection_reason) && (
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    {overlaps.length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                        <AlertTriangle className="w-3 h-3" />
+                        Overlap ({overlaps.length})
+                      </span>
+                    )}
+                    {entry.notes && (
+                      <span className="text-[11px] text-slate-500 bg-slate-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.notes}>
+                        {entry.notes}
+                      </span>
+                    )}
+                    {entry.rejection_reason && (
+                      <span className="text-[11px] text-red-600 bg-red-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.rejection_reason}>
+                        Afkeuring: {entry.rejection_reason}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="flex flex-col items-end gap-2">
-            {entry.shift_type && (
-              <Badge className={`${
-                entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
-                entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
-                entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
-                'bg-slate-100 text-slate-700'
-              }`}>
-                {entry.shift_type}
-              </Badge>
-            )}
-            {entryLocked && (
-              <Badge className="bg-emerald-100 text-emerald-700 flex items-center gap-1">
-                <Lock className="w-3 h-3" /> Vergrendeld
-              </Badge>
-            )}
-
-            <div className="flex gap-2 mt-2">
+            {/* Right: actions */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <Button
                 size="sm"
                 variant="outline"
+                className="h-8 px-2.5 text-xs"
                 onClick={() => openDetailDialog(entry)}
               >
-                <Eye className="w-4 h-4 mr-1" />
-                Bekijken
+                <Eye className="w-3.5 h-3.5 mr-1" />
+                Bekijk
               </Button>
               {showActions && !entryLocked && (
                 <>
                   <Button
                     size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700"
+                    className="h-8 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700"
                     onClick={() => handleApprove(entry)}
                     disabled={approvingIds.has(entry.id) || approveMutation.isPending}
                   >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Goedkeuren
+                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                    Goed
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-red-600 border-red-200 hover:bg-red-50"
+                    className="h-8 px-2.5 text-xs text-red-600 border-red-200 hover:bg-red-50"
                     onClick={() => openRejectDialog(entry)}
                   >
-                    <XCircle className="w-4 h-4 mr-1" />
-                    Afkeuren
+                    <XCircle className="w-3.5 h-3.5 mr-1" />
+                    Afkeur
                   </Button>
                 </>
-              )}
-            </div>
-
-              {entry.approved_by && (
-                <p className="text-xs text-slate-500 mt-2">
-                  Door {entry.approved_by}
-                </p>
               )}
             </div>
           </div>
