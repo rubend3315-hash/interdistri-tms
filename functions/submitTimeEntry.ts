@@ -444,14 +444,13 @@ Deno.serve(async (req) => {
     const queryStart = addDays(payload.date, -1);
     const queryEnd = addDays(entryEnd, 1);
 
-    // Use $lte only (single operator) — some SDKs don't support combined $gte+$lte on same field
-    const candidateEntries = await svc.entities.TimeEntry.filter({
+    // Fetch ALL time entries for this employee — filter in memory to avoid SDK operator issues
+    const allEmployeeEntries = await svc.entities.TimeEntry.filter({
       employee_id: empId,
-      date: { $lte: queryEnd },
     });
 
-    // In-memory filter for the lower bound (queryStart)
-    const rangedCandidates = candidateEntries.filter(e => e.date >= queryStart);
+    // In-memory filter for the date range window
+    const rangedCandidates = allEmployeeEntries.filter(e => e.date >= queryStart && e.date <= queryEnd);
 
     console.debug('[OVERLAP_CHECK]', {
       employeeId: empId,
@@ -685,11 +684,11 @@ Deno.serve(async (req) => {
       // ========================================
       // 9. POST-COMMIT OVERLAP GUARD (uses same servicesOverlap engine)
       // ========================================
-      const postCommitCandidatesRaw = await svc.entities.TimeEntry.filter({
+      // Re-fetch all for this employee for post-commit check (no date operators)
+      const postCommitAll = await svc.entities.TimeEntry.filter({
         employee_id: empId,
-        date: { $lte: queryEnd },
       });
-      const postCommitCandidates = postCommitCandidatesRaw.filter(e => e.date >= queryStart);
+      const postCommitCandidates = postCommitAll.filter(e => e.date >= queryStart && e.date <= queryEnd);
       const postCommitOverlaps = postCommitCandidates.filter(e =>
         e.id !== te.id &&
         (e.status === 'Ingediend' || e.status === 'Goedgekeurd') &&
