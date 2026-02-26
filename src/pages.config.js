@@ -110,6 +110,7 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
+import RBACAudit from './pages/RBACAudit';
 import __Layout from './Layout.jsx';
 
 
@@ -177,6 +178,7 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
+    "RBACAudit": RBACAudit,
 }
 
 export const pagesConfig = {
