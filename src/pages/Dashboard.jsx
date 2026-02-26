@@ -28,6 +28,7 @@ import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
 import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
 import SystemStatusCard from "../components/dashboard/SystemStatusCard";
+import MobileEntryStatusCard from "../components/dashboard/MobileEntryStatusCard";
 
 export default function Dashboard({ currentUser }) {
   const today = new Date();
@@ -213,10 +214,10 @@ export default function Dashboard({ currentUser }) {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {isLoading ? (
           <>
-            {[1, 2, 3, 4].map(i => (
+            {[1, 2, 3, 4, 5].map(i => (
               <Skeleton key={i} className="h-32 rounded-2xl" />
             ))}
           </>
@@ -247,6 +248,7 @@ export default function Dashboard({ currentUser }) {
               subtitle="Openstaande uren"
               className={pendingApprovals > 0 ? "ring-2 ring-amber-200" : ""}
             />
+            <MobileEntryStatusCard />
           </>
         )}
       </div>

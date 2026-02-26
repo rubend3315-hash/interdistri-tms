@@ -89,6 +89,7 @@ import PayrollReport from './pages/PayrollReport';
 import PerformanceReviews from './pages/PerformanceReviews';
 import Planning from './pages/Planning';
 import Projects from './pages/Projects';
+import RBACAudit from './pages/RBACAudit';
 import RBACMatrix from './pages/RBACMatrix';
 import Recalculations from './pages/Recalculations';
 import SalaryReports from './pages/SalaryReports';
@@ -110,7 +111,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import RBACAudit from './pages/RBACAudit';
 import __Layout from './Layout.jsx';
 
 
@@ -157,6 +157,7 @@ export const PAGES = {
     "PerformanceReviews": PerformanceReviews,
     "Planning": Planning,
     "Projects": Projects,
+    "RBACAudit": RBACAudit,
     "RBACMatrix": RBACMatrix,
     "Recalculations": Recalculations,
     "SalaryReports": SalaryReports,
@@ -178,7 +179,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "RBACAudit": RBACAudit,
 }
 
 export const pagesConfig = {
