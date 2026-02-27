@@ -80,6 +80,9 @@ function servicesOverlap(existing, incoming) {
   const newStart = incoming.date;
   const newEnd = effectiveEndDate(incoming);
 
+  // No date range overlap at all → no overlap
+  if (exEnd < newStart || newEnd < exStart) return false;
+
   // Both on exact same single date (no overnight) → time-level check
   if (exStart === exEnd && newStart === newEnd && exStart === newStart) {
     const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
@@ -88,24 +91,26 @@ function servicesOverlap(existing, incoming) {
     return ns < ee && ne > es;
   }
 
-  // Check if date ranges merely touch at a boundary (adjacent)
-  if (exEnd === newStart || newEnd === exStart) {
-    // Boundary day: compare times on the shared day
-    const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
-    const es = timeMin(existing.start_time), ee = timeMin(existing.end_time);
-    if (exEnd === newStart && ee !== null && ns !== null) {
-      // Existing ends on the day new starts → overlap if ex.end_time > new.start_time
-      return ee > ns;
-    }
-    if (newEnd === exStart && ne !== null && es !== null) {
-      // New ends on the day existing starts → overlap if new.end_time > ex.start_time
-      return ne > es;
-    }
-    return false; // can't determine times → treat as non-overlapping
+  // Ranges overlap by more than a single boundary day → definite overlap
+  if (exStart < newEnd && exEnd > newStart) {
+    // Check: is it a true multi-day overlap, or do they share just one boundary?
+    // If exEnd > newStart AND exStart < newEnd with strict inequalities → they truly overlap
+    return true;
   }
 
-  // True date range overlap (ranges cross more than just a boundary)
-  return exStart < newEnd && exEnd > newStart;
+  // Remaining case: ranges touch at exactly one boundary day
+  // exEnd === newStart OR newEnd === exStart (but not both strict overlap above)
+  const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
+  const es = timeMin(existing.start_time), ee = timeMin(existing.end_time);
+  if (exEnd === newStart && ee !== null && ns !== null) {
+    // Existing ends on the day new starts → overlap if ex.end_time > new.start_time
+    return ee > ns;
+  }
+  if (newEnd === exStart && ne !== null && es !== null) {
+    // New ends on the day existing starts → overlap if new.end_time > ex.start_time
+    return ne > es;
+  }
+  return false;
 }
 
 function shiftType(start, end) {
