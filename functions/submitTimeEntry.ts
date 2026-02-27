@@ -919,6 +919,29 @@ Deno.serve(async (req) => {
         latency_ms: Date.now() - t0,
       });
 
+      // ========================================
+      // 11b. PRE-RESOLVE RECEIVED SIBLING
+      // ========================================
+      // Immediately mark the corresponding RECEIVED log as resolved,
+      // so the stuck monitor never has a chance to flag it.
+      try {
+        const receivedSiblings = await svc.entities.MobileEntrySubmissionLog.filter({
+          submission_id: payload.submission_id,
+          status: 'RECEIVED',
+        });
+        for (const sibling of receivedSiblings) {
+          if (sibling.stuck_detected !== false || sibling.auto_resolved !== true) {
+            await svc.entities.MobileEntrySubmissionLog.update(sibling.id, {
+              stuck_detected: false,
+              auto_resolved: true,
+            });
+            console.log(`[PRE-RESOLVE] Marked RECEIVED sibling ${sibling.id} as auto_resolved`);
+          }
+        }
+      } catch (resolveErr) {
+        console.error('[PRE-RESOLVE] Non-critical:', resolveErr.message);
+      }
+
       return Response.json({
         success: true,
         data: {
