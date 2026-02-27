@@ -5,9 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Smartphone, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-function getHealthLevel(failed, p95, stuckCount) {
-  if (stuckCount > 1 || failed >= 3 || p95 > 4000) return "red";
-  if (stuckCount === 1 || failed > 0 || (p95 >= 3000 && p95 <= 4000)) return "orange";
+function getHealthLevel(systemFailures, p95, stuckCount) {
+  if (stuckCount > 1 || systemFailures >= 2 || p95 > 8000) return "red";
+  if (stuckCount === 1 || systemFailures > 0 || p95 > 6000) return "orange";
   return "green";
 }
 
@@ -31,6 +31,7 @@ export default function MobileEntryStatusCard() {
     const total = todayLogs.filter(l => l.status !== "RECEIVED").length;
     const success = todayLogs.filter(l => l.status === "SUCCESS").length;
     const failed = todayLogs.filter(l => l.status === "FAILED" || l.status === "VALIDATION_FAILED").length;
+    const systemFailures = todayLogs.filter(l => l.failure_type === "SYSTEM").length;
     const stuckCount = todayLogs.filter(l => l.stuck_detected === true && l.auto_resolved !== true).length;
 
     const latencies = todayLogs
@@ -42,13 +43,13 @@ export default function MobileEntryStatusCard() {
       ? latencies[Math.min(Math.floor(latencies.length * 0.95), latencies.length - 1)]
       : 0;
 
-    return { total, success, failed, p95, stuckCount };
+    return { total, success, failed, systemFailures, p95, stuckCount };
   }, [logs, today]);
 
-  const health = getHealthLevel(stats.failed, stats.p95, stats.stuckCount);
+  const health = getHealthLevel(stats.systemFailures, stats.p95, stats.stuckCount);
   const s = HEALTH_STYLES[health];
 
-  const showRing = stats.failed > 0 || stats.stuckCount > 0;
+  const showRing = stats.systemFailures > 0 || stats.stuckCount > 0;
 
   return (
     <Card className={cn(showRing ? "ring-1" : "", showRing ? s.ring : "")}>
