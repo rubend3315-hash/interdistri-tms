@@ -196,18 +196,19 @@ function validate(p) {
   if (!isOptStr(p.signature_url)) err.push('signature_url moet string zijn');
 
   // --- DATE_TIME_MISMATCH guard ---
-  // For single-day entries: verify start_time and end_time are consistent with payload.date.
-  // Overnight shifts (end_time < start_time) are allowed and imply next-day end.
-  // Multi-day entries skip this check (end_date explicitly provided).
-  if (!err.length && isDate(p.date) && isTime(p.start_time) && isTime(p.end_time)) {
-    if (!p.end_date || p.end_date === p.date) {
-      // Single-day entry: validate times are plausible HH:MM values (already done by isTime)
-      // Additional guard: if end_time < start_time → overnight, which is fine for single-day
-      // But if end_date is explicitly set to a DIFFERENT date, it should match the multi-day range
-    }
-    if (p.end_date && p.end_date !== p.date) {
-      // Multi-day: end_date must be after date (already checked above)
-      // No additional time-vs-date mismatch for multi-day
+  // Detect payloads where date is clearly nonsensical.
+  // A future date > today + 1 or a date > 60 days in the past is rejected.
+  if (!err.length && isDate(p.date)) {
+    const payloadDate = new Date(p.date + 'T12:00:00Z');
+    const now = new Date();
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const diffDays = Math.round((payloadDate - todayUTC) / 864e5);
+    if (diffDays > 1) {
+      err.push('DATE_TIME_MISMATCH: Datum ligt in de toekomst.');
+      p._dateTimeMismatch = true;
+    } else if (diffDays < -60) {
+      err.push('DATE_TIME_MISMATCH: Datum ligt meer dan 60 dagen in het verleden.');
+      p._dateTimeMismatch = true;
     }
   }
 
