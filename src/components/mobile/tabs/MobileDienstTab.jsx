@@ -375,14 +375,25 @@ export default function MobileDienstTab({
               </>
             ) : (
               <>
-                <button type="button" onClick={onSubmit} disabled={!canSubmit}
+                <button type="button" onClick={onSubmit} disabled={!canSubmit || isSubmitting}
                   className={`w-full h-[44px] rounded-[10px] text-[13px] font-semibold flex items-center justify-center gap-2 transition-all ${
-                    canSubmit
-                      ? 'bg-blue-600 text-white active:bg-blue-700 ring-2 ring-blue-300 ring-offset-1'
-                      : 'bg-slate-200 text-slate-400'
+                    isSubmitting
+                      ? 'bg-blue-500 text-white/80 cursor-wait'
+                      : canSubmit
+                        ? 'bg-blue-600 text-white active:bg-blue-700 ring-2 ring-blue-300 ring-offset-1'
+                        : 'bg-slate-200 text-slate-400'
                   }`}>
-                  <Send className="w-4 h-4" />
-                  {signature ? 'Dienst Indienen' : 'Handtekening & Indienen'}
+                  {isSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Bezig met verzenden...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      {signature ? 'Dienst Indienen' : 'Handtekening & Indienen'}
+                    </>
+                  )}
                 </button>
                 <button type="button" onClick={onSaveDraft} disabled={isSubmitting}
                   className="w-full text-center text-[11px] text-emerald-700 font-medium py-1">
