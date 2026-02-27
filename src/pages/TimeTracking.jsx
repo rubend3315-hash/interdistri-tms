@@ -104,10 +104,9 @@ export default function TimeTracking() {
   // Mutations
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      // Admin creates entries directly as Goedgekeurd — use approveTimeEntry after create
-      const entry = await base44.entities.TimeEntry.create({ ...data, status: 'Ingediend' });
-      const response = await base44.functions.invoke('approveTimeEntry', { time_entry_id: entry.id });
-      if (!response.data?.success) throw new Error(response.data?.message || 'Goedkeuren mislukt');
+      // Admin create with server-side overlap validation
+      const response = await base44.functions.invoke('adminCreateTimeEntry', data);
+      if (!response.data?.success) throw new Error(response.data?.message || 'Aanmaken mislukt');
       return response.data;
     },
     onSuccess: () => {
@@ -118,23 +117,13 @@ export default function TimeTracking() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
-      // Admin updates + approves: update data first, then approve via backend
-      const { status, approved_by, approved_date, ...fieldData } = data;
-      if (Object.keys(fieldData).length > 0) {
-        await base44.entities.TimeEntry.update(id, fieldData);
-      }
-      // If target status is Goedgekeurd, use the server-side transition
-      if (status === 'Goedgekeurd') {
-        // Ensure entry is in Ingediend state for the approve function
-        const entries = await base44.entities.TimeEntry.filter({ id });
-        const current = entries[0];
-        if (current && current.status !== 'Ingediend') {
-          await base44.entities.TimeEntry.update(id, { status: 'Ingediend' });
-        }
-        const response = await base44.functions.invoke('approveTimeEntry', { time_entry_id: id });
-        if (!response.data?.success) throw new Error(response.data?.message || 'Goedkeuren mislukt');
-      }
-      return { success: true };
+      // Admin update with server-side overlap validation (excludes self)
+      const response = await base44.functions.invoke('adminUpdateTimeEntry', {
+        time_entry_id: id,
+        data,
+      });
+      if (!response.data?.success) throw new Error(response.data?.message || 'Opslaan mislukt');
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
