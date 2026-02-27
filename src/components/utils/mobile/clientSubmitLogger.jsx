@@ -92,13 +92,14 @@ export function createClientSubmitLogger({ userEmail, employeeId, entryDate }) {
     },
 
     /** 3. Called on successful backend response */
-    async logResponseOk() {
+    async logResponseOk(retryCount = 0) {
       if (!logId) return;
       const responseTimeMs = requestStartTime ? Date.now() - requestStartTime : null;
       try {
         await base44.entities.ClientSubmitLog.update(logId, {
           status: "RESPONSE_OK",
           response_time_ms: responseTimeMs,
+          retry_count: retryCount,
         });
       } catch (e) {
         console.error("[ClientSubmitLog] Failed to log RESPONSE_OK:", e.message);
@@ -106,7 +107,7 @@ export function createClientSubmitLogger({ userEmail, employeeId, entryDate }) {
     },
 
     /** 4. Called on backend error or network error */
-    async logResponseError(errorMessage) {
+    async logResponseError(errorMessage, retryCount = 0) {
       if (!logId) return;
       const responseTimeMs = requestStartTime ? Date.now() - requestStartTime : null;
       try {
@@ -114,6 +115,7 @@ export function createClientSubmitLogger({ userEmail, employeeId, entryDate }) {
           status: "RESPONSE_ERROR",
           error_message: (errorMessage || "Unknown error").slice(0, 500),
           response_time_ms: responseTimeMs,
+          retry_count: retryCount,
         });
       } catch (e) {
         console.error("[ClientSubmitLog] Failed to log RESPONSE_ERROR:", e.message);
