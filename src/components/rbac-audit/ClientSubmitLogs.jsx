@@ -114,13 +114,14 @@ export default function ClientSubmitLogs() {
                   <th className="text-right p-3 font-medium">Payload KB</th>
                   <th className="text-right p-3 font-medium">Sig KB</th>
                   <th className="text-right p-3 font-medium">Response ms</th>
+                  <th className="text-right p-3 font-medium">Retries</th>
                   <th className="text-left p-3 font-medium">Fout</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="text-center p-6 text-slate-400">Geen logs gevonden</td>
+                    <td colSpan={11} className="text-center p-6 text-slate-400">Geen logs gevonden</td>
                   </tr>
                 )}
                 {filtered.map(log => {
@@ -167,6 +168,11 @@ export default function ClientSubmitLogs() {
                       <td className="p-3 text-xs text-right">
                         <span className={log.response_time_ms > 10000 ? "text-red-600 font-bold" : log.response_time_ms > 5000 ? "text-orange-600" : ""}>
                           {log.response_time_ms ? `${Math.round(log.response_time_ms)}` : "-"}
+                        </span>
+                      </td>
+                      <td className="p-3 text-xs text-right">
+                        <span className={log.retry_count > 0 ? "text-orange-600 font-medium" : ""}>
+                          {log.retry_count || 0}
                         </span>
                       </td>
                       <td className="p-3 text-xs text-red-600 max-w-[200px] truncate" title={log.error_message}>
