@@ -417,7 +417,18 @@ Deno.serve(async (req) => {
     // ========================================
     let payload;
     try { payload = await req.json(); }
-    catch { return Response.json({ success: false, error: 'INVALID_JSON', message: 'Ongeldig JSON' }, { status: 400 }); }
+    catch {
+      await logSubmission(svcEarly, {
+        ...submissionLog,
+        status: 'VALIDATION_FAILED',
+        http_status: 400,
+        error_code: 'INVALID_JSON',
+        error_message: 'Ongeldig JSON in request body',
+        timestamp_completed: new Date().toISOString(),
+        latency_ms: Date.now() - t0,
+      });
+      return Response.json({ success: false, error: 'INVALID_JSON', message: 'Ongeldig JSON' }, { status: 400 });
+    }
 
     submissionLog.submission_id = payload.submission_id || 'unknown';
     submissionLog.entry_date = payload.date || null;
