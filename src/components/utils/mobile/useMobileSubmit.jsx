@@ -144,6 +144,13 @@ export function useMobileSubmit({
       return { needsSignature: true };
     }
 
+    // SAFEGUARD: Verify formData.date is valid and not stale
+    if (!formData.date || formData.date.length !== 10) {
+      console.error('[SUBMIT_GUARD] Invalid date in formData:', formData.date);
+      toast.error('Ongeldige datum — selecteer een datum en probeer opnieuw.');
+      return { success: false, error: 'INVALID_DATE' };
+    }
+
     base44.analytics.track({
       eventName: "mobile_entry_submit_start",
       properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length }
