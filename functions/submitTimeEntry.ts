@@ -63,14 +63,24 @@ function addDays(dateStr, days) {
 
 // --- UNIFIED OVERLAP ENGINE ---
 // Single function used by BOTH pre-commit and post-commit checks.
-// All comparisons use YYYY-MM-DD strings and minute integers — no Date offsets.
+// Uses effective end dates to handle single-day night shifts that cross midnight.
+// All comparisons use YYYY-MM-DD strings and minute integers.
+
+function effectiveEndDate(service) {
+  if (service.end_date) return service.end_date;
+  // Night shift: end_time <= start_time means service runs into next calendar day
+  const s = timeMin(service.start_time), e = timeMin(service.end_time);
+  if (s !== null && e !== null && e <= s) return addDays(service.date, 1);
+  return service.date;
+}
+
 function servicesOverlap(existing, incoming) {
   const exStart = existing.date;
-  const exEnd = existing.end_date || existing.date;
+  const exEnd = effectiveEndDate(existing);
   const newStart = incoming.date;
-  const newEnd = incoming.end_date || incoming.date;
+  const newEnd = effectiveEndDate(incoming);
 
-  // Both single-day on same date → time-level check
+  // Both on exact same single date (no overnight) → time-level check
   if (exStart === exEnd && newStart === newEnd && exStart === newStart) {
     const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
     const es = timeMin(existing.start_time), ee = timeMin(existing.end_time);
@@ -95,7 +105,7 @@ function servicesOverlap(existing, incoming) {
   }
 
   // True date range overlap (ranges cross more than just a boundary)
-  return exStart <= newEnd && exEnd >= newStart;
+  return exStart < newEnd && exEnd > newStart;
 }
 
 function shiftType(start, end) {
