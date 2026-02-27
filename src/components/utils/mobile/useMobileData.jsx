@@ -124,6 +124,8 @@ export function useMobileData(user, selectedDate) {
   );
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+  // Use selectedDate for filtering submitted entries (falls back to today)
+  const activeDate = selectedDate || todayStr;
 
   // Merge myTimeEntries + employeeTimeEntries, deduplicate by id
   const allMyEntries = useMemo(() => {
@@ -137,11 +139,11 @@ export function useMobileData(user, selectedDate) {
     if (!currentEmployee?.id || !allMyEntries.length) return [];
     return allMyEntries.filter(e =>
       e.employee_id === currentEmployee.id &&
-      e.date === todayStr &&
+      e.date === activeDate &&
       (e.status === 'Ingediend' || e.status === 'Goedgekeurd') &&
       e.signature_url
     );
-  }, [allMyEntries, currentEmployee?.id, todayStr]);
+  }, [allMyEntries, currentEmployee?.id, activeDate]);
 
   const approvedEntries = useMemo(() =>
     allMyEntries.filter(e => e.status === 'Goedgekeurd'),
