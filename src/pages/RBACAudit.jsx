@@ -88,6 +88,10 @@ export default function RBACAudit({ currentUser }) {
           <SubmissionLogs />
         </TabsContent>
 
+        <TabsContent value="client-logs">
+          <ClientSubmitLogs />
+        </TabsContent>
+
         <TabsContent value="performance">
           <PerformanceTab />
         </TabsContent>
