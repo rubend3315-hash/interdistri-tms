@@ -126,11 +126,11 @@ export default function MobileDienstTab({
         <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
       </div>
 
-      {/* Submitted entries warning */}
-      {submittedTodayEntries.length > 0 && (
+      {/* Submitted entries warning — filter to match current formData.date */}
+      {submittedTodayEntries.filter(e => e.date === formData.date).length > 0 && (
         <div className="mx-4 mt-2 px-3 py-2 bg-blue-50/80 rounded-xl">
           <p className="text-[11px] text-blue-800 font-medium">ℹ️ Al ingediend:</p>
-          {submittedTodayEntries.map((entry) => (
+          {submittedTodayEntries.filter(e => e.date === formData.date).map((entry) => (
             <div key={entry.id} className="flex items-center gap-2 text-[11px] text-blue-700">
               <span>{entry.start_time || '?'} — {entry.end_time || '?'}</span>
               <Badge className="bg-blue-100 text-blue-700 text-[9px] py-0 px-1">{entry.status}</Badge>
