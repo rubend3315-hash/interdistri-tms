@@ -1,59 +1,54 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { applyPostnlOffset, formatMinutes } from "./timePolicy";
 
 /**
  * useMobileForm — Form state, localStorage autosave, and server draft loading.
- * 
- * @param {Object} options
- * @param {boolean} options.isMultiDay - Multi-day entry mode
- * @param {Object|null} options.currentEmployee - Current employee record
+ * Date-aware: switching date in WeekHeader resets form + loads correct draft.
  */
 export function useMobileForm({ isMultiDay = false, currentEmployee, businessMode = "HANDMATIG" }) {
-  const storageKey = isMultiDay ? 'mobile-entry-multiday-draft' : 'mobile-entry-draft';
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
+  // Per-datum storage key
+  const getStorageKey = (date) => {
+    const empId = currentEmployee?.id || 'unknown';
+    return `mobile_draft_${empId}_${date}`;
+  };
 
+  // Track current date to detect changes and prevent race conditions
+  const currentDateRef = useRef(todayStr);
+
+  const makeEmptyForm = (date) => ({
+    date,
+    ...(isMultiDay ? { end_date: date } : {}),
+    start_time: "", end_time: "",
+    break_minutes: 0, break_manual: false, notes: ""
+  });
+
+  // Load localStorage draft for a specific date
+  const loadLocalDraft = (date) => {
+    try {
+      const key = getStorageKey(date);
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.formData?.date === date) return parsed;
+      }
+    } catch {}
+    return null;
+  };
 
   // --- Form data ---
   const [formData, setFormData] = useState(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.formData?.date === todayStr) return parsed.formData;
-      }
-    } catch {}
-    return {
-      date: todayStr,
-      ...(isMultiDay ? { end_date: todayStr } : {}),
-      start_time: "", end_time: "",
-      break_minutes: 0, notes: ""
-    };
+    const draft = loadLocalDraft(todayStr);
+    return draft?.formData || makeEmptyForm(todayStr);
   });
 
   // --- DienstRegels (unified rit + standplaats) ---
   const [dienstRegels, setDienstRegels] = useState(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.formData?.date === todayStr) {
-          // Support new format
-          if (parsed.dienstRegels?.length) return parsed.dienstRegels;
-          // Migrate legacy format
-          const rules = [];
-          if (parsed.trips?.length) {
-            parsed.trips.forEach(t => rules.push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, type: "rit", ...t }));
-          }
-          if (parsed.standplaatsWerk?.length) {
-            parsed.standplaatsWerk.forEach(s => rules.push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, type: "standplaats", ...s }));
-          }
-          if (rules.length > 0) return rules;
-        }
-      }
-    } catch {}
+    const draft = loadLocalDraft(todayStr);
+    if (draft?.dienstRegels?.length) return draft.dienstRegels;
     return [];
   });
 
