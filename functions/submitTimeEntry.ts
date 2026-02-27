@@ -640,11 +640,19 @@ Deno.serve(async (req) => {
     const queryStart = addDays(payload.date, -1);
     const queryEnd = addDays(entryEnd, 1);
 
-    console.log('[STEP] Fetching all entries for employee:', empId);
+    // ========================================
+    // 5. OVERLAP DETECTION + BREAK STAFFEL (PARALLELIZED)
+    // ========================================
+    // Fetch employee entries AND break schedules in parallel — they're independent.
+    console.log('[STEP] Fetching entries + break schedules for employee:', empId);
     const tOverlap = Date.now();
-    const allEmployeeEntries = await svc.entities.TimeEntry.filter({
-      employee_id: empId,
-    });
+    const isManualBreak = payload.break_manual === true;
+    const endD = payload.end_date || null;
+
+    const [allEmployeeEntries, breakSchedulesRaw] = await Promise.all([
+      svc.entities.TimeEntry.filter({ employee_id: empId }),
+      isManualBreak ? Promise.resolve([]) : svc.entities.BreakSchedule.filter({ status: 'Actief' }),
+    ]);
     perf.overlap_fetch = Date.now() - tOverlap;
     console.log('[STEP] Found', allEmployeeEntries.length, 'total entries');
 
@@ -659,13 +667,6 @@ Deno.serve(async (req) => {
       totalEntries: allEmployeeEntries.length,
       rangedCandidates: rangedCandidates.length,
     }));
-
-    const incomingEntry = {
-      date: payload.date,
-      end_date: payload.end_date || null,
-      start_time: payload.start_time,
-      end_time: payload.end_time,
-    };
 
     // Use extracted overlap validation function
     const overlapResult = validateTimeEntryOverlap(
@@ -696,7 +697,6 @@ Deno.serve(async (req) => {
     // ========================================
     // 6. COMPUTE SERVER-SIDE DERIVED FIELDS + BREAK STAFFEL
     // ========================================
-    const endD = payload.end_date || null;
 
     // 6a. Calculate gross dienst duration in minutes
     const sMin = timeMin(payload.start_time);
@@ -713,18 +713,14 @@ Deno.serve(async (req) => {
     perf.overlap_check_total = Date.now() - tOverlap;
 
     // 6b. Server-side break staffel calculation
-    const isManualBreak = payload.break_manual === true;
     let brk;
     let breakStaffelId = null;
 
     if (isManualBreak) {
-      // Handmatige override: respecteer client-waarde
       brk = Math.max(0, Math.round(payload.break_minutes || 0));
       console.log(`[BREAK] Manual override: ${brk} min for ${dienstHours.toFixed(2)}h dienst`);
     } else {
-      // Staffelberekening: ophalen uit BreakSchedule entity
-      const breakSchedules = await svc.entities.BreakSchedule.filter({ status: 'Actief' });
-      const sorted = breakSchedules.sort((a, b) => a.min_hours - b.min_hours);
+      const sorted = breakSchedulesRaw.sort((a, b) => a.min_hours - b.min_hours);
       const match = sorted.find(s => dienstHours >= s.min_hours && (s.max_hours == null || dienstHours < s.max_hours));
       brk = match ? match.break_minutes : 0;
       breakStaffelId = match ? match.id : null;
