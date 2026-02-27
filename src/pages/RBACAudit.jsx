@@ -57,12 +57,13 @@ export default function RBACAudit({ currentUser }) {
       </div>
 
       <Tabs defaultValue="snapshots" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="snapshots">Snapshots</TabsTrigger>
           <TabsTrigger value="integrity">Integrity</TabsTrigger>
           <TabsTrigger value="changes">Wijzigingen</TabsTrigger>
           <TabsTrigger value="invariants">Invariants</TabsTrigger>
           <TabsTrigger value="submissions">Submissions</TabsTrigger>
+          <TabsTrigger value="client-logs">Client Logs</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="policy">Policy</TabsTrigger>
         </TabsList>
