@@ -628,15 +628,19 @@ Deno.serve(async (req) => {
     const committed = existingBySubId.find(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd');
     if (committed) {
       console.log(`[IDEMPOTENT HIT] submission_id=${payload.submission_id} → TimeEntry ${committed.id}`);
-      await logSubmission(svc, {
-        ...submissionLog,
-        status: 'IDEMPOTENT_HIT',
-        failure_type: 'IDEMPOTENT',
-        http_status: 200,
-        time_entry_id: committed.id,
-        timestamp_completed: new Date().toISOString(),
-        latency_ms: Date.now() - t0,
-      });
+      await Promise.all([
+        logSubmission(svc, {
+          ...submissionLog,
+          status: 'IDEMPOTENT_HIT',
+          failure_type: 'IDEMPOTENT',
+          http_status: 200,
+          time_entry_id: committed.id,
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        }),
+        // Ensure index is consistent (may already be SUCCESS from original request)
+        updateSubmissionIndex(svc, indexRecord, 'SUCCESS', { time_entry_id: committed.id, employee_id: empId }),
+      ]);
       const [existTrips, existSpw] = await Promise.all([
         svc.entities.Trip.filter({ time_entry_id: committed.id }),
         svc.entities.StandplaatsWerk.filter({ time_entry_id: committed.id }),
@@ -878,17 +882,20 @@ Deno.serve(async (req) => {
             });
           }
           // Winner hasn't committed yet — tell client to retry
-          await logSubmission(svc, {
-            ...submissionLog,
-            status: 'VALIDATION_FAILED',
-            failure_type: 'BUSINESS',
-            http_status: 409,
-            error_code: 'CONCURRENT_SUBMIT',
-            error_message: 'Gelijktijdige submit gedetecteerd',
-            employee_id: empId,
-            timestamp_completed: new Date().toISOString(),
-            latency_ms: Date.now() - t0,
-          });
+          await Promise.all([
+            logSubmission(svc, {
+              ...submissionLog,
+              status: 'VALIDATION_FAILED',
+              failure_type: 'BUSINESS',
+              http_status: 409,
+              error_code: 'CONCURRENT_SUBMIT',
+              error_message: 'Gelijktijdige submit gedetecteerd',
+              employee_id: empId,
+              timestamp_completed: new Date().toISOString(),
+              latency_ms: Date.now() - t0,
+            }),
+            updateSubmissionIndex(svc, indexRecord, 'FAILED'),
+          ]);
           return Response.json({
             success: false, error: 'CONCURRENT_SUBMIT',
             message: 'Gelijktijdige submit gedetecteerd, probeer opnieuw'
@@ -967,17 +974,20 @@ Deno.serve(async (req) => {
           for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
           for (const sid of created.spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
           await safeDelete(svc.entities.TimeEntry, te.id, 'overlap-te');
-          await logSubmission(svc, {
-            ...submissionLog,
-            status: 'VALIDATION_FAILED',
-            failure_type: 'BUSINESS',
-            http_status: 409,
-            error_code: 'POST_COMMIT_' + postOverlap.errorCode,
-            error_message: `Gelijktijdige overlap: ${postOverlap.errorMsg}`,
-            employee_id: empId,
-            timestamp_completed: new Date().toISOString(),
-            latency_ms: Date.now() - t0,
-          });
+          await Promise.all([
+            logSubmission(svc, {
+              ...submissionLog,
+              status: 'VALIDATION_FAILED',
+              failure_type: 'BUSINESS',
+              http_status: 409,
+              error_code: 'POST_COMMIT_' + postOverlap.errorCode,
+              error_message: `Gelijktijdige overlap: ${postOverlap.errorMsg}`,
+              employee_id: empId,
+              timestamp_completed: new Date().toISOString(),
+              latency_ms: Date.now() - t0,
+            }),
+            updateSubmissionIndex(svc, indexRecord, 'FAILED'),
+          ]);
           return Response.json({
             success: false, error: postOverlap.errorCode,
             message: `Gelijktijdige overlap gedetecteerd: ${postOverlap.errorMsg}`,
