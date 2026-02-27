@@ -23,23 +23,23 @@ Deno.serve(async (req) => {
     // ========================================
     // STEP 1: Build SUCCESS submission_id set
     // ========================================
-    const successLogs = await svc.entities.MobileEntrySubmissionLog.filter(
-      { status: 'SUCCESS' }, '-created_date', 200
-    );
-    const successIds = new Set(
-      successLogs
-        .filter(l => l.submission_id && l.submission_id !== 'unknown')
-        .map(l => l.submission_id)
-    );
-    // Also include IDEMPOTENT_HIT as resolved
-    const idempotentLogs = await svc.entities.MobileEntrySubmissionLog.filter(
-      { status: 'IDEMPOTENT_HIT' }, '-created_date', 200
-    );
-    for (const l of idempotentLogs) {
-      if (l.submission_id && l.submission_id !== 'unknown') successIds.add(l.submission_id);
+    // Build set of submission_ids that have ANY terminal status
+    // Terminal = SUCCESS, IDEMPOTENT_HIT, VALIDATION_FAILED, FAILED
+    const TERMINAL_STATUSES = ['SUCCESS', 'IDEMPOTENT_HIT', 'VALIDATION_FAILED', 'FAILED'];
+    const terminalIds = new Set();
+
+    const [successLogs, idempotentLogs, validationFailedLogs, failedLogs] = await Promise.all([
+      svc.entities.MobileEntrySubmissionLog.filter({ status: 'SUCCESS' }, '-created_date', 200),
+      svc.entities.MobileEntrySubmissionLog.filter({ status: 'IDEMPOTENT_HIT' }, '-created_date', 200),
+      svc.entities.MobileEntrySubmissionLog.filter({ status: 'VALIDATION_FAILED' }, '-created_date', 200),
+      svc.entities.MobileEntrySubmissionLog.filter({ status: 'FAILED' }, '-created_date', 200),
+    ]);
+
+    for (const l of [...successLogs, ...idempotentLogs, ...validationFailedLogs, ...failedLogs]) {
+      if (l.submission_id && l.submission_id !== 'unknown') terminalIds.add(l.submission_id);
     }
 
-    console.log(`[STUCK_MONITOR] SUCCESS map built: ${successIds.size} unique submission_ids`);
+    console.log(`[STUCK_MONITOR] Terminal map built: ${terminalIds.size} unique submission_ids (${successLogs.length} SUCCESS, ${idempotentLogs.length} IDEMPOTENT, ${validationFailedLogs.length} VALIDATION_FAILED, ${failedLogs.length} FAILED)`);
 
     // ========================================
     // STEP 2: Get ALL RECEIVED logs older than threshold
