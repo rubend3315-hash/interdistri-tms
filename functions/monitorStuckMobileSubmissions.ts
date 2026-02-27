@@ -25,12 +25,39 @@ Deno.serve(async (req) => {
     }, '-created_date', 200);
 
     // Filter: older than threshold, not yet marked as stuck
-    const stuckLogs = receivedLogs.filter(log => {
+    const candidateLogs = receivedLogs.filter(log => {
       if (log.stuck_detected === true) return false;
       if (log.timestamp_completed) return false;
       const receivedAt = log.timestamp_received || log.created_date;
       return receivedAt && receivedAt < cutoff;
     });
+
+    // ========================================
+    // 1b. Cross-check: exclude RECEIVED logs where a SUCCESS record
+    //     already exists for the same submission_id (immutable log pattern)
+    // ========================================
+    const stuckLogs = [];
+    for (const log of candidateLogs) {
+      if (log.submission_id) {
+        const siblingLogs = await svc.entities.MobileEntrySubmissionLog.filter({
+          submission_id: log.submission_id,
+        });
+        const hasSuccess = siblingLogs.some(s => s.id !== log.id && (s.status === 'SUCCESS' || s.status === 'IDEMPOTENT_HIT'));
+        if (hasSuccess) {
+          // Not stuck — the submission completed successfully via a sibling record.
+          // Auto-close this orphan RECEIVED record.
+          console.log(`[STUCK_MONITOR] RECEIVED ${log.id} has SUCCESS sibling for submission_id=${log.submission_id} — auto-closing`);
+          await svc.entities.MobileEntrySubmissionLog.update(log.id, {
+            status: 'SUCCESS',
+            error_code: 'AUTO_CLOSED',
+            error_message: 'Automatisch gesloten — SUCCESS sibling gevonden',
+            timestamp_completed: new Date().toISOString(),
+          });
+          continue;
+        }
+      }
+      stuckLogs.push(log);
+    }
 
     if (stuckLogs.length === 0) {
       return Response.json({
