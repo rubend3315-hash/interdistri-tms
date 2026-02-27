@@ -872,6 +872,16 @@ Deno.serve(async (req) => {
           for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
           for (const sid of created.spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
           await safeDelete(svc.entities.TimeEntry, te.id, 'overlap-te');
+          await logSubmission(svc, {
+            ...submissionLog,
+            status: 'VALIDATION_FAILED',
+            http_status: 409,
+            error_code: 'POST_COMMIT_' + postOverlap.errorCode,
+            error_message: `Gelijktijdige overlap: ${postOverlap.errorMsg}`,
+            employee_id: empId,
+            timestamp_completed: new Date().toISOString(),
+            latency_ms: Date.now() - t0,
+          });
           return Response.json({
             success: false, error: postOverlap.errorCode,
             message: `Gelijktijdige overlap gedetecteerd: ${postOverlap.errorMsg}`,
