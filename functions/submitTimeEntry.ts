@@ -515,6 +515,16 @@ Deno.serve(async (req) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (today > graceEnd) {
+        await logSubmission(svcEarly, {
+          ...submissionLog,
+          status: 'VALIDATION_FAILED',
+          http_status: 403,
+          error_code: 'EMPLOYEE_INACTIVE',
+          error_message: 'Dienstverband beëindigd, grace-periode verlopen',
+          employee_id: empId,
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        });
         return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: 'Je dienstverband is beëindigd en de grace-periode is verlopen.' }, { status: 403 });
       }
     }
