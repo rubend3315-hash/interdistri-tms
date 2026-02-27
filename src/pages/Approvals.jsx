@@ -120,10 +120,10 @@ export default function Approvals() {
 
   const updateMutation = useMutation({
     mutationFn: async (data) => {
-      // Admin edit with approve: use approveTimeEntry with edit_data
-      const response = await base44.functions.invoke('approveTimeEntry', {
+      // Admin edit with overlap validation + approve via adminUpdateTimeEntry
+      const response = await base44.functions.invoke('adminUpdateTimeEntry', {
         time_entry_id: selectedEntry.id,
-        edit_data: data
+        data: { ...data, status: 'Goedgekeurd' }
       });
       if (!response.data?.success) throw new Error(response.data?.message || 'Opslaan mislukt');
       return response.data;
