@@ -994,6 +994,13 @@ Deno.serve(async (req) => {
         });
       } catch (perfErr) { console.error('[PERF_LOG]', perfErr.message); }
 
+      // Compute phase-level latency breakdown for analysis
+      const tEnd = Date.now();
+      const latencyOverlap = perf.overlap_check_total || 0; // auth → end of overlap+break calc
+      const latencyWrite = (perf.timeentry_create || 0) + (perf.trips_and_spw_create || 0) + (perf.commit || 0);
+      const latencyRecalc = (perf.write_verify || 0) + (perf.post_commit_guard || 0);
+      const latencyFinalize = tEnd - t0 - (perf.idempotency_guard_and_received_log || 0) - (perf.employee_lookup || 0) - (perf.te_idempotency_check || 0) - latencyOverlap - latencyWrite - latencyRecalc;
+
       await logSubmission(svc, {
         ...submissionLog,
         status: 'SUCCESS',
@@ -1001,7 +1008,11 @@ Deno.serve(async (req) => {
         time_entry_id: te.id,
         employee_id: empId,
         timestamp_completed: new Date().toISOString(),
-        latency_ms: Date.now() - t0,
+        latency_ms: tEnd - t0,
+        latency_overlap_ms: latencyOverlap,
+        latency_write_ms: latencyWrite,
+        latency_recalc_ms: latencyRecalc,
+        latency_finalize_ms: Math.max(0, latencyFinalize),
       });
 
       // ========================================
