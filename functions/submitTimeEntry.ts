@@ -366,6 +366,21 @@ async function logSubmission(svc, data) {
   catch (e) { console.error('[SUBMIT_LOG] Failed to write log:', e.message); }
 }
 
+// --- INDEX UPDATE HELPER ---
+// Updates the MobileSubmissionIndex record to terminal status.
+// Non-blocking: failures are logged but don't affect the main flow.
+
+async function updateSubmissionIndex(svc, indexRecord, status, extra = {}) {
+  if (!indexRecord) return;
+  try {
+    await svc.entities.MobileSubmissionIndex.update(indexRecord.id, {
+      status,
+      completed_at: new Date().toISOString(),
+      ...extra,
+    });
+  } catch (e) { console.error('[INDEX_UPDATE] Failed:', e.message); }
+}
+
 // --- MAIN HANDLER ---
 
 Deno.serve(async (req) => {
