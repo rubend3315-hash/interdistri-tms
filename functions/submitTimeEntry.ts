@@ -149,11 +149,12 @@ function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, st
   const newEffEnd = effectiveEndDate(incomingEntry);
 
   // Filter to committed entries whose effective range could overlap
+  // Uses >= / <= to include boundary cases (servicesOverlap handles exact boundary logic)
   const committed = existingEntries.filter(e => {
     if (e.employee_id !== employeeId) return false;
     if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
     const exEffEnd = effectiveEndDate(e);
-    return exEffEnd > date && e.date < newEffEnd;
+    return exEffEnd >= date && e.date <= newEffEnd;
   });
 
   // Check for already-approved entry on exact date (specific error)
