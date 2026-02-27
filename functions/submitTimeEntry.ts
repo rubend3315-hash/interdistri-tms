@@ -490,6 +490,13 @@ Deno.serve(async (req) => {
       submission_id: payload.submission_id,
     }));
 
+    // === TEST MODE: FORCE_SYSTEM_ERROR ===
+    if (payload.test_mode === 'FORCE_SYSTEM_ERROR') {
+      console.log('[TEST_MODE] FORCE_SYSTEM_ERROR triggered for submission_id:', payload.submission_id);
+      // RECEIVED log is already written above. Now simulate a system crash.
+      throw new Error('SIMULATED_SYSTEM_FAILURE');
+    }
+
     const errors = validate(payload);
     if (errors.length) {
       const isDateMismatch = payload._dateTimeMismatch === true;
