@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Trash2, Check, X } from "lucide-react";
+import { compressSignatureCanvas } from "@/components/utils/mobile/signatureCompressor";
 
 export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
   const canvasRef = useRef(null);
@@ -91,7 +92,8 @@ export default function MobileSignatureDialog({ open, onOpenChange, onSave }) {
     const canvas = canvasRef.current;
     if (!canvas || isSaving) return;
     setIsSaving(true);
-    const dataUrl = canvas.toDataURL("image/png");
+    // Compress signature to JPEG (smaller payload, Safari-safe)
+    const dataUrl = compressSignatureCanvas(canvas);
     try {
       const result = await onSave(dataUrl);
       if (result?.success) onOpenChange(false);
