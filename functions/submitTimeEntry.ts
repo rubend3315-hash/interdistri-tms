@@ -547,18 +547,14 @@ Deno.serve(async (req) => {
     }
 
     // ========================================
-    // 5. OVERLAP DETECTION — against committed entries
+    // 5. OVERLAP DETECTION — via extracted validateTimeEntryOverlap
     // ========================================
-    // Query window: payload.date - 1 day to payload.end_date + 1 day
-    // This captures all entries that could possibly overlap, including adjacent
-    // multi-day shifts, without scanning the full history.
     const entryEnd = payload.end_date || payload.date;
     const queryStart = addDays(payload.date, -1);
     const queryEnd = addDays(entryEnd, 1);
 
     console.log('[STEP] Fetching all entries for employee:', empId);
     const tOverlap = Date.now();
-    // Fetch ALL time entries for this employee — filter in memory to avoid SDK operator issues
     const allEmployeeEntries = await svc.entities.TimeEntry.filter({
       employee_id: empId,
     });
@@ -577,13 +573,6 @@ Deno.serve(async (req) => {
       rangedCandidates: rangedCandidates.length,
     }));
 
-    // Filter to committed entries whose effective end_date >= payload.date
-    const committedOverlaps = rangedCandidates.filter(e => {
-      if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
-      const exEnd = e.end_date || e.date;
-      return exEnd >= payload.date && e.date <= entryEnd;
-    });
-
     const incomingEntry = {
       date: payload.date,
       end_date: payload.end_date || null,
@@ -591,23 +580,19 @@ Deno.serve(async (req) => {
       end_time: payload.end_time,
     };
 
-    console.log('[STEP] committedOverlaps count:', committedOverlaps.length);
-    for (const ex of committedOverlaps) {
-      console.log('[OVERLAP_EVAL]', JSON.stringify({ exId: ex.id, exDate: ex.date, exEndDate: ex.end_date, exStart: ex.start_time, exEnd: ex.end_time }));
-      if (servicesOverlap(ex, incomingEntry)) {
-        const exEnd = ex.end_date || ex.date;
-        const isSameDay = !payload.end_date && !ex.end_date && payload.date === ex.date;
-        const errorCode = isSameDay ? 'TIME_OVERLAP' : 'DATE_OVERLAP';
-        const errorMsg = isSameDay
-          ? `Overlapt met dienst ${ex.start_time}-${ex.end_time} op ${ex.date}`
-          : `Overlapt met dienst ${ex.date} t/m ${exEnd}`;
-        console.log(`[OVERLAP] ${errorCode}: existing ${ex.id} (${ex.date}→${exEnd} ${ex.start_time}-${ex.end_time}) vs new (${payload.date}→${entryEnd} ${payload.start_time}-${payload.end_time})`);
-        return Response.json({
-          success: false, error: errorCode,
-          message: errorMsg,
-          details: [`Bestaande dienst: ${ex.id}`]
-        }, { status: 409 });
-      }
+    // Use extracted overlap validation function
+    const overlapResult = validateTimeEntryOverlap(
+      rangedCandidates, empId, payload.date, payload.end_date || null,
+      payload.start_time, payload.end_time
+    );
+
+    if (overlapResult.overlaps) {
+      console.log(`[OVERLAP] ${overlapResult.errorCode}: existing ${overlapResult.existingId} vs new (${payload.date}→${entryEnd} ${payload.start_time}-${payload.end_time})`);
+      return Response.json({
+        success: false, error: overlapResult.errorCode,
+        message: overlapResult.errorMsg,
+        details: [`Bestaande dienst: ${overlapResult.existingId}`]
+      }, { status: 409 });
     }
 
     // ========================================
