@@ -306,16 +306,13 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
 
   // --- Reset after successful submit ---
   const resetForm = useCallback(() => {
+    const dateToReset = formData.date;
     setDienstRegels([]);
     setSignature(null);
-    setFormData({
-      date: todayStr,
-      ...(isMultiDay ? { end_date: todayStr } : {}),
-      start_time: "", end_time: "",
-      break_minutes: 0, notes: ""
-    });
-    try { localStorage.removeItem(storageKey); } catch {}
-  }, [todayStr, isMultiDay, storageKey]);
+    setFormData(makeEmptyForm(todayStr));
+    currentDateRef.current = todayStr;
+    try { localStorage.removeItem(getStorageKey(dateToReset)); } catch {}
+  }, [todayStr, isMultiDay, formData.date, currentEmployee?.id]);
 
   return {
     formData, setFormData,
