@@ -93,16 +93,49 @@ export function useEntrySubmit() {
       // --- Client log: CLICKED ---
       await clientLogger.logClicked(submissionId, payload, signature);
 
+      // --- Payload size guard (prevent Safari memory-kill) ---
+      const payloadWarning = checkPayloadSize(payload);
+      if (payloadWarning) {
+        await clientLogger.logResponseError('PAYLOAD_TOO_LARGE: ' + payloadWarning);
+        return { success: false, error: 'PAYLOAD_TOO_LARGE', message: payloadWarning };
+      }
+
       // --- Abort detection: if page unloads while request is in flight ---
       let abortCleanup = null;
+      const logIdForBeacon = () => clientLogger.getLogId();
+      const requestStartTimeRef = { value: null };
+
       const setupAbortDetection = () => {
-        const onVisibilityChange = () => {
-          if (document.visibilityState === 'hidden') {
-            clientLogger.logAborted();
+        const onBeforeUnload = () => {
+          // Use sendBeacon for reliability — Safari kills normal fetches during unload
+          const lid = logIdForBeacon();
+          if (lid) {
+            try {
+              const beaconPayload = JSON.stringify({
+                logId: lid,
+                status: "ABORTED",
+                error_message: "Page unload / tab closed during request (sendBeacon)",
+                response_time_ms: requestStartTimeRef.value ? Date.now() - requestStartTimeRef.value : null,
+              });
+              navigator.sendBeacon(
+                `data:text/plain;charset=utf-8,` + encodeURIComponent('abort-logged'),
+                ''
+              );
+              // Best-effort entity update (may not complete)
+              base44.entities.ClientSubmitLog.update(lid, {
+                status: "ABORTED",
+                error_message: "Page unload / tab closed during request (sendBeacon)",
+                response_time_ms: requestStartTimeRef.value ? Date.now() - requestStartTimeRef.value : null,
+              }).catch(() => {});
+            } catch (e) {
+              // sendBeacon failed silently — acceptable
+            }
           }
         };
-        const onBeforeUnload = () => {
-          clientLogger.logAborted();
+        const onVisibilityChange = () => {
+          if (document.visibilityState === 'hidden') {
+            onBeforeUnload();
+          }
         };
         document.addEventListener('visibilitychange', onVisibilityChange);
         window.addEventListener('beforeunload', onBeforeUnload);
@@ -124,10 +157,26 @@ export function useEntrySubmit() {
 
       // --- Client log: REQUEST_STARTED ---
       await clientLogger.logRequestStarted();
+      requestStartTimeRef.value = Date.now();
       abortCleanup = setupAbortDetection();
 
-      // Online: single atomic API call
-      const response = await base44.functions.invoke('submitTimeEntry', payload);
+      // Online: single atomic API call with timeout + retry
+      let retryCount = 0;
+      const { response, retryCount: actualRetries } = await invokeWithRetry(
+        base44.functions.invoke.bind(base44.functions),
+        'submitTimeEntry',
+        payload,
+        {
+          onRetry: (count) => {
+            retryCount = count;
+            // Visual feedback via toast is handled by useMobileSubmit
+          },
+          onTimeout: () => {
+            console.warn('[useEntrySubmit] Request timed out, retrying...');
+          },
+        }
+      );
+
       const result = response.data;
 
       // Clean up abort listeners
@@ -135,27 +184,34 @@ export function useEntrySubmit() {
 
       if (result.success) {
         // --- Client log: RESPONSE_OK ---
-        await clientLogger.logResponseOk();
+        await clientLogger.logResponseOk(actualRetries);
         return {
           success: true,
           offline: false,
           data: result.data,
+          retryCount: actualRetries,
         };
       } else {
         // --- Client log: RESPONSE_ERROR ---
-        await clientLogger.logResponseError(result.error + ': ' + (result.message || ''));
+        await clientLogger.logResponseError(result.error + ': ' + (result.message || ''), actualRetries);
         return {
           success: false,
           error: result.error,
           message: result.message,
           details: result.details || [],
+          retryCount: actualRetries,
         };
       }
 
     } catch (error) {
       // --- Client log: RESPONSE_ERROR ---
-      const errMsg = error?.response?.data?.message || error?.message || 'Unknown error';
+      const isTimeout = error?._isTimeout === true;
+      const errMsg = isTimeout ? 'CLIENT_TIMEOUT' : (error?.response?.data?.message || error?.message || 'Unknown error');
       await clientLogger.logResponseError(errMsg);
+
+      if (isTimeout) {
+        return { success: false, error: 'CLIENT_TIMEOUT', message: 'Verbinding duurt te lang — probeer opnieuw.' };
+      }
 
       // Distinguish axios response errors from network errors
       if (error?.response) {
@@ -179,7 +235,7 @@ export function useEntrySubmit() {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error?.message || 'Onverwachte fout',
+        message: 'Geen verbinding — probeer opnieuw.',
       };
     } finally {
       submittingRef.current = false;
