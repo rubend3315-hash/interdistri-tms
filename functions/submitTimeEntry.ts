@@ -593,17 +593,20 @@ Deno.serve(async (req) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (today > graceEnd) {
-        await logSubmission(svcEarly, {
-          ...submissionLog,
-          status: 'VALIDATION_FAILED',
-          failure_type: 'VALIDATION',
-          http_status: 403,
-          error_code: 'EMPLOYEE_INACTIVE',
-          error_message: 'Dienstverband beëindigd, grace-periode verlopen',
-          employee_id: empId,
-          timestamp_completed: new Date().toISOString(),
-          latency_ms: Date.now() - t0,
-        });
+        await Promise.all([
+          logSubmission(svcEarly, {
+            ...submissionLog,
+            status: 'VALIDATION_FAILED',
+            failure_type: 'VALIDATION',
+            http_status: 403,
+            error_code: 'EMPLOYEE_INACTIVE',
+            error_message: 'Dienstverband beëindigd, grace-periode verlopen',
+            employee_id: empId,
+            timestamp_completed: new Date().toISOString(),
+            latency_ms: Date.now() - t0,
+          }),
+          updateSubmissionIndex(svcEarly, indexRecord, 'VALIDATION_FAILED'),
+        ]);
         return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: 'Je dienstverband is beëindigd en de grace-periode is verlopen.' }, { status: 403 });
       }
     }
@@ -713,17 +716,20 @@ Deno.serve(async (req) => {
 
     if (overlapResult.overlaps) {
       console.log(`[OVERLAP] ${overlapResult.errorCode}: existing ${overlapResult.existingId} vs new (${payload.date}→${entryEnd} ${payload.start_time}-${payload.end_time})`);
-      await logSubmission(svc, {
-        ...submissionLog,
-        status: 'VALIDATION_FAILED',
-        failure_type: 'BUSINESS',
-        http_status: 409,
-        error_code: overlapResult.errorCode,
-        error_message: overlapResult.errorMsg,
-        employee_id: empId,
-        timestamp_completed: new Date().toISOString(),
-        latency_ms: Date.now() - t0,
-      });
+      await Promise.all([
+        logSubmission(svc, {
+          ...submissionLog,
+          status: 'VALIDATION_FAILED',
+          failure_type: 'BUSINESS',
+          http_status: 409,
+          error_code: overlapResult.errorCode,
+          error_message: overlapResult.errorMsg,
+          employee_id: empId,
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        }),
+        updateSubmissionIndex(svc, indexRecord, 'VALIDATION_FAILED'),
+      ]);
       return Response.json({
         success: false, error: overlapResult.errorCode,
         message: overlapResult.errorMsg,
@@ -1130,17 +1136,20 @@ Deno.serve(async (req) => {
       for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'rb-trip');
       if (created.teId) await safeDelete(svc.entities.TimeEntry, created.teId, 'rb-te');
 
-      await logSubmission(svc, {
-        ...submissionLog,
-        status: 'FAILED',
-        failure_type: 'SYSTEM',
-        http_status: 500,
-        error_code: 'TRANSACTION_FAILED',
-        error_message: (txError.message || 'Onbekende fout').slice(0, 500),
-        employee_id: empId,
-        timestamp_completed: new Date().toISOString(),
-        latency_ms: Date.now() - t0,
-      });
+      await Promise.all([
+        logSubmission(svc, {
+          ...submissionLog,
+          status: 'FAILED',
+          failure_type: 'SYSTEM',
+          http_status: 500,
+          error_code: 'TRANSACTION_FAILED',
+          error_message: (txError.message || 'Onbekende fout').slice(0, 500),
+          employee_id: empId,
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        }),
+        updateSubmissionIndex(svc, indexRecord, 'SYSTEM_ERROR'),
+      ]);
 
       return Response.json({
         success: false, error: 'TRANSACTION_FAILED',
@@ -1155,16 +1164,19 @@ Deno.serve(async (req) => {
     try {
       const base44Fallback = createClientFromRequest(req);
       const svcFallback = base44Fallback.asServiceRole;
-      await logSubmission(svcFallback, {
-        ...submissionLog,
-        status: 'FAILED',
-        failure_type: 'SYSTEM',
-        http_status: 500,
-        error_code: 'INTERNAL_ERROR',
-        error_message: (outerError.message || 'Onverwachte fout').slice(0, 500),
-        timestamp_completed: new Date().toISOString(),
-        latency_ms: Date.now() - t0,
-      });
+      await Promise.all([
+        logSubmission(svcFallback, {
+          ...submissionLog,
+          status: 'FAILED',
+          failure_type: 'SYSTEM',
+          http_status: 500,
+          error_code: 'INTERNAL_ERROR',
+          error_message: (outerError.message || 'Onverwachte fout').slice(0, 500),
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        }),
+        updateSubmissionIndex(svcFallback, indexRecord, 'SYSTEM_ERROR'),
+      ]);
     } catch (_) { /* logging itself failed, nothing we can do */ }
     return Response.json({ success: false, error: 'INTERNAL_ERROR', message: 'Onverwachte fout' }, { status: 500 });
   }
