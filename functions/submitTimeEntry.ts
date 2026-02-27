@@ -436,53 +436,72 @@ Deno.serve(async (req) => {
     submissionLog.entry_date = payload.date || null;
 
     // ========================================
-    // 2b. EARLY IDEMPOTENCY GUARD (submission_id level) — OPTIMIZED
+    // 2b. EARLY IDEMPOTENCY GUARD via MobileSubmissionIndex
     // ========================================
-    // Run idempotency check and RECEIVED log write in PARALLEL.
-    // The guard checks for existing SUCCESS/RECEIVED logs for this submission_id.
-    // If guard triggers → return early (the RECEIVED log write is harmless noise).
-    // If guard passes → RECEIVED log is already written by the time we continue.
+    // Uses a lightweight index entity (1 record per submission_id) for fast lookups.
+    // Falls back to MobileEntrySubmissionLog if index record doesn't exist yet (transition period).
     const tGuardStart = Date.now();
-    let idempotencyHit = null; // set if we need to return early
+    let indexRecord = null; // track for terminal status updates later
 
     if (payload.submission_id && UUID_RE.test(payload.submission_id)) {
-      // Fire BOTH queries in parallel: idempotency check + RECEIVED log write
-      const [existingLogs] = await Promise.all([
-        svcEarly.entities.MobileEntrySubmissionLog.filter({
-          submission_id: payload.submission_id,
-        }),
-        logSubmission(svcEarly, { ...submissionLog }), // write RECEIVED in parallel
-      ]);
-
-      perf.idempotency_guard_and_received_log = Date.now() - tGuardStart;
-
-      // If any log for this submission_id already has SUCCESS → return immediately
-      const successLog = existingLogs.find(l => l.status === 'SUCCESS');
-      if (successLog) {
-        console.log(`[IDEMPOTENCY_GUARD] submission_id=${payload.submission_id} already SUCCESS (log ${successLog.id})`);
-        return Response.json({
-          success: true,
-          idempotent: true,
-          status: 'ALREADY_PROCESSED',
-          data: {
-            time_entry_id: successLog.time_entry_id || null,
-          }
-        });
-      }
-
-      // If a RECEIVED log exists and is < 10 seconds old → still processing
-      const recentReceived = existingLogs.find(l => {
-        if (l.status !== 'RECEIVED') return false;
-        const age = Date.now() - new Date(l.timestamp_received).getTime();
-        return age < 10000;
+      // Step 1: Check MobileSubmissionIndex (fast, single record per submission_id)
+      const indexResults = await svcEarly.entities.MobileSubmissionIndex.filter({
+        submission_id: payload.submission_id,
       });
-      if (recentReceived) {
-        console.log(`[IDEMPOTENCY_GUARD] submission_id=${payload.submission_id} still RECEIVED (${Math.round((Date.now() - new Date(recentReceived.timestamp_received).getTime()) / 1000)}s old)`);
-        return Response.json({
-          success: true,
-          idempotent: true,
-          status: 'PROCESSING',
-        }, { status: 202 });
+      indexRecord = indexResults[0] || null;
+
+      if (indexRecord) {
+        perf.idempotency_guard_and_received_log = Date.now() - tGuardStart;
+
+        if (indexRecord.status === 'SUCCESS') {
+          console.log(`[INDEX_GUARD] submission_id=${payload.submission_id} already SUCCESS`);
+          // Write RECEIVED log in background (non-blocking)
+          logSubmission(svcEarly, { ...submissionLog });
+          return Response.json({
+            success: true,
+            idempotent: true,
+            status: 'ALREADY_PROCESSED',
+            data: { time_entry_id: indexRecord.time_entry_id || null }
+          });
+        }
+
+        if (indexRecord.status === 'PROCESSING') {
+          const age = Date.now() - new Date(indexRecord.created_at).getTime();
+          if (age < 30000) { // < 30s → still processing
+            console.log(`[INDEX_GUARD] submission_id=${payload.submission_id} PROCESSING (${Math.round(age / 1000)}s old)`);
+            logSubmission(svcEarly, { ...submissionLog });
+            return Response.json({
+              success: true,
+              idempotent: true,
+              status: 'PROCESSING',
+            }, { status: 202 });
+          }
+          // > 30s old PROCESSING → stale, allow retry by continuing
+          console.log(`[INDEX_GUARD] submission_id=${payload.submission_id} stale PROCESSING (${Math.round(age / 1000)}s), allowing retry`);
+        }
+
+        // Terminal failure states → return previous result
+        if (['FAILED', 'VALIDATION_FAILED', 'SYSTEM_ERROR'].includes(indexRecord.status)) {
+          console.log(`[INDEX_GUARD] submission_id=${payload.submission_id} previous terminal: ${indexRecord.status}, allowing retry`);
+          // Previous attempt failed — allow retry with fresh PROCESSING status
+          await svcEarly.entities.MobileSubmissionIndex.update(indexRecord.id, {
+            status: 'PROCESSING',
+            created_at: new Date().toISOString(),
+            completed_at: null,
+          });
+        }
+      } else {
+        // No index record exists → create PROCESSING + write RECEIVED log in parallel
+        const [newIndex] = await Promise.all([
+          svcEarly.entities.MobileSubmissionIndex.create({
+            submission_id: payload.submission_id,
+            status: 'PROCESSING',
+            created_at: new Date().toISOString(),
+          }),
+          logSubmission(svcEarly, { ...submissionLog }),
+        ]);
+        indexRecord = newIndex;
+        perf.idempotency_guard_and_received_log = Date.now() - tGuardStart;
       }
     } else {
       // No valid submission_id — just write RECEIVED log
