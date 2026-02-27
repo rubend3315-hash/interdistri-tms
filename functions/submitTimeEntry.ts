@@ -545,17 +545,20 @@ Deno.serve(async (req) => {
         ? 'De geselecteerde datum komt niet overeen met de ingevoerde tijden. Vernieuw de pagina en probeer opnieuw.'
         : 'Validatie mislukt';
 
-      await logSubmission(svcEarly, {
-        ...submissionLog,
-        status: 'VALIDATION_FAILED',
-        failure_type: 'VALIDATION',
-        http_status: 400,
-        error_code: errorCode,
-        error_message: `${errors.slice(0, 3).join('; ')} | start_time_raw=${payload.start_time} | end_time_raw=${payload.end_time} | date=${payload.date}`,
-        employee_id: payload.employee_id || null,
-        timestamp_completed: new Date().toISOString(),
-        latency_ms: Date.now() - t0,
-      });
+      await Promise.all([
+        logSubmission(svcEarly, {
+          ...submissionLog,
+          status: 'VALIDATION_FAILED',
+          failure_type: 'VALIDATION',
+          http_status: 400,
+          error_code: errorCode,
+          error_message: `${errors.slice(0, 3).join('; ')} | start_time_raw=${payload.start_time} | end_time_raw=${payload.end_time} | date=${payload.date}`,
+          employee_id: payload.employee_id || null,
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        }),
+        updateSubmissionIndex(svcEarly, indexRecord, 'VALIDATION_FAILED'),
+      ]);
       return Response.json({ success: false, error: errorCode, message: errorMessage, details: errors }, { status: isDateMismatch ? 400 : 422 });
     }
 
