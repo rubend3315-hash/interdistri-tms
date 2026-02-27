@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useEntrySubmit } from "./useEntrySubmit";
 import { findOverlaps, validateBounds } from "./dienstRegelValidation";
 import { validateTimeEntryCore } from "../validation/timeEntryValidation";
+import { createClientSubmitLogger } from "./clientSubmitLogger";
 
 /**
  * useMobileSubmit — Handles validation + submit + draft save.
