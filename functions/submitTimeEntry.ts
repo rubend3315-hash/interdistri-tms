@@ -8,8 +8,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
-// submitTimeEntry v5.2 — MobileSubmissionIndex idempotency guard (2026-02-27)
+// submitTimeEntry v6.0 — Async recalculation (2026-02-27)
 // ============================================================
+// CHANGE: Trips, SPW, write-verify, post-commit guard, cleanup
+// and pre-resolve are now fire-and-forget via recalculateAfterTimeEntrySubmit.
+// The synchronous path only does: auth → idempotency → overlap → TE create → commit → SUCCESS.
 //
 // ARCHITECTURE:
 //   1. Dedicated submission_id field on TimeEntry (no notes parsing)
