@@ -7,7 +7,7 @@ import { format, getWeek, getYear } from "date-fns";
  * useMobileData — Central data fetching hook for mobile entry pages.
  * Zero entity calls in pages/components — all queries live here.
  */
-export function useMobileData(user) {
+export function useMobileData(user, selectedDate) {
   const queryClient = useQueryClient();
 
   const { data: employees = [] } = useQuery({
