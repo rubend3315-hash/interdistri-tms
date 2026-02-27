@@ -44,7 +44,11 @@ export function useEntrySubmit() {
       let signatureUrl = signature;
       if (signature && signature.startsWith('data:')) {
         const blob = await fetch(signature).then(r => r.blob());
-        const file = new File([blob], `sig-${Date.now()}.png`, { type: 'image/png' });
+        // Detect MIME from data URL (JPEG from compressor, PNG legacy)
+        const mimeMatch = signature.match(/^data:(image\/\w+);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const ext = mime === 'image/jpeg' ? 'jpg' : 'png';
+        const file = new File([blob], `sig-${Date.now()}.${ext}`, { type: mime });
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         signatureUrl = file_url;
       }
