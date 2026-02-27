@@ -84,13 +84,13 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
 
   useEffect(() => {
     // CRITICAL: Don't autosave until server draft has been loaded/attempted
-    // Otherwise localStorage overwrites with stale data before server draft arrives
     if (!draftLoaded) return;
 
     setIsSaving(true);
     const timer = setTimeout(() => {
       try {
-        localStorage.setItem(storageKey, JSON.stringify({
+        const key = getStorageKey(formData.date);
+        localStorage.setItem(key, JSON.stringify({
           formData, dienstRegels, savedAt: Date.now()
         }));
         setLastSavedAt(Date.now());
@@ -98,7 +98,32 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       setIsSaving(false);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [formData, dienstRegels, storageKey, draftLoaded]);
+  }, [formData, dienstRegels, draftLoaded, currentEmployee?.id]);
+
+  // =============================================
+  // DATE CHANGE DETECTION — reset + reload draft
+  // =============================================
+  useEffect(() => {
+    const newDate = formData.date;
+    if (newDate === currentDateRef.current) return;
+    
+    console.log(`[useMobileForm] Date changed: ${currentDateRef.current} → ${newDate}`);
+    currentDateRef.current = newDate;
+
+    // 1. Reset form fields for new date
+    const localDraft = loadLocalDraft(newDate);
+    if (localDraft?.formData) {
+      setFormData(localDraft.formData);
+      setDienstRegels(localDraft.dienstRegels || []);
+    } else {
+      setFormData(makeEmptyForm(newDate));
+      setDienstRegels([]);
+    }
+    setSignature(null);
+
+    // 2. Re-trigger server draft loading for new date
+    setDraftLoaded(false);
+  }, [formData.date]);
 
   // --- AUTO_RIT: generate 1 rit when PostNL klanttype selected ---
   const [autoRitDismissed, setAutoRitDismissed] = useState(false);
