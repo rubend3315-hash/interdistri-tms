@@ -8,7 +8,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
-// submitTimeEntry v5.0 — Date-time mismatch guard + overlap hardening (2026-02-27)
+// submitTimeEntry v5.1 — Nightshift-proof overlap engine (2026-02-27)
 // ============================================================
 //
 // ARCHITECTURE:
