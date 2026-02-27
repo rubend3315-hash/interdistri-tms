@@ -118,6 +118,8 @@ export function useMobileSubmit({
     const msg = result.message;
     
     if (code === 'DUPLICATE_SUBMISSION') return 'Deze dienst is al ingediend. Ververs de pagina.';
+    if (code === 'ALREADY_APPROVED') return msg || 'Voor deze datum bestaat al een goedgekeurde dienst.';
+    if (code === 'DATE_TIME_MISMATCH') return msg || 'De geselecteerde datum komt niet overeen met de ingevoerde tijden. Vernieuw de pagina en probeer opnieuw.';
     if (code === 'TIME_OVERLAP' || code === 'DATE_OVERLAP' || code === 'OVERLAP_DETECTED') return msg || 'Overlap met bestaande dienst gedetecteerd.';
     if (code === 'CONCURRENT_SUBMIT') return 'Gelijktijdige submit gedetecteerd — probeer opnieuw.';
     if (code === 'VALIDATION_ERROR' || code === 'VALIDATION_FAILED') {
