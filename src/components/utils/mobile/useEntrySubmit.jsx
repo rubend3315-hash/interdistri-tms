@@ -89,6 +89,28 @@ export function useEntrySubmit() {
           })),
       };
 
+      // --- Client log: CLICKED ---
+      await clientLogger.logClicked(submissionId, payload, signature);
+
+      // --- Abort detection: if page unloads while request is in flight ---
+      let abortCleanup = null;
+      const setupAbortDetection = () => {
+        const onVisibilityChange = () => {
+          if (document.visibilityState === 'hidden') {
+            clientLogger.logAborted();
+          }
+        };
+        const onBeforeUnload = () => {
+          clientLogger.logAborted();
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('beforeunload', onBeforeUnload);
+        return () => {
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+          window.removeEventListener('beforeunload', onBeforeUnload);
+        };
+      };
+
       // Check connectivity at moment of submit (not stale React state)
       const currentlyOnline = navigator.onLine;
 
@@ -99,17 +121,28 @@ export function useEntrySubmit() {
         return { success: true, offline: true };
       }
 
+      // --- Client log: REQUEST_STARTED ---
+      await clientLogger.logRequestStarted();
+      abortCleanup = setupAbortDetection();
+
       // Online: single atomic API call
       const response = await base44.functions.invoke('submitTimeEntry', payload);
       const result = response.data;
 
+      // Clean up abort listeners
+      if (abortCleanup) abortCleanup();
+
       if (result.success) {
+        // --- Client log: RESPONSE_OK ---
+        await clientLogger.logResponseOk();
         return {
           success: true,
           offline: false,
           data: result.data,
         };
       } else {
+        // --- Client log: RESPONSE_ERROR ---
+        await clientLogger.logResponseError(result.error + ': ' + (result.message || ''));
         return {
           success: false,
           error: result.error,
@@ -119,6 +152,10 @@ export function useEntrySubmit() {
       }
 
     } catch (error) {
+      // --- Client log: RESPONSE_ERROR ---
+      const errMsg = error?.response?.data?.message || error?.message || 'Unknown error';
+      await clientLogger.logResponseError(errMsg);
+
       // Distinguish axios response errors from network errors
       if (error?.response) {
         // Backend returned an HTTP error (4xx, 5xx)
@@ -126,8 +163,6 @@ export function useEntrySubmit() {
         const data = error.response.data;
         
         if (status === 409) {
-          // Backend sends specific error codes: TIME_OVERLAP, DATE_OVERLAP, CONCURRENT_SUBMIT, DUPLICATE_SUBMISSION
-          // Pass through the actual backend error code instead of hardcoding
           return { success: false, error: data?.error || 'DUPLICATE_SUBMISSION', message: data?.message || 'Conflict gedetecteerd', details: data?.details || [] };
         }
         if (status === 422) {
