@@ -129,6 +129,8 @@ export function useMobileSubmit({
     if (code === 'EMPLOYEE_NOT_FOUND' || code === 'EMPLOYEE_INACTIVE') return 'Medewerker niet gevonden of niet actief — neem contact op met je supervisor.';
     if (code === 'ALREADY_SUBMITTING') return 'Bezig met indienen, even geduld...';
     if (code === 'NETWORK_ERROR') return 'Geen verbinding — probeer opnieuw.';
+    if (code === 'CLIENT_TIMEOUT') return 'Verbinding duurt te lang — controleer je internet en probeer opnieuw.';
+    if (code === 'PAYLOAD_TOO_LARGE') return msg || 'Payload te groot — probeer de handtekening opnieuw te zetten.';
     if (code === 'TRANSACTION_FAILED') return 'Indienen mislukt — probeer opnieuw.';
     return msg || 'Er is een fout opgetreden bij het indienen.';
   }, []);
