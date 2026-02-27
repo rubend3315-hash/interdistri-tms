@@ -62,14 +62,16 @@ function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, st
     return exEffEnd >= date && e.date <= newEffEnd;
   });
 
+  // ALREADY_APPROVED check: only block if there's an actual time overlap
   const approvedOnDate = committed.find(e =>
     e.status === 'Goedgekeurd' && e.date === date && (!e.end_date || e.end_date === e.date)
+    && servicesOverlap(e, incomingEntry)
   );
   if (approvedOnDate && (!excludeId || approvedOnDate.id !== excludeId)) {
     return {
       overlaps: true,
       errorCode: 'ALREADY_APPROVED',
-      errorMsg: 'Voor deze datum bestaat al een goedgekeurde dienst.',
+      errorMsg: 'Voor deze datum bestaat al een goedgekeurde dienst die overlapt.',
       existingId: approvedOnDate.id,
     };
   }
