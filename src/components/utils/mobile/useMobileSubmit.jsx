@@ -152,11 +152,20 @@ export function useMobileSubmit({
       ? { ...formData, notes: `[GEEN_RIT] ${geenRitReden}${formData.notes ? '\n' + formData.notes : ''}` }
       : formData;
 
+    // Check signature size warning
+    const sigLogger = createClientSubmitLogger({ userEmail: currentEmployee?.email || '', employeeId: currentEmployee?.id || '', entryDate: formData.date });
+    const sigWarning = sigLogger.getSignatureWarning(finalSignature);
+    if (sigWarning) {
+      toast.warning(sigWarning, { duration: 8000 });
+    }
+
     const result = await submitEntry({
       formData: finalFormData,
       trips: geenRit ? [] : trips,
       standplaatsWerk: geenRit ? [] : standplaatsWerk,
       signature: finalSignature,
+      userEmail: currentEmployee?.email || '',
+      employeeId: currentEmployee?.id || '',
     });
 
     if (result.success) {
