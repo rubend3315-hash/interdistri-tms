@@ -795,36 +795,33 @@ Deno.serve(async (req) => {
       perf.write_verify = Date.now() - tVerify;
 
       // ========================================
-      // 9. POST-COMMIT OVERLAP GUARD (uses same servicesOverlap engine)
+      // 9. POST-COMMIT OVERLAP GUARD (uses same validateTimeEntryOverlap)
       // ========================================
       const tPostCommit = Date.now();
-      // Re-fetch all for this employee for post-commit check (no date operators)
       const postCommitAll = await svc.entities.TimeEntry.filter({
         employee_id: empId,
       });
-      const postCommitCandidates = postCommitAll.filter(e => e.date >= queryStart && e.date <= queryEnd);
-      const postCommitOverlaps = postCommitCandidates.filter(e =>
-        e.id !== te.id &&
-        (e.status === 'Ingediend' || e.status === 'Goedgekeurd') &&
-        (e.end_date || e.date) >= payload.date &&
-        e.date <= entryEnd
+      // Exclude the entry we just committed from the candidates
+      const postCommitCandidates = postCommitAll.filter(e => e.id !== te.id && e.date >= queryStart && e.date <= queryEnd);
+
+      const postOverlap = validateTimeEntryOverlap(
+        postCommitCandidates, empId, payload.date, payload.end_date || null,
+        payload.start_time, payload.end_time
       );
 
-      for (const oc of postCommitOverlaps) {
-        if (servicesOverlap(oc, incomingEntry) && oc.created_date < te.created_date) {
-          const ocEnd = oc.end_date || oc.date;
-          const isSameDay = !payload.end_date && !oc.end_date && payload.date === oc.date;
-          const errorCode = isSameDay ? 'TIME_OVERLAP' : 'DATE_OVERLAP';
-          const errorMsg = `Gelijktijdige overlap gedetecteerd met dienst ${isSameDay ? `${oc.start_time}-${oc.end_time}` : `${oc.date} t/m ${ocEnd}`}`;
-          console.log(`[POST-COMMIT ${errorCode}] Rolling back ${te.id}, older entry ${oc.id} wins`);
+      if (postOverlap.overlaps) {
+        // Only roll back if the existing entry is older (it was committed first)
+        const existingEntry = postCommitCandidates.find(e => e.id === postOverlap.existingId);
+        if (existingEntry && existingEntry.created_date < te.created_date) {
+          console.log(`[POST-COMMIT ${postOverlap.errorCode}] Rolling back ${te.id}, older entry ${postOverlap.existingId} wins`);
           await svc.entities.TimeEntry.update(te.id, { status: 'Concept' });
           for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
           for (const sid of created.spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
           await safeDelete(svc.entities.TimeEntry, te.id, 'overlap-te');
           return Response.json({
-            success: false, error: errorCode,
-            message: errorMsg,
-            details: [`Bestaande dienst: ${oc.id}`]
+            success: false, error: postOverlap.errorCode,
+            message: `Gelijktijdige overlap gedetecteerd: ${postOverlap.errorMsg}`,
+            details: [`Bestaande dienst: ${postOverlap.existingId}`]
           }, { status: 409 });
         }
       }
