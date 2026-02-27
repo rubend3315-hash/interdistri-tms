@@ -391,6 +391,19 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     perf.auth = Date.now() - t0;
     if (!user) {
+      // No svc available yet, use best-effort logging
+      try {
+        const svcFb = base44.asServiceRole;
+        await logSubmission(svcFb, {
+          ...submissionLog,
+          status: 'VALIDATION_FAILED',
+          http_status: 401,
+          error_code: 'UNAUTHORIZED',
+          error_message: 'Niet ingelogd',
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        });
+      } catch (_) {}
       return Response.json({ success: false, error: 'UNAUTHORIZED', message: 'Niet ingelogd' }, { status: 401 });
     }
     submissionLog.user_id = user.id;
