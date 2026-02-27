@@ -24,8 +24,9 @@ Deno.serve(async (req) => {
       status: 'RECEIVED',
     }, '-created_date', 200);
 
-    // Filter: older than threshold, not yet marked as stuck
+    // Filter: older than threshold, not yet marked as stuck (or already auto_resolved)
     const candidateLogs = receivedLogs.filter(log => {
+      if (log.auto_resolved === true) return false; // Already resolved, skip
       if (log.stuck_detected === true) return false;
       if (log.timestamp_completed) return false;
       const receivedAt = log.timestamp_received || log.created_date;
@@ -36,27 +37,40 @@ Deno.serve(async (req) => {
     // 1b. Cross-check: exclude RECEIVED logs where a SUCCESS record
     //     already exists for the same submission_id (immutable log pattern)
     // ========================================
+    // Also re-check previously stuck-marked logs that may now have a SUCCESS sibling
+    const previouslyStuckLogs = receivedLogs.filter(log =>
+      log.stuck_detected === true && log.auto_resolved !== true
+    );
+
     const stuckLogs = [];
-    for (const log of candidateLogs) {
-      if (log.submission_id) {
+    const allCandidates = [...candidateLogs, ...previouslyStuckLogs];
+    const processedIds = new Set();
+
+    for (const log of allCandidates) {
+      if (processedIds.has(log.id)) continue;
+      processedIds.add(log.id);
+
+      if (log.submission_id && log.submission_id !== 'unknown') {
         const siblingLogs = await svc.entities.MobileEntrySubmissionLog.filter({
           submission_id: log.submission_id,
         });
         const hasSuccess = siblingLogs.some(s => s.id !== log.id && (s.status === 'SUCCESS' || s.status === 'IDEMPOTENT_HIT'));
         if (hasSuccess) {
           // Not stuck — the submission completed successfully via a sibling record.
-          // Auto-close this orphan RECEIVED record.
-          console.log(`[STUCK_MONITOR] RECEIVED ${log.id} has SUCCESS sibling for submission_id=${log.submission_id} — auto-closing`);
+          // Mark as auto_resolved. Do NOT change status (immutable pattern intact).
+          console.log(`[STUCK_MONITOR] RECEIVED ${log.id} has SUCCESS sibling for submission_id=${log.submission_id} — marking auto_resolved`);
           await svc.entities.MobileEntrySubmissionLog.update(log.id, {
-            status: 'SUCCESS',
-            error_code: 'AUTO_CLOSED',
-            error_message: 'Automatisch gesloten — SUCCESS sibling gevonden',
-            timestamp_completed: new Date().toISOString(),
+            stuck_detected: false,
+            auto_resolved: true,
+            error_code: null,
           });
           continue;
         }
       }
-      stuckLogs.push(log);
+      // Only add new candidates (not previously stuck) to the stuck list
+      if (!log.stuck_detected) {
+        stuckLogs.push(log);
+      }
     }
 
     if (stuckLogs.length === 0) {

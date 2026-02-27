@@ -31,7 +31,7 @@ export default function MobileEntryStatusCard() {
     const total = todayLogs.filter(l => l.status !== "RECEIVED").length;
     const success = todayLogs.filter(l => l.status === "SUCCESS").length;
     const failed = todayLogs.filter(l => l.status === "FAILED" || l.status === "VALIDATION_FAILED").length;
-    const stuckCount = todayLogs.filter(l => l.stuck_detected === true).length;
+    const stuckCount = todayLogs.filter(l => l.stuck_detected === true && l.auto_resolved !== true).length;
 
     const latencies = todayLogs
       .filter(l => l.status === "SUCCESS" && l.latency_ms > 0)
