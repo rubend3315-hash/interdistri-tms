@@ -474,10 +474,9 @@ export default function TimeTracking() {
         await base44.functions.invoke('deleteTimeEntryCascade', { id: selectedEntry.id });
       }
 
-      const created1 = await base44.entities.TimeEntry.create(entry1);
-      const created2 = await base44.entities.TimeEntry.create(entry2);
-      await base44.functions.invoke('approveTimeEntry', { time_entry_id: created1.id });
-      await base44.functions.invoke('approveTimeEntry', { time_entry_id: created2.id });
+      // Use adminCreateTimeEntry with overlap validation for both split entries
+      const response = await base44.functions.invoke('adminCreateTimeEntry', { entries: [entry1, entry2] });
+      if (!response.data?.success) throw new Error(response.data?.message || 'Aanmaken mislukt');
       queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
       setIsDialogOpen(false);
       return;
