@@ -368,6 +368,7 @@ async function logSubmission(svc, data) {
 // --- MAIN HANDLER ---
 
 Deno.serve(async (req) => {
+  console.log('ACTIVE_SUBMIT_FUNCTION_REACHED — submitTimeEntry v5.1');
   const t0 = Date.now();
   const userAgent = req.headers.get('user-agent') || '';
   const submissionLog = {
