@@ -62,12 +62,12 @@ Deno.serve(async (req) => {
     const newlyStuck = [];
 
     for (const log of oldReceived) {
-      const hasSuccessSibling = log.submission_id
+      const hasTerminalSibling = log.submission_id
         && log.submission_id !== 'unknown'
-        && successIds.has(log.submission_id);
+        && terminalIds.has(log.submission_id);
 
-      if (hasSuccessSibling) {
-        // SUCCESS sibling found → NOT stuck, auto-resolve
+      if (hasTerminalSibling) {
+        // Terminal sibling found → NOT stuck, auto-resolve
         if (log.stuck_detected !== false || log.auto_resolved !== true) {
           await svc.entities.MobileEntrySubmissionLog.update(log.id, {
             stuck_detected: false,
