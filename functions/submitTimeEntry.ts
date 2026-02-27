@@ -397,6 +397,7 @@ Deno.serve(async (req) => {
         await logSubmission(svcFb, {
           ...submissionLog,
           status: 'VALIDATION_FAILED',
+          failure_type: 'VALIDATION',
           http_status: 401,
           error_code: 'UNAUTHORIZED',
           error_message: 'Niet ingelogd',
@@ -421,6 +422,7 @@ Deno.serve(async (req) => {
       await logSubmission(svcEarly, {
         ...submissionLog,
         status: 'VALIDATION_FAILED',
+        failure_type: 'VALIDATION',
         http_status: 400,
         error_code: 'INVALID_JSON',
         error_message: 'Ongeldig JSON in request body',
@@ -499,6 +501,7 @@ Deno.serve(async (req) => {
       await logSubmission(svcEarly, {
         ...submissionLog,
         status: 'VALIDATION_FAILED',
+        failure_type: 'VALIDATION',
         http_status: 400,
         error_code: errorCode,
         error_message: `${errors.slice(0, 3).join('; ')} | start_time_raw=${payload.start_time} | end_time_raw=${payload.end_time} | date=${payload.date}`,
@@ -520,6 +523,7 @@ Deno.serve(async (req) => {
       await logSubmission(svcEarly, {
         ...submissionLog,
         status: 'VALIDATION_FAILED',
+        failure_type: 'VALIDATION',
         http_status: 403,
         error_code: 'EMPLOYEE_NOT_FOUND',
         error_message: 'Geen medewerker voor dit account',
@@ -542,6 +546,7 @@ Deno.serve(async (req) => {
         await logSubmission(svcEarly, {
           ...submissionLog,
           status: 'VALIDATION_FAILED',
+          failure_type: 'VALIDATION',
           http_status: 403,
           error_code: 'EMPLOYEE_INACTIVE',
           error_message: 'Dienstverband beëindigd, grace-periode verlopen',
@@ -573,6 +578,7 @@ Deno.serve(async (req) => {
       await logSubmission(svc, {
         ...submissionLog,
         status: 'IDEMPOTENT_HIT',
+        failure_type: 'IDEMPOTENT',
         http_status: 200,
         time_entry_id: committed.id,
         timestamp_completed: new Date().toISOString(),
@@ -659,6 +665,7 @@ Deno.serve(async (req) => {
       await logSubmission(svc, {
         ...submissionLog,
         status: 'VALIDATION_FAILED',
+        failure_type: 'BUSINESS',
         http_status: 409,
         error_code: overlapResult.errorCode,
         error_message: overlapResult.errorMsg,
@@ -822,6 +829,7 @@ Deno.serve(async (req) => {
           await logSubmission(svc, {
             ...submissionLog,
             status: 'VALIDATION_FAILED',
+            failure_type: 'BUSINESS',
             http_status: 409,
             error_code: 'CONCURRENT_SUBMIT',
             error_message: 'Gelijktijdige submit gedetecteerd',
@@ -869,6 +877,7 @@ Deno.serve(async (req) => {
         await logSubmission(svc, {
           ...submissionLog,
           status: 'CRITICAL_WRITE_MISSING',
+          failure_type: 'SYSTEM',
           http_status: 500,
           error_code: 'WRITE_VERIFICATION_FAILED',
           error_message: `TimeEntry create returned ID ${te.id} but record not found or not Ingediend in verification step`,
@@ -909,6 +918,7 @@ Deno.serve(async (req) => {
           await logSubmission(svc, {
             ...submissionLog,
             status: 'VALIDATION_FAILED',
+            failure_type: 'BUSINESS',
             http_status: 409,
             error_code: 'POST_COMMIT_' + postOverlap.errorCode,
             error_message: `Gelijktijdige overlap: ${postOverlap.errorMsg}`,
@@ -1062,6 +1072,7 @@ Deno.serve(async (req) => {
       await logSubmission(svc, {
         ...submissionLog,
         status: 'FAILED',
+        failure_type: 'SYSTEM',
         http_status: 500,
         error_code: 'TRANSACTION_FAILED',
         error_message: (txError.message || 'Onbekende fout').slice(0, 500),
@@ -1086,6 +1097,7 @@ Deno.serve(async (req) => {
       await logSubmission(svcFallback, {
         ...submissionLog,
         status: 'FAILED',
+        failure_type: 'SYSTEM',
         http_status: 500,
         error_code: 'INTERNAL_ERROR',
         error_message: (outerError.message || 'Onverwachte fout').slice(0, 500),
