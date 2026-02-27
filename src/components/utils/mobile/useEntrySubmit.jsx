@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { addToSyncQueue } from '@/components/utils/offlineStorage';
 import { createClientSubmitLogger } from './clientSubmitLogger';
+import { invokeWithRetry, checkPayloadSize, isSafari } from './safariHardenedFetch';
 
 /**
  * useEntrySubmit — Client-side hook for atomic time entry submission
