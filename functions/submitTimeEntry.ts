@@ -8,8 +8,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
-// submitTimeEntry v5.2 — MobileSubmissionIndex idempotency guard (2026-02-27)
+// submitTimeEntry v6.0 — Async recalculation (2026-02-27)
 // ============================================================
+// CHANGE: Trips, SPW, write-verify, post-commit guard, cleanup
+// and pre-resolve are now fire-and-forget via recalculateAfterTimeEntrySubmit.
+// The synchronous path only does: auth → idempotency → overlap → TE create → commit → SUCCESS.
 //
 // ARCHITECTURE:
 //   1. Dedicated submission_id field on TimeEntry (no notes parsing)
@@ -910,7 +913,7 @@ Deno.serve(async (req) => {
       }
 
       // ========================================
-      // 8. TRANSACTION PHASE 2: COMMIT (direct, no Trips/SPW yet)
+      // 8. TRANSACTION PHASE 2: COMMIT (direct, no trips/SPW yet)
       // ========================================
       const tCommit = Date.now();
       await svc.entities.TimeEntry.update(te.id, { status: 'Ingediend' });
@@ -922,7 +925,7 @@ Deno.serve(async (req) => {
       perf.total = Date.now() - t0;
       console.log('[PERF]', JSON.stringify(perf));
 
-      // Persist perf log
+      // Persist perf log (synchronous path only)
       try {
         await svc.entities.MobileEntryPerformanceLog.create({
           submission_id: payload.submission_id,
@@ -935,10 +938,10 @@ Deno.serve(async (req) => {
           overlap_fetch_ms: perf.overlap_fetch || null,
           overlap_check_ms: perf.overlap_check_total || null,
           timeentry_create_ms: perf.timeentry_create || null,
-          trips_and_spw_create_ms: null,
+          trips_and_spw_create_ms: null, // async now
           commit_ms: perf.commit || null,
-          write_verify_ms: null,
-          post_commit_guard_ms: null,
+          write_verify_ms: null, // async now
+          post_commit_guard_ms: null, // async now
           total_ms: perf.total,
           outcome: 'SUCCESS',
         });
@@ -946,9 +949,6 @@ Deno.serve(async (req) => {
 
       // Update index to SUCCESS + write audit log in parallel
       const tEnd = Date.now();
-      const latencyOverlap = perf.overlap_check_total || 0;
-      const latencyWrite = (perf.timeentry_create || 0) + (perf.commit || 0);
-
       await Promise.all([
         logSubmission(svc, {
           ...submissionLog,
@@ -958,44 +958,41 @@ Deno.serve(async (req) => {
           employee_id: empId,
           timestamp_completed: new Date().toISOString(),
           latency_ms: tEnd - t0,
-          latency_overlap_ms: latencyOverlap,
-          latency_write_ms: latencyWrite,
-          latency_recalc_ms: 0,
-          latency_finalize_ms: 0,
         }),
-        updateSubmissionIndex(svc, indexRecord, 'SUCCESS', { time_entry_id: te.id, employee_id: empId, recalc_status: 'PENDING' }),
+        updateSubmissionIndex(svc, indexRecord, 'SUCCESS', { time_entry_id: te.id, employee_id: empId }),
       ]);
 
       // ========================================
-      // 10. FIRE-AND-FORGET: Async recalculation
+      // 10. FIRE-AND-FORGET: async recalculation
       // ========================================
-      // Trips, SPW, write-verify, post-commit guard, cleanup all happen async.
-      // NOT awaited — does not block HTTP response.
-      svc.functions.invoke('recalculateAfterTimeEntrySubmit', {
+      // Trips, SPW, write-verify, post-commit overlap guard, cleanup, pre-resolve
+      // are all handled by the background function. NOT awaited.
+      base44.asServiceRole.functions.invoke('recalculateAfterTimeEntrySubmit', {
         time_entry_id: te.id,
         employee_id: empId,
         submission_id: payload.submission_id,
-        trips: payload.trips || [],
-        standplaats_werk: payload.standplaats_werk || [],
         date: payload.date,
-        end_date: payload.end_date || null,
+        end_date: endD,
         start_time: payload.start_time,
         end_time: payload.end_time,
-      }).catch(err => console.error('[ASYNC_RECALC] Fire-and-forget failed:', err.message));
+        trips: payload.trips || [],
+        standplaats_werk: payload.standplaats_werk || [],
+        user_email: user.email,
+      }).catch(err => console.error('[ASYNC_FIRE] Failed to invoke recalculateAfterTimeEntrySubmit:', err.message));
 
       return Response.json({
         success: true,
         data: {
           time_entry_id: te.id,
-          trip_ids: [],
-          standplaats_werk_ids: [],
+          trip_ids: [], // will be created async
+          standplaats_werk_ids: [], // will be created async
           computed: { total_hours: totalHours, shift_type: st, week_number: wk, year: yr }
         }
       });
 
     } catch (txError) {
       // ========================================
-      // ROLLBACK — clean newly created records only
+      // ROLLBACK — clean TimeEntry only (no trips/SPW in sync path)
       // ========================================
       perf.total = Date.now() - t0;
       console.log('[PERF]', JSON.stringify(perf));
@@ -1013,10 +1010,7 @@ Deno.serve(async (req) => {
           overlap_fetch_ms: perf.overlap_fetch || null,
           overlap_check_ms: perf.overlap_check_total || null,
           timeentry_create_ms: perf.timeentry_create || null,
-          trips_and_spw_create_ms: perf.trips_and_spw_create || null,
           commit_ms: perf.commit || null,
-          write_verify_ms: perf.write_verify || null,
-          post_commit_guard_ms: perf.post_commit_guard || null,
           total_ms: perf.total,
           outcome: 'FAILED',
         });
