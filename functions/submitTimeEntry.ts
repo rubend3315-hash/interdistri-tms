@@ -8,11 +8,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
-// submitTimeEntry v6.0 — Async recalculation (2026-02-27)
+// submitTimeEntry v5.2 — MobileSubmissionIndex idempotency guard (2026-02-27)
 // ============================================================
-// CHANGE: Trips, SPW, write-verify, post-commit guard, cleanup
-// and pre-resolve are now fire-and-forget via recalculateAfterTimeEntrySubmit.
-// The synchronous path only does: auth → idempotency → overlap → TE create → commit → SUCCESS.
 //
 // ARCHITECTURE:
 //   1. Dedicated submission_id field on TimeEntry (no notes parsing)
@@ -912,135 +909,20 @@ Deno.serve(async (req) => {
         // else: we are older, the other one should yield to us
       }
 
-      // --- Create Trips ---
-      for (const trip of payload.trips) {
-        const t = await svc.entities.Trip.create(sanitizeTrip(trip, empId, payload.date, te.id));
-        created.tripIds.push(t.id);
-      }
-
-      // --- Create StandplaatsWerk ---
-      for (const spw of (payload.standplaats_werk || [])) {
-        if (spw.customer_id || spw.activity_id) {
-          const s = await svc.entities.StandplaatsWerk.create(sanitizeSPW(spw, empId, payload.date, te.id));
-          created.spwIds.push(s.id);
-        }
-      }
-
       // ========================================
-      // 8. TRANSACTION PHASE 2: COMMIT
+      // 8. TRANSACTION PHASE 2: COMMIT (direct, no Trips/SPW yet)
       // ========================================
       const tCommit = Date.now();
-      perf.trips_and_spw_create = tCommit - (tCreate + (perf.timeentry_create || 0));
       await svc.entities.TimeEntry.update(te.id, { status: 'Ingediend' });
       perf.commit = Date.now() - tCommit;
 
       // ========================================
-      // 8b. WRITE CONFIRMATION GUARD
-      // ========================================
-      const tVerify = Date.now();
-      const verifyEntries = await svc.entities.TimeEntry.filter({ employee_id: empId, submission_id: payload.submission_id });
-      const verifyEntry = verifyEntries.find(e => e.id === te.id && e.status === 'Ingediend');
-      if (!verifyEntry) {
-        await logSubmission(svc, {
-          ...submissionLog,
-          status: 'CRITICAL_WRITE_MISSING',
-          failure_type: 'SYSTEM',
-          http_status: 500,
-          error_code: 'WRITE_VERIFICATION_FAILED',
-          error_message: `TimeEntry create returned ID ${te.id} but record not found or not Ingediend in verification step`,
-          employee_id: empId,
-          time_entry_id: te.id,
-          timestamp_completed: new Date().toISOString(),
-          latency_ms: Date.now() - t0,
-        });
-        throw new Error(`TimeEntry write verification failed for ${te.id}`);
-      }
-
-      perf.write_verify = Date.now() - tVerify;
-
-      // ========================================
-      // 9. POST-COMMIT OVERLAP GUARD (uses same validateTimeEntryOverlap)
-      // ========================================
-      const tPostCommit = Date.now();
-      const postCommitAll = await svc.entities.TimeEntry.filter({
-        employee_id: empId,
-      });
-      // Exclude the entry we just committed from the candidates
-      const postCommitCandidates = postCommitAll.filter(e => e.id !== te.id && e.date >= queryStart && e.date <= queryEnd);
-
-      const postOverlap = validateTimeEntryOverlap(
-        postCommitCandidates, empId, payload.date, payload.end_date || null,
-        payload.start_time, payload.end_time
-      );
-
-      if (postOverlap.overlaps) {
-        // Only roll back if the existing entry is older (it was committed first)
-        const existingEntry = postCommitCandidates.find(e => e.id === postOverlap.existingId);
-        if (existingEntry && existingEntry.created_date < te.created_date) {
-          console.log(`[POST-COMMIT ${postOverlap.errorCode}] Rolling back ${te.id}, older entry ${postOverlap.existingId} wins`);
-          await svc.entities.TimeEntry.update(te.id, { status: 'Concept' });
-          for (const tid of created.tripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
-          for (const sid of created.spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
-          await safeDelete(svc.entities.TimeEntry, te.id, 'overlap-te');
-          await Promise.all([
-            logSubmission(svc, {
-              ...submissionLog,
-              status: 'VALIDATION_FAILED',
-              failure_type: 'BUSINESS',
-              http_status: 409,
-              error_code: 'POST_COMMIT_' + postOverlap.errorCode,
-              error_message: `Gelijktijdige overlap: ${postOverlap.errorMsg}`,
-              employee_id: empId,
-              timestamp_completed: new Date().toISOString(),
-              latency_ms: Date.now() - t0,
-            }),
-            updateSubmissionIndex(svc, indexRecord, 'FAILED'),
-          ]);
-          return Response.json({
-            success: false, error: postOverlap.errorCode,
-            message: `Gelijktijdige overlap gedetecteerd: ${postOverlap.errorMsg}`,
-            details: [`Bestaande dienst: ${postOverlap.existingId}`]
-          }, { status: 409 });
-        }
-      }
-
-      perf.post_commit_guard = Date.now() - tPostCommit;
-
-      // ========================================
-      // 10. POST-COMMIT CLEANUP (best-effort, non-critical)
-      // ========================================
-      // Clean ALL Concept entries for this employee that overlap with the
-      // committed dienst range. This catches orphan drafts from date changes.
-      try {
-        const oldDrafts = rangedCandidates.filter(e => {
-          if (e.status !== 'Concept' || e.id === te.id) return false;
-          const draftEnd = e.end_date || e.date;
-          // Draft overlaps with committed range?
-          return e.date <= entryEnd && draftEnd >= payload.date;
-        });
-        for (const draft of oldDrafts) {
-          console.log(`[CLEANUP] Removing overlapping draft ${draft.id} (${draft.date}→${draft.end_date || draft.date})`);
-          const [dTrips, dSpw] = await Promise.all([
-            svc.entities.Trip.filter({ time_entry_id: draft.id }),
-            svc.entities.StandplaatsWerk.filter({ time_entry_id: draft.id }),
-          ]);
-          await Promise.all([
-            ...dTrips.map(t => safeDelete(svc.entities.Trip, t.id, 'cleanup-trip')),
-            ...dSpw.map(s => safeDelete(svc.entities.StandplaatsWerk, s.id, 'cleanup-spw')),
-          ]);
-          await safeDelete(svc.entities.TimeEntry, draft.id, 'cleanup-te');
-        }
-      } catch (cleanupErr) {
-        console.error('[CLEANUP NON-CRITICAL]', cleanupErr.message);
-      }
-
-      // ========================================
-      // 11. SUCCESS
+      // 9. SUCCESS — return immediately, async recalc follows
       // ========================================
       perf.total = Date.now() - t0;
       console.log('[PERF]', JSON.stringify(perf));
 
-      // Persist perf log for every submission
+      // Persist perf log
       try {
         await svc.entities.MobileEntryPerformanceLog.create({
           submission_id: payload.submission_id,
@@ -1053,23 +935,20 @@ Deno.serve(async (req) => {
           overlap_fetch_ms: perf.overlap_fetch || null,
           overlap_check_ms: perf.overlap_check_total || null,
           timeentry_create_ms: perf.timeentry_create || null,
-          trips_and_spw_create_ms: perf.trips_and_spw_create || null,
+          trips_and_spw_create_ms: null,
           commit_ms: perf.commit || null,
-          write_verify_ms: perf.write_verify || null,
-          post_commit_guard_ms: perf.post_commit_guard || null,
+          write_verify_ms: null,
+          post_commit_guard_ms: null,
           total_ms: perf.total,
           outcome: 'SUCCESS',
         });
       } catch (perfErr) { console.error('[PERF_LOG]', perfErr.message); }
 
-      // Compute phase-level latency breakdown for analysis
-      const tEnd = Date.now();
-      const latencyOverlap = perf.overlap_check_total || 0; // auth → end of overlap+break calc
-      const latencyWrite = (perf.timeentry_create || 0) + (perf.trips_and_spw_create || 0) + (perf.commit || 0);
-      const latencyRecalc = (perf.write_verify || 0) + (perf.post_commit_guard || 0);
-      const latencyFinalize = tEnd - t0 - (perf.idempotency_guard_and_received_log || 0) - (perf.employee_lookup || 0) - (perf.te_idempotency_check || 0) - latencyOverlap - latencyWrite - latencyRecalc;
-
       // Update index to SUCCESS + write audit log in parallel
+      const tEnd = Date.now();
+      const latencyOverlap = perf.overlap_check_total || 0;
+      const latencyWrite = (perf.timeentry_create || 0) + (perf.commit || 0);
+
       await Promise.all([
         logSubmission(svc, {
           ...submissionLog,
@@ -1081,41 +960,35 @@ Deno.serve(async (req) => {
           latency_ms: tEnd - t0,
           latency_overlap_ms: latencyOverlap,
           latency_write_ms: latencyWrite,
-          latency_recalc_ms: latencyRecalc,
-          latency_finalize_ms: Math.max(0, latencyFinalize),
+          latency_recalc_ms: 0,
+          latency_finalize_ms: 0,
         }),
-        updateSubmissionIndex(svc, indexRecord, 'SUCCESS', { time_entry_id: te.id, employee_id: empId }),
+        updateSubmissionIndex(svc, indexRecord, 'SUCCESS', { time_entry_id: te.id, employee_id: empId, recalc_status: 'PENDING' }),
       ]);
 
       // ========================================
-      // 11b. PRE-RESOLVE RECEIVED SIBLING
+      // 10. FIRE-AND-FORGET: Async recalculation
       // ========================================
-      // Immediately mark the corresponding RECEIVED log as resolved,
-      // so the stuck monitor never has a chance to flag it.
-      try {
-        const receivedSiblings = await svc.entities.MobileEntrySubmissionLog.filter({
-          submission_id: payload.submission_id,
-          status: 'RECEIVED',
-        });
-        for (const sibling of receivedSiblings) {
-          if (sibling.stuck_detected !== false || sibling.auto_resolved !== true) {
-            await svc.entities.MobileEntrySubmissionLog.update(sibling.id, {
-              stuck_detected: false,
-              auto_resolved: true,
-            });
-            console.log(`[PRE-RESOLVE] Marked RECEIVED sibling ${sibling.id} as auto_resolved`);
-          }
-        }
-      } catch (resolveErr) {
-        console.error('[PRE-RESOLVE] Non-critical:', resolveErr.message);
-      }
+      // Trips, SPW, write-verify, post-commit guard, cleanup all happen async.
+      // NOT awaited — does not block HTTP response.
+      svc.functions.invoke('recalculateAfterTimeEntrySubmit', {
+        time_entry_id: te.id,
+        employee_id: empId,
+        submission_id: payload.submission_id,
+        trips: payload.trips || [],
+        standplaats_werk: payload.standplaats_werk || [],
+        date: payload.date,
+        end_date: payload.end_date || null,
+        start_time: payload.start_time,
+        end_time: payload.end_time,
+      }).catch(err => console.error('[ASYNC_RECALC] Fire-and-forget failed:', err.message));
 
       return Response.json({
         success: true,
         data: {
           time_entry_id: te.id,
-          trip_ids: created.tripIds,
-          standplaats_werk_ids: created.spwIds,
+          trip_ids: [],
+          standplaats_werk_ids: [],
           computed: { total_hours: totalHours, shift_type: st, week_number: wk, year: yr }
         }
       });
