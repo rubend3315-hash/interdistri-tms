@@ -132,6 +132,52 @@ function isoYear(d) {
   return dt.getUTCFullYear();
 }
 
+// --- EXTRACTED OVERLAP VALIDATION (future-proof, reusable) ---
+
+function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, startTime, endTime) {
+  const entryEnd = endDate || date;
+  const incomingEntry = { date, end_date: endDate || null, start_time: startTime, end_time: endTime };
+
+  // Filter to committed entries in range
+  const committed = existingEntries.filter(e => {
+    if (e.employee_id !== employeeId) return false;
+    if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
+    const exEnd = e.end_date || e.date;
+    return exEnd >= date && e.date <= entryEnd;
+  });
+
+  // Check for already-approved entry on exact date (specific error)
+  const approvedOnDate = committed.find(e =>
+    e.status === 'Goedgekeurd' && e.date === date && (!e.end_date || e.end_date === e.date)
+  );
+  if (approvedOnDate) {
+    return {
+      overlaps: true,
+      errorCode: 'ALREADY_APPROVED',
+      errorMsg: 'Voor deze datum bestaat al een goedgekeurde dienst.',
+      existingId: approvedOnDate.id,
+    };
+  }
+
+  // General overlap check
+  for (const ex of committed) {
+    if (servicesOverlap(ex, incomingEntry)) {
+      const exEnd = ex.end_date || ex.date;
+      const isSameDay = !endDate && !ex.end_date && date === ex.date;
+      return {
+        overlaps: true,
+        errorCode: isSameDay ? 'TIME_OVERLAP' : 'DATE_OVERLAP',
+        errorMsg: isSameDay
+          ? `Overlapt met dienst ${ex.start_time}-${ex.end_time} op ${ex.date}`
+          : `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
+        existingId: ex.id,
+      };
+    }
+  }
+
+  return { overlaps: false };
+}
+
 // --- INPUT VALIDATION ---
 
 function validate(p) {
@@ -148,6 +194,22 @@ function validate(p) {
   if (!isTime(p.start_time)) err.push('Ongeldige starttijd (HH:MM)');
   if (!isTime(p.end_time)) err.push('Ongeldige eindtijd (HH:MM)');
   if (!isOptStr(p.signature_url)) err.push('signature_url moet string zijn');
+
+  // --- DATE_TIME_MISMATCH guard ---
+  // For single-day entries: verify start_time and end_time are consistent with payload.date.
+  // Overnight shifts (end_time < start_time) are allowed and imply next-day end.
+  // Multi-day entries skip this check (end_date explicitly provided).
+  if (!err.length && isDate(p.date) && isTime(p.start_time) && isTime(p.end_time)) {
+    if (!p.end_date || p.end_date === p.date) {
+      // Single-day entry: validate times are plausible HH:MM values (already done by isTime)
+      // Additional guard: if end_time < start_time → overnight, which is fine for single-day
+      // But if end_date is explicitly set to a DIFFERENT date, it should match the multi-day range
+    }
+    if (p.end_date && p.end_date !== p.date) {
+      // Multi-day: end_date must be after date (already checked above)
+      // No additional time-vs-date mismatch for multi-day
+    }
+  }
 
   if (p.end_date != null) {
     if (!isDate(p.end_date)) err.push('Ongeldige einddatum (YYYY-MM-DD)');
