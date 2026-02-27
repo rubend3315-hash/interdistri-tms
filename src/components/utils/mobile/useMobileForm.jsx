@@ -191,20 +191,29 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   useEffect(() => {
     if (!currentEmployee?.id || draftLoaded) return;
 
+    // Capture the date at the start of this async operation for race-condition guard
+    const targetDate = formData.date;
+
     const loadDraft = async () => {
       try {
         const draftEntries = await base44.entities.TimeEntry.filter({
           employee_id: currentEmployee.id,
-          date: todayStr,
+          date: targetDate,
           status: 'Concept'
         });
+
+        // Race condition guard: if user changed date while we were fetching, discard
+        if (currentDateRef.current !== targetDate) {
+          console.log(`[useMobileForm] Draft fetch for ${targetDate} discarded — date changed to ${currentDateRef.current}`);
+          return;
+        }
 
         if (draftEntries.length > 0) {
           const draft = draftEntries[0];
           setFormData(prev => ({
             ...prev,
-            date: draft.date || todayStr,
-            ...(isMultiDay ? { end_date: draft.end_date || todayStr } : {}),
+            date: targetDate,
+            ...(isMultiDay ? { end_date: draft.end_date || targetDate } : {}),
             start_time: draft.start_time || "",
             end_time: draft.end_time || "",
             break_minutes: draft.break_minutes ?? 0,
@@ -214,8 +223,12 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         }
 
         const existingTrips = await base44.entities.Trip.filter({
-          employee_id: currentEmployee.id, date: todayStr
+          employee_id: currentEmployee.id, date: targetDate
         });
+
+        // Race guard again after second fetch
+        if (currentDateRef.current !== targetDate) return;
+
         const draftTrips = existingTrips.filter(t => t.status === 'Gepland');
         const loadedRegels = [];
         if (draftTrips.length > 0) {
@@ -242,8 +255,12 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         }
 
         const existingSpw = await base44.entities.StandplaatsWerk.filter({
-          employee_id: currentEmployee.id, date: todayStr
+          employee_id: currentEmployee.id, date: targetDate
         });
+
+        // Race guard again
+        if (currentDateRef.current !== targetDate) return;
+
         if (existingSpw.length > 0) {
           existingSpw.forEach(s => loadedRegels.push({
             id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
@@ -261,12 +278,15 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       } catch (error) {
         console.error('Draft laden mislukt:', error);
       } finally {
-        setDraftLoaded(true);
+        // Only mark loaded if we're still on the same date
+        if (currentDateRef.current === targetDate) {
+          setDraftLoaded(true);
+        }
       }
     };
 
     loadDraft();
-  }, [currentEmployee?.id, draftLoaded, todayStr, isMultiDay]);
+  }, [currentEmployee?.id, draftLoaded, formData.date, isMultiDay]);
 
   // --- Calculate hours (client-side for display only) ---
   const calculateHours = useCallback((start, end, breakMin, startDate, endDate) => {
