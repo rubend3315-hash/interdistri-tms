@@ -795,6 +795,16 @@ Deno.serve(async (req) => {
             });
           }
           // Winner hasn't committed yet — tell client to retry
+          await logSubmission(svc, {
+            ...submissionLog,
+            status: 'VALIDATION_FAILED',
+            http_status: 409,
+            error_code: 'CONCURRENT_SUBMIT',
+            error_message: 'Gelijktijdige submit gedetecteerd',
+            employee_id: empId,
+            timestamp_completed: new Date().toISOString(),
+            latency_ms: Date.now() - t0,
+          });
           return Response.json({
             success: false, error: 'CONCURRENT_SUBMIT',
             message: 'Gelijktijdige submit gedetecteerd, probeer opnieuw'
