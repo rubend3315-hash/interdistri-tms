@@ -493,6 +493,15 @@ Deno.serve(async (req) => {
     console.log('[STEP] Looking up employee for:', user.email);
     const employees = await svc.entities.Employee.filter({ email: user.email });
     if (!employees.length) {
+      await logSubmission(svcEarly, {
+        ...submissionLog,
+        status: 'VALIDATION_FAILED',
+        http_status: 403,
+        error_code: 'EMPLOYEE_NOT_FOUND',
+        error_message: 'Geen medewerker voor dit account',
+        timestamp_completed: new Date().toISOString(),
+        latency_ms: Date.now() - t0,
+      });
       return Response.json({ success: false, error: 'EMPLOYEE_NOT_FOUND', message: 'Geen medewerker voor dit account' }, { status: 403 });
     }
     const employee = employees[0];
