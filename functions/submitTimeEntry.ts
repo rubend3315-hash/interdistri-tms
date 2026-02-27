@@ -1042,19 +1042,23 @@ Deno.serve(async (req) => {
       const latencyRecalc = (perf.write_verify || 0) + (perf.post_commit_guard || 0);
       const latencyFinalize = tEnd - t0 - (perf.idempotency_guard_and_received_log || 0) - (perf.employee_lookup || 0) - (perf.te_idempotency_check || 0) - latencyOverlap - latencyWrite - latencyRecalc;
 
-      await logSubmission(svc, {
-        ...submissionLog,
-        status: 'SUCCESS',
-        http_status: 200,
-        time_entry_id: te.id,
-        employee_id: empId,
-        timestamp_completed: new Date().toISOString(),
-        latency_ms: tEnd - t0,
-        latency_overlap_ms: latencyOverlap,
-        latency_write_ms: latencyWrite,
-        latency_recalc_ms: latencyRecalc,
-        latency_finalize_ms: Math.max(0, latencyFinalize),
-      });
+      // Update index to SUCCESS + write audit log in parallel
+      await Promise.all([
+        logSubmission(svc, {
+          ...submissionLog,
+          status: 'SUCCESS',
+          http_status: 200,
+          time_entry_id: te.id,
+          employee_id: empId,
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: tEnd - t0,
+          latency_overlap_ms: latencyOverlap,
+          latency_write_ms: latencyWrite,
+          latency_recalc_ms: latencyRecalc,
+          latency_finalize_ms: Math.max(0, latencyFinalize),
+        }),
+        updateSubmissionIndex(svc, indexRecord, 'SUCCESS', { time_entry_id: te.id, employee_id: empId }),
+      ]);
 
       // ========================================
       // 11b. PRE-RESOLVE RECEIVED SIBLING
