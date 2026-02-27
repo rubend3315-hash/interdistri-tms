@@ -12,6 +12,7 @@ import IntegrityReports from "../components/rbac-audit/IntegrityReports";
 import MonitoringPolicy from "../components/rbac-audit/MonitoringPolicy";
 import SubmissionLogs from "../components/rbac-audit/SubmissionLogs";
 import PerformanceTab from "../components/rbac-audit/PerformanceTab";
+import ClientSubmitLogs from "../components/rbac-audit/ClientSubmitLogs";
 
 export default function RBACAudit({ currentUser }) {
   // Audit log: track dashboard view
