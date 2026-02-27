@@ -26,10 +26,17 @@ export function useEntrySubmit() {
    * @param {string} params.signature - Signature URL (already uploaded) or base64
    * @returns {Object} { success, offline, data?, error?, details? }
    */
-  const submitEntry = useCallback(async ({ formData, trips, standplaatsWerk, signature }) => {
+  const submitEntry = useCallback(async ({ formData, trips, standplaatsWerk, signature, userEmail, employeeId }) => {
     if (submittingRef.current) return { success: false, error: 'ALREADY_SUBMITTING' };
     submittingRef.current = true;
     setIsSubmitting(true);
+
+    // Client-side submit logger — tracks the full lifecycle
+    const clientLogger = createClientSubmitLogger({
+      userEmail: userEmail || '',
+      employeeId: employeeId || '',
+      entryDate: formData.date,
+    });
 
     try {
       // Upload signature if it's still base64
