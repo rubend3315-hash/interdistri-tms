@@ -632,6 +632,16 @@ Deno.serve(async (req) => {
 
     if (overlapResult.overlaps) {
       console.log(`[OVERLAP] ${overlapResult.errorCode}: existing ${overlapResult.existingId} vs new (${payload.date}→${entryEnd} ${payload.start_time}-${payload.end_time})`);
+      await logSubmission(svc, {
+        ...submissionLog,
+        status: 'VALIDATION_FAILED',
+        http_status: 409,
+        error_code: overlapResult.errorCode,
+        error_message: overlapResult.errorMsg,
+        employee_id: empId,
+        timestamp_completed: new Date().toISOString(),
+        latency_ms: Date.now() - t0,
+      });
       return Response.json({
         success: false, error: overlapResult.errorCode,
         message: overlapResult.errorMsg,
