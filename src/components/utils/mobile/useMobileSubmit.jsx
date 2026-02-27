@@ -229,6 +229,11 @@ export function useMobileSubmit({
       } else if (result.error === 'DUPLICATE_SUBMISSION') {
         toast.warning(userMessage, { duration: 6000 });
         queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      } else if (result.error === 'ALREADY_APPROVED') {
+        toast.error(userMessage, { duration: 8000 });
+        queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      } else if (result.error === 'DATE_TIME_MISMATCH') {
+        toast.error(userMessage, { duration: 8000 });
       } else if (result.error === 'TIME_OVERLAP' || result.error === 'DATE_OVERLAP') {
         toast.error(userMessage, { duration: 8000 });
         queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
