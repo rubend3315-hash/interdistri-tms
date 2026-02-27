@@ -325,7 +325,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     progressStep,
     calculateHours,
     resetForm,
-    storageKey,
+    storageKey: getStorageKey(formData.date),
     generateAutoRit,
     autoRitDismissed,
 
