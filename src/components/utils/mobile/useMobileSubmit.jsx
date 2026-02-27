@@ -168,6 +168,11 @@ export function useMobileSubmit({
       employeeId: currentEmployee?.id || '',
     });
 
+    // Show retry feedback if retries occurred
+    if (result.retryCount > 0 && result.success) {
+      toast.info('Verbinding hersteld — succesvol ingediend na herpoging.', { duration: 4000 });
+    }
+
     if (result.success) {
       const hasDamage = trips.some(t => t.damage_occurred === "Ja");
 
