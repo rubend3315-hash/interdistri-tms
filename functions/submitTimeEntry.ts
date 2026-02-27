@@ -145,15 +145,15 @@ function isoYear(d) {
 // --- EXTRACTED OVERLAP VALIDATION (future-proof, reusable) ---
 
 function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, startTime, endTime) {
-  const entryEnd = endDate || date;
   const incomingEntry = { date, end_date: endDate || null, start_time: startTime, end_time: endTime };
+  const newEffEnd = effectiveEndDate(incomingEntry);
 
-  // Filter to committed entries in range
+  // Filter to committed entries whose effective range could overlap
   const committed = existingEntries.filter(e => {
     if (e.employee_id !== employeeId) return false;
     if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
-    const exEnd = e.end_date || e.date;
-    return exEnd >= date && e.date <= entryEnd;
+    const exEffEnd = effectiveEndDate(e);
+    return exEffEnd > date && e.date < newEffEnd;
   });
 
   // Check for already-approved entry on exact date (specific error)
