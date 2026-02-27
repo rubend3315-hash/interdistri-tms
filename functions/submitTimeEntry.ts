@@ -8,7 +8,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
-// submitTimeEntry v5.1 — Nightshift-proof overlap engine (2026-02-27)
+// submitTimeEntry v5.2 — MobileSubmissionIndex idempotency guard (2026-02-27)
 // ============================================================
 //
 // ARCHITECTURE:
@@ -611,6 +611,11 @@ Deno.serve(async (req) => {
       }
     }
     const empId = employee.id;
+
+    // Update index with employee_id if not yet set
+    if (indexRecord && !indexRecord.employee_id) {
+      updateSubmissionIndex(svc, indexRecord, 'PROCESSING', { employee_id: empId }); // fire-and-forget
+    }
 
     // ========================================
     // 4. IDEMPOTENCY CHECK — dedicated field
