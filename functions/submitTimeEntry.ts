@@ -436,14 +436,25 @@ Deno.serve(async (req) => {
     submissionLog.entry_date = payload.date || null;
 
     // ========================================
-    // 2b. EARLY IDEMPOTENCY GUARD (submission_id level)
+    // 2b. EARLY IDEMPOTENCY GUARD (submission_id level) — OPTIMIZED
     // ========================================
-    // Check MobileEntrySubmissionLog BEFORE creating a new RECEIVED log.
-    // This prevents duplicate processing when the client retries rapidly.
+    // Run idempotency check and RECEIVED log write in PARALLEL.
+    // The guard checks for existing SUCCESS/RECEIVED logs for this submission_id.
+    // If guard triggers → return early (the RECEIVED log write is harmless noise).
+    // If guard passes → RECEIVED log is already written by the time we continue.
+    const tGuardStart = Date.now();
+    let idempotencyHit = null; // set if we need to return early
+
     if (payload.submission_id && UUID_RE.test(payload.submission_id)) {
-      const existingLogs = await svcEarly.entities.MobileEntrySubmissionLog.filter({
-        submission_id: payload.submission_id,
-      });
+      // Fire BOTH queries in parallel: idempotency check + RECEIVED log write
+      const [existingLogs] = await Promise.all([
+        svcEarly.entities.MobileEntrySubmissionLog.filter({
+          submission_id: payload.submission_id,
+        }),
+        logSubmission(svcEarly, { ...submissionLog }), // write RECEIVED in parallel
+      ]);
+
+      perf.idempotency_guard_and_received_log = Date.now() - tGuardStart;
 
       // If any log for this submission_id already has SUCCESS → return immediately
       const successLog = existingLogs.find(l => l.status === 'SUCCESS');
@@ -473,11 +484,11 @@ Deno.serve(async (req) => {
           status: 'PROCESSING',
         }, { status: 202 });
       }
+    } else {
+      // No valid submission_id — just write RECEIVED log
+      await logSubmission(svcEarly, { ...submissionLog });
+      perf.idempotency_guard_and_received_log = Date.now() - tGuardStart;
     }
-
-    // Log RECEIVED immediately (separate immutable record)
-    await logSubmission(svcEarly, { ...submissionLog });
-    perf.idempotency_guard_and_received_log = Date.now() - t0;
 
     // DEBUG: Log incoming payload summary
     console.log('[SUBMIT_PAYLOAD]', JSON.stringify({
