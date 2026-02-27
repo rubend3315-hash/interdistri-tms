@@ -1,18 +1,16 @@
 // ╔══════════════════════════════════════════════════════════════════╗
-// ║ FUNCTION TYPE: BACKGROUND (fire-and-forget)                     ║
-// ║ Called by: submitTimeEntry after SUCCESS commit                  ║
-// ║ Auth: Service role (called internally)                           ║
-// ║ MUST NOT affect SUCCESS status of original submission            ║
+// ║ FUNCTION TYPE: BACKGROUND / FIRE-AND-FORGET                     ║
+// ║ Called by: submitTimeEntry (fire-and-forget, not awaited)        ║
+// ║ Auth: Service role (called from backend function)                ║
+// ║ PURPOSE: Create Trips, SPW, write-verify, post-commit guard     ║
+// ║ NEVER affects the original SUCCESS status of the submission.     ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// --- HELPERS (duplicated from submitTimeEntry — no local imports allowed) ---
-
+// --- TIME HELPERS (duplicated from submitTimeEntry for independence) ---
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function isTime(t) { return typeof t === 'string' && TIME_RE.test(t); }
-function clamp(v, lo, hi) { if (v == null) return null; const n = Number(v); return isFinite(n) ? Math.max(lo, Math.min(hi, n)) : null; }
 function timeMin(t) { if (!isTime(t)) return null; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
-
 function addDays(dateStr, days) {
   const d = new Date(dateStr + 'T12:00:00Z');
   d.setUTCDate(d.getUTCDate() + days);
@@ -57,52 +55,26 @@ function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, st
   });
   for (const ex of committed) {
     if (servicesOverlap(ex, incomingEntry)) {
-      return { overlaps: true, existingId: ex.id };
+      const exEnd = ex.end_date || ex.date;
+      const isSameDay = !endDate && !ex.end_date && date === ex.date;
+      return {
+        overlaps: true,
+        errorCode: isSameDay ? 'TIME_OVERLAP' : 'DATE_OVERLAP',
+        errorMsg: isSameDay
+          ? `Overlapt met dienst ${ex.start_time}-${ex.end_time} op ${ex.date}`
+          : `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
+        existingId: ex.id,
+      };
     }
   }
   return { overlaps: false };
 }
 
-function sanitizeTrip(t, empId, date, teId) {
-  return {
-    employee_id: empId, time_entry_id: teId, date,
-    vehicle_id: t.vehicle_id,
-    customer_id: t.customer_id || null,
-    route_name: t.route_name ? String(t.route_name).slice(0, 200) : null,
-    planned_stops: clamp(t.planned_stops, 0, 9999),
-    start_km: clamp(t.start_km, 0, 9999999),
-    end_km: clamp(t.end_km, 0, 9999999),
-    total_km: (t.start_km != null && t.end_km != null) ? Math.max(0, Number(t.end_km) - Number(t.start_km)) : null,
-    fuel_liters: clamp(t.fuel_liters, 0, 9999),
-    adblue_liters: clamp(t.adblue_liters, 0, 9999),
-    fuel_km: clamp(t.fuel_km, 0, 9999999),
-    charging_kwh: clamp(t.charging_kwh, 0, 9999),
-    departure_time: isTime(t.start_time) ? t.start_time : null,
-    arrival_time: isTime(t.end_time) ? t.end_time : null,
-    departure_location: (t.departure_location || '').slice(0, 200) || null,
-    notes: (t.notes || '').slice(0, 2000) || null,
-    status: 'Voltooid',
-  };
-}
-
-function sanitizeSPW(s, empId, date, teId) {
-  return {
-    employee_id: empId, time_entry_id: teId, date,
-    start_time: isTime(s.start_time) ? s.start_time : null,
-    end_time: isTime(s.end_time) ? s.end_time : null,
-    customer_id: s.customer_id || null,
-    project_id: s.project_id || null,
-    activity_id: s.activity_id || null,
-    notes: (s.notes || '').slice(0, 2000) || null,
-  };
-}
-
+// --- SAFE DELETE ---
 async function safeDelete(entity, id, label) {
   try { await entity.delete(id); }
   catch (e) { console.error(`Failed to delete ${label} ${id}: ${e.message}`); }
 }
-
-// --- MAIN HANDLER ---
 
 Deno.serve(async (req) => {
   const t0 = Date.now();
@@ -117,204 +89,253 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    console.log(`[ASYNC_RECALC] Starting for TE ${time_entry_id}, employee ${employee_id}, submission ${submission_id}`);
+    console.log(`[RECALC] Starting for TE=${time_entry_id} sub=${submission_id}`);
+
+    // Update index to RUNNING
+    try {
+      const indexRecords = await svc.entities.MobileSubmissionIndex.filter({ submission_id });
+      if (indexRecords[0]) {
+        await svc.entities.MobileSubmissionIndex.update(indexRecords[0].id, { recalc_status: 'RUNNING' });
+      }
+    } catch (e) { console.error('[RECALC] Index update to RUNNING failed:', e.message); }
 
     const perf = {};
+    const createdTripIds = [];
+    const createdSpwIds = [];
 
     // ========================================
-    // 1. VERIFY TimeEntry still exists and is Ingediend
-    // ========================================
-    const tVerify = Date.now();
-    const teCheck = await svc.entities.TimeEntry.filter({
-      employee_id,
-      submission_id,
-    });
-    const te = teCheck.find(e => e.id === time_entry_id && e.status === 'Ingediend');
-    perf.write_verify = Date.now() - tVerify;
-
-    if (!te) {
-      console.warn(`[ASYNC_RECALC] TimeEntry ${time_entry_id} not found or not Ingediend — skipping`);
-      return Response.json({ success: false, reason: 'TimeEntry not found or wrong status' });
-    }
-
-    // ========================================
-    // 2. CREATE TRIPS
+    // 1. CREATE TRIPS
     // ========================================
     const tTrips = Date.now();
-    const tripIds = [];
     if (Array.isArray(trips) && trips.length > 0) {
       for (const trip of trips) {
-        const t = await svc.entities.Trip.create(sanitizeTrip(trip, employee_id, date, time_entry_id));
-        tripIds.push(t.id);
+        const t = await svc.entities.Trip.create({
+          employee_id, time_entry_id, date,
+          vehicle_id: trip.vehicle_id,
+          customer_id: trip.customer_id || null,
+          route_name: trip.route_name ? String(trip.route_name).slice(0, 200) : null,
+          planned_stops: trip.planned_stops != null ? Math.max(0, Math.min(9999, Number(trip.planned_stops) || 0)) : null,
+          start_km: trip.start_km != null ? Math.max(0, Math.min(9999999, Number(trip.start_km) || 0)) : null,
+          end_km: trip.end_km != null ? Math.max(0, Math.min(9999999, Number(trip.end_km) || 0)) : null,
+          total_km: (trip.start_km != null && trip.end_km != null) ? Math.max(0, Number(trip.end_km) - Number(trip.start_km)) : null,
+          fuel_liters: trip.fuel_liters != null ? Math.max(0, Math.min(9999, Number(trip.fuel_liters) || 0)) : null,
+          adblue_liters: trip.adblue_liters != null ? Math.max(0, Math.min(9999, Number(trip.adblue_liters) || 0)) : null,
+          fuel_km: trip.fuel_km != null ? Math.max(0, Math.min(9999999, Number(trip.fuel_km) || 0)) : null,
+          charging_kwh: trip.charging_kwh != null ? Math.max(0, Math.min(9999, Number(trip.charging_kwh) || 0)) : null,
+          departure_time: isTime(trip.start_time) ? trip.start_time : null,
+          arrival_time: isTime(trip.end_time) ? trip.end_time : null,
+          departure_location: (trip.departure_location || '').slice(0, 200) || null,
+          notes: (trip.notes || '').slice(0, 2000) || null,
+          status: 'Voltooid',
+        });
+        createdTripIds.push(t.id);
       }
     }
-    perf.trips_create = Date.now() - tTrips;
+    perf.trips_create_ms = Date.now() - tTrips;
 
     // ========================================
-    // 3. CREATE STANDPLAATSWERK
+    // 2. CREATE STANDPLAATSWERK
     // ========================================
     const tSpw = Date.now();
-    const spwIds = [];
     if (Array.isArray(standplaats_werk) && standplaats_werk.length > 0) {
       for (const spw of standplaats_werk) {
         if (spw.customer_id || spw.activity_id) {
-          const s = await svc.entities.StandplaatsWerk.create(sanitizeSPW(spw, employee_id, date, time_entry_id));
-          spwIds.push(s.id);
+          const s = await svc.entities.StandplaatsWerk.create({
+            employee_id, time_entry_id, date,
+            start_time: isTime(spw.start_time) ? spw.start_time : null,
+            end_time: isTime(spw.end_time) ? spw.end_time : null,
+            customer_id: spw.customer_id || null,
+            project_id: spw.project_id || null,
+            activity_id: spw.activity_id || null,
+            notes: (spw.notes || '').slice(0, 2000) || null,
+          });
+          createdSpwIds.push(s.id);
         }
       }
     }
-    perf.spw_create = Date.now() - tSpw;
+    perf.spw_create_ms = Date.now() - tSpw;
+
+    // ========================================
+    // 3. WRITE VERIFICATION
+    // ========================================
+    const tVerify = Date.now();
+    const verifyEntries = await svc.entities.TimeEntry.filter({ employee_id, submission_id });
+    const verifyEntry = verifyEntries.find(e => e.id === time_entry_id && e.status === 'Ingediend');
+    perf.write_verify_ms = Date.now() - tVerify;
+
+    if (!verifyEntry) {
+      console.error(`[RECALC] CRITICAL: TimeEntry ${time_entry_id} not found or not Ingediend in write verification`);
+      // Log but do NOT rollback — the TimeEntry was already committed
+      try {
+        await svc.entities.MobileEntrySubmissionLog.create({
+          submission_id, user_id: '', email: '', employee_id,
+          timestamp_received: new Date().toISOString(),
+          status: 'FAILED', failure_type: 'SYSTEM',
+          http_status: 500,
+          error_code: 'ASYNC_WRITE_VERIFY_FAILED',
+          error_message: `TimeEntry ${time_entry_id} not found/not Ingediend in async write verify`,
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        });
+      } catch (_) {}
+    }
 
     // ========================================
     // 4. POST-COMMIT OVERLAP GUARD
     // ========================================
-    const tPostGuard = Date.now();
-    const entryEnd = end_date || date;
-    const queryStart = addDays(date, -1);
-    const queryEnd = addDays(entryEnd, 1);
+    const tPostCommit = Date.now();
+    if (date && start_time && end_time) {
+      const entryEnd = end_date || date;
+      const queryStart = addDays(date, -1);
+      const queryEnd = addDays(entryEnd, 1);
 
-    const allEntries = await svc.entities.TimeEntry.filter({ employee_id });
-    const candidates = allEntries.filter(e => e.id !== time_entry_id && e.date >= queryStart && e.date <= queryEnd);
+      const postCommitAll = await svc.entities.TimeEntry.filter({ employee_id });
+      const postCommitCandidates = postCommitAll.filter(e =>
+        e.id !== time_entry_id && e.date >= queryStart && e.date <= queryEnd
+      );
 
-    const postOverlap = validateTimeEntryOverlap(candidates, employee_id, date, end_date || null, start_time, end_time);
+      const postOverlap = validateTimeEntryOverlap(
+        postCommitCandidates, employee_id, date, end_date || null, start_time, end_time
+      );
 
-    if (postOverlap.overlaps) {
-      const existingEntry = candidates.find(e => e.id === postOverlap.existingId);
-      if (existingEntry && existingEntry.created_date < te.created_date) {
-        console.log(`[ASYNC_RECALC] POST-COMMIT OVERLAP detected! Rolling back TE ${time_entry_id}`);
-        await svc.entities.TimeEntry.update(time_entry_id, { status: 'Concept' });
-        for (const tid of tripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
-        for (const sid of spwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
-        await safeDelete(svc.entities.TimeEntry, time_entry_id, 'overlap-te');
+      if (postOverlap.overlaps) {
+        const existingEntry = postCommitCandidates.find(e => e.id === postOverlap.existingId);
+        if (existingEntry && existingEntry.created_date < verifyEntry?.created_date) {
+          console.log(`[RECALC POST-COMMIT OVERLAP] Rolling back ${time_entry_id}, older entry ${postOverlap.existingId} wins`);
+          await svc.entities.TimeEntry.update(time_entry_id, { status: 'Concept' });
+          for (const tid of createdTripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
+          for (const sid of createdSpwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
+          await safeDelete(svc.entities.TimeEntry, time_entry_id, 'overlap-te');
 
-        // Update index to FAILED
-        const indexRecords = await svc.entities.MobileSubmissionIndex.filter({ submission_id });
-        if (indexRecords[0]) {
-          await svc.entities.MobileSubmissionIndex.update(indexRecords[0].id, {
-            status: 'FAILED',
-            completed_at: new Date().toISOString(),
+          // Update index
+          try {
+            const indexRecords = await svc.entities.MobileSubmissionIndex.filter({ submission_id });
+            if (indexRecords[0]) {
+              await svc.entities.MobileSubmissionIndex.update(indexRecords[0].id, {
+                status: 'FAILED',
+                recalc_status: 'FAILED',
+              });
+            }
+          } catch (_) {}
+
+          await svc.entities.MobileEntrySubmissionLog.create({
+            submission_id, user_id: '', email: '', employee_id,
+            timestamp_received: new Date().toISOString(),
+            status: 'VALIDATION_FAILED', failure_type: 'BUSINESS',
+            http_status: 409,
+            error_code: 'ASYNC_POST_COMMIT_' + postOverlap.errorCode,
+            error_message: `Async overlap: ${postOverlap.errorMsg}`,
+            timestamp_completed: new Date().toISOString(),
+            latency_ms: Date.now() - t0,
           });
+
+          perf.post_commit_guard_ms = Date.now() - tPostCommit;
+          perf.total_ms = Date.now() - t0;
+          console.log('[RECALC PERF]', JSON.stringify(perf));
+          return Response.json({ success: false, error: 'POST_COMMIT_OVERLAP', rolled_back: true });
         }
-
-        // Log the failure
-        await svc.entities.MobileEntrySubmissionLog.create({
-          submission_id,
-          user_id: te.created_by_id || '',
-          employee_id,
-          timestamp_received: new Date().toISOString(),
-          status: 'VALIDATION_FAILED',
-          failure_type: 'BUSINESS',
-          http_status: 409,
-          error_code: 'POST_COMMIT_OVERLAP_ASYNC',
-          error_message: `Async post-commit overlap: bestaande dienst ${postOverlap.existingId}`,
-          timestamp_completed: new Date().toISOString(),
-          latency_ms: Date.now() - t0,
-        });
-
-        perf.post_commit_guard = Date.now() - tPostGuard;
-        perf.total = Date.now() - t0;
-        console.log('[ASYNC_RECALC PERF]', JSON.stringify(perf));
-        return Response.json({ success: false, reason: 'POST_COMMIT_OVERLAP', rolled_back: true });
       }
     }
-    perf.post_commit_guard = Date.now() - tPostGuard;
+    perf.post_commit_guard_ms = Date.now() - tPostCommit;
 
     // ========================================
     // 5. CLEANUP OLD DRAFTS
     // ========================================
+    const tCleanup = Date.now();
     try {
-      const drafts = allEntries.filter(e => {
-        if (e.status !== 'Concept' || e.id === time_entry_id) return false;
-        const draftEnd = e.end_date || e.date;
-        return e.date <= entryEnd && draftEnd >= date;
-      });
-      for (const draft of drafts) {
-        console.log(`[ASYNC_CLEANUP] Removing draft ${draft.id}`);
-        const [dTrips, dSpw] = await Promise.all([
-          svc.entities.Trip.filter({ time_entry_id: draft.id }),
-          svc.entities.StandplaatsWerk.filter({ time_entry_id: draft.id }),
-        ]);
-        await Promise.all([
-          ...dTrips.map(t => safeDelete(svc.entities.Trip, t.id, 'cleanup-trip')),
-          ...dSpw.map(s => safeDelete(svc.entities.StandplaatsWerk, s.id, 'cleanup-spw')),
-        ]);
-        await safeDelete(svc.entities.TimeEntry, draft.id, 'cleanup-te');
+      if (date) {
+        const entryEnd = end_date || date;
+        const queryStart = addDays(date, -1);
+        const queryEnd = addDays(entryEnd, 1);
+        const allEntries = await svc.entities.TimeEntry.filter({ employee_id });
+        const oldDrafts = allEntries.filter(e => {
+          if (e.status !== 'Concept' || e.id === time_entry_id) return false;
+          const draftEnd = e.end_date || e.date;
+          return e.date <= entryEnd && draftEnd >= date;
+        });
+        for (const draft of oldDrafts) {
+          console.log(`[RECALC CLEANUP] Removing draft ${draft.id}`);
+          const [dTrips, dSpw] = await Promise.all([
+            svc.entities.Trip.filter({ time_entry_id: draft.id }),
+            svc.entities.StandplaatsWerk.filter({ time_entry_id: draft.id }),
+          ]);
+          await Promise.all([
+            ...dTrips.map(t => safeDelete(svc.entities.Trip, t.id, 'cleanup-trip')),
+            ...dSpw.map(s => safeDelete(svc.entities.StandplaatsWerk, s.id, 'cleanup-spw')),
+          ]);
+          await safeDelete(svc.entities.TimeEntry, draft.id, 'cleanup-te');
+        }
       }
     } catch (cleanupErr) {
-      console.error('[ASYNC_CLEANUP] Non-critical:', cleanupErr.message);
+      console.error('[RECALC CLEANUP] Non-critical:', cleanupErr.message);
     }
+    perf.cleanup_ms = Date.now() - tCleanup;
 
     // ========================================
-    // 6. PRE-RESOLVE RECEIVED SIBLINGS
+    // 6. PRE-RESOLVE RECEIVED SIBLING
     // ========================================
     try {
       const receivedSiblings = await svc.entities.MobileEntrySubmissionLog.filter({
-        submission_id,
-        status: 'RECEIVED',
+        submission_id, status: 'RECEIVED',
       });
       for (const sibling of receivedSiblings) {
         if (sibling.stuck_detected !== false || sibling.auto_resolved !== true) {
           await svc.entities.MobileEntrySubmissionLog.update(sibling.id, {
-            stuck_detected: false,
-            auto_resolved: true,
+            stuck_detected: false, auto_resolved: true,
           });
         }
       }
     } catch (resolveErr) {
-      console.error('[ASYNC_PRE-RESOLVE] Non-critical:', resolveErr.message);
+      console.error('[RECALC PRE-RESOLVE]:', resolveErr.message);
     }
 
     // ========================================
-    // 7. LOG PERFORMANCE
+    // 7. UPDATE INDEX TO COMPLETED
     // ========================================
-    perf.total = Date.now() - t0;
-    console.log('[ASYNC_RECALC PERF]', JSON.stringify(perf));
-
     try {
-      await svc.entities.MobileEntryPerformanceLog.create({
-        submission_id,
-        employee_id,
-        write_verify_ms: perf.write_verify || null,
-        trips_and_spw_create_ms: (perf.trips_create || 0) + (perf.spw_create || 0),
-        post_commit_guard_ms: perf.post_commit_guard || null,
-        total_ms: perf.total,
-        outcome: 'SUCCESS',
-        user_email: payload.user_email || null,
-      });
-    } catch (perfErr) { console.error('[ASYNC_PERF_LOG]', perfErr.message); }
+      const indexRecords = await svc.entities.MobileSubmissionIndex.filter({ submission_id });
+      if (indexRecords[0]) {
+        await svc.entities.MobileSubmissionIndex.update(indexRecords[0].id, { recalc_status: 'COMPLETED' });
+      }
+    } catch (e) { console.error('[RECALC] Index update to COMPLETED failed:', e.message); }
+
+    perf.total_ms = Date.now() - t0;
+    console.log('[RECALC PERF]', JSON.stringify(perf));
 
     return Response.json({
       success: true,
-      trip_ids: tripIds,
-      spw_ids: spwIds,
+      trip_ids: createdTripIds,
+      standplaats_werk_ids: createdSpwIds,
       perf,
     });
 
-  } catch (error) {
-    console.error('[ASYNC_RECALC FATAL]', error.message);
+  } catch (outerError) {
+    console.error('[RECALC UNHANDLED]', outerError);
 
-    // Best-effort error logging
+    // Best-effort: update index to FAILED
     try {
-      const base44Fb = createClientFromRequest(req);
-      const svcFb = base44Fb.asServiceRole;
+      const base44 = createClientFromRequest(req);
+      const svc = base44.asServiceRole;
       const payload = await req.json().catch(() => ({}));
       if (payload.submission_id) {
-        await svcFb.entities.MobileEntrySubmissionLog.create({
+        const indexRecords = await svc.entities.MobileSubmissionIndex.filter({ submission_id: payload.submission_id });
+        if (indexRecords[0]) {
+          await svc.entities.MobileSubmissionIndex.update(indexRecords[0].id, { recalc_status: 'FAILED' });
+        }
+        await svc.entities.MobileEntrySubmissionLog.create({
           submission_id: payload.submission_id,
-          employee_id: payload.employee_id || '',
-          user_id: '',
+          user_id: '', email: '', employee_id: payload.employee_id || '',
           timestamp_received: new Date().toISOString(),
-          status: 'FAILED',
-          failure_type: 'SYSTEM',
+          status: 'FAILED', failure_type: 'SYSTEM',
           http_status: 500,
-          error_code: 'ASYNC_RECALC_FAILED',
-          error_message: (error.message || 'Onbekende fout').slice(0, 500),
+          error_code: 'ASYNC_RECALC_ERROR',
+          error_message: (outerError.message || 'Onbekende fout').slice(0, 500),
           timestamp_completed: new Date().toISOString(),
           latency_ms: Date.now() - t0,
         });
       }
     } catch (_) {}
 
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: outerError.message }, { status: 500 });
   }
 });
