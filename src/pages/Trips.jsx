@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,8 @@ import {
   Lock,
   AlertTriangle,
   CheckCircle2,
-  XCircle
+  XCircle,
+  X
 } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
@@ -137,17 +138,37 @@ function RouteSelector({ value, customerId, tiModelRoutes, dbRoutes, customers, 
   );
 }
 
+const TRIPS_DEFAULT_FROM = format(subDays(new Date(), 30), 'yyyy-MM-dd');
+const TRIPS_TODAY = format(new Date(), 'yyyy-MM-dd');
+
 export default function Trips() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState(TRIPS_DEFAULT_FROM);
+  const [filterDateTo, setFilterDateTo] = useState(TRIPS_TODAY);
+  const [filterEmployee, setFilterEmployee] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [activeTab, setActiveTab] = useState("voltooid");
   const queryClient = useQueryClient();
 
+  const resetFilters = () => {
+    setSearchTerm("");
+    setFilterDateFrom(TRIPS_DEFAULT_FROM);
+    setFilterDateTo(TRIPS_TODAY);
+    setFilterEmployee("all");
+    voltooidePageState.resetPage();
+    conceptPageState.resetPage();
+  };
+
+  // Server-side filtered query
   const { data: trips = [], isLoading } = useQuery({
-    queryKey: ['trips'],
-    queryFn: () => base44.entities.Trip.list('-date', 100)
+    queryKey: ['trips', filterDateFrom, filterDateTo],
+    queryFn: () => {
+      const filter = {};
+      if (filterDateFrom) filter.date = { ...(filter.date || {}), $gte: filterDateFrom };
+      if (filterDateTo) filter.date = { ...(filter.date || {}), $lte: filterDateTo };
+      return base44.entities.Trip.filter(filter, '-date');
+    }
   });
 
   const { data: employees = [] } = useQuery({
@@ -526,15 +547,21 @@ export default function Trips() {
   };
 
   const filteredTrips = trips.filter(t => {
-    const matchesDate = !filterDate || t.date === filterDate;
-    const employee = getEmployee(t.employee_id);
-    const vehicle = getVehicle(t.vehicle_id);
-    const matchesSearch = 
-      t.route_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle?.license_plate?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesDate && matchesSearch;
+    // Employee filter (server already filtered by date)
+    if (filterEmployee !== "all" && t.employee_id !== filterEmployee) return false;
+    // Search filter (client-side)
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const employee = getEmployee(t.employee_id);
+      const vehicle = getVehicle(t.vehicle_id);
+      const matchesSearch = 
+        t.route_name?.toLowerCase().includes(term) ||
+        employee?.first_name?.toLowerCase().includes(term) ||
+        employee?.last_name?.toLowerCase().includes(term) ||
+        vehicle?.license_plate?.toLowerCase().includes(term);
+      if (!matchesSearch) return false;
+    }
+    return true;
   });
 
   const voltooideTripsAll = filteredTrips.filter(t => t.status === "Voltooid");
@@ -593,28 +620,56 @@ export default function Trips() {
       {/* Filters */}
       <Card>
         <CardContent className="px-4 py-3">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[180px] max-w-[280px]">
+              <Label className="text-xs text-slate-500 mb-1 block">Zoeken</Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Route, chauffeur, kenteken..."
+                  value={searchTerm}
+                  onChange={(e) => { setSearchTerm(e.target.value); voltooidePageState.resetPage(); conceptPageState.resetPage(); }}
+                  className="pl-9 h-9 text-sm"
+                />
+              </div>
+            </div>
+            <div className="min-w-[160px]">
+              <Label className="text-xs text-slate-500 mb-1 block">Medewerker</Label>
+              <Select value={filterEmployee} onValueChange={(v) => { setFilterEmployee(v); voltooidePageState.resetPage(); conceptPageState.resetPage(); }}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Alle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle medewerkers</SelectItem>
+                  {employees.filter(e => e.status === 'Actief').map(e => (
+                    <SelectItem key={e.id} value={e.id}>{getFullName(e)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[140px]">
+              <Label className="text-xs text-slate-500 mb-1 block">Datum van</Label>
               <Input
-                placeholder="Zoek op route, chauffeur of kenteken..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                type="date"
+                value={filterDateFrom}
+                onChange={(e) => { setFilterDateFrom(e.target.value); voltooidePageState.resetPage(); conceptPageState.resetPage(); }}
+                className="h-9 text-sm"
               />
             </div>
-            <Input
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="w-full md:w-44"
-            />
-            <Button 
-              variant="outline" 
-              onClick={() => setFilterDate("")}
-            >
-              Alle data
-            </Button>
+            <div className="min-w-[140px]">
+              <Label className="text-xs text-slate-500 mb-1 block">Datum tot</Label>
+              <Input
+                type="date"
+                value={filterDateTo}
+                onChange={(e) => { setFilterDateTo(e.target.value); voltooidePageState.resetPage(); conceptPageState.resetPage(); }}
+                className="h-9 text-sm"
+              />
+            </div>
+            {(searchTerm || filterEmployee !== "all" || filterDateFrom !== TRIPS_DEFAULT_FROM || filterDateTo !== TRIPS_TODAY) && (
+              <Button variant="ghost" size="sm" className="h-9 text-xs text-slate-500" onClick={resetFilters}>
+                <X className="w-3.5 h-3.5 mr-1" /> Reset
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -54,12 +54,14 @@ export default function Approvals() {
   const [filterDateTo, setFilterDateTo] = useState(TODAY);
   const [filterEmployee, setFilterEmployee] = useState("all");
   const [filterSearch, setFilterSearch] = useState("");
+  const [filterShiftType, setFilterShiftType] = useState("all");
 
   const resetFilters = () => {
     setFilterDateFrom(DEFAULT_FROM);
     setFilterDateTo(TODAY);
     setFilterEmployee("all");
     setFilterSearch("");
+    setFilterShiftType("all");
     pendingPage.resetPage();
     approvedPage.resetPage();
     rejectedPage.resetPage();
@@ -296,11 +298,14 @@ export default function Approvals() {
     });
   };
 
-  // Client-side filter function (employee + search)
+  // Client-side filter function (employee + search + shift type)
   const applyClientFilters = (entries) => {
     let result = entries;
     if (filterEmployee !== "all") {
       result = result.filter(e => e.employee_id === filterEmployee);
+    }
+    if (filterShiftType !== "all") {
+      result = result.filter(e => e.shift_type === filterShiftType);
     }
     if (filterSearch.trim()) {
       const q = filterSearch.toLowerCase().trim();
@@ -524,10 +529,12 @@ export default function Approvals() {
             dateTo={filterDateTo}
             selectedEmployee={filterEmployee}
             searchQuery={filterSearch}
+            filterShiftType={filterShiftType}
             onDateFromChange={(v) => { setFilterDateFrom(v); pendingPage.resetPage(); approvedPage.resetPage(); rejectedPage.resetPage(); }}
             onDateToChange={(v) => { setFilterDateTo(v); pendingPage.resetPage(); approvedPage.resetPage(); rejectedPage.resetPage(); }}
             onEmployeeChange={(v) => { setFilterEmployee(v); pendingPage.resetPage(); approvedPage.resetPage(); rejectedPage.resetPage(); }}
             onSearchChange={(v) => { setFilterSearch(v); pendingPage.resetPage(); approvedPage.resetPage(); rejectedPage.resetPage(); }}
+            onShiftTypeChange={(v) => { setFilterShiftType(v); pendingPage.resetPage(); approvedPage.resetPage(); rejectedPage.resetPage(); }}
             employees={employees}
             onReset={resetFilters}
           />

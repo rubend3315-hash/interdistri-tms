@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,8 @@ import {
   Lock,
   CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  X
 } from "lucide-react";
 import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
@@ -32,19 +33,39 @@ import { checkEmployeeActiveRules } from "@/components/utils/employeeContractChe
 import ConfirmDialog from "../components/ConfirmDialog";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
 
+const SPW_DEFAULT_FROM = format(subDays(new Date(), 30), 'yyyy-MM-dd');
+const SPW_TODAY = format(new Date(), 'yyyy-MM-dd');
+
 export default function StandplaatsWerk() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState(SPW_DEFAULT_FROM);
+  const [filterDateTo, setFilterDateTo] = useState(SPW_TODAY);
   const [filterEmployee, setFilterEmployee] = useState("all");
+  const [filterActivity, setFilterActivity] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const queryClient = useQueryClient();
   const pagination = usePagination(20);
 
+  const resetFilters = () => {
+    setSearchTerm("");
+    setFilterDateFrom(SPW_DEFAULT_FROM);
+    setFilterDateTo(SPW_TODAY);
+    setFilterEmployee("all");
+    setFilterActivity("all");
+    pagination.resetPage();
+  };
+
+  // Server-side filtered query
   const { data: records = [], isLoading } = useQuery({
-    queryKey: ["standplaatswerk"],
-    queryFn: () => base44.entities.StandplaatsWerk.list("-created_date", 200),
+    queryKey: ["standplaatswerk", filterDateFrom, filterDateTo],
+    queryFn: () => {
+      const filter = {};
+      if (filterDateFrom) filter.date = { ...(filter.date || {}), $gte: filterDateFrom };
+      if (filterDateTo) filter.date = { ...(filter.date || {}), $lte: filterDateTo };
+      return base44.entities.StandplaatsWerk.filter(filter, '-date');
+    },
   });
 
   const { data: employees = [] } = useQuery({
@@ -248,8 +269,9 @@ export default function StandplaatsWerk() {
   const activeActiviteiten = activiteiten.filter((a) => a.status !== "Inactief");
 
   const filtered = records.filter((r) => {
-    if (filterDate && r.date !== filterDate) return false;
+    // Client-side filters (date already handled server-side)
     if (filterEmployee !== "all" && r.employee_id !== filterEmployee) return false;
+    if (filterActivity !== "all" && r.activity_id !== filterActivity) return false;
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       const emp = getEmployee(r.employee_id);
@@ -285,7 +307,7 @@ export default function StandplaatsWerk() {
     return overlapping;
   };
 
-  const uniqueEmployees = [...new Set(records.map((r) => r.employee_id).filter(Boolean))];
+  // No longer needed - using employees list directly
 
   return (
     <div className="space-y-4 max-w-[1400px] mx-auto pb-6">
@@ -304,41 +326,70 @@ export default function StandplaatsWerk() {
       {/* Filters */}
       <Card>
         <CardContent className="px-4 py-3">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[180px] max-w-[280px]">
+              <Label className="text-xs text-slate-500 mb-1 block">Zoeken</Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Medewerker, klant, opmerking..."
+                  value={searchTerm}
+                  onChange={(e) => { setSearchTerm(e.target.value); pagination.resetPage(); }}
+                  className="pl-9 h-9 text-sm"
+                />
+              </div>
+            </div>
+            <div className="min-w-[160px]">
+              <Label className="text-xs text-slate-500 mb-1 block">Medewerker</Label>
+              <Select value={filterEmployee} onValueChange={(v) => { setFilterEmployee(v); pagination.resetPage(); }}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Alle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle medewerkers</SelectItem>
+                  {employees.filter(e => e.status === 'Actief').map(e => (
+                    <SelectItem key={e.id} value={e.id}>{getFullName(e)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[140px]">
+              <Label className="text-xs text-slate-500 mb-1 block">Activiteit</Label>
+              <Select value={filterActivity} onValueChange={(v) => { setFilterActivity(v); pagination.resetPage(); }}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Alle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle activiteiten</SelectItem>
+                  {activeActiviteiten.map(a => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[140px]">
+              <Label className="text-xs text-slate-500 mb-1 block">Datum van</Label>
               <Input
-                placeholder="Zoek op medewerker, klant of opmerking..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                type="date"
+                value={filterDateFrom}
+                onChange={(e) => { setFilterDateFrom(e.target.value); pagination.resetPage(); }}
+                className="h-9 text-sm"
               />
             </div>
-            <Input
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="w-full md:w-44"
-            />
-            <Select value={filterEmployee} onValueChange={setFilterEmployee}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Medewerker" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle medewerkers</SelectItem>
-                {uniqueEmployees.map((id) => {
-                  const emp = getEmployee(id);
-                  return (
-                    <SelectItem key={id} value={id}>
-                      {emp ? getFullName(emp) : id}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={() => { setFilterDate(""); setFilterEmployee("all"); setSearchTerm(""); }}>
-              Reset
-            </Button>
+            <div className="min-w-[140px]">
+              <Label className="text-xs text-slate-500 mb-1 block">Datum tot</Label>
+              <Input
+                type="date"
+                value={filterDateTo}
+                onChange={(e) => { setFilterDateTo(e.target.value); pagination.resetPage(); }}
+                className="h-9 text-sm"
+              />
+            </div>
+            {(searchTerm || filterEmployee !== "all" || filterActivity !== "all" || filterDateFrom !== SPW_DEFAULT_FROM || filterDateTo !== SPW_TODAY) && (
+              <Button variant="ghost" size="sm" className="h-9 text-xs text-slate-500" onClick={resetFilters}>
+                <X className="w-3.5 h-3.5 mr-1" /> Reset
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
