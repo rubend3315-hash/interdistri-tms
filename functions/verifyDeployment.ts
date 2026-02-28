@@ -126,16 +126,16 @@ Deno.serve(async (req) => {
         success: true, functions: [], dependency_checks: [],
         summary: { total: 0, checked: 0, deployed: 0, not_deployed: 0, errors: 0 },
         auth_error: authErr?.message || 'Auth failed',
-        version: '2026-02-28-v5', timestamp: new Date().toISOString(),
-      }, { status: 200 });
-    }
+        version: '2026-02-28-v6', timestamp: new Date().toISOString(),
+        }, { status: 200 });
+        }
 
-    if (!user || user.role !== 'admin') {
-      return Response.json({
-        success: true, functions: [], dependency_checks: [],
-        summary: { total: 0, checked: 0, deployed: 0, not_deployed: 0, errors: 0 },
-        auth_error: 'Forbidden: Admin access required',
-        version: '2026-02-28-v5', timestamp: new Date().toISOString(),
+        if (!user || user.role !== 'admin') {
+        return Response.json({
+          success: true, functions: [], dependency_checks: [],
+          summary: { total: 0, checked: 0, deployed: 0, not_deployed: 0, errors: 0 },
+          auth_error: 'Forbidden: Admin access required',
+          version: '2026-02-28-v6', timestamp: new Date().toISOString(),
       }, { status: 200 });
     }
 
