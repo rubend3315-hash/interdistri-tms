@@ -237,8 +237,14 @@ export default function DeploymentStatus() {
       {/* Registry Integrity Section */}
       <RegistryIntegritySection />
 
+      {/* Self-Healing Status */}
+      <SelfHealingSection />
+
       {/* Full Publish Protocol */}
       <FullPublishProtocol />
+
+      {/* Self-Healing Protocol */}
+      <SelfHealingProtocol />
     </div>
   );
 }
