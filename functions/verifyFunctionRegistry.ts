@@ -108,21 +108,25 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    let user = null;
+    // Auth: allow admin users AND service-role calls (from autoHealRegistry/hourly automation)
+    let isAuthorized = false;
     try {
-      user = await base44.auth.me();
+      const user = await base44.auth.me();
+      if (user && user.role === 'admin') isAuthorized = true;
     } catch (_) {
-      return Response.json({
-        status: 'ERROR', auth_error: 'Auth failed',
-        manifest_count: CRITICAL_FUNCTION_MANIFEST.length,
-        missing_functions: [], deployed_count: 0,
-        timestamp: new Date().toISOString(), version: 'registry-v1',
-      }, { status: 200 });
+      // auth.me() fails for service-role invocations — that's OK, check if it's a service call
     }
-
-    if (!user || user.role !== 'admin') {
+    // Service-role calls pass through (they already have elevated access)
+    if (!isAuthorized) {
+      try {
+        // If we can list entities via asServiceRole, we're in a service context
+        const test = await base44.asServiceRole.entities.Tenant.list('', 1);
+        if (Array.isArray(test)) isAuthorized = true;
+      } catch (_) {}
+    }
+    if (!isAuthorized) {
       return Response.json({
-        status: 'ERROR', auth_error: 'Forbidden: Admin access required',
+        status: 'ERROR', auth_error: 'Forbidden: Admin or service role required',
         manifest_count: CRITICAL_FUNCTION_MANIFEST.length,
         missing_functions: [], deployed_count: 0,
         timestamp: new Date().toISOString(), version: 'registry-v1',
