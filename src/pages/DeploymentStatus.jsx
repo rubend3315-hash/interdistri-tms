@@ -384,6 +384,237 @@ function RegistryIntegritySection() {
   );
 }
 
+function SelfHealingSection() {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const { data: healLogs, refetch: refetchLogs } = useQuery({
+    queryKey: ['autoHealLogs'],
+    queryFn: async () => {
+      const logs = await base44.entities.AuditLog.filter(
+        { target_id: 'auto-heal-registry' },
+        '-created_date',
+        10
+      );
+      return logs;
+    },
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+
+  const handleManualHeal = async () => {
+    setLoading(true);
+    try {
+      const res = await base44.functions.invoke('autoHealRegistry', {});
+      setResult(res.data);
+      refetchLogs();
+    } catch (err) {
+      setResult({ action: 'SYSTEM_ERROR', error: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const healResults = healLogs?.filter(l => l.metadata?.phase === 'HEAL_RESULT') || [];
+  const healAttempts = healLogs?.filter(l => l.metadata?.phase === 'HEAL_START') || [];
+  const rateLimited = healLogs?.filter(l => l.target_id === 'auto-heal-rate-limited') || [];
+  const consecutiveFailures = (() => {
+    let count = 0;
+    for (const log of healResults) {
+      if (!log.metadata?.heal_success) count++;
+      else break;
+    }
+    return count;
+  })();
+
+  return (
+    <div className="space-y-4 mt-8">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Shield className="w-5 h-5 text-purple-600" />
+          <h2 className="text-lg font-bold text-slate-900">Self-Healing Status</h2>
+          {consecutiveFailures > 0 && (
+            <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
+              {consecutiveFailures}x consecutive failure
+            </Badge>
+          )}
+        </div>
+        <Button onClick={handleManualHeal} disabled={loading} size="sm" variant="outline" className="gap-2">
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          Manual Heal
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p className="text-2xl font-bold">{healAttempts.length}</p>
+            <p className="text-xs text-slate-500">Heal attempts (recent)</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p className="text-2xl font-bold text-green-700">{healResults.filter(l => l.metadata?.heal_success).length}</p>
+            <p className="text-xs text-slate-500">Successful heals</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p className={`text-2xl font-bold ${consecutiveFailures > 0 ? 'text-red-700' : 'text-green-700'}`}>{consecutiveFailures}</p>
+            <p className="text-xs text-slate-500">Consecutive failures</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p className="text-2xl font-bold text-amber-700">{rateLimited.length}</p>
+            <p className="text-xs text-slate-500">Rate limited</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Manual heal result */}
+      {result && (
+        <Card className={
+          result.action === 'HEAL_SUCCESS' || result.action === 'NO_DRIFT'
+            ? "border-green-200 bg-green-50"
+            : "border-red-200 bg-red-50"
+        }>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              {result.action === 'HEAL_SUCCESS' || result.action === 'NO_DRIFT'
+                ? <CheckCircle2 className="w-5 h-5 text-green-600" />
+                : <AlertTriangle className="w-5 h-5 text-red-600" />
+              }
+              <div>
+                <p className="font-semibold">{result.action}</p>
+                {result.healed_functions?.length > 0 && (
+                  <p className="text-sm text-green-700">Hersteld: {result.healed_functions.join(', ')}</p>
+                )}
+                {result.still_missing?.length > 0 && (
+                  <p className="text-sm text-red-700">Nog steeds missing: {result.still_missing.join(', ')}</p>
+                )}
+                {result.rate_limited && (
+                  <p className="text-sm text-amber-700">Rate limited — max 1 heal per uur</p>
+                )}
+                {result.error && (
+                  <p className="text-sm text-red-700">{result.error}</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent heal log */}
+      {healLogs && healLogs.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Recente Heal Log</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {healLogs.slice(0, 5).map(log => (
+                <div key={log.id} className="flex items-start gap-2 text-xs border-b border-slate-100 pb-2">
+                  <span className="text-slate-400 font-mono flex-shrink-0 w-32">
+                    {new Date(log.created_date).toLocaleString("nl-NL")}
+                  </span>
+                  <span className={
+                    log.metadata?.heal_success === true ? "text-green-700" :
+                    log.metadata?.heal_success === false ? "text-red-700" :
+                    log.metadata?.rate_limited ? "text-amber-700" :
+                    "text-slate-600"
+                  }>
+                    {log.description}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function SelfHealingProtocol() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-2 text-lg font-semibold text-slate-700 hover:text-slate-900"
+        >
+          {open ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          <Shield className="w-5 h-5 text-purple-600" />
+          Self-Healing Protocol Documentatie
+        </button>
+      </CardHeader>
+      {open && (
+        <CardContent className="prose prose-sm prose-slate max-w-none">
+          <div className="space-y-4 text-sm">
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <h3 className="font-bold text-purple-900 mt-0">Hoe werkt Self-Healing?</h3>
+              <p className="text-purple-800 mb-0">
+                Het <code>autoHealRegistry</code> systeem draait elk uur via de automation en detecteert deployment drift.
+                Bij ontbrekende functies wordt automatisch een <strong>warm-ping heal</strong> uitgevoerd:
+                elke missing function wordt 3× gepinged met 3 seconden pauze, gevolgd door 5 seconden stabilisatie.
+                Daarna wordt de registry opnieuw gecontroleerd.
+              </p>
+            </div>
+
+            <h3 className="font-bold text-slate-900">Heal Flow</h3>
+            <div className="space-y-2">
+              <div className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+                <p><strong>Check:</strong> <code>verifyFunctionRegistry</code> vergelijkt manifest met deployed functies</p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+                <p><strong>Rate limit:</strong> Max 1 heal per 60 minuten (via AuditLog timestamp)</p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center">3</span>
+                <p><strong>Warm-ping:</strong> 3 rondes × ping alle missing functies, 3s delay per ronde</p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center">4</span>
+                <p><strong>Verify:</strong> 5s wachten, dan re-run <code>verifyFunctionRegistry</code></p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center">5</span>
+                <p><strong>Notify:</strong> SUCCESS = medium notification, FAILED = urgent notification</p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <h3 className="font-bold text-amber-900 mt-0">⚠️ Beperkingen</h3>
+              <ul className="text-amber-800 mb-0">
+                <li>Warm-ping kan alleen functies herstellen die <strong>gepauzeerd/cold</strong> zijn door het platform</li>
+                <li>Als een functie daadwerkelijk <strong>verwijderd of corrupt</strong> is, is handmatige re-deploy nodig</li>
+                <li>Rate limit: max 1 heal per uur om cascade-effecten te voorkomen</li>
+                <li>Bij 3+ consecutive failures: handmatig Full Publish Protocol uitvoeren</li>
+              </ul>
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="font-bold text-green-900 mt-0">✓ Automatische escalatie</h3>
+              <ul className="text-green-800 mb-0">
+                <li><strong>GREEN (geen drift):</strong> Stille AuditLog entry, geen notification</li>
+                <li><strong>HEAL SUCCESS:</strong> Medium priority notification + AuditLog</li>
+                <li><strong>HEAL FAILED:</strong> Urgent notification + AuditLog</li>
+                <li><strong>RATE LIMITED:</strong> Urgent notification (handmatige actie vereist)</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
 function FullPublishProtocol() {
   const [open, setOpen] = useState(false);
 
