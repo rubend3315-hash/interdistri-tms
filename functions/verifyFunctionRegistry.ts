@@ -109,20 +109,33 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     // Auth: allow admin users AND service-role calls (from autoHealRegistry/hourly automation)
+    // Strategy: try admin check first; if that fails, try service-role entity access.
+    // When called via svc.functions.invoke() from another function, the request carries
+    // a service-role token, so auth.me() may return a system/service identity or throw.
     let isAuthorized = false;
     try {
       const user = await base44.auth.me();
-      if (user && user.role === 'admin') isAuthorized = true;
+      if (user) {
+        // Admin check
+        if (user.role === 'admin') {
+          isAuthorized = true;
+        }
+        // Service-role calls from automations/other functions often have a special identity
+        // that still passes auth.me() — if we got any valid user, check service-role access
+        if (!isAuthorized) {
+          try {
+            await base44.asServiceRole.entities.AuditLog.list('-created_date', 1);
+            isAuthorized = true;
+          } catch (_) {}
+        }
+      }
     } catch (_) {
-      // auth.me() fails for service-role invocations — that's OK, check if it's a service call
-    }
-    // Service-role calls pass through (they already have elevated access)
-    if (!isAuthorized) {
+      // auth.me() threw — likely a pure service-role context without user identity
+      // Verify by checking if service-role operations work
       try {
-        // If we can list entities via asServiceRole, we're in a service context
-        const test = await base44.asServiceRole.entities.Tenant.list('', 1);
-        if (Array.isArray(test)) isAuthorized = true;
-      } catch (_) {}
+        await base44.asServiceRole.entities.AuditLog.list('-created_date', 1);
+        isAuthorized = true;
+      } catch (_inner) {}
     }
     if (!isAuthorized) {
       return Response.json({
