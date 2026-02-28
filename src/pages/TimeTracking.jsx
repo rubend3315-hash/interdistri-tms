@@ -147,10 +147,14 @@ export default function TimeTracking() {
     if (weekIsDefinitief) return;
     const dateStr = format(day, 'yyyy-MM-dd');
     const entries = timeEntries.filter(e => e.employee_id === employeeId && e.date === dateStr);
-    let errors = [];
+    const errors = [];
     for (const entry of entries) {
-      const res = await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
-      if (!res.data?.success) errors.push(res.data?.message || res.data?.error || 'Onbekende fout');
+      try {
+        const res = await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
+        if (!res.data?.success) errors.push(res.data?.message || res.data?.error || 'Onbekende fout');
+      } catch (err) {
+        errors.push(err?.response?.data?.message || err?.message || 'Verwijderen mislukt');
+      }
     }
     if (errors.length > 0) alert(`Verwijderen mislukt: ${errors.join(', ')}`);
     queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
@@ -160,10 +164,14 @@ export default function TimeTracking() {
     if (weekIsDefinitief) return;
     const dateStrs = days.map(d => format(d, 'yyyy-MM-dd'));
     const entries = timeEntries.filter(e => e.employee_id === employeeId && dateStrs.includes(e.date));
-    let errors = [];
+    const errors = [];
     for (const entry of entries) {
-      const res = await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
-      if (!res.data?.success) errors.push(res.data?.message || res.data?.error || 'Onbekende fout');
+      try {
+        const res = await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
+        if (!res.data?.success) errors.push(res.data?.message || res.data?.error || 'Onbekende fout');
+      } catch (err) {
+        errors.push(err?.response?.data?.message || err?.message || 'Verwijderen mislukt');
+      }
     }
     if (errors.length > 0) alert(`Verwijderen mislukt: ${errors.join(', ')}`);
     queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
