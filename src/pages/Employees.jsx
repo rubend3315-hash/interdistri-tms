@@ -1563,4 +1563,4 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
   );
 }
 
-// ContractDialog and ReiskostenDialog are now imported from components/employees/
+// ContractDialog and ReiskostenDialog imported from components/employees/
