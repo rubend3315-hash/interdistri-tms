@@ -341,9 +341,16 @@ export default function StamkaartForm({
         {/* Kolom 2 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <StamkaartRow label="Contract type" compact>
-            <Select value={data.contract_type || "Tijdelijk"} onValueChange={v => update("contract_type", v)}>
-              <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue /></SelectTrigger>
+            <Select value={data.contract_type || "_none"} onValueChange={v => {
+              const val = v === '_none' ? '' : v;
+              const updated = { ...data, contract_type: val };
+              if (val === 'Oproep') updated.contract_hours = 0;
+              setData(updated);
+              if (isOnboarding && externalOnChange) externalOnChange(updated);
+            }}>
+              <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Selecteer" /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="_none" disabled>Selecteer</SelectItem>
                 <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
                 <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
                 <SelectItem value="Oproep">Oproep / 0-uren</SelectItem>
@@ -351,7 +358,17 @@ export default function StamkaartForm({
             </Select>
           </StamkaartRow>
           <StamkaartRow label="Contracturen" compact>
-            <Input type="number" className={inputCls} value={data.contract_hours || ""} onChange={e => update("contract_hours", Number(e.target.value))} />
+            <Input
+              type="number"
+              className={inputCls}
+              value={data.contract_type === 'Oproep' ? 0 : (data.contract_hours ?? "")}
+              readOnly={data.contract_type === 'Oproep'}
+              onChange={e => update("contract_hours", Number(e.target.value))}
+              style={data.contract_type === 'Oproep' ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
+            />
+            {data.contract_type === 'Oproep' && (
+              <span className="text-[10px] text-slate-400 ml-1.5 whitespace-nowrap">0-uren</span>
+            )}
           </StamkaartRow>
           <StamkaartRow label="Loonschaal" compact>
             {loadingSalary ? (
