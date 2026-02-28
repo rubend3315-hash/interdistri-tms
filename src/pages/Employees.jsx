@@ -1561,24 +1561,7 @@ function WeekroosterTab({ employee, onSubmit, isSubmitting, viewOnly = false }) 
   );
 }
 
-function ContractDialog({ open, onOpenChange, contract, onSave, preFilledData, contractList = [] }) {
-  const { data: salaryTables = [] } = useQuery({
-    queryKey: ['salaryTables'],
-    queryFn: () => base44.entities.SalaryTable.list(),
-    enabled: open
-  });
-
-  const [formData, setFormData] = useState(contract || {
-    startdatum: '',
-    einddatum: '',
-    type_contract: 'Vast Contract',
-    loonschaal: '',
-    uren_per_week: 40,
-    week1: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
-    week2: { maandag: true, dinsdag: true, woensdag: true, donderdag: true, vrijdag: true, zaterdag: false, zondag: false },
-    reiskostenvergoeding: 'Woon-werkverkeer',
-    status: 'Actief'
-  });
+/* ContractDialog and ReiskostenDialog extracted to components/employees/ */
 
   useEffect(() => {
     if (contract) {
