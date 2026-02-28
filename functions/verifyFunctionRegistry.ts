@@ -153,16 +153,24 @@ Deno.serve(async (req) => {
       }, { status: 200 });
     }
 
-    // Ping all manifest functions in parallel (use service role for reliability)
+    // Ping all manifest functions in batches to avoid 429 rate limits
     const svc = base44.asServiceRole;
-    const promises = CRITICAL_FUNCTION_MANIFEST.map(fn =>
-      svc.functions.invoke(fn, { _ping: true })
-    );
-    const settled = await Promise.allSettled(promises);
-
+    const BATCH_SIZE = 4;
+    const BATCH_DELAY_MS = 1500;
     const results = [];
-    for (let i = 0; i < CRITICAL_FUNCTION_MANIFEST.length; i++) {
-      results.push(classifyResult(CRITICAL_FUNCTION_MANIFEST[i], settled[i]));
+
+    for (let batchStart = 0; batchStart < CRITICAL_FUNCTION_MANIFEST.length; batchStart += BATCH_SIZE) {
+      if (batchStart > 0) {
+        await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
+      }
+      const batch = CRITICAL_FUNCTION_MANIFEST.slice(batchStart, batchStart + BATCH_SIZE);
+      const batchPromises = batch.map(fn =>
+        svc.functions.invoke(fn, { _ping: true })
+      );
+      const batchSettled = await Promise.allSettled(batchPromises);
+      for (let i = 0; i < batch.length; i++) {
+        results.push(classifyResult(batch[i], batchSettled[i]));
+      }
     }
 
     const deployed = results.filter(r => r.deployed === true);
