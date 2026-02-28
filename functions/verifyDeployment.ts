@@ -140,16 +140,24 @@ Deno.serve(async (req) => {
     }
 
     // ========================================
-    // 1. Test all critical functions
+    // 1. Test all critical functions in batches to avoid 429
     // ========================================
-    const criticalPromises = CRITICAL_FUNCTIONS.map(fnName =>
-      base44.functions.invoke(fnName, { _ping: true })
-    );
-    const criticalSettled = await Promise.allSettled(criticalPromises);
-
+    const BATCH_SIZE = 4;
+    const BATCH_DELAY_MS = 1500;
     const functions = [];
-    for (let i = 0; i < CRITICAL_FUNCTIONS.length; i++) {
-      functions.push(classifyResult(CRITICAL_FUNCTIONS[i], criticalSettled[i]));
+
+    for (let batchStart = 0; batchStart < CRITICAL_FUNCTIONS.length; batchStart += BATCH_SIZE) {
+      if (batchStart > 0) {
+        await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
+      }
+      const batch = CRITICAL_FUNCTIONS.slice(batchStart, batchStart + BATCH_SIZE);
+      const batchPromises = batch.map(fnName =>
+        base44.functions.invoke(fnName, { _ping: true })
+      );
+      const batchSettled = await Promise.allSettled(batchPromises);
+      for (let i = 0; i < batch.length; i++) {
+        functions.push(classifyResult(batch[i], batchSettled[i]));
+      }
     }
 
     // ========================================
