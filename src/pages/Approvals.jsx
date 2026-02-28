@@ -293,14 +293,29 @@ export default function Approvals() {
     });
   };
 
-  const pendingEntries = sortByDateDesc(
-    Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Ingediend') : []
-  );
+  // Client-side filter function (employee + search)
+  const applyClientFilters = (entries) => {
+    let result = entries;
+    if (filterEmployee !== "all") {
+      result = result.filter(e => e.employee_id === filterEmployee);
+    }
+    if (filterSearch.trim()) {
+      const q = filterSearch.toLowerCase().trim();
+      result = result.filter(e => {
+        const emp = getEmployee(e.employee_id);
+        const empName = emp ? `${emp.first_name} ${emp.last_name}`.toLowerCase() : '';
+        return empName.includes(q) || (e.notes || '').toLowerCase().includes(q);
+      });
+    }
+    return result;
+  };
+
+  const pendingEntries = sortByDateDesc(applyClientFilters(pendingRaw));
   const approvedEntries = sortByDateDesc(
-    Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Goedgekeurd') : []
+    applyClientFilters(historyRaw.filter(e => e?.status === 'Goedgekeurd'))
   );
   const rejectedEntries = sortByDateDesc(
-    Array.isArray(timeEntries) ? timeEntries.filter(e => e?.status === 'Afgekeurd') : []
+    applyClientFilters(historyRaw.filter(e => e?.status === 'Afgekeurd'))
   );
 
   // Detect overlap between time entries for same employee+date
@@ -311,7 +326,7 @@ export default function Approvals() {
     const startMin = sH * 60 + sM;
     const endMin = eH * 60 + eM;
 
-    return timeEntries.filter((te) => {
+    return allLoadedEntries.filter((te) => {
       if (te.id === entry.id || te.employee_id !== entry.employee_id || te.date !== entry.date) return false;
       if (!te.start_time || !te.end_time) return false;
       const [s2H, s2M] = te.start_time.split(':').map(Number);
