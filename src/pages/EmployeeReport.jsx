@@ -34,7 +34,7 @@ export default function EmployeeReport() {
   const currentYear = getYear(new Date());
   const currentWeek = getISOWeek(new Date());
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
-  const [selectedWeek, setSelectedWeek] = useState(String(currentWeek));
+  const [selectedWeek, setSelectedWeek] = useState(String(currentWeek)); // Default: huidige week (niet "all")
   const [importOpen, setImportOpen] = useState(false);
   const [tab, setTab] = useState("summary");
   const [selectedEmployee, setSelectedEmployee] = useState("all");
