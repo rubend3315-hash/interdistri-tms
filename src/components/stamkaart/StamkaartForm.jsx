@@ -70,14 +70,13 @@ export default function StamkaartForm({
 }) {
   const isOnboarding = mode === "onboarding";
 
-  // Derive contract_type and contract_hours from active contractregel (single source of truth)
+  // Derive display-only contract_type and contract_hours from active contractregel (single source of truth)
   const initialData = useMemo(() => {
     const emp = { ...employee };
     const activeRegel = (emp.contractregels || [])
       .filter(r => r.status === 'Actief' || (r.status !== 'Inactief' && r.status !== 'Beëindigd'))
       .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
     if (activeRegel) {
-      // Map contractregel type_contract to Employee contract_type display enum
       const typeMap = {
         'Oproepcontract': 'Oproep',
         'Oproep': 'Oproep',
@@ -88,12 +87,11 @@ export default function StamkaartForm({
         'Bepaalde tijd': 'Tijdelijk',
         'Tijdelijk': 'Tijdelijk',
       };
-      emp.contract_type = typeMap[activeRegel.type_contract] || '';
-      emp.contract_hours = (emp.contract_type === 'Oproep') ? 0 : (activeRegel.uren_per_week ?? 0);
+      emp._display_contract_type = typeMap[activeRegel.type_contract] || '';
+      emp._display_contract_hours = (emp._display_contract_type === 'Oproep') ? 0 : (activeRegel.uren_per_week ?? 0);
     } else {
-      // No active contractregel → show empty
-      emp.contract_type = emp.contract_type || '';
-      emp.contract_hours = emp.contract_hours ?? '';
+      emp._display_contract_type = '';
+      emp._display_contract_hours = '';
     }
     return emp;
   }, [employee]);
@@ -187,9 +185,9 @@ export default function StamkaartForm({
     mutationFn: () => {
       const saveData = { ...data, loonheffing_toepassen: lhToepassen, loonheffing_datum: lhDatum, loonheffing_handtekening_url: lhSignatureUrl };
       delete saveData.id; delete saveData.created_date; delete saveData.updated_date; delete saveData.created_by;
-      // contract_type/contract_hours are derived from contractregels — don't overwrite Employee fields
-      delete saveData.contract_type;
-      delete saveData.contract_hours;
+      // Remove display-only derived fields — not part of Employee entity
+      delete saveData._display_contract_type;
+      delete saveData._display_contract_hours;
       return base44.entities.Employee.update(employee.id, saveData);
     },
     onSuccess: () => {
@@ -372,35 +370,26 @@ export default function StamkaartForm({
         {/* Kolom 2 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <StamkaartRow label="Contract type" compact>
-            <Select value={data.contract_type || "__empty__"} onValueChange={v => {
-              const val = v === '__empty__' ? '' : v;
-              const updated = { ...data, contract_type: val };
-              if (val === 'Oproep') updated.contract_hours = 0;
-              setData(updated);
-              if (isOnboarding && externalOnChange) externalOnChange(updated);
-            }}>
-              <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Selecteer" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__empty__">— Geen —</SelectItem>
-                <SelectItem value="Vast">Onbepaalde tijd</SelectItem>
-                <SelectItem value="Tijdelijk">Bepaalde tijd</SelectItem>
-                <SelectItem value="Oproep">Oproep / 0-uren</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              className={inputCls}
+              value={data._display_contract_type ? {
+                'Vast': 'Onbepaalde tijd',
+                'Tijdelijk': 'Bepaalde tijd',
+                'Oproep': 'Oproep / 0-uren'
+              }[data._display_contract_type] || data._display_contract_type : '—'}
+              readOnly
+              style={{ backgroundColor: '#f1f5f9', cursor: 'default' }}
+            />
           </StamkaartRow>
           <StamkaartRow label="Contracturen" compact>
             <Input
               type="number"
               className={inputCls}
-              value={data.contract_type === 'Oproep' ? 0 : (data.contract_hours != null && data.contract_hours !== '' ? data.contract_hours : "")}
-              readOnly={data.contract_type === 'Oproep'}
-              onChange={e => {
-                const v = e.target.value;
-                update("contract_hours", v === '' ? null : Number(v));
-              }}
-              style={data.contract_type === 'Oproep' ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
+              value={data._display_contract_hours != null && data._display_contract_hours !== '' ? data._display_contract_hours : ""}
+              readOnly
+              style={{ backgroundColor: '#f1f5f9', cursor: 'default' }}
             />
-            {data.contract_type === 'Oproep' && (
+            {data._display_contract_type === 'Oproep' && (
               <span className="text-[10px] text-slate-400 ml-1.5 whitespace-nowrap">0-uren</span>
             )}
           </StamkaartRow>
