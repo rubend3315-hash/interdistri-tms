@@ -618,6 +618,139 @@ function SelfHealingProtocol() {
   );
 }
 
+function PublishRegistryDriftDocs() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Card className="mt-8">
+      <CardHeader>
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-2 text-lg font-semibold text-slate-700 hover:text-slate-900"
+        >
+          {open ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          <BookOpen className="w-5 h-5 text-indigo-600" />
+          Publish Types & Registry Drift
+        </button>
+      </CardHeader>
+      {open && (
+        <CardContent className="prose prose-sm prose-slate max-w-none">
+          <div className="space-y-5 text-sm">
+
+            {/* Incremental Publish */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-bold text-blue-900 mt-0">1. Incremental Publish (standaard)</h3>
+              <p className="text-blue-800 mb-2">
+                Elke keer dat een <strong>individueel bestand</strong> wordt opgeslagen of gewijzigd (via chat of editor), 
+                wordt <strong>alleen dat bestand</strong> opnieuw gedeployed.
+              </p>
+              <ul className="text-blue-800 mb-0 space-y-1">
+                <li><strong>Frontend</strong> (pages, components, layout): alleen het gewijzigde bestand wordt opnieuw gebundeld.</li>
+                <li><strong>Backend functions</strong>: alleen de gewijzigde functie wordt opnieuw gedeployed naar Deno. Andere functies worden <em>niet aangeraakt</em>.</li>
+                <li>Dit is het standaard gedrag bij elke wijziging.</li>
+              </ul>
+            </div>
+
+            {/* Full Rebuild */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="font-bold text-green-900 mt-0">2. Full Rebuild / Publish</h3>
+              <p className="text-green-800 mb-2">
+                Een full rebuild vindt plaats wanneer je in het Base44 dashboard handmatig <strong>"Publish"</strong> klikt.
+              </p>
+              <ul className="text-green-800 mb-0 space-y-1">
+                <li><strong>Alle</strong> frontend-bestanden worden opnieuw gebundeld.</li>
+                <li><strong>Alle</strong> backend functions worden opnieuw gedeployed.</li>
+                <li>Dit is de enige manier om te garanderen dat alle functies consistent zijn.</li>
+              </ul>
+            </div>
+
+            {/* Function Registry */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <h3 className="font-bold text-purple-900 mt-0">3. Function Registry</h3>
+              <p className="text-purple-800 mb-2">
+                Er is <strong>geen platform-native registry</strong> die automatisch wordt bijgehouden door Base44.
+              </p>
+              <ul className="text-purple-800 mb-0 space-y-1">
+                <li>Functies bestaan als individuele <strong>Deno-isolates</strong> — er is geen centraal manifest op platform-niveau.</li>
+                <li>Onze <code>verifyFunctionRegistry</code> en <code>autoHealRegistry</code> zijn <strong>zelfgebouwde verificatielagen</strong> die checken of functies bereikbaar zijn via ping.</li>
+                <li>Bij een <strong>full publish</strong> worden alle functies opnieuw gedeployed → daarna zijn ze allemaal bereikbaar.</li>
+                <li>Bij een <strong>incremental</strong> publish wordt <em>alleen</em> de gewijzigde functie opnieuw gedeployed.</li>
+                <li>De registry wordt dus <strong>niet automatisch opnieuw opgebouwd</strong> — onze functies monitoren en rapporteren de actuele status.</li>
+              </ul>
+            </div>
+
+            {/* Registry Drift */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <h3 className="font-bold text-amber-900 mt-0">4. Kan partial publish registry drift veroorzaken?</h3>
+              <p className="text-amber-800 mb-2">
+                <strong>Ja, absoluut.</strong> Dit is de hoofdoorzaak van drift.
+              </p>
+              <table className="w-full text-xs border-collapse mb-0">
+                <thead>
+                  <tr className="border-b border-amber-300">
+                    <th className="text-left py-2 pr-3 font-semibold text-amber-900">Oorzaak</th>
+                    <th className="text-left py-2 font-semibold text-amber-900">Mechanisme</th>
+                  </tr>
+                </thead>
+                <tbody className="text-amber-800">
+                  <tr className="border-b border-amber-200">
+                    <td className="py-2 pr-3 font-medium">Deploy-fout bij incremental save</td>
+                    <td className="py-2">Functie wordt gewijzigd maar deploy faalt stilletjes (syntax error, timeout). Functie is dan tijdelijk niet bereikbaar.</td>
+                  </tr>
+                  <tr className="border-b border-amber-200">
+                    <td className="py-2 pr-3 font-medium">Cold-start na inactiviteit</td>
+                    <td className="py-2">Deno-isolates kunnen na langere inactiviteit "slapen". Eerste ping kan timeout geven.</td>
+                  </tr>
+                  <tr className="border-b border-amber-200">
+                    <td className="py-2 pr-3 font-medium">Platform-onderhoud</td>
+                    <td className="py-2">Bij platform-updates worden isolates herstart. Niet alle functies starten tegelijk → kort window van drift.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-3 font-medium">Verwijderde functie</td>
+                    <td className="py-2">Bestand verwijderd maar staat nog in het manifest → permanent missing tot manifest update.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Samenvatting */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <h3 className="font-bold text-slate-900 mt-0">Samenvatting</h3>
+              <table className="w-full text-xs border-collapse mb-0">
+                <thead>
+                  <tr className="border-b border-slate-300">
+                    <th className="text-left py-2 pr-3 font-semibold">Actie</th>
+                    <th className="text-left py-2 pr-3 font-semibold">Scope</th>
+                    <th className="text-left py-2 font-semibold">Drift risico</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-700">
+                  <tr className="border-b border-slate-200">
+                    <td className="py-2 pr-3 font-medium">Incremental save</td>
+                    <td className="py-2 pr-3">Alleen gewijzigde functie</td>
+                    <td className="py-2"><Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 text-[10px]">Mogelijk</Badge></td>
+                  </tr>
+                  <tr className="border-b border-slate-200">
+                    <td className="py-2 pr-3 font-medium">Full publish</td>
+                    <td className="py-2 pr-3">Alle functies</td>
+                    <td className="py-2"><Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-[10px]">Lost drift op</Badge></td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-3 font-medium">Registry check</td>
+                    <td className="py-2 pr-3">Onze eigen verificatielaag</td>
+                    <td className="py-2"><Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-[10px]">Detecteert drift</Badge></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
 function FullPublishProtocol() {
   const [open, setOpen] = useState(false);
 
