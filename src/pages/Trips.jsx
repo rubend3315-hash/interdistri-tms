@@ -239,6 +239,8 @@ export default function Trips() {
   });
   const [kmWarning, setKmWarning] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const voltooidePageState = usePagination(20);
+  const conceptPageState = usePagination(20);
 
   const resetForm = () => {
     setFormData({
@@ -535,8 +537,10 @@ export default function Trips() {
     return matchesDate && matchesSearch;
   });
 
-  const voltooideTrips = filteredTrips.filter(t => t.status === "Voltooid");
-  const conceptTrips = filteredTrips.filter(t => t.status === "Gepland");
+  const voltooideTripsAll = filteredTrips.filter(t => t.status === "Voltooid");
+  const conceptTripsAll = filteredTrips.filter(t => t.status === "Gepland");
+  const voltooideTrips = voltooidePageState.paginateItems(voltooideTripsAll);
+  const conceptTrips = conceptPageState.paginateItems(conceptTripsAll);
 
   // Detect overlap between trips for same employee+date
   const getTripOverlaps = (trip) => {
@@ -626,22 +630,23 @@ export default function Trips() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="voltooid">
-              Voltooid ({voltooideTrips.length})
+              Voltooid ({voltooideTripsAll.length})
             </TabsTrigger>
             <TabsTrigger value="concept">
-              Concept ({conceptTrips.length})
+              Concept ({conceptTripsAll.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="voltooid" className="space-y-3 mt-3">
-            {voltooideTrips.length === 0 ? (
+            {voltooideTripsAll.length === 0 ? (
               <Card className="p-12 text-center">
                 <Truck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-slate-900">Geen voltooide ritten</h3>
                 <p className="text-slate-500 mt-1">Er zijn nog geen voltooide ritten.</p>
               </Card>
             ) : (
-              voltooideTrips.map(trip => {
+              <>
+              {voltooideTrips.map(trip => {
                 const employee = getEmployee(trip.employee_id);
                 const vehicle = getVehicle(trip.vehicle_id);
                 const customer = getCustomer(trip.customer_id);
@@ -733,19 +738,28 @@ export default function Trips() {
                     </CardContent>
                   </Card>
                                   );
-                                  })
-                                  )}
-                                  </TabsContent>
+                                  })}
+              <Pagination
+                totalItems={voltooideTripsAll.length}
+                currentPage={voltooidePageState.currentPage}
+                pageSize={voltooidePageState.pageSize}
+                onPageChange={voltooidePageState.setCurrentPage}
+                onPageSizeChange={voltooidePageState.handlePageSizeChange}
+              />
+              </>
+            )}
+          </TabsContent>
 
                                   <TabsContent value="concept" className="space-y-3 mt-3">
-                                  {conceptTrips.length === 0 ? (
-                                  <Card className="p-8 text-center">
-                                  <Truck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                                  <h3 className="text-sm font-medium text-slate-900">Geen concept ritten</h3>
-                                  <p className="text-xs text-slate-500 mt-1">Er zijn geen concept ritten (status: Gepland).</p>
-                                  </Card>
-                                  ) : (
-                                  conceptTrips.map(trip => {
+                                    {conceptTripsAll.length === 0 ? (
+                                      <Card className="p-8 text-center">
+                                        <Truck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                                        <h3 className="text-sm font-medium text-slate-900">Geen concept ritten</h3>
+                                        <p className="text-xs text-slate-500 mt-1">Er zijn geen concept ritten (status: Gepland).</p>
+                                      </Card>
+                                    ) : (
+                                      <>
+                                      {conceptTrips.map(trip => {
                                   const employee = getEmployee(trip.employee_id);
                                   const vehicle = getVehicle(trip.vehicle_id);
                                   const customer = getCustomer(trip.customer_id);
@@ -795,6 +809,14 @@ export default function Trips() {
                                 </Card>
                 );
               })
+              <Pagination
+                totalItems={conceptTripsAll.length}
+                currentPage={conceptPageState.currentPage}
+                pageSize={conceptPageState.pageSize}
+                onPageChange={conceptPageState.setCurrentPage}
+                onPageSizeChange={conceptPageState.handlePageSizeChange}
+              />
+              </>
             )}
           </TabsContent>
         </Tabs>

@@ -40,6 +40,7 @@ export default function StandplaatsWerk() {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const queryClient = useQueryClient();
+  const pagination = usePagination(20);
 
   const { data: records = [], isLoading } = useQuery({
     queryKey: ["standplaatswerk"],
@@ -357,7 +358,7 @@ export default function StandplaatsWerk() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map((record) => {
+          {pagination.paginateItems(filtered).map((record) => {
             const employee = getEmployee(record.employee_id);
             const recYear = record.date ? new Date(record.date).getFullYear() : null;
             const isLocked = record.date && recYear && isDateInDefinitiefPeriode(record.date, recYear, loonperiodeStatuses);
@@ -430,6 +431,13 @@ export default function StandplaatsWerk() {
               </Card>
             );
           })}
+          <Pagination
+            totalItems={filtered.length}
+            currentPage={pagination.currentPage}
+            pageSize={pagination.pageSize}
+            onPageChange={pagination.setCurrentPage}
+            onPageSizeChange={pagination.handlePageSizeChange}
+          />
         </div>
       )}
 
