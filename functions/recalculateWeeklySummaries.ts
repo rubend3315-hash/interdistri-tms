@@ -4,7 +4,7 @@
 // ║ Auth: User session (admin) or service role                     ║
 // ║ Purpose: Recalculate WeeklyCustomerSummary + WeeklyEmployee    ║
 // ║          Summary for a given year + week_number                ║
-// ║ V2: tarief-snapshots, race-condition safe, aggregation_status  ║
+// ║ V2.1: tarief-snapshots, race-condition safe, aggregation_status ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 

@@ -4,7 +4,7 @@
 // ║ Auth: User session (admin)                                     ║
 // ║ Purpose: Archive PostNLImportResult records older than cutoff  ║
 // ║          to PostNLImportArchive, then delete originals.        ║
-// ║ V2: safe batches, verify copy+delete, notifications           ║
+// ║ V2.1: safe batches, verify copy+delete, notifications          ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 

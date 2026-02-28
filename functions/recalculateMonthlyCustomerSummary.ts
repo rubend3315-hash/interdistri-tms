@@ -4,7 +4,7 @@
 // ║ Auth: User session (admin)                                     ║
 // ║ Purpose: Aggregate WeeklyCustomerSummary + SpottaInvoice       ║
 // ║          into MonthlyCustomerSummary for a given year + month  ║
-// ║ V2: locked-week safe, aggregation_status, lock check           ║
+// ║ V2.1: locked-week safe, aggregation_status, lock check          ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
