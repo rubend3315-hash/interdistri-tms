@@ -240,6 +240,9 @@ export default function DeploymentStatus() {
       {/* Self-Healing Status */}
       <SelfHealingSection />
 
+      {/* Publish & Registry Drift Docs */}
+      <PublishRegistryDriftDocs />
+
       {/* Full Publish Protocol */}
       <FullPublishProtocol />
 
