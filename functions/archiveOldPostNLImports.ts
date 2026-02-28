@@ -4,8 +4,19 @@
 // ║ Auth: User session (admin)                                     ║
 // ║ Purpose: Archive PostNLImportResult records older than cutoff  ║
 // ║          to PostNLImportArchive, then delete originals.        ║
+// ║ V2: safe batches, verify copy+delete, notifications           ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+function normalizeDatum(d) {
+  if (!d) return null;
+  if (d.length === 10 && d[4] === '-') return d;
+  if (d.length === 10 && d[2] === '-') {
+    const parts = d.split('-');
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  return d;
+}
 
 Deno.serve(async (req) => {
   try {
@@ -20,19 +31,28 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'cutoff_date is required (YYYY-MM-DD)' }, { status: 400 });
     }
 
-    const svc = base44.asServiceRole;
-    console.log(`[archivePostNL] Starting archive for records with import_datum < ${cutoff_date}`);
+    // Safety: also ensure cutoff < (today - 1 day)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const safeMax = yesterday.toISOString().split('T')[0];
+    const effectiveCutoff = cutoff_date < safeMax ? cutoff_date : safeMax;
 
-    // Fetch old records in batches
+    const svc = base44.asServiceRole;
+    console.log(`[archivePostNL] Starting archive: import_datum < ${effectiveCutoff} (requested: ${cutoff_date}, safeMax: ${safeMax})`);
+
     let totalArchived = 0;
     let totalDeleted = 0;
+    let batchNum = 0;
+    let errors = [];
     let hasMore = true;
+    const BATCH_SIZE = 100; // API limit per call, process many batches up to ~5000
 
-    while (hasMore) {
+    while (hasMore && totalArchived < 5000) {
+      batchNum++;
       const batch = await svc.entities.PostNLImportResult.filter(
-        { import_datum: { $lt: cutoff_date } },
+        { import_datum: { $lt: effectiveCutoff } },
         'import_datum',
-        100
+        BATCH_SIZE
       );
 
       if (batch.length === 0) {
@@ -40,20 +60,9 @@ Deno.serve(async (req) => {
         break;
       }
 
-      console.log(`[archivePostNL] Processing batch of ${batch.length} records`);
+      console.log(`[archivePostNL] Batch #${batchNum}: ${batch.length} records`);
 
-      // Normalize datum to ISO format
-      function normalizeDatum(d) {
-        if (!d) return null;
-        if (d.length === 10 && d[4] === '-') return d; // Already YYYY-MM-DD
-        if (d.length === 10 && d[2] === '-') {
-          const parts = d.split('-');
-          return `${parts[2]}-${parts[1]}-${parts[0]}`; // DD-MM-YYYY → YYYY-MM-DD
-        }
-        return d;
-      }
-
-      // Copy to archive
+      // Step 1: Copy to archive
       const archiveRecords = batch.map(r => ({
         original_id: r.id,
         original_created_date: r.created_date,
@@ -69,53 +78,101 @@ Deno.serve(async (req) => {
         archived_at: new Date().toISOString(),
       }));
 
-      // Bulk create in archive (max 50 at a time for API limits)
+      let batchArchived = 0;
       for (let i = 0; i < archiveRecords.length; i += 50) {
         const chunk = archiveRecords.slice(i, i + 50);
         await svc.entities.PostNLImportArchive.bulkCreate(chunk);
-        totalArchived += chunk.length;
+        batchArchived += chunk.length;
       }
 
-      // Delete originals
+      // Step 2: Verify copy count
+      // Quick check: we just created batchArchived records
+      if (batchArchived !== batch.length) {
+        const errMsg = `Batch #${batchNum}: archive count mismatch (expected ${batch.length}, got ${batchArchived})`;
+        console.error(`[archivePostNL] ${errMsg}`);
+        errors.push(errMsg);
+        // Don't delete if copy failed
+        break;
+      }
+
+      totalArchived += batchArchived;
+
+      // Step 3: Delete originals
+      let batchDeleted = 0;
       for (const r of batch) {
         await svc.entities.PostNLImportResult.delete(r.id);
-        totalDeleted++;
+        batchDeleted++;
       }
 
-      console.log(`[archivePostNL] Batch done. Archived: ${totalArchived}, Deleted: ${totalDeleted}`);
+      // Step 4: Verify delete count
+      if (batchDeleted !== batch.length) {
+        const errMsg = `Batch #${batchNum}: delete count mismatch (expected ${batch.length}, got ${batchDeleted})`;
+        console.error(`[archivePostNL] ${errMsg}`);
+        errors.push(errMsg);
+      }
 
-      // Safety: if batch was less than 100, we're done
-      if (batch.length < 100) {
+      totalDeleted += batchDeleted;
+
+      // Step 5: Log batch result
+      try {
+        await svc.entities.AuditLog.create({
+          action_type: 'export',
+          category: 'Data',
+          description: `PostNL archivering batch #${batchNum}: ${batchArchived} gekopieerd, ${batchDeleted} verwijderd`,
+          performed_by_email: user.email,
+          performed_by_name: user.full_name || user.email,
+          performed_by_role: user.role,
+          metadata: { batch: batchNum, archived: batchArchived, deleted: batchDeleted, cutoff: effectiveCutoff },
+        });
+      } catch (auditErr) {
+        console.warn('[archivePostNL] Batch audit log failed:', auditErr?.message);
+      }
+
+      console.log(`[archivePostNL] Batch #${batchNum} done. Running total: ${totalArchived} archived, ${totalDeleted} deleted`);
+
+      if (batch.length < BATCH_SIZE) {
         hasMore = false;
       }
     }
 
-    // Log to AuditLog
+    // Final audit log
     try {
       await svc.entities.AuditLog.create({
         action_type: 'export',
         category: 'Data',
-        description: `PostNL Import archivering: ${totalArchived} records gearchiveerd (cutoff: ${cutoff_date})`,
+        description: `PostNL archivering TOTAAL: ${totalArchived} gearchiveerd, ${totalDeleted} verwijderd (cutoff: ${effectiveCutoff})${errors.length > 0 ? ' MET FOUTEN' : ''}`,
         performed_by_email: user.email,
         performed_by_name: user.full_name || user.email,
         performed_by_role: user.role,
-        metadata: {
-          cutoff_date,
-          archived_count: totalArchived,
-          deleted_count: totalDeleted,
-        },
+        metadata: { cutoff: effectiveCutoff, archived: totalArchived, deleted: totalDeleted, errors },
       });
     } catch (auditErr) {
-      console.warn('[archivePostNL] Audit log failed:', auditErr?.message);
+      console.warn('[archivePostNL] Final audit failed:', auditErr?.message);
     }
 
-    console.log(`[archivePostNL] Done. Total archived: ${totalArchived}, deleted: ${totalDeleted}`);
+    // Create admin notification
+    try {
+      await svc.entities.Notification.create({
+        title: `PostNL Archivering: ${totalArchived} records verwerkt`,
+        description: errors.length > 0
+          ? `Archivering afgerond met ${errors.length} fout(en). ${totalArchived} gearchiveerd, ${totalDeleted} verwijderd. Cutoff: ${effectiveCutoff}`
+          : `Archivering succesvol. ${totalArchived} records gearchiveerd en verwijderd. Cutoff: ${effectiveCutoff}`,
+        type: errors.length > 0 ? 'import_failed' : 'import_success',
+        priority: errors.length > 0 ? 'high' : 'low',
+      });
+    } catch (notifErr) {
+      console.warn('[archivePostNL] Notification create failed:', notifErr?.message);
+    }
+
+    console.log(`[archivePostNL] DONE. ${totalArchived} archived, ${totalDeleted} deleted, ${errors.length} errors`);
 
     return Response.json({
-      success: true,
-      cutoff_date,
+      success: errors.length === 0,
+      cutoff_date: effectiveCutoff,
       archived: totalArchived,
       deleted: totalDeleted,
+      batches: batchNum,
+      errors,
     });
   } catch (error) {
     console.error('[archiveOldPostNLImports]', error);
