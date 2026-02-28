@@ -4,6 +4,7 @@
 // ║ Auth: Service role (called from backend function)                ║
 // ║ PURPOSE: Create Trips, SPW, write-verify, post-commit guard     ║
 // ║ NEVER affects the original SUCCESS status of the submission.     ║
+// ║ Redeployed: 2026-02-28                                           ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
