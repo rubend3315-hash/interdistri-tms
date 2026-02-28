@@ -73,10 +73,10 @@ Deno.serve(async (req) => {
     const deployedCount = initialCheck?.deployed_count || 0;
 
     // ============================================================
-    // Step 2: If everything is GREEN, just log and return
+    // Step 2: If everything is GREEN, just log and return (no heal needed)
     // ============================================================
-    if (initialCheck?.status === 'GREEN') {
-      // Fire-and-forget audit log for successful check
+    if (initialCheck?.status === 'GREEN' || (initialMissing.length === 0 && initialBrokenDeps.length === 0)) {
+      // Fire-and-forget audit log for successful check — use different target_id to not affect rate limit
       svc.entities.AuditLog.create({
         action_type: 'create',
         category: 'Systeem',
