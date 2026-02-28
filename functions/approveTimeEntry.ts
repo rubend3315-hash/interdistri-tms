@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
     await svc.entities.TimeEntry.update(time_entry_id, updatePayload);
 
     // Trigger weekly summary recalculation (fire-and-forget)
+    // NEVER awaited, NEVER throws to frontend.
     try {
       const week = entry.week_number;
       const yr = entry.year;
@@ -88,6 +89,17 @@ Deno.serve(async (req) => {
         console.log(`[approveTimeEntry] Triggering recalcWeeklySummaries for week=${week} year=${yr}`);
         base44.functions.invoke('recalculateWeeklySummaries', { year: yr, week_number: week }).catch(e => {
           console.warn('[approveTimeEntry] recalc trigger failed (non-blocking):', e?.message);
+          // Log to AuditLog — best-effort
+          svc.entities.AuditLog.create({
+            action_type: 'update',
+            category: 'Systeem',
+            description: `Async recalcWeeklySummaries failed after approve TE ${time_entry_id}: ${(e?.message || '').slice(0, 300)}`,
+            performed_by_email: user.email,
+            performed_by_role: 'admin',
+            target_entity: 'TimeEntry',
+            target_id: time_entry_id,
+            metadata: { week, year: yr, error: (e?.message || '').slice(0, 200) },
+          }).catch(() => {});
         });
       }
     } catch (triggerErr) {

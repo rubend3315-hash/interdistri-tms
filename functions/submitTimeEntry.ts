@@ -970,7 +970,7 @@ Deno.serve(async (req) => {
       // 10. FIRE-AND-FORGET: Async recalculation
       // ========================================
       // Trips, SPW, write-verify, post-commit guard, cleanup all happen async.
-      // NOT awaited — does not block HTTP response.
+      // NOT awaited — does not block HTTP response. NEVER throws to frontend.
       svc.functions.invoke('recalculateAfterTimeEntrySubmit', {
         time_entry_id: te.id,
         employee_id: empId,
@@ -981,7 +981,20 @@ Deno.serve(async (req) => {
         end_date: payload.end_date || null,
         start_time: payload.start_time,
         end_time: payload.end_time,
-      }).catch(err => console.error('[ASYNC_RECALC] Fire-and-forget failed:', err.message));
+      }).catch(err => {
+        console.error('[ASYNC_RECALC] Fire-and-forget failed:', err.message);
+        // Log to AuditLog — best-effort, never throw
+        svc.entities.AuditLog.create({
+          action_type: 'update',
+          category: 'Systeem',
+          description: `Async recalc failed for TE ${te.id}: ${(err.message || '').slice(0, 300)}`,
+          performed_by_email: user.email || 'system',
+          performed_by_role: 'system',
+          target_entity: 'TimeEntry',
+          target_id: te.id,
+          metadata: { submission_id: payload.submission_id, error: (err.message || '').slice(0, 200) },
+        }).catch(() => {});
+      });
 
       return Response.json({
         success: true,

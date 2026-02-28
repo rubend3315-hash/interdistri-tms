@@ -1,5 +1,14 @@
-// verifyDeployment v4 — Promise.allSettled, error-isolated per function, never 500
+// verifyDeployment v5 — dependency-map, Promise.allSettled, error-isolated, never 500
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+// Dependency map: parent → child functions that must also be deployed
+const DEPENDENCY_MAP = {
+  'submitTimeEntry': ['recalculateAfterTimeEntrySubmit'],
+  'approveTimeEntry': ['recalculateWeeklySummaries'],
+  'recalculate': ['recalculateWeeklySummaries', 'recalculateMonthlyCustomerSummary'],
+  'generateContract': ['downloadContractPdf', 'sendContractForSigning'],
+  'buildDailyPayrollReportData': ['sendDailyPayrollReportToAzure'],
+};
 
 const CRITICAL_FUNCTIONS = [
   'submitTimeEntry',
@@ -32,11 +41,12 @@ const CRITICAL_FUNCTIONS = [
   'onTripOrSpwChange',
   'recalculateAfterTimeEntrySubmit',
   'monitorStuckMobileSubmissions',
+  'sendContractForSigning',
 ];
 
 const OTHER_FUNCTIONS = [
   'systemHealthMonitor', 'tenantService', 'autoInviteEmployee', 'exportCriticalData',
-  'exportToSupabase', 'sendWelcomeEmail', 'sendStamkaartEmail', 'sendContractForSigning',
+  'exportToSupabase', 'sendWelcomeEmail', 'sendStamkaartEmail',
   'sendTimeEntryRejectionEmail', 'shareIdDocument', 'guardAuditLog', 'guardTenantDelete',
   'guardTenantId', 'hrmAutomation', 'generateNotifications', 'checkExpiringDocuments',
   'downloadDailyPayrollReportJson', 'downloadDailyPayrollSchema', 'verifyDeployment',
@@ -51,14 +61,9 @@ const OTHER_FUNCTIONS = [
   'sendContractToPayroll', 'testEmailSend', 'testSignatureFetch', 'testSignatureRender',
   'rbacDailySnapshot', 'rbacShadowValidation', 'rebuildMonthlySummaries', 'rebuildWeeklySummaries',
   'recalcBreaks', 'scheduledArchivePostNL', 'calculateMobileEntryLatencyStats',
-  'bulkSyncBusinessRole', 'guardAuditLogs',
+  'bulkSyncBusinessRole', 'guardAuditLogs', 'hourlyVerification',
 ];
 
-/**
- * Determines if a function is deployed based on the invoke result.
- * deployed=false ONLY when: 404, "not deployed", "not found"
- * 400/401/403/422 = function exists = deployed=true
- */
 function classifyResult(fnName, settled) {
   const result = {
     name: fnName,
@@ -73,14 +78,12 @@ function classifyResult(fnName, settled) {
     return result;
   }
 
-  // rejected
   const err = settled.reason;
   const msg = err?.message || String(err);
   const httpStatus = err?.response?.status || err?.status || null;
   result.http_status = httpStatus;
   result.error_message = msg;
 
-  // Check for not-deployed indicators
   const msgLower = msg.toLowerCase();
   const isNotDeployed =
     httpStatus === 404 ||
@@ -94,22 +97,18 @@ function classifyResult(fnName, settled) {
     return result;
   }
 
-  // 400/401/403/422 = function exists, just validation/auth error
   if ([400, 401, 403, 422].includes(httpStatus)) {
     result.deployed = true;
-    result.error_message = null; // not an error — function exists
+    result.error_message = null;
     return result;
   }
 
-  // 429/502/503 = probably exists but overloaded
   if ([429, 502, 503].includes(httpStatus)) {
-    result.deployed = true; // assume deployed
+    result.deployed = true;
     result.error_message = `Rate limit / overload (${httpStatus})`;
     return result;
   }
 
-  // Any other error: function might exist but had an internal error
-  // Still mark as deployed=true unless we explicitly got 404
   result.deployed = true;
   return result;
 }
@@ -124,59 +123,108 @@ Deno.serve(async (req) => {
       user = await base44.auth.me();
     } catch (authErr) {
       return Response.json({
-        success: true,
-        functions: [],
+        success: true, functions: [], dependency_checks: [],
         summary: { total: 0, checked: 0, deployed: 0, not_deployed: 0, errors: 0 },
         auth_error: authErr?.message || 'Auth failed',
-        version: '2026-02-28-v4',
-        timestamp: new Date().toISOString(),
+        version: '2026-02-28-v5', timestamp: new Date().toISOString(),
       }, { status: 200 });
     }
 
     if (!user || user.role !== 'admin') {
       return Response.json({
-        success: true,
-        functions: [],
+        success: true, functions: [], dependency_checks: [],
         summary: { total: 0, checked: 0, deployed: 0, not_deployed: 0, errors: 0 },
         auth_error: 'Forbidden: Admin access required',
-        version: '2026-02-28-v4',
-        timestamp: new Date().toISOString(),
+        version: '2026-02-28-v5', timestamp: new Date().toISOString(),
       }, { status: 200 });
     }
 
-    // Test all critical functions in parallel with Promise.allSettled
-    const promises = CRITICAL_FUNCTIONS.map(fnName =>
+    // ========================================
+    // 1. Test all critical functions
+    // ========================================
+    const criticalPromises = CRITICAL_FUNCTIONS.map(fnName =>
       base44.functions.invoke(fnName, { _ping: true })
     );
-
-    const settled = await Promise.allSettled(promises);
+    const criticalSettled = await Promise.allSettled(criticalPromises);
 
     const functions = [];
-
-    // Classify each critical function
     for (let i = 0; i < CRITICAL_FUNCTIONS.length; i++) {
-      functions.push(classifyResult(CRITICAL_FUNCTIONS[i], settled[i]));
+      functions.push(classifyResult(CRITICAL_FUNCTIONS[i], criticalSettled[i]));
     }
 
-    // Add other functions as not-checked
+    // ========================================
+    // 2. Dependency checks — verify child functions of critical parents
+    // ========================================
+    const depChecks = [];
+    const alreadyChecked = new Set(CRITICAL_FUNCTIONS);
+    const extraToCheck = [];
+
+    for (const [parent, children] of Object.entries(DEPENDENCY_MAP)) {
+      for (const child of children) {
+        if (!alreadyChecked.has(child)) {
+          extraToCheck.push({ parent, child });
+          alreadyChecked.add(child);
+        } else {
+          // Already checked as critical — find the result
+          const existing = functions.find(f => f.name === child);
+          depChecks.push({
+            parent,
+            child,
+            deployed: existing?.deployed ?? null,
+            http_status: existing?.http_status ?? null,
+            error_message: existing?.error_message ?? null,
+          });
+        }
+      }
+    }
+
+    // Check any extra dependency functions not in critical list
+    if (extraToCheck.length > 0) {
+      const extraPromises = extraToCheck.map(({ child }) =>
+        base44.functions.invoke(child, { _ping: true })
+      );
+      const extraSettled = await Promise.allSettled(extraPromises);
+      for (let i = 0; i < extraToCheck.length; i++) {
+        const classified = classifyResult(extraToCheck[i].child, extraSettled[i]);
+        depChecks.push({
+          parent: extraToCheck[i].parent,
+          child: extraToCheck[i].child,
+          deployed: classified.deployed,
+          http_status: classified.http_status,
+          error_message: classified.error_message,
+        });
+      }
+    }
+
+    // ========================================
+    // 3. Add other functions as not-checked
+    // ========================================
     for (const fnName of OTHER_FUNCTIONS) {
       functions.push({
         name: fnName,
-        deployed: null, // unknown — not checked
+        deployed: null,
         http_status: null,
         error_message: null,
         skipped: true,
       });
     }
 
+    // ========================================
+    // 4. Summary
+    // ========================================
     const criticalResults = functions.filter(f => !f.skipped);
     const deployedCount = criticalResults.filter(f => f.deployed === true).length;
     const notDeployedCount = criticalResults.filter(f => f.deployed === false).length;
     const withErrors = criticalResults.filter(f => f.deployed === true && f.error_message).length;
 
+    const depFailures = depChecks.filter(d => d.deployed === false);
+    const depErrors = depChecks.filter(d => d.error_message);
+
     return Response.json({
       success: true,
       functions,
+      dependency_checks: depChecks,
+      dependency_map: DEPENDENCY_MAP,
       summary: {
         total: CRITICAL_FUNCTIONS.length + OTHER_FUNCTIONS.length,
         checked: CRITICAL_FUNCTIONS.length,
@@ -185,8 +233,11 @@ Deno.serve(async (req) => {
         not_deployed: notDeployedCount,
         errors: withErrors,
         all_deployed: notDeployedCount === 0,
+        dependency_failures: depFailures.length,
+        dependency_errors: depErrors.length,
+        all_dependencies_ok: depFailures.length === 0,
       },
-      version: '2026-02-28-v4',
+      version: '2026-02-28-v5',
       timestamp: new Date().toISOString(),
     }, { status: 200 });
 
@@ -194,10 +245,10 @@ Deno.serve(async (req) => {
     // Absolute safety net — NEVER 500
     return Response.json({
       success: false,
-      functions: [],
+      functions: [], dependency_checks: [],
       summary: { total: 0, checked: 0, deployed: 0, not_deployed: 0, errors: 1 },
       outer_error: outerError?.message || 'Unknown error in verifyDeployment',
-      version: '2026-02-28-v4',
+      version: '2026-02-28-v5',
       timestamp: new Date().toISOString(),
     }, { status: 200 });
   }
