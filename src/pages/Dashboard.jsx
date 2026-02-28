@@ -261,6 +261,9 @@ export default function Dashboard({ currentUser }) {
         )}
       </div>
 
+      {/* Aggregation Status */}
+      <AggregationStatusWidget />
+
       {/* Contract Warnings - compact */}
       {!isLoading && <ContractWarnings employees={employees} />}
 
