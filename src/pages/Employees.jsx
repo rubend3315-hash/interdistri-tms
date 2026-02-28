@@ -544,10 +544,8 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
     drivers_license_categories: '',
     drivers_license_expiry: '',
     code95_expiry: '',
-    contract_type: 'Vast',
     contract_start_date: '',
     contract_end_date: '',
-    contract_hours: 40,
     hourly_rate: '',
     status: 'Actief',
     bsn: '',
@@ -616,7 +614,11 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
       
       delete cleanedData.viewOnly;
 
-      const numericFields = ['hourly_rate', 'contract_hours', 'travel_allowance_per_km', 'travel_distance_km'];
+      // Remove contract_type/contract_hours — contractregels is single source of truth
+      delete cleanedData.contract_type;
+      delete cleanedData.contract_hours;
+
+      const numericFields = ['hourly_rate', 'travel_allowance_per_km', 'travel_distance_km'];
 
       Object.keys(cleanedData).forEach(key => {
         const value = cleanedData[key];
