@@ -1,16 +1,13 @@
+// scheduledSync v2 — scheduled automation, service-role auth, timeout-safe
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (user?.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
+    const svc = base44.asServiceRole;
 
     // Fetch all active integrations that have credentials configured
-    const allIntegrations = await base44.asServiceRole.entities.Integration.filter({ is_active: true });
+    const allIntegrations = await svc.entities.Integration.filter({ is_active: true });
 
     const now = new Date();
     const toSync = [];
@@ -21,7 +18,6 @@ Deno.serve(async (req) => {
       const intervalMs = (integration.sync_interval_minutes || 60) * 60 * 1000;
 
       if (!integration.last_sync) {
-        // Never synced before — sync now
         toSync.push(integration);
       } else {
         const lastSync = new Date(integration.last_sync);
@@ -35,14 +31,21 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: "Geen integraties om te synchroniseren", synced: 0 });
     }
 
-    // Call the syncIntegration function for each integration that is due
+    // Call syncIntegration for each due integration, with a 15s timeout per call
     const results = [];
     for (const integration of toSync) {
       try {
-        const res = await base44.functions.invoke('syncIntegration', {
+        const syncPromise = svc.functions.invoke('syncIntegration', {
           integration_id: integration.id,
           mode: 'scheduled',
         });
+
+        // 15s timeout to prevent TIME_LIMIT on the parent function
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Sync timeout (15s)')), 15000)
+        );
+
+        const res = await Promise.race([syncPromise, timeoutPromise]);
         results.push({ id: integration.id, name: integration.name, result: res.data || res });
       } catch (err) {
         results.push({ id: integration.id, name: integration.name, error: err.message });
