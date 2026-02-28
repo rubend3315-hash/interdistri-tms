@@ -39,6 +39,8 @@ export function useEntrySubmit() {
       entryDate: formData.date,
     });
 
+    let abortCleanup = null;
+
     try {
       // Upload signature if it's still base64
       let signatureUrl = signature;
