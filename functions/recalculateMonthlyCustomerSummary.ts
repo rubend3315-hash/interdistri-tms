@@ -37,8 +37,15 @@ Deno.serve(async (req) => {
   let svc, year, month;
 
   try {
-    const user = await base44.auth.me();
-    if (!user || user.role !== 'admin') {
+    // Allow admin users OR service-role calls (from rebuild functions)
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch (_) {
+      // service-role call — no user session
+    }
+    const isServiceRole = !user && req.headers.get('authorization')?.startsWith('Bearer ');
+    if (!isServiceRole && (!user || user.role !== 'admin')) {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
