@@ -194,6 +194,7 @@ const menuItems = [
       { name: "Charters", icon: Truck, page: "Charters" },
       { name: "KPI rapportage PostNL", icon: FileSpreadsheet, page: "EmployeeReport" },
       { name: "Maandcontrole", icon: FileSpreadsheet, page: "Maandcontrole" },
+      { name: "Business Dashboard", icon: LayoutDashboard, page: "BusinessDashboard" },
     ]
   },
   {
@@ -360,6 +361,7 @@ export default function Layout({ children, currentPageName }) {
       'Charters': PERMISSIONS.CHARTERS_MANAGE,
       'EmployeeReport': PERMISSIONS.KPI_VIEW,
       'Maandcontrole': PERMISSIONS.CUSTOMERS_MANAGE,
+      'BusinessDashboard': PERMISSIONS.CUSTOMERS_MANAGE,
 
       // Communicatie
       'Messages': PERMISSIONS.MAIL_SEND,
