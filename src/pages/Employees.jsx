@@ -614,9 +614,6 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
       
       delete cleanedData.viewOnly;
 
-      // Remove contract_type/contract_hours — contractregels is single source of truth
-      delete cleanedData.contract_type;
-      delete cleanedData.contract_hours;
 
       const numericFields = ['hourly_rate', 'travel_allowance_per_km', 'travel_distance_km'];
 

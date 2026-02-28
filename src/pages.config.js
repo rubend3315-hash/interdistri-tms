@@ -78,6 +78,7 @@ import HelpPage from './pages/HelpPage';
 import Holidays from './pages/Holidays';
 import Integrations from './pages/Integrations';
 import LoonstrookPrint from './pages/LoonstrookPrint';
+import Maandcontrole from './pages/Maandcontrole';
 import Messages from './pages/Messages';
 import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import MobileEntry from './pages/MobileEntry';
@@ -111,7 +112,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import Maandcontrole from './pages/Maandcontrole';
 import __Layout from './Layout.jsx';
 
 
@@ -147,6 +147,7 @@ export const PAGES = {
     "Holidays": Holidays,
     "Integrations": Integrations,
     "LoonstrookPrint": LoonstrookPrint,
+    "Maandcontrole": Maandcontrole,
     "Messages": Messages,
     "MobileBedrijfsreglement": MobileBedrijfsreglement,
     "MobileEntry": MobileEntry,
@@ -180,7 +181,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "Maandcontrole": Maandcontrole,
 }
 
 export const pagesConfig = {

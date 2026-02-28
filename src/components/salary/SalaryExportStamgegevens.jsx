@@ -12,7 +12,7 @@ export default function SalaryExportStamgegevens({ employees }) {
 
   const getInServiceDate = (emp) => {
     if (emp.in_service_since) return emp.in_service_since;
-    if (emp.contract_start_date) return emp.contract_start_date;
+
     const earliest = (emp.contractregels || [])
       .filter(c => c.startdatum)
       .sort((a, b) => new Date(a.startdatum) - new Date(b.startdatum))[0];
@@ -60,7 +60,7 @@ export default function SalaryExportStamgegevens({ employees }) {
         emp.city || "",
         emp.bank_account || "",
         getInServiceDate(emp),
-        emp.contract_end_date || "",
+        emp.out_of_service_date || "",
         emp.department || "",
         emp.function || "",
         emp.status || "",
