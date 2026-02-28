@@ -1,9 +1,28 @@
-// autoHealRegistry v1 — detect drift, attempt warm-ping heal, verify, notify
+// autoHealRegistry v2 — detect drift, attempt warm-ping heal, verify, notify
+// Now runs the manifest check INLINE instead of delegating to verifyFunctionRegistry,
+// avoiding cross-function auth issues in service-role context.
 // Never returns HTTP 500. Rate-limited to max 1 heal attempt per hour.
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Rate limit key stored in AuditLog metadata
 const RATE_LIMIT_MINUTES = 60;
+
+/**
+ * CRITICAL FUNCTION MANIFEST — duplicated from verifyFunctionRegistry.
+ * Must be kept in sync. This is the source of truth for autoHeal.
+ */
+const CRITICAL_FUNCTION_MANIFEST = [
+  'submitTimeEntry', 'upsertDraftTimeEntry', 'recalculateAfterTimeEntrySubmit',
+  'approveTimeEntry', 'rejectTimeEntry', 'resubmitTimeEntry',
+  'deleteTimeEntryCascade', 'adminCreateTimeEntry', 'adminUpdateTimeEntry',
+  'recalculate', 'recalculateWeeklySummaries', 'recalculateMonthlyCustomerSummary', 'recalcBreaks',
+  'generateContract', 'downloadContractPdf', 'sendContractForSigning', 'listContractsLight',
+  'buildDailyPayrollReportData', 'sendDailyPayrollReportToAzure', 'generateDailyPayrollReport',
+  'systemHealthCheck', 'auditService', 'mailService', 'encryptionService', 'createBackup', 'secureDownload',
+  'parseExcelImport', 'exportTimeAndTrips', 'sendEmployeeEmail',
+  'monitorStuckMobileSubmissions', 'archiveOldPostNLImports', 'onTripOrSpwChange',
+  'verifyDeployment', 'hourlyVerification', 'verifyFunctionRegistry',
+];
 
 function classifyPing(fnName, settled) {
   if (settled.status === 'fulfilled') return { name: fnName, deployed: true };
@@ -11,13 +30,30 @@ function classifyPing(fnName, settled) {
   const msg = err?.message || String(err);
   const httpStatus = err?.response?.status || err?.status || null;
   const msgLower = msg.toLowerCase();
-  if (httpStatus === 404 || msgLower.includes('not found') || msgLower.includes('not deployed') || msgLower.includes('does not exist')) {
-    return { name: fnName, deployed: false, error: msg };
-  }
-  if ([400, 401, 403, 422, 429, 502, 503].includes(httpStatus)) {
-    return { name: fnName, deployed: true };
-  }
+  const isNotDeployed = httpStatus === 404 || msgLower.includes('not found') || msgLower.includes('not deployed') || msgLower.includes('does not exist') || msgLower.includes('function not found');
+  if (isNotDeployed) return { name: fnName, deployed: false, error: msg };
   return { name: fnName, deployed: true };
+}
+
+/**
+ * Inline registry check — pings all manifest functions via service role
+ * and returns { status, manifest_count, deployed_count, missing_count, missing_functions }
+ */
+async function runRegistryCheck(svc) {
+  const promises = CRITICAL_FUNCTION_MANIFEST.map(fn =>
+    svc.functions.invoke(fn, { _ping: true })
+  );
+  const settled = await Promise.allSettled(promises);
+  const results = CRITICAL_FUNCTION_MANIFEST.map((fn, i) => classifyPing(fn, settled[i]));
+  const deployed = results.filter(r => r.deployed);
+  const missing = results.filter(r => !r.deployed);
+  return {
+    status: missing.length === 0 ? 'GREEN' : 'RED',
+    manifest_count: CRITICAL_FUNCTION_MANIFEST.length,
+    deployed_count: deployed.length,
+    missing_count: missing.length,
+    missing_functions: missing,
+  };
 }
 
 Deno.serve(async (req) => {
