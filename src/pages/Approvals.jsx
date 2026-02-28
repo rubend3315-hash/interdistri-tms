@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { getBreakMinutesForHours } from "@/components/utils/breakScheduleUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
+import Pagination, { usePagination } from "@/components/ui/Pagination";
 
 export default function Approvals() {
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -40,6 +41,9 @@ export default function Approvals() {
   const [isManualBreak, setIsManualBreak] = useState(false);
   const [approvingIds, setApprovingIds] = useState(new Set());
   const queryClient = useQueryClient();
+  const pendingPage = usePagination(20);
+  const approvedPage = usePagination(20);
+  const rejectedPage = usePagination(20);
 
   const { data: timeEntries = [], isLoading } = useQuery({
     queryKey: ['timeEntries-all'],
@@ -491,7 +495,16 @@ export default function Approvals() {
               <p className="text-slate-500 mt-1">Er zijn geen uren ter goedkeuring.</p>
             </Card>
           ) : (
-            pendingEntries.map(entry => renderEntryCard(entry, true))
+            <>
+              {pendingPage.paginateItems(pendingEntries).map(entry => renderEntryCard(entry, true))}
+              <Pagination
+                totalItems={pendingEntries.length}
+                currentPage={pendingPage.currentPage}
+                pageSize={pendingPage.pageSize}
+                onPageChange={pendingPage.setCurrentPage}
+                onPageSizeChange={pendingPage.handlePageSizeChange}
+              />
+            </>
           )}
         </TabsContent>
 
@@ -503,12 +516,14 @@ export default function Approvals() {
             </Card>
           ) : (
             <>
-              {approvedEntries.slice(0, 20).map(entry => renderEntryCard(entry, false))}
-              {approvedEntries.length > 20 && (
-                <p className="text-sm text-slate-500 text-center py-2">
-                  Toont 20 van {approvedEntries.length} vermeldingen
-                </p>
-              )}
+              {approvedPage.paginateItems(approvedEntries).map(entry => renderEntryCard(entry, false))}
+              <Pagination
+                totalItems={approvedEntries.length}
+                currentPage={approvedPage.currentPage}
+                pageSize={approvedPage.pageSize}
+                onPageChange={approvedPage.setCurrentPage}
+                onPageSizeChange={approvedPage.handlePageSizeChange}
+              />
             </>
           )}
         </TabsContent>
@@ -521,12 +536,14 @@ export default function Approvals() {
             </Card>
           ) : (
             <>
-              {rejectedEntries.slice(0, 20).map(entry => renderEntryCard(entry, false))}
-              {rejectedEntries.length > 20 && (
-                <p className="text-sm text-slate-500 text-center py-2">
-                  Toont 20 van {rejectedEntries.length} vermeldingen
-                </p>
-              )}
+              {rejectedPage.paginateItems(rejectedEntries).map(entry => renderEntryCard(entry, false))}
+              <Pagination
+                totalItems={rejectedEntries.length}
+                currentPage={rejectedPage.currentPage}
+                pageSize={rejectedPage.pageSize}
+                onPageChange={rejectedPage.setCurrentPage}
+                onPageSizeChange={rejectedPage.handlePageSizeChange}
+              />
             </>
           )}
         </TabsContent>
