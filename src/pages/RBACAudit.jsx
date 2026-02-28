@@ -13,6 +13,7 @@ import MonitoringPolicy from "../components/rbac-audit/MonitoringPolicy";
 import SubmissionLogs from "../components/rbac-audit/SubmissionLogs";
 import PerformanceTab from "../components/rbac-audit/PerformanceTab";
 import ClientSubmitLogs from "../components/rbac-audit/ClientSubmitLogs";
+import MobileReliabilityDashboard from "../components/rbac-audit/reliability/MobileReliabilityDashboard";
 
 export default function RBACAudit({ currentUser }) {
   // Audit log: track dashboard view
@@ -57,13 +58,14 @@ export default function RBACAudit({ currentUser }) {
       </div>
 
       <Tabs defaultValue="snapshots" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="snapshots">Snapshots</TabsTrigger>
           <TabsTrigger value="integrity">Integrity</TabsTrigger>
           <TabsTrigger value="changes">Wijzigingen</TabsTrigger>
           <TabsTrigger value="invariants">Invariants</TabsTrigger>
           <TabsTrigger value="submissions">Submissions</TabsTrigger>
           <TabsTrigger value="client-logs">Client Logs</TabsTrigger>
+          <TabsTrigger value="reliability">Reliability</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="policy">Policy</TabsTrigger>
         </TabsList>
@@ -90,6 +92,10 @@ export default function RBACAudit({ currentUser }) {
 
         <TabsContent value="client-logs">
           <ClientSubmitLogs />
+        </TabsContent>
+
+        <TabsContent value="reliability">
+          <MobileReliabilityDashboard />
         </TabsContent>
 
         <TabsContent value="performance">
