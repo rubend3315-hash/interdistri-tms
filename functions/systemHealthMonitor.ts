@@ -58,13 +58,9 @@ async function runHealthCheck(base44) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const svc = base44.asServiceRole;
 
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
-
-    // Run health check directly — no HTTP invoke, no 403 issue
+    // Run health check directly
     const healthData = await runHealthCheck(base44);
     const isRed = healthData.status !== 'GREEN';
 
@@ -72,7 +68,6 @@ Deno.serve(async (req) => {
       return Response.json({
         alert_sent: false,
         status: 'GREEN',
-        version: '2026-02-23-stable',
         message: 'All systems operational — no alert needed',
         timestamp: new Date().toISOString()
       });
@@ -81,7 +76,7 @@ Deno.serve(async (req) => {
     // Check last alert to prevent spam — look for recent AuditLog entry
     let shouldSend = true;
     try {
-      const recentAlerts = await base44.asServiceRole.entities.AuditLog.filter(
+      const recentAlerts = await svc.entities.AuditLog.filter(
         { action_type: 'export', category: 'Systeem', description: 'System health alert email sent' },
         '-created_date',
         1
@@ -101,13 +96,13 @@ Deno.serve(async (req) => {
       return Response.json({
         alert_sent: false,
         status: 'RED',
-        version: '2026-02-23-stable',
         message: 'Alert suppressed — already sent within last 30 minutes',
         timestamp: new Date().toISOString()
       });
     }
 
-    // Send alert email
+    // Send alert email to fixed admin address
+    const alertEmail = 'ruben@interdistri.nl';
     const emailBody = `
 <h2 style="color: #dc2626;">⚠️ CRITICAL: Backend Failure Detected</h2>
 <p><strong>Timestamp:</strong> ${healthData.timestamp}</p>
@@ -127,15 +122,15 @@ Deno.serve(async (req) => {
 <p style="color:#64748b; font-size:12px;">This alert is sent by systemHealthMonitor. Suppressed for 30 min after each send.</p>
 `;
 
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: user.email,
+    await svc.integrations.Core.SendEmail({
+      to: alertEmail,
       subject: 'CRITICAL: Backend Failure Detected',
       body: emailBody
     });
 
     // Log alert to prevent spam
     try {
-      await base44.asServiceRole.entities.AuditLog.create({
+      await svc.entities.AuditLog.create({
         action_type: 'export',
         category: 'Systeem',
         description: 'System health alert email sent',
@@ -151,8 +146,7 @@ Deno.serve(async (req) => {
     return Response.json({
       alert_sent: true,
       status: 'RED',
-      version: '2026-02-23-stable',
-      message: 'Alert email sent to ' + user.email,
+      message: 'Alert email sent to ' + alertEmail,
       health_data: healthData,
       timestamp: new Date().toISOString()
     });
