@@ -29,6 +29,7 @@ import WeekRevenueCard from "../components/dashboard/WeekRevenueCard";
 import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
 import SystemStatusCard from "../components/dashboard/SystemStatusCard";
+import RegistryIntegrityCard from "../components/dashboard/RegistryIntegrityCard";
 import MobileEntryStatusCard from "../components/dashboard/MobileEntryStatusCard";
 import NotificationsCard from "../components/dashboard/NotificationsCard";
 import AggregationStatusWidget from "../components/dashboard/AggregationStatusWidget";
@@ -196,8 +197,11 @@ export default function Dashboard({ currentUser }) {
 
   return (
     <div className="space-y-6">
-      {/* System Status */}
-      <SystemStatusCard />
+      {/* System Status + Registry Integrity */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <SystemStatusCard />
+        <RegistryIntegrityCard />
+      </div>
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">

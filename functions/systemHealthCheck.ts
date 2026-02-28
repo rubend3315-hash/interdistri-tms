@@ -12,6 +12,7 @@ async function runHealthCheck(base44) {
   const errors = [];
   let base44Connection = false;
   let supabaseConnection = false;
+  let registryIntegrity = null;
 
   // A) Base44 SDK connectivity
   try {
@@ -39,14 +40,36 @@ async function runHealthCheck(base44) {
     errors.push({ check: 'supabase_connection', error: err.message });
   }
 
+  // C) Registry integrity — lightweight call (non-blocking for health status)
+  try {
+    const regRes = await base44.functions.invoke('verifyFunctionRegistry', { _ping: false });
+    const regData = regRes?.data || regRes;
+    registryIntegrity = {
+      status: regData.status || 'UNKNOWN',
+      manifest_count: regData.manifest_count || 0,
+      deployed_count: regData.deployed_count || 0,
+      missing_count: regData.missing_count || 0,
+      missing_functions: (regData.missing_functions || []).map(f => f.name || f),
+    };
+    if (regData.status === 'RED') {
+      errors.push({
+        check: 'registry_integrity',
+        error: `${regData.missing_count} critical function(s) missing: ${registryIntegrity.missing_functions.join(', ')}`
+      });
+    }
+  } catch (err) {
+    registryIntegrity = { status: 'ERROR', error: err.message };
+  }
+
   const isHealthy = base44Connection && supabaseConnection && errors.length === 0;
 
   return {
     status: isHealthy ? 'GREEN' : 'RED',
-    version: '2026-02-23-stable',
+    version: '2026-02-28-registry',
     timestamp: new Date().toISOString(),
     base44_connection: base44Connection,
     supabase_connection: supabaseConnection,
+    registry_integrity: registryIntegrity,
     environment: {
       SUPABASE_URL: !!SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_KEY

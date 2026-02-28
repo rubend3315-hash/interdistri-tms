@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, CheckCircle2, XCircle, AlertTriangle, Server, Clock, ChevronDown, ChevronRight } from "lucide-react";
+import { RefreshCw, CheckCircle2, XCircle, AlertTriangle, Server, Clock, ChevronDown, ChevronRight, Shield, BookOpen } from "lucide-react";
 
 function StatusBadge({ fn }) {
   if (fn.skipped) {
@@ -232,6 +233,253 @@ export default function DeploymentStatus() {
           </CardContent>
         </Card>
       )}
+
+      {/* Registry Integrity Section */}
+      <RegistryIntegritySection />
+
+      {/* Full Publish Protocol */}
+      <FullPublishProtocol />
     </div>
+  );
+}
+
+function RegistryIntegritySection() {
+  const [loading, setLoading] = useState(false);
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ['registryIntegrity-detail'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('verifyFunctionRegistry');
+      return res.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    await refetch();
+    setLoading(false);
+  };
+
+  const isGreen = data?.status === 'GREEN';
+  const missing = data?.missing_functions || [];
+  const brokenDeps = data?.broken_dependencies || [];
+  const warnings = data?.warnings || [];
+  const spinning = isLoading || loading;
+
+  return (
+    <div className="space-y-4 mt-8">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Shield className="w-5 h-5 text-blue-600" />
+          <h2 className="text-lg font-bold text-slate-900">Registry Integrity</h2>
+          {data && (
+            <Badge className={isGreen
+              ? "bg-green-100 text-green-800 hover:bg-green-100"
+              : "bg-red-100 text-red-800 hover:bg-red-100"
+            }>
+              {isGreen ? 'PASS' : `FAIL — ${missing.length} missing`}
+            </Badge>
+          )}
+        </div>
+        <Button onClick={handleRefresh} disabled={spinning} size="sm" variant="outline" className="gap-2">
+          <RefreshCw className={`w-4 h-4 ${spinning ? "animate-spin" : ""}`} />
+          Check
+        </Button>
+      </div>
+
+      {data && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-2xl font-bold">{data.manifest_count}</p>
+              <p className="text-xs text-slate-500">Manifest functies</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-2xl font-bold text-green-700">{data.deployed_count}</p>
+              <p className="text-xs text-slate-500">Deployed</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className={`text-2xl font-bold ${missing.length > 0 ? 'text-red-700' : 'text-green-700'}`}>{missing.length}</p>
+              <p className="text-xs text-slate-500">Missing</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className={`text-2xl font-bold ${brokenDeps.length > 0 ? 'text-red-700' : 'text-green-700'}`}>{brokenDeps.length}</p>
+              <p className="text-xs text-slate-500">Broken deps</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {missing.length > 0 && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-red-800">Ontbrekende functies</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {missing.map(fn => (
+                <div key={fn.name} className="flex items-center gap-2">
+                  <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <span className="font-mono text-sm text-red-800">{fn.name}</span>
+                  {fn.error && <span className="text-xs text-red-600 truncate">— {fn.error}</span>}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {brokenDeps.length > 0 && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-amber-800">Broken Dependencies</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {brokenDeps.map((d, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <span className="font-mono text-sm text-amber-800">{d.parent} → {d.child}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {warnings.length > 0 && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-amber-800">Waarschuwingen</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {warnings.map((w, i) => (
+              <div key={i} className="text-xs font-mono text-amber-700">
+                {w.name}: {w.warning}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {data?.timestamp && (
+        <p className="text-xs text-slate-400">
+          Laatste check: {new Date(data.timestamp).toLocaleString("nl-NL")} — Version: {data.version}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function FullPublishProtocol() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Card className="mt-8">
+      <CardHeader>
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-2 text-lg font-semibold text-slate-700 hover:text-slate-900"
+        >
+          {open ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          <BookOpen className="w-5 h-5 text-blue-600" />
+          Full Publish Protocol
+        </button>
+      </CardHeader>
+      {open && (
+        <CardContent className="prose prose-sm prose-slate max-w-none">
+          <div className="space-y-4 text-sm">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-bold text-blue-900 mt-0">Wanneer uitvoeren?</h3>
+              <ul className="text-blue-800 mb-0">
+                <li>Na elke wijziging aan backend functies</li>
+                <li>Na een platform-update van Base44</li>
+                <li>Wanneer de hourly verification een RED status rapporteert</li>
+                <li>Bij onverklaarbare "function not found" errors in ClientSubmitLog</li>
+              </ul>
+            </div>
+
+            <h3 className="font-bold text-slate-900">Stap-voor-stap Protocol</h3>
+
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">1</span>
+                <div>
+                  <p className="font-semibold">Pre-check</p>
+                  <p className="text-slate-600">Ga naar <strong>Deployment Status</strong> en klik "Start verificatie". Noteer welke functies RED zijn.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">2</span>
+                <div>
+                  <p className="font-semibold">Full Publish</p>
+                  <p className="text-slate-600">Ga naar <strong>Dashboard → Code → Functions</strong>. Open elke ontbrekende functie en klik <strong>"Deploy"</strong>. Of voer een bulk deploy uit via "Publish All".</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">3</span>
+                <div>
+                  <p className="font-semibold">Registry Integrity Check</p>
+                  <p className="text-slate-600">Klik op "Check" bij <strong>Registry Integrity</strong> hierboven. Alle {`{manifest_count}`} functies moeten GREEN zijn.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">4</span>
+                <div>
+                  <p className="font-semibold">Dependency Verificatie</p>
+                  <p className="text-slate-600">Controleer dat er 0 "Broken deps" zijn. Elke parent-functie moet zijn child-functies beschikbaar hebben.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">5</span>
+                <div>
+                  <p className="font-semibold">Smoke Test</p>
+                  <p className="text-slate-600">Test een mobiele submit met een testmedewerker om te bevestigen dat het complete pipeline werkt (submit → recalc → DB).</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">6</span>
+                <div>
+                  <p className="font-semibold">Post-check</p>
+                  <p className="text-slate-600">Wacht 1 uur. De hourly verification automation zal automatisch bevestigen dat alle functies nog steeds deployed zijn.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
+              <h3 className="font-bold text-amber-900 mt-0">⚠️ Bekende oorzaken van deployment drift</h3>
+              <ul className="text-amber-800 mb-0">
+                <li><strong>Cold start timeout:</strong> Platform kan functies na lange inactiviteit deregistreren</li>
+                <li><strong>Partial deploy:</strong> Alleen gewijzigde functies worden gedeployed, ongewijzigde functies kunnen verouderen</li>
+                <li><strong>Platform update:</strong> Base44 platform updates kunnen function containers resetten</li>
+                <li><strong>Dependency mismatch:</strong> Parent-functie gedeployed zonder child-functies</li>
+              </ul>
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="font-bold text-green-900 mt-0">✓ Automatische bewaking</h3>
+              <ul className="text-green-800 mb-0">
+                <li><strong>Hourly Verification:</strong> Controleert elk uur de kritieke functies</li>
+                <li><strong>Registry Integrity:</strong> Vergelijkt deployed functies met het manifest</li>
+                <li><strong>Admin Notifications:</strong> Urgent notification bij ontbrekende functies</li>
+                <li><strong>Audit Log:</strong> Alle integrity-failures worden gelogd</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
   );
 }
