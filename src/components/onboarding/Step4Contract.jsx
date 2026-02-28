@@ -15,7 +15,20 @@ const PROEFTIJD_OPTIONS = ["Geen proeftijd", "1 maand proeftijd"];
 
 export default function Step4Contract({ employeeData, onboardingData, onChange, onNext, onBack }) {
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
-  const [contractType, setContractType] = useState(employeeData.contract_type === "Oproep" ? "Tijdelijk Nul Uren" : (employeeData.contract_type || "Tijdelijk"));
+  // Derive initial contract type from active contractregel (contractregels = single source of truth)
+  const deriveContractType = () => {
+    const activeRegel = (employeeData.contractregels || [])
+      .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
+      .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+    if (activeRegel) {
+      const tc = (activeRegel.type_contract || "").toLowerCase();
+      if (tc.includes("oproep") || tc.includes("nul uren")) return "Tijdelijk Nul Uren";
+      if (tc.includes("vast")) return "Vast";
+      return "Tijdelijk";
+    }
+    return "Tijdelijk";
+  };
+  const [contractType, setContractType] = useState(deriveContractType());
   const [startDate, setStartDate] = useState(employeeData.in_service_since || "");
   const [endDate, setEndDate] = useState("");
   const [proeftijd, setProeftijd] = useState("Geen proeftijd");
@@ -61,7 +74,12 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
       contract_type: contractType,
       start_date: startDate,
       end_date: endDate || undefined,
-      hours_per_week: employeeData.contract_hours || 0,
+      hours_per_week: (() => {
+        const activeRegel = (employeeData.contractregels || [])
+          .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
+          .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+        return activeRegel?.uren_per_week ?? 0;
+      })(),
       proeftijd,
       preview_only: true,
       template_id: selectedTemplateId || undefined,
@@ -122,7 +140,12 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
             <span><b>Uurloon:</b> {employeeData.hourly_rate ? `€ ${Number(employeeData.hourly_rate).toFixed(2)}` : '—'}</span>
             <span><b>Functie:</b> {employeeData.function || '—'}</span>
             <span><b>Loonschaal:</b> {employeeData.salary_scale || '—'}</span>
-            <span><b>Uren/week:</b> {employeeData.contract_hours || '—'}</span>
+            <span><b>Uren/week:</b> {(() => {
+              const ar = (employeeData.contractregels || [])
+                .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
+                .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+              return ar?.uren_per_week ?? '—';
+            })()}</span>
           </div>
         </div>
 
