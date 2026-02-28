@@ -167,10 +167,11 @@ async function recalcWeek(svc, year, week_number) {
     otherRateSnapshot = { stop_price: rates.stopRate || 0, stuk_price: rates.stukRate || 0 };
     let imports = [];
     try {
-      imports = await svc.entities.PostNLImportResult.filter({ import_datum: { $gte: wsStr, $lte: weStr } });
+      const importResult = await svc.entities.PostNLImportResult.filter({ import_datum: { $gte: wsStr, $lte: weStr } });
+      imports = Array.isArray(importResult) ? importResult : [];
       if (imports.length === 0) {
         const allRecent = await svc.entities.PostNLImportResult.list('-created_date', 200);
-        imports = allRecent.filter(r => {
+        imports = (Array.isArray(allRecent) ? allRecent : []).filter(r => {
           const d = r.datum || r.data?.Datum;
           if (!d) return false;
           if (d.includes('-') && d.length === 10) {
@@ -316,6 +317,8 @@ Deno.serve(async (req) => {
           results.push({ year, week, status: 'error', message: err?.message });
           console.error(`[rebuildWeekly] Error year=${year} week=${week}:`, err?.message);
         }
+        // Rate limit protection: pause 1.5s between weeks
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
     }
 
