@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     let rateLimited = false;
     try {
       const recentHeals = await svc.entities.AuditLog.filter(
-        { target_id: 'auto-heal-registry', action_type: 'create' },
+        { target_id: 'auto-heal-registry' },
         '-created_date',
         1
       );
@@ -48,18 +48,23 @@ Deno.serve(async (req) => {
     }
 
     // ============================================================
-    // Step 1: Run registry check via verifyFunctionRegistry
+    // Step 1: Run registry check via verifyFunctionRegistry (service role)
     // ============================================================
     let initialCheck = null;
     try {
       const res = await svc.functions.invoke('verifyFunctionRegistry', {});
       initialCheck = res?.data || res;
     } catch (err) {
-      return Response.json({
-        action: 'CHECK_FAILED',
-        error: err.message,
-        timestamp: now.toISOString(),
-      }, { status: 200 });
+      // If the invoke returns an axios error with data, use that
+      if (err?.response?.data) {
+        initialCheck = err.response.data;
+      } else {
+        return Response.json({
+          action: 'CHECK_FAILED',
+          error: err.message,
+          timestamp: now.toISOString(),
+        }, { status: 200 });
+      }
     }
 
     const initialMissing = initialCheck?.missing_functions || [];
