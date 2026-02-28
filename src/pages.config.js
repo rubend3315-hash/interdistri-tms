@@ -47,144 +47,14 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Activiteiten from './pages/Activiteiten';
-import Approvals from './pages/Approvals';
-import AuditLog from './pages/AuditLog';
-import Backups from './pages/Backups';
-import Bedrijfsreglement from './pages/Bedrijfsreglement';
-import CaoRules from './pages/CaoRules';
-import Charters from './pages/Charters';
-import CompletedContracts from './pages/CompletedContracts';
-import ContractAnalytics from './pages/ContractAnalytics';
-import ContractTemplates from './pages/ContractTemplates';
-import ContractWijzigingen from './pages/ContractWijzigingen';
-import Contracts from './pages/Contracts';
-import CustomerDetail from './pages/CustomerDetail';
-import Customers from './pages/Customers';
-import Dagstaat from './pages/Dagstaat';
-import DailyPayrollExportDocs from './pages/DailyPayrollExportDocs';
-import Dashboard from './pages/Dashboard';
-import DataMigration from './pages/DataMigration';
-import DeploymentStatus from './pages/DeploymentStatus';
-import Documents from './pages/Documents';
-import EditTimeEntry from './pages/EditTimeEntry';
-import EmployeeReport from './pages/EmployeeReport';
-import Employees from './pages/Employees';
-import EncryptionMigration from './pages/EncryptionMigration';
-import GovernanceDashboard from './pages/GovernanceDashboard';
-import HRImport from './pages/HRImport';
-import HRMSettings from './pages/HRMSettings';
-import HelpPage from './pages/HelpPage';
-import Holidays from './pages/Holidays';
-import Integrations from './pages/Integrations';
-import LoonstrookPrint from './pages/LoonstrookPrint';
-import Maandcontrole from './pages/Maandcontrole';
-import Messages from './pages/Messages';
-import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
-import MobileEntry from './pages/MobileEntry';
-import MobileHandleiding from './pages/MobileHandleiding';
-import NiwoPermits from './pages/NiwoPermits';
-import Onboarding from './pages/Onboarding';
-import PayCheckedAudit from './pages/PayCheckedAudit';
-import PayrollReport from './pages/PayrollReport';
-import PerformanceReviews from './pages/PerformanceReviews';
-import Planning from './pages/Planning';
-import Projects from './pages/Projects';
-import RBACAudit from './pages/RBACAudit';
-import RBACMatrix from './pages/RBACMatrix';
-import Recalculations from './pages/Recalculations';
-import SalaryReports from './pages/SalaryReports';
-import SalaryTables from './pages/SalaryTables';
-import SecureDownload from './pages/SecureDownload';
-import SecurityAccessControl from './pages/SecurityAccessControl';
-import SecurityArchitecture from './pages/SecurityArchitecture';
-import SecurityPrivacy from './pages/SecurityPrivacy';
-import SecurityRoadmap from './pages/SecurityRoadmap';
-import SecuritySummary from './pages/SecuritySummary';
-import ShiftTime from './pages/ShiftTime';
-import Stamkaart from './pages/Stamkaart';
-import StandplaatsWerk from './pages/StandplaatsWerk';
-import SystemArchitectureDiagram from './pages/SystemArchitectureDiagram';
-import TIRekenmodule from './pages/TIRekenmodule';
-import TenantArchitecture from './pages/TenantArchitecture';
-import TimeTracking from './pages/TimeTracking';
-import Trips from './pages/Trips';
-import Trust from './pages/Trust';
-import Users from './pages/Users';
-import Vehicles from './pages/Vehicles';
-import __Layout from './Layout.jsx';
+import BusinessDashboard from './pages/BusinessDashboard';
 
 
 export const PAGES = {
-    "Activiteiten": Activiteiten,
-    "Approvals": Approvals,
-    "AuditLog": AuditLog,
-    "Backups": Backups,
-    "Bedrijfsreglement": Bedrijfsreglement,
-    "CaoRules": CaoRules,
-    "Charters": Charters,
-    "CompletedContracts": CompletedContracts,
-    "ContractAnalytics": ContractAnalytics,
-    "ContractTemplates": ContractTemplates,
-    "ContractWijzigingen": ContractWijzigingen,
-    "Contracts": Contracts,
-    "CustomerDetail": CustomerDetail,
-    "Customers": Customers,
-    "Dagstaat": Dagstaat,
-    "DailyPayrollExportDocs": DailyPayrollExportDocs,
-    "Dashboard": Dashboard,
-    "DataMigration": DataMigration,
-    "DeploymentStatus": DeploymentStatus,
-    "Documents": Documents,
-    "EditTimeEntry": EditTimeEntry,
-    "EmployeeReport": EmployeeReport,
-    "Employees": Employees,
-    "EncryptionMigration": EncryptionMigration,
-    "GovernanceDashboard": GovernanceDashboard,
-    "HRImport": HRImport,
-    "HRMSettings": HRMSettings,
-    "HelpPage": HelpPage,
-    "Holidays": Holidays,
-    "Integrations": Integrations,
-    "LoonstrookPrint": LoonstrookPrint,
-    "Maandcontrole": Maandcontrole,
-    "Messages": Messages,
-    "MobileBedrijfsreglement": MobileBedrijfsreglement,
-    "MobileEntry": MobileEntry,
-    "MobileHandleiding": MobileHandleiding,
-    "NiwoPermits": NiwoPermits,
-    "Onboarding": Onboarding,
-    "PayCheckedAudit": PayCheckedAudit,
-    "PayrollReport": PayrollReport,
-    "PerformanceReviews": PerformanceReviews,
-    "Planning": Planning,
-    "Projects": Projects,
-    "RBACAudit": RBACAudit,
-    "RBACMatrix": RBACMatrix,
-    "Recalculations": Recalculations,
-    "SalaryReports": SalaryReports,
-    "SalaryTables": SalaryTables,
-    "SecureDownload": SecureDownload,
-    "SecurityAccessControl": SecurityAccessControl,
-    "SecurityArchitecture": SecurityArchitecture,
-    "SecurityPrivacy": SecurityPrivacy,
-    "SecurityRoadmap": SecurityRoadmap,
-    "SecuritySummary": SecuritySummary,
-    "ShiftTime": ShiftTime,
-    "Stamkaart": Stamkaart,
-    "StandplaatsWerk": StandplaatsWerk,
-    "SystemArchitectureDiagram": SystemArchitectureDiagram,
-    "TIRekenmodule": TIRekenmodule,
-    "TenantArchitecture": TenantArchitecture,
-    "TimeTracking": TimeTracking,
-    "Trips": Trips,
-    "Trust": Trust,
-    "Users": Users,
-    "Vehicles": Vehicles,
+    "BusinessDashboard": BusinessDashboard,
 }
 
 export const pagesConfig = {
-    mainPage: "Dashboard",
+    mainPage: "BusinessDashboard",
     Pages: PAGES,
-    Layout: __Layout,
 };
