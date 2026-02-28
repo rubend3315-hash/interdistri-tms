@@ -140,7 +140,8 @@ export default function Approvals() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeEntries-all'] });
+      queryClient.invalidateQueries({ queryKey: ['timeEntries-pending'] });
+      queryClient.invalidateQueries({ queryKey: ['timeEntries-history'] });
     }
   });
 
@@ -151,7 +152,8 @@ export default function Approvals() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeEntries-all'] });
+      queryClient.invalidateQueries({ queryKey: ['timeEntries-pending'] });
+      queryClient.invalidateQueries({ queryKey: ['timeEntries-history'] });
       setIsRejectDialogOpen(false);
       setRejectionReason("");
     }
@@ -168,7 +170,8 @@ export default function Approvals() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeEntries-all'] });
+      queryClient.invalidateQueries({ queryKey: ['timeEntries-pending'] });
+      queryClient.invalidateQueries({ queryKey: ['timeEntries-history'] });
       setIsDetailDialogOpen(false);
       setIsEditMode(false);
     }
