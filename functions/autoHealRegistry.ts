@@ -53,7 +53,14 @@ Deno.serve(async (req) => {
     let initialCheck = null;
     try {
       const res = await svc.functions.invoke('verifyFunctionRegistry', {});
-      initialCheck = res?.data || res;
+      // SDK returns axios-like response: data is in res.data
+      const payload = res?.data ?? res;
+      // Sometimes res.data is a string (JSON), parse it
+      if (typeof payload === 'string') {
+        try { initialCheck = JSON.parse(payload); } catch (_) { initialCheck = payload; }
+      } else {
+        initialCheck = payload;
+      }
     } catch (err) {
       // If the invoke returns an axios error with data, use that
       if (err?.response?.data) {
@@ -175,7 +182,12 @@ Deno.serve(async (req) => {
     let postHealCheck = null;
     try {
       const res = await svc.functions.invoke('verifyFunctionRegistry', {});
-      postHealCheck = res?.data || res;
+      const payload = res?.data ?? res;
+      if (typeof payload === 'string') {
+        try { postHealCheck = JSON.parse(payload); } catch (_) { postHealCheck = payload; }
+      } else {
+        postHealCheck = payload;
+      }
     } catch (_) {
       postHealCheck = { status: 'ERROR', missing_functions: initialMissing };
     }
