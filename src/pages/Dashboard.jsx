@@ -31,6 +31,7 @@ import ExportDialog from "../components/export/ExportDialog";
 import SystemStatusCard from "../components/dashboard/SystemStatusCard";
 import MobileEntryStatusCard from "../components/dashboard/MobileEntryStatusCard";
 import NotificationsCard from "../components/dashboard/NotificationsCard";
+import AggregationStatusWidget from "../components/dashboard/AggregationStatusWidget";
 
 export default function Dashboard({ currentUser }) {
   const today = new Date();
