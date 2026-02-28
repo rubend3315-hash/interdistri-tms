@@ -80,6 +80,20 @@ Deno.serve(async (req) => {
 
     await svc.entities.TimeEntry.update(time_entry_id, updatePayload);
 
+    // Trigger weekly summary recalculation (fire-and-forget)
+    try {
+      const week = entry.week_number;
+      const yr = entry.year;
+      if (week && yr) {
+        console.log(`[approveTimeEntry] Triggering recalcWeeklySummaries for week=${week} year=${yr}`);
+        base44.functions.invoke('recalculateWeeklySummaries', { year: yr, week_number: week }).catch(e => {
+          console.warn('[approveTimeEntry] recalc trigger failed (non-blocking):', e?.message);
+        });
+      }
+    } catch (triggerErr) {
+      console.warn('[approveTimeEntry] recalc trigger error (non-blocking):', triggerErr?.message);
+    }
+
     return Response.json({ success: true, time_entry_id, new_status: 'Goedgekeurd' });
   } catch (error) {
     console.error('[approveTimeEntry]', error);

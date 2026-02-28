@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Building2, ChevronLeft, ChevronRight, RefreshCw, Lock } from "lucide-react";
 import { getISOWeek, getYear, startOfWeek, endOfWeek, addWeeks, subWeeks, format } from "date-fns";
 
 function fmt(n) {
@@ -32,160 +33,15 @@ function DeltaPct({ pct }) {
   );
 }
 
-function timeToMin(t) {
-  if (!t || typeof t !== "string") return null;
-  const m = t.match(/^(\d{1,2}):(\d{2})$/);
-  if (!m) return null;
-  return parseInt(m[1]) * 60 + parseInt(m[2]);
-}
-
-function durationMin(start, end) {
-  const s = timeToMin(start), e = timeToMin(end);
-  if (s === null || e === null) return 0;
-  let d = e - s;
-  if (d <= 0) d += 1440;
-  return Math.max(0, d);
-}
-
-/** Get active price for article at a given date */
-function getArticlePrice(article, refDate) {
-  if (!article?.price_rules?.length) return 0;
-  const valid = article.price_rules
-    .filter(r => new Date(r.start_date) <= refDate && (!r.end_date || new Date(r.end_date) >= refDate))
-    .sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
-  return valid.length > 0 ? valid[0].price : 0;
-}
-
-/**
- * Build per-customer data: hours, km, revenue (hours*rate + km*kmRate + PostNL import revenue)
- */
-function buildWeekData(entries, trips, spws, custList, projList, imports, articles, refDate) {
-  const customerMap = {};
-  const custNameMap = {};
-  custList.forEach(c => { custNameMap[c.id] = c.company_name; });
-
-  const projCustMap = {};
-  projList.forEach(p => { if (p.customer_id) projCustMap[p.id] = p.customer_id; });
-
-  // Build article lookup per customer: { custId: { hourRate, kmRate } }
-  const rateMap = {};
-  custList.forEach(c => {
-    const custArticles = articles.filter(a => a.customer_id === c.id);
-    const hourArt = custArticles.find(a => {
-      const d = (a.description || '').toLowerCase();
-      return d.includes('uur') || d.includes('hour');
-    });
-    const kmArt = custArticles.find(a => {
-      const d = (a.description || '').toLowerCase();
-      return d.includes('km') || d.includes('kilometer');
-    });
-    rateMap[c.id] = {
-      hourRate: hourArt ? getArticlePrice(hourArt, refDate) : 0,
-      kmRate: kmArt ? getArticlePrice(kmArt, refDate) : 0,
-    };
-  });
-
-  // Index trips/spw by time_entry_id
-  const tripsByTE = {};
-  trips.forEach(t => { const k = t.time_entry_id; if (k) { (tripsByTE[k] = tripsByTE[k] || []).push(t); } });
-  const spwsByTE = {};
-  spws.forEach(s => { const k = s.time_entry_id; if (k) { (spwsByTE[k] = spwsByTE[k] || []).push(s); } });
-
-  // Also aggregate km per customer from ALL trips (not just linked to time entries)
-  const kmByCustomer = {};
-  trips.forEach(t => {
-    const custId = t.customer_id || projCustMap[t.project_id];
-    if (!custId || !custNameMap[custId]) return;
-    const km = t.total_km || (t.end_km && t.start_km ? t.end_km - t.start_km : 0);
-    if (km > 0) kmByCustomer[custId] = (kmByCustomer[custId] || 0) + km;
-  });
-
-  // Process approved TimeEntries → allocate hours to customers
-  const approved = entries.filter(te => te.status === "Goedgekeurd");
-
-  for (const te of approved) {
-    const totalServiceMinutes = te.total_hours ? te.total_hours * 60 : 0;
-    if (totalServiceMinutes <= 0) continue;
-
-    const teTrips = tripsByTE[te.id] || [];
-    const teSpws = spwsByTE[te.id] || [];
-    const custMinutes = {};
-
-    teTrips.forEach(t => {
-      const custId = t.customer_id || projCustMap[t.project_id];
-      if (!custId || !custNameMap[custId]) return;
-      custMinutes[custId] = (custMinutes[custId] || 0) + durationMin(t.departure_time || t.start_time, t.arrival_time || t.end_time);
-    });
-
-    teSpws.forEach(s => {
-      const custId = s.customer_id || projCustMap[s.project_id];
-      if (!custId || !custNameMap[custId]) return;
-      custMinutes[custId] = (custMinutes[custId] || 0) + durationMin(s.start_time, s.end_time);
-    });
-
-    const custIds = Object.keys(custMinutes);
-    if (custIds.length === 0) continue;
-
-    const totalSpecificMinutes = Object.values(custMinutes).reduce((s, v) => s + v, 0);
-
-    for (const cid of custIds) {
-      const allocatedHours = custIds.length === 1
-        ? totalServiceMinutes / 60
-        : (totalSpecificMinutes > 0 ? (custMinutes[cid] / totalSpecificMinutes) * totalServiceMinutes : 0) / 60;
-
-      if (!customerMap[cid]) {
-        customerMap[cid] = { name: custNameMap[cid], hours: 0, km: 0, revenue: 0, entries: 0 };
-      }
-      customerMap[cid].hours += allocatedHours;
-      customerMap[cid].entries += 1;
-    }
-  }
-
-  // Merge km into customerMap and calculate revenue
-  for (const cid of Object.keys(kmByCustomer)) {
-    if (!customerMap[cid]) {
-      customerMap[cid] = { name: custNameMap[cid], hours: 0, km: 0, revenue: 0, entries: 0 };
-    }
-    customerMap[cid].km = kmByCustomer[cid];
-  }
-
-  // Calculate revenue: hours * hourRate + km * kmRate
-  for (const cid of Object.keys(customerMap)) {
-    const rates = rateMap[cid] || { hourRate: 0, kmRate: 0 };
-    customerMap[cid].revenue += customerMap[cid].hours * rates.hourRate + customerMap[cid].km * rates.kmRate;
-  }
-
-  // PostNL import revenue (additive, based on import data)
-  const postNLCustomer = custList.find(c => c.company_name?.toLowerCase().includes("postnl"));
-  if (postNLCustomer && imports.length > 0) {
-    if (!customerMap[postNLCustomer.id]) {
-      customerMap[postNLCustomer.id] = { name: postNLCustomer.company_name, hours: 0, km: 0, revenue: 0, entries: 0 };
-    }
-    const custArticles = articles.filter(a => a.customer_id === postNLCustomer.id);
-    const stopArticle = custArticles.find(a => a.description?.toLowerCase().includes("stop"));
-    const stukArticle = custArticles.find(a => a.description?.toLowerCase().includes("stuk") || a.description?.toLowerCase().includes("pakket"));
-    const stopPrice = getArticlePrice(stopArticle, refDate);
-    const stukPrice = getArticlePrice(stukArticle, refDate);
-    imports.forEach(r => {
-      const data = r.data || {};
-      const stops = Number(data["Aantal tijdens route - stops"]) || 0;
-      const stuks = Number(data["Geleverde stops"]) || Number(data["Aantal stuks afgehaald/ gecollecteerd"]) || 0;
-      customerMap[postNLCustomer.id].revenue += stops * stopPrice + stuks * stukPrice;
-    });
-  }
-
-  return customerMap;
-}
-
 export default function WeekRevenueCard() {
   const [weekOffset, setWeekOffset] = useState(0);
+  const [recalculating, setRecalculating] = useState(false);
 
-  const { weekNum, yearNum, weekStartStr, weekEndStr, prevWeekNum, prevYearNum, prevWeekStartStr, prevWeekEndStr, refDate } = useMemo(() => {
+  const { weekNum, yearNum, weekStartStr, weekEndStr, prevWeekNum, prevYearNum } = useMemo(() => {
     const base = addWeeks(new Date(), weekOffset);
     const ws = startOfWeek(base, { weekStartsOn: 1 });
     const we = endOfWeek(base, { weekStartsOn: 1 });
     const pws = subWeeks(ws, 1);
-    const pwe = subWeeks(we, 1);
     return {
       weekNum: getISOWeek(ws),
       yearNum: getYear(ws),
@@ -193,104 +49,57 @@ export default function WeekRevenueCard() {
       weekEndStr: format(we, "yyyy-MM-dd"),
       prevWeekNum: getISOWeek(pws),
       prevYearNum: getYear(pws),
-      prevWeekStartStr: format(pws, "yyyy-MM-dd"),
-      prevWeekEndStr: format(pwe, "yyyy-MM-dd"),
-      refDate: ws,
     };
   }, [weekOffset]);
 
-  // Data queries
-  const { data: customers = [], isLoading: l1 } = useQuery({
-    queryKey: ["dashboard-customers"],
-    queryFn: () => base44.entities.Customer.filter({ status: "Actief" }),
-  });
-  const { data: projects = [] } = useQuery({
-    queryKey: ["dashboard-projects"],
-    queryFn: () => base44.entities.Project.filter({ status: "Actief" }),
-  });
-  const { data: articles = [] } = useQuery({
-    queryKey: ["dashboard-articles"],
-    queryFn: () => base44.entities.Article.filter({ status: "Actief" }),
+  // Read pre-computed summaries
+  const { data: curSummaries = [], isLoading: l1, refetch } = useQuery({
+    queryKey: ["wcs", yearNum, weekNum],
+    queryFn: () => base44.entities.WeeklyCustomerSummary.filter({ year: yearNum, week_number: weekNum }),
   });
 
-  // Current week
-  const { data: curTE = [], isLoading: l2 } = useQuery({
-    queryKey: ["wrc-te", weekNum, yearNum],
-    queryFn: () => base44.entities.TimeEntry.filter({ week_number: weekNum, year: yearNum }),
-  });
-  const { data: curTrips = [], isLoading: l3 } = useQuery({
-    queryKey: ["wrc-trips", weekStartStr, weekEndStr],
-    queryFn: () => base44.entities.Trip.filter({ date: { $gte: weekStartStr, $lte: weekEndStr } }),
-  });
-  const { data: curSpws = [], isLoading: l4 } = useQuery({
-    queryKey: ["wrc-spw", weekStartStr, weekEndStr],
-    queryFn: () => base44.entities.StandplaatsWerk.filter({ date: { $gte: weekStartStr, $lte: weekEndStr } }),
-  });
-  const { data: curImports = [] } = useQuery({
-    queryKey: ["wrc-imports", weekStartStr, weekEndStr],
-    queryFn: async () => {
-      const all = await base44.entities.PostNLImportResult.filter({ datum: { $gte: weekStartStr, $lte: weekEndStr } });
-      // fallback: filter by data.Datum if datum field isn't set
-      if (all.length === 0) {
-        const raw = await base44.entities.PostNLImportResult.list("-created_date", 500);
-        return raw.filter(r => {
-          const d = r.datum || r.data?.Datum;
-          return d && d >= weekStartStr && d <= weekEndStr;
-        });
-      }
-      return all;
-    },
+  const { data: prevSummaries = [], isLoading: l2 } = useQuery({
+    queryKey: ["wcs", prevYearNum, prevWeekNum],
+    queryFn: () => base44.entities.WeeklyCustomerSummary.filter({ year: prevYearNum, week_number: prevWeekNum }),
   });
 
-  // Previous week (for delta)
-  const { data: prevTE = [] } = useQuery({
-    queryKey: ["wrc-te", prevWeekNum, prevYearNum],
-    queryFn: () => base44.entities.TimeEntry.filter({ week_number: prevWeekNum, year: prevYearNum }),
-  });
-  const { data: prevTrips = [] } = useQuery({
-    queryKey: ["wrc-trips", prevWeekStartStr, prevWeekEndStr],
-    queryFn: () => base44.entities.Trip.filter({ date: { $gte: prevWeekStartStr, $lte: prevWeekEndStr } }),
-  });
-  const { data: prevSpws = [] } = useQuery({
-    queryKey: ["wrc-spw", prevWeekStartStr, prevWeekEndStr],
-    queryFn: () => base44.entities.StandplaatsWerk.filter({ date: { $gte: prevWeekStartStr, $lte: prevWeekEndStr } }),
-  });
-  const { data: prevImports = [] } = useQuery({
-    queryKey: ["wrc-imports", prevWeekStartStr, prevWeekEndStr],
-    queryFn: async () => {
-      const all = await base44.entities.PostNLImportResult.filter({ datum: { $gte: prevWeekStartStr, $lte: prevWeekEndStr } });
-      if (all.length === 0) {
-        const raw = await base44.entities.PostNLImportResult.list("-created_date", 500);
-        return raw.filter(r => {
-          const d = r.datum || r.data?.Datum;
-          return d && d >= prevWeekStartStr && d <= prevWeekEndStr;
-        });
-      }
-      return all;
-    },
-  });
+  const isLoading = l1 || l2;
+  const isLocked = curSummaries.some(s => s.locked);
+  const isCurrentWeek = weekOffset === 0;
 
-  const isLoading = l1 || l2 || l3 || l4;
+  const handleRecalculate = async () => {
+    setRecalculating(true);
+    try {
+      await base44.functions.invoke('recalculateWeeklySummaries', { year: yearNum, week_number: weekNum });
+      await refetch();
+    } finally {
+      setRecalculating(false);
+    }
+  };
 
   const { customerData, totals } = useMemo(() => {
     if (isLoading) return { customerData: [], totals: null };
 
-    const curMap = buildWeekData(curTE, curTrips, curSpws, customers, projects, curImports, articles, refDate);
-    const prevMap = buildWeekData(prevTE, prevTrips, prevSpws, customers, projects, prevImports, articles, subWeeks(refDate, 1));
+    const prevMap = {};
+    prevSummaries.forEach(s => { prevMap[s.customer_id] = s; });
 
-    const merged = Object.entries(curMap)
-      .filter(([, v]) => v.hours > 0 || v.km > 0 || v.revenue > 0)
-      .map(([id, cur]) => {
-        const prev = prevMap[id] || { hours: 0, km: 0, revenue: 0, entries: 0 };
-        const curRate = cur.hours > 0 ? cur.revenue / cur.hours : 0;
+    const merged = curSummaries
+      .filter(s => s.total_hours > 0 || s.total_km > 0 || s.calculated_revenue > 0)
+      .map(s => {
+        const prev = prevMap[s.customer_id] || { total_hours: 0, total_km: 0, calculated_revenue: 0 };
+        const rate = s.total_hours > 0 ? s.calculated_revenue / s.total_hours : 0;
         return {
-          id, name: cur.name,
-          hours: cur.hours, km: cur.km, revenue: cur.revenue, rate: curRate, entries: cur.entries,
-          hoursDelta: cur.hours - prev.hours,
-          hoursPct: prev.hours > 0 ? ((cur.hours - prev.hours) / prev.hours) * 100 : null,
-          kmDelta: cur.km - prev.km,
-          revenueDelta: cur.revenue - prev.revenue,
-          revenuePct: prev.revenue > 0 ? ((cur.revenue - prev.revenue) / prev.revenue) * 100 : null,
+          id: s.customer_id,
+          name: s.customer_name,
+          hours: s.total_hours,
+          km: s.total_km,
+          revenue: s.calculated_revenue,
+          rate,
+          hoursDelta: s.total_hours - prev.total_hours,
+          hoursPct: prev.total_hours > 0 ? ((s.total_hours - prev.total_hours) / prev.total_hours) * 100 : null,
+          kmDelta: s.total_km - prev.total_km,
+          revenueDelta: s.calculated_revenue - prev.calculated_revenue,
+          revenuePct: prev.calculated_revenue > 0 ? ((s.calculated_revenue - prev.calculated_revenue) / prev.calculated_revenue) * 100 : null,
         };
       })
       .sort((a, b) => (b.revenue + b.hours) - (a.revenue + a.hours));
@@ -298,9 +107,9 @@ export default function WeekRevenueCard() {
     const curTotH = merged.reduce((s, c) => s + c.hours, 0);
     const curTotKm = merged.reduce((s, c) => s + c.km, 0);
     const curTotR = merged.reduce((s, c) => s + c.revenue, 0);
-    const prevTotH = Object.values(prevMap).reduce((s, c) => s + c.hours, 0);
-    const prevTotKm = Object.values(prevMap).reduce((s, c) => s + c.km, 0);
-    const prevTotR = Object.values(prevMap).reduce((s, c) => s + c.revenue, 0);
+    const prevTotH = prevSummaries.reduce((s, c) => s + (c.total_hours || 0), 0);
+    const prevTotKm = prevSummaries.reduce((s, c) => s + (c.total_km || 0), 0);
+    const prevTotR = prevSummaries.reduce((s, c) => s + (c.calculated_revenue || 0), 0);
 
     return {
       customerData: merged,
@@ -314,9 +123,7 @@ export default function WeekRevenueCard() {
         revenuePct: prevTotR > 0 ? ((curTotR - prevTotR) / prevTotR) * 100 : null,
       },
     };
-  }, [customers, projects, articles, curTE, prevTE, curTrips, prevTrips, curSpws, prevSpws, curImports, prevImports, isLoading, refDate]);
-
-  const isCurrentWeek = weekOffset === 0;
+  }, [curSummaries, prevSummaries, isLoading]);
 
   return (
     <Card className="shadow-sm h-full">
@@ -325,8 +132,17 @@ export default function WeekRevenueCard() {
           <CardTitle className="text-sm flex items-center gap-2">
             <Building2 className="w-4 h-4 text-blue-600" />
             Omzet & Uren per Klant
+            {isLocked && <Lock className="w-3 h-3 text-amber-500" title="Week vergrendeld" />}
           </CardTitle>
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost" size="icon" className="h-6 w-6"
+              onClick={handleRecalculate}
+              disabled={recalculating || isLocked}
+              title="Herbereken"
+            >
+              <RefreshCw className={`w-3 h-3 ${recalculating ? 'animate-spin' : ''}`} />
+            </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekOffset(o => o - 1)}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -344,13 +160,22 @@ export default function WeekRevenueCard() {
         </div>
         <p className="text-[10px] text-slate-400 mt-0.5">
           {weekStartStr} — {weekEndStr} · Δ t.o.v. wk {String(prevWeekNum).padStart(2, '0')}
+          {curSummaries[0]?.last_calculated && (
+            <span className="ml-1">· berekend {new Date(curSummaries[0].last_calculated).toLocaleString('nl-NL', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}</span>
+          )}
         </p>
       </CardHeader>
       <CardContent className="px-3 pb-3 pt-0">
         {isLoading ? (
           <div className="space-y-1.5">{[1, 2, 3].map(i => <Skeleton key={i} className="h-6" />)}</div>
         ) : customerData.length === 0 ? (
-          <p className="text-[11px] text-slate-400 text-center py-3">Geen klantdata deze week</p>
+          <div className="text-center py-3">
+            <p className="text-[11px] text-slate-400">Geen data voor deze week</p>
+            <Button variant="outline" size="sm" className="mt-2 text-xs h-7" onClick={handleRecalculate} disabled={recalculating}>
+              <RefreshCw className={`w-3 h-3 mr-1.5 ${recalculating ? 'animate-spin' : ''}`} />
+              {recalculating ? 'Berekenen...' : 'Berekenen'}
+            </Button>
+          </div>
         ) : (
           <div className="max-h-[280px] overflow-y-auto">
             <table className="w-full text-[11px]">
