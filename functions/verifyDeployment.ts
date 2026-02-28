@@ -1,4 +1,4 @@
-// verifyDeployment v5 — dependency-map, Promise.allSettled, error-isolated, never 500
+// verifyDeployment v6 — batched checks with delay to avoid 429 rate limits
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Dependency map: parent → child functions that must also be deployed
