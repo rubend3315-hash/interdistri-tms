@@ -84,34 +84,20 @@ Deno.serve(async (req) => {
     }
 
     // ============================================================
-    // Step 1: Run registry check via verifyFunctionRegistry (service role)
+    // Step 1: Run registry check INLINE (avoids cross-function auth issues)
     // ============================================================
     let initialCheck = null;
     try {
-      const res = await svc.functions.invoke('verifyFunctionRegistry', {});
-      // SDK returns axios-like response: data is in res.data
-      const payload = res?.data ?? res;
-      // Sometimes res.data is a string (JSON), parse it
-      if (typeof payload === 'string') {
-        try { initialCheck = JSON.parse(payload); } catch (_) { initialCheck = payload; }
-      } else {
-        initialCheck = payload;
-      }
+      initialCheck = await runRegistryCheck(svc);
     } catch (err) {
-      // If the invoke returns an axios error with data, use that
-      if (err?.response?.data) {
-        initialCheck = err.response.data;
-      } else {
-        return Response.json({
-          action: 'CHECK_FAILED',
-          error: err.message,
-          timestamp: now.toISOString(),
-        }, { status: 200 });
-      }
+      return Response.json({
+        action: 'CHECK_FAILED',
+        error: err?.message || 'Registry check failed',
+        timestamp: now.toISOString(),
+      }, { status: 200 });
     }
 
     const initialMissing = initialCheck?.missing_functions || [];
-    const initialBrokenDeps = initialCheck?.broken_dependencies || [];
     const manifestCount = initialCheck?.manifest_count || 0;
     const deployedCount = initialCheck?.deployed_count || 0;
 
