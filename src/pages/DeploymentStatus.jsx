@@ -621,6 +621,128 @@ function SelfHealingProtocol() {
   );
 }
 
+function OperationalDeploymentProtocol() {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <Card className="mt-8 border-2 border-indigo-300 shadow-md">
+      <CardHeader className="bg-indigo-50 rounded-t-xl">
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-2 text-lg font-bold text-indigo-900 hover:text-indigo-700 w-full"
+        >
+          {open ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          <Shield className="w-5 h-5 text-indigo-700" />
+          Operational Deployment Protocol (Verplicht)
+        </button>
+      </CardHeader>
+      {open && (
+        <CardContent className="pt-4 space-y-5">
+          {/* Waarschuwing */}
+          <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 flex items-start gap-3">
+            <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-red-800 text-sm">Dit protocol is verplicht bij ALLE backend wijzigingen, ook kleine.</p>
+              <p className="text-red-700 text-xs mt-1">Niet-naleving kan leiden tot registry drift, ontbrekende functies en productieverstoringen.</p>
+            </div>
+          </div>
+
+          {/* 1. Backend Changes Bundelen */}
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="flex-shrink-0 w-6 h-6 rounded-md bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+              <h3 className="font-bold text-slate-900 text-sm">Backend Changes — Bundelen</h3>
+            </div>
+            <ul className="text-sm text-slate-700 space-y-1 ml-8 list-disc">
+              <li>Backend wijzigingen <strong>bundelen in één sessie</strong>.</li>
+              <li>Geen meerdere incremental saves achter elkaar.</li>
+              <li>Voer alle gerelateerde wijzigingen in één keer door, dan publiceren.</li>
+            </ul>
+          </div>
+
+          {/* 2. Verplichte Deploy Procedure */}
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-md bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+              <h3 className="font-bold text-indigo-900 text-sm">Verplichte Deploy Procedure</h3>
+            </div>
+            <div className="space-y-2 ml-4">
+              {[
+                { step: "1", text: 'Klik Publish.' },
+                { step: "2", text: 'Wacht tot "Publish completed".' },
+                { step: "3", text: 'Wacht extra 10–15 seconden (functies warmen op).' },
+                { step: "4", text: "Controleer RegistryIntegrityCard → status GREEN, missing_count = 0." },
+                { step: "5", text: "Voer één echte test uit (bijv. submitTimeEntry via mobiele app)." },
+              ].map(s => (
+                <div key={s.step} className="flex gap-3 items-start">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-700 text-white text-[10px] font-bold flex items-center justify-center mt-0.5">{s.step}</span>
+                  <p className="text-sm text-indigo-900">{s.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 3. Tijdens Productie-uren */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="flex-shrink-0 w-6 h-6 rounded-md bg-amber-600 text-white text-xs font-bold flex items-center justify-center">3</span>
+              <h3 className="font-bold text-amber-900 text-sm">Tijdens Productie-uren</h3>
+            </div>
+            <ul className="text-sm text-amber-800 space-y-1 ml-8 list-disc">
+              <li><strong>Geen backend wijzigingen</strong> tijdens productie-uren.</li>
+              <li>Alleen frontend aanpassingen (pages, components, layout) zijn veilig.</li>
+              <li>Backend changes uitsluitend buiten piekuren plannen.</li>
+            </ul>
+          </div>
+
+          {/* 4. Na Grote Refactors */}
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-md bg-purple-600 text-white text-xs font-bold flex items-center justify-center">4</span>
+              <h3 className="font-bold text-purple-900 text-sm">Na Grote Refactors</h3>
+            </div>
+            <div className="space-y-2 ml-4">
+              {[
+                "Publish uitvoeren.",
+                "Registry verify (RegistryIntegrityCard → GREEN).",
+                "Test submitTimeEntry (mobiele app).",
+                "Test approveTimeEntry (goedkeuringspagina).",
+                "Test autoHealRegistry (Manual Heal knop).",
+              ].map((text, i) => (
+                <div key={i} className="flex gap-3 items-start">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-700 text-white text-[10px] font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                  <p className="text-sm text-purple-900">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 5. Bij "function not deployed" */}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-md bg-red-600 text-white text-xs font-bold flex items-center justify-center">5</span>
+              <h3 className="font-bold text-red-900 text-sm">Bij "function not deployed"</h3>
+            </div>
+            <div className="space-y-2 ml-4">
+              {[
+                "STOP alle wijzigingen onmiddellijk.",
+                "Handmatige Publish uitvoeren.",
+                "Registry check (RegistryIntegrityCard → GREEN).",
+                "Pas daarna verder werken.",
+              ].map((text, i) => (
+                <div key={i} className="flex gap-3 items-start">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-red-700 text-white text-[10px] font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                  <p className="text-sm text-red-900">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
 function PublishRegistryDriftDocs() {
   const [open, setOpen] = useState(false);
 
