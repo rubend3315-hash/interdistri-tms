@@ -1,4 +1,4 @@
-// verifyFunctionRegistry v1 — manifest-based registry integrity check, never 500
+// verifyFunctionRegistry v2 — batched checks to avoid 429 rate limits
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**
