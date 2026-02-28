@@ -25,7 +25,7 @@ import {
   Smartphone
 } from "lucide-react";
 import CharterOverview from "../components/dashboard/CharterOverview";
-import RevenuePerCustomer from "../components/dashboard/RevenuePerCustomer";
+import WeekRevenueCard from "../components/dashboard/WeekRevenueCard";
 import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
 import SystemStatusCard from "../components/dashboard/SystemStatusCard";
@@ -269,7 +269,7 @@ export default function Dashboard({ currentUser }) {
           <NotificationsCard items={notificationItems} />
         </div>
         <div className="lg:col-span-8">
-          <RevenuePerCustomer />
+          <WeekRevenueCard />
         </div>
       </div>
 
