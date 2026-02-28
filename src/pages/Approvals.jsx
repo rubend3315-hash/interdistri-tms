@@ -31,6 +31,9 @@ import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
 import ApprovalsFilters from "@/components/approvals/ApprovalsFilters";
 
+const DEFAULT_FROM = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+const TODAY = format(new Date(), 'yyyy-MM-dd');
+
 export default function Approvals() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -46,17 +49,48 @@ export default function Approvals() {
   const approvedPage = usePagination(20);
   const rejectedPage = usePagination(20);
 
-  const { data: timeEntries = [], isLoading } = useQuery({
-    queryKey: ['timeEntries-all'],
-    queryFn: async () => {
-      try {
-        return await base44.entities.TimeEntry.list();
-      } catch (error) {
-        console.error('Error loading time entries:', error);
-        return [];
-      }
-    }
+  // Filter state
+  const [filterDateFrom, setFilterDateFrom] = useState(DEFAULT_FROM);
+  const [filterDateTo, setFilterDateTo] = useState(TODAY);
+  const [filterEmployee, setFilterEmployee] = useState("all");
+  const [filterSearch, setFilterSearch] = useState("");
+
+  const resetFilters = () => {
+    setFilterDateFrom(DEFAULT_FROM);
+    setFilterDateTo(TODAY);
+    setFilterEmployee("all");
+    setFilterSearch("");
+    pendingPage.resetPage();
+    approvedPage.resetPage();
+    rejectedPage.resetPage();
+  };
+
+  // Server-side filtered query: pending always ALL (workflow), history by date range
+  const { data: pendingRaw = [], isLoading: loadingPending } = useQuery({
+    queryKey: ['timeEntries-pending'],
+    queryFn: () => base44.entities.TimeEntry.filter({ status: 'Ingediend' }),
   });
+
+  const { data: historyRaw = [], isLoading: loadingHistory } = useQuery({
+    queryKey: ['timeEntries-history', filterDateFrom, filterDateTo],
+    queryFn: () => {
+      const filter = {};
+      if (filterDateFrom) filter.date = { ...(filter.date || {}), $gte: filterDateFrom };
+      if (filterDateTo) filter.date = { ...(filter.date || {}), $lte: filterDateTo };
+      return base44.entities.TimeEntry.filter(filter);
+    },
+    enabled: activeTab !== 'pending', // only load history when viewing those tabs
+  });
+
+  // Combine for overlap detection (pending + visible history)
+  const allLoadedEntries = useMemo(() => {
+    const map = new Map();
+    pendingRaw.forEach(e => map.set(e.id, e));
+    historyRaw.forEach(e => map.set(e.id, e));
+    return Array.from(map.values());
+  }, [pendingRaw, historyRaw]);
+
+  const isLoading = loadingPending || (activeTab !== 'pending' && loadingHistory);
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
