@@ -3,7 +3,7 @@
 // ║ Called by: Scheduled automation every 5 minutes                 ║
 // ║ Auth: Service role (scheduled)                                  ║
 // ║                                                                 ║
-// ║ v3 — Ultra-lightweight: skip unknowns, batch updates, delays   ║
+// ║ v3.1 — Ultra-lightweight: skip unknowns, batch updates, delays ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
