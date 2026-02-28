@@ -376,6 +376,20 @@ Deno.serve(async (req) => {
 
     console.log(`[recalcWeekly] Done. Customer: ${custCreated} created, ${custUpdated} updated, ${custDeleted} deleted. Employee: ${empCreated} created, ${empUpdated} updated, ${empDeleted} deleted.`);
 
+    // Trigger monthly summary recalculation (fire-and-forget)
+    // Determine which month this week's Monday falls in
+    try {
+      const weekMonday = weekStartDate(year, week_number);
+      const monthOfWeek = weekMonday.getMonth() + 1;
+      const yearOfMonth = weekMonday.getFullYear();
+      console.log(`[recalcWeekly] Triggering monthly recalc for ${yearOfMonth}-${monthOfWeek}`);
+      base44.functions.invoke('recalculateMonthlyCustomerSummary', { year: yearOfMonth, month: monthOfWeek }).catch(e => {
+        console.warn('[recalcWeekly] Monthly recalc trigger failed (non-blocking):', e?.message);
+      });
+    } catch (triggerErr) {
+      console.warn('[recalcWeekly] Monthly trigger error (non-blocking):', triggerErr?.message);
+    }
+
     return Response.json({
       success: true,
       year,
