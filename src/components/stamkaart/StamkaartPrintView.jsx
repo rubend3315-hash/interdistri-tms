@@ -122,8 +122,18 @@ export default function StamkaartPrintView({ employee, onboardingData }) {
         </div>
         {/* Kolom 2 */}
         <div className="space-y-0">
-          <Row label="Contract type" compact>{employee.contract_type}</Row>
-          <Row label="Contracturen" compact>{employee.contract_hours ? `${employee.contract_hours} uur` : null}</Row>
+          <Row label="Contract type" compact>{(() => {
+            const ar = (employee.contractregels || [])
+              .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
+              .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+            return ar?.type_contract || '—';
+          })()}</Row>
+          <Row label="Contracturen" compact>{(() => {
+            const ar = (employee.contractregels || [])
+              .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
+              .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+            return ar ? `${ar.uren_per_week ?? 0} uur` : null;
+          })()}</Row>
           <Row label="Loonschaal" compact>{employee.salary_scale}</Row>
           <Row label="Bruto uurloon (€)" compact>{employee.hourly_rate ? `€ ${Number(employee.hourly_rate).toFixed(2)}` : null}</Row>
         </div>

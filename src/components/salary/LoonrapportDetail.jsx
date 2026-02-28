@@ -25,9 +25,8 @@ export default function LoonrapportDetail({
   }, [employee]);
 
   const loonschaal = contract.loonschaal || employee.salary_scale || "";
-  const contractHours = contract.uren_per_week || employee.contract_hours || 0;
-  const isOproepkracht = employee.contract_type === "Oproep" ||
-    (contract.type_contract || "").toLowerCase().includes("oproep");
+  const contractHours = contract.uren_per_week ?? 0;
+  const isOproepkracht = (contract.type_contract || "").toLowerCase().includes("oproep");
 
   const hourlyRate = useMemo(() => {
     if (employee.hourly_rate) return employee.hourly_rate;
@@ -55,7 +54,7 @@ export default function LoonrapportDetail({
   const dailyRate = monthlyRate / 21.75;
   const parttime = contractHours >= 40 ? 100 : Math.round((contractHours / 40) * 100);
 
-  const inServiceDate = employee.in_service_since || employee.contract_start_date ||
+  const inServiceDate = employee.in_service_since ||
     ((employee.contractregels || []).filter(c => c.startdatum).sort((a, b) => new Date(a.startdatum) - new Date(b.startdatum))[0]?.startdatum || "");
 
   const currentPeriode = periodes.find(p => p.periode === selectedPeriode);
@@ -210,7 +209,7 @@ export default function LoonrapportDetail({
             </div>
             <div>
               <p className="text-sm">In dienst: <span className="font-medium">{inServiceDate ? format(new Date(inServiceDate), "dd-MM-yyyy") : "-"}</span></p>
-              <p className="text-sm">Uit dienst: <span className="font-medium">{employee.contract_end_date ? format(new Date(employee.contract_end_date), "dd-MM-yyyy") : ""}</span></p>
+              <p className="text-sm">Uit dienst: <span className="font-medium">{employee.out_of_service_date ? format(new Date(employee.out_of_service_date), "dd-MM-yyyy") : ""}</span></p>
             </div>
           </div>
         </div>
