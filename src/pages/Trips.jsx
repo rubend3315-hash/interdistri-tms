@@ -808,7 +808,7 @@ export default function Trips() {
                                   </CardContent>
                                 </Card>
                 );
-              })
+              })}
               <Pagination
                 totalItems={conceptTripsAll.length}
                 currentPage={conceptPageState.currentPage}
