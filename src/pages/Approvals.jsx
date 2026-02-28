@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
 import { getBreakMinutesForHours } from "@/components/utils/breakScheduleUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
+import ApprovalsFilters from "@/components/approvals/ApprovalsFilters";
 
 export default function Approvals() {
   const [selectedEntry, setSelectedEntry] = useState(null);
