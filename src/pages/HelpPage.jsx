@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Zap, Layers, Users, Clock, CheckSquare, Truck, CalendarDays, Shield, Smartphone, CircleDot, Download, FileText, Building2, FolderKanban, DollarSign, FileSpreadsheet, Mail, Car, Settings, Lock } from 'lucide-react';
+import { BookOpen, Zap, Layers, Users, Clock, CheckSquare, Truck, CalendarDays, Shield, Smartphone, CircleDot, Download, FileText, Building2, FolderKanban, DollarSign, FileSpreadsheet, Mail, Car, Settings, Lock, Server, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import HelpMobileEntryCard from '../components/help/HelpMobileEntryCard';
 import HelpMobileEntryGuide from '../components/help/HelpMobileEntryGuide';
