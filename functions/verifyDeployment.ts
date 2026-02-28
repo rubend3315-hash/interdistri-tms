@@ -246,7 +246,7 @@ Deno.serve(async (req) => {
         dependency_errors: depErrors.length,
         all_dependencies_ok: depFailures.length === 0,
       },
-      version: '2026-02-28-v5',
+      version: '2026-02-28-v6',
       timestamp: new Date().toISOString(),
     }, { status: 200 });
 
@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
       functions: [], dependency_checks: [],
       summary: { total: 0, checked: 0, deployed: 0, not_deployed: 0, errors: 1 },
       outer_error: outerError?.message || 'Unknown error in verifyDeployment',
-      version: '2026-02-28-v5',
+      version: '2026-02-28-v6',
       timestamp: new Date().toISOString(),
     }, { status: 200 });
   }
