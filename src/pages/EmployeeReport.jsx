@@ -143,15 +143,28 @@ export default function EmployeeReport() {
     enabled: !!postNLCustomer
   });
 
-  // Fetch import results for report rows - fetch ALL records with pagination
+  // Fetch import results for report rows - server-side filtered by period
+  const periodKey = useMemo(() => {
+    const s = format(weekStart, 'yyyy-MM-dd');
+    const e = format(weekEnd, 'yyyy-MM-dd');
+    return `${s}_${e}`;
+  }, [weekStart, weekEnd]);
+
   const { data: importResults = [], isLoading: loadingImports } = useQuery({
-    queryKey: ['postnl-imports-report'],
+    queryKey: ['postnl-imports-report', periodKey],
     queryFn: async () => {
+      const startStr = format(weekStart, 'yyyy-MM-dd');
+      const endStr = format(weekEnd, 'yyyy-MM-dd');
       const allResults = [];
       let skip = 0;
       const limit = 500;
       while (true) {
-        const batch = await base44.entities.PostNLImportResult.list('-created_date', limit, skip);
+        const batch = await base44.entities.PostNLImportResult.filter(
+          { created_date: { $gte: startStr, $lte: endStr + 'T23:59:59' } },
+          '-created_date',
+          limit,
+          skip
+        );
         if (!batch || batch.length === 0) break;
         allResults.push(...batch);
         if (batch.length < limit) break;
