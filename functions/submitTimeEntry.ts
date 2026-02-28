@@ -8,7 +8,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
-// submitTimeEntry v5.2 — MobileSubmissionIndex idempotency guard (2026-02-27)
+// submitTimeEntry v5.2.1 — MobileSubmissionIndex idempotency guard (2026-02-28 redeployed)
 // ============================================================
 //
 // ARCHITECTURE:
