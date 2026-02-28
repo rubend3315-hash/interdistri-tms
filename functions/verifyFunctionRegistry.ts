@@ -133,9 +133,10 @@ Deno.serve(async (req) => {
       }, { status: 200 });
     }
 
-    // Ping all manifest functions in parallel
+    // Ping all manifest functions in parallel (use service role for reliability)
+    const svc = base44.asServiceRole;
     const promises = CRITICAL_FUNCTION_MANIFEST.map(fn =>
-      base44.functions.invoke(fn, { _ping: true })
+      svc.functions.invoke(fn, { _ping: true })
     );
     const settled = await Promise.allSettled(promises);
 
@@ -170,7 +171,7 @@ Deno.serve(async (req) => {
       const depNames = brokenDeps.map(d => `${d.parent}→${d.child}`);
 
       // Fire-and-forget notification
-      base44.asServiceRole.entities.Notification.create({
+      svc.entities.Notification.create({
         title: `Registry Integrity Alert: ${missing.length} functie(s) ontbreken`,
         description: `Ontbrekend: ${missingNames.join(', ')}${brokenDeps.length > 0 ? `. Broken deps: ${depNames.join(', ')}` : ''}`,
         type: 'general',
@@ -178,7 +179,7 @@ Deno.serve(async (req) => {
       }).catch(() => {});
 
       // Fire-and-forget audit log
-      base44.asServiceRole.entities.AuditLog.create({
+      svc.entities.AuditLog.create({
         action_type: 'create',
         category: 'Systeem',
         description: `Registry Integrity FAILED: ${missing.length} missing, ${brokenDeps.length} broken deps. Missing: ${missingNames.join(', ')}`,
