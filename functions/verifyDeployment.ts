@@ -186,8 +186,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check any extra dependency functions not in critical list
+    // Check any extra dependency functions not in critical list (with delay)
     if (extraToCheck.length > 0) {
+      await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
       const extraPromises = extraToCheck.map(({ child }) =>
         base44.functions.invoke(child, { _ping: true })
       );
