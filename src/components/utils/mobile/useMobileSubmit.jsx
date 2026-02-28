@@ -137,113 +137,133 @@ export function useMobileSubmit({
     return msg || 'Er is een fout opgetreden bij het indienen.';
   }, []);
 
-  // --- Submit handler ---
+  // --- Submit handler with safety timeout ---
   const handleSubmitEntry = useCallback(async (signatureOverride) => {
     const finalSignature = signatureOverride || signature;
 
     if (!finalSignature) {
-      // Will be called again after signature dialog
       return { needsSignature: true };
     }
 
-    // SAFEGUARD: Verify formData.date is valid and not stale
     if (!formData.date || formData.date.length !== 10) {
       console.error('[SUBMIT_GUARD] Invalid date in formData:', formData.date);
       toast.error('Ongeldige datum — selecteer een datum en probeer opnieuw.');
       return { success: false, error: 'INVALID_DATE' };
     }
 
-    base44.analytics.track({
-      eventName: "mobile_entry_submit_start",
-      properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length }
-    });
+    // Safety timeout: if submit takes >20s, force-reset UI and warn driver
+    let safetyTimeoutId;
+    let timedOut = false;
 
-    // Build final formData with GEEN_RIT prefix if applicable
-    const finalFormData = geenRit
-      ? { ...formData, notes: `[GEEN_RIT] ${geenRitReden}${formData.notes ? '\n' + formData.notes : ''}` }
-      : formData;
+    safetyTimeoutId = setTimeout(() => {
+      timedOut = true;
+      // Force-reset submitting state in useEntrySubmit
+      submittingRef.current = false;
+      toast.warning('Verzenden duurde langer dan verwacht. Controleer of uw dienst is opgeslagen in het overzicht.', { duration: 8000 });
+    }, 20000);
 
-    // Check signature size warning
-    const sigLogger = createClientSubmitLogger({ userEmail: currentEmployee?.email || '', employeeId: currentEmployee?.id || '', entryDate: formData.date });
-    const sigWarning = sigLogger.getSignatureWarning(finalSignature);
-    if (sigWarning) {
-      toast.warning(sigWarning, { duration: 8000 });
-    }
-
-    const result = await submitEntry({
-      formData: finalFormData,
-      trips: geenRit ? [] : trips,
-      standplaatsWerk: geenRit ? [] : standplaatsWerk,
-      signature: finalSignature,
-      userEmail: currentEmployee?.email || '',
-      employeeId: currentEmployee?.id || '',
-    });
-
-    // Show retry feedback if retries occurred
-    if (result.retryCount > 0 && result.success) {
-      toast.info('Verbinding hersteld — succesvol ingediend na herpoging.', { duration: 4000 });
-    }
-
-    if (result.success) {
-      const hasDamage = trips.some(t => t.damage_occurred === "Ja");
-
-      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
-
+    try {
       base44.analytics.track({
-        eventName: "mobile_entry_submit_success",
-        properties: {
-          employeeId: currentEmployee?.id, date: formData.date,
-          tripCount: trips.length, isOnline: !result.offline,
-          entryType: isMultiDay ? "multi_day" : "single_day"
-        }
+        eventName: "mobile_entry_submit_start",
+        properties: { employeeId: currentEmployee?.id, date: formData.date, tripCount: trips.length }
       });
 
-      if (result.offline) {
-        toast.info('📡 Offline opgeslagen — wordt automatisch verstuurd bij verbinding.');
-      } else {
-        toast.success('✅ Dienst afgerond — goede rit vandaag!');
+      const finalFormData = geenRit
+        ? { ...formData, notes: `[GEEN_RIT] ${geenRitReden}${formData.notes ? '\n' + formData.notes : ''}` }
+        : formData;
+
+      const sigLogger = createClientSubmitLogger({ userEmail: currentEmployee?.email || '', employeeId: currentEmployee?.id || '', entryDate: formData.date });
+      const sigWarning = sigLogger.getSignatureWarning(finalSignature);
+      if (sigWarning) {
+        toast.warning(sigWarning, { duration: 8000 });
       }
 
-      resetForm();
-
-      if (hasDamage) {
-        window.open('https://mijn.bumper.nl', '_blank');
-      }
-
-      setActiveTab("home");
-    } else {
-      base44.analytics.track({
-        eventName: "mobile_entry_submit_fail",
-        properties: {
-          employeeId: currentEmployee?.id, date: formData.date,
-          error: result.error || "unknown", entryType: isMultiDay ? "multi_day" : "single_day"
-        }
+      const result = await submitEntry({
+        formData: finalFormData,
+        trips: geenRit ? [] : trips,
+        standplaatsWerk: geenRit ? [] : standplaatsWerk,
+        signature: finalSignature,
+        userEmail: currentEmployee?.email || '',
+        employeeId: currentEmployee?.id || '',
       });
-      
-      // Map backend error codes to user-friendly Dutch messages
-      const userMessage = mapErrorToMessage(result);
-      
-      if (result.error === 'UNAUTHORIZED' || result.error === 'AUTH_ERROR') {
-        toast.error(userMessage, { duration: 8000 });
-        setTimeout(() => base44.auth.redirectToLogin(), 3000);
-      } else if (result.error === 'DUPLICATE_SUBMISSION') {
-        toast.warning(userMessage, { duration: 6000 });
-        queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
-      } else if (result.error === 'ALREADY_APPROVED') {
-        toast.error(userMessage, { duration: 8000 });
-        queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
-      } else if (result.error === 'DATE_TIME_MISMATCH') {
-        toast.error(userMessage, { duration: 8000 });
-      } else if (result.error === 'TIME_OVERLAP' || result.error === 'DATE_OVERLAP') {
-        toast.error(userMessage, { duration: 8000 });
-        queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
-      } else {
-        toast.error(userMessage, { duration: 6000 });
-      }
-    }
 
-    return result;
-  }, [signature, formData, trips, standplaatsWerk, currentEmployee, isMultiDay, submitEntry, resetForm, setActiveTab, queryClient, mapErrorToMessage]);
+      clearTimeout(safetyTimeoutId);
+
+      // If safety timeout already fired, don't show duplicate toasts
+      if (timedOut) {
+        if (result.success) {
+          toast.success('✓ Dienst alsnog succesvol verzonden.', { duration: 5000 });
+          queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+          resetForm();
+          setActiveTab("home");
+        }
+        return result;
+      }
+
+      if (result.retryCount > 0 && result.success) {
+        toast.info('Verbinding hersteld — succesvol ingediend na herpoging.', { duration: 4000 });
+      }
+
+      if (result.success) {
+        const hasDamage = trips.some(t => t.damage_occurred === "Ja");
+        queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+
+        base44.analytics.track({
+          eventName: "mobile_entry_submit_success",
+          properties: {
+            employeeId: currentEmployee?.id, date: formData.date,
+            tripCount: trips.length, isOnline: !result.offline,
+            entryType: isMultiDay ? "multi_day" : "single_day"
+          }
+        });
+
+        if (result.offline) {
+          toast.info('📡 Offline opgeslagen — wordt automatisch verstuurd bij verbinding.');
+        } else {
+          toast.success('✓ Dienst succesvol verzonden.');
+        }
+
+        resetForm();
+        if (hasDamage) window.open('https://mijn.bumper.nl', '_blank');
+        setActiveTab("home");
+      } else {
+        base44.analytics.track({
+          eventName: "mobile_entry_submit_fail",
+          properties: {
+            employeeId: currentEmployee?.id, date: formData.date,
+            error: result.error || "unknown", entryType: isMultiDay ? "multi_day" : "single_day"
+          }
+        });
+        
+        const userMessage = mapErrorToMessage(result);
+        
+        if (result.error === 'UNAUTHORIZED' || result.error === 'AUTH_ERROR') {
+          toast.error(userMessage, { duration: 8000 });
+          setTimeout(() => base44.auth.redirectToLogin(), 3000);
+        } else if (result.error === 'DUPLICATE_SUBMISSION') {
+          toast.warning(userMessage, { duration: 6000 });
+          queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+        } else if (result.error === 'ALREADY_APPROVED') {
+          toast.error(userMessage, { duration: 8000 });
+          queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+        } else if (result.error === 'DATE_TIME_MISMATCH') {
+          toast.error(userMessage, { duration: 8000 });
+        } else if (result.error === 'TIME_OVERLAP' || result.error === 'DATE_OVERLAP') {
+          toast.error(userMessage, { duration: 8000 });
+          queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+        } else {
+          toast.error(userMessage, { duration: 6000 });
+        }
+      }
+
+      return result;
+    } catch (unexpectedError) {
+      clearTimeout(safetyTimeoutId);
+      console.error('[handleSubmitEntry] Unexpected error:', unexpectedError);
+      toast.error('Verzenden mislukt. Controleer uw internetverbinding of neem contact op.', { duration: 6000 });
+      return { success: false, error: 'UNEXPECTED_ERROR', message: unexpectedError?.message };
+    }
+  }, [signature, formData, trips, standplaatsWerk, currentEmployee, isMultiDay, submitEntry, resetForm, setActiveTab, queryClient, mapErrorToMessage, submittingRef, geenRit, geenRitReden]);
 
   // --- Save draft (guarded: blocks if submit is in progress) ---
   const handleSaveDraft = useCallback(async () => {
