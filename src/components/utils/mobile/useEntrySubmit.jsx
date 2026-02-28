@@ -107,7 +107,6 @@ export function useEntrySubmit() {
       }
 
       // --- Abort detection: if page unloads while request is in flight ---
-      let abortCleanup = null;
       const logIdForBeacon = () => clientLogger.getLogId();
       const requestStartTimeRef = { value: null };
 
