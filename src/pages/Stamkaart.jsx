@@ -49,7 +49,7 @@ export default function Stamkaart() {
             }
           />
         </div>
-        <StamkaartForm employee={selectedEmployee} />
+        <StamkaartForm key={selectedEmployee.id} employee={selectedEmployee} />
       </div>
     );
   }
