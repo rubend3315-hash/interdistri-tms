@@ -70,7 +70,32 @@ export default function StamkaartForm({
 }) {
   const isOnboarding = mode === "onboarding";
 
-  const [data, setData] = useState({ ...employee });
+  // Derive contract_type and contract_hours from active contractregel if available
+  const initialData = useMemo(() => {
+    const emp = { ...employee };
+    const activeRegel = emp.contractregels?.find(r => r.status === 'Actief');
+    if (activeRegel) {
+      // Map contractregel type to Employee contract_type enum
+      const typeMap = {
+        'Oproepcontract': 'Oproep',
+        'Oproep': 'Oproep',
+        'Onbepaalde tijd': 'Vast',
+        'Vast': 'Vast',
+        'Bepaalde tijd': 'Tijdelijk',
+        'Tijdelijk': 'Tijdelijk',
+      };
+      const mappedType = typeMap[activeRegel.type_contract] || emp.contract_type;
+      if (mappedType) emp.contract_type = mappedType;
+      if (mappedType === 'Oproep') {
+        emp.contract_hours = 0;
+      } else if (activeRegel.uren_per_week != null) {
+        emp.contract_hours = activeRegel.uren_per_week;
+      }
+    }
+    return emp;
+  }, [employee]);
+
+  const [data, setData] = useState(initialData);
   
   // In standalone mode, loonheffing lives on the employee object
   // In onboarding mode, it lives in onboardingData
