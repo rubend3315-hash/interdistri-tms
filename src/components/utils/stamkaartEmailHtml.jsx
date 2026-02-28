@@ -125,8 +125,18 @@ export function buildStamkaartEmailHtml({ fullName, data, lhLabel, lhDatum, sign
     </td>
     <td style="width:50%;">
       <table style="width:100%;border-collapse:collapse;">
-        ${compactRow('Contract type', data.contract_type)}
-        ${compactRow('Contracturen', data.contract_hours ? `${data.contract_hours} uur` : '—')}
+        ${compactRow('Contract type', (() => {
+          const ar = (data.contractregels || [])
+            .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
+            .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+          return ar?.type_contract || '—';
+        })())}
+        ${compactRow('Contracturen', (() => {
+          const ar = (data.contractregels || [])
+            .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
+            .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+          return ar ? `${ar.uren_per_week ?? 0} uur` : '—';
+        })())}
         ${compactRow('Loonschaal', data.salary_scale)}
         ${compactRow('Bruto uurloon (€)', data.hourly_rate ? `€ ${Number(data.hourly_rate).toFixed(2)}` : '—')}
       </table>
