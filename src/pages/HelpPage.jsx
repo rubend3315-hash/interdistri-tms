@@ -10,55 +10,21 @@ import { BookOpen, Zap, Layers, Users, Clock, CheckSquare, Truck, CalendarDays, 
 import { toast } from 'sonner';
 import HelpMobileEntryCard from '../components/help/HelpMobileEntryCard';
 import HelpMobileEntryGuide from '../components/help/HelpMobileEntryGuide';
+import HelpStabilisatieUpdates from '../components/help/HelpStabilisatieUpdates';
+import { EmailGuide, SystemEmailTemplatesGuide, BackupsGuide, EmailChangeGuide, SecurityArchitectureGuide, MultidayGuide, ShiftTypeGuide, HRImportGuide, ReglementGuide, EmployeeTogglesGuide, TipsGuide } from '../components/help/HelpGuideExtras';
 
 export default function HelpPage() {
   const [activeTab, setActiveTab] = useState('functions');
 
   const handleDownloadPDF = () => {
     toast.info('Het document wordt voorbereid voor download...');
-    setTimeout(() => {
-      window.print();
-    }, 100);
+    setTimeout(() => window.print(), 100);
   };
 
   const handleDownloadHTML = () => {
     const content = document.getElementById('help-content');
     if (!content) return;
-
-    const htmlContent = `
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interdistri TMS - Help & Documentatie</title>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 1200px; margin: 0 auto; padding: 20px; color: #1e293b; }
-    h1 { color: #0f172a; font-size: 2em; margin-top: 1.5em; border-bottom: 2px solid #3b82f6; padding-bottom: 0.3em; }
-    h2 { color: #1e293b; font-size: 1.5em; margin-top: 1.2em; }
-    h3 { color: #334155; font-size: 1.2em; margin-top: 1em; }
-    h4 { color: #475569; font-size: 1em; margin-top: 0.8em; font-weight: 600; }
-    ul { margin-left: 20px; }
-    li { margin-bottom: 0.5em; }
-    .tip { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 12px; margin: 1em 0; }
-    .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin: 1em 0; }
-    .important { background: #fef2f2; border-left: 4px solid #ef4444; padding: 12px; margin: 1em 0; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; font-weight: 500; }
-    .badge-concept { background: #f1f5f9; color: #475569; }
-    .badge-submitted { background: #fef3c7; color: #92400e; }
-    .badge-approved { background: #d1fae5; color: #065f46; }
-    .badge-rejected { background: #fee2e2; color: #991b1b; }
-    .section { margin-bottom: 2em; padding-bottom: 1em; border-bottom: 1px solid #e2e8f0; }
-  </style>
-</head>
-<body>
-  <h1>📚 Interdistri TMS - Help & Documentatie</h1>
-  <p style="color: #64748b; margin-bottom: 2em;">Versie: ${new Date().toLocaleDateString('nl-NL')}</p>
-  ${content.innerHTML}
-</body>
-</html>
-    `;
-
+    const htmlContent = `<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Interdistri TMS - Help</title><style>body{font-family:Arial,sans-serif;line-height:1.6;max-width:1200px;margin:0 auto;padding:20px;color:#1e293b}h1{border-bottom:2px solid #3b82f6;padding-bottom:.3em}ul{margin-left:20px}li{margin-bottom:.5em}</style></head><body><h1>Interdistri TMS - Help & Documentatie</h1><p style="color:#64748b">Versie: ${new Date().toLocaleDateString('nl-NL')}</p>${content.innerHTML}</body></html>`;
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -73,70 +39,31 @@ export default function HelpPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-4xl font-bold text-slate-900">Help & Documentatie</h1>
           <p className="text-slate-500 mt-2">Leer hoe je het Interdistri TMS-systeem gebruikt</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleDownloadHTML} variant="outline" className="gap-2">
-            <FileText className="w-4 h-4" />
-            Download HTML
-          </Button>
-          <Button onClick={handleDownloadPDF} className="gap-2 bg-blue-600 hover:bg-blue-700">
-            <Download className="w-4 h-4" />
-            Opslaan als PDF
-          </Button>
+          <Button onClick={handleDownloadHTML} variant="outline" className="gap-2"><FileText className="w-4 h-4" />Download HTML</Button>
+          <Button onClick={handleDownloadPDF} className="gap-2 bg-blue-600 hover:bg-blue-700"><Download className="w-4 h-4" />Opslaan als PDF</Button>
         </div>
       </div>
-
-      <style>{`
-        @media print {
-          .no-print { display: none !important; }
-          body { background: white; }
-          h1 { page-break-before: always; }
-          h1:first-of-type { page-break-before: avoid; }
-        }
-      `}</style>
-
-      {/* Security Architectuur link */}
+      <style>{`@media print { .no-print { display: none !important; } body { background: white; } h1 { page-break-before: always; } h1:first-of-type { page-break-before: avoid; } }`}</style>
       <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between no-print">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Lock className="w-5 h-5 text-blue-700" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-900">Security Architectuur</p>
-            <p className="text-xs text-slate-500">Formele beveiligingsdocumentatie — alleen voor Admin</p>
-          </div>
+          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><Lock className="w-5 h-5 text-blue-700" /></div>
+          <div><p className="text-sm font-semibold text-slate-900">Security Architectuur</p><p className="text-xs text-slate-500">Formele beveiligingsdocumentatie — alleen voor Admin</p></div>
         </div>
-        <Link to={createPageUrl("SecurityArchitecture")}>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Shield className="w-4 h-4" /> Bekijken
-          </Button>
-        </Link>
+        <Link to={createPageUrl("SecurityArchitecture")}><Button variant="outline" size="sm" className="gap-2"><Shield className="w-4 h-4" /> Bekijken</Button></Link>
       </div>
-
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 no-print">
-          <TabsTrigger value="functions" className="gap-2">
-            <Zap className="w-4 h-4" />
-            Functies
-          </TabsTrigger>
-          <TabsTrigger value="system-rules" className="gap-2">
-            <Shield className="w-4 h-4" />
-            Systeemregels
-          </TabsTrigger>
-          <TabsTrigger value="architecture" className="gap-2">
-            <Layers className="w-4 h-4" />
-            Opbouw
-          </TabsTrigger>
-          <TabsTrigger value="guide" className="gap-2">
-            <BookOpen className="w-4 h-4" />
-            Handleiding
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 no-print">
+          <TabsTrigger value="functions" className="gap-2"><Zap className="w-4 h-4" />Functies</TabsTrigger>
+          <TabsTrigger value="system-rules" className="gap-2"><Shield className="w-4 h-4" />Systeemregels</TabsTrigger>
+          <TabsTrigger value="architecture" className="gap-2"><Layers className="w-4 h-4" />Opbouw</TabsTrigger>
+          <TabsTrigger value="guide" className="gap-2"><BookOpen className="w-4 h-4" />Handleiding</TabsTrigger>
+          <TabsTrigger value="updates" className="gap-2"><Wrench className="w-4 h-4" />Updates</TabsTrigger>
         </TabsList>
 
         <div id="help-content">
