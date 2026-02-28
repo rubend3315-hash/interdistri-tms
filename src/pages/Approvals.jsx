@@ -513,6 +513,24 @@ export default function Approvals() {
         </Card>
       </div>
 
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-4 pb-3">
+          <ApprovalsFilters
+            dateFrom={filterDateFrom}
+            dateTo={filterDateTo}
+            selectedEmployee={filterEmployee}
+            searchQuery={filterSearch}
+            onDateFromChange={(v) => { setFilterDateFrom(v); pendingPage.resetPage(); approvedPage.resetPage(); rejectedPage.resetPage(); }}
+            onDateToChange={(v) => { setFilterDateTo(v); pendingPage.resetPage(); approvedPage.resetPage(); rejectedPage.resetPage(); }}
+            onEmployeeChange={(v) => { setFilterEmployee(v); pendingPage.resetPage(); approvedPage.resetPage(); rejectedPage.resetPage(); }}
+            onSearchChange={(v) => { setFilterSearch(v); pendingPage.resetPage(); approvedPage.resetPage(); rejectedPage.resetPage(); }}
+            employees={employees}
+            onReset={resetFilters}
+          />
+        </CardContent>
+      </Card>
+
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
