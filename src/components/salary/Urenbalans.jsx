@@ -29,9 +29,8 @@ export default function Urenbalans({
   }, [employee]);
 
   const contract = activeContracts[0] || {};
-  const contractHours = contract.uren_per_week || employee.contract_hours || 0;
-  const isOproepkracht = employee.contract_type === "Oproep" ||
-    (contract.type_contract || "").toLowerCase().includes("oproep");
+  const contractHours = contract.uren_per_week ?? 0;
+  const isOproepkracht = (contract.type_contract || "").toLowerCase().includes("oproep");
 
   // Functie om het juiste contract per weekdatum op te zoeken
   const getContractForDate = (dateStr) => {
@@ -91,9 +90,8 @@ export default function Urenbalans({
         weekStart.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
         const weekStartStr = weekStart.toISOString().split("T")[0];
         const weekContract = getContractForDate(weekStartStr);
-        const weekContractHours = weekContract.uren_per_week || employee.contract_hours || 0;
-        const weekIsOproep = employee.contract_type === "Oproep" ||
-          (weekContract.type_contract || "").toLowerCase().includes("oproep");
+        const weekContractHours = weekContract.uren_per_week ?? 0;
+        const weekIsOproep = (weekContract.type_contract || "").toLowerCase().includes("oproep");
 
         if (!weekIsOproep) {
           contractUren += weekContractHours;
@@ -154,8 +152,7 @@ export default function Urenbalans({
         const ws = new Date(jan4);
         ws.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (weekNr - 1) * 7);
         const wc = getContractForDate(ws.toISOString().split("T")[0]);
-        const wIsOproep = employee.contract_type === "Oproep" ||
-          (wc.type_contract || "").toLowerCase().includes("oproep");
+        const wIsOproep = (wc.type_contract || "").toLowerCase().includes("oproep");
         if (wIsOproep) {
           const wEntries = entriesByWeek[weekNr] || [];
           wEntries.filter(e => e.employee_id === employee.id).forEach(e => {

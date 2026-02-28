@@ -64,9 +64,9 @@ export default function SalaryExportStamgegevens({ employees }) {
         emp.department || "",
         emp.function || "",
         emp.status || "",
-        contract.type_contract || emp.contract_type || "",
+        contract.type_contract || "",
         contract.loonschaal || emp.salary_scale || "",
-        contract.uren_per_week || emp.contract_hours || "",
+        contract.uren_per_week ?? "",
         reiskosten.afstand_km || "",
         reiskosten.vergoeding_per_dag || ""
       ];
@@ -146,9 +146,9 @@ export default function SalaryExportStamgegevens({ employees }) {
                         </TableCell>
                         <TableCell className="text-slate-600">{emp.department || "-"}</TableCell>
                         <TableCell className="text-slate-600">{emp.function || "-"}</TableCell>
-                        <TableCell className="text-slate-600">{contract.type_contract || emp.contract_type || "-"}</TableCell>
+                        <TableCell className="text-slate-600">{contract.type_contract || "-"}</TableCell>
                         <TableCell className="text-slate-600">{contract.loonschaal || emp.salary_scale || "-"}</TableCell>
-                        <TableCell className="text-right text-slate-600">{contract.uren_per_week || emp.contract_hours || "-"}</TableCell>
+                        <TableCell className="text-right text-slate-600">{contract.uren_per_week ?? "-"}</TableCell>
                         <TableCell className="text-slate-600">
                           {inService ? format(new Date(inService), "dd-MM-yyyy") : "-"}
                         </TableCell>

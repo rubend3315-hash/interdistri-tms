@@ -66,7 +66,7 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
     }) || activeContracts[0] || {};
   }
 
-  const contractHours = contract.uren_per_week || employee.contract_hours || 0;
+  const contractHours = contract.uren_per_week ?? 0;
 
   let totalHours = 0;
   let saturdayHours = 0;
@@ -124,8 +124,7 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
   });
 
   // Oproepkracht: check op basis van het actieve contract voor deze week
-  const isOproep = employee.contract_type === "Oproep" ||
-    ((contract.type_contract || "").toLowerCase().includes("oproep"));
+  const isOproep = (contract.type_contract || "").toLowerCase().includes("oproep");
 
   const r = (v) => Math.round(v * 10000) / 10000;
 

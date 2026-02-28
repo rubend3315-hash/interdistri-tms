@@ -74,7 +74,7 @@ export default function SalaryExportMutation({ employees, timeEntries, salaryTab
         wkr += e.wkr || 0;
       });
 
-      const contractHours = contract.uren_per_week || emp.contract_hours || 0;
+      const contractHours = contract.uren_per_week ?? 0;
       const workWeeks = 4.33;
       const expectedHours = contractHours * workWeeks;
       const workDays = entries.length;

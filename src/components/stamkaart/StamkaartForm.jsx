@@ -70,27 +70,30 @@ export default function StamkaartForm({
 }) {
   const isOnboarding = mode === "onboarding";
 
-  // Derive contract_type and contract_hours from active contractregel if available
+  // Derive contract_type and contract_hours from active contractregel (single source of truth)
   const initialData = useMemo(() => {
     const emp = { ...employee };
-    const activeRegel = emp.contractregels?.find(r => r.status === 'Actief');
+    const activeRegel = (emp.contractregels || [])
+      .filter(r => r.status === 'Actief' || (r.status !== 'Inactief' && r.status !== 'Beëindigd'))
+      .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
     if (activeRegel) {
-      // Map contractregel type to Employee contract_type enum
+      // Map contractregel type_contract to Employee contract_type display enum
       const typeMap = {
         'Oproepcontract': 'Oproep',
         'Oproep': 'Oproep',
+        'Vast Contract': 'Vast',
         'Onbepaalde tijd': 'Vast',
         'Vast': 'Vast',
+        'Tijdelijk Contract': 'Tijdelijk',
         'Bepaalde tijd': 'Tijdelijk',
         'Tijdelijk': 'Tijdelijk',
       };
-      const mappedType = typeMap[activeRegel.type_contract] || emp.contract_type;
-      if (mappedType) emp.contract_type = mappedType;
-      if (mappedType === 'Oproep') {
-        emp.contract_hours = 0;
-      } else if (activeRegel.uren_per_week != null) {
-        emp.contract_hours = activeRegel.uren_per_week;
-      }
+      emp.contract_type = typeMap[activeRegel.type_contract] || '';
+      emp.contract_hours = (emp.contract_type === 'Oproep') ? 0 : (activeRegel.uren_per_week ?? 0);
+    } else {
+      // No active contractregel → show empty
+      emp.contract_type = emp.contract_type || '';
+      emp.contract_hours = emp.contract_hours ?? '';
     }
     return emp;
   }, [employee]);
@@ -184,6 +187,9 @@ export default function StamkaartForm({
     mutationFn: () => {
       const saveData = { ...data, loonheffing_toepassen: lhToepassen, loonheffing_datum: lhDatum, loonheffing_handtekening_url: lhSignatureUrl };
       delete saveData.id; delete saveData.created_date; delete saveData.updated_date; delete saveData.created_by;
+      // contract_type/contract_hours are derived from contractregels — don't overwrite Employee fields
+      delete saveData.contract_type;
+      delete saveData.contract_hours;
       return base44.entities.Employee.update(employee.id, saveData);
     },
     onSuccess: () => {
