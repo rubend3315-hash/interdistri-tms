@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
 
       for (let week = 1; week <= maxWeek; week++) {
         try {
-          const res = await base44.functions.invoke('recalculateWeeklySummaries', {
+          const res = await base44.asServiceRole.functions.invoke('recalculateWeeklySummaries', {
             year, week_number: week, force_unlock: true,
           });
           totalWeeks++;

@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
         }
 
         try {
-          const res = await base44.functions.invoke('recalculateMonthlyCustomerSummary', {
+          const res = await base44.asServiceRole.functions.invoke('recalculateMonthlyCustomerSummary', {
             year, month, force_unlock: true,
           });
           totalMonths++;
