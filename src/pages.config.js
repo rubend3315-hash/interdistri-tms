@@ -52,6 +52,7 @@ import Approvals from './pages/Approvals';
 import AuditLog from './pages/AuditLog';
 import Backups from './pages/Backups';
 import Bedrijfsreglement from './pages/Bedrijfsreglement';
+import BusinessDashboard from './pages/BusinessDashboard';
 import CaoRules from './pages/CaoRules';
 import Charters from './pages/Charters';
 import CompletedContracts from './pages/CompletedContracts';
@@ -112,7 +113,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import BusinessDashboard from './pages/BusinessDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -122,6 +122,7 @@ export const PAGES = {
     "AuditLog": AuditLog,
     "Backups": Backups,
     "Bedrijfsreglement": Bedrijfsreglement,
+    "BusinessDashboard": BusinessDashboard,
     "CaoRules": CaoRules,
     "Charters": Charters,
     "CompletedContracts": CompletedContracts,
@@ -182,11 +183,10 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "BusinessDashboard": BusinessDashboard,
 }
 
 export const pagesConfig = {
-    mainPage: "BusinessDashboard",
+    mainPage: "Dashboard",
     Pages: PAGES,
     Layout: __Layout,
 };
