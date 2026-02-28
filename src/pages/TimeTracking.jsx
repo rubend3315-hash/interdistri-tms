@@ -147,9 +147,12 @@ export default function TimeTracking() {
     if (weekIsDefinitief) return;
     const dateStr = format(day, 'yyyy-MM-dd');
     const entries = timeEntries.filter(e => e.employee_id === employeeId && e.date === dateStr);
+    let errors = [];
     for (const entry of entries) {
-      await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
+      const res = await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
+      if (!res.data?.success) errors.push(res.data?.message || res.data?.error || 'Onbekende fout');
     }
+    if (errors.length > 0) alert(`Verwijderen mislukt: ${errors.join(', ')}`);
     queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
   };
 
@@ -157,9 +160,12 @@ export default function TimeTracking() {
     if (weekIsDefinitief) return;
     const dateStrs = days.map(d => format(d, 'yyyy-MM-dd'));
     const entries = timeEntries.filter(e => e.employee_id === employeeId && dateStrs.includes(e.date));
+    let errors = [];
     for (const entry of entries) {
-      await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
+      const res = await base44.functions.invoke('deleteTimeEntryCascade', { id: entry.id });
+      if (!res.data?.success) errors.push(res.data?.message || res.data?.error || 'Onbekende fout');
     }
+    if (errors.length > 0) alert(`Verwijderen mislukt: ${errors.join(', ')}`);
     queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
   };
 
@@ -469,13 +475,18 @@ export default function TimeTracking() {
         wkr: 0,
       };
 
-      // Bestaande entry eerst verwijderen
+      // Bestaande entry eerst verwijderen + pass exclude_ids zodat overlap check de verwijderde entry niet ziet
+      const excludeIds = [];
       if (selectedEntry) {
+        excludeIds.push(selectedEntry.id);
         await base44.functions.invoke('deleteTimeEntryCascade', { id: selectedEntry.id });
       }
 
       // Use adminCreateTimeEntry with overlap validation for both split entries
-      const response = await base44.functions.invoke('adminCreateTimeEntry', { entries: [entry1, entry2] });
+      const response = await base44.functions.invoke('adminCreateTimeEntry', { 
+        entries: [entry1, entry2],
+        exclude_ids: excludeIds,
+      });
       if (!response.data?.success) throw new Error(response.data?.message || 'Aanmaken mislukt');
       queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
       setIsDialogOpen(false);

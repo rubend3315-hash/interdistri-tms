@@ -4,6 +4,7 @@
 // ║ Auth: Admin only                                                 ║
 // ║ Purpose: Create + approve TimeEntry WITH overlap validation      ║
 // ║ Uses same overlap engine as submitTimeEntry v5.1                 ║
+// ║ v2.0 — Fix: excludeIds for batch + replace scenarios            ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
@@ -50,24 +51,26 @@ function servicesOverlap(existing, incoming) {
   return false;
 }
 
-function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, startTime, endTime, excludeId) {
+function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, startTime, endTime, excludeIds) {
   const incomingEntry = { date, end_date: endDate || null, start_time: startTime, end_time: endTime };
   const newEffEnd = effectiveEndDate(incomingEntry);
 
+  // excludeIds can be a single string or an array
+  const idsToExclude = Array.isArray(excludeIds) ? excludeIds : (excludeIds ? [excludeIds] : []);
+
   const committed = existingEntries.filter(e => {
     if (e.employee_id !== employeeId) return false;
-    if (excludeId && e.id === excludeId) return false;
+    if (idsToExclude.includes(e.id)) return false;
     if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
     const exEffEnd = effectiveEndDate(e);
     return exEffEnd >= date && e.date <= newEffEnd;
   });
 
-  // ALREADY_APPROVED check: only block if there's an actual time overlap
   const approvedOnDate = committed.find(e =>
     e.status === 'Goedgekeurd' && e.date === date && (!e.end_date || e.end_date === e.date)
     && servicesOverlap(e, incomingEntry)
   );
-  if (approvedOnDate && (!excludeId || approvedOnDate.id !== excludeId)) {
+  if (approvedOnDate) {
     return {
       overlaps: true,
       errorCode: 'ALREADY_APPROVED',
@@ -105,7 +108,7 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { entries } = payload;
+    const { entries, exclude_ids } = payload;
 
     // Support single entry or array of entries (for overnight split)
     const entryList = Array.isArray(entries) ? entries : [payload];
@@ -113,6 +116,9 @@ Deno.serve(async (req) => {
     if (entryList.length === 0) {
       return Response.json({ success: false, error: 'NO_ENTRIES', message: 'Geen entries om aan te maken' }, { status: 400 });
     }
+
+    // exclude_ids: IDs to exclude from overlap check (e.g. entries being replaced)
+    const idsToExclude = Array.isArray(exclude_ids) ? exclude_ids : (exclude_ids ? [exclude_ids] : []);
 
     const svc = base44.asServiceRole;
     const createdIds = [];
@@ -126,7 +132,6 @@ Deno.serve(async (req) => {
 
       // Skip overlap check for non-worked entries (no start/end time)
       if (start_time && end_time) {
-        // Fetch all entries for this employee in relevant date range
         const effectiveEnd = end_date || date;
         const queryStart = addDays(date, -1);
         const queryEnd = addDays(effectiveEnd, 1);
@@ -134,13 +139,20 @@ Deno.serve(async (req) => {
         const allEntries = await svc.entities.TimeEntry.filter({ employee_id });
         const rangedCandidates = allEntries.filter(e => e.date >= queryStart && e.date <= queryEnd);
 
+        // Exclude: provided exclude_ids + any entries already created in this batch
+        const allExcludes = [...idsToExclude, ...createdIds];
+
         const overlapResult = validateTimeEntryOverlap(
           rangedCandidates, employee_id, date, end_date || null,
-          start_time, end_time, null
+          start_time, end_time, allExcludes
         );
 
         if (overlapResult.overlaps) {
           console.log(`[ADMIN_CREATE] Overlap blocked: ${overlapResult.errorCode} for ${employee_id} on ${date}`);
+          // Rollback any entries already created in this batch
+          for (const id of createdIds) {
+            try { await svc.entities.TimeEntry.delete(id); } catch (_) {}
+          }
           return Response.json({
             success: false,
             error: overlapResult.errorCode,
@@ -152,7 +164,8 @@ Deno.serve(async (req) => {
 
       // Create the entry as Ingediend
       const createData = { ...entryData, status: 'Ingediend' };
-      delete createData.entries; // remove wrapper if present
+      delete createData.entries;
+      delete createData.exclude_ids;
       const created = await svc.entities.TimeEntry.create(createData);
       createdIds.push(created.id);
 
