@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
       dependency_map: DEPENDENCY_MAP,
       results,
       timestamp: new Date().toISOString(),
-      version: 'registry-v1',
+      version: 'registry-v2',
     }, { status: 200 });
 
   } catch (outerError) {
@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
       deployed_count: 0,
       error: outerError?.message || 'Unknown error',
       timestamp: new Date().toISOString(),
-      version: 'registry-v1',
+      version: 'registry-v2',
     }, { status: 200 });
   }
 });
