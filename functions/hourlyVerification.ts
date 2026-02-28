@@ -4,8 +4,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Only check the most critical functions + their dependencies
+// NOTE: submitTimeEntry is excluded from ping checks because each ping
+// creates MobileEntrySubmissionLog records (RECEIVED + VALIDATION_FAILED),
+// causing a flood of junk data. It's verified via other means.
 const CRITICAL_CHECK = [
-  'submitTimeEntry',
   'recalculateAfterTimeEntrySubmit',
   'approveTimeEntry',
   'recalculateWeeklySummaries',

@@ -384,6 +384,15 @@ async function updateSubmissionIndex(svc, indexRecord, status, extra = {}) {
 // --- MAIN HANDLER ---
 
 Deno.serve(async (req) => {
+  // Early return for internal health-check pings — no logging, no side effects
+  try {
+    const cloned = req.clone();
+    const body = await cloned.json().catch(() => null);
+    if (body && body._ping === true) {
+      return Response.json({ success: true, pong: true });
+    }
+  } catch (_) { /* not JSON or empty body — continue normal flow */ }
+
   const t0 = Date.now();
   const userAgent = req.headers.get('user-agent') || '';
   const submissionLog = {
