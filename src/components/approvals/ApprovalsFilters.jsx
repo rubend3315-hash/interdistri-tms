@@ -10,15 +10,17 @@ export default function ApprovalsFilters({
   dateTo,
   selectedEmployee,
   searchQuery,
+  filterShiftType = "all",
   onDateFromChange,
   onDateToChange,
   onEmployeeChange,
   onSearchChange,
+  onShiftTypeChange,
   employees = [],
   onReset,
 }) {
   const activeEmployees = employees.filter(e => e.status === 'Actief');
-  const hasFilters = searchQuery || selectedEmployee !== "all" || dateFrom || dateTo;
+  const hasFilters = searchQuery || selectedEmployee !== "all" || filterShiftType !== "all" || dateFrom || dateTo;
 
   return (
     <div className="flex flex-wrap items-end gap-3">
@@ -50,6 +52,28 @@ export default function ApprovalsFilters({
           </SelectContent>
         </Select>
       </div>
+      {onShiftTypeChange && (
+        <div className="min-w-[140px]">
+          <Label className="text-xs text-slate-500 mb-1 block">Diensttype</Label>
+          <Select value={filterShiftType} onValueChange={onShiftTypeChange}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Alle" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle types</SelectItem>
+              <SelectItem value="Dag">Dag</SelectItem>
+              <SelectItem value="Avond">Avond</SelectItem>
+              <SelectItem value="Nacht">Nacht</SelectItem>
+              <SelectItem value="Dag en Avond">Dag en Avond</SelectItem>
+              <SelectItem value="Avond en Nacht">Avond en Nacht</SelectItem>
+              <SelectItem value="Gewerkte dag">Gewerkte dag</SelectItem>
+              <SelectItem value="Ziek">Ziek</SelectItem>
+              <SelectItem value="Opleiding">Opleiding</SelectItem>
+              <SelectItem value="ATV">ATV</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       <div className="min-w-[140px]">
         <Label className="text-xs text-slate-500 mb-1 block">Datum van</Label>
         <Input
