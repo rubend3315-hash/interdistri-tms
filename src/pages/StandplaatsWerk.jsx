@@ -30,6 +30,7 @@ import { getFullName } from "@/components/utils/employeeUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import { checkEmployeeActiveRules } from "@/components/utils/employeeContractCheck";
 import ConfirmDialog from "../components/ConfirmDialog";
+import Pagination, { usePagination } from "@/components/ui/Pagination";
 
 export default function StandplaatsWerk() {
   const [searchTerm, setSearchTerm] = useState("");

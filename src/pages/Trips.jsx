@@ -32,6 +32,7 @@ import { checkEmployeeActiveRules } from "@/components/utils/employeeContractChe
 import ConfirmDialog from "../components/ConfirmDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import Pagination, { usePagination } from "@/components/ui/Pagination";
 
 const statuses = ["Gepland", "Onderweg", "Voltooid", "Geannuleerd"];
 
