@@ -199,19 +199,13 @@ Deno.serve(async (req) => {
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     // ============================================================
-    // Step 5: Re-verify after heal attempt
+    // Step 5: Re-verify after heal attempt (inline check)
     // ============================================================
     let postHealCheck = null;
     try {
-      const res = await svc.functions.invoke('verifyFunctionRegistry', {});
-      const payload = res?.data ?? res;
-      if (typeof payload === 'string') {
-        try { postHealCheck = JSON.parse(payload); } catch (_) { postHealCheck = payload; }
-      } else {
-        postHealCheck = payload;
-      }
+      postHealCheck = await runRegistryCheck(svc);
     } catch (_) {
-      postHealCheck = { status: 'ERROR', missing_functions: initialMissing };
+      postHealCheck = { status: 'ERROR', missing_functions: initialMissing, manifest_count: manifestCount, deployed_count: 0 };
     }
 
     const postMissing = (postHealCheck?.missing_functions || []).map(f => f.name || f);
