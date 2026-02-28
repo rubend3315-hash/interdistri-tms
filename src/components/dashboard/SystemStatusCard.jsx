@@ -11,17 +11,14 @@ export default function SystemStatusCard() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['systemHealthCheck'],
     queryFn: async () => {
-      try {
-        const res = await base44.functions.invoke('systemHealthCheck');
-        return res.data;
-      } catch (err) {
-        console.warn('SystemHealthCheck failed:', err?.response?.status, err?.message);
-        return { status: 'GREEN', fallback: true, timestamp: new Date().toISOString(), base44_connection: true, supabase_connection: true, errors: [] };
-      }
+      const res = await base44.functions.invoke('systemHealthCheck');
+      return res.data;
     },
     staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    retry: 1,
+    gcTime: 0,
+    refetchOnWindowFocus: true,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   let status = 'loading';
