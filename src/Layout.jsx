@@ -290,7 +290,8 @@ export default function Layout({ children, currentPageName }) {
   const { data: user, isLoading: loadingUser, isError: userError } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(attempt * 500, 1500),
   });
 
   const { data: currentEmployee, isLoading: loadingEmployee } = useQuery({
@@ -442,10 +443,17 @@ export default function Layout({ children, currentPageName }) {
     return null;
   }
 
-  // If user is not logged in, redirect to login
+  // If user is not logged in after retries, show brief message then redirect
   if (userError || !user) {
-    base44.auth.redirectToLogin();
-    return null;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-600">Sessie verlopen, opnieuw verbinden...</p>
+          {(() => { setTimeout(() => base44.auth.redirectToLogin(), 1500); return null; })()}
+        </div>
+      </div>
+    );
   }
 
   // --- Toegangscontrole: alleen EMPLOYEE rol vereist employee-link ---

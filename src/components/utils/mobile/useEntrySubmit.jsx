@@ -183,9 +183,6 @@ export function useEntrySubmit() {
 
       const result = response.data;
 
-      // Clean up abort listeners
-      if (abortCleanup) abortCleanup();
-
       if (result.success) {
         // --- Client log: RESPONSE_OK ---
         await clientLogger.logResponseOk(actualRetries);
@@ -242,6 +239,8 @@ export function useEntrySubmit() {
         message: 'Geen verbinding — probeer opnieuw.',
       };
     } finally {
+      // CRITICAL: Always clean up abort detection listeners to prevent memory leaks
+      if (abortCleanup) abortCleanup();
       submittingRef.current = false;
       setIsSubmitting(false);
     }

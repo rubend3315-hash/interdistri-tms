@@ -20,7 +20,7 @@ const TimeInput = ({ value, onChange, placeholder, autoFocus }) => {
         onChange(v);
       }}
       placeholder={placeholder}
-      className="text-[14px] h-[40px] bg-white"
+      className="text-[16px] h-[40px] bg-white"
     />
   );
 };
@@ -236,7 +236,7 @@ export default function DienstRegelDrawer({
           {/* Notes */}
           <div>
             <Label className="text-[11px] text-slate-500 mb-0.5">Opmerkingen</Label>
-            <Textarea value={draft.notes || ""} onChange={(e) => update('notes', e.target.value)} rows={2} placeholder="Bijzonderheden..." className="text-[13px] bg-white" />
+            <Textarea value={draft.notes || ""} onChange={(e) => update('notes', e.target.value)} rows={2} placeholder="Bijzonderheden..." className="text-[16px] bg-white" />
           </div>
         </div>
 
@@ -262,7 +262,7 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
       <div>
         <Label className="text-[11px] text-slate-500 mb-0.5">Kenteken *</Label>
         <Select value={draft.vehicle_id || ""} onValueChange={(v) => update('vehicle_id', v)}>
-          <SelectTrigger className="h-[40px] bg-white text-[13px]"><SelectValue placeholder="Selecteer voertuig" /></SelectTrigger>
+          <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue placeholder="Selecteer voertuig" /></SelectTrigger>
           <SelectContent>{(vehicles || []).map(v => <SelectItem key={v.id} value={v.id}>{v.license_plate}</SelectItem>)}</SelectContent>
         </Select>
       </div>
@@ -270,12 +270,12 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
       <div className="grid grid-cols-2 gap-2">
         <div>
           <Label className="text-[11px] text-slate-500 mb-0.5">Begin km {draft.vehicle_id ? '*' : ''}</Label>
-          <Input type="number" className="h-[40px] bg-white" value={draft.start_km || ""} onChange={(e) => update('start_km', e.target.value)} />
+          <Input type="number" className="h-[40px] bg-white text-[16px]" value={draft.start_km || ""} onChange={(e) => update('start_km', e.target.value)} />
         </div>
         {!isOpen && (
           <div>
             <Label className="text-[11px] text-slate-500 mb-0.5">Eind km {draft.end_time && draft.vehicle_id ? '*' : ''}</Label>
-            <Input type="number" className="h-[40px] bg-white" value={draft.end_km || ""} onChange={(e) => update('end_km', e.target.value)} />
+            <Input type="number" className="h-[40px] bg-white text-[16px]" value={draft.end_km || ""} onChange={(e) => update('end_km', e.target.value)} />
           </div>
         )}
       </div>
@@ -283,7 +283,7 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
       <div>
         <Label className="text-[11px] text-slate-500 mb-0.5">Schade gereden?</Label>
         <Select value={draft.damage_occurred || "Nee"} onValueChange={(v) => update('damage_occurred', v)}>
-          <SelectTrigger className="h-[40px] bg-white text-[13px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue /></SelectTrigger>
           <SelectContent><SelectItem value="Nee">Nee</SelectItem><SelectItem value="Ja">Ja</SelectItem></SelectContent>
         </Select>
       </div>
@@ -291,7 +291,7 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
       <div>
         <Label className="text-[11px] text-slate-500 mb-0.5">Klant</Label>
         <Select value={draft.customer_id || "none"} onValueChange={(v) => update('customer_id', v === "none" ? "" : v)}>
-          <SelectTrigger className="h-[40px] bg-white text-[13px]"><SelectValue placeholder="Selecteer klant" /></SelectTrigger>
+          <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue placeholder="Selecteer klant" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Selecteer klant</SelectItem>
             {(customers || []).map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
@@ -305,7 +305,7 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
           <Select value={draft.route_name || "none"} onValueChange={(v) => {
             setDraft(prev => v === "__custom__" ? { ...prev, route_name: "", _showCustomRoute: true } : { ...prev, route_name: v === "none" ? "" : v, _showCustomRoute: false });
           }}>
-            <SelectTrigger className="h-[40px] bg-white text-[13px]"><SelectValue placeholder="Route" /></SelectTrigger>
+            <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue placeholder="Route" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Selecteer route</SelectItem>
               {[...(tiModelRoutes || [])].filter(r => !draft.customer_id || r.customer_id === draft.customer_id)
@@ -318,14 +318,14 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
             </SelectContent>
           </Select>
           {draft._showCustomRoute && (
-            <Input className="mt-1 h-[40px] bg-white text-[13px]" value={draft.route_name || ""}
+            <Input className="mt-1 h-[40px] bg-white text-[16px]" value={draft.route_name || ""}
               onChange={(e) => setDraft(prev => ({ ...prev, route_name: e.target.value }))}
               placeholder="Typ routenaam..." autoFocus />
           )}
         </div>
         <div>
           <Label className="text-[11px] text-slate-500 mb-0.5">Stops</Label>
-          <Input type="number" className="h-[40px] bg-white" value={draft.planned_stops || ""} onChange={(e) => update('planned_stops', e.target.value)} placeholder="85" />
+          <Input type="number" className="h-[40px] bg-white text-[16px]" value={draft.planned_stops || ""} onChange={(e) => update('planned_stops', e.target.value)} placeholder="85" />
         </div>
       </div>
 
@@ -340,26 +340,26 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
         <div className="space-y-1.5">
           <div>
             <Label className="text-[11px] text-slate-500 mb-0.5">Vertreklocatie</Label>
-            <Input className="h-[40px] bg-white" value={draft.departure_location || ""} onChange={(e) => update('departure_location', e.target.value)} placeholder="Standplaats" />
+            <Input className="h-[40px] bg-white text-[16px]" value={draft.departure_location || ""} onChange={(e) => update('departure_location', e.target.value)} placeholder="Standplaats" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label className="text-[11px] text-slate-500 mb-0.5">Brandstof (L)</Label>
-              <Input type="number" step="0.01" className="h-[40px] bg-white" value={draft.fuel_liters || ""} onChange={(e) => update('fuel_liters', e.target.value)} />
+              <Input type="number" step="0.01" className="h-[40px] bg-white text-[16px]" value={draft.fuel_liters || ""} onChange={(e) => update('fuel_liters', e.target.value)} />
             </div>
             <div>
               <Label className="text-[11px] text-slate-500 mb-0.5">AdBlue (L)</Label>
-              <Input type="number" step="0.01" className="h-[40px] bg-white" value={draft.adblue_liters || ""} onChange={(e) => update('adblue_liters', e.target.value)} />
+              <Input type="number" step="0.01" className="h-[40px] bg-white text-[16px]" value={draft.adblue_liters || ""} onChange={(e) => update('adblue_liters', e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label className="text-[11px] text-slate-500 mb-0.5">Km bij tanken</Label>
-              <Input type="number" className="h-[40px] bg-white" value={draft.fuel_km || ""} onChange={(e) => update('fuel_km', e.target.value)} />
+              <Input type="number" className="h-[40px] bg-white text-[16px]" value={draft.fuel_km || ""} onChange={(e) => update('fuel_km', e.target.value)} />
             </div>
             <div>
               <Label className="text-[11px] text-slate-500 mb-0.5">E-laden (kWh)</Label>
-              <Input type="number" step="0.01" className="h-[40px] bg-white" value={draft.charging_kwh || ""} onChange={(e) => update('charging_kwh', e.target.value)} />
+              <Input type="number" step="0.01" className="h-[40px] bg-white text-[16px]" value={draft.charging_kwh || ""} onChange={(e) => update('charging_kwh', e.target.value)} />
             </div>
           </div>
         </div>
@@ -375,7 +375,7 @@ function StandplaatsFields({ draft, update, setDraft, customers, projects, activ
       <div>
         <Label className="text-[11px] text-slate-500 mb-0.5">Klant</Label>
         <Select value={draft.customer_id || "none"} onValueChange={(v) => update('customer_id', v === "none" ? "" : v)}>
-          <SelectTrigger className="h-[40px] bg-white text-[13px]"><SelectValue placeholder="Selecteer klant" /></SelectTrigger>
+          <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue placeholder="Selecteer klant" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Selecteer klant</SelectItem>
             {(customers || []).map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
@@ -386,7 +386,7 @@ function StandplaatsFields({ draft, update, setDraft, customers, projects, activ
         <div>
           <Label className="text-[11px] text-slate-500 mb-0.5">Project</Label>
           <Select value={draft.project_id || "none"} onValueChange={(v) => update('project_id', v === "none" ? "" : v)}>
-            <SelectTrigger className="h-[40px] bg-white text-[13px]"><SelectValue placeholder="Project" /></SelectTrigger>
+            <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue placeholder="Project" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Selecteer project</SelectItem>
               {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
@@ -404,7 +404,7 @@ function StandplaatsFields({ draft, update, setDraft, customers, projects, activ
               : { ...prev, activity_id: v === "none" ? "" : v, _showCustomActivity: false, custom_activity: "" });
           }}
         >
-          <SelectTrigger className="h-[40px] bg-white text-[13px]"><SelectValue placeholder="Activiteit" /></SelectTrigger>
+          <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue placeholder="Activiteit" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Selecteer activiteit</SelectItem>
             {(activiteiten || []).map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
@@ -412,7 +412,7 @@ function StandplaatsFields({ draft, update, setDraft, customers, projects, activ
           </SelectContent>
         </Select>
         {draft._showCustomActivity && (
-          <Input className="mt-1 h-[40px] bg-white text-[13px]" value={draft.custom_activity || ""}
+          <Input className="mt-1 h-[40px] bg-white text-[16px]" value={draft.custom_activity || ""}
             onChange={(e) => update("custom_activity", e.target.value)}
             placeholder="Typ activiteit..." autoFocus />
         )}
