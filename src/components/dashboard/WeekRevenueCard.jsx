@@ -140,7 +140,11 @@ export default function WeekRevenueCard() {
     return weekMap;
   }, [dpgInvoices]);
 
-  const isLoading = l1 || l2 || l3 || l4;
+  // DPG week keys for current and previous week
+  const dpgCurKey = `${yearNum}-${String(weekNum).padStart(2, '0')}`;
+  const dpgPrevKey = `${prevYearNum}-${String(prevWeekNum).padStart(2, '0')}`;
+
+  const isLoading = l1 || l2 || l3 || l4 || l5;
   const isLocked = curSummaries.some(s => s.locked);
   const isCurrentWeek = weekOffset === 0;
 
