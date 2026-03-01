@@ -135,6 +135,7 @@ export default function Vehicles() {
 
   const openEditDialog = (vehicle) => {
     setSelectedVehicle(vehicle);
+    setEditMode(false);
     setFormData({
       ...vehicle,
       year: vehicle.year || "",
@@ -150,6 +151,7 @@ export default function Vehicles() {
 
   const openNewDialog = () => {
     setSelectedVehicle(null);
+    setEditMode(true);
     resetForm();
     setIsDialogOpen(true);
   };
