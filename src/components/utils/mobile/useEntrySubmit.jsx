@@ -95,7 +95,7 @@ export function useEntrySubmit() {
       };
 
       // --- Client logging ---
-      await clientLogger.logClicked(submissionId, payload, signature);
+      clientLogger.logClicked(submissionId, payload, signature).catch(() => {});
 
       // --- Payload size guard ---
       const payloadWarning = checkPayloadSize(payload);
