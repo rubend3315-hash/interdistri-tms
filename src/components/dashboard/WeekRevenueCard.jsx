@@ -242,7 +242,10 @@ export default function WeekRevenueCard() {
                     <td className="py-0.5 px-1 text-right text-slate-700">{c.hours.toFixed(1)}</td>
                     <td className="py-0.5 px-1 text-right"><DeltaVal value={c.hoursDelta} /></td>
                     <td className="py-0.5 px-1 text-right text-slate-600">{c.km > 0 ? c.km.toLocaleString("nl-NL") : "—"}</td>
-                    <td className="py-0.5 px-1 text-right text-slate-700">{c.revenue > 0 ? `€${fmt(c.revenue)}` : "—"}</td>
+                    <td className="py-0.5 px-1 text-right text-slate-700" title={c.invoiceBased ? "Bron: Spotta factuur (excl. depot)" : ""}>
+                      {c.revenue > 0 ? `€${fmt(c.revenue)}` : "—"}
+                      {c.invoiceBased && c.revenue > 0 && <span className="text-[8px] text-blue-400 ml-0.5">F</span>}
+                    </td>
                     <td className="py-0.5 pl-1 text-right text-slate-600">{c.rate > 0 ? `€${fmt(c.rate)}` : "—"}</td>
                   </tr>
                 ))}
