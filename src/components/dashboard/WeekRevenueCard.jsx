@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Building2, ChevronLeft, ChevronRight, RefreshCw, Lock } from "lucide-react";
-import { getISOWeek, getYear, startOfWeek, endOfWeek, addWeeks, subWeeks, format } from "date-fns";
+import { getISOWeek, getYear, startOfWeek, endOfWeek, addWeeks, subWeeks, format, parseISO, eachWeekOfInterval } from "date-fns";
 
 // Spotta customer ID (Netwerk VSP B.V. = statutair, Spotta = handelsnaam)
 const SPOTTA_CUSTOMER_ID = "697a3ffb9e5ab8044383b8ff";
