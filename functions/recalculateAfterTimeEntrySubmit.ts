@@ -105,11 +105,51 @@ Deno.serve(async (req) => {
     const createdSpwIds = [];
 
     // ========================================
-    // 1. CREATE TRIPS
+    // 1. CREATE TRIPS (with km continuity check)
     // ========================================
     const tTrips = Date.now();
     if (Array.isArray(trips) && trips.length > 0) {
+      // Collect unique vehicle IDs for km continuity check
+      const vehicleIds = [...new Set(trips.filter(t => t.vehicle_id).map(t => t.vehicle_id))];
+      
+      // Fetch last known trip per vehicle (for km continuity)
+      const lastTripByVehicle = {};
+      if (vehicleIds.length > 0) {
+        try {
+          for (const vid of vehicleIds) {
+            const vTrips = await svc.entities.Trip.filter({ vehicle_id: vid }, '-date', 1);
+            if (vTrips.length > 0) lastTripByVehicle[vid] = vTrips[0];
+          }
+        } catch (e) { console.error('[KM_CHECK] Failed to fetch vehicle history:', e.message); }
+      }
+
       for (const trip of trips) {
+        // KM continuity warning
+        let kmWarning = null;
+        const totalKm = (trip.start_km != null && trip.end_km != null) ? Math.max(0, Number(trip.end_km) - Number(trip.start_km)) : null;
+        
+        const warnings = [];
+        
+        // Check 1: absolute km distance
+        if (totalKm != null && totalKm > 400) {
+          warnings.push(`Rode afwijking: ${totalKm} km gereden (>400 km)`);
+        } else if (totalKm != null && totalKm > 250) {
+          warnings.push(`Gele afwijking: ${totalKm} km gereden (>250 km)`);
+        }
+        
+        // Check 2: km continuity with previous trip on same vehicle
+        if (trip.vehicle_id && trip.start_km != null && lastTripByVehicle[trip.vehicle_id]) {
+          const lastTrip = lastTripByVehicle[trip.vehicle_id];
+          if (lastTrip.end_km != null) {
+            const gap = Math.abs(Number(trip.start_km) - Number(lastTrip.end_km));
+            if (gap > 50) {
+              warnings.push(`KM-gat: begin ${trip.start_km} vs vorige eind ${lastTrip.end_km} (verschil ${gap} km, voertuig ${trip.vehicle_id}, vorige rit ${lastTrip.date})`);
+            }
+          }
+        }
+        
+        if (warnings.length > 0) kmWarning = warnings.join(' | ');
+
         const t = await svc.entities.Trip.create({
           employee_id, time_entry_id, date,
           vehicle_id: trip.vehicle_id,
@@ -118,7 +158,7 @@ Deno.serve(async (req) => {
           planned_stops: trip.planned_stops != null ? Math.max(0, Math.min(9999, Number(trip.planned_stops) || 0)) : null,
           start_km: trip.start_km != null ? Math.max(0, Math.min(9999999, Number(trip.start_km) || 0)) : null,
           end_km: trip.end_km != null ? Math.max(0, Math.min(9999999, Number(trip.end_km) || 0)) : null,
-          total_km: (trip.start_km != null && trip.end_km != null) ? Math.max(0, Number(trip.end_km) - Number(trip.start_km)) : null,
+          total_km: totalKm,
           fuel_liters: trip.fuel_liters != null ? Math.max(0, Math.min(9999, Number(trip.fuel_liters) || 0)) : null,
           adblue_liters: trip.adblue_liters != null ? Math.max(0, Math.min(9999, Number(trip.adblue_liters) || 0)) : null,
           fuel_km: trip.fuel_km != null ? Math.max(0, Math.min(9999999, Number(trip.fuel_km) || 0)) : null,
@@ -128,8 +168,12 @@ Deno.serve(async (req) => {
           departure_location: (trip.departure_location || '').slice(0, 200) || null,
           notes: (trip.notes || '').slice(0, 2000) || null,
           status: 'Voltooid',
+          km_warning: kmWarning,
         });
         createdTripIds.push(t.id);
+        
+        // Update lastTripByVehicle for sequential trips on same vehicle in same submission
+        if (trip.vehicle_id) lastTripByVehicle[trip.vehicle_id] = { end_km: trip.end_km != null ? Number(trip.end_km) : null, date };
       }
     }
     perf.trips_create_ms = Date.now() - tTrips;

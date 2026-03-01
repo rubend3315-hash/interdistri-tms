@@ -129,6 +129,23 @@ export default function MobileRittenTab({
                 <Input type="number" value={trip.end_km} onChange={(e) => updateTrip(index, 'end_km', e.target.value)} />
               </div>
             </div>
+            {(() => {
+              const sk = Number(trip.start_km), ek = Number(trip.end_km);
+              if (sk > 0 && ek > 0 && ek > sk) {
+                const km = ek - sk;
+                if (km > 400) return (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-100 border border-red-300 text-red-800 text-xs">
+                    <span className="font-bold">⚠️ {km} km</span> — Zeer ongebruikelijk. Controleer begin- en eindstand!
+                  </div>
+                );
+                if (km > 250) return (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-100 border border-yellow-300 text-yellow-800 text-xs">
+                    <span className="font-bold">⚠️ {km} km</span> — Meer dan gebruikelijk. Klopt dit?
+                  </div>
+                );
+              }
+              return null;
+            })()}
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
