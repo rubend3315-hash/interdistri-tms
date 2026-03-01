@@ -22,7 +22,7 @@ export default function SecureDownload() {
     (async () => {
       try {
         // Call secureDownload via direct HTTP (no auth required for external recipients)
-        const functionUrl = `${window.location.origin}/api/functions/secureDownload`;
+        const functionUrl = `${window.location.origin}/functions/secureDownload`;
         const res = await fetch(functionUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
