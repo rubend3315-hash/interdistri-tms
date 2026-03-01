@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { TrendingUp, Truck, Package, DollarSign } from "lucide-react";
+import { TrendingUp, Truck, Package, DollarSign, Warehouse } from "lucide-react";
 import PeriodSelector from "./PeriodSelector";
 import YearRevenueChart from "./YearRevenueChart";
 
@@ -91,10 +91,19 @@ export default function InvoiceWeekDashboard({ customerId }) {
     return map;
   }, [routes]);
 
-  // === 1. Per route opbrengsten ===
+  // Detect depot/overslag handling lines (not route-specific, separate cost)
+  const isDepotHandling = (line) =>
+    line.line_type === "handling" &&
+    (line.description || "").toLowerCase().includes("overslagpunt");
+
+  const depotLines = useMemo(() => lines.filter(isDepotHandling), [lines]);
+  const routeOnlyLines = useMemo(() => lines.filter(l => !isDepotHandling(l)), [lines]);
+  const depotTotal = useMemo(() => depotLines.reduce((s, l) => s + (l.total_price || 0), 0), [depotLines]);
+
+  // === 1. Per route opbrengsten (excl. depot handling) ===
   const routeRevenue = useMemo(() => {
     const map = {};
-    lines.forEach(line => {
+    routeOnlyLines.forEach(line => {
       const rc = line.route_code || "Onbekend";
       if (!map[rc]) map[rc] = { route_code: rc, total_excl: 0, total_incl: 0, quantity: 0, lines: 0 };
       map[rc].total_excl += line.total_price || 0;
@@ -103,14 +112,14 @@ export default function InvoiceWeekDashboard({ customerId }) {
       map[rc].lines += 1;
     });
     return Object.values(map).sort((a, b) => b.total_excl - a.total_excl);
-  }, [lines]);
+  }, [routeOnlyLines]);
 
-  // === 2. Handling kosten per dag (quantity = aantal dagen) ===
+  // === 2. Handling kosten per route (excl. depot handling) ===
   const handlingLines = useMemo(() => {
-    return lines.filter(l =>
+    return routeOnlyLines.filter(l =>
       l.line_type === "handling" || l.line_type === "losse_verspreiding"
     );
-  }, [lines]);
+  }, [routeOnlyLines]);
 
   const handlingPerRoute = useMemo(() => {
     const map = {};
@@ -192,7 +201,7 @@ export default function InvoiceWeekDashboard({ customerId }) {
       <YearRevenueChart invoices={invoices} allLines={allLines} />
 
       {/* KPI's */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
@@ -210,11 +219,25 @@ export default function InvoiceWeekDashboard({ customerId }) {
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+                <Warehouse className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Depotvergoeding</p>
+                <p className="text-lg font-bold text-slate-900">€ {depotTotal.toFixed(2)}</p>
+                <p className="text-[10px] text-slate-400">{depotLines.length} regels</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
                 <Package className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">Handling kosten</p>
+                <p className="text-xs text-slate-500">Route handling</p>
                 <p className="text-lg font-bold text-slate-900">€ {totalHandling.toFixed(2)}</p>
               </div>
             </div>
@@ -235,10 +258,39 @@ export default function InvoiceWeekDashboard({ customerId }) {
         </Card>
       </div>
 
+      {/* Depot vergoeding detail */}
+      {depotLines.length > 0 && (
+        <Card className="border-orange-200 bg-orange-50/30">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Warehouse className="w-4 h-4 text-orange-600" />
+              Depotvergoeding (Overslagpunt)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {depotLines.map((line, i) => (
+                <div key={line.id || i} className="flex items-center justify-between p-2 bg-white rounded-lg border border-orange-100">
+                  <div>
+                    <p className="text-sm text-slate-700">{line.description}</p>
+                    <p className="text-xs text-slate-400">{line.product_code}</p>
+                  </div>
+                  <span className="font-semibold text-slate-900">€ {(line.total_price || 0).toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between pt-2 border-t border-orange-200 font-semibold text-sm">
+                <span>Totaal depot</span>
+                <span>€ {depotTotal.toFixed(2)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Opbrengsten per route - Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Opbrengsten per route (excl. BTW)</CardTitle>
+          <CardTitle className="text-base">Opbrengsten per route (excl. BTW, excl. depot)</CardTitle>
         </CardHeader>
         <CardContent>
           {routeChartData.length > 0 ? (
@@ -307,7 +359,7 @@ export default function InvoiceWeekDashboard({ customerId }) {
       {/* Detail tabel: opbrengsten per route met artikel koppeling */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Route opbrengsten & artikelkoppeling</CardTitle>
+          <CardTitle className="text-base">Route opbrengsten & artikelkoppeling (excl. depot)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
