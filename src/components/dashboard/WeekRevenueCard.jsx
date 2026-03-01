@@ -101,10 +101,6 @@ export default function WeekRevenueCard() {
     spottaLines.forEach(line => {
       const period = invPeriodMap[line.invoice_id];
       if (!period) return;
-      // Exclude depot handling (overslagpunt vergoeding per week / bakken)
-      const isDepot = line.line_type === "handling" &&
-        (line.description || "").toLowerCase().includes("overslagpunt");
-      if (isDepot) return;
       weekMap[period] = (weekMap[period] || 0) + (line.total_price || 0);
     });
     return weekMap;
