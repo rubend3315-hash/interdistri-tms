@@ -75,11 +75,11 @@ export default function WeekRevenueCard() {
     queryFn: () => base44.entities.SpottaInvoice.filter({ customer_id: SPOTTA_CUSTOMER_ID }),
   });
 
+  const spottaInvoiceIds = useMemo(() => spottaInvoices.map(i => i.id).sort().join(','), [spottaInvoices]);
   const { data: spottaLines = [], isLoading: l4 } = useQuery({
-    queryKey: ["spotta-lines", SPOTTA_CUSTOMER_ID],
+    queryKey: ["spotta-lines", SPOTTA_CUSTOMER_ID, spottaInvoiceIds],
     queryFn: async () => {
-      // Fetch all lines (default limit=50 is too low for 70+ lines per invoice)
-      // Fetch per invoice to avoid hitting limits
+      // Fetch per invoice (default limit=50 is too low for 70+ lines per invoice)
       const allLines = [];
       for (const inv of spottaInvoices) {
         const lines = await base44.entities.SpottaInvoiceLine.filter(
