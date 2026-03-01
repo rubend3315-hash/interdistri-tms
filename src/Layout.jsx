@@ -223,49 +223,42 @@ const menuItems = [
   {
     label: "Governance & Control",
     subtitle: "Security, compliance & risicobeheersing",
-    subgroups: [
-      {
-        label: "Security & Compliance",
-        icon: Shield,
-        highlight: true,
-        items: [
-          { name: "Governance Dashboard", icon: Shield, page: "GovernanceDashboard" },
-          { name: "Security Samenvatting", icon: ShieldCheck, page: "SecuritySummary" },
-          { name: "Security Architectuur", icon: Shield, page: "SecurityArchitecture" },
-          { name: "Toegangscontrole (RBAC)", icon: ShieldCheck, page: "SecurityAccessControl" },
-          { name: "Systeemdiagram", icon: Shield, page: "SystemArchitectureDiagram" },
-          { name: "Security Roadmap", icon: Shield, page: "SecurityRoadmap" },
-          { name: "Security & Privacy", icon: Lock, page: "SecurityPrivacy" },
-          { name: "Trust & Security", icon: ShieldCheck, page: "Trust" },
-          { name: "Encryptie Migratie", icon: Lock, page: "EncryptionMigration" },
-          { name: "Rollen & Rechten", icon: ShieldCheck, page: "RBACMatrix" },
-          { name: "Audit Log", icon: ClipboardList, page: "AuditLog" },
-          { name: "RBAC Audit", icon: ShieldCheck, page: "RBACAudit" },
-        ]
-      },
-      {
-        label: "Data & Continuïteit",
-        icon: HardDrive,
-        items: [
-          { name: "Back-ups", icon: Database, page: "Backups" },
-        ]
-      },
-      {
-        label: "Documentatie",
-        icon: LifeBuoy,
-        items: [
-            { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
-            { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
-            { name: "Payroll Export Docs", icon: FileSpreadsheet, page: "DailyPayrollExportDocs" },
-          ]
-      },
-      {
-        label: "Systeem",
-        icon: HardDrive,
-        items: [
-          { name: "Deployment Status", icon: Server, page: "DeploymentStatus" },
-        ]
-      },
+    items: [
+      { name: "Governance Dashboard", icon: Shield, page: "GovernanceDashboard" },
+      { name: "Security Samenvatting", icon: ShieldCheck, page: "SecuritySummary" },
+      { name: "Security Architectuur", icon: Shield, page: "SecurityArchitecture" },
+      { name: "Toegangscontrole (RBAC)", icon: ShieldCheck, page: "SecurityAccessControl" },
+      { name: "Systeemdiagram", icon: Shield, page: "SystemArchitectureDiagram" },
+      { name: "Security Roadmap", icon: Shield, page: "SecurityRoadmap" },
+      { name: "Security & Privacy", icon: Lock, page: "SecurityPrivacy" },
+      { name: "Trust & Security", icon: ShieldCheck, page: "Trust" },
+      { name: "Encryptie Migratie", icon: Lock, page: "EncryptionMigration" },
+      { name: "Rollen & Rechten", icon: ShieldCheck, page: "RBACMatrix" },
+      { name: "Audit Log", icon: ClipboardList, page: "AuditLog" },
+      { name: "RBAC Audit", icon: ShieldCheck, page: "RBACAudit" },
+    ]
+  },
+  {
+    label: "Data & Continuïteit",
+    subtitle: "Back-ups & databeheer",
+    items: [
+      { name: "Back-ups", icon: Database, page: "Backups" },
+    ]
+  },
+  {
+    label: "Documentatie",
+    subtitle: "Help & handleidingen",
+    items: [
+      { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
+      { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
+      { name: "Payroll Export Docs", icon: FileSpreadsheet, page: "DailyPayrollExportDocs" },
+    ]
+  },
+  {
+    label: "Systeem",
+    subtitle: "Deployment & monitoring",
+    items: [
+      { name: "Deployment Status", icon: Server, page: "DeploymentStatus" },
     ]
   },
 ];
