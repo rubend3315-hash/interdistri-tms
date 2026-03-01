@@ -369,11 +369,11 @@ export default function Vehicles() {
       )}
 
       {/* Add/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditMode(false); }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span>{selectedVehicle ? 'Voertuig Bewerken' : 'Nieuw Voertuig'}</span>
+              <span>{selectedVehicle ? `${selectedVehicle.license_plate} — ${selectedVehicle.brand} ${selectedVehicle.model || ''}` : 'Nieuw Voertuig'}</span>
               {selectedVehicle && (
                 <Button
                   variant="ghost"
@@ -391,6 +391,10 @@ export default function Vehicles() {
             <Tabs defaultValue="gegevens">
               <TabsList className="w-full">
                 <TabsTrigger value="gegevens" className="flex-1">Gegevens</TabsTrigger>
+                <TabsTrigger value="km" className="flex-1 gap-1">
+                  <Gauge className="w-3.5 h-3.5" />
+                  KM Registratie
+                </TabsTrigger>
                 <TabsTrigger value="onderhoud" className="flex-1 gap-1">
                   <Wrench className="w-3.5 h-3.5" />
                   Onderhoud
@@ -401,251 +405,22 @@ export default function Vehicles() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="gegevens">
-                <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Kenteken *</Label>
-                      <Input
-                        value={formData.license_plate}
-                        onChange={(e) => setFormData({ ...formData, license_plate: e.target.value.toUpperCase() })}
-                        required
-                        placeholder="AB-123-CD"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Status</Label>
-                      <Select 
-                        value={formData.status} 
-                        onValueChange={(v) => setFormData({ ...formData, status: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {statuses.map(s => (
-                            <SelectItem key={s} value={s}>{s}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Merk *</Label>
-                      <Input
-                        value={formData.brand}
-                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Model</Label>
-                      <Input
-                        value={formData.model}
-                        onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Type *</Label>
-                      <Select 
-                        value={formData.type} 
-                        onValueChange={(v) => setFormData({ ...formData, type: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecteer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vehicleTypes.map(t => (
-                            <SelectItem key={t} value={t}>{t}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Brandstof</Label>
-                      <Select 
-                        value={formData.fuel_type} 
-                        onValueChange={(v) => setFormData({ ...formData, fuel_type: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecteer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fuelTypes.map(f => (
-                            <SelectItem key={f} value={f}>{f}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Bouwjaar</Label>
-                      <Input
-                        type="number"
-                        value={formData.year}
-                        onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                        placeholder="2024"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Chassisnummer (VIN)</Label>
-                      <Input
-                        value={formData.chassis_number}
-                        onChange={(e) => setFormData({ ...formData, chassis_number: e.target.value.toUpperCase() })}
-                        placeholder="bijv. WF0XXXGCDX1234567"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Sleutelkast nr.</Label>
-                      <Input
-                        value={formData.key_cabinet_number}
-                        onChange={(e) => setFormData({ ...formData, key_cabinet_number: e.target.value })}
-                        placeholder="bijv. 12"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Emissieklasse</Label>
-                      <Select
-                        value={formData.emission_class || "none"}
-                        onValueChange={(v) => setFormData({ ...formData, emission_class: v === "none" ? "" : v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecteer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Geen</SelectItem>
-                          {emissionClasses.map(e => (
-                            <SelectItem key={e} value={e}>{e}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Verbruik / 100 km</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        value={formData.factory_consumption_per_100km}
-                        onChange={(e) => setFormData({ ...formData, factory_consumption_per_100km: e.target.value })}
-                        placeholder="L of kWh"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Max laadvermogen (kg)</Label>
-                      <Input
-                        type="number"
-                        value={formData.max_weight}
-                        onChange={(e) => setFormData({ ...formData, max_weight: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Kilometerstand</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        value={formData.current_mileage}
-                        onChange={(e) => setFormData({ ...formData, current_mileage: e.target.value })}
-                        className="flex-1"
-                      />
-                      {selectedVehicle && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="shrink-0 gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
-                          onClick={() => {
-                            setCalibrationVehicle(selectedVehicle);
-                          }}
-                        >
-                          <Crosshair className="w-4 h-4" />
-                          IJken
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>APK vervaldatum</Label>
-                      <Input
-                        type="date"
-                        value={formData.apk_expiry}
-                        onChange={(e) => setFormData({ ...formData, apk_expiry: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Verzekering vervalt</Label>
-                      <Input
-                        type="date"
-                        value={formData.insurance_expiry}
-                        onChange={(e) => setFormData({ ...formData, insurance_expiry: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Tachograaf ijkdatum</Label>
-                      <Input
-                        type="date"
-                        value={formData.tachograph_calibration_date}
-                        onChange={(e) => setFormData({ ...formData, tachograph_calibration_date: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>NIWO Vergunning</Label>
-                    <Select 
-                      value={formData.niwo_permit_id || "none"} 
-                      onValueChange={(v) => setFormData({ ...formData, niwo_permit_id: v === "none" ? "" : v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecteer vergunning" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Geen vergunning</SelectItem>
-                        {niwoPermits
-                          .filter(p => p.status === 'Beschikbaar' || p.id === formData.niwo_permit_id)
-                          .map(p => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.permit_number} - {p.status}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Opmerkingen</Label>
-                    <Textarea
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-4 border-t">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Annuleren
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      className="bg-blue-600 hover:bg-blue-700"
-                      disabled={createMutation.isPending || updateMutation.isPending}
-                    >
-                      {createMutation.isPending || updateMutation.isPending ? 'Opslaan...' : 'Opslaan'}
-                    </Button>
-                  </div>
-                </form>
+                <VehicleGegevensForm
+                  formData={formData}
+                  setFormData={setFormData}
+                  onSubmit={handleSubmit}
+                  onCancel={() => setIsDialogOpen(false)}
+                  isEditing={true}
+                  selectedVehicle={selectedVehicle}
+                  niwoPermits={niwoPermits}
+                  isPending={createMutation.isPending || updateMutation.isPending}
+                  editMode={editMode}
+                  setEditMode={setEditMode}
+                  onCalibrate={() => setCalibrationVehicle(selectedVehicle)}
+                />
+              </TabsContent>
+              <TabsContent value="km">
+                <KmRegistratieTab vehicle={selectedVehicle} userName={currentUser?.full_name} />
               </TabsContent>
               <TabsContent value="onderhoud">
                 <div className="pt-4">
@@ -659,237 +434,19 @@ export default function Vehicles() {
               </TabsContent>
             </Tabs>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Kenteken *</Label>
-                  <Input
-                    value={formData.license_plate}
-                    onChange={(e) => setFormData({ ...formData, license_plate: e.target.value.toUpperCase() })}
-                    required
-                    placeholder="AB-123-CD"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select 
-                    value={formData.status} 
-                    onValueChange={(v) => setFormData({ ...formData, status: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statuses.map(s => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Merk *</Label>
-                  <Input
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Model</Label>
-                  <Input
-                    value={formData.model}
-                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Type *</Label>
-                  <Select 
-                    value={formData.type} 
-                    onValueChange={(v) => setFormData({ ...formData, type: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {vehicleTypes.map(t => (
-                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Brandstof</Label>
-                  <Select 
-                    value={formData.fuel_type} 
-                    onValueChange={(v) => setFormData({ ...formData, fuel_type: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fuelTypes.map(f => (
-                        <SelectItem key={f} value={f}>{f}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Bouwjaar</Label>
-                  <Input
-                    type="number"
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    placeholder="2024"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Chassisnummer (VIN)</Label>
-                  <Input
-                    value={formData.chassis_number}
-                    onChange={(e) => setFormData({ ...formData, chassis_number: e.target.value.toUpperCase() })}
-                    placeholder="bijv. WF0XXXGCDX1234567"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Sleutelkast nr.</Label>
-                  <Input
-                    value={formData.key_cabinet_number}
-                    onChange={(e) => setFormData({ ...formData, key_cabinet_number: e.target.value })}
-                    placeholder="bijv. 12"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Emissieklasse</Label>
-                  <Select
-                    value={formData.emission_class || "none"}
-                    onValueChange={(v) => setFormData({ ...formData, emission_class: v === "none" ? "" : v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Geen</SelectItem>
-                      {emissionClasses.map(e => (
-                        <SelectItem key={e} value={e}>{e}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Verbruik / 100 km</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={formData.factory_consumption_per_100km}
-                    onChange={(e) => setFormData({ ...formData, factory_consumption_per_100km: e.target.value })}
-                    placeholder="L of kWh"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Max laadvermogen (kg)</Label>
-                  <Input
-                    type="number"
-                    value={formData.max_weight}
-                    onChange={(e) => setFormData({ ...formData, max_weight: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Kilometerstand</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    value={formData.current_mileage}
-                    onChange={(e) => setFormData({ ...formData, current_mileage: e.target.value })}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>APK vervaldatum</Label>
-                  <Input
-                    type="date"
-                    value={formData.apk_expiry}
-                    onChange={(e) => setFormData({ ...formData, apk_expiry: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Verzekering vervalt</Label>
-                  <Input
-                    type="date"
-                    value={formData.insurance_expiry}
-                    onChange={(e) => setFormData({ ...formData, insurance_expiry: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Tachograaf ijkdatum</Label>
-                  <Input
-                    type="date"
-                    value={formData.tachograph_calibration_date}
-                    onChange={(e) => setFormData({ ...formData, tachograph_calibration_date: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>NIWO Vergunning</Label>
-                <Select 
-                  value={formData.niwo_permit_id || "none"} 
-                  onValueChange={(v) => setFormData({ ...formData, niwo_permit_id: v === "none" ? "" : v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecteer vergunning" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Geen vergunning</SelectItem>
-                    {niwoPermits
-                      .filter(p => p.status === 'Beschikbaar' || p.id === formData.niwo_permit_id)
-                      .map(p => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.permit_number} - {p.status}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Opmerkingen</Label>
-                <Textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Annuleren
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {createMutation.isPending || updateMutation.isPending ? 'Opslaan...' : 'Opslaan'}
-                </Button>
-              </div>
-            </form>
+            <VehicleGegevensForm
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleSubmit}
+              onCancel={() => setIsDialogOpen(false)}
+              isEditing={false}
+              selectedVehicle={null}
+              niwoPermits={niwoPermits}
+              isPending={createMutation.isPending || updateMutation.isPending}
+              editMode={true}
+              setEditMode={setEditMode}
+              onCalibrate={() => {}}
+            />
           )}
         </DialogContent>
       </Dialog>
