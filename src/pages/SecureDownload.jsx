@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, AlertTriangle, Download, Loader2, Clock, Printer } from "lucide-react";
@@ -22,18 +21,21 @@ export default function SecureDownload() {
 
     (async () => {
       try {
-        const res = await base44.functions.invoke("secureDownload", {
-          action: "download",
-          token,
+        // Call secureDownload via direct HTTP (no auth required for external recipients)
+        const functionUrl = `${window.location.origin}/api/functions/secureDownload`;
+        const res = await fetch(functionUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "download", token }),
         });
-        if (res.data?.success && res.data?.html) {
-          setHtml(res.data.html);
+        const data = await res.json();
+        if (data?.success && data?.html) {
+          setHtml(data.html);
         } else {
-          setError(res.data?.error || "Er is een fout opgetreden bij het ophalen van het document.");
+          setError(data?.error || "Er is een fout opgetreden bij het ophalen van het document.");
         }
       } catch (err) {
-        const errMsg = err?.response?.data?.error || err.message || "Er is een fout opgetreden.";
-        setError(errMsg);
+        setError(err.message || "Er is een fout opgetreden.");
       }
       setLoading(false);
     })();
