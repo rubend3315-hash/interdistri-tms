@@ -168,14 +168,20 @@ export default function WeekRevenueCard() {
     const spottaCurRevenue = spottaRevenueByWeek[spottaPeriod] || 0;
     const spottaPrevRevenue = spottaRevenueByWeek[prevSpottaPeriod] || 0;
 
+    // DPG Media invoice-based revenue (4-week period split)
+    const dpgCurRevenue = dpgRevenueByWeek[dpgCurKey] || 0;
+    const dpgPrevRevenue = dpgRevenueByWeek[dpgPrevKey] || 0;
+
     const merged = curSummaries
       .filter(s => s.total_hours > 0 || s.total_km > 0 || s.calculated_revenue > 0)
       .map(s => {
         const prev = prevMap[s.customer_id] || { total_hours: 0, total_km: 0, calculated_revenue: 0 };
-        // For Spotta: use invoice-based revenue instead of calculated
+        // For Spotta/DPG: use invoice-based revenue instead of calculated
         const isSpotta = s.customer_id === SPOTTA_CUSTOMER_ID;
-        const revenue = isSpotta ? spottaCurRevenue : s.calculated_revenue;
-        const prevRevenue = isSpotta ? spottaPrevRevenue : prev.calculated_revenue;
+        const isDPG = s.customer_id === DPG_CUSTOMER_ID;
+        const isInvoiceBased = isSpotta || isDPG;
+        const revenue = isSpotta ? spottaCurRevenue : isDPG ? dpgCurRevenue : s.calculated_revenue;
+        const prevRevenue = isSpotta ? spottaPrevRevenue : isDPG ? dpgPrevRevenue : prev.calculated_revenue;
         const rate = s.total_hours > 0 ? revenue / s.total_hours : 0;
         return {
           id: s.customer_id,
@@ -189,7 +195,7 @@ export default function WeekRevenueCard() {
           kmDelta: s.total_km - prev.total_km,
           revenueDelta: revenue - prevRevenue,
           revenuePct: prevRevenue > 0 ? ((revenue - prevRevenue) / prevRevenue) * 100 : null,
-          invoiceBased: isSpotta, // flag for display
+          invoiceBased: isInvoiceBased, // flag for display
         };
       })
       .sort((a, b) => (b.revenue + b.hours) - (a.revenue + a.hours));
