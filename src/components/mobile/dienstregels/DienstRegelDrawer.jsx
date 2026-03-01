@@ -284,23 +284,44 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
           </div>
         )}
       </div>
-      {/* KM-controle waarschuwing */}
+      {/* KM-controle waarschuwingen */}
       {(() => {
+        const warnings = [];
         const sk = Number(draft.start_km), ek = Number(draft.end_km);
+
+        // 1. Begin-km vs. laatst bekende voertuig-stand
+        if (sk > 0 && vehicleMileage && vehicleMileage > 0) {
+          const diff = Math.abs(sk - vehicleMileage);
+          const pct = (diff / vehicleMileage) * 100;
+          // >20% afwijking of >500km verschil
+          if (diff > 500 || pct > 20) {
+            warnings.push(
+              <div key="mileage" className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-100 border border-orange-300 text-orange-800 text-[11px]">
+                <span className="font-bold">⚠️ Begin km {sk}</span> — Laatst bekende stand: {vehicleMileage.toLocaleString('nl-NL')} km. Verschil: {diff.toLocaleString('nl-NL')} km. Klopt dit?
+              </div>
+            );
+          }
+        }
+
+        // 2. Ritafstand controle
         if (sk > 0 && ek > 0 && ek > sk) {
           const km = ek - sk;
-          if (km > 400) return (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-100 border border-red-300 text-red-800 text-[11px]">
-              <span className="font-bold">⚠️ {km} km</span> — Zeer ongebruikelijk. Controleer begin- en eindstand!
-            </div>
-          );
-          if (km > 250) return (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-100 border border-yellow-300 text-yellow-800 text-[11px]">
-              <span className="font-bold">⚠️ {km} km</span> — Meer dan gebruikelijk. Klopt dit?
-            </div>
-          );
+          if (km > 400) {
+            warnings.push(
+              <div key="dist-red" className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-100 border border-red-300 text-red-800 text-[11px]">
+                <span className="font-bold">⚠️ {km} km</span> — Zeer ongebruikelijk. Controleer begin- en eindstand!
+              </div>
+            );
+          } else if (km > 250) {
+            warnings.push(
+              <div key="dist-yellow" className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-100 border border-yellow-300 text-yellow-800 text-[11px]">
+                <span className="font-bold">⚠️ {km} km</span> — Meer dan gebruikelijk. Klopt dit?
+              </div>
+            );
+          }
         }
-        return null;
+
+        return warnings.length > 0 ? <div className="space-y-1">{warnings}</div> : null;
       })()}
       {/* Schade */}
       <div>
