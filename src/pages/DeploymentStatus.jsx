@@ -13,7 +13,7 @@ function StatusBadge({ fn }) {
   if (fn.deployed === false) {
     return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">✗ Niet gedeployed</Badge>;
   }
-  if (fn.error_message) {
+  if (fn.error_message && fn.http_status !== 429) {
     return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">⚠ Deployed (met waarschuwing)</Badge>;
   }
   return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">✓ Deployed</Badge>;

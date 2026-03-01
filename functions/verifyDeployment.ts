@@ -103,9 +103,15 @@ function classifyResult(fnName, settled) {
     return result;
   }
 
-  if ([429, 502, 503].includes(httpStatus)) {
+  if (httpStatus === 429) {
     result.deployed = true;
-    result.error_message = `Rate limit / overload (${httpStatus})`;
+    result.error_message = null; // 429 = rate limited by verification itself, not an error
+    return result;
+  }
+
+  if ([502, 503].includes(httpStatus)) {
+    result.deployed = true;
+    result.error_message = `Overload (${httpStatus})`;
     return result;
   }
 
