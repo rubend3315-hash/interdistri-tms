@@ -2,7 +2,7 @@
 // ║ FUNCTION TYPE: USER_FACING                                      ║
 // ║ Called by: Employee via mobile app (auto-save draft)             ║
 // ║ Auth: User session (any authenticated employee)                  ║
-// ║ v2 — re-deployed 2026-02-23                                     ║
+// ║ v3 — re-deployed 2026-03-01                                     ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
@@ -92,6 +92,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, id: resultId });
   } catch (error) {
     console.error('[upsertDraft] Error:', error?.message);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ success: false, error: error.message || 'Onbekende fout' }, { status: 500 });
   }
 });
