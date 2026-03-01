@@ -66,9 +66,9 @@ export default function WeekRevenueCard() {
     queryFn: () => base44.entities.WeeklyCustomerSummary.filter({ year: prevYearNum, week_number: prevWeekNum }),
   });
 
-  // Spotta invoice revenue: match on description_period "YYYY-WW"
-  const spottaPeriod = `${yearNum}-${String(weekNum).padStart(2, '0')}`;
-  const prevSpottaPeriod = `${prevYearNum}-${String(prevWeekNum).padStart(2, '0')}`;
+  // Spotta invoice revenue: factuurweek = werkweek + 1 (Spotta factureert week 9 voor werk in week 8)
+  const spottaPeriod = `${yearNum}-${String(weekNum + 1).padStart(2, '0')}`;
+  const prevSpottaPeriod = `${prevYearNum}-${String(prevWeekNum + 1).padStart(2, '0')}`;
 
   const { data: spottaInvoices = [], isLoading: l3 } = useQuery({
     queryKey: ["spotta-inv", SPOTTA_CUSTOMER_ID],
