@@ -219,9 +219,9 @@ export default function WeekRevenueCard() {
     const filtered = merged.filter(c => c.hours > 0 || c.km > 0 || c.revenue > 0);
     filtered.sort((a, b) => (b.revenue + b.hours) - (a.revenue + a.hours));
 
-    const curTotH = merged.reduce((s, c) => s + c.hours, 0);
-    const curTotKm = merged.reduce((s, c) => s + c.km, 0);
-    const curTotR = merged.reduce((s, c) => s + c.revenue, 0);
+    const curTotH = filtered.reduce((s, c) => s + c.hours, 0);
+    const curTotKm = filtered.reduce((s, c) => s + c.km, 0);
+    const curTotR = filtered.reduce((s, c) => s + c.revenue, 0);
     const prevTotH = prevSummaries.reduce((s, c) => s + (c.total_hours || 0), 0);
     const prevTotKm = prevSummaries.reduce((s, c) => s + (c.total_km || 0), 0);
     const prevTotR = prevSummaries.reduce((s, c) => {
