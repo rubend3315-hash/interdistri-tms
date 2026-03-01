@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, ChevronLeft, ChevronRight, RefreshCw, Lock } from "lucide-react";
 import { getISOWeek, getYear, startOfWeek, endOfWeek, addWeeks, subWeeks, format } from "date-fns";
 
+// Spotta customer ID (Netwerk VSP B.V. = statutair, Spotta = handelsnaam)
+const SPOTTA_CUSTOMER_ID = "697a3ffb9e5ab8044383b8ff";
+
 function fmt(n) {
   return n.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
