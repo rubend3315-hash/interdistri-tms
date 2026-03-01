@@ -231,7 +231,7 @@ export default function WeekRevenueCard() {
     }, 0);
 
     return {
-      customerData: merged,
+      customerData: filtered,
       totals: {
         hours: curTotH, km: curTotKm, revenue: curTotR,
         rate: curTotH > 0 ? curTotR / curTotH : 0,
