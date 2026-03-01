@@ -279,6 +279,24 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
           </div>
         )}
       </div>
+      {/* KM-controle waarschuwing */}
+      {(() => {
+        const sk = Number(draft.start_km), ek = Number(draft.end_km);
+        if (sk > 0 && ek > 0 && ek > sk) {
+          const km = ek - sk;
+          if (km > 400) return (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-100 border border-red-300 text-red-800 text-[11px]">
+              <span className="font-bold">⚠️ {km} km</span> — Zeer ongebruikelijk. Controleer begin- en eindstand!
+            </div>
+          );
+          if (km > 250) return (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-100 border border-yellow-300 text-yellow-800 text-[11px]">
+              <span className="font-bold">⚠️ {km} km</span> — Meer dan gebruikelijk. Klopt dit?
+            </div>
+          );
+        }
+        return null;
+      })()}
       {/* Schade */}
       <div>
         <Label className="text-[11px] text-slate-500 mb-0.5">Schade gereden?</Label>

@@ -262,7 +262,9 @@ export function useMobileSubmit({
       });
       toast.success('✅ Concept opgeslagen — je kunt later verder');
     } else {
-      toast.error('Concept opslaan mislukt.');
+      const errDetail = result.error || 'Onbekende fout';
+      console.error('[handleSaveDraft] Failed:', errDetail);
+      toast.error(`Concept opslaan mislukt: ${errDetail}`);
     }
   }, [formData, trips, standplaatsWerk, currentEmployee, isMultiDay, saveDraft, submittingRef]);
 
