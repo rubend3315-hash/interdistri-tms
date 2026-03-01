@@ -256,6 +256,11 @@ export default function DienstRegelDrawer({
 function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiModelRoutes }) {
   const [showExtra, setShowExtra] = useState(false);
   const isOpen = draft.openRit && !draft.end_time;
+
+  // Bekende km-stand van geselecteerd voertuig
+  const selectedVehicle = draft.vehicle_id ? (vehicles || []).find(v => v.id === draft.vehicle_id) : null;
+  const vehicleMileage = selectedVehicle?.current_mileage;
+
   return (
     <div className="space-y-1.5">
       {/* Kenteken */}
