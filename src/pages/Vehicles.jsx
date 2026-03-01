@@ -30,6 +30,7 @@ import MileageCalibrationDialog from "@/components/vehicles/MileageCalibrationDi
 import MaintenanceTab from "@/components/vehicles/MaintenanceTab";
 import LeaseTab from "@/components/vehicles/LeaseTab";
 import KmRegistratieTab from "@/components/vehicles/KmRegistratieTab";
+import VehicleGegevensForm from "@/components/vehicles/VehicleGegevensForm";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 const vehicleTypes = ["Vrachtwagen", "Bestelbus", "Personenauto", "Aanhanger"];
