@@ -373,18 +373,8 @@ export default function Vehicles() {
       <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditMode(false); }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>{selectedVehicle ? `${selectedVehicle.license_plate} — ${selectedVehicle.brand} ${selectedVehicle.model || ''}` : 'Nieuw Voertuig'}</span>
-              {selectedVehicle && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => setConfirmDelete({ id: selectedVehicle.id })}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
+            <DialogTitle>
+              {selectedVehicle ? `${selectedVehicle.license_plate} — ${selectedVehicle.brand} ${selectedVehicle.model || ''}` : 'Nieuw Voertuig'}
             </DialogTitle>
           </DialogHeader>
           
