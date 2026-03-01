@@ -23,11 +23,13 @@ import {
   FileText,
   Crosshair,
   Wrench,
-  FileText as FileTextIcon
+  FileText as FileTextIcon,
+  Pencil
 } from "lucide-react";
 import MileageCalibrationDialog from "@/components/vehicles/MileageCalibrationDialog";
 import MaintenanceTab from "@/components/vehicles/MaintenanceTab";
 import LeaseTab from "@/components/vehicles/LeaseTab";
+import KmRegistratieTab from "@/components/vehicles/KmRegistratieTab";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 const vehicleTypes = ["Vrachtwagen", "Bestelbus", "Personenauto", "Aanhanger"];
