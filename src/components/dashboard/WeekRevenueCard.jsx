@@ -10,6 +10,8 @@ import { getISOWeek, getYear, startOfWeek, endOfWeek, addWeeks, subWeeks, format
 
 // Spotta customer ID (Netwerk VSP B.V. = statutair, Spotta = handelsnaam)
 const SPOTTA_CUSTOMER_ID = "697a3ffb9e5ab8044383b8ff";
+// DPG Media customer ID
+const DPG_CUSTOMER_ID = "697a40046dffdfcf4ff3e664";
 
 function fmt(n) {
   return n.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
