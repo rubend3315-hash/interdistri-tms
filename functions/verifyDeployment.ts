@@ -148,8 +148,8 @@ Deno.serve(async (req) => {
     // ========================================
     // 1. Test all critical functions in batches to avoid 429
     // ========================================
-    const BATCH_SIZE = 4;
-    const BATCH_DELAY_MS = 1500;
+    const BATCH_SIZE = 8;
+    const BATCH_DELAY_MS = 500;
     const functions = [];
 
     for (let batchStart = 0; batchStart < CRITICAL_FUNCTIONS.length; batchStart += BATCH_SIZE) {

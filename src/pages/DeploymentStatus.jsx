@@ -36,12 +36,15 @@ export default function DeploymentStatus() {
       const res = await base44.functions.invoke("verifyDeployment", {});
       setData(res.data);
     } catch (err) {
-      // Even if the call itself fails, show it gracefully
+      const status = err?.response?.status || err?.status;
+      const isTimeout = status === 504 || status === 502;
       setData({
         success: false,
         functions: [],
         summary: { total: 0, checked: 0, deployed: 0, not_deployed: 0, errors: 1 },
-        outer_error: err?.message || "Onbekende fout bij aanroep verifyDeployment",
+        outer_error: isTimeout
+          ? `Timeout (${status}) — de verificatie duurde te lang. Probeer het opnieuw, of gebruik de Registry Integrity check hieronder.`
+          : (err?.message || "Onbekende fout bij aanroep verifyDeployment"),
         timestamp: new Date().toISOString(),
       });
     } finally {
