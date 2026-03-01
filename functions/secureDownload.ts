@@ -171,17 +171,18 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, token, expires_at: expiresAt });
     }
 
-    // ── DOWNLOAD (validate token + serve HTML) ──
+    // ── DOWNLOAD (validate token + serve HTML) — NO AUTH REQUIRED ──
     if (action === 'download') {
       const { token } = body;
       if (!token) return Response.json({ error: 'Missing token' }, { status: 400 });
 
       console.log(`[secureDownload] Looking up token: ${token.substring(0, 8)}...`);
 
-      // Find token — always use service role to bypass auth/tenant context
+      // Find token — always use service role (download is public, no user auth needed)
+      const svc = base44.asServiceRole;
       let tokens = [];
       try {
-        tokens = await base44.asServiceRole.entities.SecureDownloadToken.filter({ token });
+        tokens = await svc.entities.SecureDownloadToken.filter({ token });
       } catch (filterErr) {
         console.error(`[secureDownload] Token filter error: ${filterErr.message}`);
         // Fallback: list all and find manually
