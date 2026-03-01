@@ -254,6 +254,7 @@ const menuItems = [
       { name: "Help & Documentatie", icon: BookOpen, page: "HelpPage" },
       { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
       { name: "Payroll Export Docs", icon: FileSpreadsheet, page: "DailyPayrollExportDocs" },
+      { name: "MobileEntry Bestanden", icon: Smartphone, page: "MobileEntryFiles" },
     ]
   },
   {
@@ -394,6 +395,7 @@ export default function Layout({ children, currentPageName }) {
       'HelpPage': '__public__',
       'MobileHandleiding': '__public__',
       'DailyPayrollExportDocs': '__public__',
+      'MobileEntryFiles': PERMISSIONS.GOVERNANCE_MANAGE,
       'SecureDownload': '__public__',
 
       // Mobiel

@@ -114,6 +114,7 @@ import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
 import KmDashboard from './pages/KmDashboard';
+import MobileEntryFiles from './pages/MobileEntryFiles';
 import __Layout from './Layout.jsx';
 
 
@@ -185,6 +186,7 @@ export const PAGES = {
     "Users": Users,
     "Vehicles": Vehicles,
     "KmDashboard": KmDashboard,
+    "MobileEntryFiles": MobileEntryFiles,
 }
 
 export const pagesConfig = {
