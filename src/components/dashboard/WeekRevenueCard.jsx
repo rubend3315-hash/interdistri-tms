@@ -77,6 +77,12 @@ export default function WeekRevenueCard() {
     queryFn: () => base44.entities.SpottaInvoice.filter({ customer_id: SPOTTA_CUSTOMER_ID }),
   });
 
+  // DPG Media invoices (4-week periods → split to weekly revenue)
+  const { data: dpgInvoices = [], isLoading: l5 } = useQuery({
+    queryKey: ["dpg-inv", DPG_CUSTOMER_ID],
+    queryFn: () => base44.entities.SpottaInvoice.filter({ customer_id: DPG_CUSTOMER_ID }),
+  });
+
   const spottaInvoiceIds = useMemo(() => spottaInvoices.map(i => i.id).sort().join(','), [spottaInvoices]);
   const { data: spottaLines = [], isLoading: l4 } = useQuery({
     queryKey: ["spotta-lines", SPOTTA_CUSTOMER_ID, spottaInvoiceIds],
