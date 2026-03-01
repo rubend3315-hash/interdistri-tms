@@ -336,7 +336,7 @@ export default function Vehicles() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-6 text-sm">
+                    <div className="flex flex-wrap items-center gap-6 text-sm">
                       {vehicle.current_mileage != null && (
                         <div className="text-center">
                           <p className="text-slate-500">Km-stand</p>
@@ -361,6 +361,18 @@ export default function Vehicles() {
                           <p className="font-semibold text-slate-900">{vehicle.max_weight.toLocaleString()} kg</p>
                         </div>
                       )}
+                      <div className="text-center" onClick={(e) => e.stopPropagation()}>
+                        <p className="text-slate-500 mb-1">Actief</p>
+                        <Switch
+                          checked={vehicle.status !== "Uit dienst"}
+                          onCheckedChange={(checked) => {
+                            updateMutation.mutate({
+                              id: vehicle.id,
+                              data: { status: checked ? "Beschikbaar" : "Uit dienst" }
+                            });
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </CardContent>
