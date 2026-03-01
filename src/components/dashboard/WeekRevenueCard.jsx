@@ -77,7 +77,19 @@ export default function WeekRevenueCard() {
 
   const { data: spottaLines = [], isLoading: l4 } = useQuery({
     queryKey: ["spotta-lines", SPOTTA_CUSTOMER_ID],
-    queryFn: () => base44.entities.SpottaInvoiceLine.filter({ customer_id: SPOTTA_CUSTOMER_ID }),
+    queryFn: async () => {
+      // Fetch all lines (default limit=50 is too low for 70+ lines per invoice)
+      // Fetch per invoice to avoid hitting limits
+      const allLines = [];
+      for (const inv of spottaInvoices) {
+        const lines = await base44.entities.SpottaInvoiceLine.filter(
+          { invoice_id: inv.id }, '-created_date', 200
+        );
+        allLines.push(...lines);
+      }
+      return allLines;
+    },
+    enabled: spottaInvoices.length > 0,
   });
 
   // Calculate Spotta revenue per week from invoice lines (excl. depot handling)
