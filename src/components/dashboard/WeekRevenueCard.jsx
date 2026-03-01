@@ -100,7 +100,7 @@ export default function WeekRevenueCard() {
     enabled: spottaInvoices.length > 0,
   });
 
-  // Calculate Spotta revenue per week from invoice lines (excl. depot handling)
+  // Calculate Spotta revenue per week from invoice lines
   const spottaRevenueByWeek = useMemo(() => {
     const invPeriodMap = {};
     spottaInvoices.forEach(inv => { invPeriodMap[inv.id] = inv.description_period; });
@@ -113,6 +113,32 @@ export default function WeekRevenueCard() {
     });
     return weekMap;
   }, [spottaInvoices, spottaLines]);
+
+  // DPG Media: parse 4-week period → split total_net evenly across ISO weeks
+  // description_period format: "Periode 2026-1 (29-12-2025 t/m 25-01-2026)"
+  const dpgRevenueByWeek = useMemo(() => {
+    const weekMap = {}; // key: "YYYY-WW" e.g. "2026-05"
+    dpgInvoices.forEach(inv => {
+      const dp = inv.description_period || "";
+      const match = dp.match(/\((\d{2}-\d{2}-\d{4})\s+t\/m\s+(\d{2}-\d{2}-\d{4})\)/);
+      if (!match) return;
+      const parseDMY = (s) => { const [d, m, y] = s.split('-'); return parseISO(`${y}-${m}-${d}`); };
+      const start = parseDMY(match[1]);
+      const end = parseDMY(match[2]);
+      // Get all ISO week-start Mondays in this period
+      const weekStarts = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+      const numWeeks = weekStarts.length || 1;
+      const weeklyAmount = (inv.total_net || 0) / numWeeks;
+      weekStarts.forEach(ws => {
+        const y = getYear(ws);
+        const w = getISOWeek(ws);
+        // Use year from the Thursday of the ISO week for correct ISO year
+        const isoKey = `${y}-${String(w).padStart(2, '0')}`;
+        weekMap[isoKey] = (weekMap[isoKey] || 0) + weeklyAmount;
+      });
+    });
+    return weekMap;
+  }, [dpgInvoices]);
 
   const isLoading = l1 || l2 || l3 || l4;
   const isLocked = curSummaries.some(s => s.locked);
