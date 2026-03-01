@@ -205,7 +205,11 @@ export default function WeekRevenueCard() {
     const curTotR = merged.reduce((s, c) => s + c.revenue, 0);
     const prevTotH = prevSummaries.reduce((s, c) => s + (c.total_hours || 0), 0);
     const prevTotKm = prevSummaries.reduce((s, c) => s + (c.total_km || 0), 0);
-    const prevTotR = prevSummaries.reduce((s, c) => s + (c.calculated_revenue || 0), 0);
+    const prevTotR = prevSummaries.reduce((s, c) => {
+      if (c.customer_id === SPOTTA_CUSTOMER_ID) return s + spottaPrevRevenue;
+      if (c.customer_id === DPG_CUSTOMER_ID) return s + dpgPrevRevenue;
+      return s + (c.calculated_revenue || 0);
+    }, 0);
 
     return {
       customerData: merged,
