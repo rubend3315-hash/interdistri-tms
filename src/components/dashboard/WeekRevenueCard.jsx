@@ -118,23 +118,32 @@ export default function WeekRevenueCard() {
     const prevMap = {};
     prevSummaries.forEach(s => { prevMap[s.customer_id] = s; });
 
+    // Spotta invoice-based revenue for current and previous week
+    const spottaCurRevenue = spottaRevenueByWeek[spottaPeriod] || 0;
+    const spottaPrevRevenue = spottaRevenueByWeek[prevSpottaPeriod] || 0;
+
     const merged = curSummaries
       .filter(s => s.total_hours > 0 || s.total_km > 0 || s.calculated_revenue > 0)
       .map(s => {
         const prev = prevMap[s.customer_id] || { total_hours: 0, total_km: 0, calculated_revenue: 0 };
-        const rate = s.total_hours > 0 ? s.calculated_revenue / s.total_hours : 0;
+        // For Spotta: use invoice-based revenue instead of calculated
+        const isSpotta = s.customer_id === SPOTTA_CUSTOMER_ID;
+        const revenue = isSpotta ? spottaCurRevenue : s.calculated_revenue;
+        const prevRevenue = isSpotta ? spottaPrevRevenue : prev.calculated_revenue;
+        const rate = s.total_hours > 0 ? revenue / s.total_hours : 0;
         return {
           id: s.customer_id,
           name: s.customer_name,
           hours: s.total_hours,
           km: s.total_km,
-          revenue: s.calculated_revenue,
+          revenue,
           rate,
           hoursDelta: s.total_hours - prev.total_hours,
           hoursPct: prev.total_hours > 0 ? ((s.total_hours - prev.total_hours) / prev.total_hours) * 100 : null,
           kmDelta: s.total_km - prev.total_km,
-          revenueDelta: s.calculated_revenue - prev.calculated_revenue,
-          revenuePct: prev.calculated_revenue > 0 ? ((s.calculated_revenue - prev.calculated_revenue) / prev.calculated_revenue) * 100 : null,
+          revenueDelta: revenue - prevRevenue,
+          revenuePct: prevRevenue > 0 ? ((revenue - prevRevenue) / prevRevenue) * 100 : null,
+          invoiceBased: isSpotta, // flag for display
         };
       })
       .sort((a, b) => (b.revenue + b.hours) - (a.revenue + a.hours));
