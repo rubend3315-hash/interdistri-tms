@@ -45,6 +45,7 @@ export default function Vehicles() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [calibrationVehicle, setCalibrationVehicle] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [editMode, setEditMode] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
