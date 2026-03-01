@@ -223,7 +223,7 @@ export default function WeekRevenueCard() {
         revenuePct: prevTotR > 0 ? ((curTotR - prevTotR) / prevTotR) * 100 : null,
       },
     };
-  }, [curSummaries, prevSummaries, isLoading]);
+  }, [curSummaries, prevSummaries, isLoading, spottaRevenueByWeek, spottaPeriod, prevSpottaPeriod, dpgRevenueByWeek, dpgCurKey, dpgPrevKey]);
 
   return (
     <Card className="shadow-sm h-full">
