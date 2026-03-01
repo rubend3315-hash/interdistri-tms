@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // ============================================================
-// cleanupOrphanTimeEntries — Scheduled orphan cleanup job
+// cleanupOrphanTimeEntries — Scheduled orphan cleanup job (redeployed 2026-03-01)
 // ============================================================
 //
 // Runs on a schedule (every 6 hours). Cleans up:
