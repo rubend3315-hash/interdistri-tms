@@ -36,7 +36,8 @@ import {
   ShieldCheck,
   ClipboardList,
   HardDrive,
-  LifeBuoy
+  LifeBuoy,
+  Gauge
 } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
@@ -216,6 +217,7 @@ const menuItems = [
       { name: "Herberekeningen", icon: Wrench, page: "Recalculations" },
       { name: "Datamigratie", icon: Database, page: "DataMigration" },
       { name: "Voertuigen", icon: Car, page: "Vehicles" },
+      { name: "KM Dashboard", icon: Gauge, page: "KmDashboard" },
       { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
       { name: "Gebruikers", icon: Users, page: "Users" },
     ]
@@ -368,6 +370,7 @@ export default function Layout({ children, currentPageName }) {
       'Recalculations': PERMISSIONS.GOVERNANCE_MANAGE,
       'DataMigration': PERMISSIONS.GOVERNANCE_MANAGE,
       'Vehicles': PERMISSIONS.PLANNING_MANAGE,
+      'KmDashboard': PERMISSIONS.PLANNING_MANAGE,
       'NiwoPermits': PERMISSIONS.PLANNING_MANAGE,
       'Users': PERMISSIONS.USERS_MANAGE,
 
