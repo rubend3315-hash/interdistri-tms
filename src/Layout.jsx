@@ -196,6 +196,7 @@ const menuItems = [
       { name: "KPI rapportage PostNL", icon: FileSpreadsheet, page: "EmployeeReport" },
       { name: "Maandcontrole", icon: FileSpreadsheet, page: "Maandcontrole" },
       { name: "Business Dashboard", icon: LayoutDashboard, page: "BusinessDashboard" },
+      { name: "KM Dashboard", icon: Gauge, page: "KmDashboard" },
     ]
   },
   {
@@ -217,7 +218,6 @@ const menuItems = [
       { name: "Herberekeningen", icon: Wrench, page: "Recalculations" },
       { name: "Datamigratie", icon: Database, page: "DataMigration" },
       { name: "Voertuigen", icon: Car, page: "Vehicles" },
-      { name: "KM Dashboard", icon: Gauge, page: "KmDashboard" },
       { name: "NIWO Vergunningen", icon: FileText, page: "NiwoPermits" },
       { name: "Gebruikers", icon: Users, page: "Users" },
     ]
