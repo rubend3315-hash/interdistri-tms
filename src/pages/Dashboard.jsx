@@ -197,10 +197,11 @@ export default function Dashboard({ currentUser }) {
 
   return (
     <div className="space-y-6">
-      {/* System Status + Registry Integrity */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* System Status + Registry Integrity + Aggregation */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <SystemStatusCard />
         <RegistryIntegrityCard />
+        <AggregationStatusWidget />
       </div>
 
       {/* Header */}
@@ -265,8 +266,7 @@ export default function Dashboard({ currentUser }) {
         )}
       </div>
 
-      {/* Aggregation Status */}
-      <AggregationStatusWidget />
+
 
       {/* Contract Warnings - compact */}
       {!isLoading && <ContractWarnings employees={employees} />}
