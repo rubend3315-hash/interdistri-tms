@@ -172,33 +172,52 @@ export default function WeekRevenueCard() {
     const dpgCurRevenue = dpgRevenueByWeek[dpgCurKey] || 0;
     const dpgPrevRevenue = dpgRevenueByWeek[dpgPrevKey] || 0;
 
+    // Build from WeeklyCustomerSummary records
+    const buildRow = (customerId, customerName, summary, prev) => {
+      const isSpotta = customerId === SPOTTA_CUSTOMER_ID;
+      const isDPG = customerId === DPG_CUSTOMER_ID;
+      const isInvoiceBased = isSpotta || isDPG;
+      const hours = summary?.total_hours || 0;
+      const km = summary?.total_km || 0;
+      const calcRev = summary?.calculated_revenue || 0;
+      const revenue = isSpotta ? spottaCurRevenue : isDPG ? dpgCurRevenue : calcRev;
+      const prevHours = prev?.total_hours || 0;
+      const prevKm = prev?.total_km || 0;
+      const prevRevenue = isSpotta ? spottaPrevRevenue : isDPG ? dpgPrevRevenue : (prev?.calculated_revenue || 0);
+      const rate = hours > 0 ? revenue / hours : 0;
+      return {
+        id: customerId,
+        name: customerName,
+        hours, km, revenue, rate,
+        hoursDelta: hours - prevHours,
+        hoursPct: prevHours > 0 ? ((hours - prevHours) / prevHours) * 100 : null,
+        kmDelta: km - prevKm,
+        revenueDelta: revenue - prevRevenue,
+        revenuePct: prevRevenue > 0 ? ((revenue - prevRevenue) / prevRevenue) * 100 : null,
+        invoiceBased: isInvoiceBased,
+      };
+    };
+
+    // Start with summaries that have activity
+    const seenIds = new Set();
     const merged = curSummaries
       .filter(s => s.total_hours > 0 || s.total_km > 0 || s.calculated_revenue > 0)
       .map(s => {
-        const prev = prevMap[s.customer_id] || { total_hours: 0, total_km: 0, calculated_revenue: 0 };
-        // For Spotta/DPG: use invoice-based revenue instead of calculated
-        const isSpotta = s.customer_id === SPOTTA_CUSTOMER_ID;
-        const isDPG = s.customer_id === DPG_CUSTOMER_ID;
-        const isInvoiceBased = isSpotta || isDPG;
-        const revenue = isSpotta ? spottaCurRevenue : isDPG ? dpgCurRevenue : s.calculated_revenue;
-        const prevRevenue = isSpotta ? spottaPrevRevenue : isDPG ? dpgPrevRevenue : prev.calculated_revenue;
-        const rate = s.total_hours > 0 ? revenue / s.total_hours : 0;
-        return {
-          id: s.customer_id,
-          name: s.customer_name,
-          hours: s.total_hours,
-          km: s.total_km,
-          revenue,
-          rate,
-          hoursDelta: s.total_hours - prev.total_hours,
-          hoursPct: prev.total_hours > 0 ? ((s.total_hours - prev.total_hours) / prev.total_hours) * 100 : null,
-          kmDelta: s.total_km - prev.total_km,
-          revenueDelta: revenue - prevRevenue,
-          revenuePct: prevRevenue > 0 ? ((revenue - prevRevenue) / prevRevenue) * 100 : null,
-          invoiceBased: isInvoiceBased, // flag for display
-        };
-      })
-      .sort((a, b) => (b.revenue + b.hours) - (a.revenue + a.hours));
+        seenIds.add(s.customer_id);
+        return buildRow(s.customer_id, s.customer_name, s, prevMap[s.customer_id]);
+      });
+
+    // Add invoice-only customers (DPG/Spotta) if they have revenue but no summary row
+    if (!seenIds.has(DPG_CUSTOMER_ID) && dpgCurRevenue > 0) {
+      merged.push(buildRow(DPG_CUSTOMER_ID, "DPG Media", null, prevMap[DPG_CUSTOMER_ID]));
+    }
+    if (!seenIds.has(SPOTTA_CUSTOMER_ID) && spottaCurRevenue > 0) {
+      merged.push(buildRow(SPOTTA_CUSTOMER_ID, "Spotta", null, prevMap[SPOTTA_CUSTOMER_ID]));
+    }
+
+    // Filter out rows with zero everything
+    const filtered = merged.filter(c => c.hours > 0 || c.km > 0 || c.revenue > 0);
+    filtered.sort((a, b) => (b.revenue + b.hours) - (a.revenue + a.hours));
 
     const curTotH = merged.reduce((s, c) => s + c.hours, 0);
     const curTotKm = merged.reduce((s, c) => s + c.km, 0);
