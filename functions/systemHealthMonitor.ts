@@ -1,4 +1,4 @@
-// refactored: 2026-02-28 v3 — service-role auth for scheduled automation
+// refactored: 2026-03-01 v4 — re-deploy fix for scheduled automation
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
