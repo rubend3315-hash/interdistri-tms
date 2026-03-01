@@ -66,7 +66,39 @@ export default function WeekRevenueCard() {
     queryFn: () => base44.entities.WeeklyCustomerSummary.filter({ year: prevYearNum, week_number: prevWeekNum }),
   });
 
-  const isLoading = l1 || l2;
+  // Spotta invoice revenue: match on description_period "YYYY-WW"
+  const spottaPeriod = `${yearNum}-${String(weekNum).padStart(2, '0')}`;
+  const prevSpottaPeriod = `${prevYearNum}-${String(prevWeekNum).padStart(2, '0')}`;
+
+  const { data: spottaInvoices = [], isLoading: l3 } = useQuery({
+    queryKey: ["spotta-inv", SPOTTA_CUSTOMER_ID],
+    queryFn: () => base44.entities.SpottaInvoice.filter({ customer_id: SPOTTA_CUSTOMER_ID }),
+  });
+
+  const { data: spottaLines = [], isLoading: l4 } = useQuery({
+    queryKey: ["spotta-lines", SPOTTA_CUSTOMER_ID],
+    queryFn: () => base44.entities.SpottaInvoiceLine.filter({ customer_id: SPOTTA_CUSTOMER_ID }),
+  });
+
+  // Calculate Spotta revenue per week from invoice lines (excl. depot handling)
+  const spottaRevenueByWeek = useMemo(() => {
+    const invPeriodMap = {};
+    spottaInvoices.forEach(inv => { invPeriodMap[inv.id] = inv.description_period; });
+
+    const weekMap = {};
+    spottaLines.forEach(line => {
+      const period = invPeriodMap[line.invoice_id];
+      if (!period) return;
+      // Exclude depot handling (overslagpunt vergoeding per week / bakken)
+      const isDepot = line.line_type === "handling" &&
+        (line.description || "").toLowerCase().includes("overslagpunt");
+      if (isDepot) return;
+      weekMap[period] = (weekMap[period] || 0) + (line.total_price || 0);
+    });
+    return weekMap;
+  }, [spottaInvoices, spottaLines]);
+
+  const isLoading = l1 || l2 || l3 || l4;
   const isLocked = curSummaries.some(s => s.locked);
   const isCurrentWeek = weekOffset === 0;
 
