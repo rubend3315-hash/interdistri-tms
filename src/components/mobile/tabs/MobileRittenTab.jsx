@@ -1,3 +1,17 @@
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║ ⚠️  DEPRECATED — NIET MEER IN GEBRUIK                              ║
+// ║                                                                      ║
+// ║  Dit component is vervangen door DienstRegelsTab + DienstRegelDrawer ║
+// ║  die via MobileEntry worden gebruikt.                                ║
+// ║                                                                      ║
+// ║  NIET AANPASSEN — wijzigingen hier hebben GEEN effect op productie.  ║
+// ║  Nieuwe functionaliteit (KM-controle, validatie, etc.) hoort in:     ║
+// ║    → components/mobile/dienstregels/DienstRegelDrawer                ║
+// ║    → components/mobile/tabs/DienstRegelsTab                          ║
+// ║                                                                      ║
+// ║  Bewaard voor referentie / rollback. Kan in de toekomst verwijderd.  ║
+// ╚══════════════════════════════════════════════════════════════════════╝
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
