@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
       } catch (filterErr) {
         console.error(`[secureDownload] Token filter error: ${filterErr.message}`);
         // Fallback: list all and find manually
-        const allTokens = await base44.asServiceRole.entities.SecureDownloadToken.list('-created_date', 200);
+        const allTokens = await svc.entities.SecureDownloadToken.list('-created_date', 200);
         tokens = allTokens.filter(t => t.token === token);
         console.log(`[secureDownload] Fallback search found ${tokens.length} match(es) from ${allTokens.length} total tokens`);
       }
@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
       const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 
       // Increment download count + log IP
-      await base44.asServiceRole.entities.SecureDownloadToken.update(tokenRecord.id, {
+      await svc.entities.SecureDownloadToken.update(tokenRecord.id, {
         download_count: (tokenRecord.download_count || 0) + 1,
         used: true,
         ip_address: ip,
@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
       // Fetch employee with decrypted sensitive fields
       let emp;
       try {
-        emp = await base44.asServiceRole.entities.Employee.get(tokenRecord.employee_id);
+        emp = await svc.entities.Employee.get(tokenRecord.employee_id);
       } catch (empErr) {
         console.error(`[secureDownload] Employee not found: ${tokenRecord.employee_id} - ${empErr.message}`);
         return Response.json({ error: 'Medewerker niet gevonden. Het account is mogelijk verwijderd.' }, { status: 404 });
@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
         }
         let doc;
         try {
-          doc = await base44.asServiceRole.entities.Document.get(docId);
+          doc = await svc.entities.Document.get(docId);
         } catch (_) {
           return Response.json({ error: 'Document niet gevonden.' }, { status: 404 });
         }
@@ -251,7 +251,7 @@ Deno.serve(async (req) => {
         // SECURITY: Enforce private storage only — no legacy file_url fallback
         if (!doc.file_uri) {
           try {
-            await base44.asServiceRole.entities.AuditLog.create({
+            await svc.entities.AuditLog.create({
               action_type: 'tamper_attempt_update',
               category: 'Security',
               description: `SecureDownload BLOCKED — document ${docId} missing private file_uri (legacy public storage rejected)`,
@@ -265,7 +265,7 @@ Deno.serve(async (req) => {
         // SECURITY: Block unencrypted ID documents
         if (tokenRecord.type === 'id_document' && !doc.encrypted) {
           try {
-            await base44.asServiceRole.entities.AuditLog.create({
+            await svc.entities.AuditLog.create({
               action_type: 'tamper_attempt_update',
               category: 'Security',
               description: `SecureDownload BLOCKED — unencrypted ID document ${docId}`,
@@ -276,7 +276,7 @@ Deno.serve(async (req) => {
           return Response.json({ error: 'Onversleuteld ID-document geblokkeerd.' }, { status: 403 });
         }
 
-        const signedResult = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
+        const signedResult = await svc.integrations.Core.CreateFileSignedUrl({
           file_uri: doc.file_uri,
           expires_in: 300,
         });
@@ -316,11 +316,9 @@ img.doc-img{max-width:100%;max-height:600px;border-radius:4px;box-shadow:0 2px 8
 </div></body></html>`;
       }
 
-      // Audit download
+      // Audit download — use service role (no user auth in download flow)
       try {
-        await base44.functions.invoke('auditService', {
-          entity_type: 'SecureDownloadToken',
-          entity_id: tokenRecord.id,
+        await svc.entities.AuditLog.create({
           action_type: 'download',
           category: 'Security',
           description: `Secure download uitgevoerd (${tokenRecord.type}) voor employee ${tokenRecord.employee_id}`,
