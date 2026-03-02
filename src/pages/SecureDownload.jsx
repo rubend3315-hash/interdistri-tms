@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, AlertTriangle, Download, Loader2, Clock, Printer } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 export default function SecureDownload() {
   const [loading, setLoading] = useState(true);
