@@ -42,7 +42,7 @@ const CheckItem = ({ label, done }) => (
 );
 
 export default function OnboardingViewDialog({ process, open, onClose }) {
-  const [printing, setPrinting] = useState(false);
+  const [showPrint, setShowPrint] = useState(false);
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ["onboarding_employee", process?.employee_id],
@@ -54,15 +54,12 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
     enabled: open && !!process?.employee_id,
   });
 
-  const handlePrint = () => {
-    setPrinting(true);
-    setTimeout(() => {
-      window.print();
-      setPrinting(false);
-    }, 300);
-  };
-
   if (!process) return null;
+
+  if (showPrint && employee) {
+    return <OnboardingPrintView employeeData={employee} onboardingData={process} onClose={() => setShowPrint(false)} />;
+  }
+
   const emp = employee || {};
   const ob = process;
   const fullName = ob.employee_name || `${emp.first_name || ""} ${emp.prefix ? emp.prefix + " " : ""}${emp.last_name || ""}`.trim();
@@ -70,12 +67,12 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto print:max-w-none print:max-h-none print:overflow-visible print:shadow-none print:border-none">
-        <DialogHeader className="print:hidden">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Onboarding Dossier — {fullName}</span>
-            <Button variant="outline" size="sm" onClick={handlePrint} disabled={printing}>
-              {printing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Printer className="w-4 h-4 mr-1" />}
+            <Button variant="outline" size="sm" onClick={() => setShowPrint(true)} disabled={isLoading || !employee}>
+              <Printer className="w-4 h-4 mr-1" />
               Afdrukken
             </Button>
           </DialogTitle>
@@ -86,22 +83,9 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
             <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
           </div>
         ) : (
-          <div className="space-y-1 print:p-0" id="onboarding-print-content">
-            {/* Print header */}
-            <div className="hidden print:flex justify-between items-start border-b-2 border-slate-800 pb-1 mb-3">
-              <div>
-                <h1 className="text-base font-bold text-slate-900">Onboarding Dossier</h1>
-                <p className="text-xs text-slate-500">{fullName} — Nr. {emp.employee_number || "—"}</p>
-              </div>
-              <div className="text-right text-[9px] text-slate-500 leading-tight">
-                <div className="font-semibold text-slate-700">Interdistri B.V.</div>
-                <div>Fleerbosseweg 19, 4421 RR Kapelle</div>
-                <div>Afdrukdatum: {new Date().toLocaleDateString("nl-NL")}</div>
-              </div>
-            </div>
-
+          <div className="space-y-1">
             {/* Status */}
-            <div className="flex items-center gap-3 mb-3 print:mb-2">
+            <div className="flex items-center gap-3 mb-3">
               <Badge className={ob.status === "Afgerond" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}>
                 {ob.status}
               </Badge>
@@ -112,7 +96,7 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
 
             {/* Werknemer */}
             <Section title="Werknemer gegevens">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 print:grid-cols-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                 <div>
                   <Row label="Voornaam" value={emp.first_name} />
                   <Row label="Tussenvoegsel" value={emp.prefix} />
@@ -142,7 +126,7 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
 
             {/* Dienstverband */}
             <Section title="Dienstverband">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 print:grid-cols-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                 <div>
                   <Row label="Datum in dienst" value={fmtDate(emp.in_service_since)} />
                   <Row label="Functie" value={emp.function} />
@@ -158,7 +142,7 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
 
             {/* Verklaringen checklist */}
             <Section title="Verklaringen & Stappen">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 print:grid-cols-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                 <CheckItem label="Stamkaart afgerond" done={ob.stamkaart_completed} />
                 <CheckItem label="Sleutelkast verklaring" done={ob.pincode_verklaring_signed} />
                 <CheckItem label="Sleutelverklaring" done={ob.sleutel_verklaring_signed} />
@@ -189,11 +173,6 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
                 <p className="text-xs text-slate-600">{ob.notes}</p>
               </Section>
             )}
-
-            {/* Print footer */}
-            <div className="hidden print:block mt-4 pt-2 border-t text-center text-[9px] text-slate-400">
-              Dit document is vertrouwelijk en uitsluitend bestemd voor HR-administratie.
-            </div>
           </div>
         )}
       </DialogContent>
