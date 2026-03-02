@@ -113,6 +113,7 @@ export default function StamkaartForm({
   const [sendingEmail, setSendingEmail] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
   const queryClient = useQueryClient();
 
   const update = (field, value) => {
