@@ -45,6 +45,7 @@ export default function Onboarding() {
   });
   const [createdEmployeeId, setCreatedEmployeeId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [viewProcess, setViewProcess] = useState(null);
 
   const { data: processes = [], isLoading } = useQuery({
     queryKey: ['onboarding_processes'],
