@@ -174,6 +174,9 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
           </div>
         )}
       </DialogContent>
+
+      {/* Hidden print view — becomes visible only during window.print() */}
+      {employee && <OnboardingPrintView employeeData={employee} onboardingData={process} />}
     </Dialog>
   );
 }
