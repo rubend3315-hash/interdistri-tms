@@ -421,7 +421,10 @@ export default function Onboarding() {
                       "bg-blue-100 text-blue-700"
                     }>{proc.status}</Badge>
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-right flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-400 hover:text-blue-600" onClick={() => setViewProcess(proc)}>
+                      <Eye className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-600" onClick={() => deleteMutation.mutate(proc.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
