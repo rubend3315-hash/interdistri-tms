@@ -50,20 +50,20 @@ export default function StamkaartSignatureView({ employee, employeeName, token, 
     setSigning(true);
     setError(null);
     try {
-      const functionUrl = `${window.location.origin}/functions/submitStamkaartSignature`;
-      const res = await fetch(functionUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "sign", token, signature_data_url: dataUrl }),
+      const response = await base44.functions.invoke('submitStamkaartSignature', {
+        action: "sign",
+        token,
+        signature_data_url: dataUrl,
       });
-      const data = await res.json();
+      const data = response.data;
       if (data?.success) {
         onSigned();
       } else {
         setError(data?.error || "Er is een fout opgetreden bij het opslaan.");
       }
     } catch (err) {
-      setError(err.message);
+      const errMsg = err?.response?.data?.error || err.message;
+      setError(errMsg);
     }
     setSigning(false);
   };
