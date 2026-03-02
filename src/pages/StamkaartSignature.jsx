@@ -35,11 +35,17 @@ export default function StamkaartSignature() {
           body: JSON.stringify({ action: "validate", token: t }),
         });
 
+        console.log("[StamkaartSignature] Response status:", res.status, res.statusText);
+
         let data;
+        const responseText = await res.text();
+        console.log("[StamkaartSignature] Response body:", responseText.substring(0, 500));
+        
         try {
-          data = await res.json();
+          data = JSON.parse(responseText);
         } catch (parseErr) {
-          setError("Kon de server-response niet verwerken. Probeer het opnieuw.");
+          console.error("[StamkaartSignature] JSON parse error:", parseErr, "Body:", responseText.substring(0, 200));
+          setError(`Server antwoordde met status ${res.status}. Probeer het opnieuw.`);
           setLoading(false);
           return;
         }
@@ -52,7 +58,7 @@ export default function StamkaartSignature() {
           setEmployeeName(data.employee_name);
           setFillOnboarding(data.fill_onboarding_fields);
         } else {
-          setError(data?.error || "Er is een fout opgetreden.");
+          setError(data?.error || `Onbekende fout (status ${res.status}).`);
         }
       } catch (err) {
         console.error("[StamkaartSignature] Validate error:", err);
