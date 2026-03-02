@@ -53,17 +53,23 @@ function fmtDate(val) {
   } catch { return val; }
 }
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+  });
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    });
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
   try {
@@ -71,7 +77,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, token } = body;
 
-    if (!token) return Response.json({ error: 'Missing token' }, { status: 400 });
+    if (!token) return jsonResponse({ error: 'Missing token' }, 400);
 
     const svc = base44.asServiceRole;
 
