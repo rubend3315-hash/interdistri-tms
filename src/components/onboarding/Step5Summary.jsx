@@ -173,6 +173,9 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
           Onboarding Afronden
         </Button>
       </div>
+
+      {/* Hidden print view */}
+      <OnboardingPrintView employeeData={employeeData} onboardingData={onboardingData} />
     </div>
   );
 }
