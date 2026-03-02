@@ -1,36 +1,46 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { UserCheck, Loader2 } from "lucide-react";
 
 export default function SignatureCanvas({ onSign, signing }) {
   const canvasRef = useRef(null);
   const isDrawingRef = useRef(false);
+  const hasStrokesRef = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(false);
+  const [canvasReady, setCanvasReady] = useState(false);
 
-  useEffect(() => {
+  const initCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set canvas resolution to match display size
     const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
     const dpr = window.devicePixelRatio || 1;
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
 
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-
-    // White background
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, rect.width, rect.height);
-
-    // Drawing style - BLACK pen
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    setCanvasReady(true);
+  }, []);
 
-    // Touch/mouse handlers
+  useEffect(() => {
+    // Init canvas after a short delay to ensure layout is complete
+    const timer = setTimeout(initCanvas, 50);
+    return () => clearTimeout(timer);
+  }, [initCanvas]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !canvasReady) return;
+
     function getPos(e) {
       const r = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -41,27 +51,27 @@ export default function SignatureCanvas({ onSign, signing }) {
     function onStart(e) {
       e.preventDefault();
       isDrawingRef.current = true;
+      hasStrokesRef.current = true;
       setHasDrawn(true);
-      const ctx2 = canvas.getContext('2d');
-      // Always enforce black stroke before drawing
-      ctx2.strokeStyle = '#000000';
-      ctx2.lineWidth = 2.5;
-      ctx2.lineCap = 'round';
-      ctx2.lineJoin = 'round';
+      const ctx = canvas.getContext('2d');
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
       const pos = getPos(e);
-      ctx2.beginPath();
-      ctx2.moveTo(pos.x, pos.y);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
     }
 
     function onMove(e) {
       if (!isDrawingRef.current) return;
       e.preventDefault();
-      const ctx2 = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
       const pos = getPos(e);
-      ctx2.lineTo(pos.x, pos.y);
-      ctx2.stroke();
-      ctx2.beginPath();
-      ctx2.moveTo(pos.x, pos.y);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
     }
 
     function onEnd(e) {
@@ -86,7 +96,7 @@ export default function SignatureCanvas({ onSign, signing }) {
       canvas.removeEventListener('touchmove', onMove);
       canvas.removeEventListener('touchend', onEnd);
     };
-  }, []);
+  }, [canvasReady]);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
@@ -100,10 +110,12 @@ export default function SignatureCanvas({ onSign, signing }) {
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    hasStrokesRef.current = false;
     setHasDrawn(false);
   };
 
   const handleSign = () => {
+    if (!hasStrokesRef.current) return;
     const canvas = canvasRef.current;
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     onSign(dataUrl);
@@ -127,13 +139,14 @@ export default function SignatureCanvas({ onSign, signing }) {
         />
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={clearCanvas}>
+        <Button variant="outline" className="flex-1" onClick={clearCanvas} type="button">
           Wissen
         </Button>
         <Button
           className="flex-1 bg-blue-600 hover:bg-blue-700"
           onClick={handleSign}
           disabled={signing || !hasDrawn}
+          type="button"
         >
           {signing ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
