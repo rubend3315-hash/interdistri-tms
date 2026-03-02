@@ -97,7 +97,6 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
     } else {
       empPayload.drivers_license_categories = null;
     }
-    delete empPayload.id_document_number;
     delete empPayload.lkv_uitkering;
     delete empPayload.financiele_situatie;
     const requiredStringFields = ['first_name', 'last_name', 'department'];
