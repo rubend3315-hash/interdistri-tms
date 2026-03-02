@@ -91,9 +91,9 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
     }
   };
 
-  if (showPrint) {
-    return <OnboardingPrintView employeeData={employeeData} onboardingData={onboardingData} onClose={() => setShowPrint(false)} />;
-  }
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <div className="max-w-[900px] mx-auto space-y-4">
