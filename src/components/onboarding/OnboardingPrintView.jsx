@@ -1,38 +1,37 @@
 import React, { useEffect } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
 
 const fmtDate = (val) => {
   if (!val) return '—';
   try {
     const d = new Date(val);
-    return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}`;
+    return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
   } catch { return val; }
 };
 
 const Section = ({ title, children }) => (
-  <div className="mb-4 break-inside-avoid">
-    <h3 className="text-xs font-bold uppercase tracking-wide text-slate-700 border-b border-slate-300 pb-1 mb-2">{title}</h3>
+  <div className="mb-5 break-inside-avoid">
+    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-900 border-b-2 border-slate-400 pb-1 mb-2">{title}</h3>
     {children}
   </div>
 );
 
-const Row = ({ label, value }) => (
-  <div className="flex text-xs leading-relaxed">
-    <span className="w-48 min-w-[12rem] text-slate-500 pr-2 text-right shrink-0">{label}</span>
-    <span className="text-slate-800">{value || '—'}</span>
+const DataGrid = ({ children }) => (
+  <div className="grid grid-cols-3 gap-x-6 gap-y-1">{children}</div>
+);
+
+const Field = ({ label, value, wide }) => (
+  <div className={`text-xs ${wide ? 'col-span-2' : ''}`}>
+    <span className="text-slate-400 block leading-tight">{label}</span>
+    <span className="text-slate-900 font-medium block leading-snug">{value || '—'}</span>
   </div>
 );
 
-const DeclarationBlock = ({ title, done, extra, children }) => (
-  <div className="mb-3 pb-3 border-b border-slate-200 last:border-b-0 break-inside-avoid" style={{ pageBreakInside: 'avoid' }}>
-    <div className="flex items-center justify-between mb-1.5">
-      <h4 className="text-xs font-semibold text-slate-800">{title}</h4>
-      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${done ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-        {done ? '✓ Akkoord' : '✗ Niet akkoord'}
-      </span>
-    </div>
-    {extra}
-    <div className="text-xs text-slate-600 leading-relaxed">{children}</div>
+const StatusItem = ({ label, done }) => (
+  <div className="flex items-center gap-2 text-xs py-0.5">
+    <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold ${done ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+      {done ? '✓' : '✗'}
+    </span>
+    <span className={done ? 'text-slate-700' : 'text-slate-400'}>{label}</span>
   </div>
 );
 
@@ -42,26 +41,23 @@ export default function OnboardingPrintView({ employeeData, onboardingData, onCl
   const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
   const cats = Array.isArray(emp.drivers_license_categories) ? emp.drivers_license_categories.join(', ') : (emp.drivers_license_categories || '—');
 
-  const lhLabel = ob.loonheffing_toepassen === 'ja' ? 'Ja' : ob.loonheffing_toepassen === 'nee' ? 'Nee' : 'Niet ingevuld';
-  const allDeclarationsDone = ob.pincode_verklaring_signed && ob.sleutel_verklaring_signed && ob.gps_buddy_toestemming && ob.dienstbetrekking_signed && ob.bedrijfsreglement_ontvangen;
-
   useEffect(() => {
     const timer = setTimeout(() => window.print(), 500);
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <div className="max-w-[720px] mx-auto p-4 bg-white text-sm print:p-0">
+    <div className="max-w-[780px] mx-auto p-4 bg-white text-sm print:p-0 print:max-w-none">
       {/* Close button — hidden in print */}
       <div className="print:hidden mb-4 flex justify-end">
         <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-800 border px-3 py-1 rounded">Sluiten</button>
       </div>
 
       {/* Header */}
-      <div className="flex justify-between items-start border-b-2 border-slate-800 pb-1 mb-3">
+      <div className="flex justify-between items-start border-b-2 border-slate-800 pb-2 mb-4">
         <div>
-          <h1 className="text-base font-bold text-slate-900">Onboarding Dossier</h1>
-          <p className="text-xs text-slate-500">{fullName} — Nr. {emp.employee_number || '—'}</p>
+          <h1 className="text-lg font-bold text-slate-900 leading-tight">Onboarding Dossier</h1>
+          <p className="text-xs text-slate-500 mt-0.5">{fullName} — Nr. {emp.employee_number || '—'}</p>
         </div>
         <div className="text-right text-[9px] text-slate-500 leading-tight">
           <div className="font-semibold text-slate-700">Interdistri B.V.</div>
@@ -70,163 +66,143 @@ export default function OnboardingPrintView({ employeeData, onboardingData, onCl
         </div>
       </div>
 
-      {/* Werknemer gegevens */}
+      {/* Status badge */}
+      <div className="flex items-center gap-3 mb-4 text-xs">
+        <span className={`px-2 py-0.5 rounded font-semibold ${ob.status === 'Afgerond' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+          {ob.status || 'In behandeling'}
+        </span>
+        <span className="text-slate-500">
+          Nr. {emp.employee_number || '—'} · {ob.completed_date ? `Afgerond ${fmtDate(ob.completed_date)}` : `Gestart ${fmtDate(ob.created_date)}`}
+        </span>
+      </div>
+
+      {/* WERKNEMER GEGEVENS */}
       <Section title="Werknemer gegevens">
-        <Row label="Voorletters" value={emp.initials} />
-        <Row label="Voornaam" value={emp.first_name} />
-        <Row label="Tussenvoegsel" value={emp.prefix} />
-        <Row label="Achternaam" value={emp.last_name} />
-        <Row label="Geboortedatum" value={fmtDate(emp.date_of_birth)} />
-        <Row label="Adres" value={emp.address} />
-        <Row label="Postcode en woonplaats" value={`${emp.postal_code || ''} ${emp.city || ''}`} />
-        <Row label="E-mailadres" value={emp.email} />
-        <Row label="Telefoon" value={emp.phone} />
-        <Row label="IBAN" value={emp.bank_account} />
-        <Row label="Noodcontact" value={`${emp.emergency_contact_name || '—'} ${emp.emergency_contact_phone || ''}`} />
+        <DataGrid>
+          <Field label="Voornaam" value={emp.first_name} />
+          <Field label="E-mail" value={emp.email} />
+          <Field label="Noodcontact" value={emp.emergency_contact_name ? `${emp.emergency_contact_name} ${emp.emergency_contact_phone || ''}` : null} />
+
+          <Field label="Tussenvoegsel" value={emp.prefix} />
+          <Field label="Telefoon" value={emp.phone} />
+          <Field label="" value="" />
+
+          <Field label="Achternaam" value={emp.last_name} />
+          <Field label="Adres" value={emp.address} />
+          <Field label="" value="" />
+
+          <Field label="Voorletters" value={emp.initials} />
+          <Field label="Postcode / Plaats" value={`${emp.postal_code || ''} ${emp.city || ''}`.trim() || '—'} />
+          <Field label="" value="" />
+
+          <Field label="Geboortedatum" value={fmtDate(emp.date_of_birth)} />
+          <Field label="IBAN" value={emp.bank_account} />
+          <Field label="" value="" />
+
+          <Field label="BSN" value={emp.bsn} />
+          <Field label="Noodcontact relatie" value={emp.emergency_contact_relation} />
+          <Field label="" value="" />
+        </DataGrid>
       </Section>
 
-      {/* Identiteitsbewijs */}
+      {/* IDENTITEITSBEWIJS */}
       <Section title="Identiteitsbewijs">
-        <Row label="BSN" value={emp.bsn} />
-        <Row label="Nr. ID-kaart/paspoort" value={emp.id_document_number} />
-        <Row label="Geldig tot" value={fmtDate(emp.id_document_expiry)} />
+        <DataGrid>
+          <Field label="Nr. ID-kaart/paspoort" value={emp.id_document_number} />
+          <Field label="Geldig tot" value={fmtDate(emp.id_document_expiry)} />
+          <Field label="" value="" />
+        </DataGrid>
       </Section>
 
-      {/* Rijbewijs */}
+      {/* RIJBEWIJS */}
       <Section title="Rijbewijs">
-        <Row label="Rijbewijsnummer" value={emp.drivers_license_number} />
-        <Row label="Categorieën" value={cats} />
-        <Row label="Vervaldatum rijbewijs" value={fmtDate(emp.drivers_license_expiry)} />
-        <Row label="Vervaldatum Code 95" value={fmtDate(emp.code95_expiry)} />
+        <DataGrid>
+          <Field label="Rijbewijsnummer" value={emp.drivers_license_number} />
+          <Field label="Vervaldatum rijbewijs" value={fmtDate(emp.drivers_license_expiry)} />
+          <Field label="" value="" />
+          <Field label="Categorieën" value={cats} />
+          <Field label="Code 95 vervaldatum" value={fmtDate(emp.code95_expiry)} />
+          <Field label="" value="" />
+        </DataGrid>
       </Section>
 
-      {/* Dienstverband */}
-      <Section title="Gegevens dienstverband">
-        <div className="grid grid-cols-2 gap-x-6">
-          <div>
-            <Row label="Datum in dienst" value={fmtDate(emp.in_service_since)} />
-            <Row label="Functie" value={emp.function} />
-            <Row label="Afdeling" value={emp.department} />
-          </div>
-          <div>
-            <Row label="Contract type" value={emp.contract_type} />
-            <Row label="Contracturen" value={emp.contract_hours ? `${emp.contract_hours} uur` : '—'} />
-            <Row label="Loonschaal" value={emp.salary_scale} />
-            <Row label="Bruto uurloon" value={emp.hourly_rate ? `€ ${Number(emp.hourly_rate).toFixed(2)}` : '—'} />
-          </div>
-        </div>
+      {/* DIENSTVERBAND */}
+      <Section title="Dienstverband">
+        <DataGrid>
+          <Field label="Datum in dienst" value={fmtDate(emp.in_service_since)} />
+          <Field label="Loonschaal" value={emp.salary_scale} />
+          <Field label="" value="" />
+          <Field label="Functie" value={emp.function} />
+          <Field label="Uurloon" value={emp.hourly_rate ? `€ ${Number(emp.hourly_rate).toFixed(2)}` : '—'} />
+          <Field label="" value="" />
+          <Field label="Afdeling" value={emp.department} />
+          <Field label="Status" value={emp.status || 'Actief'} />
+          <Field label="" value="" />
+        </DataGrid>
       </Section>
 
-      {/* Loonheffing */}
-      <Section title="Loonheffingskorting">
-        <Row label="Loonheffingskorting?" value={lhLabel} />
-        {ob.loonheffing_datum && <Row label="Vanaf datum" value={fmtDate(ob.loonheffing_datum)} />}
-      </Section>
-
-      {/* Verklaringen — volledig statisch uitgeschreven */}
-      <Section title="Verklaringen">
-        {!allDeclarationsDone && (
-          <div className="bg-amber-50 border border-amber-300 rounded p-2 mb-3 text-xs font-semibold text-amber-800">
-            LET OP: Niet alle verklaringen zijn afgerond.
-          </div>
-        )}
-
-        <DeclarationBlock
-          title="Ontvangstverklaring Sleutelkast"
-          done={ob.pincode_verklaring_signed}
-        >
-          <p>De medewerker ontvangt een persoonlijke pincode voor de sleutelkast. Deze valt onder eigen verantwoordelijkheid.</p>
-          <p className="mt-1">De pincode wordt afzonderlijk verstrekt en is uitsluitend bekend bij de medewerker.</p>
-          <ol className="list-decimal pl-4 mt-1 space-y-0.5">
-            <li>De pincode mag aan niemand anders verstrekt worden.</li>
-            <li>Sleutels uitgenomen onder deze pincode vallen onder verantwoordelijkheid van de medewerker.</li>
-            <li>Bij verlies dient de medewerker zelf aangifte te doen.</li>
-            <li>Kosten van vermiste sleutels worden op netto salaris ingehouden.</li>
-          </ol>
-        </DeclarationBlock>
-
-        <DeclarationBlock
-          title="Sleutelverklaring Pand & Hek"
-          done={ob.sleutel_verklaring_signed}
-          extra={
-            (ob.sleutel_nummer || ob.sleutel_toegang) ? (
-              <div className="bg-slate-50 p-2 rounded mb-2 text-xs space-y-0.5">
-                {ob.sleutel_nummer && <div><span className="text-slate-500">Sleutelnummer:</span> <span className="font-medium">{ob.sleutel_nummer}</span></div>}
-                {ob.sleutel_toegang && <div><span className="text-slate-500">Toegang tot:</span> <span className="font-medium">{ob.sleutel_toegang}</span></div>}
-              </div>
-            ) : null
-          }
-        >
-          <ul className="list-disc pl-4 space-y-0.5">
-            <li>Het is verboden een kopie te (laten) maken.</li>
-            <li>Diefstal of verlies direct melden bij leidinggevende.</li>
-            <li>Bij einde dienstverband uiterlijk op laatste werkdag inleveren.</li>
-          </ul>
-        </DeclarationBlock>
-
-        <DeclarationBlock
-          title="Toestemmingsverklaring GPS Buddy"
-          done={ob.gps_buddy_toestemming}
-        >
-          <p>Ondergetekende geeft toestemming voor het GPS-Buddy ritregistratiesysteem in het voertuig van Interdistri.</p>
-          <p className="mt-1">Verwerkersverantwoordelijke gebruikt de data uitsluitend werkgerelateerd. Gegevens worden 7 jaar bewaard.</p>
-        </DeclarationBlock>
-
-        <DeclarationBlock
-          title="Verklaring van Dienstbetrekking"
-          done={ob.dienstbetrekking_signed}
-        >
-          <p className="font-medium mb-1">Artikel 2.11 Wet wegvervoer goederen</p>
-          <p>Vergunninghouder: Interdistri, Fleerbosseweg 19, 4421RR Kapelle</p>
-          <p>Chauffeur: {fullName}</p>
-          <ul className="list-disc pl-4 mt-1 space-y-0.5">
-            <li>Vervoer voor rekening en risico vergunninghouder</li>
-            <li>Loons- en gezagsverhouding aanwezig</li>
-            <li>Gegevens naar waarheid ingevuld</li>
-          </ul>
-        </DeclarationBlock>
-
-        <DeclarationBlock
-          title="Ontvangst Bedrijfsreglement"
-          done={ob.bedrijfsreglement_ontvangen}
-        >
-          <p>Het bedrijfsreglement is beschikbaar via de mobiele app. De medewerker bevestigt ontvangst en kennisneming van het bedrijfsreglement van Interdistri B.V.</p>
-        </DeclarationBlock>
-      </Section>
-
-      {/* Contract */}
-      {ob.contract_generated && ob.contract_settings && (
-        <Section title="Contractgegevens">
-          <Row label="Type" value={ob.contract_settings.contract_type} />
-          <Row label="Startdatum" value={fmtDate(ob.contract_settings.start_date)} />
-          {ob.contract_settings.end_date && <Row label="Einddatum" value={fmtDate(ob.contract_settings.end_date)} />}
-          <Row label="Proeftijd" value={ob.contract_settings.proeftijd} />
+      {/* LOONHEFFING */}
+      {(ob.loonheffing_toepassen || emp.loonheffing_toepassen) && (
+        <Section title="Loonheffingskorting">
+          <DataGrid>
+            <Field label="Loonheffingskorting toepassen" value={
+              (ob.loonheffing_toepassen || emp.loonheffing_toepassen) === 'ja' ? 'Ja' :
+              (ob.loonheffing_toepassen || emp.loonheffing_toepassen) === 'nee' ? 'Nee' : 'Niet ingevuld'
+            } />
+            <Field label="Vanaf datum" value={fmtDate(ob.loonheffing_datum || emp.loonheffing_datum)} />
+            <Field label="" value="" />
+          </DataGrid>
         </Section>
       )}
 
-      {/* Handtekening */}
-      <Section title="Handtekening medewerker">
-        {ob.employee_signature_url ? (
-          <img src={ob.employee_signature_url} alt="Handtekening" className="max-h-24 border rounded" />
-        ) : (
-          <p className="text-xs text-slate-400 italic">Geen handtekening</p>
-        )}
-        {ob.loonheffing_handtekening_url && ob.loonheffing_handtekening_url !== ob.employee_signature_url && (
-          <div className="mt-2">
-            <p className="text-xs text-slate-500 mb-1">Handtekening loonheffingsverklaring</p>
-            <img src={ob.loonheffing_handtekening_url} alt="Handtekening LH" className="max-h-24 border rounded" />
+      {/* CONTRACT */}
+      {ob.contract_generated && ob.contract_settings && (
+        <Section title="Contractgegevens">
+          <DataGrid>
+            <Field label="Contracttype" value={ob.contract_settings.contract_type} />
+            <Field label="Startdatum" value={fmtDate(ob.contract_settings.start_date)} />
+            <Field label="Proeftijd" value={ob.contract_settings.proeftijd} />
+            {ob.contract_settings.end_date && <Field label="Einddatum" value={fmtDate(ob.contract_settings.end_date)} />}
+            <Field label="Uren per week" value={ob.contract_settings.hours_per_week ?? emp.contract_hours ?? '—'} />
+          </DataGrid>
+        </Section>
+      )}
+
+      {/* VERKLARINGEN & STAPPEN */}
+      <Section title="Verklaringen & stappen">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+          <StatusItem label="Stamkaart afgerond" done={ob.stamkaart_completed} />
+          <StatusItem label="Sleutelkast verklaring" done={ob.pincode_verklaring_signed} />
+          <StatusItem label="Sleutelverklaring" done={ob.sleutel_verklaring_signed} />
+          <StatusItem label="GPS Buddy toestemming" done={ob.gps_buddy_toestemming} />
+          <StatusItem label="Verklaring dienstbetrekking" done={ob.dienstbetrekking_signed} />
+          <StatusItem label="Bedrijfsreglement ontvangen" done={ob.bedrijfsreglement_ontvangen} />
+          <StatusItem label="Contract aangemaakt" done={ob.contract_generated} />
+          <StatusItem label="Mobile Entry uitnodiging" done={ob.mobile_invite_sent} />
+        </div>
+        {ob.sleutel_nummer && (
+          <div className="mt-2 text-xs text-slate-500">
+            Sleutelnummer: <span className="font-medium text-slate-700">{ob.sleutel_nummer}</span>
+            {ob.sleutel_toegang && <> · Toegang tot: <span className="font-medium text-slate-700">{ob.sleutel_toegang}</span></>}
           </div>
         )}
       </Section>
 
-      {/* Status */}
-      <Section title="Status">
-        <Row label="Uitnodiging verzonden" value={ob.mobile_invite_sent ? 'Ja' : 'Nee'} />
-        <Row label="Welkomstmail verzonden" value={ob.welcome_email_sent ? 'Ja' : 'Nee'} />
-      </Section>
+      {/* HANDTEKENING */}
+      {ob.employee_signature_url && (
+        <Section title="Handtekening medewerker">
+          <img src={ob.employee_signature_url} alt="Handtekening" className="max-h-20 border rounded" />
+          {ob.loonheffing_handtekening_url && ob.loonheffing_handtekening_url !== ob.employee_signature_url && (
+            <div className="mt-2">
+              <span className="text-xs text-slate-400 block mb-1">Handtekening loonheffingsverklaring</span>
+              <img src={ob.loonheffing_handtekening_url} alt="Handtekening LH" className="max-h-20 border rounded" />
+            </div>
+          )}
+        </Section>
+      )}
 
       {/* Footer */}
-      <div className="mt-4 pt-2 border-t text-center text-[9px] text-slate-400">
+      <div className="mt-6 pt-2 border-t text-center text-[9px] text-slate-400">
         Dit document is vertrouwelijk en uitsluitend bestemd voor HR-administratie.
       </div>
     </div>
