@@ -91,23 +91,23 @@ Deno.serve(async (req) => {
     }
 
     if (tokens.length === 0) {
-      return Response.json({ error: 'Token niet gevonden of ongeldig' }, { status: 404 });
+      return jsonResponse({ error: 'Token niet gevonden of ongeldig' }, 404);
     }
 
     const tokenRecord = tokens[0];
 
     if (tokenRecord.type !== 'stamkaart_signature') {
-      return Response.json({ error: 'Ongeldig token type' }, { status: 400 });
+      return jsonResponse({ error: 'Ongeldig token type' }, 400);
     }
 
     if (new Date(tokenRecord.expires_at) < new Date()) {
-      return Response.json({ error: 'Deze link is verlopen. Vraag een nieuwe link aan bij uw contactpersoon.' }, { status: 410 });
+      return jsonResponse({ error: 'Deze link is verlopen. Vraag een nieuwe link aan bij uw contactpersoon.' }, 410);
     }
 
     // ── VALIDATE: Return employee data for display ──
     if (action === 'validate') {
       if (tokenRecord.signed) {
-        return Response.json({ error: 'Dit document is al ondertekend.', already_signed: true, signature_url: tokenRecord.signature_url }, { status: 409 });
+        return jsonResponse({ error: 'Dit document is al ondertekend.', already_signed: true, signature_url: tokenRecord.signature_url }, 409);
       }
 
       // Increment view count
@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
 
       // Fetch employee
       const emp = await svc.entities.Employee.get(tokenRecord.employee_id);
-      if (!emp) return Response.json({ error: 'Medewerker niet gevonden' }, { status: 404 });
+      if (!emp) return jsonResponse({ error: 'Medewerker niet gevonden' }, 404);
 
       // Decrypt sensitive fields
       let bsnDecrypted = emp.bsn ? await decrypt(emp.bsn) : '';
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
         loonheffing_datum: emp.loonheffing_datum,
       };
 
-      return Response.json({
+      return jsonResponse({
         success: true,
         employee: safeEmployee,
         fill_onboarding_fields: tokenRecord.fill_onboarding_fields,
@@ -174,12 +174,12 @@ Deno.serve(async (req) => {
     // ── SIGN: Save signature ──
     if (action === 'sign') {
       if (tokenRecord.signed) {
-        return Response.json({ error: 'Dit document is al ondertekend.' }, { status: 409 });
+        return jsonResponse({ error: 'Dit document is al ondertekend.' }, 409);
       }
 
       const { signature_data_url } = body;
       if (!signature_data_url) {
-        return Response.json({ error: 'Geen handtekening meegegeven' }, { status: 400 });
+        return jsonResponse({ error: 'Geen handtekening meegegeven' }, 400);
       }
 
       // Upload signature image
@@ -264,12 +264,12 @@ Deno.serve(async (req) => {
         console.warn(`[submitStamkaartSignature] Admin notification failed: ${mailErr.message}`);
       }
 
-      return Response.json({ success: true, signature_url: signatureUrl });
+      return jsonResponse({ success: true, signature_url: signatureUrl });
     }
 
-    return Response.json({ error: 'Unknown action. Use: validate, sign' }, { status: 400 });
+    return jsonResponse({ error: 'Unknown action. Use: validate, sign' }, 400);
   } catch (error) {
     console.error(`[submitStamkaartSignature] ERROR: ${error.message}`);
-    return Response.json({ error: error.message }, { status: 500 });
+    return jsonResponse({ error: error.message }, 500);
   }
 });
