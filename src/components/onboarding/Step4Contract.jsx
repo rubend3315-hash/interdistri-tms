@@ -82,12 +82,7 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
       contract_type: contractType,
       start_date: startDate,
       end_date: endDate || undefined,
-      hours_per_week: (() => {
-        const activeRegel = (employeeData.contractregels || [])
-          .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
-          .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
-        return activeRegel?.uren_per_week ?? 0;
-      })(),
+      hours_per_week: isNulUren ? 0 : hoursPerWeek,
       proeftijd,
       preview_only: true,
       template_id: selectedTemplateId || undefined,
@@ -119,7 +114,7 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
     onChange({
       ...onboardingData,
       contract_generated: true,
-      contract_settings: { template_id: selectedTemplateId, contract_type: contractType, start_date: startDate, end_date: endDate, proeftijd }
+      contract_settings: { template_id: selectedTemplateId, contract_type: contractType, start_date: startDate, end_date: endDate, proeftijd, hours_per_week: isNulUren ? 0 : hoursPerWeek }
     });
     onNext();
   };
@@ -147,12 +142,7 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
             <span><b>Uurloon:</b> {employeeData.hourly_rate ? `€ ${Number(employeeData.hourly_rate).toFixed(2)}` : '—'}</span>
             <span><b>Functie:</b> {employeeData.function || '—'}</span>
             <span><b>Loonschaal:</b> {employeeData.salary_scale || '—'}</span>
-            <span><b>Uren/week:</b> {(() => {
-              const ar = (employeeData.contractregels || [])
-                .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
-                .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
-              return ar?.uren_per_week ?? '—';
-            })()}</span>
+            <span><b>Uren/week:</b> {isNulUren ? '0 (nul uren)' : hoursPerWeek}</span>
           </div>
         </div>
 
