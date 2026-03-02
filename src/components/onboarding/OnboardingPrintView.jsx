@@ -41,21 +41,16 @@ export default function OnboardingPrintView({ employeeData, onboardingData, onCl
   const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
   const cats = Array.isArray(emp.drivers_license_categories) ? emp.drivers_license_categories.join(', ') : (emp.drivers_license_categories || '—');
 
-  useEffect(() => {
-    const timer = setTimeout(() => window.print(), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <div className="fixed inset-0 z-[9999] bg-white overflow-y-auto print:static print:z-auto print:overflow-visible">
       <div className="max-w-[780px] mx-auto p-6 bg-white text-sm print:p-0 print:max-w-none">
-      {/* Close button — hidden in print */}
-      <div className="print:hidden mb-4 flex justify-end gap-2">
-        <button onClick={() => window.print()} className="text-xs text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded font-medium">Afdrukken</button>
-        <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-800 border px-4 py-1.5 rounded">Sluiten</button>
-      </div>
+        {/* Close button — hidden in print */}
+        <div className="print:hidden mb-4 flex justify-end gap-2">
+          <button onClick={() => window.print()} className="text-xs text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded font-medium">Afdrukken</button>
+          <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-800 border px-4 py-1.5 rounded">Sluiten</button>
+        </div>
 
-      {/* Header */}
+        {/* Header */}
       <div className="flex justify-between items-start border-b-2 border-slate-800 pb-2 mb-4">
         <div>
           <h1 className="text-lg font-bold text-slate-900 leading-tight">Onboarding Dossier</h1>
