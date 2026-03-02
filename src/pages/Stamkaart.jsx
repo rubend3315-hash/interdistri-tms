@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { getFullName } from "@/components/utils/employeeUtils";
 import StamkaartForm from "@/components/stamkaart/StamkaartForm";
 import StamkaartPrintDialog from "@/components/stamkaart/StamkaartPrintDialog";
+import SendStamkaartSignatureButton from "@/components/stamkaart/SendStamkaartSignatureButton";
 
 export default function Stamkaart() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
@@ -48,6 +49,7 @@ export default function Stamkaart() {
               </Button>
             }
           />
+          <SendStamkaartSignatureButton employee={selectedEmployee} />
         </div>
         <StamkaartForm key={selectedEmployee.id} employee={selectedEmployee} />
       </div>
