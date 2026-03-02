@@ -29,27 +29,8 @@ export default function StamkaartSignature() {
 
     (async () => {
       try {
-        const functionUrl = `${window.location.origin}/functions/submitStamkaartSignature`;
-        const res = await fetch(functionUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "validate", token: t }),
-        });
-
-        console.log("[StamkaartSignature] Response status:", res.status, res.statusText);
-
-        let data;
-        const responseText = await res.text();
-        console.log("[StamkaartSignature] Response body:", responseText.substring(0, 500));
-        
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseErr) {
-          console.error("[StamkaartSignature] JSON parse error:", parseErr, "Body:", responseText.substring(0, 200));
-          setError(`Server antwoordde met status ${res.status}. Probeer het opnieuw.`);
-          setLoading(false);
-          return;
-        }
+        const response = await base44.functions.invoke('submitStamkaartSignature', { action: "validate", token: t });
+        const data = response.data;
 
         if (data?.already_signed) {
           setAlreadySigned(true);
@@ -59,11 +40,12 @@ export default function StamkaartSignature() {
           setEmployeeName(data.employee_name);
           setFillOnboarding(data.fill_onboarding_fields);
         } else {
-          setError(data?.error || `Onbekende fout (status ${res.status}).`);
+          setError(data?.error || "Er is een fout opgetreden.");
         }
       } catch (err) {
         console.error("[StamkaartSignature] Validate error:", err);
-        setError("Kan geen verbinding maken met de server. Controleer je internetverbinding en probeer het opnieuw.");
+        const errMsg = err?.response?.data?.error || err.message || "Er is een fout opgetreden.";
+        setError(errMsg);
       }
       setLoading(false);
     })();
