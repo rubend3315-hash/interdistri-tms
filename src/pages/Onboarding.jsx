@@ -122,12 +122,7 @@ export default function Onboarding() {
         contract_type: cs.contract_type,
         start_date: cs.start_date,
         end_date: cs.end_date || undefined,
-        hours_per_week: (() => {
-          const activeRegel = (employeeData.contractregels || [])
-            .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
-            .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
-          return activeRegel?.uren_per_week ?? employeeData.contract_hours ?? 0;
-        })(),
+        hours_per_week: cs.hours_per_week ?? employeeData.contract_hours ?? 40,
         proeftijd: cs.proeftijd,
         template_id: cs.template_id || undefined,
       });
