@@ -34,7 +34,7 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
     return !!onboardingData[key];
   };
 
-  const [showPrint, setShowPrint] = useState(false);
+  const printRef = React.useRef(null);
   const [sendingPayroll, setSendingPayroll] = useState(false);
 
   const { data: payrollSettings = [] } = useQuery({
