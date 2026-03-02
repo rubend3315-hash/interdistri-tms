@@ -22,21 +22,16 @@ export default function SecureDownload() {
 
     (async () => {
       try {
-        // Call secureDownload via direct HTTP (no auth required for external recipients)
-        const functionUrl = `${window.location.origin}/functions/secureDownload`;
-        const res = await fetch(functionUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "download", token }),
-        });
-        const data = await res.json();
+        const response = await base44.functions.invoke('secureDownload', { action: "download", token });
+        const data = response.data;
         if (data?.success && data?.html) {
           setHtml(data.html);
         } else {
           setError(data?.error || "Er is een fout opgetreden bij het ophalen van het document.");
         }
       } catch (err) {
-        setError(err.message || "Er is een fout opgetreden.");
+        const errMsg = err?.response?.data?.error || err.message || "Er is een fout opgetreden.";
+        setError(errMsg);
       }
       setLoading(false);
     })();
