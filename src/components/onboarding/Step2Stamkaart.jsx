@@ -51,7 +51,6 @@ export default function Step2Stamkaart({ employeeData, onboardingData, onOnboard
     } else {
       empPayload.drivers_license_categories = null;
     }
-    delete empPayload.id_document_number;
     delete empPayload.lkv_uitkering;
     delete empPayload.financiele_situatie;
     const created = await base44.entities.Employee.create(empPayload);
