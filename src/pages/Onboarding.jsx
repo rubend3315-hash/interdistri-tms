@@ -81,8 +81,7 @@ export default function Onboarding() {
     } else {
       empPayload.drivers_license_categories = null;
     }
-    // Remove non-entity fields
-    delete empPayload.id_document_number;
+    // Remove non-entity fields (keep id_document_number — it's a real Employee field)
     delete empPayload.lkv_uitkering;
     delete empPayload.financiele_situatie;
     // Clean nulls — protect required string fields
