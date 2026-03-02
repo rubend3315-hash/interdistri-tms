@@ -42,8 +42,6 @@ const CheckItem = ({ label, done }) => (
 );
 
 export default function OnboardingViewDialog({ process, open, onClose }) {
-  const [showPrint, setShowPrint] = useState(false);
-
   const { data: employee, isLoading } = useQuery({
     queryKey: ["onboarding_employee", process?.employee_id],
     queryFn: async () => {
@@ -56,9 +54,9 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
 
   if (!process) return null;
 
-  if (showPrint && employee) {
-    return <OnboardingPrintView employeeData={employee} onboardingData={process} onClose={() => setShowPrint(false)} />;
-  }
+  const handlePrint = () => {
+    window.print();
+  };
 
   const emp = employee || {};
   const ob = process;
