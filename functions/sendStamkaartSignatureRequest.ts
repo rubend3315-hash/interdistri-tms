@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
     const signatureUrl = `${appBaseUrl}/StamkaartSignature?token=${token}`;
 
     const empName = employee_name || '(medewerker)';
-    const subject = `Stamkaart ter ondertekening - ${empName}`;
+    const subject = `Persoonsgegevens & Verklaringen ter ondertekening - ${empName}`;
 
     const htmlBody = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;">
