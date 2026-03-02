@@ -240,11 +240,18 @@ export default function StamkaartForm({
   };
 
   const handleSignature = async (dataUrl) => {
+    setUploadingSignature(true);
     const res = await fetch(dataUrl);
     const blob = await res.blob();
     const file = new File([blob], "handtekening_stamkaart.jpg", { type: "image/jpeg" });
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setLh("loonheffing_handtekening_url", file_url);
+    // Auto-save signature to database in standalone mode
+    if (!isOnboarding && employee?.id) {
+      await base44.entities.Employee.update(employee.id, { loonheffing_handtekening_url: file_url });
+      queryClient.invalidateQueries({ queryKey: ['employees_stamkaart'] });
+    }
+    setUploadingSignature(false);
   };
 
   const fullName = isOnboarding
