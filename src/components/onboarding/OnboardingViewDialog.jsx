@@ -69,7 +69,7 @@ export default function OnboardingViewDialog({ process, open, onClose }) {
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Onboarding Dossier — {fullName}</span>
-            <Button variant="outline" size="sm" onClick={() => setShowPrint(true)} disabled={isLoading || !employee}>
+            <Button variant="outline" size="sm" onClick={handlePrint} disabled={isLoading || !employee}>
               <Printer className="w-4 h-4 mr-1" />
               Afdrukken
             </Button>
