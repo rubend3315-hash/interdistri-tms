@@ -15,7 +15,7 @@ const PROEFTIJD_OPTIONS = ["Geen proeftijd", "1 maand proeftijd"];
 
 export default function Step4Contract({ employeeData, onboardingData, onChange, onNext, onBack }) {
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
-  // Derive initial contract type from active contractregel (contractregels = single source of truth)
+  // Derive initial contract type from active contractregel or employeeData.contract_type
   const deriveContractType = () => {
     const activeRegel = (employeeData.contractregels || [])
       .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
@@ -26,12 +26,20 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
       if (tc.includes("vast")) return "Vast";
       return "Tijdelijk";
     }
-    return "Tijdelijk";
+    return employeeData.contract_type || "Tijdelijk";
+  };
+  const deriveHoursPerWeek = () => {
+    const activeRegel = (employeeData.contractregels || [])
+      .filter(r => r.status !== 'Inactief' && r.status !== 'Beëindigd')
+      .sort((a, b) => new Date(b.startdatum) - new Date(a.startdatum))[0];
+    return activeRegel?.uren_per_week ?? employeeData.contract_hours ?? 40;
   };
   const [contractType, setContractType] = useState(deriveContractType());
   const [startDate, setStartDate] = useState(employeeData.in_service_since || "");
   const [endDate, setEndDate] = useState("");
   const [proeftijd, setProeftijd] = useState("Geen proeftijd");
+  const [hoursPerWeek, setHoursPerWeek] = useState(deriveHoursPerWeek());
+  const isNulUren = contractType === "Tijdelijk Nul Uren" || contractType === "Vast Nul Uren";
   const [generating, setGenerating] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(null);
   const [error, setError] = useState(null);
