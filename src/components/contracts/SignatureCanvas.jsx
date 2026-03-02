@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { UserCheck, Loader2 } from "lucide-react";
+import { UserCheck, Loader2, PenTool, Type } from "lucide-react";
+import TypedSignature from "./TypedSignature";
 
 export default function SignatureCanvas({ onSign, signing }) {
+  const [mode, setMode] = useState("draw"); // "draw" | "type"
   const canvasRef = useRef(null);
   const isDrawingRef = useRef(false);
   const hasStrokesRef = useRef(false);
