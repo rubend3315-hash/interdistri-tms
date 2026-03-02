@@ -212,6 +212,7 @@ export default function OnboardingPrintView({ employeeData, onboardingData }) {
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
