@@ -430,13 +430,14 @@ export default function Layout({ children, currentPageName }) {
 
   const isMobilePage = currentPageName === "MobileEntry";
   const isSecureDownloadPage = currentPageName === "SecureDownload";
+  const isStamkaartSignaturePage = currentPageName === "StamkaartSignature";
   const isPublicSecurityPage = currentPageName === "SecurityPrivacy";
   const isStamkaartDocument = false;
   const isEmployeeContractPage = user && isEmployeeUser(user) && currentPageName === "Contracts";
   const isEmployeeEditTimeEntry = user && isEmployeeUser(user) && currentPageName === "EditTimeEntry";
 
   // Public pages — render immediately, skip all auth
-  if (isSecureDownloadPage || isPublicSecurityPage) {
+  if (isSecureDownloadPage || isStamkaartSignaturePage || isPublicSecurityPage) {
     return <>{children}</>;
   }
 
