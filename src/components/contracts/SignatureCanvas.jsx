@@ -128,36 +128,67 @@ export default function SignatureCanvas({ onSign, signing }) {
       <p className="text-xs font-normal text-slate-500">
         Onderteken hieronder ter bevestiging van de juistheid van bovenstaande gegevens.
       </p>
-      <div className="border-2 border-dashed border-slate-300 rounded-lg bg-white">
-        <canvas
-          ref={canvasRef}
-          style={{
-            touchAction: 'none',
-            width: '100%',
-            height: '120px',
-            display: 'block',
-            cursor: 'crosshair'
-          }}
-        />
-      </div>
-      <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={clearCanvas} type="button">
-          Wissen
-        </Button>
-        <Button
-          className="flex-1 bg-blue-600 hover:bg-blue-700"
-          onClick={handleSign}
-          disabled={signing || !hasDrawn}
+
+      {/* Mode switcher */}
+      <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+        <button
           type="button"
+          onClick={() => setMode("draw")}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            mode === "draw" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          }`}
         >
-          {signing ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <UserCheck className="w-4 h-4 mr-2" />
-          )}
-          Ondertekenen
-        </Button>
+          <PenTool className="w-3.5 h-3.5" />
+          Tekenen
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("type")}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            mode === "type" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <Type className="w-3.5 h-3.5" />
+          Typen
+        </button>
       </div>
+
+      {mode === "draw" ? (
+        <>
+          <div className="border-2 border-dashed border-slate-300 rounded-lg bg-white">
+            <canvas
+              ref={canvasRef}
+              style={{
+                touchAction: 'none',
+                width: '100%',
+                height: '120px',
+                display: 'block',
+                cursor: 'crosshair'
+              }}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={clearCanvas} type="button">
+              Wissen
+            </Button>
+            <Button
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              onClick={handleSign}
+              disabled={signing || !hasDrawn}
+              type="button"
+            >
+              {signing ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <UserCheck className="w-4 h-4 mr-2" />
+              )}
+              Ondertekenen
+            </Button>
+          </div>
+        </>
+      ) : (
+        <TypedSignature onSign={onSign} signing={signing} />
+      )}
     </div>
   );
 }
