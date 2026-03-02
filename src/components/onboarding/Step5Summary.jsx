@@ -101,7 +101,7 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-sm font-semibold text-slate-700">Onboarding Overzicht</h3>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowPrint(true)} className="h-7 text-xs">
+            <Button variant="outline" size="sm" onClick={handlePrint} className="h-7 text-xs">
               <Printer className="w-3.5 h-3.5 mr-1" /> Afdrukken
             </Button>
             <Button variant="outline" size="sm" onClick={handleSendToPayroll} disabled={sendingPayroll} className="h-7 text-xs">
