@@ -91,6 +91,11 @@ export default function Onboarding() {
       if (empPayload[k] === '' || empPayload[k] === undefined) empPayload[k] = null;
     });
 
+    // Copy loonheffing data from onboardingData to empPayload
+    if (onboardingData.loonheffing_toepassen) empPayload.loonheffing_toepassen = onboardingData.loonheffing_toepassen;
+    if (onboardingData.loonheffing_datum) empPayload.loonheffing_datum = onboardingData.loonheffing_datum;
+    if (onboardingData.loonheffing_handtekening_url) empPayload.loonheffing_handtekening_url = onboardingData.loonheffing_handtekening_url;
+
     let employee;
 
     // If a temp employee was created for preview, update it and set status to Actief
