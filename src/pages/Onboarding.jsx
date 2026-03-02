@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { UserPlus, Clock, CheckCircle2, Users, Plus, Eye, Trash2 } from "lucide-react";
+import OnboardingViewDialog from "../components/onboarding/OnboardingViewDialog";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 

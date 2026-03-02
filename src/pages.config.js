@@ -78,11 +78,13 @@ import HRMSettings from './pages/HRMSettings';
 import HelpPage from './pages/HelpPage';
 import Holidays from './pages/Holidays';
 import Integrations from './pages/Integrations';
+import KmDashboard from './pages/KmDashboard';
 import LoonstrookPrint from './pages/LoonstrookPrint';
 import Maandcontrole from './pages/Maandcontrole';
 import Messages from './pages/Messages';
 import MobileBedrijfsreglement from './pages/MobileBedrijfsreglement';
 import MobileEntry from './pages/MobileEntry';
+import MobileEntryFiles from './pages/MobileEntryFiles';
 import MobileHandleiding from './pages/MobileHandleiding';
 import NiwoPermits from './pages/NiwoPermits';
 import Onboarding from './pages/Onboarding';
@@ -113,8 +115,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import KmDashboard from './pages/KmDashboard';
-import MobileEntryFiles from './pages/MobileEntryFiles';
 import __Layout from './Layout.jsx';
 
 
@@ -150,11 +150,13 @@ export const PAGES = {
     "HelpPage": HelpPage,
     "Holidays": Holidays,
     "Integrations": Integrations,
+    "KmDashboard": KmDashboard,
     "LoonstrookPrint": LoonstrookPrint,
     "Maandcontrole": Maandcontrole,
     "Messages": Messages,
     "MobileBedrijfsreglement": MobileBedrijfsreglement,
     "MobileEntry": MobileEntry,
+    "MobileEntryFiles": MobileEntryFiles,
     "MobileHandleiding": MobileHandleiding,
     "NiwoPermits": NiwoPermits,
     "Onboarding": Onboarding,
@@ -185,8 +187,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "KmDashboard": KmDashboard,
-    "MobileEntryFiles": MobileEntryFiles,
 }
 
 export const pagesConfig = {
