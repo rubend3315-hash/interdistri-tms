@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, ChevronLeft, Loader2, KeyRound, Printer, Send } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronLeft, Loader2, KeyRound, Printer, Send, Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getFullName } from "@/components/utils/employeeUtils";
 import OnboardingPrintView from "./OnboardingPrintView";
+import SendStamkaartSignatureButton from "../stamkaart/SendStamkaartSignatureButton";
 
 
 const CHECKLIST = [
@@ -107,7 +108,19 @@ export default function Step5Summary({ employeeData, onboardingData, onBack, onC
               {sendingPayroll ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
               Versturen naar loonadministratie
             </Button>
-
+            {employeeData?.email && (onboardingData?._temp_employee_id || employeeData?.id) && (
+              <SendStamkaartSignatureButton
+                employee={{
+                  id: onboardingData?._temp_employee_id || employeeData?.id,
+                  email: employeeData.email,
+                  first_name: employeeData.first_name,
+                  prefix: employeeData.prefix,
+                  last_name: employeeData.last_name,
+                }}
+                fillOnboardingFields={true}
+                size="sm"
+              />
+            )}
           </div>
         </div>
         <p className="text-xs text-slate-500 mb-3">{fullName} — {employeeData.department}</p>
