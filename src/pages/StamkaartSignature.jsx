@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, AlertTriangle, Loader2, Clock, CheckCircle2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import StamkaartSignatureView from "../components/stamkaart/StamkaartSignatureView";
 
 export default function StamkaartSignature() {
