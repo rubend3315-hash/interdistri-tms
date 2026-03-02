@@ -481,8 +481,8 @@ export default function StamkaartForm({
               <Button variant="outline" size="sm" className="h-5 text-xs px-2 self-start" style={{ fontSize: 11 }} onClick={() => setLh("loonheffing_handtekening_url", "")}>Opnieuw tekenen</Button>
             </div>
           ) : (
-            <div className="border border-slate-400/60 bg-white w-full" style={{ height: 90 }}>
-              <SignatureCanvas onSign={handleSignature} />
+            <div className="w-full">
+              <SignatureCanvas onSign={handleSignature} signing={uploadingSignature} />
             </div>
           )}
         </div>
