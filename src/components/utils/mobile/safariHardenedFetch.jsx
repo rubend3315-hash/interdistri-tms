@@ -15,7 +15,7 @@ if (isSafari) {
 }
 
 const DEFAULT_TIMEOUT = isSafari ? 12000 : 15000;
-const RETRY_DELAY = isSafari ? 2000 : 1500;
+const RETRY_DELAY = isSafari ? 5000 : 1500;
 const MAX_RETRIES = 1;
 
 /**
