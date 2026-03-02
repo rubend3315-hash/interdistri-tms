@@ -115,6 +115,7 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
+import StamkaartSignature from './pages/StamkaartSignature';
 import __Layout from './Layout.jsx';
 
 
@@ -187,6 +188,7 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
+    "StamkaartSignature": StamkaartSignature,
 }
 
 export const pagesConfig = {
