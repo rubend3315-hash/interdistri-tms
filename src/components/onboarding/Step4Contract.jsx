@@ -147,7 +147,7 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
         </div>
 
         {/* Contract type & dates – single row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="space-y-1">
             <Label className="text-xs">Contracttype</Label>
             <Select value={contractType} onValueChange={setContractType}>
@@ -173,6 +173,10 @@ export default function Step4Contract({ employeeData, onboardingData, onChange, 
                 {PROEFTIJD_OPTIONS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Uren per week</Label>
+            <Input className="h-10" type="number" min={0} max={60} value={isNulUren ? 0 : hoursPerWeek} onChange={(e) => setHoursPerWeek(Number(e.target.value))} disabled={isNulUren} />
           </div>
         </div>
 
