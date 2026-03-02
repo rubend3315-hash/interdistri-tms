@@ -207,6 +207,7 @@ export default function OnboardingPrintView({ employeeData, onboardingData, onCl
       <div className="mt-6 pt-2 border-t text-center text-[9px] text-slate-400">
         Dit document is vertrouwelijk en uitsluitend bestemd voor HR-administratie.
       </div>
+      </div>
     </div>
   );
 }
