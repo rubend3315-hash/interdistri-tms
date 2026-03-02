@@ -128,8 +128,8 @@ Deno.serve(async (req) => {
     </div>
     <p style="font-size:15px;color:#334155;margin:0 0 12px;">Beste ${empName},</p>
     <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 16px;">
-      Er staat een stamkaart (loonheffingsverklaring) klaar ter ondertekening. 
-      Via onderstaande link kun je de gegevens controleren en digitaal ondertekenen.
+      Er staat een set Persoonsgegevens & Verklaringen klaar ter ondertekening. 
+      Dit is onderdeel van het onboardingsproces. Via onderstaande link kun je de gegevens controleren en digitaal ondertekenen.
     </p>
     <div style="text-align:center;margin:24px 0;">
       <a href="${signatureUrl}" 
