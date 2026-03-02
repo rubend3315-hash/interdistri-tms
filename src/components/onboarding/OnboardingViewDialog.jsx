@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Printer, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
+import OnboardingPrintView from "./OnboardingPrintView";
 
 const fmtDate = (val) => {
   if (!val) return "—";
