@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     <div style="text-align:center;margin:24px 0;">
       <a href="${signatureUrl}" 
          style="display:inline-block;background:#1e40af;color:white;padding:14px 36px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:600;">
-        ✍️ Stamkaart bekijken & ondertekenen
+        ✍️ Gegevens bekijken & ondertekenen
       </a>
     </div>
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;margin:16px 0;">
