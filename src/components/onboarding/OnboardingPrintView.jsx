@@ -47,10 +47,12 @@ export default function OnboardingPrintView({ employeeData, onboardingData, onCl
   }, []);
 
   return (
-    <div className="max-w-[780px] mx-auto p-4 bg-white text-sm print:p-0 print:max-w-none">
+    <div className="fixed inset-0 z-[9999] bg-white overflow-y-auto print:static print:z-auto print:overflow-visible">
+      <div className="max-w-[780px] mx-auto p-6 bg-white text-sm print:p-0 print:max-w-none">
       {/* Close button — hidden in print */}
-      <div className="print:hidden mb-4 flex justify-end">
-        <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-800 border px-3 py-1 rounded">Sluiten</button>
+      <div className="print:hidden mb-4 flex justify-end gap-2">
+        <button onClick={() => window.print()} className="text-xs text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded font-medium">Afdrukken</button>
+        <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-800 border px-4 py-1.5 rounded">Sluiten</button>
       </div>
 
       {/* Header */}
