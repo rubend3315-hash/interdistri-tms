@@ -106,6 +106,7 @@ import SecurityRoadmap from './pages/SecurityRoadmap';
 import SecuritySummary from './pages/SecuritySummary';
 import ShiftTime from './pages/ShiftTime';
 import Stamkaart from './pages/Stamkaart';
+import StamkaartSignature from './pages/StamkaartSignature';
 import StandplaatsWerk from './pages/StandplaatsWerk';
 import SystemArchitectureDiagram from './pages/SystemArchitectureDiagram';
 import TIRekenmodule from './pages/TIRekenmodule';
@@ -115,7 +116,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import StamkaartSignature from './pages/StamkaartSignature';
 import __Layout from './Layout.jsx';
 
 
@@ -179,6 +179,7 @@ export const PAGES = {
     "SecuritySummary": SecuritySummary,
     "ShiftTime": ShiftTime,
     "Stamkaart": Stamkaart,
+    "StamkaartSignature": StamkaartSignature,
     "StandplaatsWerk": StandplaatsWerk,
     "SystemArchitectureDiagram": SystemArchitectureDiagram,
     "TIRekenmodule": TIRekenmodule,
@@ -188,7 +189,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "StamkaartSignature": StamkaartSignature,
 }
 
 export const pagesConfig = {

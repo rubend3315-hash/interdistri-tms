@@ -34,7 +34,15 @@ export default function StamkaartSignature() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "validate", token: t }),
         });
-        const data = await res.json();
+
+        let data;
+        try {
+          data = await res.json();
+        } catch (parseErr) {
+          setError("Kon de server-response niet verwerken. Probeer het opnieuw.");
+          setLoading(false);
+          return;
+        }
 
         if (data?.already_signed) {
           setAlreadySigned(true);
@@ -47,7 +55,8 @@ export default function StamkaartSignature() {
           setError(data?.error || "Er is een fout opgetreden.");
         }
       } catch (err) {
-        setError(err.message || "Er is een fout opgetreden.");
+        console.error("[StamkaartSignature] Validate error:", err);
+        setError("Kan geen verbinding maken met de server. Controleer je internetverbinding en probeer het opnieuw.");
       }
       setLoading(false);
     })();
