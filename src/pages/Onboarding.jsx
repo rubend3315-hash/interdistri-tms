@@ -435,6 +435,12 @@ export default function Onboarding() {
           </table>
         </div>
       )}
+
+      <OnboardingViewDialog
+        process={viewProcess}
+        open={!!viewProcess}
+        onClose={() => setViewProcess(null)}
+      />
     </div>
   );
 }
