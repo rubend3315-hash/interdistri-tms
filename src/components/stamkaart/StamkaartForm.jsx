@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Send, Loader2, Save, AlertCircle } from "lucide-react";
 import SignatureCanvas from "../contracts/SignatureCanvas";
 import { getFullName } from "@/components/utils/employeeUtils";
+import SendStamkaartSignatureButton from "./SendStamkaartSignatureButton";
 
 export const STAMKAART_REQUIRED_FIELDS = [
   { key: "first_name", label: "Voornaam" },
@@ -499,6 +500,7 @@ export default function StamkaartForm({
             {sendingEmail ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
             Versturen naar Loonadministratie
           </Button>
+          <SendStamkaartSignatureButton employee={employee} size="sm" />
         </div>
       )}
     </div>
