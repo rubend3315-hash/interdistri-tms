@@ -148,11 +148,30 @@ export default function Step1EmployeeDetails({ employeeData, onChange, onNext })
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
           <div className="space-y-1">
             <Label className="text-xs">Personeelsnummer</Label>
             <Input className="h-10" value={employeeData.employee_number || ""} onChange={(e) => update("employee_number", e.target.value)} />
           </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Contracttype</Label>
+            <Select value={employeeData.contract_type || "Tijdelijk"} onValueChange={(v) => update("contract_type", v)}>
+              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Vast">Vast</SelectItem>
+                <SelectItem value="Vast Nul Uren">Vast Nul Uren</SelectItem>
+                <SelectItem value="Tijdelijk">Tijdelijk</SelectItem>
+                <SelectItem value="Tijdelijk Nul Uren">Tijdelijk Nul Uren</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Uren per week</Label>
+            <Input className="h-10" type="number" min={0} max={60} value={employeeData.contract_hours ?? 40} onChange={(e) => update("contract_hours", Number(e.target.value))} disabled={employeeData.contract_type === "Tijdelijk Nul Uren" || employeeData.contract_type === "Vast Nul Uren"} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           <div className="space-y-1">
             <Label className="text-xs">Type mobiele app</Label>
             <Select value={employeeData.mobile_entry_type || "single_day"} onValueChange={(v) => update("mobile_entry_type", v)}>
