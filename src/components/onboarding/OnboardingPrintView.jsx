@@ -46,23 +46,21 @@ export default function OnboardingPrintView({ employeeData, onboardingData }) {
   const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
   const cats = Array.isArray(emp.drivers_license_categories) ? emp.drivers_license_categories.join(', ') : (emp.drivers_license_categories || '—');
 
-  return (
+  return ReactDOM.createPortal(
     <>
       {/* Print-specific styles */}
       <style>{`
         @media print {
           body > * { display: none !important; }
-          body > #onboarding-print-root { display: block !important; }
-          #onboarding-print-root { position: static !important; }
+          body > #onboarding-print-root { display: block !important; position: static !important; }
           #onboarding-print-root * { visibility: visible !important; }
         }
       `}</style>
 
-      {/* Hidden container — only visible during print */}
+      {/* Hidden container portaled to body — only visible during print */}
       <div
         id="onboarding-print-root"
-        className="hidden print:block"
-        style={{ position: 'fixed', left: '-9999px', top: 0 }}
+        style={{ position: 'fixed', left: '-9999px', top: 0, visibility: 'hidden' }}
       >
         <div className="max-w-[780px] mx-auto bg-white text-sm p-0">
           {/* Header */}
