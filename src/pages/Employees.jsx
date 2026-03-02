@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { format, addMonths, isBefore } from 'date-fns';
 import { getFullName, getDisplayName } from '@/components/utils/employeeUtils';
+import ContractDialog from '@/components/employees/ContractDialog';
+import ReiskostenDialog from '@/components/employees/ReiskostenDialog';
 
 const statuses = ['Actief', 'Inactief', 'Uit dienst'];
 
