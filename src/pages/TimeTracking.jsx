@@ -37,8 +37,9 @@ export default function TimeTracking() {
   const { data: currentUser, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });

@@ -63,7 +63,9 @@ export default function NotificationBell() {
       );
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Subscribe to notification updates
