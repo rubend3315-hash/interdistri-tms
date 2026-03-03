@@ -24,15 +24,9 @@ import {
   FileText,
   Smartphone
 } from "lucide-react";
-import CharterOverview from "../components/dashboard/CharterOverview";
-import WeekRevenueCard from "../components/dashboard/WeekRevenueCard";
 import ContractWarnings from "../components/dashboard/ContractWarnings";
 import ExportDialog from "../components/export/ExportDialog";
-import SystemStatusCard from "../components/dashboard/SystemStatusCard";
-import RegistryIntegrityCard from "../components/dashboard/RegistryIntegrityCard";
-import MobileEntryStatusCard from "../components/dashboard/MobileEntryStatusCard";
 import NotificationsCard from "../components/dashboard/NotificationsCard";
-import AggregationStatusWidget from "../components/dashboard/AggregationStatusWidget";
 
 export default function Dashboard({ currentUser }) {
   const today = new Date();
@@ -206,13 +200,6 @@ export default function Dashboard({ currentUser }) {
 
   return (
     <div className="space-y-6">
-      {/* System Status + Registry Integrity + Aggregation */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <SystemStatusCard />
-        <RegistryIntegrityCard />
-        <AggregationStatusWidget />
-      </div>
-
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
@@ -270,7 +257,6 @@ export default function Dashboard({ currentUser }) {
               subtitle="Openstaand"
               className={pendingApprovals > 0 ? "ring-1 ring-amber-200" : ""}
             />
-            <MobileEntryStatusCard />
           </>
         )}
       </div>
@@ -280,18 +266,11 @@ export default function Dashboard({ currentUser }) {
       {/* Contract Warnings - compact */}
       {!isLoading && <ContractWarnings employees={employees} />}
 
-      {/* Second Row: Meldingen (4 col) + Klanten (8 col) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-4">
-          <NotificationsCard items={notificationItems} />
-        </div>
-        <div className="lg:col-span-8">
-          <WeekRevenueCard />
-        </div>
-      </div>
+      {/* Meldingen */}
+      <NotificationsCard items={notificationItems} />
 
-      {/* Third Row: Quick Actions + Recent + Charters */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Quick Actions + Recent */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Quick Actions */}
         <Card className="shadow-sm">
           <CardHeader className="pb-2 px-4 pt-4">
@@ -395,8 +374,6 @@ export default function Dashboard({ currentUser }) {
           </CardContent>
         </Card>
 
-        {/* Charter Overview */}
-        <CharterOverview />
       </div>
 
       <ExportDialog open={showExport} onOpenChange={setShowExport} />
