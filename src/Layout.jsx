@@ -530,7 +530,8 @@ export default function Layout({ children, currentPageName }) {
   }
 
   // --- EMPLOYEE landing: redirect Dashboard → MobileEntry ---
-  if (isEmployeeUser(user) && currentPageName === "Dashboard") {
+  // Alleen bij expliciete EMPLOYEE business_role
+  if (hasExplicitEmployeeRole && currentPageName === "Dashboard") {
     return <Navigate to={createPageUrl("MobileEntry")} replace />;
   }
 
