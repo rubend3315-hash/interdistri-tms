@@ -288,7 +288,7 @@ export default function Layout({ children, currentPageName }) {
   const { data: user, isLoading: loadingUser, isError: userError } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    staleTime: 24 * 60 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 2,
     retryDelay: (attempt) => Math.min(attempt * 500, 1500),
