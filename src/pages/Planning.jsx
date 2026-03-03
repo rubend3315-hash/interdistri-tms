@@ -73,10 +73,12 @@ export default function Planning() {
 
   const periodLabel = viewMode === "week" ? `Week ${weekNumber}` : format(currentDate, "MMMM yyyy", { locale: nl });
 
+  const refOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
     queryFn: () => base44.entities.Employee.list(),
-    staleTime: 0,
+    ...refOpts,
   });
 
   const { data: schedules = [], isLoading: loadingSchedules } = useQuery({
@@ -89,32 +91,42 @@ export default function Planning() {
         const monthWeeks = [...new Set(days.map(d => getWeek(d, { weekStartsOn: 1 })))];
         return allSchedules.filter(s => monthWeeks.includes(s.week_number));
       }
-    }
+    },
+    ...refOpts,
   });
 
   const { data: holidays = [] } = useQuery({
     queryKey: ['holidays', year],
-    queryFn: () => base44.entities.Holiday.filter({ year })
+    queryFn: () => base44.entities.Holiday.filter({ year }),
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: uurcodes = [] } = useQuery({
     queryKey: ['uurcodes'],
-    queryFn: () => base44.entities.Uurcode.filter({ status: 'Actief' })
+    queryFn: () => base44.entities.Uurcode.filter({ status: 'Actief' }),
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: routes = [] } = useQuery({
     queryKey: ['routes'],
-    queryFn: () => base44.entities.Route.filter({ is_active: true })
+    queryFn: () => base44.entities.Route.filter({ is_active: true }),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutes'],
-    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true })
+    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true }),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
-    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
+    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' }),
+    ...refOpts,
   });
 
   const { data: timeEntries = [] } = useQuery({
@@ -125,12 +137,15 @@ export default function Planning() {
       } else {
         return base44.entities.TimeEntry.filter({ year });
       }
-    }
+    },
+    ...refOpts,
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
+    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' }),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const getWeekScheduleHours = (employee) => {

@@ -160,6 +160,8 @@ export default function Trips() {
     conceptPageState.resetPage();
   };
 
+  const refOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   // Server-side filtered query
   const { data: trips = [], isLoading } = useQuery({
     queryKey: ['trips', filterDateFrom, filterDateTo],
@@ -168,37 +170,47 @@ export default function Trips() {
       if (filterDateFrom) filter.date = { ...(filter.date || {}), $gte: filterDateFrom };
       if (filterDateTo) filter.date = { ...(filter.date || {}), $lte: filterDateTo };
       return base44.entities.Trip.filter(filter, '-date');
-    }
+    },
+    ...refOpts,
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryFn: () => base44.entities.Employee.list(),
+    ...refOpts,
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
-    queryFn: () => base44.entities.Vehicle.list()
+    queryFn: () => base44.entities.Vehicle.list(),
+    ...refOpts,
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list()
+    queryFn: () => base44.entities.Customer.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutes'],
-    queryFn: () => base44.entities.TIModelRoute.list()
+    queryFn: () => base44.entities.TIModelRoute.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: dbRoutes = [] } = useQuery({
     queryKey: ['routesList'],
-    queryFn: () => base44.entities.Route.list()
+    queryFn: () => base44.entities.Route.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: timeEntries = [] } = useQuery({
     queryKey: ['timeEntriesForTrips'],
-    queryFn: () => base44.entities.TimeEntry.list('-date', 500)
+    queryFn: () => base44.entities.TimeEntry.list('-date', 200),
+    ...refOpts,
   });
 
   const { data: caoRules = [] } = useQuery({
@@ -206,12 +218,16 @@ export default function Trips() {
     queryFn: () => base44.entities.CaoRule.filter({ 
       category: 'Verblijfkosten',
       status: 'Actief'
-    })
+    }),
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ['loonperiodeStatuses'],
-    queryFn: () => base44.entities.LoonperiodeStatus.list()
+    queryFn: () => base44.entities.LoonperiodeStatus.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const createMutation = useMutation({

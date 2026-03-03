@@ -32,9 +32,13 @@ export default function TimeTracking() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
+  const refOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   const { data: currentUser, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me()
+    queryFn: () => base44.auth.me(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -45,32 +49,42 @@ export default function TimeTracking() {
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryFn: () => base44.entities.Employee.list(),
+    ...refOpts,
   });
 
   const { data: timeEntries = [], isLoading: loadingEntries } = useQuery({
     queryKey: ['timeEntries', weekNumber, year],
-    queryFn: () => base44.entities.TimeEntry.filter({ week_number: weekNumber, year })
+    queryFn: () => base44.entities.TimeEntry.filter({ week_number: weekNumber, year }),
+    ...refOpts,
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => base44.entities.Project.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list()
+    queryFn: () => base44.entities.Customer.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: urensoorten = [] } = useQuery({
     queryKey: ['urensoorten'],
-    queryFn: () => base44.entities.Urensoort.list()
+    queryFn: () => base44.entities.Urensoort.list(),
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ['loonperiodeStatuses'],
-    queryFn: () => base44.entities.LoonperiodeStatus.list()
+    queryFn: () => base44.entities.LoonperiodeStatus.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const weekIsDefinitief = isWeekInDefinitiefPeriode(weekNumber, year, loonperiodeStatuses);

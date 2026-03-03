@@ -68,9 +68,12 @@ export default function Approvals() {
   };
 
   // Server-side filtered query: pending always ALL (workflow), history by date range
+  const qOpts = { staleTime: 3 * 60 * 1000, refetchOnWindowFocus: false };
+
   const { data: pendingRaw = [], isLoading: loadingPending } = useQuery({
     queryKey: ['timeEntries-pending'],
     queryFn: () => base44.entities.TimeEntry.filter({ status: 'Ingediend' }),
+    ...qOpts,
   });
 
   const { data: historyRaw = [], isLoading: loadingHistory } = useQuery({
@@ -82,6 +85,7 @@ export default function Approvals() {
       return base44.entities.TimeEntry.filter(filter);
     },
     enabled: activeTab !== 'pending', // only load history when viewing those tabs
+    ...qOpts,
   });
 
   // Combine for overlap detection (pending + visible history)
@@ -96,43 +100,30 @@ export default function Approvals() {
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
-    queryFn: async () => {
-      try {
-        return await base44.entities.Employee.list();
-      } catch (error) {
-        console.error('Error loading employees:', error);
-        return [];
-      }
-    }
+    queryFn: () => base44.entities.Employee.list(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
-    queryFn: async () => {
-      try {
-        return await base44.entities.Vehicle.list();
-      } catch (error) {
-        console.error('Error loading vehicles:', error);
-        return [];
-      }
-    }
+    queryFn: () => base44.entities.Vehicle.list(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: user, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch (error) {
-        console.error('Error loading user:', error);
-        return null;
-      }
-    }
+    queryFn: () => base44.auth.me(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ['loonperiodeStatuses'],
-    queryFn: () => base44.entities.LoonperiodeStatus.list()
+    queryFn: () => base44.entities.LoonperiodeStatus.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const approveMutation = useMutation({
