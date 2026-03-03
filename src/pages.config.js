@@ -192,7 +192,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "Approvals",
+    mainPage: "MobileEntry",
     Pages: PAGES,
     Layout: __Layout,
 };
