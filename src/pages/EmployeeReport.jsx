@@ -82,10 +82,13 @@ export default function EmployeeReport() {
     return endOfISOWeek(weekStart);
   }, [weekStart, isFullYear, yearNum]);
 
+  const cOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   // Fetch PakketDistributie employees for validation
   const { data: pdEmployees = [] } = useQuery({
     queryKey: ['pd-employees'],
     queryFn: () => base44.entities.Employee.filter({ department: 'PakketDistributie', status: 'Actief' }),
+    ...cOpts,
   });
 
   // Fetch KPI data for selected week (or full year)
@@ -93,7 +96,8 @@ export default function EmployeeReport() {
     queryKey: ['employee-kpi', weekNum, yearNum, isFullYear],
     queryFn: () => isFullYear
       ? base44.entities.EmployeeKPI.filter({ year: yearNum })
-      : base44.entities.EmployeeKPI.filter({ week: weekNum, year: yearNum })
+      : base44.entities.EmployeeKPI.filter({ week: weekNum, year: yearNum }),
+    ...cOpts,
   });
 
   // Fetch KPI doelen for selected week (or full year)
@@ -101,13 +105,15 @@ export default function EmployeeReport() {
     queryKey: ['kpi-doelen', weekNum, yearNum, isFullYear],
     queryFn: () => isFullYear
       ? base44.entities.KPIDoel.filter({ jaar: yearNum })
-      : base44.entities.KPIDoel.filter({ week: weekNum, jaar: yearNum })
+      : base44.entities.KPIDoel.filter({ week: weekNum, jaar: yearNum }),
+    ...cOpts,
   });
 
   // Fetch all KPI data for the year (for employee name list)
   const { data: yearKpiData = [] } = useQuery({
     queryKey: ['employee-kpi-year-names', yearNum],
-    queryFn: () => base44.entities.EmployeeKPI.filter({ year: yearNum })
+    queryFn: () => base44.entities.EmployeeKPI.filter({ year: yearNum }),
+    ...cOpts,
   });
 
   // Get unique employee names from year KPI data
@@ -125,7 +131,9 @@ export default function EmployeeReport() {
   // Fetch PostNL customer to find customer_id
   const { data: customers = [] } = useQuery({
     queryKey: ['customers-for-report'],
-    queryFn: () => base44.entities.Customer.list()
+    queryFn: () => base44.entities.Customer.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
   const postNLCustomer = customers.find(c => c.company_name === 'PostNL');
 
@@ -133,14 +141,18 @@ export default function EmployeeReport() {
   const { data: articles = [] } = useQuery({
     queryKey: ['articles-report', postNLCustomer?.id],
     queryFn: () => postNLCustomer ? base44.entities.Article.filter({ customer_id: postNLCustomer.id }) : [],
-    enabled: !!postNLCustomer
+    enabled: !!postNLCustomer,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch TI Model routes
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['ti-routes-report', postNLCustomer?.id],
     queryFn: () => postNLCustomer ? base44.entities.TIModelRoute.filter({ customer_id: postNLCustomer.id, status: 'Actief' }) : [],
-    enabled: !!postNLCustomer
+    enabled: !!postNLCustomer,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch import results for report rows - server-side filtered by period

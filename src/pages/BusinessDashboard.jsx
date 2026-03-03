@@ -21,33 +21,41 @@ export default function BusinessDashboard() {
     employeeId: "all",
   });
 
+  const cOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   // Load reference data
   const { data: customers = [] } = useQuery({
     queryKey: ["customers-active"],
     queryFn: () => base44.entities.Customer.filter({ status: "Actief" }),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ["employees-active"],
     queryFn: () => base44.entities.Employee.filter({ status: "Actief" }),
+    ...cOpts,
   });
 
   // Load weekly customer summaries
   const { data: weeklyCustomer = [], isLoading: loadingWC } = useQuery({
     queryKey: ["wcs", filters.year],
     queryFn: () => base44.entities.WeeklyCustomerSummary.filter({ year: filters.year }, "week_number", 500),
+    ...cOpts,
   });
 
   // Load weekly employee summaries
   const { data: weeklyEmployee = [], isLoading: loadingWE } = useQuery({
     queryKey: ["wes", filters.year],
     queryFn: () => base44.entities.WeeklyEmployeeSummary.filter({ year: filters.year }, "week_number", 500),
+    ...cOpts,
   });
 
   // Load monthly customer summaries
   const { data: monthlyCustomer = [], isLoading: loadingMC } = useQuery({
     queryKey: ["mcs", filters.year],
     queryFn: () => base44.entities.MonthlyCustomerSummary.filter({ year: filters.year }, "month", 500),
+    ...cOpts,
   });
 
   const isLoading = loadingWC || loadingWE || loadingMC;

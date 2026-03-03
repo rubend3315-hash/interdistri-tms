@@ -22,24 +22,33 @@ export default function KmDashboard() {
   const [vehicleFilter, setVehicleFilter] = useState("all");
   const [employeeFilter, setEmployeeFilter] = useState("all");
 
+  const cOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   const { data: trips = [], isLoading: loadingTrips } = useQuery({
-    queryKey: ['trips'],
-    queryFn: () => base44.entities.Trip.list('-date', 5000)
+    queryKey: ['km-trips', dateRange.from, dateRange.to],
+    queryFn: () => base44.entities.Trip.filter({
+      date: { $gte: dateRange.from, $lte: dateRange.to }
+    }, '-date', 500),
+    ...cOpts,
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
-    queryFn: () => base44.entities.Vehicle.list()
+    queryFn: () => base44.entities.Vehicle.list(),
+    ...cOpts,
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryFn: () => base44.entities.Employee.list(),
+    ...cOpts,
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list()
+    queryFn: () => base44.entities.Customer.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const vehicleMap = useMemo(() => {
@@ -76,12 +85,11 @@ export default function KmDashboard() {
   const filteredTrips = useMemo(() => {
     return trips.filter(t => {
       if (!t.date) return false;
-      if (t.date < dateRange.from || t.date > dateRange.to) return false;
       if (vehicleFilter !== "all" && t.vehicle_id !== vehicleFilter) return false;
       if (employeeFilter !== "all" && t.employee_id !== employeeFilter) return false;
       return true;
     });
-  }, [trips, dateRange, vehicleFilter, employeeFilter]);
+  }, [trips, vehicleFilter, employeeFilter]);
 
   // Period label for print header
   const periodLabel = useMemo(() => {

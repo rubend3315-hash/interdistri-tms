@@ -29,40 +29,45 @@ export default function Charters() {
   const periodEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: periodStart, end: periodEnd });
 
+  const cOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   const { data: charterCompanies = [], isLoading: loadingCompanies } = useQuery({
     queryKey: ['charterCompanies'],
-    queryFn: () => base44.entities.CharterCompany.list()
+    queryFn: () => base44.entities.CharterCompany.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['charterEmployees'],
-    queryFn: () => base44.entities.Employee.filter({ department: "Charters", status: "Actief" })
+    queryFn: () => base44.entities.Employee.filter({ department: "Charters", status: "Actief" }),
+    ...cOpts,
   });
 
   const { data: allEmployees = [] } = useQuery({
     queryKey: ['allEmployeesCharters'],
-    queryFn: () => base44.entities.Employee.filter({ status: "Actief" })
+    queryFn: () => base44.entities.Employee.filter({ status: "Actief" }),
+    ...cOpts,
   });
 
   const { data: schedules = [], isLoading: loadingSchedules } = useQuery({
     queryKey: ['charterSchedules', weekNumber, year],
-    queryFn: () => base44.entities.Schedule.filter({ week_number: weekNumber, year })
+    queryFn: () => base44.entities.Schedule.filter({ week_number: weekNumber, year }),
+    ...cOpts,
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['charterVehicles'],
-    queryFn: () => base44.entities.Vehicle.list()
+    queryFn: () => base44.entities.Vehicle.list(),
+    ...cOpts,
   });
 
+  const startStr = format(periodStart, 'yyyy-MM-dd');
+  const endStr = format(periodEnd, 'yyyy-MM-dd');
   const { data: trips = [] } = useQuery({
-    queryKey: ['charterTrips', weekNumber, year],
-    queryFn: async () => {
-      const allTrips = await base44.entities.Trip.list('-date', 200);
-      return allTrips.filter(t => {
-        const tripDate = new Date(t.date);
-        return tripDate >= periodStart && tripDate <= periodEnd;
-      });
-    }
+    queryKey: ['charterTrips', startStr, endStr],
+    queryFn: () => base44.entities.Trip.filter({ date: { $gte: startStr, $lte: endStr } }, '-date'),
+    ...cOpts,
   });
 
   const createCompanyMutation = useMutation({

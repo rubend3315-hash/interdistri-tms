@@ -18,47 +18,45 @@ export default function Dagstaat() {
   const [selectedEndDate, setSelectedEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [showPrint, setShowPrint] = useState(false);
 
+  const cOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ["employees-dagstaat"],
     queryFn: () => base44.entities.Employee.filter({ status: "Actief" }),
+    ...cOpts,
   });
 
   const { data: timeEntries = [], isLoading: loadingTime } = useQuery({
     queryKey: ["dagstaat-time", selectedEmployeeId, selectedStartDate, selectedEndDate],
-    queryFn: async () => {
-      const all = await base44.entities.TimeEntry.filter({
-        employee_id: selectedEmployeeId,
-      });
-      return all.filter(te => {
-        const startDate = te.date;
-        const endDate = te.end_date || te.date;
-        // Entry overlaps with selected period
-        return startDate <= selectedEndDate && endDate >= selectedStartDate;
-      }).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-    },
+    queryFn: () => base44.entities.TimeEntry.filter({
+      employee_id: selectedEmployeeId,
+      date: { $gte: selectedStartDate, $lte: selectedEndDate },
+    }),
     enabled: !!selectedEmployeeId && !!selectedStartDate && !!selectedEndDate,
+    ...cOpts,
   });
 
   const { data: trips = [], isLoading: loadingTrips } = useQuery({
     queryKey: ["dagstaat-trips", selectedEmployeeId, selectedStartDate, selectedEndDate],
-    queryFn: async () => {
-      const all = await base44.entities.Trip.filter({
-        employee_id: selectedEmployeeId,
-      });
-      return all.filter(t => t.date >= selectedStartDate && t.date <= selectedEndDate)
-        .sort((a, b) => a.date.localeCompare(b.date));
-    },
+    queryFn: () => base44.entities.Trip.filter({
+      employee_id: selectedEmployeeId,
+      date: { $gte: selectedStartDate, $lte: selectedEndDate },
+    }, 'date'),
     enabled: !!selectedEmployeeId && !!selectedStartDate && !!selectedEndDate,
+    ...cOpts,
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ["vehicles-dagstaat"],
     queryFn: () => base44.entities.Vehicle.list(),
+    ...cOpts,
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers-dagstaat"],
     queryFn: () => base44.entities.Customer.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const selectedEmployee = employees.find((e) => e.id === selectedEmployeeId);
