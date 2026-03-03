@@ -462,9 +462,15 @@ export default function Layout({ children, currentPageName }) {
   }
 
   // --- Toegangscontrole: alleen EMPLOYEE rol vereist employee-link ---
+  // Alleen gebruikers met een EXPLICIETE business_role=EMPLOYEE of die gekoppeld
+  // zijn aan een Employee-record worden als medewerker behandeld.
+  // Gebruikers zonder business_role die geen Employee-koppeling hebben,
+  // worden NIET geblokkeerd (ze krijgen gewoon de permission check).
+  const hasExplicitEmployeeRole = user?.business_role === 'EMPLOYEE';
+  const isEffectiveEmployee = isEmployeeUser(user);
   let showGraceWarning = false;
 
-  if (isEmployeeUser(user)) {
+  if (isEffectiveEmployee && hasExplicitEmployeeRole) {
     if (loadingEmployee) {
       return null;
     }
