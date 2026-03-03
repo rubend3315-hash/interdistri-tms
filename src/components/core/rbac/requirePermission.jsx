@@ -23,10 +23,11 @@ import { WILDCARD } from './permissionRegistry';
 export function getEffectiveRole(user) {
   if (!user) return ROLES.EMPLOYEE;
   if (user.role === 'admin') return ROLES.SUPER_ADMIN;
-  // Bekende niet-EMPLOYEE business_roles worden gerespecteerd
+  // Expliciete business_roles worden gerespecteerd
+  if (user.business_role === ROLES.EMPLOYEE) return ROLES.EMPLOYEE;
   if (user.business_role === ROLES.HR_ADMIN) return ROLES.HR_ADMIN;
   if (user.business_role === ROLES.PLANNER) return ROLES.PLANNER;
-  // Alle overige gebruikers (geen business_role, of EMPLOYEE) krijgen volledige
+  // Alle overige gebruikers (geen business_role) krijgen volledige
   // toegang — zoals vóór RBAC. Admin kan via Users-pagina rollen toewijzen.
   return ROLES.SUPER_ADMIN;
 }
