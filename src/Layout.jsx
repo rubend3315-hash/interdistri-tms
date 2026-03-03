@@ -553,7 +553,30 @@ export default function Layout({ children, currentPageName }) {
   }
 
   // Permission guard — non-public, non-mobile pages require explicit permission
+  // Gebruikers zonder expliciete business_role die GEEN admin zijn,
+  // worden niet geblokkeerd als ze geen business_role hebben
+  // (ze zijn waarschijnlijk nieuwe gebruikers die nog geen rol toegewezen hebben gekregen)
   if (!hasPagePermission(currentPageName)) {
+    // Als de gebruiker geen admin is én geen expliciete business_role heeft,
+    // toon dan een vriendelijker bericht i.p.v. AccessDenied
+    if (!user.business_role && user.role !== 'admin') {
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center space-y-4 max-w-md mx-auto p-6">
+            <h1 className="text-lg font-semibold">Welkom</h1>
+            <p className="text-muted-foreground">
+              Je account is nog niet volledig geconfigureerd. Neem contact op met je beheerder om je rol in te stellen.
+            </p>
+            <button
+              onClick={() => base44.auth.logout()}
+              className="px-4 py-2 bg-primary text-white rounded"
+            >
+              Uitloggen
+            </button>
+          </div>
+        </div>
+      );
+    }
     return <AccessDenied />;
   }
 
