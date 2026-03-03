@@ -435,8 +435,8 @@ export default function Layout({ children, currentPageName }) {
   const isStamkaartSignaturePage = currentPageName === "StamkaartSignature";
   const isPublicSecurityPage = currentPageName === "SecurityPrivacy";
   const isStamkaartDocument = false;
-  const isEmployeeContractPage = user && isEmployeeUser(user) && currentPageName === "Contracts";
-  const isEmployeeEditTimeEntry = user && isEmployeeUser(user) && currentPageName === "EditTimeEntry";
+  const isEmployeeContractPage = user && hasExplicitEmployeeRole && currentPageName === "Contracts";
+  const isEmployeeEditTimeEntry = user && hasExplicitEmployeeRole && currentPageName === "EditTimeEntry";
 
   // Public pages — render immediately, skip all auth
   if (isSecureDownloadPage || isStamkaartSignaturePage || isPublicSecurityPage) {
