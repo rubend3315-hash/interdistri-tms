@@ -528,9 +528,8 @@ export default function Layout({ children, currentPageName }) {
     }
   }
 
-  // --- EMPLOYEE landing: redirect Dashboard → MobileEntry ---
-  // Alleen bij expliciete EMPLOYEE business_role
-  if (hasExplicitEmployeeRole && currentPageName === "Dashboard") {
+  // --- EMPLOYEE: altijd naar MobileEntry, nergens anders ---
+  if (hasExplicitEmployeeRole && currentPageName !== "MobileEntry" && currentPageName !== "SecureDownload" && currentPageName !== "StamkaartSignature" && currentPageName !== "SecurityPrivacy") {
     return <Navigate to={createPageUrl("MobileEntry")} replace />;
   }
 
