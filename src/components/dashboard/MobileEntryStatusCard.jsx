@@ -23,8 +23,9 @@ export default function MobileEntryStatusCard() {
   const { data: logs = [] } = useQuery({
     queryKey: ["mobile-entry-today-stats"],
     queryFn: () => base44.entities.MobileEntrySubmissionLog.list("-timestamp_received", 200),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const stats = useMemo(() => {

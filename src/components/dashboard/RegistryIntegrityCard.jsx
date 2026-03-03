@@ -16,9 +16,10 @@ export default function RegistryIntegrityCard() {
       const res = await base44.functions.invoke('verifyFunctionRegistry');
       return res.data;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     gcTime: 0,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     retry: 2,
     retryDelay: 1000,
   });
@@ -34,8 +35,9 @@ export default function RegistryIntegrityCard() {
       );
       return logs;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     retry: 1,
   });
 

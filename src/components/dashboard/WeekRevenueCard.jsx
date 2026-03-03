@@ -61,15 +61,17 @@ export default function WeekRevenueCard() {
   const { data: curSummaries = [], isLoading: l1, refetch } = useQuery({
     queryKey: ["wcs", yearNum, weekNum],
     queryFn: () => base44.entities.WeeklyCustomerSummary.filter({ year: yearNum, week_number: weekNum }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: prevSummaries = [], isLoading: l2 } = useQuery({
     queryKey: ["wcs", prevYearNum, prevWeekNum],
     queryFn: () => base44.entities.WeeklyCustomerSummary.filter({ year: prevYearNum, week_number: prevWeekNum }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Spotta invoice revenue: factuurweek = werkweek + 1 (Spotta factureert week 9 voor werk in week 8)
@@ -79,16 +81,18 @@ export default function WeekRevenueCard() {
   const { data: spottaInvoices = [], isLoading: l3 } = useQuery({
     queryKey: ["spotta-inv", SPOTTA_CUSTOMER_ID],
     queryFn: () => base44.entities.SpottaInvoice.filter({ customer_id: SPOTTA_CUSTOMER_ID }),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // DPG Media invoices (4-week periods → split to weekly revenue)
   const { data: dpgInvoices = [], isLoading: l5 } = useQuery({
     queryKey: ["dpg-inv", DPG_CUSTOMER_ID],
     queryFn: () => base44.entities.SpottaInvoice.filter({ customer_id: DPG_CUSTOMER_ID }),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const spottaInvoiceIds = useMemo(() => spottaInvoices.map(i => i.id).sort().join(','), [spottaInvoices]);
@@ -106,8 +110,9 @@ export default function WeekRevenueCard() {
       return allLines;
     },
     enabled: spottaInvoices.length > 0,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Calculate Spotta revenue per week from invoice lines

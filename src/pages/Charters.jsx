@@ -29,13 +29,12 @@ export default function Charters() {
   const periodEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: periodStart, end: periodEnd });
 
-  const cOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const cOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   const { data: charterCompanies = [], isLoading: loadingCompanies } = useQuery({
     queryKey: ['charterCompanies'],
     queryFn: () => base44.entities.CharterCompany.list(),
-    staleTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    ...cOpts,
   });
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({

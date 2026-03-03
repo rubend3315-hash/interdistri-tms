@@ -14,9 +14,10 @@ export default function SystemStatusCard() {
       const res = await base44.functions.invoke('systemHealthCheck');
       return res.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     gcTime: 0,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     retry: 2,
     retryDelay: 1000,
   });

@@ -22,7 +22,7 @@ export default function KmDashboard() {
   const [vehicleFilter, setVehicleFilter] = useState("all");
   const [employeeFilter, setEmployeeFilter] = useState("all");
 
-  const cOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const cOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   const { data: trips = [], isLoading: loadingTrips } = useQuery({
     queryKey: ['km-trips', dateRange.from, dateRange.to],
@@ -47,8 +47,9 @@ export default function KmDashboard() {
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const vehicleMap = useMemo(() => {

@@ -19,7 +19,7 @@ export default function CharterOverview() {
   const periodEnd = endOfWeek(today, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: periodStart, end: periodEnd });
 
-  const cacheOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const cacheOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   const { data: charterEmployees = [], isLoading: loadingEmp } = useQuery({
     queryKey: ['charterDashEmp'],

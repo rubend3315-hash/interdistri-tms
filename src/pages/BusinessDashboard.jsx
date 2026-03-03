@@ -21,14 +21,13 @@ export default function BusinessDashboard() {
     employeeId: "all",
   });
 
-  const cOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const cOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   // Load reference data
   const { data: customers = [] } = useQuery({
     queryKey: ["customers-active"],
     queryFn: () => base44.entities.Customer.filter({ status: "Actief" }),
-    staleTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    ...cOpts,
   });
 
   const { data: employees = [] } = useQuery({

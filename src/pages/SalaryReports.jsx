@@ -43,7 +43,7 @@ export default function SalaryReports() {
   const [definitiefDialogOpen, setDefinitiefDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const cacheOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const cacheOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
@@ -60,29 +60,33 @@ export default function SalaryReports() {
   const { data: holidays = [] } = useQuery({
     queryKey: ['holidays-all'],
     queryFn: () => base44.entities.Holiday.list(),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: salaryTables = [] } = useQuery({
     queryKey: ['salaryTables'],
     queryFn: () => base44.entities.SalaryTable.list(),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ['loonperiodeStatuses'],
     queryFn: () => base44.entities.LoonperiodeStatus.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const definitiefMutation = useMutation({

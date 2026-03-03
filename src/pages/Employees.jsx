@@ -45,22 +45,25 @@ export default function Employees() {
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees'],
     queryFn: () => base44.entities.Employee.list('-created_date'),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
     queryFn: () => base44.entities.Department.filter({ status: 'Actief' }, 'sort_order'),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: functionOptions = [] } = useQuery({
     queryKey: ['functions_list'],
     queryFn: () => base44.entities.Function.filter({ status: 'Actief' }, 'sort_order'),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const createMutation = useMutation({

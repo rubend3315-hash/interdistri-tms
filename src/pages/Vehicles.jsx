@@ -54,22 +54,25 @@ export default function Vehicles() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: vehicles = [], isLoading } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => base44.entities.Vehicle.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: niwoPermits = [] } = useQuery({
     queryKey: ['niwoPermits'],
     queryFn: () => base44.entities.NiwoPermit.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const createMutation = useMutation({

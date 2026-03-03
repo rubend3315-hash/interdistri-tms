@@ -44,7 +44,7 @@ export default function Dashboard({ currentUser }) {
     return null;
   }
 
-  const queryOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const queryOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],

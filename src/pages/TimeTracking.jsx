@@ -32,7 +32,7 @@ export default function TimeTracking() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const refOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const refOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   const { data: currentUser, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
@@ -62,29 +62,33 @@ export default function TimeTracking() {
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
     queryFn: () => base44.entities.Project.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: urensoorten = [] } = useQuery({
     queryKey: ['urensoorten'],
     queryFn: () => base44.entities.Urensoort.list(),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ['loonperiodeStatuses'],
     queryFn: () => base44.entities.LoonperiodeStatus.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const weekIsDefinitief = isWeekInDefinitiefPeriode(weekNumber, year, loonperiodeStatuses);

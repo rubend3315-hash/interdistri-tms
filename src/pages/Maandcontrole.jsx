@@ -18,8 +18,9 @@ export default function Maandcontrole() {
   const { data: summaries = [], isLoading, refetch } = useQuery({
     queryKey: ["monthly-control", year, month],
     queryFn: () => base44.entities.MonthlyCustomerSummary.filter({ year, month }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const isLocked = summaries.some(s => s.locked);

@@ -68,7 +68,7 @@ export default function Approvals() {
   };
 
   // Server-side filtered query: pending always ALL (workflow), history by date range
-  const qOpts = { staleTime: 3 * 60 * 1000, refetchOnWindowFocus: false };
+  const qOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   const { data: pendingRaw = [], isLoading: loadingPending } = useQuery({
     queryKey: ['timeEntries-pending'],
@@ -101,29 +101,33 @@ export default function Approvals() {
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
     queryFn: () => base44.entities.Employee.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => base44.entities.Vehicle.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: user, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ['loonperiodeStatuses'],
     queryFn: () => base44.entities.LoonperiodeStatus.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const approveMutation = useMutation({

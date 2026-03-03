@@ -29,22 +29,25 @@ export default function Documents() {
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ['documents'],
     queryFn: () => base44.entities.Document.list('-created_date', 500),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
     queryFn: () => base44.entities.Employee.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => base44.entities.Vehicle.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const deleteMutation = useMutation({

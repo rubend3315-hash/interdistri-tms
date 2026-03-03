@@ -160,7 +160,7 @@ export default function Trips() {
     conceptPageState.resetPage();
   };
 
-  const refOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const refOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   // Server-side filtered query
   const { data: trips = [], isLoading } = useQuery({
@@ -189,22 +189,25 @@ export default function Trips() {
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutes'],
     queryFn: () => base44.entities.TIModelRoute.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: dbRoutes = [] } = useQuery({
     queryKey: ['routesList'],
     queryFn: () => base44.entities.Route.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: timeEntries = [] } = useQuery({
@@ -219,15 +222,17 @@ export default function Trips() {
       category: 'Verblijfkosten',
       status: 'Actief'
     }),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ['loonperiodeStatuses'],
     queryFn: () => base44.entities.LoonperiodeStatus.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const createMutation = useMutation({

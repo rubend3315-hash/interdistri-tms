@@ -73,7 +73,7 @@ export default function Planning() {
 
   const periodLabel = viewMode === "week" ? `Week ${weekNumber}` : format(currentDate, "MMMM yyyy", { locale: nl });
 
-  const refOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const refOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
@@ -98,29 +98,33 @@ export default function Planning() {
   const { data: holidays = [] } = useQuery({
     queryKey: ['holidays', year],
     queryFn: () => base44.entities.Holiday.filter({ year }),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: uurcodes = [] } = useQuery({
     queryKey: ['uurcodes'],
     queryFn: () => base44.entities.Uurcode.filter({ status: 'Actief' }),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: routes = [] } = useQuery({
     queryKey: ['routes'],
     queryFn: () => base44.entities.Route.filter({ is_active: true }),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutes'],
     queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true }),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: vehicles = [] } = useQuery({
@@ -144,8 +148,9 @@ export default function Planning() {
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.filter({ status: 'Actief' }),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const getWeekScheduleHours = (employee) => {

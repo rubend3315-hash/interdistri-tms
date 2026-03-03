@@ -18,7 +18,7 @@ export default function Dagstaat() {
   const [selectedEndDate, setSelectedEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [showPrint, setShowPrint] = useState(false);
 
-  const cOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+  const cOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ["employees-dagstaat"],
@@ -55,8 +55,9 @@ export default function Dagstaat() {
   const { data: customers = [] } = useQuery({
     queryKey: ["customers-dagstaat"],
     queryFn: () => base44.entities.Customer.list(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const selectedEmployee = employees.find((e) => e.id === selectedEmployeeId);
