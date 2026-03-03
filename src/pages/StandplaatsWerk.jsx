@@ -57,6 +57,8 @@ export default function StandplaatsWerk() {
     pagination.resetPage();
   };
 
+  const cOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
+
   // Server-side filtered query
   const { data: records = [], isLoading } = useQuery({
     queryKey: ["standplaatswerk", filterDateFrom, filterDateTo],
@@ -66,36 +68,48 @@ export default function StandplaatsWerk() {
       if (filterDateTo) filter.date = { ...(filter.date || {}), $lte: filterDateTo };
       return base44.entities.StandplaatsWerk.filter(filter, '-date');
     },
+    ...cOpts,
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ["employees"],
     queryFn: () => base44.entities.Employee.list(),
+    ...cOpts,
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
     queryFn: () => base44.entities.Customer.list(),
+    ...cOpts,
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: () => base44.entities.Project.list(),
+    ...cOpts,
   });
 
   const { data: activiteiten = [] } = useQuery({
     queryKey: ["activiteiten"],
     queryFn: () => base44.entities.Activiteit.list(),
+    ...cOpts,
   });
 
   const { data: timeEntries = [] } = useQuery({
-    queryKey: ["timeEntriesForStandplaats"],
-    queryFn: () => base44.entities.TimeEntry.list("-date", 500),
+    queryKey: ["timeEntriesForStandplaats", filterDateFrom, filterDateTo],
+    queryFn: () => {
+      const f = {};
+      if (filterDateFrom) f.date = { ...(f.date || {}), $gte: filterDateFrom };
+      if (filterDateTo) f.date = { ...(f.date || {}), $lte: filterDateTo };
+      return base44.entities.TimeEntry.filter(f, '-date');
+    },
+    ...cOpts,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ["loonperiodeStatuses"],
     queryFn: () => base44.entities.LoonperiodeStatus.list(),
+    ...cOpts,
   });
 
   const createMutation = useMutation({

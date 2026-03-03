@@ -132,8 +132,7 @@ export default function EmployeeReport() {
   const { data: customers = [] } = useQuery({
     queryKey: ['customers-for-report'],
     queryFn: () => base44.entities.Customer.list(),
-    staleTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    ...cOpts,
   });
   const postNLCustomer = customers.find(c => c.company_name === 'PostNL');
 
@@ -142,8 +141,7 @@ export default function EmployeeReport() {
     queryKey: ['articles-report', postNLCustomer?.id],
     queryFn: () => postNLCustomer ? base44.entities.Article.filter({ customer_id: postNLCustomer.id }) : [],
     enabled: !!postNLCustomer,
-    staleTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    ...cOpts,
   });
 
   // Fetch TI Model routes
@@ -151,8 +149,7 @@ export default function EmployeeReport() {
     queryKey: ['ti-routes-report', postNLCustomer?.id],
     queryFn: () => postNLCustomer ? base44.entities.TIModelRoute.filter({ customer_id: postNLCustomer.id, status: 'Actief' }) : [],
     enabled: !!postNLCustomer,
-    staleTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    ...cOpts,
   });
 
   // Fetch import results for report rows - server-side filtered by period

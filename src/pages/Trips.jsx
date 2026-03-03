@@ -211,8 +211,13 @@ export default function Trips() {
   });
 
   const { data: timeEntries = [] } = useQuery({
-    queryKey: ['timeEntriesForTrips'],
-    queryFn: () => base44.entities.TimeEntry.list('-date', 200),
+    queryKey: ['timeEntriesForTrips', filterDateFrom, filterDateTo],
+    queryFn: () => {
+      const f = {};
+      if (filterDateFrom) f.date = { ...(f.date || {}), $gte: filterDateFrom };
+      if (filterDateTo) f.date = { ...(f.date || {}), $lte: filterDateTo };
+      return base44.entities.TimeEntry.filter(f, '-date');
+    },
     ...refOpts,
   });
 
