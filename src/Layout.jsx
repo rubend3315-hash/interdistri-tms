@@ -467,10 +467,9 @@ export default function Layout({ children, currentPageName }) {
   // Gebruikers zonder business_role die geen Employee-koppeling hebben,
   // worden NIET geblokkeerd (ze krijgen gewoon de permission check).
   const hasExplicitEmployeeRole = user?.business_role === 'EMPLOYEE';
-  const isEffectiveEmployee = isEmployeeUser(user);
   let showGraceWarning = false;
 
-  if (isEffectiveEmployee && hasExplicitEmployeeRole) {
+  if (hasExplicitEmployeeRole) {
     if (loadingEmployee) {
       return null;
     }
