@@ -43,34 +43,46 @@ export default function SalaryReports() {
   const [definitiefDialogOpen, setDefinitiefDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
+  const cacheOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list()
+    queryFn: () => base44.entities.Employee.list(),
+    ...cacheOpts,
   });
 
   const { data: timeEntries = [], isLoading: loadingEntries } = useQuery({
-    queryKey: ['timeEntries-all'],
-    queryFn: () => base44.entities.TimeEntry.list()
+    queryKey: ['timeEntries-all', selectedYear],
+    queryFn: () => base44.entities.TimeEntry.filter({ year: selectedYear }),
+    ...cacheOpts,
   });
 
   const { data: holidays = [] } = useQuery({
     queryKey: ['holidays-all'],
-    queryFn: () => base44.entities.Holiday.list()
+    queryFn: () => base44.entities.Holiday.list(),
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: salaryTables = [] } = useQuery({
     queryKey: ['salaryTables'],
-    queryFn: () => base44.entities.SalaryTable.list()
+    queryFn: () => base44.entities.SalaryTable.list(),
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
     queryKey: ['loonperiodeStatuses'],
-    queryFn: () => base44.entities.LoonperiodeStatus.list()
+    queryFn: () => base44.entities.LoonperiodeStatus.list(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me()
+    queryFn: () => base44.auth.me(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const definitiefMutation = useMutation({

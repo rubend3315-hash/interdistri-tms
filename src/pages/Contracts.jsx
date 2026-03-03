@@ -63,7 +63,9 @@ export default function Contracts() {
 
   const { data: user, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me()
+    queryFn: () => base44.auth.me(),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const isAdmin = user?.role === 'admin';
@@ -71,7 +73,9 @@ export default function Contracts() {
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
     queryFn: () => base44.entities.Employee.list(),
-    enabled: isAdmin
+    enabled: isAdmin,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Admin: use backend function for light list; Employee: also uses it (it filters server-side)
@@ -80,7 +84,9 @@ export default function Contracts() {
     queryFn: async () => {
       const response = await base44.functions.invoke('listContractsLight');
       return response.data?.contracts || [];
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Track which contract content has been loaded (for employee view)
@@ -104,7 +110,9 @@ export default function Contracts() {
   const { data: templates = [] } = useQuery({
     queryKey: ['contractTemplates'],
     queryFn: () => base44.entities.ContractTemplate.filter({ status: 'Actief' }),
-    enabled: isAdmin
+    enabled: isAdmin,
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const generateContractMutation = useMutation({
