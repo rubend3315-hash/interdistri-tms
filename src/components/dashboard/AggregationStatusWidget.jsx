@@ -17,13 +17,15 @@ export default function AggregationStatusWidget() {
   const { data: weeklySummaries = [], isLoading: l1 } = useQuery({
     queryKey: ["agg-status-weekly", curYear, curWeek],
     queryFn: () => base44.entities.WeeklyCustomerSummary.filter({ year: curYear, week_number: curWeek }),
-    refetchInterval: 60000,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: monthlySummaries = [], isLoading: l2 } = useQuery({
     queryKey: ["agg-status-monthly", curYear, curMonth],
     queryFn: () => base44.entities.MonthlyCustomerSummary.filter({ year: curYear, month: curMonth }),
-    refetchInterval: 60000,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const isLoading = l1 || l2;

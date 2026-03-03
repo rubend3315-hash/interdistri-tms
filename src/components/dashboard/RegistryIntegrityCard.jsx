@@ -18,7 +18,7 @@ export default function RegistryIntegrityCard() {
     },
     staleTime: 10 * 60 * 1000,
     gcTime: 0,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     retry: 2,
     retryDelay: 1000,
   });
@@ -35,6 +35,7 @@ export default function RegistryIntegrityCard() {
       return logs;
     },
     staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
     retry: 1,
   });
 

@@ -16,7 +16,7 @@ export default function SystemStatusCard() {
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 0,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     retry: 2,
     retryDelay: 1000,
   });

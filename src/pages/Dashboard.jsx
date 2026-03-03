@@ -44,40 +44,49 @@ export default function Dashboard({ currentUser }) {
     return null;
   }
 
+  const queryOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
     queryFn: () => base44.entities.Employee.list(),
-    enabled: isAdmin
+    enabled: isAdmin,
+    ...queryOpts
   });
 
   const { data: vehicles = [], isLoading: loadingVehicles } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => base44.entities.Vehicle.list(),
-    enabled: isAdmin
+    enabled: isAdmin,
+    ...queryOpts
   });
 
   const { data: timeEntries = [], isLoading: loadingTimeEntries } = useQuery({
     queryKey: ['timeEntries'],
     queryFn: () => base44.entities.TimeEntry.list('-created_date', 100),
-    enabled: isAdmin
+    enabled: isAdmin,
+    ...queryOpts
   });
 
+  const todayStr = format(today, 'yyyy-MM-dd');
   const { data: trips = [], isLoading: loadingTrips } = useQuery({
-    queryKey: ['trips'],
-    queryFn: () => base44.entities.Trip.list(),
-    enabled: isAdmin
+    queryKey: ['trips-today', todayStr],
+    queryFn: () => base44.entities.Trip.filter({ date: todayStr }),
+    enabled: isAdmin,
+    ...queryOpts
   });
 
   const { data: niwoPermits = [] } = useQuery({
     queryKey: ['niwoPermits'],
     queryFn: () => base44.entities.NiwoPermit.list(),
-    enabled: isAdmin
+    enabled: isAdmin,
+    ...queryOpts
   });
 
   const { data: managedDocuments = [] } = useQuery({
     queryKey: ['documents-dashboard'],
     queryFn: () => base44.entities.Document.filter({ status: 'Actief' }),
-    enabled: isAdmin
+    enabled: isAdmin,
+    ...queryOpts
   });
 
   const isLoading = loadingEmployees || loadingVehicles || loadingTimeEntries || loadingTrips;
@@ -86,7 +95,7 @@ export default function Dashboard({ currentUser }) {
   const activeEmployees = employees.filter(e => e.status === 'Actief').length;
   const availableVehicles = vehicles.filter(v => v.status === 'Beschikbaar').length;
   const pendingApprovals = timeEntries.filter(t => t.status === 'Ingediend').length;
-  const todayTrips = trips.filter(t => t.date === format(today, 'yyyy-MM-dd')).length;
+  const todayTrips = trips.length;
 
   // Build notification items from expiring documents + system alerts
   const notificationItems = [];

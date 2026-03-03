@@ -19,24 +19,30 @@ export default function CharterOverview() {
   const periodEnd = endOfWeek(today, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: periodStart, end: periodEnd });
 
+  const cacheOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
+
   const { data: charterEmployees = [], isLoading: loadingEmp } = useQuery({
     queryKey: ['charterDashEmp'],
-    queryFn: () => base44.entities.Employee.filter({ department: "Charters", status: "Actief" })
+    queryFn: () => base44.entities.Employee.filter({ department: "Charters", status: "Actief" }),
+    ...cacheOpts
   });
 
   const { data: schedules = [], isLoading: loadingSched } = useQuery({
     queryKey: ['charterDashSchedules', weekNumber, year],
-    queryFn: () => base44.entities.Schedule.filter({ week_number: weekNumber, year })
+    queryFn: () => base44.entities.Schedule.filter({ week_number: weekNumber, year }),
+    ...cacheOpts
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['charterDashVehicles'],
-    queryFn: () => base44.entities.Vehicle.list()
+    queryFn: () => base44.entities.Vehicle.list(),
+    ...cacheOpts
   });
 
   const { data: allEmployees = [] } = useQuery({
     queryKey: ['charterDashAllEmp'],
-    queryFn: () => base44.entities.Employee.filter({ status: "Actief" })
+    queryFn: () => base44.entities.Employee.filter({ status: "Actief" }),
+    ...cacheOpts
   });
 
   const getDayKey = (index) => {
