@@ -301,7 +301,7 @@ export default function Layout({ children, currentPageName }) {
       const emps = await base44.entities.Employee.filter({ email });
       return emps[0] ?? null;
     },
-    enabled: !!user && isEmployeeUser(user),
+    enabled: !!user && (isEmployeeUser(user) || user?.business_role === 'EMPLOYEE'),
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
