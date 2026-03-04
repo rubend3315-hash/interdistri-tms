@@ -232,7 +232,11 @@ export default function BackupsPage() {
             >
               {exportToSupabaseMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               <CloudUpload className="w-4 h-4 mr-2" />
-              {exportToSupabaseMutation.isPending ? 'Exporteren...' : 'Export naar Supabase'}
+              {exportToSupabaseMutation.isPending 
+                ? (supabaseExportProgress 
+                    ? `Batch ${supabaseExportProgress.current}/${supabaseExportProgress.total}...` 
+                    : 'Exporteren...')
+                : 'Export naar Supabase'}
             </Button>
             <Button
               onClick={() => setShowSupabaseRestore(true)}
