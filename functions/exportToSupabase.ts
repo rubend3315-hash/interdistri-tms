@@ -206,6 +206,31 @@ function prepareRow(row) {
   return prepared;
 }
 
+// Export a single entity to Supabase
+async function exportSingleEntity(base44, entityName, tableName) {
+  const columns = await fetchTableColumnNames(tableName);
+  if (!columns) {
+    return { status: 'skipped', reason: 'table does not exist in Supabase', count: 0 };
+  }
+
+  const data = await base44.asServiceRole.entities[entityName].list('', 10000);
+  
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return { status: 'skipped', reason: 'no data', count: 0 };
+  }
+
+  await clearTable(tableName);
+  await delay(100);
+
+  const preparedRows = data.map(row => {
+    const prepared = prepareRow(row);
+    return filterToColumns(prepared, columns);
+  });
+  
+  const inserted = await insertBatch(tableName, preparedRows);
+  return { status: 'success', count: inserted };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -217,47 +242,48 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const selectedEntities = body.entities || null; // null = all
+    // batch_index: which chunk of entities to export (0-based, 5 entities per batch)
+    const batchIndex = body.batch_index ?? null;
+    const BATCH_SIZE = 5;
+
+    const allEntities = selectedEntities 
+      ? Object.entries(entityToTable).filter(([e]) => selectedEntities.includes(e))
+      : Object.entries(entityToTable);
+
+    // If no batch_index given and more than BATCH_SIZE entities, return batch plan
+    if (batchIndex === null && allEntities.length > BATCH_SIZE) {
+      const totalBatches = Math.ceil(allEntities.length / BATCH_SIZE);
+      const batches = [];
+      for (let i = 0; i < totalBatches; i++) {
+        const slice = allEntities.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
+        batches.push(slice.map(([e]) => e));
+      }
+      return Response.json({
+        success: true,
+        mode: 'batched',
+        total_batches: totalBatches,
+        total_entities: allEntities.length,
+        batches
+      });
+    }
+
+    // Determine which entities to export this call
+    const entitiesToExport = batchIndex !== null
+      ? allEntities.slice(batchIndex * BATCH_SIZE, (batchIndex + 1) * BATCH_SIZE)
+      : allEntities;
 
     const results = {};
     let totalExported = 0;
     const errors = [];
 
-    const entitiesToExport = selectedEntities 
-      ? Object.entries(entityToTable).filter(([e]) => selectedEntities.includes(e))
-      : Object.entries(entityToTable);
-
     for (const [entityName, tableName] of entitiesToExport) {
       try {
-        await delay(300);
-
-        // Check if table exists and get its columns
-        const columns = await fetchTableColumnNames(tableName);
-        if (!columns) {
-          results[entityName] = { status: 'skipped', reason: 'table does not exist in Supabase', count: 0 };
-          continue;
-        }
-
-        const data = await base44.asServiceRole.entities[entityName].list('', 10000);
-        
-        if (!data || !Array.isArray(data) || data.length === 0) {
-          results[entityName] = { status: 'skipped', reason: 'no data', count: 0 };
-          continue;
-        }
-
-        // Clear existing data in Supabase table
-        await clearTable(tableName);
-        await delay(100);
-
-        // Prepare rows: stringify objects, then filter to only existing columns
-        const preparedRows = data.map(row => {
-          const prepared = prepareRow(row);
-          return filterToColumns(prepared, columns);
-        });
-        
-        const inserted = await insertBatch(tableName, preparedRows);
-        
-        results[entityName] = { status: 'success', count: inserted };
-        totalExported += inserted;
+        await delay(200);
+        console.log(`[exportToSupabase] Exporting ${entityName} → ${tableName}`);
+        const result = await exportSingleEntity(base44, entityName, tableName);
+        results[entityName] = result;
+        totalExported += result.count || 0;
+        console.log(`[exportToSupabase] ${entityName}: ${result.status} (${result.count || 0} rows)`);
       } catch (err) {
         console.error(`Export error for ${entityName}:`, err.message);
         results[entityName] = { status: 'error', error: err.message };
@@ -265,9 +291,12 @@ Deno.serve(async (req) => {
       }
     }
 
+    const totalBatches = Math.ceil(allEntities.length / BATCH_SIZE);
     return Response.json({
       success: true,
       timestamp: new Date().toISOString(),
+      batch_index: batchIndex,
+      total_batches: totalBatches,
       total_exported: totalExported,
       entity_results: results,
       errors: errors.length > 0 ? errors : undefined
