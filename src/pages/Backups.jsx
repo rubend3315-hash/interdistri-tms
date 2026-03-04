@@ -61,15 +61,49 @@ export default function BackupsPage() {
     }
   });
 
+  const [supabaseExportProgress, setSupabaseExportProgress] = useState(null);
+
   const exportToSupabaseMutation = useMutation({
     mutationFn: async () => {
-      const response = await base44.functions.invoke('exportToSupabase');
-      return response.data;
+      // Step 1: Get batch plan
+      setSupabaseExportProgress({ current: 0, total: 0, status: 'Planning...' });
+      const planRes = await base44.functions.invoke('exportToSupabase');
+      const plan = planRes.data;
+
+      if (plan.mode !== 'batched') {
+        // Small export, done in one go
+        setSupabaseExportProgress(null);
+        return plan;
+      }
+
+      const totalBatches = plan.total_batches;
+      let totalExported = 0;
+      const allErrors = [];
+      const allResults = {};
+
+      // Step 2: Execute each batch
+      for (let i = 0; i < totalBatches; i++) {
+        setSupabaseExportProgress({
+          current: i + 1,
+          total: totalBatches,
+          status: `Batch ${i + 1}/${totalBatches}: ${plan.batches[i]?.join(', ')}`
+        });
+        const batchRes = await base44.functions.invoke('exportToSupabase', { batch_index: i });
+        const batchData = batchRes.data;
+        totalExported += batchData.total_exported || 0;
+        if (batchData.errors) allErrors.push(...batchData.errors);
+        Object.assign(allResults, batchData.entity_results || {});
+      }
+
+      setSupabaseExportProgress(null);
+      return { success: true, total_exported: totalExported, errors: allErrors.length > 0 ? allErrors : undefined, entity_results: allResults };
     },
     onSuccess: (data) => {
+      setSupabaseExportProgress(null);
       alert(`Export naar Supabase voltooid! ${data.total_exported} records geëxporteerd.${data.errors?.length ? ` ${data.errors.length} fouten.` : ''}`);
     },
     onError: (error) => {
+      setSupabaseExportProgress(null);
       alert('Fout bij export naar Supabase: ' + (error?.response?.data?.error || error.message));
     }
   });
