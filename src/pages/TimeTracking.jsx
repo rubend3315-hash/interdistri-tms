@@ -57,7 +57,8 @@ export default function TimeTracking() {
   const { data: timeEntries = [], isLoading: loadingEntries } = useQuery({
     queryKey: ['timeEntries', weekNumber, year],
     queryFn: () => base44.entities.TimeEntry.filter({ week_number: weekNumber, year }),
-    ...refOpts,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: projects = [] } = useQuery({
