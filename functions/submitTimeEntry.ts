@@ -707,15 +707,15 @@ Deno.serve(async (req) => {
     const isManualBreak = payload.break_manual === true;
     const endD = payload.end_date || null;
 
-    const [allEmployeeEntries, breakSchedulesRaw] = await Promise.all([
-      svc.entities.TimeEntry.filter({ employee_id: empId }),
+    const [rangedCandidates, breakSchedulesRaw] = await Promise.all([
+      svc.entities.TimeEntry.filter({
+        employee_id: empId,
+        date: { $gte: queryStart, $lte: queryEnd },
+      }),
       isManualBreak ? Promise.resolve([]) : svc.entities.BreakSchedule.filter({ status: 'Actief' }),
     ]);
     perf.overlap_fetch = Date.now() - tOverlap;
-    console.log('[STEP] Found', allEmployeeEntries.length, 'total entries');
-
-    // In-memory filter for the date range window
-    const rangedCandidates = allEmployeeEntries.filter(e => e.date >= queryStart && e.date <= queryEnd);
+    console.log('[STEP] Found', rangedCandidates.length, 'entries in range', queryStart, '-', queryEnd);
 
     console.log('[OVERLAP_CHECK]', JSON.stringify({
       employeeId: empId,
