@@ -5,7 +5,7 @@
 // ║ DO NOT USE RAW ENTITY CALLS — USE tenantService for tenant data  ║
 // ║ Do not mix user session and service role access.                 ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // ============================================================
 // submitTimeEntry v5.2.1 — MobileSubmissionIndex idempotency guard (2026-02-28 redeployed)
