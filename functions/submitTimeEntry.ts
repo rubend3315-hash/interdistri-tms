@@ -553,6 +553,7 @@ Deno.serve(async (req) => {
     const [rangedCandidates, breakSchedulesRaw] = await Promise.all([
       svc.entities.TimeEntry.filter({
         employee_id: empId,
+        status: { $in: ['Ingediend', 'Goedgekeurd'] },
         date: { $gte: queryStart, $lte: queryEnd },
       }),
       isManualBreak ? Promise.resolve([]) : getBreakSchedules(svc),
