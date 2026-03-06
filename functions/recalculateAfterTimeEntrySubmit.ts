@@ -254,11 +254,11 @@ Deno.serve(async (req) => {
       if (postOverlap.overlaps) {
         const existingEntry = postCommitCandidates.find(e => e.id === postOverlap.existingId);
         if (existingEntry && existingEntry.created_date < verifyEntry?.created_date) {
-          console.log(`[RECALC POST-COMMIT OVERLAP] Rolling back ${time_entry_id}, older entry ${postOverlap.existingId} wins`);
-          await svc.entities.TimeEntry.update(time_entry_id, { status: 'Concept' });
-          for (const tid of createdTripIds) await safeDelete(svc.entities.Trip, tid, 'overlap-trip');
-          for (const sid of createdSpwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
-          await safeDelete(svc.entities.TimeEntry, time_entry_id, 'overlap-te');
+          console.log(`[RECALC POST-COMMIT OVERLAP] Rejecting ${time_entry_id}, older entry ${postOverlap.existingId} wins`);
+          await svc.entities.TimeEntry.update(time_entry_id, {
+            status: 'Afgekeurd',
+            rejection_reason: `Automatisch afgekeurd: overlap gedetecteerd met bestaande dienst ${postOverlap.existingId} (${postOverlap.errorMsg})`,
+          });
 
           await svc.entities.MobileEntrySubmissionLog.create({
             submission_id, user_id: '', email: '', employee_id,
