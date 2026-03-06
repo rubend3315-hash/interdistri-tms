@@ -6,7 +6,7 @@
 // ║ NEVER affects the original SUCCESS status of the submission.     ║
 // ║ Redeployed: 2026-02-28                                           ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // --- TIME HELPERS (duplicated from submitTimeEntry for independence) ---
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
