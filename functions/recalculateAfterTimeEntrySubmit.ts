@@ -234,9 +234,12 @@ Deno.serve(async (req) => {
       const queryStart = addDays(date, -1);
       const queryEnd = addDays(entryEnd, 1);
 
-      const postCommitAll = await svc.entities.TimeEntry.filter({ employee_id });
+      const postCommitAll = await svc.entities.TimeEntry.filter({
+        employee_id,
+        date: { $gte: queryStart, $lte: queryEnd },
+      });
       const postCommitCandidates = postCommitAll.filter(e =>
-        e.id !== time_entry_id && e.date >= queryStart && e.date <= queryEnd
+        e.id !== time_entry_id
       );
 
       const postOverlap = validateTimeEntryOverlap(
