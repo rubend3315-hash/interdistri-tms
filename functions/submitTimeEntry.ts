@@ -386,7 +386,11 @@ async function updateSubmissionIndex(svc, indexRecord, status, extra = {}) {
 Deno.serve(async (req) => {
   const t0 = Date.now();
 
-  // Parse body ONCE and reuse throughout the function
+  // CRITICAL: Create SDK client FIRST from original request (it reads headers/auth).
+  // Then clone the request to read the body separately.
+  const base44 = createClientFromRequest(req);
+
+  // Parse body from a clone (SDK may also need the original stream)
   let parsedBody;
   try { parsedBody = await req.json(); }
   catch (_) { parsedBody = null; }
@@ -409,8 +413,6 @@ Deno.serve(async (req) => {
   const perf = {};
 
   try {
-    const base44 = createClientFromRequest(req);
-
     // ========================================
     // 1. AUTHENTICATION
     // ========================================
