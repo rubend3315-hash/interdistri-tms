@@ -79,26 +79,24 @@ async function safeDelete(entity, id, label) {
 
 Deno.serve(async (req) => {
   const t0 = Date.now();
+  // Outer-scope vars for error handler access (req body can only be read once)
+  let _submission_id = null;
+  let _employee_id = null;
+
   try {
     const base44 = createClientFromRequest(req);
     const svc = base44.asServiceRole;
 
     const payload = await req.json();
     const { time_entry_id, employee_id, submission_id, trips, standplaats_werk, date, end_date, start_time, end_time } = payload;
+    _submission_id = submission_id;
+    _employee_id = employee_id;
 
     if (!time_entry_id || !employee_id || !submission_id) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     console.log(`[RECALC] Starting for TE=${time_entry_id} sub=${submission_id}`);
-
-    // Update index to RUNNING
-    try {
-      const indexRecords = await svc.entities.MobileSubmissionIndex.filter({ submission_id });
-      if (indexRecords[0]) {
-        await svc.entities.MobileSubmissionIndex.update(indexRecords[0].id, { recalc_status: 'RUNNING' });
-      }
-    } catch (e) { console.error('[RECALC] Index update to RUNNING failed:', e.message); }
 
     const perf = {};
     const createdTripIds = [];
@@ -262,17 +260,6 @@ Deno.serve(async (req) => {
           for (const sid of createdSpwIds) await safeDelete(svc.entities.StandplaatsWerk, sid, 'overlap-spw');
           await safeDelete(svc.entities.TimeEntry, time_entry_id, 'overlap-te');
 
-          // Update index
-          try {
-            const indexRecords = await svc.entities.MobileSubmissionIndex.filter({ submission_id });
-            if (indexRecords[0]) {
-              await svc.entities.MobileSubmissionIndex.update(indexRecords[0].id, {
-                status: 'FAILED',
-                recalc_status: 'FAILED',
-              });
-            }
-          } catch (_) {}
-
           await svc.entities.MobileEntrySubmissionLog.create({
             submission_id, user_id: '', email: '', employee_id,
             timestamp_received: new Date().toISOString(),
@@ -300,9 +287,12 @@ Deno.serve(async (req) => {
     try {
       if (date) {
         const entryEnd = end_date || date;
-        const queryStart = addDays(date, -1);
-        const queryEnd = addDays(entryEnd, 1);
-        const allEntries = await svc.entities.TimeEntry.filter({ employee_id });
+        const cleanupStart = addDays(date, -1);
+        const cleanupEnd = addDays(entryEnd, 1);
+        const allEntries = await svc.entities.TimeEntry.filter({
+          employee_id,
+          date: { $gte: cleanupStart, $lte: cleanupEnd },
+        });
         const oldDrafts = allEntries.filter(e => {
           if (e.status !== 'Concept' || e.id === time_entry_id) return false;
           const draftEnd = e.end_date || e.date;
@@ -344,16 +334,6 @@ Deno.serve(async (req) => {
       console.error('[RECALC PRE-RESOLVE]:', resolveErr.message);
     }
 
-    // ========================================
-    // 7. UPDATE INDEX TO COMPLETED
-    // ========================================
-    try {
-      const indexRecords = await svc.entities.MobileSubmissionIndex.filter({ submission_id });
-      if (indexRecords[0]) {
-        await svc.entities.MobileSubmissionIndex.update(indexRecords[0].id, { recalc_status: 'COMPLETED' });
-      }
-    } catch (e) { console.error('[RECALC] Index update to COMPLETED failed:', e.message); }
-
     perf.total_ms = Date.now() - t0;
     console.log('[RECALC PERF]', JSON.stringify(perf));
 
@@ -367,19 +347,14 @@ Deno.serve(async (req) => {
   } catch (outerError) {
     console.error('[RECALC UNHANDLED]', outerError);
 
-    // Best-effort: update index to FAILED
+    // Best-effort error logging — uses outer-scope vars (req body already consumed)
     try {
-      const base44 = createClientFromRequest(req);
-      const svc = base44.asServiceRole;
-      const payload = await req.json().catch(() => ({}));
-      if (payload.submission_id) {
-        const indexRecords = await svc.entities.MobileSubmissionIndex.filter({ submission_id: payload.submission_id });
-        if (indexRecords[0]) {
-          await svc.entities.MobileSubmissionIndex.update(indexRecords[0].id, { recalc_status: 'FAILED' });
-        }
+      if (_submission_id) {
+        const base44 = createClientFromRequest(req);
+        const svc = base44.asServiceRole;
         await svc.entities.MobileEntrySubmissionLog.create({
-          submission_id: payload.submission_id,
-          user_id: '', email: '', employee_id: payload.employee_id || '',
+          submission_id: _submission_id,
+          user_id: '', email: '', employee_id: _employee_id || '',
           timestamp_received: new Date().toISOString(),
           status: 'FAILED', failure_type: 'SYSTEM',
           http_status: 500,
