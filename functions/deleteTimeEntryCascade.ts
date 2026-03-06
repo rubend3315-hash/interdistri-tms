@@ -1,12 +1,11 @@
-// redeploy: 2026-02-28T fix_deployment_v2
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║ FUNCTION TYPE: USER_FACING                                      ║
 // ║ Called by: Admin via frontend (TimeTracking page)                ║
 // ║ Auth: User session (admin only)                                  ║
-// ║ DO NOT USE RAW ENTITY CALLS — USE tenantService for tenant data  ║
-// ║ Do not mix user session and service role access.                 ║
+// ║ Optimized: parallel fetches + parallel deletes                   ║
+// ║ Redeployed: 2026-03-06                                           ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   try {
@@ -27,44 +26,26 @@ Deno.serve(async (req) => {
 
     const svc = base44.asServiceRole;
 
-    // 1. Haal TimeEntry op om te bevestigen dat het bestaat
-    let entry;
-    try {
-      const entries = await svc.entities.TimeEntry.filter({ id });
-      entry = entries[0];
-    } catch (e) {
-      console.error('[deleteTimeEntryCascade] Fetch TimeEntry failed:', e?.message);
-    }
-    if (!entry) {
+    // 1. Parallel: fetch TimeEntry + Trips + StandplaatsWerk
+    const [entries, trips, spw] = await Promise.all([
+      svc.entities.TimeEntry.filter({ id }),
+      svc.entities.Trip.filter({ time_entry_id: id }),
+      svc.entities.StandplaatsWerk.filter({ time_entry_id: id }),
+    ]);
+
+    if (!entries[0]) {
       return Response.json({ error: 'NOT_FOUND', message: 'TimeEntry niet gevonden' }, { status: 404 });
     }
 
-    // 2. Verwijder alle Trip records met time_entry_id = entry.id
-    try {
-      const trips = await svc.entities.Trip.filter({ time_entry_id: id });
-      for (const trip of trips) {
-        await svc.entities.Trip.delete(trip.id);
-      }
-      console.log(`[deleteTimeEntryCascade] Deleted ${trips.length} Trip(s) for TimeEntry ${id}`);
-    } catch (e) {
-      console.error('[deleteTimeEntryCascade] Delete Trips failed:', e?.message);
-    }
+    // 2. Parallel: delete all related records + the TimeEntry itself
+    const deleteOps = [
+      ...trips.map(t => svc.entities.Trip.delete(t.id).catch(e => console.error('[del trip]', e?.message))),
+      ...spw.map(s => svc.entities.StandplaatsWerk.delete(s.id).catch(e => console.error('[del spw]', e?.message))),
+      svc.entities.TimeEntry.delete(id),
+    ];
+    await Promise.all(deleteOps);
 
-    // 3. Verwijder alle StandplaatsWerk records met time_entry_id = entry.id
-    try {
-      const spw = await svc.entities.StandplaatsWerk.filter({ time_entry_id: id });
-      for (const item of spw) {
-        await svc.entities.StandplaatsWerk.delete(item.id);
-      }
-      console.log(`[deleteTimeEntryCascade] Deleted ${spw.length} StandplaatsWerk(s) for TimeEntry ${id}`);
-    } catch (e) {
-      console.error('[deleteTimeEntryCascade] Delete StandplaatsWerk failed:', e?.message);
-    }
-
-    // 4. Verwijder de TimeEntry zelf
-    await svc.entities.TimeEntry.delete(id);
-    console.log(`[deleteTimeEntryCascade] Deleted TimeEntry ${id}`);
-
+    console.log(`[deleteTimeEntryCascade] Deleted TE=${id}, ${trips.length} trip(s), ${spw.length} spw(s)`);
     return Response.json({ success: true, message: 'TimeEntry en gerelateerde records verwijderd' });
   } catch (error) {
     console.error('[deleteTimeEntryCascade] Error:', error?.message);
