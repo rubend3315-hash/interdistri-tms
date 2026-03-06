@@ -1077,10 +1077,9 @@ Deno.serve(async (req) => {
 
   } catch (outerError) {
     console.error('[UNHANDLED]', outerError);
-    // Best-effort log for unhandled errors
+    // Best-effort log for unhandled errors — reuse existing base44 client (req body already consumed)
     try {
-      const base44Fallback = createClientFromRequest(req);
-      const svcFallback = base44Fallback.asServiceRole;
+      const svcFallback = base44.asServiceRole;
       await Promise.all([
         logSubmission(svcFallback, {
           ...submissionLog,
