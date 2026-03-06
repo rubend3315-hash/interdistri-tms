@@ -112,13 +112,20 @@ Deno.serve(async (req) => {
       // Collect unique vehicle IDs for km continuity check
       const vehicleIds = [...new Set(trips.filter(t => t.vehicle_id).map(t => t.vehicle_id))];
       
-      // Fetch last known trip per vehicle (for km continuity)
+      // Fetch last known trip per vehicle (for km continuity) — single bulk query
       const lastTripByVehicle = {};
       if (vehicleIds.length > 0) {
         try {
-          for (const vid of vehicleIds) {
-            const vTrips = await svc.entities.Trip.filter({ vehicle_id: vid }, '-date', 1);
-            if (vTrips.length > 0) lastTripByVehicle[vid] = vTrips[0];
+          const allVehicleTrips = await svc.entities.Trip.filter({
+            vehicle_id: { $in: vehicleIds },
+          }, '-date', 50);
+          // Determine the most recent trip per vehicle in memory
+          for (const vt of allVehicleTrips) {
+            if (!vt.vehicle_id) continue;
+            const existing = lastTripByVehicle[vt.vehicle_id];
+            if (!existing || vt.date > existing.date || (vt.date === existing.date && vt.created_date > existing.created_date)) {
+              lastTripByVehicle[vt.vehicle_id] = vt;
+            }
           }
         } catch (e) { console.error('[KM_CHECK] Failed to fetch vehicle history:', e.message); }
       }
