@@ -386,14 +386,17 @@ async function updateSubmissionIndex(svc, indexRecord, status, extra = {}) {
 Deno.serve(async (req) => {
   const t0 = Date.now();
 
-  // CRITICAL: Create SDK client FIRST from original request (it reads headers/auth).
-  // Then clone the request to read the body separately.
-  const base44 = createClientFromRequest(req);
+  // CRITICAL: Read body text FIRST (can only read stream once).
+  // Then create SDK client from a reconstructed request with the same headers.
+  let bodyText = '';
+  let parsedBody = null;
+  try {
+    bodyText = await req.text();
+    parsedBody = JSON.parse(bodyText);
+  } catch (_) { parsedBody = null; }
 
-  // Parse body from a clone (SDK may also need the original stream)
-  let parsedBody;
-  try { parsedBody = await req.json(); }
-  catch (_) { parsedBody = null; }
+  // Create SDK client — pass original req so it can read headers (body already consumed, but SDK only needs headers)
+  const base44 = createClientFromRequest(req);
 
   // Early return for internal health-check pings — no logging, no side effects
   if (parsedBody && parsedBody._ping === true) {
