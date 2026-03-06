@@ -90,6 +90,20 @@ Deno.serve(async (req) => {
     const employeeName = `${data.first_name || ''} ${data.prefix ? data.prefix + ' ' : ''}${data.last_name || ''}`.trim();
     console.log(`Medewerker ${employeeName} (${employeeEmail}) uitgenodigd als gebruiker.`);
 
+    // Link employee_id + business_role on the newly created User
+    // Small delay to allow invite to propagate
+    await new Promise(r => setTimeout(r, 2000));
+    const newUsers = await base44.asServiceRole.entities.User.filter({ email: employeeEmail });
+    if (newUsers.length === 1) {
+      await base44.asServiceRole.entities.User.update(newUsers[0].id, {
+        employee_id: event.entity_id,
+        business_role: 'EMPLOYEE',
+      });
+      console.log(`[USER_EMPLOYEE_LINK] Linked ${employeeEmail} → employee ${event.entity_id}`);
+    } else {
+      console.warn(`[USER_EMPLOYEE_LINK] Could not auto-link: found ${newUsers.length} users for ${employeeEmail}`);
+    }
+
     // Send welcome email via Gmail
     const gmailToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
     const welcomeBody = `
