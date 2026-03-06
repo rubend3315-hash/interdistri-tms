@@ -8,37 +8,39 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // ============================================================
-// submitTimeEntry v5.2.1 — MobileSubmissionIndex idempotency guard (2026-02-28 redeployed)
+// submitTimeEntry v6.0.0 — Refactored critical path (2026-03-06)
 // ============================================================
 //
+// CHANGES FROM v5.2.1:
+//   - REMOVED MobileSubmissionIndex from entire flow (no reads/writes)
+//   - Idempotency now via UNIQUE constraint on TimeEntry.submission_id
+//   - TimeEntry created directly as "Ingediend" (no Concept→Ingediend two-step)
+//   - BreakSchedule cached in-memory (5 min TTL) to avoid repeated DB calls
+//   - Employee lookup + overlap fetch parallelized where possible
+//   - Logging (MobileEntrySubmissionLog + MobileEntryPerformanceLog) fully preserved
+//   - recalculateAfterTimeEntrySubmit fire-and-forget unchanged
+//
 // ARCHITECTURE:
-//   1. Dedicated submission_id field on TimeEntry (no notes parsing)
-//   2. Idempotency via submission_id lookup BEFORE any writes
-//   3. Atomic check-then-create with post-create duplicate guard
-//   4. Safe cleanup: only AFTER commit, failures never affect submit
-//   5. Separate orphan cleanup job handles stale Concepts
+//   1. Dedicated submission_id field on TimeEntry with UNIQUE constraint
+//   2. Idempotency via submission_id lookup — if exists with Ingediend/Goedgekeurd, return it
+//   3. Create TimeEntry directly as "Ingediend" — UNIQUE constraint prevents duplicates
+//   4. If create fails with duplicate key error → idempotent hit (another request won)
+//   5. Separate orphan cleanup job handles any edge cases
 //
 // RACE CONDITION STRATEGY:
 //   Two requests with SAME submission_id:
-//     → First one creates Concept, commits to Ingediend
-//     → Second one finds committed entry via submission_id filter → returns it
-//     → If both pass idempotency check simultaneously, both create Concepts
-//       but post-create duplicate detection catches this: only oldest survives
+//     → First one passes idempotency check, creates Ingediend entry
+//     → Second one either: (a) finds it in idempotency check, or
+//       (b) gets UNIQUE constraint violation on create → treats as idempotent hit
 //
 //   Two requests with DIFFERENT submission_ids, same date:
-//     → Overlap detection runs against committed (Ingediend/Goedgekeurd) entries
-//     → If both pass overlap check simultaneously, post-commit duplicate
-//       detection catches overlapping committed entries and the later one
-//       is rolled back
+//     → Overlap detection runs against committed entries
+//     → Second request blocked by overlap check
 //
 // FAILURE SCENARIOS:
-//   Crash before commit:  Concept entry stays. Cleaned by orphan job after 24h.
-//                          Client retries with same submission_id → creates fresh.
-//   Crash after commit:   Ingediend entry is safe. Old drafts not cleaned = harmless.
-//                          Client retries → idempotent hit returns existing.
+//   Crash before create:  No record exists. Client retries → fresh attempt.
+//   Crash after create:   Ingediend entry is safe. Client retries → idempotent hit.
 //   Client timeout retry: Same submission_id → idempotent hit.
-//   Two tabs:             Different submission_ids → overlap detection blocks second.
-//                          Same submission_id → idempotent hit for second.
 // ============================================================
 
 // --- VALIDATION HELPERS ---
@@ -62,13 +64,9 @@ function addDays(dateStr, days) {
 }
 
 // --- UNIFIED OVERLAP ENGINE ---
-// Single function used by BOTH pre-commit and post-commit checks.
-// Uses effective end dates to handle single-day night shifts that cross midnight.
-// All comparisons use YYYY-MM-DD strings and minute integers.
 
 function effectiveEndDate(service) {
   if (service.end_date) return service.end_date;
-  // Night shift: end_time <= start_time means service runs into next calendar day
   const s = timeMin(service.start_time), e = timeMin(service.end_time);
   if (s !== null && e !== null && e <= s) return addDays(service.date, 1);
   return service.date;
@@ -80,10 +78,8 @@ function servicesOverlap(existing, incoming) {
   const newStart = incoming.date;
   const newEnd = effectiveEndDate(incoming);
 
-  // No date range overlap at all → no overlap
   if (exEnd < newStart || newEnd < exStart) return false;
 
-  // Both on exact same single date (no overnight) → time-level check
   if (exStart === exEnd && newStart === newEnd && exStart === newStart) {
     const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
     const es = timeMin(existing.start_time), ee = timeMin(existing.end_time);
@@ -91,23 +87,16 @@ function servicesOverlap(existing, incoming) {
     return ns < ee && ne > es;
   }
 
-  // Ranges overlap by more than a single boundary day → definite overlap
   if (exStart < newEnd && exEnd > newStart) {
-    // Check: is it a true multi-day overlap, or do they share just one boundary?
-    // If exEnd > newStart AND exStart < newEnd with strict inequalities → they truly overlap
     return true;
   }
 
-  // Remaining case: ranges touch at exactly one boundary day
-  // exEnd === newStart OR newEnd === exStart (but not both strict overlap above)
   const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
   const es = timeMin(existing.start_time), ee = timeMin(existing.end_time);
   if (exEnd === newStart && ee !== null && ns !== null) {
-    // Existing ends on the day new starts → overlap if ex.end_time > new.start_time
     return ee > ns;
   }
   if (newEnd === exStart && ne !== null && es !== null) {
-    // New ends on the day existing starts → overlap if new.end_time > ex.start_time
     return ne > es;
   }
   return false;
@@ -147,14 +136,12 @@ function isoYear(d) {
   return dt.getUTCFullYear();
 }
 
-// --- EXTRACTED OVERLAP VALIDATION (future-proof, reusable) ---
+// --- EXTRACTED OVERLAP VALIDATION ---
 
 function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, startTime, endTime) {
   const incomingEntry = { date, end_date: endDate || null, start_time: startTime, end_time: endTime };
   const newEffEnd = effectiveEndDate(incomingEntry);
 
-  // Filter to committed entries whose effective range could overlap
-  // Uses >= / <= to include boundary cases (servicesOverlap handles exact boundary logic)
   const committed = existingEntries.filter(e => {
     if (e.employee_id !== employeeId) return false;
     if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
@@ -162,7 +149,6 @@ function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, st
     return exEffEnd >= date && e.date <= newEffEnd;
   });
 
-  // Check for already-approved entry on exact date (specific error) — only if actual time overlap
   const approvedOnDate = committed.find(e =>
     e.status === 'Goedgekeurd' && e.date === date && (!e.end_date || e.end_date === e.date)
     && servicesOverlap(e, incomingEntry)
@@ -176,7 +162,6 @@ function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, st
     };
   }
 
-  // General overlap check
   for (const ex of committed) {
     if (servicesOverlap(ex, incomingEntry)) {
       const exEnd = ex.end_date || ex.date;
@@ -201,7 +186,6 @@ function validate(p) {
   const err = [];
   if (!p) return ['Payload is vereist'];
 
-  // submission_id — server-side fallback if missing or invalid
   if (!p.submission_id || typeof p.submission_id !== 'string' || !UUID_RE.test(p.submission_id)) {
     p.submission_id = crypto.randomUUID();
     console.log(`[SUBMIT] submission_id ontbrak of ongeldig — server-generated: ${p.submission_id}`);
@@ -212,9 +196,6 @@ function validate(p) {
   if (!isTime(p.end_time)) err.push('Ongeldige eindtijd (HH:MM)');
   if (!isOptStr(p.signature_url)) err.push('signature_url moet string zijn');
 
-  // --- DATE_TIME_MISMATCH guard ---
-  // Detect payloads where date is clearly nonsensical.
-  // A future date > today + 1 or a date > 60 days in the past is rejected.
   if (!err.length && isDate(p.date)) {
     const payloadDate = new Date(p.date + 'T12:00:00Z');
     const now = new Date();
@@ -235,7 +216,6 @@ function validate(p) {
     if (isDate(p.date) && isDate(p.end_date)) {
       const diff = Math.round((new Date(p.end_date + 'T12:00:00') - new Date(p.date + 'T12:00:00')) / 864e5);
       if (diff > 7) err.push('Dienst max 7 dagen');
-      // Max 48 uur dienstduur safety guard
       if (isTime(p.start_time) && isTime(p.end_time)) {
         const sM = timeMin(p.start_time), eM = timeMin(p.end_time);
         let totalMin = eM - sM + diff * 1440;
@@ -248,7 +228,6 @@ function validate(p) {
   if (p.break_minutes != null && (typeof p.break_minutes !== 'number' || p.break_minutes < 0 || p.break_minutes > 480))
     err.push('Pauze: 0-480 minuten');
 
-  // --- Shared core validation (mirrors components/utils/validation/timeEntryValidation.js) ---
   if (!Array.isArray(p.trips)) p.trips = [];
   const isGeenRit = typeof p.notes === 'string' && p.notes.startsWith('[GEEN_RIT]');
   const geenRitReden = isGeenRit ? p.notes.replace('[GEEN_RIT]', '').trim() : '';
@@ -256,7 +235,6 @@ function validate(p) {
   const hasStandplaatsen = Array.isArray(p.standplaats_werk) && p.standplaats_werk.length > 0;
   const hasGeenRit = isGeenRit && typeof geenRitReden === 'string' && geenRitReden.trim().length >= 5;
   if (!hasTrips && !hasStandplaatsen && !hasGeenRit) err.push('Minimaal één dienstregel vereist');
-  // --- End shared core validation ---
 
   if (p.trips.length > 20) err.push('Max 20 ritten');
   if (p.trips.length > 0) p.trips.forEach((t, i) => {
@@ -295,12 +273,11 @@ function validate(p) {
   if (!isOptStr(p.notes)) err.push('Opmerkingen moet string zijn');
   if (typeof p.notes === 'string' && p.notes.length > 2000) err.push('Opmerkingen max 2000 tekens');
 
-  // Trip time vs service time (single-day, with overnight shift support)
   if (!err.length && p.trips.length > 0 && (!p.end_date || p.end_date === p.date)) {
     const ds = timeMin(p.start_time);
     let de = timeMin(p.end_time);
     if (ds !== null && de !== null) {
-      if (de <= ds) de += 1440; // overnight shift
+      if (de <= ds) de += 1440;
       p.trips.forEach((t, i) => {
         let ts = timeMin(t.start_time), te = timeMin(t.end_time);
         if (ts !== null && ts < ds) ts += 1440;
@@ -314,42 +291,6 @@ function validate(p) {
   return err;
 }
 
-// --- SANITIZERS ---
-
-function sanitizeTrip(t, empId, date, teId) {
-  return {
-    employee_id: empId, time_entry_id: teId, date,
-    vehicle_id: t.vehicle_id,
-    customer_id: t.customer_id || null,
-    route_name: t.route_name ? String(t.route_name).slice(0, 200) : null,
-    planned_stops: clamp(t.planned_stops, 0, 9999),
-    start_km: clamp(t.start_km, 0, 9999999),
-    end_km: clamp(t.end_km, 0, 9999999),
-    total_km: (t.start_km != null && t.end_km != null) ? Math.max(0, Number(t.end_km) - Number(t.start_km)) : null,
-    fuel_liters: clamp(t.fuel_liters, 0, 9999),
-    adblue_liters: clamp(t.adblue_liters, 0, 9999),
-    fuel_km: clamp(t.fuel_km, 0, 9999999),
-    charging_kwh: clamp(t.charging_kwh, 0, 9999),
-    departure_time: isTime(t.start_time) ? t.start_time : null,
-    arrival_time: isTime(t.end_time) ? t.end_time : null,
-    departure_location: (t.departure_location || '').slice(0, 200) || null,
-    notes: (t.notes || '').slice(0, 2000) || null,
-    status: 'Voltooid',
-  };
-}
-
-function sanitizeSPW(s, empId, date, teId) {
-  return {
-    employee_id: empId, time_entry_id: teId, date,
-    start_time: isTime(s.start_time) ? s.start_time : null,
-    end_time: isTime(s.end_time) ? s.end_time : null,
-    customer_id: s.customer_id || null,
-    project_id: s.project_id || null,
-    activity_id: s.activity_id || null,
-    notes: (s.notes || '').slice(0, 2000) || null,
-  };
-}
-
 // --- HELPER: safe delete with logging ---
 
 async function safeDelete(entity, id, label) {
@@ -358,27 +299,31 @@ async function safeDelete(entity, id, label) {
 }
 
 // --- SUBMISSION LOGGING HELPER ---
-// Always uses asServiceRole to bypass user permissions.
-// Creates a NEW record per status (immutable pattern, no updates).
 
 async function logSubmission(svc, data) {
   try { await svc.entities.MobileEntrySubmissionLog.create(data); }
   catch (e) { console.error('[SUBMIT_LOG] Failed to write log:', e.message); }
 }
 
-// --- INDEX UPDATE HELPER ---
-// Updates the MobileSubmissionIndex record to terminal status.
-// Non-blocking: failures are logged but don't affect the main flow.
+// --- BREAK SCHEDULE CACHE ---
+// In-memory cache for BreakSchedule data. Survives across warm requests.
+// TTL: 5 minutes. On cold start, fetched fresh on first request.
 
-async function updateSubmissionIndex(svc, indexRecord, status, extra = {}) {
-  if (!indexRecord) return;
-  try {
-    await svc.entities.MobileSubmissionIndex.update(indexRecord.id, {
-      status,
-      completed_at: new Date().toISOString(),
-      ...extra,
-    });
-  } catch (e) { console.error('[INDEX_UPDATE] Failed:', e.message); }
+let _breakScheduleCache = null;
+let _breakScheduleCacheTime = 0;
+const BREAK_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getBreakSchedules(svc) {
+  const now = Date.now();
+  if (_breakScheduleCache && (now - _breakScheduleCacheTime) < BREAK_CACHE_TTL) {
+    console.log('[CACHE] BreakSchedule hit');
+    return _breakScheduleCache;
+  }
+  console.log('[CACHE] BreakSchedule miss — fetching');
+  const schedules = await svc.entities.BreakSchedule.filter({ status: 'Actief' });
+  _breakScheduleCache = schedules;
+  _breakScheduleCacheTime = now;
+  return schedules;
 }
 
 // --- MAIN HANDLER ---
@@ -387,7 +332,6 @@ Deno.serve(async (req) => {
   const t0 = Date.now();
 
   // CRITICAL: Read body text FIRST (can only read stream once).
-  // Then create SDK client from a reconstructed request with the same headers.
   let bodyText = '';
   let parsedBody = null;
   try {
@@ -395,10 +339,9 @@ Deno.serve(async (req) => {
     parsedBody = JSON.parse(bodyText);
   } catch (_) { parsedBody = null; }
 
-  // Create SDK client — pass original req so it can read headers (body already consumed, but SDK only needs headers)
   const base44 = createClientFromRequest(req);
 
-  // Early return for internal health-check pings — no logging, no side effects
+  // Early return for internal health-check pings
   if (parsedBody && parsedBody._ping === true) {
     return Response.json({ success: true, pong: true });
   }
@@ -417,12 +360,11 @@ Deno.serve(async (req) => {
 
   try {
     // ========================================
-    // 1. AUTHENTICATION (base44 already created above from original req)
+    // 1. AUTHENTICATION
     // ========================================
     const user = await base44.auth.me();
     perf.auth = Date.now() - t0;
     if (!user) {
-      // No svc available yet, use best-effort logging
       try {
         const svcFb = base44.asServiceRole;
         await logSubmission(svcFb, {
@@ -441,15 +383,14 @@ Deno.serve(async (req) => {
     submissionLog.user_id = user.id;
     submissionLog.email = user.email;
 
-    // Service role for ALL logging — bypasses user permissions
-    const svcEarly = base44.asServiceRole;
+    const svc = base44.asServiceRole;
 
     // ========================================
     // 2. PARSE & VALIDATE
     // ========================================
     let payload = parsedBody;
     if (!payload) {
-      await logSubmission(svcEarly, {
+      await logSubmission(svc, {
         ...submissionLog,
         status: 'VALIDATION_FAILED',
         failure_type: 'VALIDATION',
@@ -465,79 +406,8 @@ Deno.serve(async (req) => {
     submissionLog.submission_id = payload.submission_id || 'unknown';
     submissionLog.entry_date = payload.date || null;
 
-    // ========================================
-    // 2b. EARLY IDEMPOTENCY GUARD via MobileSubmissionIndex
-    // ========================================
-    // Uses a lightweight index entity (1 record per submission_id) for fast lookups.
-    // Falls back to MobileEntrySubmissionLog if index record doesn't exist yet (transition period).
-    const tGuardStart = Date.now();
-    let indexRecord = null; // track for terminal status updates later
-
-    if (payload.submission_id && UUID_RE.test(payload.submission_id)) {
-      // Step 1: Check MobileSubmissionIndex (fast, single record per submission_id)
-      const indexResults = await svcEarly.entities.MobileSubmissionIndex.filter({
-        submission_id: payload.submission_id,
-      });
-      indexRecord = indexResults[0] || null;
-
-      if (indexRecord) {
-        perf.idempotency_guard_and_received_log = Date.now() - tGuardStart;
-
-        if (indexRecord.status === 'SUCCESS') {
-          console.log(`[INDEX_GUARD] submission_id=${payload.submission_id} already SUCCESS`);
-          // Write RECEIVED log in background (non-blocking)
-          logSubmission(svcEarly, { ...submissionLog });
-          return Response.json({
-            success: true,
-            idempotent: true,
-            status: 'ALREADY_PROCESSED',
-            data: { time_entry_id: indexRecord.time_entry_id || null }
-          });
-        }
-
-        if (indexRecord.status === 'PROCESSING') {
-          const age = Date.now() - new Date(indexRecord.created_at).getTime();
-          if (age < 30000) { // < 30s → still processing
-            console.log(`[INDEX_GUARD] submission_id=${payload.submission_id} PROCESSING (${Math.round(age / 1000)}s old)`);
-            logSubmission(svcEarly, { ...submissionLog });
-            return Response.json({
-              success: true,
-              idempotent: true,
-              status: 'PROCESSING',
-            }, { status: 202 });
-          }
-          // > 30s old PROCESSING → stale, allow retry by continuing
-          console.log(`[INDEX_GUARD] submission_id=${payload.submission_id} stale PROCESSING (${Math.round(age / 1000)}s), allowing retry`);
-        }
-
-        // Terminal failure states → return previous result
-        if (['FAILED', 'VALIDATION_FAILED', 'SYSTEM_ERROR'].includes(indexRecord.status)) {
-          console.log(`[INDEX_GUARD] submission_id=${payload.submission_id} previous terminal: ${indexRecord.status}, allowing retry`);
-          // Previous attempt failed — allow retry with fresh PROCESSING status
-          await svcEarly.entities.MobileSubmissionIndex.update(indexRecord.id, {
-            status: 'PROCESSING',
-            created_at: new Date().toISOString(),
-            completed_at: null,
-          });
-        }
-      } else {
-        // No index record exists → create PROCESSING + write RECEIVED log in parallel
-        const [newIndex] = await Promise.all([
-          svcEarly.entities.MobileSubmissionIndex.create({
-            submission_id: payload.submission_id,
-            status: 'PROCESSING',
-            created_at: new Date().toISOString(),
-          }),
-          logSubmission(svcEarly, { ...submissionLog }),
-        ]);
-        indexRecord = newIndex;
-        perf.idempotency_guard_and_received_log = Date.now() - tGuardStart;
-      }
-    } else {
-      // No valid submission_id — just write RECEIVED log
-      await logSubmission(svcEarly, { ...submissionLog });
-      perf.idempotency_guard_and_received_log = Date.now() - tGuardStart;
-    }
+    // Write RECEIVED log (non-blocking, fire-and-forget)
+    logSubmission(svc, { ...submissionLog });
 
     // DEBUG: Log incoming payload summary
     console.log('[SUBMIT_PAYLOAD]', JSON.stringify({
@@ -550,8 +420,6 @@ Deno.serve(async (req) => {
       submission_id: payload.submission_id,
     }));
 
-
-
     const errors = validate(payload);
     if (errors.length) {
       const isDateMismatch = payload._dateTimeMismatch === true;
@@ -560,32 +428,38 @@ Deno.serve(async (req) => {
         ? 'De geselecteerde datum komt niet overeen met de ingevoerde tijden. Vernieuw de pagina en probeer opnieuw.'
         : 'Validatie mislukt';
 
-      await Promise.all([
-        logSubmission(svcEarly, {
-          ...submissionLog,
-          status: 'VALIDATION_FAILED',
-          failure_type: 'VALIDATION',
-          http_status: 400,
-          error_code: errorCode,
-          error_message: `${errors.slice(0, 3).join('; ')} | start_time_raw=${payload.start_time} | end_time_raw=${payload.end_time} | date=${payload.date}`,
-          employee_id: payload.employee_id || null,
-          timestamp_completed: new Date().toISOString(),
-          latency_ms: Date.now() - t0,
-        }),
-        updateSubmissionIndex(svcEarly, indexRecord, 'VALIDATION_FAILED'),
-      ]);
+      await logSubmission(svc, {
+        ...submissionLog,
+        status: 'VALIDATION_FAILED',
+        failure_type: 'VALIDATION',
+        http_status: 400,
+        error_code: errorCode,
+        error_message: `${errors.slice(0, 3).join('; ')} | start_time_raw=${payload.start_time} | end_time_raw=${payload.end_time} | date=${payload.date}`,
+        employee_id: payload.employee_id || null,
+        timestamp_completed: new Date().toISOString(),
+        latency_ms: Date.now() - t0,
+      });
       return Response.json({ success: false, error: errorCode, message: errorMessage, details: errors }, { status: isDateMismatch ? 400 : 422 });
     }
 
     // ========================================
-    // 3. AUTHORIZATION — lookup employee
+    // 3. EMPLOYEE LOOKUP + IDEMPOTENCY CHECK (PARALLEL)
     // ========================================
-    const svc = base44.asServiceRole;
-    const tEmpLookup = Date.now();
-    console.log('[STEP] Looking up employee for:', user.email);
-    const employees = await svc.entities.Employee.filter({ email: user.email });
+    // These two queries are independent — run them simultaneously.
+    const tParallel1 = Date.now();
+    console.log('[STEP] Parallel: employee lookup + idempotency check for:', user.email);
+
+    const [employees, existingBySubId] = await Promise.all([
+      svc.entities.Employee.filter({ email: user.email }),
+      // Idempotency: check if submission_id already exists on ANY TimeEntry
+      (payload.submission_id && UUID_RE.test(payload.submission_id))
+        ? svc.entities.TimeEntry.filter({ submission_id: payload.submission_id })
+        : Promise.resolve([]),
+    ]);
+    perf.employee_and_idempotency = Date.now() - tParallel1;
+
     if (!employees.length) {
-      await logSubmission(svcEarly, {
+      await logSubmission(svc, {
         ...submissionLog,
         status: 'VALIDATION_FAILED',
         failure_type: 'VALIDATION',
@@ -598,9 +472,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'EMPLOYEE_NOT_FOUND', message: 'Geen medewerker voor dit account' }, { status: 403 });
     }
     const employee = employees[0];
-    perf.employee_lookup = Date.now() - tEmpLookup;
-    console.log('[STEP] Employee found:', employee.id);
     const empId = employee.id;
+    console.log('[STEP] Employee found:', empId);
+
+    // Grace period check
     if (employee.out_of_service_date) {
       const exitDate = new Date(employee.out_of_service_date);
       exitDate.setHours(0, 0, 0, 0);
@@ -609,118 +484,80 @@ Deno.serve(async (req) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (today > graceEnd) {
-        await Promise.all([
-          logSubmission(svcEarly, {
-            ...submissionLog,
-            status: 'VALIDATION_FAILED',
-            failure_type: 'VALIDATION',
-            http_status: 403,
-            error_code: 'EMPLOYEE_INACTIVE',
-            error_message: 'Dienstverband beëindigd, grace-periode verlopen',
-            employee_id: empId,
-            timestamp_completed: new Date().toISOString(),
-            latency_ms: Date.now() - t0,
-          }),
-          updateSubmissionIndex(svcEarly, indexRecord, 'VALIDATION_FAILED'),
-        ]);
+        await logSubmission(svc, {
+          ...submissionLog,
+          status: 'VALIDATION_FAILED',
+          failure_type: 'VALIDATION',
+          http_status: 403,
+          error_code: 'EMPLOYEE_INACTIVE',
+          error_message: 'Dienstverband beëindigd, grace-periode verlopen',
+          employee_id: empId,
+          timestamp_completed: new Date().toISOString(),
+          latency_ms: Date.now() - t0,
+        });
         return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: 'Je dienstverband is beëindigd en de grace-periode is verlopen.' }, { status: 403 });
       }
     }
 
-    // Update index with employee_id if not yet set
-    if (indexRecord && !indexRecord.employee_id) {
-      updateSubmissionIndex(svc, indexRecord, 'PROCESSING', { employee_id: empId }); // fire-and-forget
-    }
-
     // ========================================
-    // 4. IDEMPOTENCY CHECK — dedicated field
+    // 4. IDEMPOTENCY — check results from parallel fetch
     // ========================================
-    // Query by submission_id on this employee. This is the SINGLE source of truth.
-    // No notes parsing. Clean, explicit field.
-    const tIdempotency = Date.now();
-    const existingBySubId = await svc.entities.TimeEntry.filter({
-      employee_id: empId,
-      submission_id: payload.submission_id,
-    });
-    perf.te_idempotency_check = Date.now() - tIdempotency;
-
-    // Check for already-committed entry with this submission_id
-    const committed = existingBySubId.find(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd');
-    if (committed) {
-      console.log(`[IDEMPOTENT HIT] submission_id=${payload.submission_id} → TimeEntry ${committed.id}`);
-      await Promise.all([
-        logSubmission(svc, {
-          ...submissionLog,
-          status: 'IDEMPOTENT_HIT',
-          failure_type: 'IDEMPOTENT',
-          http_status: 200,
-          time_entry_id: committed.id,
-          timestamp_completed: new Date().toISOString(),
-          latency_ms: Date.now() - t0,
-        }),
-        // Ensure index is consistent (may already be SUCCESS from original request)
-        updateSubmissionIndex(svc, indexRecord, 'SUCCESS', { time_entry_id: committed.id, employee_id: empId }),
-      ]);
+    const committedExisting = existingBySubId.find(e =>
+      e.employee_id === empId && (e.status === 'Ingediend' || e.status === 'Goedgekeurd')
+    );
+    if (committedExisting) {
+      console.log(`[IDEMPOTENT HIT] submission_id=${payload.submission_id} → TimeEntry ${committedExisting.id}`);
+      await logSubmission(svc, {
+        ...submissionLog,
+        status: 'IDEMPOTENT_HIT',
+        failure_type: 'IDEMPOTENT',
+        http_status: 200,
+        time_entry_id: committedExisting.id,
+        employee_id: empId,
+        timestamp_completed: new Date().toISOString(),
+        latency_ms: Date.now() - t0,
+      });
       const [existTrips, existSpw] = await Promise.all([
-        svc.entities.Trip.filter({ time_entry_id: committed.id }),
-        svc.entities.StandplaatsWerk.filter({ time_entry_id: committed.id }),
+        svc.entities.Trip.filter({ time_entry_id: committedExisting.id }),
+        svc.entities.StandplaatsWerk.filter({ time_entry_id: committedExisting.id }),
       ]);
       return Response.json({
         success: true,
         idempotent_hit: true,
         data: {
-          time_entry_id: committed.id,
+          time_entry_id: committedExisting.id,
           trip_ids: existTrips.map(t => t.id),
           standplaats_werk_ids: existSpw.map(s => s.id),
           computed: {
-            total_hours: committed.total_hours,
-            shift_type: committed.shift_type,
-            week_number: committed.week_number,
-            year: committed.year,
+            total_hours: committedExisting.total_hours,
+            shift_type: committedExisting.shift_type,
+            week_number: committedExisting.week_number,
+            year: committedExisting.year,
           }
         }
       });
     }
 
-    // Clean up orphan Concepts from same submission_id (previous crashed attempt)
-    const orphanConcepts = existingBySubId.filter(e => e.status === 'Concept');
-    for (const orphan of orphanConcepts) {
-      console.log(`[CLEANUP] Orphan Concept from previous attempt: ${orphan.id}`);
-      const [oTrips, oSpw] = await Promise.all([
-        svc.entities.Trip.filter({ time_entry_id: orphan.id }),
-        svc.entities.StandplaatsWerk.filter({ time_entry_id: orphan.id }),
-      ]);
-      await Promise.all([
-        ...oTrips.map(t => safeDelete(svc.entities.Trip, t.id, 'orphan-trip')),
-        ...oSpw.map(s => safeDelete(svc.entities.StandplaatsWerk, s.id, 'orphan-spw')),
-      ]);
-      await safeDelete(svc.entities.TimeEntry, orphan.id, 'orphan-te');
-    }
-
     // ========================================
-    // 5. OVERLAP DETECTION — via extracted validateTimeEntryOverlap
+    // 5. OVERLAP DETECTION + BREAK STAFFEL (PARALLEL)
     // ========================================
     const entryEnd = payload.end_date || payload.date;
     const queryStart = addDays(payload.date, -1);
     const queryEnd = addDays(entryEnd, 1);
-
-    // ========================================
-    // 5. OVERLAP DETECTION + BREAK STAFFEL (PARALLELIZED)
-    // ========================================
-    // Fetch employee entries AND break schedules in parallel — they're independent.
-    console.log('[STEP] Fetching entries + break schedules for employee:', empId);
-    const tOverlap = Date.now();
     const isManualBreak = payload.break_manual === true;
     const endD = payload.end_date || null;
+
+    console.log('[STEP] Fetching entries + break schedules for employee:', empId);
+    const tOverlap = Date.now();
 
     const [rangedCandidates, breakSchedulesRaw] = await Promise.all([
       svc.entities.TimeEntry.filter({
         employee_id: empId,
         date: { $gte: queryStart, $lte: queryEnd },
       }),
-      isManualBreak ? Promise.resolve([]) : svc.entities.BreakSchedule.filter({ status: 'Actief' }),
+      isManualBreak ? Promise.resolve([]) : getBreakSchedules(svc),
     ]);
-    perf.overlap_fetch = Date.now() - tOverlap;
+    perf.overlap_and_break_fetch = Date.now() - tOverlap;
     console.log('[STEP] Found', rangedCandidates.length, 'entries in range', queryStart, '-', queryEnd);
 
     console.log('[OVERLAP_CHECK]', JSON.stringify({
@@ -729,10 +566,8 @@ Deno.serve(async (req) => {
       entryEnd,
       queryWindow: `${queryStart} - ${queryEnd}`,
       totalEntries: rangedCandidates.length,
-      rangedCandidates: rangedCandidates.length,
     }));
 
-    // Use extracted overlap validation function
     const overlapResult = validateTimeEntryOverlap(
       rangedCandidates, empId, payload.date, payload.end_date || null,
       payload.start_time, payload.end_time
@@ -740,20 +575,17 @@ Deno.serve(async (req) => {
 
     if (overlapResult.overlaps) {
       console.log(`[OVERLAP] ${overlapResult.errorCode}: existing ${overlapResult.existingId} vs new (${payload.date}→${entryEnd} ${payload.start_time}-${payload.end_time})`);
-      await Promise.all([
-        logSubmission(svc, {
-          ...submissionLog,
-          status: 'VALIDATION_FAILED',
-          failure_type: 'BUSINESS',
-          http_status: 409,
-          error_code: overlapResult.errorCode,
-          error_message: overlapResult.errorMsg,
-          employee_id: empId,
-          timestamp_completed: new Date().toISOString(),
-          latency_ms: Date.now() - t0,
-        }),
-        updateSubmissionIndex(svc, indexRecord, 'VALIDATION_FAILED'),
-      ]);
+      await logSubmission(svc, {
+        ...submissionLog,
+        status: 'VALIDATION_FAILED',
+        failure_type: 'BUSINESS',
+        http_status: 409,
+        error_code: overlapResult.errorCode,
+        error_message: overlapResult.errorMsg,
+        employee_id: empId,
+        timestamp_completed: new Date().toISOString(),
+        latency_ms: Date.now() - t0,
+      });
       return Response.json({
         success: false, error: overlapResult.errorCode,
         message: overlapResult.errorMsg,
@@ -762,10 +594,8 @@ Deno.serve(async (req) => {
     }
 
     // ========================================
-    // 6. COMPUTE SERVER-SIDE DERIVED FIELDS + BREAK STAFFEL
+    // 6. COMPUTE SERVER-SIDE DERIVED FIELDS
     // ========================================
-
-    // 6a. Calculate gross dienst duration in minutes
     const sMin = timeMin(payload.start_time);
     const eMin = timeMin(payload.end_time);
     let dienstMinutes = eMin - sMin;
@@ -777,9 +607,6 @@ Deno.serve(async (req) => {
     }
     const dienstHours = dienstMinutes / 60;
 
-    perf.overlap_check_total = Date.now() - tOverlap;
-
-    // 6b. Server-side break staffel calculation
     let brk;
     let breakStaffelId = null;
 
@@ -787,7 +614,7 @@ Deno.serve(async (req) => {
       brk = Math.max(0, Math.round(payload.break_minutes || 0));
       console.log(`[BREAK] Manual override: ${brk} min for ${dienstHours.toFixed(2)}h dienst`);
     } else {
-      const sorted = breakSchedulesRaw.sort((a, b) => a.min_hours - b.min_hours);
+      const sorted = [...breakSchedulesRaw].sort((a, b) => a.min_hours - b.min_hours);
       const match = sorted.find(s => dienstHours >= s.min_hours && (s.max_hours == null || dienstHours < s.max_hours));
       brk = match ? match.break_minutes : 0;
       breakStaffelId = match ? match.id : null;
@@ -800,17 +627,16 @@ Deno.serve(async (req) => {
     const yr = isoYear(payload.date);
 
     // ========================================
-    // 7. TRANSACTION PHASE 1: CREATE AS CONCEPT
+    // 7. CREATE TIMEENTRY DIRECTLY AS "Ingediend"
     // ========================================
-    // All records created as Concept first. If anything fails → rollback.
-    // Old drafts are NOT touched until after commit (safe ordering).
-
-    const created = { teId: null };
+    // No Concept→Ingediend two-step. UNIQUE constraint on submission_id
+    // prevents duplicate creation. If a race condition causes a duplicate key
+    // error, we treat it as an idempotent hit.
+    const tCreate = Date.now();
+    let te;
 
     try {
-      // --- Create TimeEntry (Concept) with submission_id ---
-      const tCreate = Date.now();
-      const teCreateData = {
+      te = await svc.entities.TimeEntry.create({
         employee_id: empId,
         date: payload.date,
         end_date: endD,
@@ -825,259 +651,139 @@ Deno.serve(async (req) => {
         total_hours: totalHours,
         shift_type: st,
         notes: (payload.notes || '').slice(0, 2000) || null,
-        status: 'Concept',
+        status: 'Ingediend',
         signature_url: payload.signature_url || null,
-        submission_id: payload.submission_id, // <-- DEDICATED FIELD
-      };
-
-      const te = await svc.entities.TimeEntry.create(teCreateData);
-      created.teId = te.id;
-      perf.timeentry_create = Date.now() - tCreate;
-      console.debug('[CREATED]', { teId: te.id, date: payload.date, endDate: endD });
-
-      // --- POST-CREATE DUPLICATE GUARD ---
-      // After creating, re-check if another request with the same submission_id
-      // also created an entry concurrently. If so, the one with the OLDEST
-      // created_date wins. The other rolls back.
-      const postCheck = await svc.entities.TimeEntry.filter({
-        employee_id: empId,
         submission_id: payload.submission_id,
       });
-      const allWithThisSubId = postCheck.filter(e => e.id !== te.id);
-      const concurrentCommitted = allWithThisSubId.find(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd');
-
-      if (concurrentCommitted) {
-        // Another request already committed — we lose the race. Roll back our Concept.
-        console.log(`[RACE LOST] Another request committed ${concurrentCommitted.id} for submission_id=${payload.submission_id}`);
-        await safeDelete(svc.entities.TimeEntry, te.id, 'race-loser');
-
-        const [cTrips, cSpw] = await Promise.all([
-          svc.entities.Trip.filter({ time_entry_id: concurrentCommitted.id }),
-          svc.entities.StandplaatsWerk.filter({ time_entry_id: concurrentCommitted.id }),
-        ]);
-        return Response.json({
-          success: true,
-          idempotent_hit: true,
-          data: {
-            time_entry_id: concurrentCommitted.id,
-            trip_ids: cTrips.map(t => t.id),
-            standplaats_werk_ids: cSpw.map(s => s.id),
-            computed: {
-              total_hours: concurrentCommitted.total_hours,
-              shift_type: concurrentCommitted.shift_type,
-              week_number: concurrentCommitted.week_number,
-              year: concurrentCommitted.year,
-            }
-          }
+    } catch (createErr) {
+      // Check if this is a UNIQUE constraint violation (duplicate submission_id)
+      const errMsg = (createErr.message || '').toLowerCase();
+      if (errMsg.includes('unique') || errMsg.includes('duplicate') || errMsg.includes('already exists')) {
+        console.log(`[UNIQUE_GUARD] submission_id=${payload.submission_id} duplicate detected via constraint`);
+        // Another request created it — fetch and return as idempotent hit
+        const dupeCheck = await svc.entities.TimeEntry.filter({
+          submission_id: payload.submission_id,
         });
-      }
-
-      // Check for concurrent Concepts (both in flight). Oldest created_date wins.
-      const concurrentConcepts = allWithThisSubId.filter(e => e.status === 'Concept');
-      for (const cc of concurrentConcepts) {
-        if (cc.created_date < te.created_date) {
-          // The other one was created first — WE are the duplicate. Roll back.
-          console.log(`[RACE LOST] Older Concept ${cc.id} exists for submission_id=${payload.submission_id}`);
-          await safeDelete(svc.entities.TimeEntry, te.id, 'race-loser-concept');
-          // Wait briefly for the winner to commit, then return its result
-          await new Promise(r => setTimeout(r, 2000));
-          const winnerCheck = await svc.entities.TimeEntry.filter({
+        const winner = dupeCheck.find(e => e.employee_id === empId && (e.status === 'Ingediend' || e.status === 'Goedgekeurd'));
+        if (winner) {
+          await logSubmission(svc, {
+            ...submissionLog,
+            status: 'IDEMPOTENT_HIT',
+            failure_type: 'IDEMPOTENT',
+            http_status: 200,
+            time_entry_id: winner.id,
             employee_id: empId,
-            submission_id: payload.submission_id,
+            timestamp_completed: new Date().toISOString(),
+            latency_ms: Date.now() - t0,
           });
-          const winner = winnerCheck.find(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd');
-          if (winner) {
-            const [wTrips, wSpw] = await Promise.all([
-              svc.entities.Trip.filter({ time_entry_id: winner.id }),
-              svc.entities.StandplaatsWerk.filter({ time_entry_id: winner.id }),
-            ]);
-            return Response.json({
-              success: true, idempotent_hit: true,
-              data: {
-                time_entry_id: winner.id,
-                trip_ids: wTrips.map(t => t.id),
-                standplaats_werk_ids: wSpw.map(s => s.id),
-                computed: { total_hours: winner.total_hours, shift_type: winner.shift_type, week_number: winner.week_number, year: winner.year }
-              }
-            });
-          }
-          // Winner hasn't committed yet — tell client to retry
-          await Promise.all([
-            logSubmission(svc, {
-              ...submissionLog,
-              status: 'VALIDATION_FAILED',
-              failure_type: 'BUSINESS',
-              http_status: 409,
-              error_code: 'CONCURRENT_SUBMIT',
-              error_message: 'Gelijktijdige submit gedetecteerd',
-              employee_id: empId,
-              timestamp_completed: new Date().toISOString(),
-              latency_ms: Date.now() - t0,
-            }),
-            updateSubmissionIndex(svc, indexRecord, 'FAILED'),
-          ]);
           return Response.json({
-            success: false, error: 'CONCURRENT_SUBMIT',
-            message: 'Gelijktijdige submit gedetecteerd, probeer opnieuw'
-          }, { status: 409 });
+            success: true,
+            idempotent_hit: true,
+            data: {
+              time_entry_id: winner.id,
+              trip_ids: [],
+              standplaats_werk_ids: [],
+              computed: {
+                total_hours: winner.total_hours,
+                shift_type: winner.shift_type,
+                week_number: winner.week_number,
+                year: winner.year,
+              }
+            }
+          });
         }
-        // else: we are older, the other one should yield to us
       }
-
-      // ========================================
-      // 8. TRANSACTION PHASE 2: COMMIT (direct, no Trips/SPW yet)
-      // ========================================
-      const tCommit = Date.now();
-      await svc.entities.TimeEntry.update(te.id, { status: 'Ingediend' });
-      perf.commit = Date.now() - tCommit;
-
-      // ========================================
-      // 9. SUCCESS — return immediately, async recalc follows
-      // ========================================
-      perf.total = Date.now() - t0;
-      console.log('[PERF]', JSON.stringify(perf));
-
-      // Persist perf log
-      try {
-        await svc.entities.MobileEntryPerformanceLog.create({
-          submission_id: payload.submission_id,
-          user_email: user.email,
-          employee_id: empId,
-          auth_ms: perf.auth || null,
-          idempotency_guard_ms: perf.idempotency_guard_and_received_log || null,
-          employee_lookup_ms: perf.employee_lookup || null,
-          te_idempotency_check_ms: perf.te_idempotency_check || null,
-          overlap_fetch_ms: perf.overlap_fetch || null,
-          overlap_check_ms: perf.overlap_check_total || null,
-          timeentry_create_ms: perf.timeentry_create || null,
-          trips_and_spw_create_ms: null,
-          commit_ms: perf.commit || null,
-          write_verify_ms: null,
-          post_commit_guard_ms: null,
-          total_ms: perf.total,
-          outcome: 'SUCCESS',
-        });
-      } catch (perfErr) { console.error('[PERF_LOG]', perfErr.message); }
-
-      // Update index to SUCCESS + write audit log in parallel
-      const tEnd = Date.now();
-      const latencyOverlap = perf.overlap_check_total || 0;
-      const latencyWrite = (perf.timeentry_create || 0) + (perf.commit || 0);
-
-      await Promise.all([
-        logSubmission(svc, {
-          ...submissionLog,
-          status: 'SUCCESS',
-          http_status: 200,
-          time_entry_id: te.id,
-          employee_id: empId,
-          timestamp_completed: new Date().toISOString(),
-          latency_ms: tEnd - t0,
-          latency_overlap_ms: latencyOverlap,
-          latency_write_ms: latencyWrite,
-          latency_recalc_ms: 0,
-          latency_finalize_ms: 0,
-        }),
-        updateSubmissionIndex(svc, indexRecord, 'SUCCESS', { time_entry_id: te.id, employee_id: empId, recalc_status: 'PENDING' }),
-      ]);
-
-      // ========================================
-      // 10. FIRE-AND-FORGET: Async recalculation
-      // ========================================
-      // Trips, SPW, write-verify, post-commit guard, cleanup all happen async.
-      // NOT awaited — does not block HTTP response. NEVER throws to frontend.
-      svc.functions.invoke('recalculateAfterTimeEntrySubmit', {
-        time_entry_id: te.id,
-        employee_id: empId,
-        submission_id: payload.submission_id,
-        trips: payload.trips || [],
-        standplaats_werk: payload.standplaats_werk || [],
-        date: payload.date,
-        end_date: payload.end_date || null,
-        start_time: payload.start_time,
-        end_time: payload.end_time,
-      }).catch(err => {
-        console.error('[ASYNC_RECALC] Fire-and-forget failed:', err.message);
-        // Log to AuditLog — best-effort, never throw
-        svc.entities.AuditLog.create({
-          action_type: 'update',
-          category: 'Systeem',
-          description: `Async recalc failed for TE ${te.id}: ${(err.message || '').slice(0, 300)}`,
-          performed_by_email: user.email || 'system',
-          performed_by_role: 'system',
-          target_entity: 'TimeEntry',
-          target_id: te.id,
-          metadata: { submission_id: payload.submission_id, error: (err.message || '').slice(0, 200) },
-        }).catch(() => {});
-      });
-
-      return Response.json({
-        success: true,
-        data: {
-          time_entry_id: te.id,
-          trip_ids: [],
-          standplaats_werk_ids: [],
-          computed: { total_hours: totalHours, shift_type: st, week_number: wk, year: yr }
-        }
-      });
-
-    } catch (txError) {
-      // ========================================
-      // ROLLBACK — clean newly created records only
-      // ========================================
-      perf.total = Date.now() - t0;
-      console.log('[PERF]', JSON.stringify(perf));
-
-      // Persist perf log for every submission (including failures)
-      try {
-        await svc.entities.MobileEntryPerformanceLog.create({
-          submission_id: payload.submission_id,
-          user_email: user.email,
-          employee_id: empId,
-          auth_ms: perf.auth || null,
-          idempotency_guard_ms: perf.idempotency_guard_and_received_log || null,
-          employee_lookup_ms: perf.employee_lookup || null,
-          te_idempotency_check_ms: perf.te_idempotency_check || null,
-          overlap_fetch_ms: perf.overlap_fetch || null,
-          overlap_check_ms: perf.overlap_check_total || null,
-          timeentry_create_ms: perf.timeentry_create || null,
-          trips_and_spw_create_ms: null,
-          commit_ms: perf.commit || null,
-          write_verify_ms: null,
-          post_commit_guard_ms: null,
-          total_ms: perf.total,
-          outcome: 'FAILED',
-        });
-      } catch (perfErr) { console.error('[PERF_LOG]', perfErr.message); }
-
-      console.error('[TX FAILED] Rolling back:', txError.message);
-      if (created.teId) await safeDelete(svc.entities.TimeEntry, created.teId, 'rb-te');
-
-      await Promise.all([
-        logSubmission(svc, {
-          ...submissionLog,
-          status: 'FAILED',
-          failure_type: 'SYSTEM',
-          http_status: 500,
-          error_code: 'TRANSACTION_FAILED',
-          error_message: (txError.message || 'Onbekende fout').slice(0, 500),
-          employee_id: empId,
-          timestamp_completed: new Date().toISOString(),
-          latency_ms: Date.now() - t0,
-        }),
-        updateSubmissionIndex(svc, indexRecord, 'SYSTEM_ERROR'),
-      ]);
-
-      return Response.json({
-        success: false, error: 'TRANSACTION_FAILED',
-        message: 'Submit mislukt, wijzigingen teruggedraaid. Probeer opnieuw.',
-        details: [txError.message || 'Onbekende fout']
-      }, { status: 500 });
+      // Not a duplicate — re-throw for outer catch
+      throw createErr;
     }
 
+    perf.timeentry_create = Date.now() - tCreate;
+    console.debug('[CREATED]', { teId: te.id, date: payload.date, endDate: endD, status: 'Ingediend' });
+
+    // ========================================
+    // 8. SUCCESS — return immediately, async recalc follows
+    // ========================================
+    perf.total = Date.now() - t0;
+    console.log('[PERF]', JSON.stringify(perf));
+
+    // Persist perf log + success submission log in parallel (non-blocking)
+    const tEnd = Date.now();
+    Promise.all([
+      svc.entities.MobileEntryPerformanceLog.create({
+        submission_id: payload.submission_id,
+        user_email: user.email,
+        employee_id: empId,
+        auth_ms: perf.auth || null,
+        idempotency_guard_ms: perf.employee_and_idempotency || null,
+        employee_lookup_ms: perf.employee_and_idempotency || null,
+        te_idempotency_check_ms: perf.employee_and_idempotency || null,
+        overlap_fetch_ms: perf.overlap_and_break_fetch || null,
+        overlap_check_ms: perf.overlap_and_break_fetch || null,
+        timeentry_create_ms: perf.timeentry_create || null,
+        trips_and_spw_create_ms: null,
+        commit_ms: null,
+        write_verify_ms: null,
+        post_commit_guard_ms: null,
+        total_ms: perf.total,
+        outcome: 'SUCCESS',
+      }).catch(e => console.error('[PERF_LOG]', e.message)),
+      logSubmission(svc, {
+        ...submissionLog,
+        status: 'SUCCESS',
+        http_status: 200,
+        time_entry_id: te.id,
+        employee_id: empId,
+        timestamp_completed: new Date().toISOString(),
+        latency_ms: tEnd - t0,
+        latency_overlap_ms: perf.overlap_and_break_fetch || 0,
+        latency_write_ms: perf.timeentry_create || 0,
+        latency_recalc_ms: 0,
+        latency_finalize_ms: 0,
+      }),
+    ]).catch(() => {}); // fire-and-forget, never block response
+
+    // ========================================
+    // 9. FIRE-AND-FORGET: Async recalculation
+    // ========================================
+    svc.functions.invoke('recalculateAfterTimeEntrySubmit', {
+      time_entry_id: te.id,
+      employee_id: empId,
+      submission_id: payload.submission_id,
+      trips: payload.trips || [],
+      standplaats_werk: payload.standplaats_werk || [],
+      date: payload.date,
+      end_date: payload.end_date || null,
+      start_time: payload.start_time,
+      end_time: payload.end_time,
+    }).catch(err => {
+      console.error('[ASYNC_RECALC] Fire-and-forget failed:', err.message);
+      svc.entities.AuditLog.create({
+        action_type: 'update',
+        category: 'Systeem',
+        description: `Async recalc failed for TE ${te.id}: ${(err.message || '').slice(0, 300)}`,
+        performed_by_email: user.email || 'system',
+        performed_by_role: 'system',
+        target_entity: 'TimeEntry',
+        target_id: te.id,
+        metadata: { submission_id: payload.submission_id, error: (err.message || '').slice(0, 200) },
+      }).catch(() => {});
+    });
+
+    return Response.json({
+      success: true,
+      data: {
+        time_entry_id: te.id,
+        trip_ids: [],
+        standplaats_werk_ids: [],
+        computed: { total_hours: totalHours, shift_type: st, week_number: wk, year: yr }
+      }
+    });
+
   } catch (outerError) {
+    perf.total = Date.now() - t0;
     console.error('[UNHANDLED]', outerError);
-    // Best-effort log for unhandled errors — reuse existing base44 client (req body already consumed)
+    console.log('[PERF]', JSON.stringify(perf));
+
     try {
       const svcFallback = base44.asServiceRole;
       await Promise.all([
@@ -1091,9 +797,15 @@ Deno.serve(async (req) => {
           timestamp_completed: new Date().toISOString(),
           latency_ms: Date.now() - t0,
         }),
-        updateSubmissionIndex(svcFallback, indexRecord, 'SYSTEM_ERROR'),
+        svcFallback.entities.MobileEntryPerformanceLog.create({
+          submission_id: submissionLog.submission_id,
+          user_email: submissionLog.email,
+          auth_ms: perf.auth || null,
+          total_ms: perf.total,
+          outcome: 'FAILED',
+        }).catch(() => {}),
       ]);
-    } catch (_) { /* logging itself failed, nothing we can do */ }
+    } catch (_) {}
     return Response.json({ success: false, error: 'INTERNAL_ERROR', message: 'Onverwachte fout' }, { status: 500 });
   }
 });
