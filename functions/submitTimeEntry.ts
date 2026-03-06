@@ -722,7 +722,7 @@ Deno.serve(async (req) => {
       entryStart: payload.date,
       entryEnd,
       queryWindow: `${queryStart} - ${queryEnd}`,
-      totalEntries: allEmployeeEntries.length,
+      totalEntries: rangedCandidates.length,
       rangedCandidates: rangedCandidates.length,
     }));
 
