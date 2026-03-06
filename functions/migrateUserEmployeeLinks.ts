@@ -12,9 +12,21 @@ Deno.serve(async (req) => {
   const svc = base44.asServiceRole;
 
   try {
-    // 1. Get all users with business_role = EMPLOYEE
-    const allUsers = await svc.entities.User.filter({ business_role: 'EMPLOYEE' });
-    console.log(`[MIGRATE] Found ${allUsers.length} EMPLOYEE users`);
+    // 1. Fetch all EMPLOYEE users and all Employees in parallel
+    const [allUsers, allEmployees] = await Promise.all([
+      svc.entities.User.filter({ business_role: 'EMPLOYEE' }),
+      svc.entities.Employee.filter({}),
+    ]);
+    console.log(`[MIGRATE] Found ${allUsers.length} EMPLOYEE users, ${allEmployees.length} Employee records`);
+
+    // 2. Build email → employees lookup map (lowercase for safety)
+    const emailMap = {};
+    for (const emp of allEmployees) {
+      if (!emp.email) continue;
+      const key = emp.email.toLowerCase().trim();
+      if (!emailMap[key]) emailMap[key] = [];
+      emailMap[key].push(emp);
+    }
 
     let usersProcessed = 0;
     let linksCreated = 0;
@@ -29,14 +41,13 @@ Deno.serve(async (req) => {
       if (u.employee_id) {
         alreadyLinked++;
         results.push({ email: u.email, status: 'already_linked', employee_id: u.employee_id });
-        console.log(`[MIGRATE] ${u.email} — already linked to ${u.employee_id}`);
         continue;
       }
 
-      // Look up Employee by email
-      const employees = await svc.entities.Employee.filter({ email: u.email });
+      const key = (u.email || '').toLowerCase().trim();
+      const matches = emailMap[key] || [];
 
-      if (employees.length === 0) {
+      if (matches.length === 0) {
         const msg = `No Employee match for user: ${u.email}`;
         warnings.push(msg);
         results.push({ email: u.email, status: 'no_match' });
@@ -44,16 +55,16 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      if (employees.length > 1) {
-        const msg = `Multiple Employees found for user: ${u.email} (${employees.length} matches)`;
+      if (matches.length > 1) {
+        const msg = `Multiple Employees found for user: ${u.email} (${matches.length} matches)`;
         warnings.push(msg);
-        results.push({ email: u.email, status: 'multiple_matches', count: employees.length });
+        results.push({ email: u.email, status: 'multiple_matches', count: matches.length });
         console.warn(`[MIGRATION WARNING] ${msg}`);
         continue;
       }
 
       // Exactly one match — create the link
-      const employee = employees[0];
+      const employee = matches[0];
       await svc.entities.User.update(u.id, { employee_id: employee.id });
       linksCreated++;
       results.push({
@@ -62,7 +73,7 @@ Deno.serve(async (req) => {
         employee_id: employee.id,
         employee_name: `${employee.first_name || ''} ${employee.last_name || ''}`.trim(),
       });
-      console.log(`[MIGRATE] ${u.email} → Employee ${employee.id} (${employee.first_name} ${employee.last_name})`);
+      console.log(`[MIGRATE] ${u.email} → ${employee.id} (${employee.first_name} ${employee.last_name})`);
     }
 
     const report = {
@@ -75,7 +86,12 @@ Deno.serve(async (req) => {
       results,
     };
 
-    console.log('[MIGRATE] Complete:', JSON.stringify({ users_processed: usersProcessed, links_created: linksCreated, already_linked: alreadyLinked, warnings: warnings.length }));
+    console.log('[MIGRATE] Complete:', JSON.stringify({
+      users_processed: usersProcessed,
+      links_created: linksCreated,
+      already_linked: alreadyLinked,
+      warnings: warnings.length,
+    }));
 
     return Response.json(report);
   } catch (error) {
