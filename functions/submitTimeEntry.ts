@@ -449,7 +449,14 @@ Deno.serve(async (req) => {
     const tParallel1 = Date.now();
     console.log('[STEP] Parallel: employee lookup + idempotency check for:', user.email);
 
-    const [employees, existingBySubId] = await Promise.all([
+    // Primary: ID-based lookup if employee_id is set on user metadata
+    // Fallback: email-based lookup (legacy)
+    const employeeByIdPromise = user.employee_id
+      ? svc.entities.Employee.filter({ id: user.employee_id })
+      : Promise.resolve([]);
+
+    const [employeesById, employeesByEmail, existingBySubId] = await Promise.all([
+      employeeByIdPromise,
       svc.entities.Employee.filter({ email: user.email }),
       // Idempotency: check if submission_id already exists on ANY TimeEntry
       (payload.submission_id && UUID_RE.test(payload.submission_id))
@@ -457,6 +464,13 @@ Deno.serve(async (req) => {
         : Promise.resolve([]),
     ]);
     perf.employee_and_idempotency = Date.now() - tParallel1;
+
+    const employees = employeesById.length > 0 ? employeesById : employeesByEmail;
+    if (employeesById.length > 0) {
+      console.log('[STEP] Employee resolved via employee_id:', user.employee_id);
+    } else if (employeesByEmail.length > 0) {
+      console.log('[STEP] Employee resolved via email fallback:', user.email);
+    }
 
     if (!employees.length) {
       await logSubmission(svc, {
