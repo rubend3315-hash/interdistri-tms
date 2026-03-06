@@ -600,6 +600,7 @@ Deno.serve(async (req) => {
     const employee = employees[0];
     perf.employee_lookup = Date.now() - tEmpLookup;
     console.log('[STEP] Employee found:', employee.id);
+    const empId = employee.id;
     if (employee.out_of_service_date) {
       const exitDate = new Date(employee.out_of_service_date);
       exitDate.setHours(0, 0, 0, 0);
@@ -625,7 +626,6 @@ Deno.serve(async (req) => {
         return Response.json({ success: false, error: 'EMPLOYEE_INACTIVE', message: 'Je dienstverband is beëindigd en de grace-periode is verlopen.' }, { status: 403 });
       }
     }
-    const empId = employee.id;
 
     // Update index with employee_id if not yet set
     if (indexRecord && !indexRecord.employee_id) {
