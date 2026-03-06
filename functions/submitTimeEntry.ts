@@ -414,7 +414,7 @@ Deno.serve(async (req) => {
 
   try {
     // ========================================
-    // 1. AUTHENTICATION
+    // 1. AUTHENTICATION (base44 already created above from original req)
     // ========================================
     const user = await base44.auth.me();
     perf.auth = Date.now() - t0;
