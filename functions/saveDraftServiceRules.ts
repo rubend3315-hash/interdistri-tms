@@ -59,16 +59,11 @@ Deno.serve(async (req) => {
 
     for (const regel of dienstRegels) {
       if (regel.type === 'rit') {
-        // Skip trip creation if no vehicle_id — Trip entity requires it
-        if (!regel.vehicle_id) {
-          console.log(`[saveDraftRules] Skipping trip without vehicle_id (draft incomplete)`);
-          continue;
-        }
         await svc.entities.Trip.create({
           employee_id,
           date,
           time_entry_id: time_entry_id || undefined,
-          vehicle_id: regel.vehicle_id,
+          vehicle_id: regel.vehicle_id || undefined,
           start_km: regel.start_km ? Number(regel.start_km) : undefined,
           end_km: regel.end_km ? Number(regel.end_km) : undefined,
           fuel_liters: regel.fuel_liters ? Number(regel.fuel_liters) : undefined,
