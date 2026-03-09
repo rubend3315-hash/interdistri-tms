@@ -529,7 +529,7 @@ export default function Layout({ children, currentPageName }) {
   }
 
   // --- EMPLOYEE: altijd naar MobileEntry, nergens anders ---
-  if (hasExplicitEmployeeRole && currentPageName !== "MobileEntry" && currentPageName !== "SecureDownload" && currentPageName !== "StamkaartSignature" && currentPageName !== "SecurityPrivacy") {
+  if (hasExplicitEmployeeRole && currentPageName !== "MobileEntry" && currentPageName !== "SecureDownload" && currentPageName !== "StamkaartSignature" && currentPageName !== "SecurityPrivacy" && currentPageName !== "Contracts") {
     return <Navigate to={createPageUrl("MobileEntry")} replace />;
   }
 
