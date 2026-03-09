@@ -82,57 +82,63 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Track last server-saved dienstRegels to detect changes (throttled at 10s)
-  const lastServerSavedRegelsRef = useRef(null);
-  const serverSaveTimerRef = useRef(null);
+  // Track last server-saved dienstRegels to avoid redundant writes
+  const lastSavedRegelsRef = useRef(null);
 
   useEffect(() => {
     // CRITICAL: Don't autosave until server draft has been loaded/attempted
     if (!draftLoaded) return;
+    if (!currentEmployee?.id) return;
 
     setIsSaving(true);
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       try {
+        // 1. Save to localStorage (instant)
         const key = getStorageKey(formData.date);
         localStorage.setItem(key, JSON.stringify({
           formData, dienstRegels, savedAt: Date.now()
         }));
+
+        // 2. Save TimeEntry to server
+        await base44.functions.invoke('upsertDraftTimeEntry', {
+          employee_id: currentEmployee.id,
+          date: formData.date,
+          start_time: formData.start_time || '',
+          end_time: formData.end_time || '',
+          break_minutes: formData.break_minutes ?? 0,
+          break_manual: formData.break_manual ?? false,
+          notes: formData.notes || '',
+          ...(isMultiDay ? { end_date: formData.end_date } : {}),
+        });
+
+        // 3. Save dienstRegels to server (only if changed)
+        const regelsJson = JSON.stringify(dienstRegels);
+        if (dienstRegels.length > 0 && regelsJson !== lastSavedRegelsRef.current) {
+          await base44.functions.invoke('saveDraftServiceRules', {
+            employee_id: currentEmployee.id,
+            date: formData.date,
+            dienstRegels,
+          });
+          lastSavedRegelsRef.current = regelsJson;
+        } else if (dienstRegels.length === 0 && lastSavedRegelsRef.current && lastSavedRegelsRef.current !== '[]') {
+          // Regels were cleared — clean up server-side drafts
+          await base44.functions.invoke('saveDraftServiceRules', {
+            employee_id: currentEmployee.id,
+            date: formData.date,
+            dienstRegels: [],
+          });
+          lastSavedRegelsRef.current = '[]';
+        }
+
+        // 4. Only show "Concept opgeslagen" after all server writes succeed
         setLastSavedAt(Date.now());
-      } catch {}
+      } catch (e) {
+        console.error('[useMobileForm] Autosave failed:', e?.message);
+      }
       setIsSaving(false);
     }, 1000);
     return () => clearTimeout(timer);
   }, [formData, dienstRegels, draftLoaded, currentEmployee?.id]);
-
-  // --- Server-side autosave for dienstRegels (throttled 10s) ---
-  useEffect(() => {
-    if (!draftLoaded || !currentEmployee?.id) return;
-    if (!dienstRegels || dienstRegels.length === 0) return;
-
-    // Check if regels actually changed since last server save
-    const regelsJson = JSON.stringify(dienstRegels);
-    if (regelsJson === lastServerSavedRegelsRef.current) return;
-
-    // Clear any pending timer
-    if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
-
-    serverSaveTimerRef.current = setTimeout(async () => {
-      try {
-        await base44.functions.invoke('saveDraftServiceRules', {
-          employee_id: currentEmployee.id,
-          date: formData.date,
-          dienstRegels,
-        });
-        lastServerSavedRegelsRef.current = regelsJson;
-      } catch (e) {
-        console.error('[useMobileForm] Server save dienstRegels failed:', e?.message);
-      }
-    }, 10000); // 10 seconden throttle
-
-    return () => {
-      if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
-    };
-  }, [dienstRegels, draftLoaded, currentEmployee?.id, formData.date]);
 
   // =============================================
   // DATE CHANGE DETECTION — reset + reload draft
