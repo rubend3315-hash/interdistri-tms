@@ -93,10 +93,10 @@ export default function WeekOverview({
   const weekTrips = allTrips.filter(t => weekDateStrs.includes(t.date));
 
   /**
-   * For overnight entries (date ≠ end_date):
-   * - If BOTH dates are visible in weekDays → split proportionally
-   * - Otherwise → all hours go to whichever date IS in weekDays
-   * For same-day entries: simple date match.
+   * Determine how many hours of an entry to show on a specific day.
+   * - Same-day entries: all hours on that day.
+   * - Overnight entries where both days are in this week: split proportionally.
+   * - Overnight entries where only one day is in this week: all hours on that day.
    */
   const weekDateSet = new Set(weekDays.map(d => format(d, 'yyyy-MM-dd')));
 
@@ -110,40 +110,31 @@ export default function WeekOverview({
       return startDate === targetDateStr ? totalHours : 0;
     }
 
-    // Overnight entry — check which dates are in the visible week
-    const startInWeek = weekDateSet.has(startDate);
-    const endInWeek = weekDateSet.has(endDate);
-
-    // Both in week → split proportionally across the two days
-    if (startInWeek && endInWeek) {
+    // Overnight entry — both days visible → split proportionally
+    if (weekDateSet.has(startDate) && weekDateSet.has(endDate)) {
       if (targetDateStr !== startDate && targetDateStr !== endDate) return 0;
-      const startTime = entry.start_time || '00:00';
-      const endTime = entry.end_time || '00:00';
-      const [sh, sm] = startTime.split(':').map(Number);
-      const [eh, em] = endTime.split(':').map(Number);
+      const [sh, sm] = (entry.start_time || '00:00').split(':').map(Number);
+      const [eh, em] = (entry.end_time || '00:00').split(':').map(Number);
       const minBefore = (24 * 60) - (sh * 60 + sm);
       const minAfter = eh * 60 + em;
       const gross = minBefore + minAfter;
       if (gross <= 0) return targetDateStr === startDate ? totalHours : 0;
       const fractionAfter = minAfter / gross;
-      if (targetDateStr === startDate) {
-        return Math.round(totalHours * (1 - fractionAfter) * 10000) / 10000;
-      } else {
-        return Math.round(totalHours * fractionAfter * 10000) / 10000;
-      }
+      return targetDateStr === startDate
+        ? Math.round(totalHours * (1 - fractionAfter) * 10000) / 10000
+        : Math.round(totalHours * fractionAfter * 10000) / 10000;
     }
 
     // Only start date in week → all hours on start date
-    if (startInWeek && !endInWeek) {
+    if (weekDateSet.has(startDate)) {
       return targetDateStr === startDate ? totalHours : 0;
     }
 
     // Only end date in week → all hours on end date
-    if (!startInWeek && endInWeek) {
+    if (weekDateSet.has(endDate)) {
       return targetDateStr === endDate ? totalHours : 0;
     }
 
-    // Neither in week
     return 0;
   };
 
