@@ -54,9 +54,29 @@ export default function TimeTracking() {
     ...refOpts,
   });
 
+  // Fetch entries for this week AND adjacent weeks to capture overnight splits
   const { data: timeEntries = [], isLoading: loadingEntries } = useQuery({
     queryKey: ['timeEntries', weekNumber, year],
-    queryFn: () => base44.entities.TimeEntry.filter({ week_number: weekNumber, year }),
+    queryFn: async () => {
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      const weekEndStr = format(weekEnd, 'yyyy-MM-dd');
+      // Get entries that belong to this week
+      const thisWeek = await base44.entities.TimeEntry.filter({ week_number: weekNumber, year });
+      // Also get entries from the previous week that might have end_date in this week
+      const prevWeekDate = subWeeks(weekStart, 0); // weekStart is Monday
+      const prevWeekNum = getWeek(subWeeks(weekStart, 1), { weekStartsOn: 1 });
+      const prevYear = getYear(subWeeks(weekStart, 1));
+      const prevWeek = await base44.entities.TimeEntry.filter({ week_number: prevWeekNum, year: prevYear });
+      // Filter prev week entries: only those with end_date falling in current week
+      const overlapEntries = prevWeek.filter(e => 
+        e.end_date && e.end_date >= weekStartStr && e.end_date <= weekEndStr
+      );
+      // Merge without duplicates
+      const ids = new Set(thisWeek.map(e => e.id));
+      const merged = [...thisWeek];
+      overlapEntries.forEach(e => { if (!ids.has(e.id)) merged.push(e); });
+      return merged;
+    },
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
   });
