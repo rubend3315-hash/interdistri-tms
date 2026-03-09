@@ -253,6 +253,7 @@ export function useMobileSubmit({
       trips,
       standplaatsWerk,
       employeeId: currentEmployee.id,
+      dienstRegels,
     });
 
     if (result.success) {
