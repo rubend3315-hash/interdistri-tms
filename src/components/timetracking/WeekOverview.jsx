@@ -272,7 +272,7 @@ export default function WeekOverview({
                   <td className="px-4 py-2 font-medium text-slate-700">{cat.label}</td>
                   {weekDays.map((day, idx) => {
                     const entries = getEntriesByCategory(cat, day);
-                    const dayTotal = entries.reduce((sum, e) => sum + (e.total_hours || 0), 0);
+                    const dayTotal = entries.reduce((sum, e) => sum + (e._splitHours || 0), 0);
                     return (
                       <td key={idx} className="text-center px-2 py-2">
                         <button
