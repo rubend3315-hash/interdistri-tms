@@ -1,9 +1,10 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { format } from "date-fns";
 import {
   Clock, Truck, ClipboardCheck, FileText,
-  CheckCircle, CalendarDays, ExternalLink, ChevronRight
+  CheckCircle, CalendarDays, ExternalLink, ChevronRight, ArrowRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,11 +21,29 @@ const menuItems = [
 export default function MobileFrontpage({ onNavigate }) {
   // Cache-warming
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
-  useQuery({
+  const { data: employees = [] } = useQuery({
     queryKey: ['currentEmployee', user?.email],
     queryFn: () => base44.entities.Employee.filter({ email: user.email }),
     enabled: !!user?.email,
   });
+
+  const currentEmployee = employees[0] ?? null;
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  // Check for existing concept draft for today
+  const { data: conceptDrafts = [] } = useQuery({
+    queryKey: ['conceptDraftToday', currentEmployee?.id, todayStr],
+    queryFn: () => base44.entities.TimeEntry.filter({
+      employee_id: currentEmployee.id,
+      date: todayStr,
+      status: 'Concept',
+    }),
+    enabled: !!currentEmployee?.id,
+    staleTime: 30 * 1000,
+  });
+
+  const hasConcept = conceptDrafts.length > 0;
+  const conceptEntry = conceptDrafts[0];
 
   return (
     <div className="-mx-3">
