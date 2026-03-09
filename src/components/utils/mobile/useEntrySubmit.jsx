@@ -184,9 +184,9 @@ export function useEntrySubmit() {
   }, []);
 
   /**
-   * Save as draft — server-side upsert
+   * Save as draft — server-side upsert (TimeEntry + dienstRegels)
    */
-  const saveDraft = useCallback(async ({ formData, trips, standplaatsWerk, employeeId }) => {
+  const saveDraft = useCallback(async ({ formData, trips, standplaatsWerk, employeeId, dienstRegels }) => {
     if (submittingRef.current) return { success: false };
     submittingRef.current = true;
     setIsSubmitting(true);
@@ -194,6 +194,7 @@ export function useEntrySubmit() {
     try {
       const hours = calculateHoursSimple(formData.start_time, formData.end_time, formData.break_minutes);
 
+      // 1. Save TimeEntry
       const response = await base44.functions.invoke('upsertDraftTimeEntry', {
         employee_id: employeeId,
         date: formData.date,
@@ -207,8 +208,19 @@ export function useEntrySubmit() {
       });
 
       const result = response.data;
-      if (result.success) return { success: true, id: result.id };
-      return { success: false, error: result.message || 'Opslaan mislukt' };
+      if (!result.success) return { success: false, error: result.message || 'Opslaan mislukt' };
+
+      // 2. Save dienstRegels (trips + standplaatswerk)
+      const regels = dienstRegels || [...(trips || []).map(t => ({ ...t, type: 'rit' })), ...(standplaatsWerk || []).map(s => ({ ...s, type: 'standplaats' }))];
+      if (regels.length > 0) {
+        await base44.functions.invoke('saveDraftServiceRules', {
+          employee_id: employeeId,
+          date: formData.date,
+          dienstRegels: regels,
+        });
+      }
+
+      return { success: true, id: result.id };
     } catch (error) {
       return { success: false, error: error?.message || 'Opslaan mislukt' };
     } finally {
