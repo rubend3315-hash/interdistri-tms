@@ -94,47 +94,62 @@ export default function WeekOverview({
 
   /**
    * Split hours for overnight entries across the correct calendar days.
-   * E.g. 23:30 → 03:45 next day = 0.5h on start day + 3.25h on end day (minus break).
-   * Returns the portion of hours that falls on `targetDateStr` for a given entry.
+   * Only splits if BOTH start and end date are visible in the current weekDays.
+   * If the end_date falls outside the week, all hours stay on the start day.
+   * If the start_date falls outside the week (overlap from prev week), only the after-midnight portion shows.
    */
+  const weekDateSet = new Set(weekDays.map(d => format(d, 'yyyy-MM-dd')));
+
   const getHoursForDate = (entry, targetDateStr) => {
     const startDate = entry.date;
     const endDate = entry.end_date || entry.date;
     const totalHours = entry.total_hours || 0;
 
-    // If start and end are on the same day, all hours belong to that day
+    // Same-day entry: simple match
     if (startDate === endDate || !entry.end_date) {
       return startDate === targetDateStr ? totalHours : 0;
     }
 
-    // Overnight entry: split hours based on start_time and end_time
-    if (targetDateStr !== startDate && targetDateStr !== endDate) {
-      return 0; // target day is neither start nor end
+    // Overnight entry
+    const startInWeek = weekDateSet.has(startDate);
+    const endInWeek = weekDateSet.has(endDate);
+
+    if (startInWeek && !endInWeek) {
+      // End date outside this week → all hours on start day
+      return targetDateStr === startDate ? totalHours : 0;
+    }
+    if (!startInWeek && endInWeek) {
+      // Start date outside this week (overlap from prev week) → split, show only end portion
+      if (targetDateStr !== endDate) return 0;
+      const fraction = getAfterMidnightFraction(entry);
+      return Math.round(totalHours * fraction * 10000) / 10000;
+    }
+    if (!startInWeek && !endInWeek) {
+      return 0;
     }
 
+    // Both days in this week → split proportionally
+    if (targetDateStr !== startDate && targetDateStr !== endDate) return 0;
+
+    const fractionAfter = getAfterMidnightFraction(entry);
+    if (targetDateStr === startDate) {
+      return Math.round(totalHours * (1 - fractionAfter) * 10000) / 10000;
+    } else {
+      return Math.round(totalHours * fractionAfter * 10000) / 10000;
+    }
+  };
+
+  /** Helper: calculate what fraction of gross time falls after midnight */
+  const getAfterMidnightFraction = (entry) => {
     const startTime = entry.start_time || '00:00';
     const endTime = entry.end_time || '00:00';
-
     const [sh, sm] = startTime.split(':').map(Number);
     const [eh, em] = endTime.split(':').map(Number);
-
-    // Minutes from start to midnight = portion on start day
-    const minutesBeforeMidnight = (24 * 60) - (sh * 60 + sm);
-    // Minutes from midnight to end = portion on end day
-    const minutesAfterMidnight = eh * 60 + em;
-    const totalMinutesGross = minutesBeforeMidnight + minutesAfterMidnight;
-
-    if (totalMinutesGross <= 0) {
-      return startDate === targetDateStr ? totalHours : 0;
-    }
-
-    const fractionBeforeMidnight = minutesBeforeMidnight / totalMinutesGross;
-
-    if (targetDateStr === startDate) {
-      return Math.round(totalHours * fractionBeforeMidnight * 10000) / 10000;
-    } else {
-      return Math.round(totalHours * (1 - fractionBeforeMidnight) * 10000) / 10000;
-    }
+    const minutesBefore = (24 * 60) - (sh * 60 + sm);
+    const minutesAfter = eh * 60 + em;
+    const total = minutesBefore + minutesAfter;
+    if (total <= 0) return 0;
+    return minutesAfter / total;
   };
 
   const getEntryForDay = (date) => {
