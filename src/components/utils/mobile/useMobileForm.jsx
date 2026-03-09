@@ -114,7 +114,6 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         // 3. Save dienstRegels to server (only if changed)
         const regelsJson = JSON.stringify(dienstRegels);
         if (dienstRegels.length > 0 && regelsJson !== lastSavedRegelsRef.current) {
-          console.log("[Draft debug] dienstRegels payload:", JSON.stringify(dienstRegels.map(r => ({ type: r.type, vehicle_id: r.vehicle_id, vehicle: r.vehicle, keys: Object.keys(r) })), null, 2));
           await base44.functions.invoke('saveDraftServiceRules', {
             employee_id: currentEmployee.id,
             date: formData.date,

@@ -1,10 +1,9 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { format } from "date-fns";
 import {
   Clock, Truck, ClipboardCheck, FileText,
-  CheckCircle, CalendarDays, ExternalLink, ChevronRight, ArrowRight
+  CheckCircle, CalendarDays, ExternalLink, ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,57 +20,14 @@ const menuItems = [
 export default function MobileFrontpage({ onNavigate }) {
   // Cache-warming
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
-  const { data: employees = [] } = useQuery({
+  useQuery({
     queryKey: ['currentEmployee', user?.email],
     queryFn: () => base44.entities.Employee.filter({ email: user.email }),
     enabled: !!user?.email,
   });
 
-  const currentEmployee = employees[0] ?? null;
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
-
-  // Check for existing concept draft for today
-  const { data: conceptDrafts = [] } = useQuery({
-    queryKey: ['conceptDraftToday', currentEmployee?.id, todayStr],
-    queryFn: () => base44.entities.TimeEntry.filter({
-      employee_id: currentEmployee.id,
-      date: todayStr,
-      status: 'Concept',
-    }),
-    enabled: !!currentEmployee?.id,
-    staleTime: 30 * 1000,
-  });
-
-  const hasConcept = conceptDrafts.length > 0;
-  const conceptEntry = conceptDrafts[0];
-
   return (
     <div className="-mx-3">
-      {/* Concept draft banner */}
-      {hasConcept && (
-        <div className="mx-1 mb-2 px-3 py-2.5 bg-blue-50/80 border border-blue-100 rounded-xl">
-          <div className="flex items-start gap-2.5">
-            <FileText className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-medium text-blue-800">
-                Je hebt een open conceptdienst van vandaag
-              </p>
-              <p className="text-[11px] text-blue-600 mt-0.5">
-                {conceptEntry?.start_time ? `Starttijd: ${conceptEntry.start_time}` : 'Nog geen starttijd'}
-                {conceptEntry?.end_time ? ` — Eindtijd: ${conceptEntry.end_time}` : ''}
-                {' · '}Je invoer is automatisch opgeslagen
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => onNavigate("dienst")}
-            className="mt-2 w-full flex items-center justify-center gap-1.5 h-[32px] rounded-lg bg-blue-600 text-white text-[12px] font-medium active:bg-blue-700"
-          >
-            Verder met dienst <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
       {/* Section header */}
       <div className="px-4 py-2">
         <h2 className="text-[15px] font-semibold text-slate-900">Wat wil je doen?</h2>

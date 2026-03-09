@@ -119,18 +119,10 @@ export default function DienstRegelDrawer({
     }
 
     // Mark openRit as closed when end_time is now provided
-    console.log('[DienstRegelDrawer] handleSave close check:', {
-      openRit: draft.openRit,
-      endTime: draft.end_time,
-      hasCallback: !!onCloseOpenRitToDienst,
-      hasSaveAndGoHome: !!onSaveAndGoHome,
-      draftType: draft.type,
-    });
     onSave({ ...draft, openRit: false });
     onOpenChange(false);
     // Closing an open rit: PostNL → prefill dienst eindtijd +2min, otherwise → home
     if (draft.openRit && draft.end_time) {
-      console.log('[DienstRegelDrawer] → Triggering close flow, callback:', onCloseOpenRitToDienst ? 'onCloseOpenRitToDienst' : 'onSaveAndGoHome');
       if (onCloseOpenRitToDienst) onCloseOpenRitToDienst(draft.end_time);
       else if (onSaveAndGoHome) onSaveAndGoHome();
     }
