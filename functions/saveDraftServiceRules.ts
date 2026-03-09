@@ -59,27 +59,44 @@ Deno.serve(async (req) => {
 
     for (const regel of dienstRegels) {
       if (regel.type === 'rit') {
-        await svc.entities.Trip.create({
-          employee_id,
-          date,
-          time_entry_id: time_entry_id || undefined,
-          vehicle_id: regel.vehicle_id || undefined,
-          start_km: regel.start_km ? Number(regel.start_km) : undefined,
-          end_km: regel.end_km ? Number(regel.end_km) : undefined,
-          fuel_liters: regel.fuel_liters ? Number(regel.fuel_liters) : undefined,
-          adblue_liters: regel.adblue_liters ? Number(regel.adblue_liters) : undefined,
-          fuel_km: regel.fuel_km ? Number(regel.fuel_km) : undefined,
-          charging_kwh: regel.charging_kwh ? Number(regel.charging_kwh) : undefined,
-          customer_id: regel.customer_id || undefined,
-          route_name: regel.route_name || undefined,
-          planned_stops: regel.planned_stops ? Number(regel.planned_stops) : undefined,
-          departure_location: regel.departure_location || undefined,
-          departure_time: regel.start_time || undefined,
-          arrival_time: regel.end_time || undefined,
-          notes: regel.notes || undefined,
-          status: 'Gepland',
+        const vehicleId = regel.vehicle_id || regel.vehicle?.id || regel.vehicle;
+
+        if (!vehicleId) {
+          console.log("[Draft trip skipped] missing vehicle_id", regel);
+          continue;
+        }
+
+        console.log("[Draft trip create]", {
+          vehicle_id: vehicleId,
+          original_vehicle_id: regel.vehicle_id,
+          vehicle_object: regel.vehicle
         });
-        createdTrips++;
+
+        try {
+          await svc.entities.Trip.create({
+            employee_id,
+            date,
+            time_entry_id: time_entry_id || undefined,
+            vehicle_id: vehicleId,
+            start_km: regel.start_km ? Number(regel.start_km) : undefined,
+            end_km: regel.end_km ? Number(regel.end_km) : undefined,
+            fuel_liters: regel.fuel_liters ? Number(regel.fuel_liters) : undefined,
+            adblue_liters: regel.adblue_liters ? Number(regel.adblue_liters) : undefined,
+            fuel_km: regel.fuel_km ? Number(regel.fuel_km) : undefined,
+            charging_kwh: regel.charging_kwh ? Number(regel.charging_kwh) : undefined,
+            customer_id: regel.customer_id || undefined,
+            route_name: regel.route_name || undefined,
+            planned_stops: regel.planned_stops ? Number(regel.planned_stops) : undefined,
+            departure_location: regel.departure_location || undefined,
+            departure_time: regel.start_time || undefined,
+            arrival_time: regel.end_time || undefined,
+            notes: regel.notes || undefined,
+            status: 'Gepland',
+          });
+          createdTrips++;
+        } catch (err) {
+          console.error("[Draft trip create error]", err?.message, { vehicleId, regel_keys: Object.keys(regel) });
+        }
       } else if (regel.type === 'standplaats') {
         await svc.entities.StandplaatsWerk.create({
           employee_id,
