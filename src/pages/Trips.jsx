@@ -161,6 +161,7 @@ export default function Trips() {
   };
 
   const refOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
+  const liveOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: true };
 
   // Server-side filtered query
   const { data: trips = [], isLoading } = useQuery({
@@ -171,7 +172,7 @@ export default function Trips() {
       if (filterDateTo) filter.date = { ...(filter.date || {}), $lte: filterDateTo };
       return base44.entities.Trip.filter(filter, '-date');
     },
-    ...refOpts,
+    ...liveOpts,
   });
 
   const { data: employees = [] } = useQuery({
@@ -218,7 +219,7 @@ export default function Trips() {
       if (filterDateTo) f.date = { ...(f.date || {}), $lte: filterDateTo };
       return base44.entities.TimeEntry.filter(f, '-date');
     },
-    ...refOpts,
+    ...liveOpts,
   });
 
   const { data: caoRules = [] } = useQuery({
