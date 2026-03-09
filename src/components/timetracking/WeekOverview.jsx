@@ -134,47 +134,28 @@ export default function WeekOverview({
     .filter(e => e.employee_id === employee.id)
     .flatMap(splitEntryByDay);
 
-  const getEntryForDay = (date) => {
+  /** Get split entries for a specific date and category */
+  const getEntriesForDayAndCategory = (category, date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return timeEntries.find(e => e.employee_id === employee.id && e.date === dateStr);
-  };
-
-  /** Get entries that contribute hours to a specific date and category */
-  const getEntriesWithHoursForDay = (category, date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return timeEntries
-      .filter(e => {
-        if (e.employee_id !== employee.id) return false;
-        if (category.shiftTypes.length > 0 && !category.shiftTypes.includes(e.shift_type)) return false;
-        // Entry contributes to this day if it starts or ends on this day
-        return e.date === dateStr || e.end_date === dateStr;
-      })
-      .map(e => ({ ...e, _splitHours: getHoursForDate(e, dateStr) }))
-      .filter(e => e._splitHours > 0);
-  };
-
-  const getEntriesByCategory = (category, date) => {
-    return getEntriesWithHoursForDay(category, date);
+    return splitEntries.filter(e => {
+      if (e._date !== dateStr) return false;
+      if (category.shiftTypes.length > 0 && !category.shiftTypes.includes(e.shift_type)) return false;
+      return e._hours > 0;
+    });
   };
 
   const getCategoryTotal = (category) => {
-    let total = 0;
-    weekDays.forEach(day => {
-      const entries = getEntriesWithHoursForDay(category, day);
-      entries.forEach(e => { total += e._splitHours || 0; });
-    });
-    return total;
+    const weekDateStrs = weekDays.map(d => format(d, 'yyyy-MM-dd'));
+    return splitEntries
+      .filter(e => weekDateStrs.includes(e._date) && (category.shiftTypes.length === 0 || category.shiftTypes.includes(e.shift_type)))
+      .reduce((sum, e) => sum + (e._hours || 0), 0);
   };
 
-  // Totals per day (with overnight split)
   const getDayTotal = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    let total = 0;
-    timeEntries.forEach(e => {
-      if (e.employee_id !== employee.id) return;
-      total += getHoursForDate(e, dateStr);
-    });
-    return total;
+    return splitEntries
+      .filter(e => e._date === dateStr)
+      .reduce((sum, e) => sum + (e._hours || 0), 0);
   };
 
   const weekTotal = weekDays.reduce((sum, day) => sum + getDayTotal(day), 0);
