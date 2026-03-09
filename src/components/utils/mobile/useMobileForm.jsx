@@ -82,6 +82,10 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Track last server-saved dienstRegels to detect changes (throttled at 10s)
+  const lastServerSavedRegelsRef = useRef(null);
+  const serverSaveTimerRef = useRef(null);
+
   useEffect(() => {
     // CRITICAL: Don't autosave until server draft has been loaded/attempted
     if (!draftLoaded) return;
@@ -99,6 +103,36 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     }, 1000);
     return () => clearTimeout(timer);
   }, [formData, dienstRegels, draftLoaded, currentEmployee?.id]);
+
+  // --- Server-side autosave for dienstRegels (throttled 10s) ---
+  useEffect(() => {
+    if (!draftLoaded || !currentEmployee?.id) return;
+    if (!dienstRegels || dienstRegels.length === 0) return;
+
+    // Check if regels actually changed since last server save
+    const regelsJson = JSON.stringify(dienstRegels);
+    if (regelsJson === lastServerSavedRegelsRef.current) return;
+
+    // Clear any pending timer
+    if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
+
+    serverSaveTimerRef.current = setTimeout(async () => {
+      try {
+        await base44.functions.invoke('saveDraftServiceRules', {
+          employee_id: currentEmployee.id,
+          date: formData.date,
+          dienstRegels,
+        });
+        lastServerSavedRegelsRef.current = regelsJson;
+      } catch (e) {
+        console.error('[useMobileForm] Server save dienstRegels failed:', e?.message);
+      }
+    }, 10000); // 10 seconden throttle
+
+    return () => {
+      if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
+    };
+  }, [dienstRegels, draftLoaded, currentEmployee?.id, formData.date]);
 
   // =============================================
   // DATE CHANGE DETECTION — reset + reload draft
