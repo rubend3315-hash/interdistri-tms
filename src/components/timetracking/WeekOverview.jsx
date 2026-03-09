@@ -92,33 +92,92 @@ export default function WeekOverview({
   });
   const weekTrips = allTrips.filter(t => weekDateStrs.includes(t.date));
 
+  /**
+   * Split hours for overnight entries across the correct calendar days.
+   * E.g. 23:30 → 03:45 next day = 0.5h on start day + 3.25h on end day (minus break).
+   * Returns the portion of hours that falls on `targetDateStr` for a given entry.
+   */
+  const getHoursForDate = (entry, targetDateStr) => {
+    const startDate = entry.date;
+    const endDate = entry.end_date || entry.date;
+    const totalHours = entry.total_hours || 0;
+
+    // If start and end are on the same day, all hours belong to that day
+    if (startDate === endDate || !entry.end_date) {
+      return startDate === targetDateStr ? totalHours : 0;
+    }
+
+    // Overnight entry: split hours based on start_time and end_time
+    if (targetDateStr !== startDate && targetDateStr !== endDate) {
+      return 0; // target day is neither start nor end
+    }
+
+    const startTime = entry.start_time || '00:00';
+    const endTime = entry.end_time || '00:00';
+
+    const [sh, sm] = startTime.split(':').map(Number);
+    const [eh, em] = endTime.split(':').map(Number);
+
+    // Minutes from start to midnight = portion on start day
+    const minutesBeforeMidnight = (24 * 60) - (sh * 60 + sm);
+    // Minutes from midnight to end = portion on end day
+    const minutesAfterMidnight = eh * 60 + em;
+    const totalMinutesGross = minutesBeforeMidnight + minutesAfterMidnight;
+
+    if (totalMinutesGross <= 0) {
+      return startDate === targetDateStr ? totalHours : 0;
+    }
+
+    const fractionBeforeMidnight = minutesBeforeMidnight / totalMinutesGross;
+
+    if (targetDateStr === startDate) {
+      return Math.round(totalHours * fractionBeforeMidnight * 10000) / 10000;
+    } else {
+      return Math.round(totalHours * (1 - fractionBeforeMidnight) * 10000) / 10000;
+    }
+  };
+
   const getEntryForDay = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return timeEntries.find(e => e.employee_id === employee.id && e.date === dateStr);
   };
 
-  const getEntriesByCategory = (category, date) => {
+  /** Get entries that contribute hours to a specific date and category */
+  const getEntriesWithHoursForDay = (category, date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    const entries = timeEntries.filter(e => e.employee_id === employee.id && e.date === dateStr);
-    if (category.shiftTypes.length === 0) return [];
-    return entries.filter(e => category.shiftTypes.includes(e.shift_type));
+    return timeEntries
+      .filter(e => {
+        if (e.employee_id !== employee.id) return false;
+        if (category.shiftTypes.length > 0 && !category.shiftTypes.includes(e.shift_type)) return false;
+        // Entry contributes to this day if it starts or ends on this day
+        return e.date === dateStr || e.end_date === dateStr;
+      })
+      .map(e => ({ ...e, _splitHours: getHoursForDate(e, dateStr) }))
+      .filter(e => e._splitHours > 0);
+  };
+
+  const getEntriesByCategory = (category, date) => {
+    return getEntriesWithHoursForDay(category, date);
   };
 
   const getCategoryTotal = (category) => {
     let total = 0;
     weekDays.forEach(day => {
-      const entries = getEntriesByCategory(category, day);
-      entries.forEach(e => { total += e.total_hours || 0; });
+      const entries = getEntriesWithHoursForDay(category, day);
+      entries.forEach(e => { total += e._splitHours || 0; });
     });
     return total;
   };
 
-  // Totals per day
+  // Totals per day (with overnight split)
   const getDayTotal = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return timeEntries
-      .filter(e => e.employee_id === employee.id && e.date === dateStr)
-      .reduce((sum, e) => sum + (e.total_hours || 0), 0);
+    let total = 0;
+    timeEntries.forEach(e => {
+      if (e.employee_id !== employee.id) return;
+      total += getHoursForDate(e, dateStr);
+    });
+    return total;
   };
 
   const weekTotal = weekDays.reduce((sum, day) => sum + getDayTotal(day), 0);
