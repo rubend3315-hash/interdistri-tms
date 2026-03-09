@@ -54,10 +54,23 @@ export default function TimeTracking() {
     ...refOpts,
   });
 
-  // Fetch entries for this week
+  // Fetch entries for this week + prev week entries that spill into this week
   const { data: timeEntries = [], isLoading: loadingEntries } = useQuery({
     queryKey: ['timeEntries', weekNumber, year],
-    queryFn: () => base44.entities.TimeEntry.filter({ week_number: weekNumber, year }),
+    queryFn: async () => {
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      const weekEndStr = format(weekEnd, 'yyyy-MM-dd');
+      const thisWeek = await base44.entities.TimeEntry.filter({ week_number: weekNumber, year });
+      // Prev week entries whose end_date falls in this week (overnight over week boundary)
+      const prevWeekNum = getWeek(subWeeks(weekStart, 1), { weekStartsOn: 1 });
+      const prevYear = getYear(subWeeks(weekStart, 1));
+      const prevWeek = await base44.entities.TimeEntry.filter({ week_number: prevWeekNum, year: prevYear });
+      const overlap = prevWeek.filter(e => e.end_date && e.end_date >= weekStartStr && e.end_date <= weekEndStr);
+      const ids = new Set(thisWeek.map(e => e.id));
+      const merged = [...thisWeek];
+      overlap.forEach(e => { if (!ids.has(e.id)) merged.push(e); });
+      return merged;
+    },
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
   });

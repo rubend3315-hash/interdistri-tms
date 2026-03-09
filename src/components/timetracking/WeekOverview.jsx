@@ -93,50 +93,46 @@ export default function WeekOverview({
   const weekTrips = allTrips.filter(t => weekDateStrs.includes(t.date));
 
   /**
-   * Determine how many hours of an entry to show on a specific day.
-   * - Same-day entries: all hours on that day.
-   * - Overnight entries where both days are in this week: split proportionally.
-   * - Overnight entries where only one day is in this week: all hours on that day.
+   * Split an entry by calendar day.
+   * Overnight entries (date ≠ end_date) are split at midnight into two day-portions.
+   * Same-day entries are returned as-is.
    */
-  const weekDateSet = new Set(weekDays.map(d => format(d, 'yyyy-MM-dd')));
-
-  const getHoursForDate = (entry, targetDateStr) => {
-    const startDate = entry.date;
-    const endDate = entry.end_date || entry.date;
-    const totalHours = entry.total_hours || 0;
-
-    // Same-day entry
-    if (startDate === endDate || !entry.end_date) {
-      return startDate === targetDateStr ? totalHours : 0;
+  const splitEntryByDay = (entry) => {
+    if (!entry.start_time || !entry.end_time) {
+      return [{ ...entry, _date: entry.date, _hours: entry.total_hours || 0 }];
     }
 
-    // Overnight entry — both days visible → split proportionally
-    if (weekDateSet.has(startDate) && weekDateSet.has(endDate)) {
-      if (targetDateStr !== startDate && targetDateStr !== endDate) return 0;
-      const [sh, sm] = (entry.start_time || '00:00').split(':').map(Number);
-      const [eh, em] = (entry.end_time || '00:00').split(':').map(Number);
-      const minBefore = (24 * 60) - (sh * 60 + sm);
-      const minAfter = eh * 60 + em;
-      const gross = minBefore + minAfter;
-      if (gross <= 0) return targetDateStr === startDate ? totalHours : 0;
-      const fractionAfter = minAfter / gross;
-      return targetDateStr === startDate
-        ? Math.round(totalHours * (1 - fractionAfter) * 10000) / 10000
-        : Math.round(totalHours * fractionAfter * 10000) / 10000;
+    const start = new Date(`${entry.date}T${entry.start_time}`);
+    const end = new Date(`${entry.end_date || entry.date}T${entry.end_time}`);
+
+    const midnight = new Date(start);
+    midnight.setHours(24, 0, 0, 0);
+
+    // No midnight crossing
+    if (end <= midnight) {
+      return [{ ...entry, _date: entry.date, _hours: entry.total_hours || 0 }];
     }
 
-    // Only start date in week → all hours on start date
-    if (weekDateSet.has(startDate)) {
-      return targetDateStr === startDate ? totalHours : 0;
-    }
+    // Split at midnight — bruto uren per dagdeel, pauze proportioneel verdelen
+    const beforeMidnightMin = (midnight - start) / 60000;
+    const afterMidnightMin = (end - midnight) / 60000;
+    const totalGrossMin = beforeMidnightMin + afterMidnightMin;
+    const breakMin = entry.break_minutes || 0;
+    const totalNetMin = Math.max(0, totalGrossMin - breakMin);
+    const ratioBefore = totalGrossMin > 0 ? beforeMidnightMin / totalGrossMin : 0;
+    const hoursBefore = Math.round((totalNetMin * ratioBefore) / 60 * 10000) / 10000;
+    const hoursAfter = Math.round((totalNetMin * (1 - ratioBefore)) / 60 * 10000) / 10000;
 
-    // Only end date in week → all hours on end date
-    if (weekDateSet.has(endDate)) {
-      return targetDateStr === endDate ? totalHours : 0;
-    }
-
-    return 0;
+    return [
+      { ...entry, _date: entry.date, _hours: hoursBefore },
+      { ...entry, _date: entry.end_date, _hours: hoursAfter },
+    ];
   };
+
+  // Build flat array of all day-split entries for this employee
+  const splitEntries = timeEntries
+    .filter(e => e.employee_id === employee.id)
+    .flatMap(splitEntryByDay);
 
   const getEntryForDay = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
