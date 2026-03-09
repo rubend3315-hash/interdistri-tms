@@ -59,6 +59,10 @@ Deno.serve(async (req) => {
 
     for (const regel of dienstRegels) {
       if (regel.type === 'rit') {
+        if (!regel.vehicle_id || !regel.start_time) {
+          console.log(`[saveDraftRules] Skipped incomplete rit (vehicle_id=${regel.vehicle_id || 'missing'}, start_time=${regel.start_time || 'missing'})`);
+          continue;
+        }
         await svc.entities.Trip.create({
           employee_id,
           date,
