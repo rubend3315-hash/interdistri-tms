@@ -63,7 +63,6 @@ export default function TimeTracking() {
       // Get entries that belong to this week
       const thisWeek = await base44.entities.TimeEntry.filter({ week_number: weekNumber, year });
       // Also get entries from the previous week that might have end_date in this week
-      const prevWeekDate = subWeeks(weekStart, 0); // weekStart is Monday
       const prevWeekNum = getWeek(subWeeks(weekStart, 1), { weekStartsOn: 1 });
       const prevYear = getYear(subWeeks(weekStart, 1));
       const prevWeek = await base44.entities.TimeEntry.filter({ week_number: prevWeekNum, year: prevYear });
