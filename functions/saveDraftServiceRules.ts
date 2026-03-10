@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
     const svc = base44.asServiceRole;
 
     // ── 1. Delete ALL existing draft trips (status=Gepland) for this employee+date ──
+    console.log("[Draft cleanup]", { employee_id, date });
     const existingTrips = await svc.entities.Trip.filter({
       employee_id,
       date,
@@ -47,14 +48,16 @@ Deno.serve(async (req) => {
     });
 
     if (existingTrips.length > 0) {
-      console.log(`[saveDraftRules] Deleting ${existingTrips.length} existing draft trips`);
-      await Promise.all(
-        existingTrips.map(t =>
-          svc.entities.Trip.delete(t.id).catch(e =>
-            console.error(`[saveDraftRules] Delete trip ${t.id} failed: ${e?.message}`)
-          )
-        )
-      );
+      console.log(`[saveDraftRules] Deleting ${existingTrips.length} existing draft trips for employee=${employee_id} date=${date}`);
+      // Delete sequentially to avoid race conditions with parallel saves
+      for (const t of existingTrips) {
+        try {
+          await svc.entities.Trip.delete(t.id);
+          console.log(`[saveDraftRules] Deleted draft trip ${t.id}`);
+        } catch (e) {
+          console.error(`[saveDraftRules] Delete trip ${t.id} failed: ${e?.message}`);
+        }
+      }
     }
 
     // ── 2. Delete existing draft standplaatswerk ──
