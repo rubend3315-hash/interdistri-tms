@@ -233,10 +233,6 @@ export default function MobileDienstTab({
           </div>
         )}
 
-        {formData.start_time && !geenRit && dienstRegels.length > 0 && (
-          <ActivityTimelinePanel dienstRegels={dienstRegels} customers={customers} activiteiten={activiteiten} />
-        )}
-
         {formData.start_time && !geenRit && (
           <div>
             <button
