@@ -158,17 +158,12 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     console.log(`[useMobileForm] Date changed: ${currentDateRef.current} → ${newDate}`);
     currentDateRef.current = newDate;
 
-    // 1. Reset form fields for new date
-    const localDraft = loadLocalDraft(newDate);
-    if (localDraft?.formData) {
-      setFormData(localDraft.formData);
-      setDienstRegels(localDraft.dienstRegels || []);
-    } else {
-      setFormData(makeEmptyForm(newDate));
-      setDienstRegels([]);
-    }
+    // 1. Reset form fields for new date — start clean, server draft will overwrite
+    setFormData(makeEmptyForm(newDate));
+    setDienstRegels([]);
     setSignature(null);
     draftTimeEntryIdRef.current = null;
+    lastSavedRegelsRef.current = null;
 
     // 2. Re-trigger server draft loading for new date
     setDraftLoaded(false);
