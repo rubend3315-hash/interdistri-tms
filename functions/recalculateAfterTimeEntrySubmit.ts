@@ -207,6 +207,41 @@ Deno.serve(async (req) => {
     perf.spw_create_ms = Date.now() - tSpw;
 
     // ========================================
+    // 2b. CLEANUP DRAFT ACTIVITIES (Gepland trips + Concept SPW)
+    // ========================================
+    const tDraftCleanup = Date.now();
+    try {
+      // Cleanup draft trips (status=Gepland) for this employee+date
+      const draftTrips = await svc.entities.Trip.filter({
+        employee_id,
+        date,
+        status: 'Gepland',
+      });
+      if (draftTrips.length > 0) {
+        console.log(`[RECALC] Cleaning up ${draftTrips.length} draft trips (Gepland) for employee=${employee_id} date=${date}`);
+        for (const dt of draftTrips) {
+          await safeDelete(svc.entities.Trip, dt.id, 'draft-trip');
+        }
+      }
+
+      // Cleanup draft SPW (status=Concept) for this employee+date
+      const draftSpw = await svc.entities.StandplaatsWerk.filter({
+        employee_id,
+        date,
+        status: 'Concept',
+      });
+      if (draftSpw.length > 0) {
+        console.log(`[RECALC] Cleaning up ${draftSpw.length} draft SPW (Concept) for employee=${employee_id} date=${date}`);
+        for (const ds of draftSpw) {
+          await safeDelete(svc.entities.StandplaatsWerk, ds.id, 'draft-spw');
+        }
+      }
+    } catch (draftCleanupErr) {
+      console.error('[RECALC DRAFT CLEANUP] Non-critical:', draftCleanupErr.message);
+    }
+    perf.draft_cleanup_ms = Date.now() - tDraftCleanup;
+
+    // ========================================
     // 3. WRITE VERIFICATION
     // ========================================
     const tVerify = Date.now();
