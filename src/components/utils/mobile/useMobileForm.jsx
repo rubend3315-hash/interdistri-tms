@@ -360,6 +360,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     setSignature(null);
     setFormData(makeEmptyForm(todayStr));
     currentDateRef.current = todayStr;
+    draftTimeEntryIdRef.current = null;
     try { localStorage.removeItem(getStorageKey(dateToReset)); } catch {}
   }, [todayStr, isMultiDay, formData.date, currentEmployee?.id]);
 
