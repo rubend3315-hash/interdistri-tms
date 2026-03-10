@@ -198,6 +198,7 @@ Deno.serve(async (req) => {
             project_id: spw.project_id || null,
             activity_id: spw.activity_id || null,
             notes: (spw.notes || '').slice(0, 2000) || null,
+            status: 'Definitief',
           });
           createdSpwIds.push(s.id);
         }
