@@ -123,12 +123,13 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         const needsSave = (dienstRegels.length > 0 && regelsJson !== lastSavedRegelsRef.current)
           || (dienstRegels.length === 0 && lastSavedRegelsRef.current && lastSavedRegelsRef.current !== '[]');
 
-        if (needsSave && !draftRulesSavingRef.current) {
+        if (needsSave && !draftRulesSavingRef.current && draftTimeEntryIdRef.current) {
           draftRulesSavingRef.current = true;
           try {
             await base44.functions.invoke('saveDraftServiceRules', {
               employee_id: currentEmployee.id,
               date: formData.date,
+              time_entry_id: draftTimeEntryIdRef.current,
               dienstRegels,
             });
             lastSavedRegelsRef.current = dienstRegels.length === 0 ? '[]' : regelsJson;
