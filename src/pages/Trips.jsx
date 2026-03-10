@@ -886,6 +886,18 @@ export default function Trips() {
                                           </span>
                                         )}
                                       </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setConfirmDelete({ id: trip.id });
+                                        }}
+                                        title="Verwijderen"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
                                     </div>
                                   </CardContent>
                                 </Card>
