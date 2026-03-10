@@ -373,7 +373,7 @@ export default function StandplaatsWerk() {
             </div>
             <div className="min-w-[140px]">
               <Label className="text-xs text-slate-500 mb-1 block">Activiteit</Label>
-              <Select value={filterActivity} onValueChange={(v) => { setFilterActivity(v); pagination.resetPage(); }}>
+              <Select value={filterActivity} onValueChange={(v) => { setFilterActivity(v); voltooidePageState.resetPage(); conceptPageState.resetPage(); }}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Alle" />
                 </SelectTrigger>
