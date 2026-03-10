@@ -104,7 +104,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         }));
 
         // 2. Save TimeEntry to server
-        await base44.functions.invoke('upsertDraftTimeEntry', {
+        const upsertRes = await base44.functions.invoke('upsertDraftTimeEntry', {
           employee_id: currentEmployee.id,
           date: formData.date,
           start_time: formData.start_time || '',
@@ -114,6 +114,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
           notes: formData.notes || '',
           ...(isMultiDay ? { end_date: formData.end_date } : {}),
         });
+        if (upsertRes?.data?.id) {
+          draftTimeEntryIdRef.current = upsertRes.data.id;
+        }
 
         // 3. Save dienstRegels to server (only if changed AND no other save in flight)
         const regelsJson = JSON.stringify(dienstRegels);
