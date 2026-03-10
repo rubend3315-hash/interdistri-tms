@@ -30,6 +30,7 @@ import { getBreakMinutesForHours } from "@/components/utils/breakScheduleUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
 import ApprovalsFilters from "@/components/approvals/ApprovalsFilters";
+import LinkedActivitiesPanel from "@/components/approvals/LinkedActivitiesPanel";
 
 const DEFAULT_FROM = format(subDays(new Date(), 14), 'yyyy-MM-dd');
 const TODAY = format(new Date(), 'yyyy-MM-dd');
@@ -129,6 +130,61 @@ export default function Approvals() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => base44.entities.Customer.list(),
+    staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false,
+  });
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => base44.entities.Project.list(),
+    staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false,
+  });
+
+  const { data: activiteiten = [] } = useQuery({
+    queryKey: ['activiteiten'],
+    queryFn: () => base44.entities.Activiteit.list(),
+    staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false,
+  });
+
+  // Fetch linked trips and standplaatswerk for pending entries
+  const pendingIds = useMemo(() => pendingRaw.map(e => e.id), [pendingRaw]);
+
+  const { data: linkedTrips = [] } = useQuery({
+    queryKey: ['linkedTrips', pendingIds],
+    queryFn: () => base44.entities.Trip.filter({ time_entry_id: { $in: pendingIds } }),
+    enabled: pendingIds.length > 0,
+    staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false,
+  });
+
+  const { data: linkedSpw = [] } = useQuery({
+    queryKey: ['linkedSpw', pendingIds],
+    queryFn: () => base44.entities.StandplaatsWerk.filter({ time_entry_id: { $in: pendingIds } }),
+    enabled: pendingIds.length > 0,
+    staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false,
+  });
+
+  const tripsByTimeEntry = useMemo(() => {
+    const map = {};
+    linkedTrips.forEach(t => {
+      if (!t.time_entry_id) return;
+      if (!map[t.time_entry_id]) map[t.time_entry_id] = [];
+      map[t.time_entry_id].push(t);
+    });
+    return map;
+  }, [linkedTrips]);
+
+  const spwByTimeEntry = useMemo(() => {
+    const map = {};
+    linkedSpw.forEach(s => {
+      if (!s.time_entry_id) return;
+      if (!map[s.time_entry_id]) map[s.time_entry_id] = [];
+      map[s.time_entry_id].push(s);
+    });
+    return map;
+  }, [linkedSpw]);
 
   const approveMutation = useMutation({
     mutationFn: async (entry) => {
@@ -346,128 +402,144 @@ export default function Approvals() {
     const entryYear = entry.date ? new Date(entry.date).getFullYear() : null;
     const entryLocked = entry.date && entryYear && isDateInDefinitiefPeriode(entry.date, entryYear, loonperiodeStatuses);
     const overlaps = getEntryOverlaps(entry);
+    const entryTrips = showActions ? (tripsByTimeEntry[entry.id] || []) : [];
+    const entrySpw = showActions ? (spwByTimeEntry[entry.id] || []) : [];
+    const hasLinked = entryTrips.length > 0 || entrySpw.length > 0;
 
     return (
-      <Card key={entry.id} className="hover:shadow-sm transition-shadow">
-        <CardContent className="px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            {/* Left: avatar + info */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <User className="w-4 h-4 text-slate-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-sm font-semibold text-slate-900 truncate">
-                    {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
-                  </h3>
-                  <span className="text-xs text-slate-400">{employee?.department}</span>
-                  {entry.shift_type && (
-                    <Badge className={`text-[11px] px-2 py-0 leading-5 ${
-                      entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
-                      entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
-                      entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
-                      'bg-slate-100 text-slate-700'
-                    }`}>
-                      {entry.shift_type}
-                    </Badge>
-                  )}
-                  {entryLocked && (
-                    <Badge className="text-[11px] px-2 py-0 leading-5 bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
-                      <Lock className="w-2.5 h-2.5" /> Vergrendeld
-                    </Badge>
-                  )}
+      <div key={entry.id}>
+        <Card className="hover:shadow-sm transition-shadow">
+          <CardContent className="px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              {/* Left: avatar + info */}
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-slate-600" />
                 </div>
-                <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    {entry.date ? (() => {
-                      try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
-                      catch { return entry.date; }
-                    })() : '–'}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                    {entry.start_time || '-'} – {entry.end_time || '-'}
-                  </span>
-                  {entry.total_hours > 0 && (
-                    <span className="font-medium text-slate-700">{entry.total_hours}u</span>
-                  )}
-                  {vehicle && (
-                    <span className="flex items-center gap-1">
-                      <Car className="w-3.5 h-3.5 text-slate-400" />
-                      {vehicle.license_plate}
-                    </span>
-                  )}
-                  {entry.travel_allowance_multiplier > 0 && (
-                    <span className="text-slate-400">Reis: {entry.travel_allowance_multiplier}x</span>
-                  )}
-                  {entry.approved_by && (
-                    <span className="text-slate-400">door {entry.approved_by}</span>
-                  )}
-                </div>
-
-                {/* Compact warnings row */}
-                {(overlaps.length > 0 || entry.notes || entry.rejection_reason) && (
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    {overlaps.length > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
-                        <AlertTriangle className="w-3 h-3" />
-                        Overlap ({overlaps.length})
-                      </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm font-semibold text-slate-900 truncate">
+                      {employee ? `${employee.first_name} ${employee.last_name}` : 'Onbekend'}
+                    </h3>
+                    <span className="text-xs text-slate-400">{employee?.department}</span>
+                    {entry.shift_type && (
+                      <Badge className={`text-[11px] px-2 py-0 leading-5 ${
+                        entry.shift_type === 'Dag' ? 'bg-amber-100 text-amber-700' :
+                        entry.shift_type === 'Avond' ? 'bg-orange-100 text-orange-700' :
+                        entry.shift_type === 'Nacht' ? 'bg-indigo-100 text-indigo-700' :
+                        'bg-slate-100 text-slate-700'
+                      }`}>
+                        {entry.shift_type}
+                      </Badge>
                     )}
-                    {entry.notes && (
-                      <span className="text-[11px] text-slate-500 bg-slate-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.notes}>
-                        {entry.notes}
-                      </span>
-                    )}
-                    {entry.rejection_reason && (
-                      <span className="text-[11px] text-red-600 bg-red-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.rejection_reason}>
-                        Afkeuring: {entry.rejection_reason}
-                      </span>
+                    {entryLocked && (
+                      <Badge className="text-[11px] px-2 py-0 leading-5 bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
+                        <Lock className="w-2.5 h-2.5" /> Vergrendeld
+                      </Badge>
                     )}
                   </div>
+                  <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      {entry.date ? (() => {
+                        try { return format(new Date(entry.date), "EEE d MMM", { locale: nl }); }
+                        catch { return entry.date; }
+                      })() : '–'}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      {entry.start_time || '-'} – {entry.end_time || '-'}
+                    </span>
+                    {entry.total_hours > 0 && (
+                      <span className="font-medium text-slate-700">{entry.total_hours}u</span>
+                    )}
+                    {vehicle && (
+                      <span className="flex items-center gap-1">
+                        <Car className="w-3.5 h-3.5 text-slate-400" />
+                        {vehicle.license_plate}
+                      </span>
+                    )}
+                    {entry.travel_allowance_multiplier > 0 && (
+                      <span className="text-slate-400">Reis: {entry.travel_allowance_multiplier}x</span>
+                    )}
+                    {entry.approved_by && (
+                      <span className="text-slate-400">door {entry.approved_by}</span>
+                    )}
+                  </div>
+
+                  {/* Compact warnings row */}
+                  {(overlaps.length > 0 || entry.notes || entry.rejection_reason) && (
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      {overlaps.length > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                          <AlertTriangle className="w-3 h-3" />
+                          Overlap ({overlaps.length})
+                        </span>
+                      )}
+                      {entry.notes && (
+                        <span className="text-[11px] text-slate-500 bg-slate-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.notes}>
+                          {entry.notes}
+                        </span>
+                      )}
+                      {entry.rejection_reason && (
+                        <span className="text-[11px] text-red-600 bg-red-50 rounded px-1.5 py-0.5 truncate max-w-[240px]" title={entry.rejection_reason}>
+                          Afkeuring: {entry.rejection_reason}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: actions */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-2.5 text-xs"
+                  onClick={() => openDetailDialog(entry)}
+                >
+                  <Eye className="w-3.5 h-3.5 mr-1" />
+                  Bekijk
+                </Button>
+                {showActions && !entryLocked && (
+                  <>
+                    <Button
+                      size="sm"
+                      className="h-8 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => handleApprove(entry)}
+                      disabled={approvingIds.has(entry.id) || approveMutation.isPending}
+                    >
+                      <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                      Goed
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={() => openRejectDialog(entry)}
+                    >
+                      <XCircle className="w-3.5 h-3.5 mr-1" />
+                      Afkeur
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
-
-            {/* Right: actions */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 px-2.5 text-xs"
-                onClick={() => openDetailDialog(entry)}
-              >
-                <Eye className="w-3.5 h-3.5 mr-1" />
-                Bekijk
-              </Button>
-              {showActions && !entryLocked && (
-                <>
-                  <Button
-                    size="sm"
-                    className="h-8 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700"
-                    onClick={() => handleApprove(entry)}
-                    disabled={approvingIds.has(entry.id) || approveMutation.isPending}
-                  >
-                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                    Goed
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 px-2.5 text-xs text-red-600 border-red-200 hover:bg-red-50"
-                    onClick={() => openRejectDialog(entry)}
-                  >
-                    <XCircle className="w-3.5 h-3.5 mr-1" />
-                    Afkeur
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        {showActions && hasLinked && (
+          <LinkedActivitiesPanel
+            trips={entryTrips}
+            standplaatsWerk={entrySpw}
+            vehicles={vehicles}
+            customers={customers}
+            projects={projects}
+            activiteiten={activiteiten}
+            employees={employees}
+          />
+        )}
+      </div>
     );
   };
 
