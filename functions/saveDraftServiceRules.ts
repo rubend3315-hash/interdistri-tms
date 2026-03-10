@@ -131,6 +131,7 @@ Deno.serve(async (req) => {
             project_id: regel.project_id || undefined,
             activity_id: regel.activity_id || undefined,
             notes: regel.notes || undefined,
+            status: 'Concept',
           });
           createdSpw++;
           console.log(`[saveDraftRules] Created SPW[${idx}]`);
