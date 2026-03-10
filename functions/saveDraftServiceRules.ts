@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[saveDraftRules] DONE ${createdTrips} trips + ${createdSpw} SPW for ${lockKey}`);
+    console.log(`[Draft save complete] ${lockKey} — ${createdTrips} trips + ${createdSpw} SPW`);
     return Response.json({ success: true, createdTrips, createdSpw });
 
   } catch (error) {
