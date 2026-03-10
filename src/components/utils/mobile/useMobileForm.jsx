@@ -168,6 +168,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       setDienstRegels([]);
     }
     setSignature(null);
+    draftTimeEntryIdRef.current = null;
 
     // 2. Re-trigger server draft loading for new date
     setDraftLoaded(false);
