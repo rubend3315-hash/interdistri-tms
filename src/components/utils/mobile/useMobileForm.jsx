@@ -259,6 +259,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
 
         if (draftEntries.length > 0) {
           const draft = draftEntries[0];
+          draftTimeEntryIdRef.current = draft.id;
           setFormData(prev => ({
             ...prev,
             date: targetDate,
