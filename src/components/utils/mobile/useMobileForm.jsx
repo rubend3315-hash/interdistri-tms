@@ -86,8 +86,6 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   const lastSavedRegelsRef = useRef(null);
   // In-flight guard: prevent parallel saveDraftServiceRules calls
   const draftRulesSavingRef = useRef(false);
-  // Track if current date has submitted activities (blocks draft saves)
-  const [hasSubmittedActivities, setHasSubmittedActivities] = useState(false);
 
   useEffect(() => {
     // CRITICAL: Don't autosave until server draft has been loaded/attempted
@@ -120,7 +118,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         const needsSave = (dienstRegels.length > 0 && regelsJson !== lastSavedRegelsRef.current)
           || (dienstRegels.length === 0 && lastSavedRegelsRef.current && lastSavedRegelsRef.current !== '[]');
 
-        if (needsSave && !draftRulesSavingRef.current && !hasSubmittedActivities) {
+        if (needsSave && !draftRulesSavingRef.current) {
           draftRulesSavingRef.current = true;
           try {
             await base44.functions.invoke('saveDraftServiceRules', {
@@ -142,7 +140,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       setIsSaving(false);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [formData, dienstRegels, draftLoaded, currentEmployee?.id, hasSubmittedActivities]);
+  }, [formData, dienstRegels, draftLoaded, currentEmployee?.id]);
 
   // =============================================
   // DATE CHANGE DETECTION — reset + reload draft
@@ -164,7 +162,6 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       setDienstRegels([]);
     }
     setSignature(null);
-    setHasSubmittedActivities(false);
 
     // 2. Re-trigger server draft loading for new date
     setDraftLoaded(false);
@@ -274,9 +271,6 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         // Race guard again after second fetch
         if (currentDateRef.current !== targetDate) return;
 
-        // Check if submitted (Voltooid) activities exist — blocks draft creation
-        const hasVoltooid = existingTrips.some(t => t.status === 'Voltooid');
-
         const draftTrips = existingTrips.filter(t => t.status === 'Gepland');
         const loadedRegels = [];
         if (draftTrips.length > 0) {
@@ -308,9 +302,6 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
 
         // Race guard again
         if (currentDateRef.current !== targetDate) return;
-
-        const hasDefinitief = existingSpw.some(s => s.status === 'Definitief');
-        setHasSubmittedActivities(hasVoltooid || hasDefinitief);
 
         if (existingSpw.length > 0) {
           existingSpw.forEach(s => loadedRegels.push({
@@ -379,7 +370,6 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     storageKey: getStorageKey(formData.date),
     generateAutoRit,
     autoRitDismissed,
-    hasSubmittedActivities,
 
   };
 }

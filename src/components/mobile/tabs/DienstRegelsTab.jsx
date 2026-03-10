@@ -65,7 +65,6 @@ export default function DienstRegelsTab({
   storageKey, onSaveDraft, setActiveTab,
   formData,
   postNLAuto = false, postNLOpenDrawer = false, setPostNLOpenDrawer,
-  hasSubmittedActivities = false,
   onSaveAndGoHome, onCloseOpenRitToDienst
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -142,16 +141,8 @@ export default function DienstRegelsTab({
         <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
       </div>
 
-      {/* Submitted banner */}
-      {hasSubmittedActivities && (
-        <div className="px-2.5 py-2.5 bg-blue-50 border-l-2 border-blue-400 rounded-r-lg mb-2">
-          <p className="text-[12px] text-blue-700 font-semibold">✓ Al ingediend</p>
-          <p className="text-[10px] text-blue-600 mt-0.5">De activiteiten voor deze datum zijn al ingediend. Wijzigingen zijn niet mogelijk.</p>
-        </div>
-      )}
-
       {/* Validation banner */}
-      {hasValidationErrors && !hasSubmittedActivities && (
+      {hasValidationErrors && (
         <div className="px-2.5 py-2 bg-red-50 border-l-2 border-red-400 rounded-r-lg mb-2">
           <div className="flex items-center gap-1.5 text-red-700 font-semibold text-[11px]">
             <AlertTriangle className="w-3.5 h-3.5" />
@@ -184,8 +175,8 @@ export default function DienstRegelsTab({
                 regel={regel}
                 customers={customers}
                 hasOverlap={overlapSet.has(regel.id)}
-                onTap={() => !hasSubmittedActivities && handleTap(regel)}
-                onDelete={hasSubmittedActivities ? undefined : () => requestDelete(regel.id)}
+                onTap={() => handleTap(regel)}
+                onDelete={() => requestDelete(regel.id)}
               />
             ))}
           </div>
@@ -194,12 +185,8 @@ export default function DienstRegelsTab({
 
       {/* Bottom actions */}
       <div className="bg-white pt-2 pb-1 -mx-4 px-4 border-t border-slate-100 mt-2 space-y-1.5">
-        {hasSubmittedActivities ? (
-          <button type="button" onClick={() => setActiveTab("dienst")}
-            className="w-full h-[36px] rounded-lg bg-slate-100 text-slate-500 text-[13px] font-medium flex items-center justify-center">
-            ← Terug naar Diensttijd
-          </button>
-        ) : postNLAuto && dienstRegels.length > 0 ? (
+        {/* PostNL mode with existing regels: no big "add" button */}
+        {postNLAuto && dienstRegels.length > 0 ? (
           <>
             {/* Secondary: add more rules — small link, not dominant */}
             <button type="button"

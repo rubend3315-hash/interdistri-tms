@@ -39,16 +39,6 @@ Deno.serve(async (req) => {
 
     const svc = base44.asServiceRole;
 
-    // ── 0. Guard: skip draft save if definitieve activiteiten already exist ──
-    const [existingVoltooid, existingDefinitief] = await Promise.all([
-      svc.entities.Trip.filter({ employee_id, date, status: 'Voltooid' }),
-      svc.entities.StandplaatsWerk.filter({ employee_id, date, status: 'Definitief' }),
-    ]);
-    if (existingVoltooid.length > 0 || existingDefinitief.length > 0) {
-      console.log(`[saveDraftRules] SKIP — ${existingVoltooid.length} Voltooid trips + ${existingDefinitief.length} Definitief SPW already exist for ${lockKey}`);
-      return Response.json({ success: true, skipped: true, reason: 'already_submitted' });
-    }
-
     // ── 1. Delete ALL existing draft trips (status=Gepland) for this employee+date ──
     console.log("[Draft cleanup]", { employee_id, date });
     const existingTrips = await svc.entities.Trip.filter({
