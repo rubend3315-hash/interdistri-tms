@@ -65,6 +65,7 @@ export default function DienstRegelsTab({
   storageKey, onSaveDraft, setActiveTab,
   formData,
   postNLAuto = false, postNLOpenDrawer = false, setPostNLOpenDrawer,
+  hasSubmittedActivities = false,
   onSaveAndGoHome, onCloseOpenRitToDienst
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -141,8 +142,16 @@ export default function DienstRegelsTab({
         <AutoSaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
       </div>
 
+      {/* Submitted banner */}
+      {hasSubmittedActivities && (
+        <div className="px-2.5 py-2.5 bg-blue-50 border-l-2 border-blue-400 rounded-r-lg mb-2">
+          <p className="text-[12px] text-blue-700 font-semibold">✓ Al ingediend</p>
+          <p className="text-[10px] text-blue-600 mt-0.5">De activiteiten voor deze datum zijn al ingediend. Wijzigingen zijn niet mogelijk.</p>
+        </div>
+      )}
+
       {/* Validation banner */}
-      {hasValidationErrors && (
+      {hasValidationErrors && !hasSubmittedActivities && (
         <div className="px-2.5 py-2 bg-red-50 border-l-2 border-red-400 rounded-r-lg mb-2">
           <div className="flex items-center gap-1.5 text-red-700 font-semibold text-[11px]">
             <AlertTriangle className="w-3.5 h-3.5" />
