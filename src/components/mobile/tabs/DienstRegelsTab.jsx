@@ -184,8 +184,8 @@ export default function DienstRegelsTab({
                 regel={regel}
                 customers={customers}
                 hasOverlap={overlapSet.has(regel.id)}
-                onTap={() => handleTap(regel)}
-                onDelete={() => requestDelete(regel.id)}
+                onTap={() => !hasSubmittedActivities && handleTap(regel)}
+                onDelete={hasSubmittedActivities ? undefined : () => requestDelete(regel.id)}
               />
             ))}
           </div>
