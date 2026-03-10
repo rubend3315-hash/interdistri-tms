@@ -188,15 +188,11 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
         if (dayHours > 8) {
           oproepOveruren += dayHours - 8;
         }
-      }
-
-      // zaterdag
-      if (dow === 6) {
+      } else if (dow === 6) {
+        // zaterdag
         zaterdagUren += dayHours;
-      }
-
-      // zondag
-      if (dow === 0) {
+      } else if (dow === 0) {
+        // zondag
         zondagUren += dayHours;
       }
     }
