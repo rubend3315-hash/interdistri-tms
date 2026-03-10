@@ -13,7 +13,7 @@ import { Send, Save, AlertTriangle, Truck, Package, ChevronRight, Clock } from "
 import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
 import { validateDienstRegels } from "@/components/utils/mobile/dienstRegelValidation";
 import MobileStepIndicator from "@/components/mobile/MobileStepIndicator";
-import ActivityTimelinePanel from "@/components/mobile/ActivityTimelinePanel";
+
 
 const TimeInput = ({ value, onChange, placeholder }) => (
   <Input
@@ -34,8 +34,7 @@ export default function MobileDienstTab({
   calculateHours, isMultiDay, isMultiDayAllowed = false, isSubmitting,
   onSubmit, onSaveDraft, setActiveTab,
   geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
-  postNLAuto = false, setPostNLAuto,
-  customers = [], activiteiten = []
+  postNLAuto = false, setPostNLAuto
 }) {
   // Only show multi-day toggle for authorized employees; default ON for multi_day employees
   const [multiDayEnabled, setMultiDayEnabled] = useState(isMultiDayAllowed);
