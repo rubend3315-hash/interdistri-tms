@@ -46,8 +46,10 @@ export default function StandplaatsWerk() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [activeTab, setActiveTab] = useState("voltooid");
   const queryClient = useQueryClient();
-  const pagination = usePagination(20);
+  const voltooidePageState = usePagination(20);
+  const conceptPageState = usePagination(20);
 
   const resetFilters = () => {
     setSearchTerm("");
