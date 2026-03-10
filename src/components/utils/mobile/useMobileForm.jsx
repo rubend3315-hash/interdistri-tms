@@ -86,6 +86,8 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   const lastSavedRegelsRef = useRef(null);
   // In-flight guard: prevent parallel saveDraftServiceRules calls
   const draftRulesSavingRef = useRef(false);
+  // Track the current draft TimeEntry id for saveDraftServiceRules
+  const draftTimeEntryIdRef = useRef(null);
 
   useEffect(() => {
     // CRITICAL: Don't autosave until server draft has been loaded/attempted
