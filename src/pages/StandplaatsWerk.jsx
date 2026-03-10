@@ -57,7 +57,8 @@ export default function StandplaatsWerk() {
     setFilterDateTo(SPW_TODAY);
     setFilterEmployee("all");
     setFilterActivity("all");
-    pagination.resetPage();
+    voltooidePageState.resetPage();
+    conceptPageState.resetPage();
   };
 
   const cOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
