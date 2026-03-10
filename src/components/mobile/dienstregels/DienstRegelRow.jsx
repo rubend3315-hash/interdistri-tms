@@ -54,13 +54,15 @@ export default function DienstRegelRow({ regel, customers, hasOverlap, onTap, on
       </div>
 
       {/* Delete button — clean icon, no overlay */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onDelete(); }}
-        className="p-1.5 rounded-lg active:bg-red-50 flex items-center justify-center flex-shrink-0"
-      >
-        <Trash2 className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.5} />
-      </button>
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="p-1.5 rounded-lg active:bg-red-50 flex items-center justify-center flex-shrink-0"
+        >
+          <Trash2 className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.5} />
+        </button>
+      )}
     </div>
   );
 }
