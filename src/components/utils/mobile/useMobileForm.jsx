@@ -311,8 +311,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         // Race guard again
         if (currentDateRef.current !== targetDate) return;
 
-        if (existingSpw.length > 0) {
-          existingSpw.forEach(s => loadedRegels.push({
+        const draftSpw = existingSpw.filter(s => s.status === 'Concept');
+        if (draftSpw.length > 0) {
+          draftSpw.forEach(s => loadedRegels.push({
             id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
             type: "standplaats",
             start_time: s.start_time || "",
