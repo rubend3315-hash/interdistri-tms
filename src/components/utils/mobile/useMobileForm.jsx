@@ -84,6 +84,8 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
 
   // Track last server-saved dienstRegels to avoid redundant writes
   const lastSavedRegelsRef = useRef(null);
+  // In-flight guard: prevent parallel saveDraftServiceRules calls
+  const draftRulesSavingRef = useRef(false);
 
   useEffect(() => {
     // CRITICAL: Don't autosave until server draft has been loaded/attempted
@@ -111,23 +113,23 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
           ...(isMultiDay ? { end_date: formData.end_date } : {}),
         });
 
-        // 3. Save dienstRegels to server (only if changed)
+        // 3. Save dienstRegels to server (only if changed AND no other save in flight)
         const regelsJson = JSON.stringify(dienstRegels);
-        if (dienstRegels.length > 0 && regelsJson !== lastSavedRegelsRef.current) {
-          await base44.functions.invoke('saveDraftServiceRules', {
-            employee_id: currentEmployee.id,
-            date: formData.date,
-            dienstRegels,
-          });
-          lastSavedRegelsRef.current = regelsJson;
-        } else if (dienstRegels.length === 0 && lastSavedRegelsRef.current && lastSavedRegelsRef.current !== '[]') {
-          // Regels were cleared — clean up server-side drafts
-          await base44.functions.invoke('saveDraftServiceRules', {
-            employee_id: currentEmployee.id,
-            date: formData.date,
-            dienstRegels: [],
-          });
-          lastSavedRegelsRef.current = '[]';
+        const needsSave = (dienstRegels.length > 0 && regelsJson !== lastSavedRegelsRef.current)
+          || (dienstRegels.length === 0 && lastSavedRegelsRef.current && lastSavedRegelsRef.current !== '[]');
+
+        if (needsSave && !draftRulesSavingRef.current) {
+          draftRulesSavingRef.current = true;
+          try {
+            await base44.functions.invoke('saveDraftServiceRules', {
+              employee_id: currentEmployee.id,
+              date: formData.date,
+              dienstRegels,
+            });
+            lastSavedRegelsRef.current = dienstRegels.length === 0 ? '[]' : regelsJson;
+          } finally {
+            draftRulesSavingRef.current = false;
+          }
         }
 
         // 4. Only show "Concept opgeslagen" after all server writes succeed
