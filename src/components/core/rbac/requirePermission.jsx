@@ -27,9 +27,9 @@ export function getEffectiveRole(user) {
   if (user.business_role === ROLES.EMPLOYEE) return ROLES.EMPLOYEE;
   if (user.business_role === ROLES.HR_ADMIN) return ROLES.HR_ADMIN;
   if (user.business_role === ROLES.PLANNER) return ROLES.PLANNER;
-  // Alle overige gebruikers (geen business_role) krijgen volledige
-  // toegang — zoals vóór RBAC. Admin kan via Users-pagina rollen toewijzen.
-  return ROLES.SUPER_ADMIN;
+  // Alle overige gebruikers (geen business_role) krijgen EMPLOYEE-rechten
+  // totdat een admin hun rol toewijst via de Users-pagina.
+  return ROLES.EMPLOYEE;
 }
 
 /**
