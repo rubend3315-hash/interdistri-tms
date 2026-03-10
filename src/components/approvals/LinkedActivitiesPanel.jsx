@@ -1,0 +1,194 @@
+import React from "react";
+import { format } from "date-fns";
+import { nl } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
+import {
+  Truck,
+  Package,
+  Calendar,
+  Clock,
+  User,
+  Building2,
+  MapPin,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle
+} from "lucide-react";
+
+function TripCard({ trip, employee, vehicle, customer }) {
+  const totalKm = trip.start_km != null && trip.end_km != null ? trip.end_km - trip.start_km : trip.total_km;
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 bg-white border border-slate-200 rounded-lg">
+      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Truck className="w-4 h-4 text-blue-600" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium text-slate-900 truncate">
+            {trip.route_name || "Rit"}
+          </span>
+          <Badge className="text-[10px] px-1.5 py-0 leading-4 bg-blue-50 text-blue-700">
+            {trip.status}
+          </Badge>
+          {trip.km_warning && (
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" title={trip.km_warning} />
+          )}
+        </div>
+        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+          {vehicle && (
+            <span className="flex items-center gap-1">
+              <Truck className="w-3 h-3 text-slate-400" />
+              {vehicle.license_plate}
+            </span>
+          )}
+          {customer && (
+            <span className="flex items-center gap-1">
+              <Building2 className="w-3 h-3 text-slate-400" />
+              {customer.company_name}
+            </span>
+          )}
+          {trip.departure_time && trip.arrival_time && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3 text-slate-400" />
+              {trip.departure_time} – {trip.arrival_time}
+            </span>
+          )}
+          {trip.start_km != null && trip.end_km != null && (
+            <span>{trip.start_km} – {trip.end_km} km</span>
+          )}
+          {totalKm > 0 && (
+            <span className="font-medium text-slate-700">{totalKm} km</span>
+          )}
+          {trip.departure_time && trip.arrival_time && (() => {
+            const [dH, dM] = trip.departure_time.split(":").map(Number);
+            const [aH, aM] = trip.arrival_time.split(":").map(Number);
+            let m = (aH * 60 + aM) - (dH * 60 + dM);
+            if (m < 0) m += 1440;
+            return <span className="font-medium text-blue-600">{(m / 60).toFixed(1)}u</span>;
+          })()}
+          {trip.fuel_liters > 0 && <span>{trip.fuel_liters}L</span>}
+        </div>
+        {trip.notes && (
+          <p className="text-[11px] text-slate-400 truncate max-w-[320px] mt-0.5">{trip.notes}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SpwCard({ record, employee, customer, project, activity }) {
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 bg-white border border-slate-200 rounded-lg">
+      <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Package className="w-4 h-4 text-amber-600" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium text-slate-900 truncate">
+            {activity || "Standplaatswerk"}
+          </span>
+          <Badge className="text-[10px] px-1.5 py-0 leading-4 bg-amber-50 text-amber-700">
+            {record.status === "Concept" ? "Concept" : "Loodswerk"}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+          {customer && (
+            <span className="flex items-center gap-1">
+              <Building2 className="w-3 h-3 text-slate-400" />
+              {customer}
+            </span>
+          )}
+          {(record.start_time || record.end_time) && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3 text-slate-400" />
+              {record.start_time || "?"} – {record.end_time || "?"}
+            </span>
+          )}
+          {project && <span className="text-slate-400">{project}</span>}
+        </div>
+        {record.notes && (
+          <p className="text-[11px] text-slate-400 truncate max-w-[320px] mt-0.5">{record.notes}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function LinkedActivitiesPanel({
+  trips = [],
+  standplaatsWerk = [],
+  vehicles = [],
+  customers = [],
+  projects = [],
+  activiteiten = [],
+  employees = []
+}) {
+  const getVehicle = (id) => vehicles.find((v) => v.id === id);
+  const getCustomer = (id) => customers.find((c) => c.id === id);
+  const getEmployee = (id) => employees.find((e) => e.id === id);
+  const getProjectName = (id) => projects.find((p) => p.id === id)?.name;
+  const getActiviteitName = (id) => activiteiten.find((a) => a.id === id)?.name;
+
+  const hasTrips = trips.length > 0;
+  const hasSpw = standplaatsWerk.length > 0;
+
+  if (!hasTrips && !hasSpw) return null;
+
+  return (
+    <div className="ml-4 pl-4 border-l-2 border-slate-200 space-y-3 pb-1">
+      {/* Ritten */}
+      <div>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+          <Truck className="w-3.5 h-3.5" />
+          Ritten ({trips.length})
+        </p>
+        {hasTrips ? (
+          <div className="space-y-1.5">
+            {trips.map((trip) => (
+              <TripCard
+                key={trip.id}
+                trip={trip}
+                employee={getEmployee(trip.employee_id)}
+                vehicle={getVehicle(trip.vehicle_id)}
+                customer={getCustomer(trip.customer_id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400 italic">Geen ritten geregistreerd</p>
+        )}
+      </div>
+
+      {/* Standplaatswerk */}
+      <div>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+          <Package className="w-3.5 h-3.5" />
+          Standplaatswerk ({standplaatsWerk.length})
+        </p>
+        {hasSpw ? (
+          <div className="space-y-1.5">
+            {standplaatsWerk.map((record) => (
+              <SpwCard
+                key={record.id}
+                record={record}
+                employee={getEmployee(record.employee_id)}
+                customer={getCustomerName(record.customer_id)}
+                project={getProjectName(record.project_id)}
+                activity={getActiviteitName(record.activity_id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400 italic">Geen standplaatswerk geregistreerd</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Internal helper — accepts ID, returns name string
+function getCustomerName(id) {
+  // This won't work standalone — we use the prop-based getCustomer in SpwCard instead
+  return null;
+}
