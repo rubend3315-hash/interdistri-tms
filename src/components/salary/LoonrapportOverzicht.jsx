@@ -167,18 +167,34 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
       }
     });
 
-    // Per kalenderdag ma-vr > 8 uur → overuren. Za/zo = diensturen, GEEN overwerk.
+    // Per kalenderdag: ma-vr basisuren (max 8) + overuren (>8), za/zo apart
+    let basisUren100 = 0;
+    let zaterdagUren = 0;
+    let zondagUren = 0;
     let oproepOveruren = 0;
+
     for (const [dateStr, dayHours] of Object.entries(dayMap)) {
       const dow = new Date(dateStr).getDay();
-      // Alleen ma(1)-vr(5): overwerk 130%. Za(6)/zo(0) gaan naar diensturen-toeslag.
-      if (dow >= 1 && dow <= 5 && dayHours > 8) {
-        oproepOveruren += dayHours - 8;
+
+      // maandag t/m vrijdag
+      if (dow >= 1 && dow <= 5) {
+        basisUren100 += Math.min(dayHours, 8);
+        if (dayHours > 8) {
+          oproepOveruren += dayHours - 8;
+        }
+      }
+
+      // zaterdag
+      if (dow === 6) {
+        zaterdagUren += dayHours;
+      }
+
+      // zondag
+      if (dow === 0) {
+        zondagUren += dayHours;
       }
     }
 
-    // Oproepkracht: toeslagen za/zo/feestdag/nacht blijven ongewijzigd
-    // Alleen overuren = per kalenderdag > 8 uur, geen aanvulling/compensatie/weekvergelijking
     // Saldo uren voor vakantiebijslag/verlof = min(totaal gewerkte basisuren, 40)
     const saldoVakantieUren = r(Math.min(totalHours, 40));
 
@@ -187,8 +203,8 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
       uren_100: r(totalHours),
       compensatie_uren: 0,
       aanvulling_contract: 0,
-      diensttoeslag_za_150: r(saturdayHours),
-      diensttoeslag_zo_200: r(sundayHours),
+      diensttoeslag_za_150: r(zaterdagUren),
+      diensttoeslag_zo_200: r(zondagUren),
       vakantiedag: 0,
       ziek: r(ziekHours),
       verlof: r(verlofHours),
@@ -199,11 +215,11 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
       onbetaald_verlof: r(onbetaaldVerlof),
       ouderschapsverlof_betaald: r(ouderschapsBetaald),
       ouderschapsverlof_onbetaald: r(ouderschapsOnbetaald),
-      variabele_uren_100: r(totalHours),
+      variabele_uren_100: r(basisUren100),
       toeslagenmatrix_19: (employee.is_chauffeur !== false) ? r(nightHours) : 0,
-      toeslag_za_50: r(saturdayHours),
+      toeslag_za_50: r(zaterdagUren),
       za_overwerk_150: 0,
-      toeslag_zo_100: r(sundayHours),
+      toeslag_zo_100: r(zondagUren),
       zo_overwerk_200: 0,
       diensturen_feestdag_200: r(holidayHoursWorked),
       toeslag_feestdag_100: r(holidayHoursWorked),
