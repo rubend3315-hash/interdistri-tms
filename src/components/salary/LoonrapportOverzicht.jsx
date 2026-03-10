@@ -36,7 +36,7 @@ export const VARIABELE_KOLOMMEN = [
   { key: "diensturen_feestdag_200", label: "Diensturen feestdag 200%" },
   { key: "toeslag_feestdag_100", label: "Toeslag diensturen feestdag 100%" },
   { key: "feestdag_overwerk_200", label: "Feestdag overwerk 200%" },
-  { key: "overwerk_130", label: "Overwerk 130%" },
+  { key: "overwerk_130", label: "Overwerktoeslag 30%" },
   { key: "partnerverlof_week", label: "Partnerverlof" },
   { key: "verblijfkosten", label: "Verblijfkosten" },
 ];
