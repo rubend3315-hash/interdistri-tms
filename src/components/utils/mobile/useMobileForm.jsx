@@ -379,6 +379,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     storageKey: getStorageKey(formData.date),
     generateAutoRit,
     autoRitDismissed,
+    hasSubmittedActivities,
 
   };
 }
