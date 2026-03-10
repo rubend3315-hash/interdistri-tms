@@ -284,10 +284,13 @@ export default function MobileDienstTab({
               </div>
             </div>
 
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox checked={manualBreak} onCheckedChange={(checked) => handleSetManualBreak(!!checked)} />
-              <span className="text-[12px] text-slate-600">Pauze handmatig invullen</span>
-            </label>
+            {/* Checkbox verborgen per besluit — logica blijft intact */}
+            {false && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox checked={manualBreak} onCheckedChange={(checked) => handleSetManualBreak(!!checked)} />
+                <span className="text-[12px] text-slate-600">Pauze handmatig invullen</span>
+              </label>
+            )}
 
             {formData.end_time && (
               <p className="text-[12px] text-blue-700 font-semibold text-center">
