@@ -249,6 +249,20 @@ export default function SalaryReports() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => {
+                          queryClient.invalidateQueries({ queryKey: ['employees'] });
+                          queryClient.invalidateQueries({ queryKey: ['timeEntries-all', selectedYear] });
+                          queryClient.invalidateQueries({ queryKey: ['holidays-all'] });
+                          queryClient.invalidateQueries({ queryKey: ['salaryTables'] });
+                          queryClient.invalidateQueries({ queryKey: ['payrollSettings'] });
+                        }}
+                      >
+                        <RefreshCw className="w-4 h-4 mr-1" />
+                        Verversen
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setShowConfig(!showConfig)}
                       >
                         <FileSpreadsheet className="w-4 h-4 mr-1" />
