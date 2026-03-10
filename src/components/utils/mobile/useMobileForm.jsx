@@ -325,7 +325,12 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
             _existingId: s.id
           }));
         }
-        if (loadedRegels.length > 0) setDienstRegels(loadedRegels);
+        // CRITICAL: Replace (not merge) — prevents duplication from localStorage + server
+        if (loadedRegels.length > 0) {
+          setDienstRegels(loadedRegels);
+          // Update lastSavedRef so autosave doesn't immediately re-save identical data
+          lastSavedRegelsRef.current = JSON.stringify(loadedRegels);
+        }
       } catch (error) {
         console.error('Draft laden mislukt:', error);
       } finally {
