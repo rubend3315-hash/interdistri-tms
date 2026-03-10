@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Plus, Save, ChevronLeft, AlertTriangle } from "lucide-react";
+import ActivityTimelinePanel from "@/components/mobile/ActivityTimelinePanel";
 import { toast } from "sonner";
 import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
 import { validateDienstRegels, findOverlaps, timeToMinutes } from "@/components/utils/mobile/dienstRegelValidation";
@@ -253,6 +254,13 @@ export default function DienstRegelsTab({
           </>
         )}
       </div>
+
+      {/* Read-only activiteiten tijdlijn */}
+      {dienstRegels.length > 0 && (
+        <div className="mt-3">
+          <ActivityTimelinePanel dienstRegels={dienstRegels} customers={customers} activiteiten={activiteiten} />
+        </div>
+      )}
 
       {/* Fullscreen drawer */}
       <DienstRegelDrawer
