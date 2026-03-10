@@ -34,7 +34,8 @@ export default function MobileDienstTab({
   calculateHours, isMultiDay, isMultiDayAllowed = false, isSubmitting,
   onSubmit, onSaveDraft, setActiveTab,
   geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
-  postNLAuto = false, setPostNLAuto
+  postNLAuto = false, setPostNLAuto,
+  customers = [], activiteiten = []
 }) {
   // Only show multi-day toggle for authorized employees; default ON for multi_day employees
   const [multiDayEnabled, setMultiDayEnabled] = useState(isMultiDayAllowed);
