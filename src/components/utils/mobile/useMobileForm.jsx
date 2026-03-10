@@ -86,6 +86,8 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   const lastSavedRegelsRef = useRef(null);
   // In-flight guard: prevent parallel saveDraftServiceRules calls
   const draftRulesSavingRef = useRef(false);
+  // Track if current date has submitted activities (blocks draft saves)
+  const [hasSubmittedActivities, setHasSubmittedActivities] = useState(false);
 
   useEffect(() => {
     // CRITICAL: Don't autosave until server draft has been loaded/attempted
