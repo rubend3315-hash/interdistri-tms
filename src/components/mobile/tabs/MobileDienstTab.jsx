@@ -13,6 +13,7 @@ import { Send, Save, AlertTriangle, Truck, Package, ChevronRight, Clock } from "
 import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
 import { validateDienstRegels } from "@/components/utils/mobile/dienstRegelValidation";
 import MobileStepIndicator from "@/components/mobile/MobileStepIndicator";
+import ActivityTimelinePanel from "@/components/mobile/ActivityTimelinePanel";
 
 
 const TimeInput = ({ value, onChange, placeholder }) => (
@@ -34,7 +35,8 @@ export default function MobileDienstTab({
   calculateHours, isMultiDay, isMultiDayAllowed = false, isSubmitting,
   onSubmit, onSaveDraft, setActiveTab,
   geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
-  postNLAuto = false, setPostNLAuto
+  postNLAuto = false, setPostNLAuto,
+  customers = [], activiteiten = []
 }) {
   // Only show multi-day toggle for authorized employees; default ON for multi_day employees
   const [multiDayEnabled, setMultiDayEnabled] = useState(isMultiDayAllowed);
@@ -330,6 +332,13 @@ export default function MobileDienstTab({
           </div>
         )}
       </div>
+
+      {/* ── Activiteiten tijdlijn — read-only, buiten form ── */}
+      {dienstRegels.length > 0 && formData.start_time && (
+        <div className="px-4 py-2">
+          <ActivityTimelinePanel dienstRegels={dienstRegels} customers={customers} activiteiten={activiteiten} />
+        </div>
+      )}
 
       {/* ── STICKY BOTTOM CTA ── */}
       <div className="sticky bottom-0 left-0 right-0 bg-white pt-1.5 pb-1 px-4 border-t border-slate-100">
