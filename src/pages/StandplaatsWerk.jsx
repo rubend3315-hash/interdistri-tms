@@ -419,96 +419,153 @@ export default function StandplaatsWerk() {
             <Skeleton key={i} className="h-32 rounded-xl" />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
-        <Card className="p-12 text-center">
-          <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900">Geen standplaatswerk gevonden</h3>
-          <p className="text-slate-500 mt-1">Er zijn nog geen registraties of de filters leveren geen resultaat.</p>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {pagination.paginateItems(filtered).map((record) => {
-            const employee = getEmployee(record.employee_id);
-            const recYear = record.date ? new Date(record.date).getFullYear() : null;
-            const isLocked = record.date && recYear && isDateInDefinitiefPeriode(record.date, recYear, loonperiodeStatuses);
-            const validation = validateAgainstTimeEntry(record);
-            const overlaps = getOverlaps(record);
-            return (
-              <Card
-                key={record.id}
-                className={`transition-shadow ${isLocked ? "opacity-75" : "hover:shadow-sm cursor-pointer"}`}
-                onClick={() => !isLocked && openEditDialog(record)}
-              >
-                <CardContent className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Package className="w-[18px] h-[18px] text-amber-700" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-semibold text-slate-900 truncate">
-                          {record.activity_id ? getActiviteitName(record.activity_id) : "Standplaatswerk"}
-                        </h3>
-                        <Badge className="text-[11px] px-2 py-0 leading-5 bg-amber-100 text-amber-700">Loodswerk</Badge>
-                        {isLocked && (
-                          <Badge className="text-[11px] px-2 py-0 leading-5 bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
-                            <Lock className="w-2.5 h-2.5" /> Vergrendeld
-                          </Badge>
-                        )}
-                        {validation.valid === true && <CheckCircle2 className="w-4 h-4 text-green-500" title={validation.message} />}
-                        {validation.valid === false && <XCircle className="w-4 h-4 text-red-500" title={validation.message} />}
-                        {overlaps.length > 0 && <AlertTriangle className="w-4 h-4 text-amber-500" title={`Overlap met ${overlaps.length} record(s)`} />}
-                      </div>
-                      <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          {record.date ? format(new Date(record.date), "d MMM", { locale: nl }) : "-"}
-                        </span>
-                        {employee && (
-                          <span className="flex items-center gap-1">
-                            <User className="w-3.5 h-3.5 text-slate-400" />
-                            {getFullName(employee)}
-                          </span>
-                        )}
-                        {record.customer_id && (
-                          <span className="flex items-center gap-1">
-                            <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                            {getCustomerName(record.customer_id)}
-                          </span>
-                        )}
-                        {(record.start_time || record.end_time) && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            {record.start_time || "?"} – {record.end_time || "?"}
-                          </span>
-                        )}
-                        {record.project_id && (
-                          <span className="text-slate-400">{getProjectName(record.project_id)}</span>
-                        )}
-                      </div>
-                      {overlaps.length > 0 && (
-                        <span className="inline-flex items-center gap-1 mt-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
-                          <AlertTriangle className="w-3 h-3" /> Overlap ({overlaps.length})
-                        </span>
-                      )}
-                      {record.notes && (
-                        <p className="text-[11px] text-slate-400 truncate max-w-[300px] mt-0.5">{record.notes}</p>
-                      )}
-                    </div>
+      ) : (() => {
+        const voltooideAll = filtered.filter(r => r.status !== "Concept");
+        const conceptAll = filtered.filter(r => r.status === "Concept");
+        const voltooideItems = voltooidePageState.paginateItems(voltooideAll);
+        const conceptItems = conceptPageState.paginateItems(conceptAll);
+
+        const renderCard = (record, isConcept) => {
+          const employee = getEmployee(record.employee_id);
+          const recYear = record.date ? new Date(record.date).getFullYear() : null;
+          const isLocked = !isConcept && record.date && recYear && isDateInDefinitiefPeriode(record.date, recYear, loonperiodeStatuses);
+          const validation = !isConcept ? validateAgainstTimeEntry(record) : { valid: null };
+          const overlaps = !isConcept ? getOverlaps(record) : [];
+          return (
+            <Card
+              key={record.id}
+              className={`transition-shadow ${isLocked ? "opacity-75" : "hover:shadow-sm cursor-pointer"}`}
+              onClick={() => !isLocked && openEditDialog(record)}
+            >
+              <CardContent className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Package className="w-[18px] h-[18px] text-amber-700" />
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-          <Pagination
-            totalItems={filtered.length}
-            currentPage={pagination.currentPage}
-            pageSize={pagination.pageSize}
-            onPageChange={pagination.setCurrentPage}
-            onPageSizeChange={pagination.handlePageSizeChange}
-          />
-        </div>
-      )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm font-semibold text-slate-900 truncate">
+                        {record.activity_id ? getActiviteitName(record.activity_id) : "Standplaatswerk"}
+                      </h3>
+                      <Badge className={`text-[11px] px-2 py-0 leading-5 ${isConcept ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"}`}>
+                        {isConcept ? "Concept" : "Loodswerk"}
+                      </Badge>
+                      {isLocked && (
+                        <Badge className="text-[11px] px-2 py-0 leading-5 bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
+                          <Lock className="w-2.5 h-2.5" /> Vergrendeld
+                        </Badge>
+                      )}
+                      {validation.valid === true && <CheckCircle2 className="w-4 h-4 text-green-500" title={validation.message} />}
+                      {validation.valid === false && <XCircle className="w-4 h-4 text-red-500" title={validation.message} />}
+                      {overlaps.length > 0 && <AlertTriangle className="w-4 h-4 text-amber-500" title={`Overlap met ${overlaps.length} record(s)`} />}
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        {record.date ? format(new Date(record.date), "d MMM", { locale: nl }) : "-"}
+                      </span>
+                      {employee && (
+                        <span className="flex items-center gap-1">
+                          <User className="w-3.5 h-3.5 text-slate-400" />
+                          {getFullName(employee)}
+                        </span>
+                      )}
+                      {record.customer_id && (
+                        <span className="flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                          {getCustomerName(record.customer_id)}
+                        </span>
+                      )}
+                      {(record.start_time || record.end_time) && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          {record.start_time || "?"} – {record.end_time || "?"}
+                        </span>
+                      )}
+                      {record.project_id && (
+                        <span className="text-slate-400">{getProjectName(record.project_id)}</span>
+                      )}
+                    </div>
+                    {overlaps.length > 0 && (
+                      <span className="inline-flex items-center gap-1 mt-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                        <AlertTriangle className="w-3 h-3" /> Overlap ({overlaps.length})
+                      </span>
+                    )}
+                    {record.notes && (
+                      <p className="text-[11px] text-slate-400 truncate max-w-[300px] mt-0.5">{record.notes}</p>
+                    )}
+                  </div>
+                  {isConcept && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDelete({ id: record.id });
+                      }}
+                      title="Verwijderen"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        };
+
+        return (
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="voltooid">Voltooid ({voltooideAll.length})</TabsTrigger>
+              <TabsTrigger value="concept">Concept ({conceptAll.length})</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="voltooid" className="space-y-3 mt-3">
+              {voltooideAll.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-slate-900">Geen voltooid standplaatswerk</h3>
+                  <p className="text-slate-500 mt-1">Er zijn nog geen voltooide registraties.</p>
+                </Card>
+              ) : (
+                <>
+                  {voltooideItems.map(r => renderCard(r, false))}
+                  <Pagination
+                    totalItems={voltooideAll.length}
+                    currentPage={voltooidePageState.currentPage}
+                    pageSize={voltooidePageState.pageSize}
+                    onPageChange={voltooidePageState.setCurrentPage}
+                    onPageSizeChange={voltooidePageState.handlePageSizeChange}
+                  />
+                </>
+              )}
+            </TabsContent>
+
+            <TabsContent value="concept" className="space-y-3 mt-3">
+              {conceptAll.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                  <h3 className="text-sm font-medium text-slate-900">Geen concept standplaatswerk</h3>
+                  <p className="text-xs text-slate-500 mt-1">Er zijn geen concept registraties.</p>
+                </Card>
+              ) : (
+                <>
+                  {conceptItems.map(r => renderCard(r, true))}
+                  <Pagination
+                    totalItems={conceptAll.length}
+                    currentPage={conceptPageState.currentPage}
+                    pageSize={conceptPageState.pageSize}
+                    onPageChange={conceptPageState.setCurrentPage}
+                    onPageSizeChange={conceptPageState.handlePageSizeChange}
+                  />
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
+        );
+      })()}
 
       {/* Edit/Create Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
