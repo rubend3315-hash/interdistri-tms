@@ -310,7 +310,7 @@ export default function StandplaatsWerk() {
     const endMin = eH * 60 + eM;
 
     const siblings = records.filter(
-      (r) => r.id !== record.id && r.employee_id === record.employee_id && r.date === record.date && r.start_time && r.end_time
+      (r) => r.id !== record.id && r.employee_id === record.employee_id && r.date === record.date && r.start_time && r.end_time && r.status !== "Concept"
     );
     const overlapping = [];
     for (const sib of siblings) {
