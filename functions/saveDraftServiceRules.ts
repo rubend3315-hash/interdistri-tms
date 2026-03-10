@@ -23,56 +23,52 @@ Deno.serve(async (req) => {
     if (!employee_id || !date) {
       return Response.json({ success: false, error: 'employee_id en date zijn verplicht' }, { status: 422 });
     }
+    if (!time_entry_id) {
+      return Response.json({ success: false, error: 'time_entry_id is verplicht' }, { status: 422 });
+    }
     if (!dienstRegels || !Array.isArray(dienstRegels) || dienstRegels.length === 0) {
       return Response.json({ success: true, message: 'Geen regels om op te slaan' });
     }
 
-    // ── Concurrency guard ──
-    lockKey = `${employee_id}::${date}`;
+    // ── Concurrency guard (per time_entry_id) ──
+    lockKey = `${time_entry_id}`;
     if (activeSaves.has(lockKey)) {
       console.log(`[Draft save skipped: lock active] ${lockKey}`);
       return Response.json({ success: true, skipped: true, reason: 'parallel_save_in_progress' });
     }
     activeSaves.set(lockKey, Date.now());
 
-    console.log(`[Draft save start] ${lockKey} rules=${dienstRegels.length} time_entry_id=${time_entry_id || 'none'}`);
+    console.log(`[Draft save start] te=${time_entry_id} employee=${employee_id} date=${date} rules=${dienstRegels.length}`);
 
     const svc = base44.asServiceRole;
 
-    // ── 1. Delete ALL existing draft trips (status=Gepland) for this employee+date ──
-    console.log("[Draft cleanup]", { employee_id, date });
+    // ── 1. Delete existing draft trips (status=Gepland) for this time_entry_id ──
     const existingTrips = await svc.entities.Trip.filter({
-      employee_id,
-      date,
+      time_entry_id,
       status: 'Gepland',
     });
 
     if (existingTrips.length > 0) {
-      console.log(`[saveDraftRules] Deleting ${existingTrips.length} existing draft trips for employee=${employee_id} date=${date}`);
-      // Delete sequentially to avoid race conditions with parallel saves
+      console.log(`[saveDraftRules] Deleting ${existingTrips.length} draft trips for te=${time_entry_id}`);
       for (const t of existingTrips) {
         try {
           await svc.entities.Trip.delete(t.id);
-          console.log(`[saveDraftRules] Deleted draft trip ${t.id}`);
         } catch (e) {
           console.error(`[saveDraftRules] Delete trip ${t.id} failed: ${e?.message}`);
         }
       }
     }
 
-    // ── 2. Delete ALL existing draft standplaatswerk (status=Concept) for this employee+date ──
-    console.log("[SPW autosave]", { employee_id, date });
+    // ── 2. Delete existing draft SPW (status=Concept) for this time_entry_id ──
     const existingSpw = await svc.entities.StandplaatsWerk.filter({
-      employee_id,
-      date,
+      time_entry_id,
       status: 'Concept',
     });
     if (existingSpw.length > 0) {
-      console.log(`[saveDraftRules] Deleting ${existingSpw.length} existing draft SPW for ${lockKey}`);
+      console.log(`[saveDraftRules] Deleting ${existingSpw.length} draft SPW for te=${time_entry_id}`);
       for (const s of existingSpw) {
         try {
           await svc.entities.StandplaatsWerk.delete(s.id);
-          console.log(`[saveDraftRules] Deleted draft SPW ${s.id}`);
         } catch (e) {
           console.error(`[saveDraftRules] Delete SPW ${s.id} failed: ${e?.message}`);
         }
