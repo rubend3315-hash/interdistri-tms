@@ -13,6 +13,7 @@ import { Send, Save, AlertTriangle, Truck, Package, ChevronRight, Clock } from "
 import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
 import { validateDienstRegels } from "@/components/utils/mobile/dienstRegelValidation";
 import MobileStepIndicator from "@/components/mobile/MobileStepIndicator";
+import ActivityTimelinePanel from "@/components/mobile/ActivityTimelinePanel";
 
 const TimeInput = ({ value, onChange, placeholder }) => (
   <Input
