@@ -30,12 +30,12 @@ Deno.serve(async (req) => {
     // ── Concurrency guard ──
     lockKey = `${employee_id}::${date}`;
     if (activeSaves.has(lockKey)) {
-      console.log(`[saveDraftRules] SKIPPED — parallel save in progress for ${lockKey}`);
+      console.log(`[Draft save skipped: lock active] ${lockKey}`);
       return Response.json({ success: true, skipped: true, reason: 'parallel_save_in_progress' });
     }
     activeSaves.set(lockKey, Date.now());
 
-    console.log(`[saveDraftRules] START employee=${employee_id} date=${date} rules=${dienstRegels.length} time_entry_id=${time_entry_id || 'none'}`);
+    console.log(`[Draft save start] ${lockKey} rules=${dienstRegels.length} time_entry_id=${time_entry_id || 'none'}`);
 
     const svc = base44.asServiceRole;
 
