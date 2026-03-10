@@ -62,6 +62,7 @@ export default function StandplaatsWerk() {
   };
 
   const cOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
+  const liveOpts = { staleTime: 30 * 1000, refetchOnWindowFocus: true };
 
   // Server-side filtered query
   const { data: records = [], isLoading } = useQuery({
@@ -72,7 +73,7 @@ export default function StandplaatsWerk() {
       if (filterDateTo) filter.date = { ...(filter.date || {}), $lte: filterDateTo };
       return base44.entities.StandplaatsWerk.filter(filter, '-date');
     },
-    ...cOpts,
+    ...liveOpts,
   });
 
   const { data: employees = [] } = useQuery({
@@ -107,7 +108,7 @@ export default function StandplaatsWerk() {
       if (filterDateTo) f.date = { ...(f.date || {}), $lte: filterDateTo };
       return base44.entities.TimeEntry.filter(f, '-date');
     },
-    ...cOpts,
+    ...liveOpts,
   });
 
   const { data: loonperiodeStatuses = [] } = useQuery({
