@@ -2,7 +2,7 @@
 // ║ FUNCTION TYPE: USER_FACING                                      ║
 // ║ Called by: Employee via mobile app (autosave draft regels)       ║
 // ║ Auth: User session (any authenticated employee)                  ║
-// ║ v3 — 2026-03-10 — serialize_draft_trip_saves_v1                 ║
+// ║ v4 — 2026-03-10 — filter_by_time_entry_id                      ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
