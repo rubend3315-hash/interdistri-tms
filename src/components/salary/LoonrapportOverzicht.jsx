@@ -175,6 +175,12 @@ export function calculateWeekData(employee, entries, holidays, weekStartDate) {
 
     for (const [dateStr, dayHours] of Object.entries(dayMap)) {
       const dow = new Date(dateStr).getDay();
+      const isHoliday = holidayDates.has(dateStr);
+
+      // Feestdaguren worden apart verwerkt via holidayHoursWorked
+      if (isHoliday) {
+        continue;
+      }
 
       // maandag t/m vrijdag
       if (dow >= 1 && dow <= 5) {
