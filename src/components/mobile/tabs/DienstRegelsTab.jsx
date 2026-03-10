@@ -194,8 +194,12 @@ export default function DienstRegelsTab({
 
       {/* Bottom actions */}
       <div className="bg-white pt-2 pb-1 -mx-4 px-4 border-t border-slate-100 mt-2 space-y-1.5">
-        {/* PostNL mode with existing regels: no big "add" button */}
-        {postNLAuto && dienstRegels.length > 0 ? (
+        {hasSubmittedActivities ? (
+          <button type="button" onClick={() => setActiveTab("dienst")}
+            className="w-full h-[36px] rounded-lg bg-slate-100 text-slate-500 text-[13px] font-medium flex items-center justify-center">
+            ← Terug naar Diensttijd
+          </button>
+        ) : postNLAuto && dienstRegels.length > 0 ? (
           <>
             {/* Secondary: add more rules — small link, not dominant */}
             <button type="button"
