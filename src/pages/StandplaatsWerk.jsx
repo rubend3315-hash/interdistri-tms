@@ -352,7 +352,7 @@ export default function StandplaatsWerk() {
                 <Input
                   placeholder="Medewerker, klant, opmerking..."
                   value={searchTerm}
-                  onChange={(e) => { setSearchTerm(e.target.value); pagination.resetPage(); }}
+                  onChange={(e) => { setSearchTerm(e.target.value); voltooidePageState.resetPage(); conceptPageState.resetPage(); }}
                   className="pl-9 h-9 text-sm"
                 />
               </div>
