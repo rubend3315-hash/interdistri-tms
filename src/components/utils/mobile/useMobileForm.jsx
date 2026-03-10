@@ -120,7 +120,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         const needsSave = (dienstRegels.length > 0 && regelsJson !== lastSavedRegelsRef.current)
           || (dienstRegels.length === 0 && lastSavedRegelsRef.current && lastSavedRegelsRef.current !== '[]');
 
-        if (needsSave && !draftRulesSavingRef.current) {
+        if (needsSave && !draftRulesSavingRef.current && !hasSubmittedActivities) {
           draftRulesSavingRef.current = true;
           try {
             await base44.functions.invoke('saveDraftServiceRules', {
@@ -142,7 +142,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       setIsSaving(false);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [formData, dienstRegels, draftLoaded, currentEmployee?.id]);
+  }, [formData, dienstRegels, draftLoaded, currentEmployee?.id, hasSubmittedActivities]);
 
   // =============================================
   // DATE CHANGE DETECTION — reset + reload draft
@@ -164,6 +164,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       setDienstRegels([]);
     }
     setSignature(null);
+    setHasSubmittedActivities(false);
 
     // 2. Re-trigger server draft loading for new date
     setDraftLoaded(false);
