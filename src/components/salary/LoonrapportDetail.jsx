@@ -121,7 +121,7 @@ export default function LoonrapportDetail({
   // Oproepkracht: verberg toeslag_za_50/toeslag_zo_100 (dubbel met diensttoeslag)
   // Contractmedewerker: verberg diensttoeslag_za_150/diensttoeslag_zo_200
   const hiddenKeys = isOproepkracht
-    ? new Set(["toeslag_za_50", "toeslag_zo_100"])
+    ? new Set(["toeslag_za_50", "toeslag_zo_100", "uren_100"])
     : new Set(["diensttoeslag_za_150", "diensttoeslag_zo_200"]);
 
   const visibleColumns = useMemo(() => {
