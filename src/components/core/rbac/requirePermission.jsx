@@ -27,6 +27,10 @@ export function getEffectiveRole(user) {
   if (user.business_role === ROLES.EMPLOYEE) return ROLES.EMPLOYEE;
   if (user.business_role === ROLES.HR_ADMIN) return ROLES.HR_ADMIN;
   if (user.business_role === ROLES.PLANNER) return ROLES.PLANNER;
+  // OPERATIONS_MANAGER, FINANCE, SUPERVISOR → volledige rechten (SUPER_ADMIN)
+  if (['ADMIN', 'OPERATIONS_MANAGER', 'FINANCE', 'SUPERVISOR'].includes(user.business_role)) {
+    return ROLES.SUPER_ADMIN;
+  }
   // Alle overige gebruikers (geen business_role) krijgen EMPLOYEE-rechten
   // totdat een admin hun rol toewijst via de Users-pagina.
   return ROLES.EMPLOYEE;
