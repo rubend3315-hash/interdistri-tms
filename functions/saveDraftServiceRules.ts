@@ -60,10 +60,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── 2. Delete existing draft standplaatswerk ──
+    // ── 2. Delete existing draft standplaatswerk (only Concept status) ──
     const existingSpw = await svc.entities.StandplaatsWerk.filter({
       employee_id,
       date,
+      status: 'Concept',
     });
     const spwToDelete = existingSpw.filter(s => !s.time_entry_id || s.time_entry_id === time_entry_id);
     if (spwToDelete.length > 0) {
