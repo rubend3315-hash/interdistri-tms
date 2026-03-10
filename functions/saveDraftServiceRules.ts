@@ -67,14 +67,15 @@ Deno.serve(async (req) => {
     });
     const spwToDelete = existingSpw.filter(s => !s.time_entry_id || s.time_entry_id === time_entry_id);
     if (spwToDelete.length > 0) {
-      console.log(`[saveDraftRules] Deleting ${spwToDelete.length} existing draft SPW`);
-      await Promise.all(
-        spwToDelete.map(s =>
-          svc.entities.StandplaatsWerk.delete(s.id).catch(e =>
-            console.error(`[saveDraftRules] Delete SPW ${s.id} failed: ${e?.message}`)
-          )
-        )
-      );
+      console.log(`[saveDraftRules] Deleting ${spwToDelete.length} existing draft SPW for ${lockKey}`);
+      for (const s of spwToDelete) {
+        try {
+          await svc.entities.StandplaatsWerk.delete(s.id);
+          console.log(`[saveDraftRules] Deleted draft SPW ${s.id}`);
+        } catch (e) {
+          console.error(`[saveDraftRules] Delete SPW ${s.id} failed: ${e?.message}`);
+        }
+      }
     }
 
     // ── 3. Create new records sequentially (to avoid race conditions) ──
