@@ -273,6 +273,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         // Race guard again after second fetch
         if (currentDateRef.current !== targetDate) return;
 
+        // Check if submitted (Voltooid) activities exist — blocks draft creation
+        const hasVoltooid = existingTrips.some(t => t.status === 'Voltooid');
+
         const draftTrips = existingTrips.filter(t => t.status === 'Gepland');
         const loadedRegels = [];
         if (draftTrips.length > 0) {
@@ -304,6 +307,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
 
         // Race guard again
         if (currentDateRef.current !== targetDate) return;
+
+        const hasDefinitief = existingSpw.some(s => s.status === 'Definitief');
+        setHasSubmittedActivities(hasVoltooid || hasDefinitief);
 
         if (existingSpw.length > 0) {
           existingSpw.forEach(s => loadedRegels.push({
