@@ -139,7 +139,7 @@ export default function LoonrapportDetail({
     return {
       toeslagenmatrix_19: calc("toeslagenmatrix_19", 0.19),
       toeslag_za_50: calc("toeslag_za_50", 0.50),
-      diensttoeslag_za_150: calc("diensttoeslag_za_150", 0.50),
+      diensttoeslag_za_150: calc("diensttoeslag_za_150", 1.50),
       za_overwerk_150: calc("za_overwerk_150", 0.50),
       toeslag_zo_100: calc("toeslag_zo_100", 1.00),
       zo_overwerk_200: calc("zo_overwerk_200", 1.00),
