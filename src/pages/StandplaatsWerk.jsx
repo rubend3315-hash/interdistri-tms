@@ -390,7 +390,7 @@ export default function StandplaatsWerk() {
               <Input
                 type="date"
                 value={filterDateFrom}
-                onChange={(e) => { setFilterDateFrom(e.target.value); pagination.resetPage(); }}
+                onChange={(e) => { setFilterDateFrom(e.target.value); voltooidePageState.resetPage(); conceptPageState.resetPage(); }}
                 className="h-9 text-sm"
               />
             </div>
