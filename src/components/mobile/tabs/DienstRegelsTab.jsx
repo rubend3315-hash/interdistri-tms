@@ -26,25 +26,37 @@ function generateId() {
 }
 
 function getPrefillStartTime(dienstRegels, dienstStartTime) {
-  const sorted = [...dienstRegels]
-    .map(r => ({ ...r, _min: timeToMinutes(r.end_time) }))
-    .filter(r => r._min !== null)
-    .sort((a, b) => a._min - b._min);
+  // 1. Regels met geldige end_time → pak de max
+  const withEnd = dienstRegels
+    .map(r => ({ ...r, _endMin: timeToMinutes(r.end_time) }))
+    .filter(r => r._endMin !== null);
 
-  let startMin = null;
-  if (sorted.length > 0) {
-    startMin = sorted[sorted.length - 1]._min;
-  } else if (dienstStartTime) {
-    startMin = timeToMinutes(dienstStartTime);
+  if (withEnd.length > 0) {
+    const maxEnd = Math.max(...withEnd.map(r => r._endMin));
+    return { start_time: fmtMin(maxEnd), end_time: "" };
   }
-  if (startMin === null) return { start_time: "", end_time: "" };
 
-  const fmt = (m) => {
-    const h = Math.floor(m / 60) % 24;
-    const mm = m % 60;
-    return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-  };
-  return { start_time: fmt(startMin), end_time: "" };
+  // 2. Open activiteit (heeft start_time maar geen end_time)
+  const open = dienstRegels
+    .map(r => ({ ...r, _startMin: timeToMinutes(r.start_time) }))
+    .filter(r => r._startMin !== null && timeToMinutes(r.end_time) === null);
+
+  if (open.length > 0) {
+    const maxStart = Math.max(...open.map(r => r._startMin));
+    return { start_time: fmtMin(maxStart), end_time: "" };
+  }
+
+  // 3. Fallback: dienst starttijd
+  const fallback = timeToMinutes(dienstStartTime);
+  if (fallback !== null) return { start_time: fmtMin(fallback), end_time: "" };
+
+  return { start_time: "", end_time: "" };
+}
+
+function fmtMin(m) {
+  const h = Math.floor(m / 60) % 24;
+  const mm = m % 60;
+  return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
 }
 
 export default function DienstRegelsTab({
