@@ -60,16 +60,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── 2. Delete existing draft standplaatswerk (only Concept status) ──
+    // ── 2. Delete ALL existing draft standplaatswerk (status=Concept) for this employee+date ──
+    console.log("[SPW autosave]", { employee_id, date });
     const existingSpw = await svc.entities.StandplaatsWerk.filter({
       employee_id,
       date,
       status: 'Concept',
     });
-    const spwToDelete = existingSpw.filter(s => !s.time_entry_id || s.time_entry_id === time_entry_id);
-    if (spwToDelete.length > 0) {
-      console.log(`[saveDraftRules] Deleting ${spwToDelete.length} existing draft SPW for ${lockKey}`);
-      for (const s of spwToDelete) {
+    if (existingSpw.length > 0) {
+      console.log(`[saveDraftRules] Deleting ${existingSpw.length} existing draft SPW for ${lockKey}`);
+      for (const s of existingSpw) {
         try {
           await svc.entities.StandplaatsWerk.delete(s.id);
           console.log(`[saveDraftRules] Deleted draft SPW ${s.id}`);
