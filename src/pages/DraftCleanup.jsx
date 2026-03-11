@@ -120,18 +120,36 @@ export default function DraftCleanup() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-slate-500">
-                      <th className="pb-2 pr-4">ID</th>
-                      <th className="pb-2 pr-4">Medewerker ID</th>
-                      <th className="pb-2 pr-4">Datum</th>
+                      <th className="pb-2 pr-3">ID</th>
+                      <th className="pb-2 pr-3">Medewerker ID</th>
+                      <th className="pb-2 pr-3">Datum</th>
+                      <th className="pb-2 pr-3">Start</th>
+                      <th className="pb-2 pr-3">Eind</th>
+                      <th className="pb-2 pr-3">Uren</th>
+                      <th className="pb-2 pr-3">Project</th>
+                      <th className="pb-2 pr-3">Vertrek</th>
+                      <th className="pb-2 pr-3">Retour</th>
+                      <th className="pb-2 pr-3">Status</th>
                       <th className="pb-2">Aangemaakt</th>
                     </tr>
                   </thead>
                   <tbody>
                     {previewData.entries.map((entry) => (
                       <tr key={entry.id} className="border-b border-slate-100">
-                        <td className="py-2 pr-4 font-mono text-xs text-slate-600">{entry.id}</td>
-                        <td className="py-2 pr-4 text-slate-700">{entry.employee_id || "—"}</td>
-                        <td className="py-2 pr-4 text-slate-700">{entry.date || "—"}</td>
+                        <td className="py-2 pr-3 font-mono text-xs text-slate-600">{entry.id}</td>
+                        <td className="py-2 pr-3 text-slate-700">{entry.employee_id || "—"}</td>
+                        <td className="py-2 pr-3 text-slate-700">{entry.date || "—"}</td>
+                        <td className="py-2 pr-3 text-slate-700">{entry.start_time || "—"}</td>
+                        <td className="py-2 pr-3 text-slate-700">{entry.end_time || "—"}</td>
+                        <td className="py-2 pr-3 text-slate-700">{entry.total_hours ?? "—"}</td>
+                        <td className="py-2 pr-3 text-slate-700">{entry.project_id || "—"}</td>
+                        <td className="py-2 pr-3 text-slate-700">{entry.departure_location || "—"}</td>
+                        <td className="py-2 pr-3 text-slate-700">{entry.return_location || "—"}</td>
+                        <td className="py-2 pr-3">
+                          <Badge className={entry.empty_status === "EMPTY" ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"}>
+                            {entry.empty_status}
+                          </Badge>
+                        </td>
                         <td className="py-2 text-slate-500 text-xs">
                           {entry.created_date ? new Date(entry.created_date).toLocaleString("nl-NL") : "—"}
                         </td>

@@ -27,12 +27,33 @@ Deno.serve(async (req) => {
 
     const emptyDrafts = drafts.filter(isEmptyDraft);
 
-    const preview = emptyDrafts.map(e => ({
-      id: e.id,
-      employee_id: e.employee_id,
-      date: e.date,
-      created_date: e.created_date
-    }));
+    const preview = emptyDrafts.map(e => {
+      const isEmpty =
+        !e.start_time &&
+        !e.end_time &&
+        !e.total_hours &&
+        !e.project_id &&
+        !e.departure_location &&
+        !e.return_location &&
+        !e.notes;
+
+      return {
+        id: e.id,
+        employee_id: e.employee_id,
+        date: e.date,
+        start_time: e.start_time || null,
+        end_time: e.end_time || null,
+        total_hours: e.total_hours || null,
+        project_id: e.project_id || null,
+        departure_location: e.departure_location || null,
+        return_location: e.return_location || null,
+        notes: e.notes || null,
+        created_date: e.created_date,
+        empty_status: isEmpty ? "EMPTY" : "PARTIAL"
+      };
+    });
+
+    preview.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
 
     return Response.json({
       success: true,
