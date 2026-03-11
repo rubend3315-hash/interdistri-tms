@@ -262,6 +262,7 @@ const menuItems = [
     subtitle: "Deployment & monitoring",
     items: [
       { name: "Deployment Status", icon: Server, page: "DeploymentStatus" },
+      { name: "Draft Cleanup", icon: Wrench, page: "DraftCleanup" },
     ]
   },
 ];
