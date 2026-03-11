@@ -101,6 +101,18 @@ function SpwCard({ record, customerName, projectName, activityName }) {
   );
 }
 
+/**
+ * Sort key for timeline: converts "HH:MM" to sortable minutes.
+ * Night-shift logic: times before 06:00 are treated as next-day (+1440 min).
+ */
+function timelineSortKey(timeStr) {
+  if (!timeStr) return 9999;
+  const [h, m] = timeStr.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return 9999;
+  const mins = h * 60 + m;
+  return mins < 360 ? mins + 1440 : mins; // < 06:00 → +24h
+}
+
 export default function LinkedActivitiesPanel({
   trips = [],
   standplaatsWerk = [],
@@ -114,53 +126,44 @@ export default function LinkedActivitiesPanel({
   const getProjectName = (id) => projects.find((p) => p.id === id)?.name;
   const getActiviteitName = (id) => activiteiten.find((a) => a.id === id)?.name;
 
-  const hasTrips = trips.length > 0;
-  const hasSpw = standplaatsWerk.length > 0;
+  // Combine trips + standplaatswerk into one sorted timeline (display-only)
+  const timelineItems = [
+    ...trips.map((t) => ({ type: "trip", data: t, sortKey: timelineSortKey(t.departure_time) })),
+    ...standplaatsWerk.map((s) => ({ type: "spw", data: s, sortKey: timelineSortKey(s.start_time) })),
+  ].sort((a, b) => a.sortKey - b.sortKey);
+
+  if (timelineItems.length === 0) {
+    return (
+      <div className="ml-4 pl-4 border-l-2 border-slate-200 pb-1 mt-1">
+        <p className="text-xs text-slate-400 italic">Geen ritten of standplaatswerk geregistreerd</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="ml-4 pl-4 border-l-2 border-slate-200 space-y-3 pb-1 mt-1">
-      {/* Ritten */}
-      <div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-          <Truck className="w-3.5 h-3.5" />
-          Ritten ({trips.length})
-        </p>
-        {hasTrips ? (
-          <div className="space-y-1.5">
-            {trips.map((trip) => (
-              <TripCard
-                key={trip.id}
-                trip={trip}
-                vehicle={getVehicle(trip.vehicle_id)}
-                customer={getCustomer(trip.customer_id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-slate-400 italic">Geen ritten geregistreerd</p>
-        )}
-      </div>
-
-      {/* Standplaatswerk */}
-      <div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-          <Package className="w-3.5 h-3.5" />
-          Standplaatswerk ({standplaatsWerk.length})
-        </p>
-        {hasSpw ? (
-          <div className="space-y-1.5">
-            {standplaatsWerk.map((record) => (
-              <SpwCard
-                key={record.id}
-                record={record}
-                customerName={getCustomer(record.customer_id)?.company_name}
-                projectName={getProjectName(record.project_id)}
-                activityName={getActiviteitName(record.activity_id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-slate-400 italic">Geen standplaatswerk geregistreerd</p>
+    <div className="ml-4 pl-4 border-l-2 border-slate-200 pb-1 mt-1">
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+        <Clock className="w-3.5 h-3.5" />
+        Tijdlijn ({trips.length} rit{trips.length !== 1 ? "ten" : ""}, {standplaatsWerk.length} standplaats)
+      </p>
+      <div className="space-y-1.5">
+        {timelineItems.map((item) =>
+          item.type === "trip" ? (
+            <TripCard
+              key={item.data.id}
+              trip={item.data}
+              vehicle={getVehicle(item.data.vehicle_id)}
+              customer={getCustomer(item.data.customer_id)}
+            />
+          ) : (
+            <SpwCard
+              key={item.data.id}
+              record={item.data}
+              customerName={getCustomer(item.data.customer_id)?.company_name}
+              projectName={getProjectName(item.data.project_id)}
+              activityName={getActiviteitName(item.data.activity_id)}
+            />
+          )
         )}
       </div>
     </div>
