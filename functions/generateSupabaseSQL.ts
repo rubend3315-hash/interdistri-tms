@@ -1,4 +1,169 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+
+/**
+ * generateSupabaseSQL — Genereert CREATE TABLE + RLS policies voor ALLE Base44 entities.
+ * Dynamische versie: leest schema's via SDK, genereert kolommen + RLS.
+ * 
+ * Totaal: 72 entiteiten (maart 2026)
+ */
+
+// ─── helpers ────────────────────────────────────────────────────────
+
+function jsonTypeToSql(prop) {
+  if (!prop) return 'text';
+  const fmt = prop.format;
+  if (fmt === 'date') return 'date';
+  if (fmt === 'date-time') return 'timestamptz';
+  switch (prop.type) {
+    case 'number': return 'numeric';
+    case 'boolean': return 'boolean';
+    case 'integer': return 'integer';
+    case 'array': return 'jsonb';
+    case 'object': return 'jsonb';
+    default: return 'text';
+  }
+}
+
+function snakeCase(name) {
+  // CamelCase → snake_case
+  return name
+    .replace(/([A-Z])/g, '_$1')
+    .toLowerCase()
+    .replace(/^_/, '');
+}
+
+/**
+ * Build RLS policy SQL from a Base44 RLS rule object.
+ * Returns a USING clause string for Supabase RLS.
+ * 
+ * Base44 RLS format:
+ *   { user_condition: { role: 'admin' } }           → (current_setting('request.jwt.claims')::jsonb->>'role' = 'admin')
+ *   { user_condition: { business_role: 'X' } }      → (current_setting('request.jwt.claims')::jsonb->>'business_role' = 'X')
+ *   { employee_id: '{{user.employee_id}}' }          → (employee_id = current_setting('request.jwt.claims')::jsonb->>'employee_id')
+ *   { $or: [...] }                                   → (cond1 OR cond2 OR ...)
+ */
+function buildRlsCondition(rule) {
+  if (!rule) return 'true';
+
+  // $or combinator
+  if (rule['$or']) {
+    const parts = rule['$or'].map(r => buildRlsCondition(r)).filter(Boolean);
+    if (parts.length === 0) return 'true';
+    return '(' + parts.join(' OR ') + ')';
+  }
+
+  // user_condition
+  if (rule.user_condition) {
+    const conditions = [];
+    for (const [key, val] of Object.entries(rule.user_condition)) {
+      conditions.push(`(current_setting('request.jwt.claims', true)::jsonb->>'${key}' = '${val}')`);
+    }
+    return conditions.join(' AND ');
+  }
+
+  // Field-level conditions like { employee_id: '{{user.employee_id}}' }
+  const entries = Object.entries(rule);
+  if (entries.length > 0) {
+    const conditions = [];
+    for (const [field, val] of entries) {
+      if (typeof val === 'string' && val.startsWith('{{user.')) {
+        const claim = val.replace('{{user.', '').replace('}}', '');
+        conditions.push(`("${field}" = (current_setting('request.jwt.claims', true)::jsonb->>'${claim}'))`);
+      }
+    }
+    if (conditions.length > 0) return conditions.join(' AND ');
+  }
+
+  return 'true';
+}
+
+// ─── All entity schemas (hardcoded from entities/ directory) ────────
+
+function getAllEntitySchemas() {
+  // This returns all 72 entity schemas as read from entities/*.json
+  // Each entry: { name, tableName, properties, rls }
+  const raw = [
+    { name: 'Employee', properties: { employee_number: { type: 'string' }, initials: { type: 'string' }, first_name: { type: 'string' }, prefix: { type: 'string' }, last_name: { type: 'string' }, photo_url: { type: 'string' }, email: { type: 'string' }, phone: { type: 'string' }, date_of_birth: { type: 'string', format: 'date' }, in_service_since: { type: 'string', format: 'date' }, out_of_service_date: { type: 'string', format: 'date' }, address: { type: 'string' }, postal_code: { type: 'string' }, city: { type: 'string' }, emergency_contact_name: { type: 'string' }, emergency_contact_phone: { type: 'string' }, emergency_contact_relation: { type: 'string' }, department: { type: 'string' }, 'function': { type: 'string' }, default_shift: { type: 'string' }, shift_template: { type: 'object' }, charter_company_id: { type: 'string' }, drivers_license_number: { type: 'string' }, drivers_license_categories: { type: 'array' }, drivers_license_expiry: { type: 'string', format: 'date' }, code95_expiry: { type: 'string', format: 'date' }, id_document_number: { type: 'string' }, id_document_expiry: { type: 'string', format: 'date' }, contract_start_date: { type: 'string', format: 'date' }, contract_end_date: { type: 'string', format: 'date' }, hourly_rate: { type: 'number' }, salary_scale: { type: 'string' }, travel_allowance_per_km: { type: 'number' }, travel_distance_km: { type: 'number' }, travel_allowance_start_date: { type: 'string', format: 'date' }, travel_allowance_end_date: { type: 'string', format: 'date' }, week_schedule: { type: 'object' }, contractregels: { type: 'array' }, reiskostenregels: { type: 'array' }, supervisor_notities: { type: 'string' }, status: { type: 'string' }, bsn: { type: 'string' }, bank_account: { type: 'string' }, mobile_entry_type: { type: 'string' }, is_chauffeur: { type: 'boolean' }, tonen_in_planner: { type: 'boolean' }, opnemen_in_loonrapport: { type: 'boolean' }, loonheffing_toepassen: { type: 'string' }, loonheffing_datum: { type: 'string', format: 'date' }, loonheffing_handtekening_url: { type: 'string' }, mobile_shift_department: { type: 'string' }, tenant_id: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, read: { '$or': [{ id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Vehicle', properties: { license_plate: { type: 'string' }, brand: { type: 'string' }, model: { type: 'string' }, type: { type: 'string' }, fuel_type: { type: 'string' }, year: { type: 'number' }, chassis_number: { type: 'string' }, emission_class: { type: 'string' }, factory_consumption_per_100km: { type: 'number' }, key_cabinet_number: { type: 'string' }, apk_expiry: { type: 'string', format: 'date' }, insurance_expiry: { type: 'string', format: 'date' }, tachograph_calibration_date: { type: 'string', format: 'date' }, current_mileage: { type: 'number' }, mileage_calibration_history: { type: 'array' }, niwo_permit_id: { type: 'string' }, status: { type: 'string' }, notes: { type: 'string' }, photo_url: { type: 'string' }, max_weight: { type: 'number' }, tenant_id: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'PLANNER' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'NiwoPermit', properties: { permit_number: { type: 'string' }, validity_date: { type: 'string', format: 'date' }, assigned_vehicle_id: { type: 'string' }, status: { type: 'string' }, notes: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Customer', properties: { company_name: { type: 'string' }, logo_url: { type: 'string' }, contact_person: { type: 'string' }, email: { type: 'string' }, phone: { type: 'string' }, address: { type: 'string' }, postal_code: { type: 'string' }, city: { type: 'string' }, country: { type: 'string' }, kvk_number: { type: 'string' }, btw_number: { type: 'string' }, payment_terms: { type: 'number' }, articles: { type: 'array' }, status: { type: 'string' }, notes: { type: 'string' }, tenant_id: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Project', properties: { name: { type: 'string' }, customer_id: { type: 'string' }, description: { type: 'string' }, start_date: { type: 'string', format: 'date' }, end_date: { type: 'string', format: 'date' }, status: { type: 'string' }, budget: { type: 'number' }, notes: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'TimeEntry', properties: { employee_id: { type: 'string' }, date: { type: 'string', format: 'date' }, end_date: { type: 'string', format: 'date' }, week_number: { type: 'number' }, year: { type: 'number' }, start_time: { type: 'string' }, end_time: { type: 'string' }, break_minutes: { type: 'number' }, break_manual: { type: 'boolean' }, break_staffel_id: { type: 'string' }, calculated_dienst_minutes: { type: 'number' }, total_hours: { type: 'number' }, overtime_hours: { type: 'number' }, night_hours: { type: 'number' }, weekend_hours: { type: 'number' }, holiday_hours: { type: 'number' }, shift_type: { type: 'string' }, project_id: { type: 'string' }, customer_id: { type: 'string' }, departure_location: { type: 'string' }, return_location: { type: 'string' }, departure_time: { type: 'string' }, expected_return_time: { type: 'string' }, subsistence_allowance: { type: 'number' }, advanced_costs: { type: 'number' }, meals: { type: 'number' }, wkr: { type: 'number' }, notes: { type: 'string' }, status: { type: 'string' }, signature_url: { type: 'string' }, submission_id: { type: 'string' }, approved_by: { type: 'string' }, approved_date: { type: 'string', format: 'date-time' }, rejection_reason: { type: 'string' }, edit_history: { type: 'array' }, travel_allowance_multiplier: { type: 'number' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'EMPLOYEE' } }] }, read: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'PLANNER' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, delete: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] } } },
+    { name: 'Trip', properties: { employee_id: { type: 'string' }, time_entry_id: { type: 'string' }, date: { type: 'string', format: 'date' }, vehicle_id: { type: 'string' }, customer_id: { type: 'string' }, project_id: { type: 'string' }, route_name: { type: 'string' }, planned_stops: { type: 'number' }, completed_stops: { type: 'number' }, start_km: { type: 'number' }, end_km: { type: 'number' }, total_km: { type: 'number' }, fuel_liters: { type: 'number' }, adblue_liters: { type: 'number' }, fuel_km: { type: 'number' }, charging_kwh: { type: 'number' }, fuel_cost: { type: 'number' }, cargo_description: { type: 'string' }, cargo_weight: { type: 'number' }, departure_time: { type: 'string' }, arrival_time: { type: 'string' }, departure_location: { type: 'string' }, notes: { type: 'string' }, status: { type: 'string' }, km_warning: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, read: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'EMPLOYEE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, delete: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] } } },
+    { name: 'Schedule', properties: { employee_id: { type: 'string' }, week_number: { type: 'number' }, year: { type: 'number' }, monday: { type: 'string' }, monday_route_id: { type: 'string' }, monday_vehicle_id: { type: 'string' }, monday_planned_department: { type: 'string' }, monday_notes_1: { type: 'string' }, monday_notes_2: { type: 'string' }, tuesday: { type: 'string' }, tuesday_route_id: { type: 'string' }, tuesday_vehicle_id: { type: 'string' }, tuesday_planned_department: { type: 'string' }, tuesday_notes_1: { type: 'string' }, tuesday_notes_2: { type: 'string' }, wednesday: { type: 'string' }, wednesday_route_id: { type: 'string' }, wednesday_vehicle_id: { type: 'string' }, wednesday_planned_department: { type: 'string' }, wednesday_notes_1: { type: 'string' }, wednesday_notes_2: { type: 'string' }, thursday: { type: 'string' }, thursday_route_id: { type: 'string' }, thursday_vehicle_id: { type: 'string' }, thursday_planned_department: { type: 'string' }, thursday_notes_1: { type: 'string' }, thursday_notes_2: { type: 'string' }, friday: { type: 'string' }, friday_route_id: { type: 'string' }, friday_vehicle_id: { type: 'string' }, friday_planned_department: { type: 'string' }, friday_notes_1: { type: 'string' }, friday_notes_2: { type: 'string' }, saturday: { type: 'string' }, saturday_route_id: { type: 'string' }, saturday_vehicle_id: { type: 'string' }, saturday_planned_department: { type: 'string' }, saturday_notes_1: { type: 'string' }, saturday_notes_2: { type: 'string' }, sunday: { type: 'string' }, sunday_route_id: { type: 'string' }, sunday_vehicle_id: { type: 'string' }, sunday_planned_department: { type: 'string' }, sunday_notes_1: { type: 'string' }, sunday_notes_2: { type: 'string' }, notes: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }] } } },
+    { name: 'CaoRule', properties: { name: { type: 'string' }, description: { type: 'string' }, category: { type: 'string' }, rule_type: { type: 'string' }, calculation_type: { type: 'string' }, value: { type: 'number' }, percentage: { type: 'number' }, fixed_amount: { type: 'number' }, start_time: { type: 'string' }, end_time: { type: 'string' }, applies_to_days: { type: 'array' }, start_date: { type: 'string', format: 'date' }, end_date: { type: 'string', format: 'date' }, priority: { type: 'number' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'SalaryTable', properties: { name: { type: 'string' }, table_type: { type: 'string' }, scale: { type: 'string' }, step: { type: 'number' }, hourly_rate: { type: 'number' }, monthly_salary: { type: 'number' }, start_date: { type: 'string', format: 'date' }, end_date: { type: 'string', format: 'date' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Holiday', properties: { name: { type: 'string' }, date: { type: 'string', format: 'date' }, year: { type: 'number' }, is_national: { type: 'boolean' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'EMPLOYEE' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'ShiftTime', properties: { date: { type: 'string', format: 'date' }, department: { type: 'string' }, service_start_time: { type: 'string' }, start_time: { type: 'string' }, end_time: { type: 'string' }, message: { type: 'string' }, created_by_name: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }] } } },
+    { name: 'VehicleInspection', properties: { employee_id: { type: 'string' }, vehicle_id: { type: 'string' }, date: { type: 'string', format: 'date' }, time: { type: 'string' }, mileage: { type: 'number' }, exterior_clean: { type: 'boolean' }, interior_clean: { type: 'boolean' }, lights_working: { type: 'boolean' }, tires_ok: { type: 'boolean' }, brakes_ok: { type: 'boolean' }, oil_level_ok: { type: 'boolean' }, coolant_level_ok: { type: 'boolean' }, windshield_ok: { type: 'boolean' }, mirrors_ok: { type: 'boolean' }, horn_working: { type: 'boolean' }, first_aid_kit: { type: 'boolean' }, fire_extinguisher: { type: 'boolean' }, warning_triangle: { type: 'boolean' }, safety_vest: { type: 'boolean' }, battery_level: { type: 'number' }, charging_cable_present: { type: 'boolean' }, fuel_level: { type: 'number' }, damage_present: { type: 'boolean' }, damage_description: { type: 'string' }, damage_photos: { type: 'array' }, notes: { type: 'string' }, signature_url: { type: 'string' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, read: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Expense', properties: { employee_id: { type: 'string' }, date: { type: 'string', format: 'date' }, category: { type: 'string' }, description: { type: 'string' }, amount: { type: 'number' }, receipt_url: { type: 'string' }, project_id: { type: 'string' }, customer_id: { type: 'string' }, status: { type: 'string' }, approved_by: { type: 'string' }, approved_date: { type: 'string', format: 'date' }, rejection_reason: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, read: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, delete: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] } } },
+    { name: 'Message', properties: { from_employee_id: { type: 'string' }, to_employee_id: { type: 'string' }, subject: { type: 'string' }, content: { type: 'string' }, is_read: { type: 'boolean' }, priority: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, read: { '$or': [{ to_employee_id: '{{user.employee_id}}' }, { from_employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ to_employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'SupervisorMessage', properties: { message: { type: 'string' }, target_employee_id: { type: 'string' }, department: { type: 'string' }, active_from: { type: 'string', format: 'date' }, active_until: { type: 'string', format: 'date' }, is_active: { type: 'boolean' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'EMPLOYEE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, delete: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] } } },
+    { name: 'Role', properties: { name: { type: 'string' }, label: { type: 'string' }, description: { type: 'string' }, permissions: { type: 'array' }, color: { type: 'string' }, is_system: { type: 'boolean' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'CustomerImport', properties: { customer_id: { type: 'string' }, import_name: { type: 'string' }, import_date: { type: 'string', format: 'date-time' }, file_name: { type: 'string' }, column_mapping: { type: 'object' }, data: { type: 'array' }, total_rows: { type: 'number' }, calculated_data: { type: 'array' }, status: { type: 'string' }, notes: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Article', properties: { customer_id: { type: 'string' }, article_number: { type: 'string' }, description: { type: 'string' }, unit: { type: 'string' }, price_rules: { type: 'array' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'TIModelRoute', properties: { customer_id: { type: 'string' }, route_code: { type: 'string' }, route_name: { type: 'string' }, total_time_hours: { type: 'number' }, total_time_hhmm: { type: 'string' }, number_of_stops: { type: 'number' }, number_of_parcels: { type: 'number' }, calculated_norm_per_hour: { type: 'number' }, manual_norm_per_hour: { type: 'number' }, start_date: { type: 'string', format: 'date' }, end_date: { type: 'string', format: 'date' }, notes: { type: 'string' }, is_active: { type: 'boolean' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Route', properties: { customer_id: { type: 'string' }, route_code: { type: 'string' }, route_name: { type: 'string' }, start_date: { type: 'string', format: 'date' }, end_date: { type: 'string', format: 'date' }, notes: { type: 'string' }, is_active: { type: 'boolean' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Urensoort', properties: { code: { type: 'string' }, name: { type: 'string' }, description: { type: 'string' }, toeslag_percentage: { type: 'number' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Uurcode', properties: { code: { type: 'string' }, name: { type: 'string' }, urensoort_id: { type: 'string' }, description: { type: 'string' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Backup', properties: { backup_date: { type: 'string', format: 'date-time' }, backup_group_id: { type: 'string' }, entity_name: { type: 'string' }, record_count: { type: 'number' }, backup_size: { type: 'number' }, entity_count: { type: 'number' }, status: { type: 'string' }, backup_type: { type: 'string' }, environment: { type: 'string' }, trigger_type: { type: 'string' }, retention_until: { type: 'string', format: 'date-time' }, json_data: { type: 'string' }, notes: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'PerformanceReview', properties: { employee_id: { type: 'string' }, review_date: { type: 'string', format: 'date' }, period_start: { type: 'string', format: 'date' }, period_end: { type: 'string', format: 'date' }, tvi_dag: { type: 'number' }, tvi_dag_punten: { type: 'number' }, uitreik_locatie: { type: 'number' }, uitreik_locatie_punten: { type: 'number' }, scankwaliteit: { type: 'number' }, scankwaliteit_punten: { type: 'number' }, pba_bezorgen: { type: 'number' }, pba_bezorgen_punten: { type: 'number' }, hitrate: { type: 'number' }, hitrate_punten: { type: 'number' }, procesverstoring_cat1: { type: 'number' }, procesverstoring_cat1_punten: { type: 'number' }, procesverstoring_cat2: { type: 'number' }, procesverstoring_cat2_punten: { type: 'number' }, betwiste_klachten: { type: 'number' }, betwiste_klachten_punten: { type: 'number' }, onbetwiste_klachten: { type: 'number' }, onbetwiste_klachten_punten: { type: 'number' }, contract_ratio: { type: 'number' }, contract_ratio_punten: { type: 'number' }, claims: { type: 'number' }, claims_punten: { type: 'number' }, veilig_defensief_rijgedrag: { type: 'number' }, veilig_defensief_rijgedrag_punten: { type: 'number' }, naleven_verkeersregels: { type: 'number' }, naleven_verkeersregels_punten: { type: 'number' }, schadevrij_rijden: { type: 'number' }, schadevrij_rijden_punten: { type: 'number' }, melden_schade_incidenten: { type: 'number' }, melden_schade_incidenten_punten: { type: 'number' }, representatief_gebruik_voertuig: { type: 'number' }, representatief_gebruik_voertuig_punten: { type: 'number' }, periodieke_voertuig_controle: { type: 'number' }, periodieke_voertuig_controle_punten: { type: 'number' }, netheid_onderhoud_voertuig: { type: 'number' }, netheid_onderhoud_voertuig_punten: { type: 'number' }, zuinig_verantwoord_rijgedrag: { type: 'number' }, zuinig_verantwoord_rijgedrag_punten: { type: 'number' }, bandenslijtage: { type: 'number' }, bandenslijtage_punten: { type: 'number' }, persoonlijke_inzet: { type: 'number' }, persoonlijke_inzet_punten: { type: 'number' }, piek_ziektebezetting: { type: 'number' }, piek_ziektebezetting_punten: { type: 'number' }, omgang_veranderingen: { type: 'number' }, omgang_veranderingen_punten: { type: 'number' }, ziekteverzuim: { type: 'number' }, ziekteverzuim_punten: { type: 'number' }, omgang_collega: { type: 'number' }, omgang_collega_punten: { type: 'number' }, nakomen_afspraken: { type: 'number' }, nakomen_afspraken_punten: { type: 'number' }, werk_prive_balans: { type: 'string' }, terugblik_vorige_periode: { type: 'string' }, nieuwe_doelen: { type: 'string' }, feedback_medewerker: { type: 'string' }, gemiddelde_score: { type: 'number' }, trede_verhoging: { type: 'boolean' }, trede_verhoging_toelichting: { type: 'string' }, algemene_conclusie: { type: 'string' }, ontwikkelpunten: { type: 'string' }, reviewer_id: { type: 'string' }, manager_signature_url: { type: 'string' }, employee_signature_url: { type: 'string' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'PerformanceNote', properties: { employee_id: { type: 'string' }, note_date: { type: 'string', format: 'date' }, category: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' }, severity: { type: 'string' }, action_taken: { type: 'string' }, follow_up_required: { type: 'boolean' }, follow_up_date: { type: 'string', format: 'date' }, created_by_name: { type: 'string' }, is_visible_to_employee: { type: 'boolean' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'BreakSchedule', properties: { min_hours: { type: 'number' }, max_hours: { type: 'number' }, break_minutes: { type: 'number' }, description: { type: 'string' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'EMPLOYEE' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Notification', properties: { title: { type: 'string' }, description: { type: 'string' }, type: { type: 'string' }, target_entity_id: { type: 'string' }, target_page: { type: 'string' }, is_read: { type: 'boolean' }, user_ids: { type: 'array' }, priority: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Contract', properties: { employee_id: { type: 'string' }, contract_number: { type: 'string' }, contract_type: { type: 'string' }, start_date: { type: 'string', format: 'date' }, end_date: { type: 'string', format: 'date' }, hours_per_week: { type: 'number' }, hourly_rate: { type: 'number' }, salary_scale: { type: 'string' }, function_title: { type: 'string' }, department: { type: 'string' }, is_verlenging: { type: 'boolean' }, oorspronkelijke_indienst_datum: { type: 'string', format: 'date' }, verlenging_nummer: { type: 'string' }, proeftijd: { type: 'string' }, contract_content: { type: 'string' }, status: { type: 'string' }, employee_signature_url: { type: 'string' }, employee_signed_date: { type: 'string', format: 'date-time' }, manager_signature_url: { type: 'string' }, manager_signed_date: { type: 'string', format: 'date-time' }, manager_signed_by: { type: 'string' }, pdf_url: { type: 'string' }, reminder_sent_dates: { type: 'array' }, cao_rules_applied: { type: 'array' }, notes: { type: 'string' }, tenant_id: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, read: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'PostNLImportResult', properties: { project_id: { type: 'string' }, project_naam: { type: 'string' }, klant_naam: { type: 'string' }, ritnaam: { type: 'string' }, datum: { type: 'string' }, starttijd_shift: { type: 'string' }, import_datum: { type: 'string', format: 'date' }, bestandsnaam: { type: 'string' }, data: { type: 'object' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'RapportageRit', properties: { project_id: { type: 'string' }, project_naam: { type: 'string' }, klant_id: { type: 'string' }, import_datum: { type: 'string', format: 'date' }, week: { type: 'number' }, datum: { type: 'string' }, chauffeur: { type: 'string' }, ritnaam: { type: 'string' }, totaal_rit: { type: 'string' }, geen_scan_15min: { type: 'number' }, besteltijd_norm: { type: 'number' }, besteltijd_bruto: { type: 'number' }, besteltijd_netto: { type: 'number' }, aantal_vrijgave_stops: { type: 'number' }, aantal_vrijgave_stuks: { type: 'number' }, aantal_afgeleverd_stuks: { type: 'number' }, aantal_afgeleverd_stops: { type: 'number' }, aantal_afgehaald_collecteerd: { type: 'number' }, aantal_pba_bezorgd: { type: 'number' }, artikelen: { type: 'array' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Document', properties: { name: { type: 'string' }, document_type: { type: 'string' }, file_url: { type: 'string' }, file_uri: { type: 'string' }, encrypted: { type: 'boolean' }, source: { type: 'string' }, linked_employee_id: { type: 'string' }, linked_vehicle_id: { type: 'string' }, linked_entity_name: { type: 'string' }, expiry_date: { type: 'string', format: 'date' }, notes: { type: 'string' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ linked_employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'EmployeeKPI', properties: { employee_id: { type: 'string' }, customer_id: { type: 'string' }, zmedcid: { type: 'string' }, medewerker_naam: { type: 'string' }, week: { type: 'number' }, year: { type: 'number' }, tvi_dag: { type: 'number' }, tvi_avond: { type: 'number' }, uitreiklocatie: { type: 'number' }, vr_distributie: { type: 'number' }, scankwaliteit: { type: 'number' }, pba_bezorgers: { type: 'number' }, hitrate: { type: 'number' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'KPIDoel', properties: { employee_id: { type: 'string' }, zmedcid: { type: 'string' }, jaar: { type: 'number' }, week: { type: 'number' }, tvi_dag_doel: { type: 'number' }, tvi_avond_doel: { type: 'number' }, uitreiklocatie_doel: { type: 'number' }, vr_distributie_doel: { type: 'number' }, scankwaliteit_doel: { type: 'number' }, pba_bezorgers_doel: { type: 'number' }, hitrate_doel: { type: 'number' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'LoonperiodeStatus', properties: { year: { type: 'number' }, periode: { type: 'number' }, status: { type: 'string' }, definitief_datum: { type: 'string', format: 'date-time' }, definitief_door: { type: 'string' }, opmerkingen: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'BedrijfsreglementArtikel', properties: { artikel_nummer: { type: 'number' }, hoofdstuk: { type: 'string' }, titel: { type: 'string' }, inhoud: { type: 'string' }, sort_order: { type: 'number' }, versie: { type: 'number' }, versie_geschiedenis: { type: 'array' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'ContractWijziging', properties: { employee_id: { type: 'string' }, employee_naam: { type: 'string' }, type_wijziging: { type: 'string' }, huidige_waarde: { type: 'string' }, nieuwe_waarde: { type: 'string' }, ingangsdatum: { type: 'string', format: 'date' }, toelichting: { type: 'string' }, aangevraagd_door: { type: 'string' }, aangevraagd_datum: { type: 'string', format: 'date-time' }, status: { type: 'string' }, beoordeeld_door: { type: 'string' }, beoordeeld_datum: { type: 'string', format: 'date-time' }, afkeur_reden: { type: 'string' }, doorgevoerd_datum: { type: 'string', format: 'date-time' }, prioriteit: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'ContractTemplate', properties: { name: { type: 'string' }, contract_type: { type: 'string' }, description: { type: 'string' }, template_content: { type: 'string' }, is_default: { type: 'boolean' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'CompletedContract', properties: { contract_id: { type: 'string' }, contract_number: { type: 'string' }, employee_name: { type: 'string' }, employee_id: { type: 'string' }, contract_type: { type: 'string' }, start_date: { type: 'string', format: 'date' }, end_date: { type: 'string', format: 'date' }, function_title: { type: 'string' }, department: { type: 'string' }, employee_signed_date: { type: 'string', format: 'date-time' }, manager_signed_date: { type: 'string', format: 'date-time' }, manager_signed_by: { type: 'string' }, activated_date: { type: 'string', format: 'date-time' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'AuditLog', properties: { entity_type: { type: 'string' }, entity_id: { type: 'string' }, action_type: { type: 'string' }, category: { type: 'string' }, description: { type: 'string' }, performed_by_email: { type: 'string' }, performed_by_name: { type: 'string' }, performed_by_role: { type: 'string' }, target_entity: { type: 'string' }, target_id: { type: 'string' }, target_name: { type: 'string' }, old_value: { type: 'string' }, new_value: { type: 'string' }, metadata: { type: 'object' }, ip_address: { type: 'string' }, correlation_id: { type: 'string' }, tenant_id: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Integration', properties: { name: { type: 'string' }, type: { type: 'string' }, api_url: { type: 'string' }, api_key: { type: 'string' }, sync_interval_minutes: { type: 'number' }, last_sync: { type: 'string', format: 'date-time' }, last_sync_status: { type: 'string' }, last_sync_message: { type: 'string' }, settings: { type: 'object' }, is_active: { type: 'boolean' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'SyncLog', properties: { integration_id: { type: 'string' }, sync_type: { type: 'string' }, status: { type: 'string' }, records_synced: { type: 'number' }, records_failed: { type: 'number' }, message: { type: 'string' }, details: { type: 'object' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'OnboardingProcess', properties: { employee_id: { type: 'string' }, employee_name: { type: 'string' }, status: { type: 'string' }, current_step: { type: 'number' }, pincode_sleutelkast: { type: 'string' }, stamkaart_completed: { type: 'boolean' }, pincode_verklaring_signed: { type: 'boolean' }, sleutel_verklaring_signed: { type: 'boolean' }, sleutel_nummer: { type: 'string' }, sleutel_toegang: { type: 'string' }, gps_buddy_toestemming: { type: 'boolean' }, dienstbetrekking_signed: { type: 'boolean' }, bedrijfsreglement_ontvangen: { type: 'boolean' }, contract_generated: { type: 'boolean' }, mobile_invite_sent: { type: 'boolean' }, employee_signature_url: { type: 'string' }, completed_date: { type: 'string', format: 'date-time' }, notes: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'VehicleMaintenance', properties: { vehicle_id: { type: 'string' }, date: { type: 'string', format: 'date' }, mileage_at_service: { type: 'number' }, maintenance_type: { type: 'string' }, description: { type: 'string' }, garage_name: { type: 'string' }, cost: { type: 'number' }, invoice_url: { type: 'string' }, notes: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'LeaseContract', properties: { vehicle_id: { type: 'string' }, lease_company: { type: 'string' }, contract_number: { type: 'string' }, start_date: { type: 'string', format: 'date' }, end_date: { type: 'string', format: 'date' }, monthly_cost: { type: 'number' }, mileage_limit: { type: 'number' }, excess_km_cost: { type: 'number' }, document_url: { type: 'string' }, notes: { type: 'string' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'EmailTemplate', properties: { name: { type: 'string' }, template_key: { type: 'string' }, subject: { type: 'string' }, body: { type: 'string' }, reply_to: { type: 'string' }, category: { type: 'string' }, is_active: { type: 'boolean' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'CharterCompany', properties: { company_name: { type: 'string' }, contact_person: { type: 'string' }, email: { type: 'string' }, phone: { type: 'string' }, address: { type: 'string' }, postal_code: { type: 'string' }, city: { type: 'string' }, kvk_number: { type: 'string' }, notes: { type: 'string' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'ClientFeatureConfig', properties: { customer_id: { type: 'string' }, feature_key: { type: 'string' }, feature_label: { type: 'string' }, is_active: { type: 'boolean' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'SpottaInvoice', properties: { customer_id: { type: 'string' }, invoice_number: { type: 'string' }, invoice_date: { type: 'string', format: 'date' }, due_date: { type: 'string', format: 'date' }, supplier_name: { type: 'string' }, supplier_address: { type: 'string' }, supplier_kvk: { type: 'string' }, supplier_btw: { type: 'string' }, customer_name: { type: 'string' }, reference_number: { type: 'string' }, description_period: { type: 'string' }, total_net: { type: 'number' }, total_tax: { type: 'number' }, total_amount: { type: 'number' }, currency: { type: 'string' }, line_count: { type: 'number' }, pdf_url: { type: 'string' }, json_url: { type: 'string' }, import_source: { type: 'string' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'SpottaInvoiceLine', properties: { invoice_id: { type: 'string' }, customer_id: { type: 'string' }, product_code: { type: 'string' }, description: { type: 'string' }, quantity: { type: 'number' }, unit_price: { type: 'number' }, total_price: { type: 'number' }, tax_rate: { type: 'number' }, tax_amount: { type: 'number' }, total_incl_tax: { type: 'number' }, matched_article_id: { type: 'string' }, route_code: { type: 'string' }, line_type: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'DriverAvailability', properties: { employee_id: { type: 'string' }, date: { type: 'string', format: 'date' }, status: { type: 'string' }, notes: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, read: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'PLANNER' } }] } } },
+    { name: 'Department', properties: { name: { type: 'string' }, label: { type: 'string' }, description: { type: 'string' }, sort_order: { type: 'number' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Function', properties: { name: { type: 'string' }, description: { type: 'string' }, sort_order: { type: 'number' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'StandplaatsWerk', properties: { time_entry_id: { type: 'string' }, employee_id: { type: 'string' }, date: { type: 'string', format: 'date' }, start_time: { type: 'string' }, end_time: { type: 'string' }, customer_id: { type: 'string' }, project_id: { type: 'string' }, activity_id: { type: 'string' }, notes: { type: 'string' }, status: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, read: { '$or': [{ employee_id: '{{user.employee_id}}' }, { user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }, { user_condition: { business_role: 'PLANNER' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'EMPLOYEE' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, delete: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] } } },
+    { name: 'Activiteit', properties: { name: { type: 'string' }, description: { type: 'string' }, sort_order: { type: 'number' }, status: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'PayrollSettings', properties: { payroll_email: { type: 'string' }, payroll_cc_email: { type: 'string' }, payroll_subject: { type: 'string' }, payroll_report_settings: { type: 'object' }, looncomponent_uursoort_mapping: { type: 'object' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'EmailLog', properties: { to: { type: 'string' }, cc: { type: 'string' }, subject: { type: 'string' }, status: { type: 'string' }, source_function: { type: 'string' }, error_message: { type: 'string' }, sent_at: { type: 'string', format: 'date-time' }, message_id: { type: 'string' }, idempotency_key: { type: 'string' }, correlation_id: { type: 'string' }, retry_count: { type: 'number' }, last_retry_at: { type: 'string', format: 'date-time' }, resent_by: { type: 'string' }, original_log_id: { type: 'string' }, tenant_id: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'Tenant', properties: { name: { type: 'string' }, slug: { type: 'string' }, status: { type: 'string' }, settings: { type: 'object' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'KeylockerPincode', properties: { employee_id: { type: 'string' }, employee_name: { type: 'string' }, pincode: { type: 'string' }, active: { type: 'boolean' }, change_reason: { type: 'string' }, changed_by: { type: 'string' }, changed_by_name: { type: 'string' }, source: { type: 'string' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'HR_MANAGER' } }] }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }, { user_condition: { business_role: 'SUPERVISOR' } }] }, update: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'SecureDownloadToken', properties: { token: { type: 'string' }, type: { type: 'string' }, employee_id: { type: 'string' }, onboarding_process_id: { type: 'string' }, document_id: { type: 'string' }, purpose: { type: 'string' }, expires_at: { type: 'string', format: 'date-time' }, max_downloads: { type: 'number' }, used: { type: 'boolean' }, download_count: { type: 'number' }, signed: { type: 'boolean' }, signed_at: { type: 'string', format: 'date-time' }, signature_url: { type: 'string' }, created_by_email: { type: 'string' }, created_by_name: { type: 'string' }, shared_with_email: { type: 'string' }, ip_address: { type: 'string' }, fill_onboarding_fields: { type: 'boolean' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'UserRoleSnapshot', properties: { user_id: { type: 'string' }, email: { type: 'string' }, system_role: { type: 'string' }, business_role: { type: 'string' }, employee_id: { type: 'string' }, effective_role: { type: 'string' }, snapshot_timestamp: { type: 'string', format: 'date-time' }, source: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'RBACDecisionLog', properties: { user_id: { type: 'string' }, system_role: { type: 'string' }, effective_role: { type: 'string' }, check_type: { type: 'string' }, description: { type: 'string' }, result: { type: 'string' }, timestamp: { type: 'string', format: 'date-time' }, source_function: { type: 'string' }, metadata: { type: 'object' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'RBACIntegrityReport', properties: { snapshot_date: { type: 'string', format: 'date' }, total_users: { type: 'number' }, admin_count: { type: 'number' }, employee_effective_count: { type: 'number' }, null_effective_count: { type: 'number' }, violation_count: { type: 'number' }, warning_count: { type: 'number' }, hash_signature: { type: 'string' }, drift_alerts: { type: 'array' }, source: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'MobileEntrySubmissionLog', properties: { submission_id: { type: 'string' }, user_id: { type: 'string' }, email: { type: 'string' }, employee_id: { type: 'string' }, timestamp_received: { type: 'string', format: 'date-time' }, timestamp_completed: { type: 'string', format: 'date-time' }, status: { type: 'string' }, failure_type: { type: 'string' }, http_status: { type: 'number' }, latency_ms: { type: 'number' }, latency_overlap_ms: { type: 'number' }, latency_write_ms: { type: 'number' }, latency_recalc_ms: { type: 'number' }, latency_finalize_ms: { type: 'number' }, user_agent: { type: 'string' }, error_code: { type: 'string' }, error_message: { type: 'string' }, entry_date: { type: 'string', format: 'date' }, time_entry_id: { type: 'string' }, stuck_detected: { type: 'boolean' }, stuck_detected_at: { type: 'string', format: 'date-time' }, auto_resolved: { type: 'boolean' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'MobileEntryLatencyDailyStats', properties: { date: { type: 'string', format: 'date' }, total_submissions: { type: 'number' }, success_count: { type: 'number' }, failed_count: { type: 'number' }, avg_latency_ms: { type: 'number' }, p50_latency_ms: { type: 'number' }, p95_latency_ms: { type: 'number' }, max_latency_ms: { type: 'number' }, ios_p95_latency_ms: { type: 'number' }, android_p95_latency_ms: { type: 'number' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'MobileEntryPerformanceLog', properties: { submission_id: { type: 'string' }, user_email: { type: 'string' }, employee_id: { type: 'string' }, auth_ms: { type: 'number' }, idempotency_guard_ms: { type: 'number' }, employee_lookup_ms: { type: 'number' }, te_idempotency_check_ms: { type: 'number' }, overlap_fetch_ms: { type: 'number' }, overlap_check_ms: { type: 'number' }, timeentry_create_ms: { type: 'number' }, trips_and_spw_create_ms: { type: 'number' }, commit_ms: { type: 'number' }, write_verify_ms: { type: 'number' }, post_commit_guard_ms: { type: 'number' }, total_ms: { type: 'number' }, outcome: { type: 'string' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'ClientSubmitLog', properties: { submission_id: { type: 'string' }, user_email: { type: 'string' }, employee_id: { type: 'string' }, entry_date: { type: 'string', format: 'date' }, clicked_at: { type: 'string', format: 'date-time' }, payload_size_kb: { type: 'number' }, signature_size_kb: { type: 'number' }, device: { type: 'string' }, browser: { type: 'string' }, user_agent: { type: 'string' }, network_type: { type: 'string' }, status: { type: 'string' }, error_message: { type: 'string' }, response_time_ms: { type: 'number' }, retry_count: { type: 'number' }, backend_submission_id_match: { type: 'boolean' } }, rls: { create: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { role: 'user' } }] }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'MobileSubmissionIndex', properties: { submission_id: { type: 'string' }, employee_id: { type: 'string' }, status: { type: 'string' }, recalc_status: { type: 'string' }, time_entry_id: { type: 'string' }, created_at: { type: 'string', format: 'date-time' }, completed_at: { type: 'string', format: 'date-time' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { user_condition: { role: 'admin' } }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'WeeklyCustomerSummary', properties: { customer_id: { type: 'string' }, customer_name: { type: 'string' }, year: { type: 'number' }, week_number: { type: 'number' }, total_hours: { type: 'number' }, total_km: { type: 'number' }, calculated_revenue: { type: 'number' }, hour_revenue: { type: 'number' }, km_revenue: { type: 'number' }, other_revenue: { type: 'number' }, hour_rate_used: { type: 'number' }, km_rate_used: { type: 'number' }, other_rate_used: { type: 'object' }, trip_count: { type: 'number' }, timeentry_count: { type: 'number' }, locked: { type: 'boolean' }, aggregation_status: { type: 'string' }, last_aggregation_at: { type: 'string', format: 'date-time' }, last_calculated: { type: 'string', format: 'date-time' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'WeeklyEmployeeSummary', properties: { employee_id: { type: 'string' }, employee_name: { type: 'string' }, year: { type: 'number' }, week_number: { type: 'number' }, total_hours: { type: 'number' }, overtime_hours: { type: 'number' }, night_hours: { type: 'number' }, weekend_hours: { type: 'number' }, holiday_hours: { type: 'number' }, total_km: { type: 'number' }, trip_count: { type: 'number' }, locked: { type: 'boolean' }, last_calculated: { type: 'string', format: 'date-time' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'HR_MANAGER' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'MonthlyCustomerSummary', properties: { customer_id: { type: 'string' }, customer_name: { type: 'string' }, year: { type: 'number' }, month: { type: 'number' }, total_hours: { type: 'number' }, total_km: { type: 'number' }, calculated_revenue: { type: 'number' }, hour_revenue: { type: 'number' }, km_revenue: { type: 'number' }, other_revenue: { type: 'number' }, invoiced_revenue: { type: 'number' }, invoice_count: { type: 'number' }, difference_amount: { type: 'number' }, difference_percentage: { type: 'number' }, locked: { type: 'boolean' }, aggregation_status: { type: 'string' }, last_aggregation_at: { type: 'string', format: 'date-time' }, last_calculated: { type: 'string', format: 'date-time' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'FINANCE' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+    { name: 'PostNLImportArchive', properties: { original_id: { type: 'string' }, original_created_date: { type: 'string', format: 'date-time' }, project_id: { type: 'string' }, project_naam: { type: 'string' }, klant_naam: { type: 'string' }, ritnaam: { type: 'string' }, datum: { type: 'string', format: 'date' }, starttijd_shift: { type: 'string' }, import_datum: { type: 'string', format: 'date' }, bestandsnaam: { type: 'string' }, data: { type: 'object' }, archived_at: { type: 'string', format: 'date-time' } }, rls: { create: { user_condition: { role: 'admin' } }, read: { '$or': [{ user_condition: { role: 'admin' } }, { user_condition: { business_role: 'OPERATIONS_MANAGER' } }] }, update: { user_condition: { role: 'admin' } }, delete: { user_condition: { role: 'admin' } } } },
+  ];
+
+  return raw.map(e => ({
+    ...e,
+    tableName: snakeCase(e.name),
+  }));
+}
+
+// ─── main handler ───────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   try {
@@ -9,353 +174,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const entities = {
-      employee: {
-        employee_number: 'text', initials: 'text', first_name: 'text', prefix: 'text', last_name: 'text',
-        photo_url: 'text', email: 'text', phone: 'text', date_of_birth: 'date', in_service_since: 'date',
-        out_of_service_date: 'date', address: 'text', postal_code: 'text', city: 'text',
-        emergency_contact_name: 'text', emergency_contact_phone: 'text', emergency_contact_relation: 'text',
-        department: 'text', "function": 'text', charter_company_id: 'text',
-        drivers_license_number: 'text', drivers_license_categories: 'text', drivers_license_expiry: 'date',
-        code95_expiry: 'date', id_document_number: 'text', id_document_expiry: 'date',
-        contract_type: 'text', contract_start_date: 'date', contract_end_date: 'date',
-        contract_hours: 'numeric', hourly_rate: 'numeric', salary_scale: 'text',
-        travel_allowance_per_km: 'numeric', travel_distance_km: 'numeric',
-        travel_allowance_start_date: 'date', travel_allowance_end_date: 'date',
-        week_schedule: 'text', contractregels: 'text', reiskostenregels: 'text',
-        supervisor_notities: 'text', status: 'text', bsn: 'text', bank_account: 'text',
-        mobile_entry_type: 'text', is_chauffeur: 'boolean', tonen_in_planner: 'boolean',
-        opnemen_in_loonrapport: 'boolean', loonheffing_toepassen: 'text', loonheffing_datum: 'date',
-        loonheffing_handtekening_url: 'text'
-      },
-      vehicle: {
-        license_plate: 'text', brand: 'text', model: 'text', type: 'text', fuel_type: 'text',
-        year: 'numeric', chassis_number: 'text', emission_class: 'text',
-        factory_consumption_per_100km: 'numeric', key_cabinet_number: 'text',
-        apk_expiry: 'date', insurance_expiry: 'date', tachograph_calibration_date: 'date',
-        current_mileage: 'numeric', mileage_calibration_history: 'text',
-        niwo_permit_id: 'text', status: 'text', notes: 'text', photo_url: 'text', max_weight: 'numeric'
-      },
-      customer: {
-        company_name: 'text', logo_url: 'text', contact_person: 'text', email: 'text', phone: 'text',
-        address: 'text', postal_code: 'text', city: 'text', country: 'text',
-        kvk_number: 'text', btw_number: 'text', payment_terms: 'numeric',
-        articles: 'text', status: 'text', notes: 'text'
-      },
-      project: {
-        name: 'text', customer_id: 'text', description: 'text',
-        start_date: 'date', end_date: 'date', status: 'text', budget: 'numeric', notes: 'text'
-      },
-      timeentry: {
-        employee_id: 'text', date: 'date', end_date: 'date', week_number: 'numeric', year: 'numeric',
-        start_time: 'text', end_time: 'text', break_minutes: 'numeric', total_hours: 'numeric',
-        overtime_hours: 'numeric', night_hours: 'numeric', weekend_hours: 'numeric', holiday_hours: 'numeric',
-        shift_type: 'text', project_id: 'text', customer_id: 'text',
-        departure_location: 'text', return_location: 'text', departure_time: 'text', expected_return_time: 'text',
-        subsistence_allowance: 'numeric', advanced_costs: 'numeric', meals: 'numeric', wkr: 'numeric',
-        notes: 'text', status: 'text', signature_url: 'text',
-        approved_by: 'text', approved_date: 'timestamptz', rejection_reason: 'text',
-        edit_history: 'text', travel_allowance_multiplier: 'numeric'
-      },
-      trip: {
-        employee_id: 'text', time_entry_id: 'text', date: 'date', vehicle_id: 'text',
-        customer_id: 'text', project_id: 'text', route_name: 'text',
-        planned_stops: 'numeric', completed_stops: 'numeric',
-        start_km: 'numeric', end_km: 'numeric', total_km: 'numeric',
-        fuel_liters: 'numeric', adblue_liters: 'numeric', fuel_km: 'numeric',
-        charging_kwh: 'numeric', fuel_cost: 'numeric',
-        cargo_description: 'text', cargo_weight: 'numeric',
-        departure_time: 'text', arrival_time: 'text', departure_location: 'text',
-        notes: 'text', status: 'text'
-      },
-      schedule: {
-        employee_id: 'text', week_number: 'numeric', year: 'numeric',
-        monday: 'text', monday_route_id: 'text', monday_vehicle_id: 'text', monday_planned_department: 'text', monday_notes_1: 'text', monday_notes_2: 'text',
-        tuesday: 'text', tuesday_route_id: 'text', tuesday_vehicle_id: 'text', tuesday_planned_department: 'text', tuesday_notes_1: 'text', tuesday_notes_2: 'text',
-        wednesday: 'text', wednesday_route_id: 'text', wednesday_vehicle_id: 'text', wednesday_planned_department: 'text', wednesday_notes_1: 'text', wednesday_notes_2: 'text',
-        thursday: 'text', thursday_route_id: 'text', thursday_vehicle_id: 'text', thursday_planned_department: 'text', thursday_notes_1: 'text', thursday_notes_2: 'text',
-        friday: 'text', friday_route_id: 'text', friday_vehicle_id: 'text', friday_planned_department: 'text', friday_notes_1: 'text', friday_notes_2: 'text',
-        saturday: 'text', saturday_route_id: 'text', saturday_vehicle_id: 'text', saturday_planned_department: 'text', saturday_notes_1: 'text', saturday_notes_2: 'text',
-        sunday: 'text', sunday_route_id: 'text', sunday_vehicle_id: 'text', sunday_planned_department: 'text', sunday_notes_1: 'text', sunday_notes_2: 'text',
-        notes: 'text'
-      },
-      caorule: {
-        name: 'text', description: 'text', category: 'text', rule_type: 'text',
-        calculation_type: 'text', value: 'numeric', percentage: 'numeric', fixed_amount: 'numeric',
-        start_time: 'text', end_time: 'text', applies_to_days: 'text',
-        start_date: 'date', end_date: 'date', priority: 'numeric', status: 'text'
-      },
-      salarytable: {
-        name: 'text', table_type: 'text', scale: 'text', step: 'numeric',
-        hourly_rate: 'numeric', monthly_salary: 'numeric',
-        start_date: 'date', end_date: 'date', status: 'text'
-      },
-      holiday: {
-        name: 'text', date: 'date', year: 'numeric', is_national: 'boolean'
-      },
-      shifttime: {
-        date: 'date', department: 'text', service_start_time: 'text',
-        start_time: 'text', end_time: 'text', message: 'text', created_by_name: 'text'
-      },
-      vehicleinspection: {
-        employee_id: 'text', vehicle_id: 'text', date: 'date', time: 'text', mileage: 'numeric',
-        exterior_clean: 'boolean', interior_clean: 'boolean', lights_working: 'boolean',
-        tires_ok: 'boolean', brakes_ok: 'boolean', oil_level_ok: 'boolean', coolant_level_ok: 'boolean',
-        windshield_ok: 'boolean', mirrors_ok: 'boolean', horn_working: 'boolean',
-        first_aid_kit: 'boolean', fire_extinguisher: 'boolean', warning_triangle: 'boolean', safety_vest: 'boolean',
-        battery_level: 'numeric', charging_cable_present: 'boolean', fuel_level: 'numeric',
-        damage_present: 'boolean', damage_description: 'text', damage_photos: 'text',
-        notes: 'text', signature_url: 'text', status: 'text'
-      },
-      expense: {
-        employee_id: 'text', date: 'date', category: 'text', description: 'text', amount: 'numeric',
-        receipt_url: 'text', project_id: 'text', customer_id: 'text',
-        status: 'text', approved_by: 'text', approved_date: 'date', rejection_reason: 'text'
-      },
-      message: {
-        from_employee_id: 'text', to_employee_id: 'text', subject: 'text',
-        content: 'text', is_read: 'boolean', priority: 'text'
-      },
-      supervisormessage: {
-        message: 'text', target_employee_id: 'text', department: 'text',
-        active_from: 'date', active_until: 'date', is_active: 'boolean'
-      },
-      niwopermit: {
-        permit_number: 'text', validity_date: 'date', assigned_vehicle_id: 'text',
-        status: 'text', notes: 'text'
-      },
-      notification: {
-        title: 'text', description: 'text', type: 'text',
-        target_entity_id: 'text', target_page: 'text',
-        is_read: 'boolean', user_ids: 'text', priority: 'text'
-      },
-      role: {
-        name: 'text', label: 'text', description: 'text',
-        permissions: 'text', color: 'text', is_system: 'boolean'
-      },
-      customerimport: {
-        customer_id: 'text', import_name: 'text', import_date: 'timestamptz',
-        file_name: 'text', column_mapping: 'text', data: 'text',
-        total_rows: 'numeric', calculated_data: 'text', status: 'text', notes: 'text'
-      },
-      urensoort: {
-        code: 'text', name: 'text', description: 'text', toeslag_percentage: 'numeric', status: 'text'
-      },
-      uurcode: {
-        code: 'text', name: 'text', urensoort_id: 'text', description: 'text', status: 'text'
-      },
-      article: {
-        customer_id: 'text', article_number: 'text', description: 'text',
-        unit: 'text', price_rules: 'text', status: 'text'
-      },
-      route: {
-        customer_id: 'text', route_code: 'text', route_name: 'text',
-        start_date: 'date', end_date: 'date', notes: 'text', is_active: 'boolean'
-      },
-      timodelroute: {
-        customer_id: 'text', route_code: 'text', route_name: 'text',
-        total_time_hours: 'numeric', total_time_hhmm: 'text',
-        number_of_stops: 'numeric', number_of_parcels: 'numeric',
-        calculated_norm_per_hour: 'numeric', manual_norm_per_hour: 'numeric',
-        start_date: 'date', end_date: 'date', notes: 'text', is_active: 'boolean', status: 'text'
-      },
-      document: {
-        name: 'text', document_type: 'text', file_url: 'text',
-        linked_employee_id: 'text', linked_vehicle_id: 'text', linked_entity_name: 'text',
-        expiry_date: 'date', notes: 'text', status: 'text'
-      },
-      contract: {
-        employee_id: 'text', contract_number: 'text', contract_type: 'text',
-        start_date: 'date', end_date: 'date', hours_per_week: 'numeric', hourly_rate: 'numeric',
-        salary_scale: 'text', function_title: 'text', department: 'text',
-        is_verlenging: 'boolean', oorspronkelijke_indienst_datum: 'date',
-        verlenging_nummer: 'text', proeftijd: 'text', contract_content: 'text',
-        status: 'text', employee_signature_url: 'text', employee_signed_date: 'timestamptz',
-        manager_signature_url: 'text', manager_signed_date: 'timestamptz', manager_signed_by: 'text',
-        pdf_url: 'text', reminder_sent_dates: 'text', cao_rules_applied: 'text', notes: 'text'
-      },
-      completedcontract: {
-        contract_id: 'text', contract_number: 'text', employee_name: 'text', employee_id: 'text',
-        contract_type: 'text', start_date: 'date', end_date: 'date',
-        function_title: 'text', department: 'text',
-        employee_signed_date: 'timestamptz', manager_signed_date: 'timestamptz',
-        manager_signed_by: 'text', activated_date: 'timestamptz'
-      },
-      contractwijziging: {
-        employee_id: 'text', employee_naam: 'text', type_wijziging: 'text',
-        huidige_waarde: 'text', nieuwe_waarde: 'text', ingangsdatum: 'date',
-        toelichting: 'text', aangevraagd_door: 'text', aangevraagd_datum: 'timestamptz',
-        status: 'text', beoordeeld_door: 'text', beoordeeld_datum: 'timestamptz',
-        afkeur_reden: 'text', doorgevoerd_datum: 'timestamptz', prioriteit: 'text'
-      },
-      breakschedule: {
-        min_hours: 'numeric', max_hours: 'numeric', break_minutes: 'numeric',
-        description: 'text', status: 'text'
-      },
-      performancereview: {
-        employee_id: 'text', review_date: 'date', period_start: 'date', period_end: 'date',
-        tvi_dag: 'numeric', tvi_dag_punten: 'numeric',
-        uitreik_locatie: 'numeric', uitreik_locatie_punten: 'numeric',
-        scankwaliteit: 'numeric', scankwaliteit_punten: 'numeric',
-        pba_bezorgen: 'numeric', pba_bezorgen_punten: 'numeric',
-        hitrate: 'numeric', hitrate_punten: 'numeric',
-        procesverstoring_cat1: 'numeric', procesverstoring_cat1_punten: 'numeric',
-        procesverstoring_cat2: 'numeric', procesverstoring_cat2_punten: 'numeric',
-        betwiste_klachten: 'numeric', betwiste_klachten_punten: 'numeric',
-        onbetwiste_klachten: 'numeric', onbetwiste_klachten_punten: 'numeric',
-        contract_ratio: 'numeric', contract_ratio_punten: 'numeric',
-        claims: 'numeric', claims_punten: 'numeric',
-        veilig_defensief_rijgedrag: 'numeric', veilig_defensief_rijgedrag_punten: 'numeric',
-        naleven_verkeersregels: 'numeric', naleven_verkeersregels_punten: 'numeric',
-        schadevrij_rijden: 'numeric', schadevrij_rijden_punten: 'numeric',
-        melden_schade_incidenten: 'numeric', melden_schade_incidenten_punten: 'numeric',
-        representatief_gebruik_voertuig: 'numeric', representatief_gebruik_voertuig_punten: 'numeric',
-        periodieke_voertuig_controle: 'numeric', periodieke_voertuig_controle_punten: 'numeric',
-        netheid_onderhoud_voertuig: 'numeric', netheid_onderhoud_voertuig_punten: 'numeric',
-        zuinig_verantwoord_rijgedrag: 'numeric', zuinig_verantwoord_rijgedrag_punten: 'numeric',
-        bandenslijtage: 'numeric', bandenslijtage_punten: 'numeric',
-        persoonlijke_inzet: 'numeric', persoonlijke_inzet_punten: 'numeric',
-        piek_ziektebezetting: 'numeric', piek_ziektebezetting_punten: 'numeric',
-        omgang_veranderingen: 'numeric', omgang_veranderingen_punten: 'numeric',
-        ziekteverzuim: 'numeric', ziekteverzuim_punten: 'numeric',
-        omgang_collega: 'numeric', omgang_collega_punten: 'numeric',
-        nakomen_afspraken: 'numeric', nakomen_afspraken_punten: 'numeric',
-        werk_prive_balans: 'text', terugblik_vorige_periode: 'text',
-        nieuwe_doelen: 'text', feedback_medewerker: 'text',
-        gemiddelde_score: 'numeric', trede_verhoging: 'boolean', trede_verhoging_toelichting: 'text',
-        algemene_conclusie: 'text', ontwikkelpunten: 'text', reviewer_id: 'text',
-        manager_signature_url: 'text', employee_signature_url: 'text', status: 'text'
-      },
-      performancenote: {
-        employee_id: 'text', note_date: 'date', category: 'text', title: 'text',
-        description: 'text', severity: 'text', action_taken: 'text',
-        follow_up_required: 'boolean', follow_up_date: 'date',
-        created_by_name: 'text', is_visible_to_employee: 'boolean'
-      },
-      employeekpi: {
-        employee_id: 'text', customer_id: 'text', zmedcid: 'text', medewerker_naam: 'text',
-        week: 'numeric', year: 'numeric',
-        tvi_dag: 'numeric', tvi_avond: 'numeric', uitreiklocatie: 'numeric',
-        vr_distributie: 'numeric', scankwaliteit: 'numeric',
-        pba_bezorgers: 'numeric', hitrate: 'numeric'
-      },
-      kpidoel: {
-        employee_id: 'text', zmedcid: 'text', jaar: 'numeric', week: 'numeric',
-        tvi_dag_doel: 'numeric', tvi_avond_doel: 'numeric', uitreiklocatie_doel: 'numeric',
-        vr_distributie_doel: 'numeric', scankwaliteit_doel: 'numeric',
-        pba_bezorgers_doel: 'numeric', hitrate_doel: 'numeric'
-      },
-      loonperiodestatus: {
-        year: 'numeric', periode: 'numeric', status: 'text',
-        definitief_datum: 'timestamptz', definitief_door: 'text', opmerkingen: 'text'
-      },
-      bedrijfsreglementartikel: {
-        artikel_nummer: 'numeric', hoofdstuk: 'text', titel: 'text', inhoud: 'text',
-        versie: 'numeric', versie_geschiedenis: 'text', status: 'text'
-      },
-      contracttemplate: {
-        name: 'text', contract_type: 'text', description: 'text',
-        template_content: 'text', is_default: 'boolean', status: 'text'
-      },
-      chartercompany: {
-        company_name: 'text', contact_person: 'text', email: 'text', phone: 'text',
-        address: 'text', postal_code: 'text', city: 'text', kvk_number: 'text',
-        notes: 'text', status: 'text'
-      },
-      vehiclemaintenance: {
-        vehicle_id: 'text', date: 'date', mileage_at_service: 'numeric',
-        maintenance_type: 'text', description: 'text', garage_name: 'text',
-        cost: 'numeric', invoice_url: 'text', notes: 'text'
-      },
-      leasecontract: {
-        vehicle_id: 'text', lease_company: 'text', contract_number: 'text',
-        start_date: 'date', end_date: 'date', monthly_cost: 'numeric',
-        mileage_limit: 'numeric', excess_km_cost: 'numeric',
-        document_url: 'text', notes: 'text', status: 'text'
-      },
-      emailtemplate: {
-        name: 'text', subject: 'text', body: 'text', reply_to: 'text',
-        category: 'text', is_active: 'boolean'
-      },
-      onboardingprocess: {
-        employee_id: 'text', employee_name: 'text', status: 'text', current_step: 'numeric',
-        pincode_sleutelkast: 'text', stamkaart_completed: 'boolean',
-        pincode_verklaring_signed: 'boolean', sleutel_verklaring_signed: 'boolean',
-        sleutel_nummer: 'text', sleutel_toegang: 'text',
-        gps_buddy_toestemming: 'boolean', dienstbetrekking_signed: 'boolean',
-        bedrijfsreglement_ontvangen: 'boolean', contract_generated: 'boolean',
-        mobile_invite_sent: 'boolean', employee_signature_url: 'text',
-        completed_date: 'timestamptz', notes: 'text'
-      },
-      driveravailability: {
-        employee_id: 'text', date: 'date', status: 'text', notes: 'text'
-      },
-      rapportagerit: {
-        project_id: 'text', project_naam: 'text', klant_id: 'text', import_datum: 'date',
-        week: 'numeric', datum: 'text', chauffeur: 'text', ritnaam: 'text',
-        totaal_rit: 'text', geen_scan_15min: 'numeric',
-        besteltijd_norm: 'numeric', besteltijd_bruto: 'numeric', besteltijd_netto: 'numeric',
-        aantal_vrijgave_stops: 'numeric', aantal_vrijgave_stuks: 'numeric',
-        aantal_afgeleverd_stuks: 'numeric', aantal_afgeleverd_stops: 'numeric',
-        aantal_afgehaald_collecteerd: 'numeric', aantal_pba_bezorgd: 'numeric',
-        artikelen: 'text', status: 'text'
-      },
-      postnlimportresult: {
-        project_id: 'text', project_naam: 'text', klant_naam: 'text',
-        ritnaam: 'text', datum: 'text', starttijd_shift: 'text',
-        import_datum: 'date', bestandsnaam: 'text', data: 'text'
-      },
-      spottainvoice: {
-        customer_id: 'text', invoice_number: 'text', invoice_date: 'date', due_date: 'date',
-        supplier_name: 'text', supplier_address: 'text', supplier_kvk: 'text', supplier_btw: 'text',
-        customer_name: 'text', reference_number: 'text', description_period: 'text',
-        total_net: 'numeric', total_tax: 'numeric', total_amount: 'numeric', currency: 'text',
-        line_count: 'numeric', pdf_url: 'text', json_url: 'text', import_source: 'text', status: 'text'
-      },
-      spottainvoiceline: {
-        invoice_id: 'text', customer_id: 'text', product_code: 'text', description: 'text',
-        quantity: 'numeric', unit_price: 'numeric', total_price: 'numeric',
-        tax_rate: 'numeric', tax_amount: 'numeric', total_incl_tax: 'numeric',
-        matched_article_id: 'text', route_code: 'text', line_type: 'text'
-      },
-      auditlog: {
-        action: 'text', category: 'text', description: 'text',
-        performed_by_email: 'text', performed_by_name: 'text',
-        target_entity: 'text', target_id: 'text', target_name: 'text',
-        old_value: 'text', new_value: 'text', details: 'text'
-      },
-      integration: {
-        name: 'text', type: 'text', api_url: 'text', api_key: 'text',
-        sync_interval_minutes: 'numeric', last_sync: 'timestamptz',
-        last_sync_status: 'text', last_sync_message: 'text',
-        settings: 'text', is_active: 'boolean'
-      },
-      synclog: {
-        integration_id: 'text', sync_type: 'text', status: 'text',
-        records_synced: 'numeric', records_failed: 'numeric',
-        message: 'text', details: 'text'
-      },
-      backup: {
-        backup_date: 'timestamptz', backup_group_id: 'text', entity_name: 'text',
-        record_count: 'numeric', backup_size: 'numeric', entity_count: 'numeric',
-        status: 'text', backup_type: 'text', environment: 'text',
-        json_data: 'text', notes: 'text'
-      },
-      clientfeatureconfig: {
-        customer_id: 'text', feature_key: 'text', feature_label: 'text', is_active: 'boolean'
-      },
-      standplaatswerk: {
-        time_entry_id: 'text', employee_id: 'text', date: 'date',
-        start_time: 'text', end_time: 'text', customer_id: 'text',
-        project_id: 'text', activity_id: 'text', notes: 'text'
-      },
-      activiteit: {
-        name: 'text', description: 'text', sort_order: 'numeric', status: 'text'
-      },
-      department: {
-        name: 'text', label: 'text', description: 'text', sort_order: 'numeric', status: 'text'
-      }
-    };
+    const entities = getAllEntitySchemas();
 
     const builtInFields = {
       id: 'uuid DEFAULT gen_random_uuid() PRIMARY KEY',
@@ -365,52 +184,84 @@ Deno.serve(async (req) => {
       created_by: 'text'
     };
 
-    let sql = '-- Supabase SQL: CREATE TABLE statements voor alle Base44 entities\n';
+    let sql = '-- ═══════════════════════════════════════════════════════════════════\n';
+    sql += '-- Interdistri TMS — Supabase SQL: CREATE TABLE + RLS policies\n';
     sql += '-- Gegenereerd op: ' + new Date().toISOString() + '\n';
-    sql += '-- BELANGRIJK: Voer dit uit in de Supabase SQL Editor\n\n';
+    sql += '-- Totaal: ' + entities.length + ' tabellen\n';
+    sql += '-- BELANGRIJK: Voer dit uit in de Supabase SQL Editor\n';
+    sql += '-- ═══════════════════════════════════════════════════════════════════\n\n';
 
+    // STAP 1: DROP
     sql += '-- ====================================\n';
     sql += '-- STAP 1: BESTAANDE TABELLEN VERWIJDEREN\n';
     sql += '-- ====================================\n\n';
-
-    for (const tableName of Object.keys(entities)) {
-      sql += `DROP TABLE IF EXISTS "${tableName}" CASCADE;\n`;
+    for (const e of entities) {
+      sql += `DROP TABLE IF EXISTS "${e.tableName}" CASCADE;\n`;
     }
 
+    // STAP 2: CREATE
     sql += '\n-- ====================================\n';
     sql += '-- STAP 2: TABELLEN AANMAKEN\n';
     sql += '-- ====================================\n\n';
-
-    for (const [tableName, columns] of Object.entries(entities)) {
-      sql += `-- ${tableName}\n`;
-      sql += `CREATE TABLE "${tableName}" (\n`;
-      
+    for (const e of entities) {
+      sql += `-- ${e.name}\n`;
+      sql += `CREATE TABLE "${e.tableName}" (\n`;
       const allCols = [];
       for (const [colName, colType] of Object.entries(builtInFields)) {
         allCols.push(`  "${colName}" ${colType}`);
       }
-      for (const [colName, colType] of Object.entries(columns)) {
-        allCols.push(`  "${colName}" ${colType}`);
+      for (const [colName, propDef] of Object.entries(e.properties)) {
+        allCols.push(`  "${colName}" ${jsonTypeToSql(propDef)}`);
       }
-      
       sql += allCols.join(',\n');
       sql += '\n);\n\n';
     }
 
+    // STAP 3: ENABLE RLS
     sql += '-- ====================================\n';
-    sql += '-- STAP 3: RLS UITSCHAKELEN (service role)\n';
+    sql += '-- STAP 3: RLS INSCHAKELEN\n';
     sql += '-- ====================================\n\n';
-
-    for (const tableName of Object.keys(entities)) {
-      sql += `ALTER TABLE "${tableName}" DISABLE ROW LEVEL SECURITY;\n`;
+    for (const e of entities) {
+      sql += `ALTER TABLE "${e.tableName}" ENABLE ROW LEVEL SECURITY;\n`;
     }
 
-    sql += '\n-- Klaar! Alle ' + Object.keys(entities).length + ' tabellen zijn aangemaakt.\n';
+    // STAP 4: RLS POLICIES
+    sql += '\n-- ====================================\n';
+    sql += '-- STAP 4: RLS POLICIES AANMAKEN\n';
+    sql += '-- ====================================\n\n';
 
-    return Response.json({ 
-      success: true, 
+    const opMap = { create: 'INSERT', read: 'SELECT', update: 'UPDATE', delete: 'DELETE' };
+
+    for (const e of entities) {
+      sql += `-- Policies voor ${e.name}\n`;
+      for (const [op, rule] of Object.entries(e.rls || {})) {
+        const pgOp = opMap[op];
+        if (!pgOp) continue;
+        const condition = buildRlsCondition(rule);
+        const policyName = `${e.tableName}_${op}_policy`;
+
+        if (pgOp === 'INSERT') {
+          sql += `CREATE POLICY "${policyName}" ON "${e.tableName}" FOR ${pgOp} WITH CHECK (${condition});\n`;
+        } else {
+          sql += `CREATE POLICY "${policyName}" ON "${e.tableName}" FOR ${pgOp} USING (${condition});\n`;
+        }
+      }
+      sql += '\n';
+    }
+
+    // Service role bypass
+    sql += '-- ====================================\n';
+    sql += '-- STAP 5: SERVICE ROLE BYPASS (optioneel)\n';
+    sql += '-- ====================================\n';
+    sql += '-- De Supabase service_role key bypast automatisch RLS.\n';
+    sql += '-- Geen extra policies nodig voor service role.\n\n';
+
+    sql += '-- Klaar! Alle ' + entities.length + ' tabellen met RLS policies zijn aangemaakt.\n';
+
+    return Response.json({
+      success: true,
       sql,
-      table_count: Object.keys(entities).length
+      table_count: entities.length
     });
   } catch (error) {
     console.error('Generate SQL error:', error);
