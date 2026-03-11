@@ -83,3 +83,12 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* iOS Mobile Entry: prevent keyboard auto-zoom on focus (font-size < 16px) */
+@supports (-webkit-touch-callout: none) {
+  div.h-\[100dvh\].flex.flex-col.overflow-hidden.bg-white input:focus,
+  div.h-\[100dvh\].flex.flex-col.overflow-hidden.bg-white textarea:focus,
+  div.h-\[100dvh\].flex.flex-col.overflow-hidden.bg-white select:focus {
+    font-size: 16px !important;
+  }
+}
