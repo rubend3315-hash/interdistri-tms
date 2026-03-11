@@ -282,19 +282,22 @@ Deno.serve(async (req) => {
       employeeMap[eid].tripCount += 1;
     });
 
-    // ── UPSERT CUSTOMER SUMMARIES (full replace) ──
+    // ── UPSERT CUSTOMER SUMMARIES (parallel + bulk) ──
     const existingCustMap = {};
     existingCustSummaries.forEach(s => { existingCustMap[s.customer_id] = s; });
 
     let custCreated = 0, custUpdated = 0, custDeleted = 0;
 
-    // Delete ALL existing customer summaries for this week first (full replace)
-    for (const existing of existingCustSummaries) {
-      if (!customerMap[existing.customer_id]) {
-        await svc.entities.WeeklyCustomerSummary.delete(existing.id);
-        custDeleted++;
-      }
+    // Delete stale customer summaries (parallel)
+    const custToDelete = existingCustSummaries.filter(s => !customerMap[s.customer_id]);
+    if (custToDelete.length > 0) {
+      await Promise.all(custToDelete.map(s => svc.entities.WeeklyCustomerSummary.delete(s.id)));
+      custDeleted = custToDelete.length;
     }
+
+    // Build payloads for create and update
+    const custToCreate = [];
+    const custToUpdate = [];
 
     for (const [custId, data] of Object.entries(customerMap)) {
       if (data.hours === 0 && data.km === 0 && data.hourRevenue === 0 && data.kmRevenue === 0 && data.otherRevenue === 0) continue;
@@ -326,27 +329,40 @@ Deno.serve(async (req) => {
 
       const existing = existingCustMap[custId];
       if (existing) {
-        await svc.entities.WeeklyCustomerSummary.update(existing.id, payload);
-        custUpdated++;
+        custToUpdate.push({ id: existing.id, payload });
       } else {
-        await svc.entities.WeeklyCustomerSummary.create(payload);
-        custCreated++;
+        custToCreate.push(payload);
       }
     }
 
-    // ── UPSERT EMPLOYEE SUMMARIES (full replace) ──
+    // Execute updates in parallel
+    if (custToUpdate.length > 0) {
+      await Promise.all(custToUpdate.map(({ id, payload }) => svc.entities.WeeklyCustomerSummary.update(id, payload)));
+      custUpdated = custToUpdate.length;
+    }
+    // Bulk create new summaries
+    if (custToCreate.length > 0) {
+      await svc.entities.WeeklyCustomerSummary.bulkCreate(custToCreate);
+      custCreated = custToCreate.length;
+    }
+
+    // ── UPSERT EMPLOYEE SUMMARIES (parallel + bulk) ──
     const existingEmpSummaries = await svc.entities.WeeklyEmployeeSummary.filter({ year, week_number });
     const existingEmpMap = {};
     existingEmpSummaries.forEach(s => { existingEmpMap[s.employee_id] = s; });
 
     let empCreated = 0, empUpdated = 0, empDeleted = 0;
 
-    for (const existing of existingEmpSummaries) {
-      if (!employeeMap[existing.employee_id]) {
-        await svc.entities.WeeklyEmployeeSummary.delete(existing.id);
-        empDeleted++;
-      }
+    // Delete stale employee summaries (parallel)
+    const empToDelete = existingEmpSummaries.filter(s => !employeeMap[s.employee_id]);
+    if (empToDelete.length > 0) {
+      await Promise.all(empToDelete.map(s => svc.entities.WeeklyEmployeeSummary.delete(s.id)));
+      empDeleted = empToDelete.length;
     }
+
+    // Build payloads for create and update
+    const empToCreateList = [];
+    const empToUpdateList = [];
 
     for (const [empId, data] of Object.entries(employeeMap)) {
       if (data.totalHours === 0 && data.totalKm === 0) continue;
@@ -369,12 +385,21 @@ Deno.serve(async (req) => {
 
       const existing = existingEmpMap[empId];
       if (existing) {
-        await svc.entities.WeeklyEmployeeSummary.update(existing.id, payload);
-        empUpdated++;
+        empToUpdateList.push({ id: existing.id, payload });
       } else {
-        await svc.entities.WeeklyEmployeeSummary.create(payload);
-        empCreated++;
+        empToCreateList.push(payload);
       }
+    }
+
+    // Execute updates in parallel
+    if (empToUpdateList.length > 0) {
+      await Promise.all(empToUpdateList.map(({ id, payload }) => svc.entities.WeeklyEmployeeSummary.update(id, payload)));
+      empUpdated = empToUpdateList.length;
+    }
+    // Bulk create new summaries
+    if (empToCreateList.length > 0) {
+      await svc.entities.WeeklyEmployeeSummary.bulkCreate(empToCreateList);
+      empCreated = empToCreateList.length;
     }
 
     console.log(`[recalcWeekly] Done. Customer: ${custCreated}C ${custUpdated}U ${custDeleted}D. Employee: ${empCreated}C ${empUpdated}U ${empDeleted}D.`);
