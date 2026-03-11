@@ -905,6 +905,40 @@ export default function Approvals() {
                       <p className="text-sm text-red-700 mt-1">{selectedEntry.rejection_reason}</p>
                     </div>
                   )}
+                  {/* Herindiening context: show previous rejection if this is a resubmission */}
+                  {selectedEntry.status === 'Ingediend' && (() => {
+                    const previousRejected = allLoadedEntries.find(e =>
+                      e.id !== selectedEntry.id &&
+                      e.employee_id === selectedEntry.employee_id &&
+                      e.date === selectedEntry.date &&
+                      e.status === 'Afgekeurd' &&
+                      e.rejection_reason
+                    );
+                    if (!previousRejected) return null;
+                    return (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <Label className="text-xs text-blue-600 font-medium mb-2 block">Herindiening na afkeuring</Label>
+                        <div className="p-2 bg-red-50 border border-red-100 rounded mb-2">
+                          <p className="text-xs text-red-600 font-medium">Afkeuringsreden:</p>
+                          <p className="text-sm text-red-700">{previousRejected.rejection_reason}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="text-blue-600 font-medium">Vorige indiening:</p>
+                            <p className="text-blue-900">
+                              {previousRejected.start_time} - {previousRejected.end_time} ({previousRejected.total_hours}u)
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-blue-600 font-medium">Nieuwe indiening:</p>
+                            <p className="text-blue-900">
+                              {selectedEntry.start_time} - {selectedEntry.end_time} ({selectedEntry.total_hours}u)
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {selectedEntry.edit_history && selectedEntry.edit_history.length > 0 && (
                     <div>
                       <Label className="text-xs text-slate-500 mb-2 block">Correctie Geschiedenis</Label>
