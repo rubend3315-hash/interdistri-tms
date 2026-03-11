@@ -219,19 +219,6 @@ Deno.serve(async (req) => {
       let imports = [];
       try {
         imports = await svc.entities.PostNLImportResult.filter({ import_datum: { $gte: wsStr, $lte: weStr } });
-        if (imports.length === 0) {
-          const allRecent = await svc.entities.PostNLImportResult.list('-created_date', 200);
-          imports = allRecent.filter(r => {
-            const d = r.datum || r.data?.Datum;
-            if (!d) return false;
-            if (d.includes('-') && d.length === 10) {
-              const parts = d.split('-');
-              const isoDate = parts[0].length === 4 ? d : `${parts[2]}-${parts[1]}-${parts[0]}`;
-              return isoDate >= wsStr && isoDate <= weStr;
-            }
-            return false;
-          });
-        }
       } catch (e) {
         console.warn('[recalcWeekly] PostNL import fetch failed:', e?.message);
       }
