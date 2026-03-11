@@ -157,7 +157,7 @@ export default function Dagstaat() {
                 </div>
                 <Button
                   onClick={() => handlePrint(false)}
-                  disabled={timeEntries.length === 0 && trips.length === 0}
+                  disabled={filteredTimeEntries.length === 0 && trips.length === 0}
                   className="bg-blue-900 hover:bg-blue-800"
                 >
                   <Printer className="w-4 h-4 mr-2" />
