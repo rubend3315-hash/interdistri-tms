@@ -149,7 +149,7 @@ export default function Dagstaat() {
               <div className="flex items-center justify-between">
                 <div className="text-sm text-slate-600">
                   <p>
-                    <strong>Tijdregistraties:</strong> {timeEntries.length} gevonden
+                    <strong>Tijdregistraties:</strong> {filteredTimeEntries.length} gevonden
                   </p>
                   <p>
                     <strong>Ritten:</strong> {trips.length} gevonden
