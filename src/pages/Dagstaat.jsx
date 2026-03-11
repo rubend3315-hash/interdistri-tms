@@ -86,7 +86,7 @@ export default function Dagstaat() {
         employee={isEmptyForm ? null : selectedEmployee}
         date={isEmptyForm ? null : selectedStartDate}
         endDate={isEmptyForm ? null : selectedEndDate}
-        timeEntries={isEmptyForm ? [] : timeEntries}
+        timeEntries={isEmptyForm ? [] : filteredTimeEntries}
         trips={isEmptyForm ? [] : trips}
         vehicles={vehicles}
         customers={customers}
