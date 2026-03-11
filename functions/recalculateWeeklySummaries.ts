@@ -416,11 +416,14 @@ Deno.serve(async (req) => {
     if (svc && year && week_number) {
       try {
         const errorSummaries = await svc.entities.WeeklyCustomerSummary.filter({ year, week_number });
-        for (const s of errorSummaries) {
-          await svc.entities.WeeklyCustomerSummary.update(s.id, {
-            aggregation_status: 'ERROR',
-            last_aggregation_at: new Date().toISOString(),
-          });
+        const errorNow = new Date().toISOString();
+        if (errorSummaries.length > 0) {
+          await Promise.all(errorSummaries.map(s =>
+            svc.entities.WeeklyCustomerSummary.update(s.id, {
+              aggregation_status: 'ERROR',
+              last_aggregation_at: errorNow,
+            })
+          ));
         }
         // Log to AuditLog
         await svc.entities.AuditLog.create({
