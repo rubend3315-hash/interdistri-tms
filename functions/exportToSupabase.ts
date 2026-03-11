@@ -115,7 +115,7 @@ async function insertBatch(table, rows, batchSize = 500) {
   return inserted;
 }
 
-// Map Base44 entity name to Supabase table name (lowercase)
+// Map Base44 entity name to Supabase table name (lowercase) — all 72 entities
 const entityToTable = {
   'Employee': 'employee',
   'Vehicle': 'vehicle',
@@ -170,7 +170,25 @@ const entityToTable = {
   'ClientFeatureConfig': 'clientfeatureconfig',
   'StandplaatsWerk': 'standplaatswerk',
   'Activiteit': 'activiteit',
-  'Department': 'department'
+  'Department': 'department',
+  'Function': 'function',
+  'PayrollSettings': 'payrollsettings',
+  'EmailLog': 'emaillog',
+  'Tenant': 'tenant',
+  'KeylockerPincode': 'keylockerpincode',
+  'SecureDownloadToken': 'securedownloadtoken',
+  'UserRoleSnapshot': 'userrolesnapshot',
+  'RBACDecisionLog': 'rbacdecisionlog',
+  'RBACIntegrityReport': 'rbacintegrityreport',
+  'MobileEntrySubmissionLog': 'mobileentrysubmissionlog',
+  'MobileEntryLatencyDailyStats': 'mobileentrylatencydailystats',
+  'MobileEntryPerformanceLog': 'mobileentryperformancelog',
+  'ClientSubmitLog': 'clientsubmitlog',
+  'MobileSubmissionIndex': 'mobilesubmissionindex',
+  'WeeklyCustomerSummary': 'weeklycustomersummary',
+  'WeeklyEmployeeSummary': 'weeklyemployeesummary',
+  'MonthlyCustomerSummary': 'monthlycustomersummary',
+  'PostNLImportArchive': 'postnlimportarchive'
 };
 
 // Known jsonb columns per table
