@@ -60,6 +60,11 @@ export default function Dagstaat() {
     refetchOnMount: false,
   });
 
+  // Filter lege concept-entries (aangemaakt door auto-save maar nooit ingevuld)
+  const filteredTimeEntries = timeEntries.filter(
+    (te) => !(te.status === "Concept" && !te.start_time && !te.end_time)
+  );
+
   const selectedEmployee = employees.find((e) => e.id === selectedEmployeeId);
 
   const sortedEmployees = [...employees].sort((a, b) =>
