@@ -391,6 +391,7 @@ export default function Layout({ children, currentPageName }) {
       'RBACAudit': PERMISSIONS.GOVERNANCE_MANAGE,
       'Backups': PERMISSIONS.GOVERNANCE_MANAGE,
       'DeploymentStatus': PERMISSIONS.GOVERNANCE_MANAGE,
+      'DraftCleanup': PERMISSIONS.GOVERNANCE_MANAGE,
 
       // Publiek / open
       'SecurityPrivacy': '__public__',
