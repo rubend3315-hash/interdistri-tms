@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
     const backupGroupId = `backup_${Date.now()}`;
 
+    // Alle 72 entiteiten (maart 2026)
     const entityNames = [
       'User', 'Employee', 'Vehicle', 'Customer', 'Project', 'TimeEntry', 'Trip',
       'Schedule', 'CaoRule', 'SalaryTable', 'Holiday', 'ShiftTime',
@@ -26,7 +27,15 @@ Deno.serve(async (req) => {
       'LoonperiodeStatus', 'BedrijfsreglementArtikel', 'CharterCompany',
       'VehicleMaintenance', 'LeaseContract', 'EmailTemplate',
       'OnboardingProcess', 'DriverAvailability', 'RapportageRit',
-      'PostNLImportResult', 'SpottaInvoice', 'SpottaInvoiceLine'
+      'PostNLImportResult', 'SpottaInvoice', 'SpottaInvoiceLine',
+      'ContractTemplate', 'AuditLog', 'Integration', 'SyncLog', 'Backup',
+      'ClientFeatureConfig', 'StandplaatsWerk', 'Activiteit', 'Department',
+      'Function', 'PayrollSettings', 'EmailLog', 'Tenant', 'KeylockerPincode',
+      'SecureDownloadToken', 'UserRoleSnapshot', 'RBACDecisionLog',
+      'RBACIntegrityReport', 'MobileEntrySubmissionLog',
+      'MobileEntryLatencyDailyStats', 'MobileEntryPerformanceLog',
+      'ClientSubmitLog', 'MobileSubmissionIndex', 'WeeklyCustomerSummary',
+      'WeeklyEmployeeSummary', 'MonthlyCustomerSummary', 'PostNLImportArchive'
     ];
 
     const backupData = {};
