@@ -166,7 +166,7 @@ export default function Dagstaat() {
               </div>
             )}
 
-            {selectedEmployeeId && selectedStartDate && selectedEndDate && timeEntries.length === 0 && trips.length === 0 && (
+            {selectedEmployeeId && selectedStartDate && selectedEndDate && filteredTimeEntries.length === 0 && trips.length === 0 && (
               <p className="text-sm text-amber-600 flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Geen gegevens gevonden voor deze medewerker op deze datum.
