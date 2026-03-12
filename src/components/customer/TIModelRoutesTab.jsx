@@ -288,14 +288,14 @@ export default function TIModelRoutesTab({ customerId }) {
               </tr>
             </thead>
             <tbody>
-              {routes.length === 0 ? (
+              {filteredRoutes.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="px-4 py-8 text-center text-slate-500">
                     Geen ritten gevonden
                   </td>
                 </tr>
               ) : (
-                [...routes].sort((a, b) => {
+                [...filteredRoutes].sort((a, b) => {
                   const codeA = parseInt((a.route_code || '0').replace(/^0+/, '')) || 0;
                   const codeB = parseInt((b.route_code || '0').replace(/^0+/, '')) || 0;
                   return codeA - codeB;
