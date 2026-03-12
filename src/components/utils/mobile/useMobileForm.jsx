@@ -88,11 +88,19 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   const draftRulesSavingRef = useRef(false);
   // Track the current draft TimeEntry id for saveDraftServiceRules
   const draftTimeEntryIdRef = useRef(null);
+  // Guard: skip autosave on initial mount and after date change (hydration cycle)
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     // CRITICAL: Don't autosave until server draft has been loaded/attempted
     if (!draftLoaded) return;
     if (!currentEmployee?.id) return;
+
+    // Skip the first autosave trigger after mount or date change (data hydration)
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
 
     setIsSaving(true);
     const timer = setTimeout(async () => {
