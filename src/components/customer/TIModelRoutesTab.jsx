@@ -81,12 +81,18 @@ export default function TIModelRoutesTab({ customerId }) {
       ? routes.filter(r => r.is_active === false)
       : routes;
 
-  const avgNormValue = filteredRoutes.length > 0
-    ? (filteredRoutes.reduce((sum, r) => sum + (r.calculated_norm_per_hour || 0), 0) / filteredRoutes.length)
+  // Contractritten = actief + geen "Reserve" in de naam
+  const contractRoutes = routes.filter(r => r.is_active !== false && !/reserve/i.test(r.route_name || ''));
+
+  const avgNormValue = contractRoutes.length > 0
+    ? (contractRoutes.reduce((sum, r) => sum + (r.calculated_norm_per_hour || 0), 0) / contractRoutes.length)
     : 0;
 
-  const totalStops = filteredRoutes.reduce((sum, r) => sum + (r.number_of_stops || 0), 0);
-  const totalParcels = filteredRoutes.reduce((sum, r) => sum + (r.number_of_parcels || 0), 0);
+  const totalStops = contractRoutes.reduce((sum, r) => sum + (r.number_of_stops || 0), 0);
+  const totalParcels = contractRoutes.reduce((sum, r) => sum + (r.number_of_parcels || 0), 0);
+  const avgStopsPerRoute = contractRoutes.length > 0
+    ? (totalStops / contractRoutes.length)
+    : 0;
 
   const exportToPDF = async () => {
     const doc = new jsPDF({
