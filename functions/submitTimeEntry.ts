@@ -8,38 +8,37 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // ============================================================
-// submitTimeEntry v6.0.0 — Refactored critical path (2026-03-06)
+// submitTimeEntry v7.0.0 — Draft-upsert strategy (2026-03-12)
 // ============================================================
 //
-// CHANGES FROM v5.2.1:
-//   - REMOVED MobileSubmissionIndex from entire flow (no reads/writes)
-//   - Idempotency now via UNIQUE constraint on TimeEntry.submission_id
-//   - TimeEntry created directly as "Ingediend" (no Concept→Ingediend two-step)
-//   - BreakSchedule cached in-memory (5 min TTL) to avoid repeated DB calls
-//   - Employee lookup + overlap fetch parallelized where possible
-//   - Logging (MobileEntrySubmissionLog + MobileEntryPerformanceLog) fully preserved
-//   - recalculateAfterTimeEntrySubmit fire-and-forget unchanged
+// CHANGES FROM v6.0.0:
+//   - UPSERT STRATEGY: If a Concept draft exists for employee+date,
+//     update it to "Ingediend" instead of creating a new record.
+//     This prevents orphaned drafts causing overlap-validation failures.
+//   - Draft lookup runs in parallel with overlap + break schedule fetch.
+//   - Safety net: any remaining duplicate Concept drafts are deleted.
+//   - All other logic (idempotency, logging, recalc) unchanged.
 //
 // ARCHITECTURE:
 //   1. Dedicated submission_id field on TimeEntry with UNIQUE constraint
 //   2. Idempotency via submission_id lookup — if exists with Ingediend/Goedgekeurd, return it
-//   3. Create TimeEntry directly as "Ingediend" — UNIQUE constraint prevents duplicates
+//   3. Draft upsert: find Concept draft → update to Ingediend, or create new if no draft
 //   4. If create fails with duplicate key error → idempotent hit (another request won)
-//   5. Separate orphan cleanup job handles any edge cases
+//   5. Duplicate Concept drafts cleaned up as safety net
 //
 // RACE CONDITION STRATEGY:
 //   Two requests with SAME submission_id:
-//     → First one passes idempotency check, creates Ingediend entry
+//     → First one passes idempotency check, upserts/creates Ingediend entry
 //     → Second one either: (a) finds it in idempotency check, or
 //       (b) gets UNIQUE constraint violation on create → treats as idempotent hit
 //
 //   Two requests with DIFFERENT submission_ids, same date:
-//     → Overlap detection runs against committed entries
+//     → Overlap detection runs against committed entries (Ingediend/Goedgekeurd)
 //     → Second request blocked by overlap check
 //
 // FAILURE SCENARIOS:
-//   Crash before create:  No record exists. Client retries → fresh attempt.
-//   Crash after create:   Ingediend entry is safe. Client retries → idempotent hit.
+//   Crash before upsert: Draft still in Concept. Client retries → fresh attempt.
+//   Crash after upsert:  Ingediend entry is safe. Client retries → idempotent hit.
 //   Client timeout retry: Same submission_id → idempotent hit.
 // ============================================================
 
