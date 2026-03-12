@@ -19,9 +19,14 @@ export default function TIRekenmoduleTab({ tiModelRoutes = [] }) {
   const [rijtijdMinuten, setRijtijdMinuten] = useState(20);
   const [opstarttijdMinuten, setOpstarttijdMinuten] = useState(10);
 
+  // Only show active, non-reserve routes
+  const activeRoutes = useMemo(() => {
+    return tiModelRoutes.filter(r => r.is_active !== false && !/reserve/i.test(r.route_name || ''));
+  }, [tiModelRoutes]);
+
   const selectedRoute = useMemo(() => {
-    return tiModelRoutes.find(r => r.id === selectedRouteId);
-  }, [tiModelRoutes, selectedRouteId]);
+    return activeRoutes.find(r => r.id === selectedRouteId);
+  }, [activeRoutes, selectedRouteId]);
 
   const berekening = useMemo(() => {
     if (!selectedRoute || !aantalStops || Number(aantalStops) <= 0) return null;
