@@ -19,9 +19,9 @@ export default function TIRekenmoduleTab({ tiModelRoutes = [] }) {
   const [rijtijdMinuten, setRijtijdMinuten] = useState(20);
   const [opstarttijdMinuten, setOpstarttijdMinuten] = useState(10);
 
-  // Only show active, non-reserve routes
+  // Only show active routes
   const activeRoutes = useMemo(() => {
-    return tiModelRoutes.filter(r => r.is_active !== false && !/reserve/i.test(r.route_name || ''));
+    return tiModelRoutes.filter(r => r.is_active !== false);
   }, [tiModelRoutes]);
 
   const selectedRoute = useMemo(() => {
