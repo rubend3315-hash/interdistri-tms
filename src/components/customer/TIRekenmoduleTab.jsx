@@ -85,7 +85,7 @@ export default function TIRekenmoduleTab({ tiModelRoutes = [] }) {
                 <SelectValue placeholder="Kies een route..." />
               </SelectTrigger>
               <SelectContent>
-                {tiModelRoutes.sort((a, b) => a.route_code.localeCompare(b.route_code)).map(route => (
+                {activeRoutes.sort((a, b) => a.route_code.localeCompare(b.route_code)).map(route => (
                   <SelectItem key={route.id} value={route.id}>
                     {route.route_code} — {route.route_name}
                   </SelectItem>
