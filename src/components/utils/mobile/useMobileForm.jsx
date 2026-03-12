@@ -166,6 +166,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     console.log(`[useMobileForm] Date changed: ${currentDateRef.current} → ${newDate}`);
     currentDateRef.current = newDate;
 
+    // Reset isInitialMount so first autosave after hydration on new date is skipped
+    isInitialMount.current = true;
+
     // 1. Reset form fields for new date — start clean, server draft will overwrite
     setFormData(makeEmptyForm(newDate));
     setDienstRegels([]);
