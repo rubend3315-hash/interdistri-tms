@@ -233,12 +233,12 @@ export default function TIModelRoutesTab({ customerId }) {
           <p className="text-2xl font-bold text-slate-900">{contractRoutes.length}</p>
         </div>
         <div className="bg-white rounded-lg border p-3">
-          <p className="text-xs text-slate-600 mb-1">Totaal stops</p>
-          <p className="text-2xl font-bold text-slate-900">{totalStops}</p>
-        </div>
-        <div className="bg-white rounded-lg border p-3">
           <p className="text-xs text-slate-600 mb-1">Gem. stops/route</p>
           <p className="text-2xl font-bold text-slate-900">{avgStopsPerRoute.toFixed(1)}</p>
+        </div>
+        <div className="bg-white rounded-lg border p-3">
+          <p className="text-xs text-slate-600 mb-1">Totaal stops</p>
+          <p className="text-2xl font-bold text-slate-900">{totalStops}</p>
         </div>
         <div className="bg-white rounded-lg border p-3">
           <p className="text-xs text-slate-600 mb-1">Totaal stuks</p>
