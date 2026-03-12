@@ -75,12 +75,18 @@ export default function TIModelRoutesTab({ customerId }) {
    toggleStatusMutation.mutate({ id: route.id, is_active: !route.is_active });
   };
 
-  const avgNormValue = routes.length > 0
-    ? (routes.reduce((sum, r) => sum + (r.calculated_norm_per_hour || 0), 0) / routes.length)
+  const filteredRoutes = statusFilter === "active"
+    ? routes.filter(r => r.is_active !== false)
+    : statusFilter === "inactive"
+      ? routes.filter(r => r.is_active === false)
+      : routes;
+
+  const avgNormValue = filteredRoutes.length > 0
+    ? (filteredRoutes.reduce((sum, r) => sum + (r.calculated_norm_per_hour || 0), 0) / filteredRoutes.length)
     : 0;
 
-  const totalStops = routes.reduce((sum, r) => sum + (r.number_of_stops || 0), 0);
-  const totalParcels = routes.reduce((sum, r) => sum + (r.number_of_parcels || 0), 0);
+  const totalStops = filteredRoutes.reduce((sum, r) => sum + (r.number_of_stops || 0), 0);
+  const totalParcels = filteredRoutes.reduce((sum, r) => sum + (r.number_of_parcels || 0), 0);
 
   const exportToPDF = async () => {
     const doc = new jsPDF({
