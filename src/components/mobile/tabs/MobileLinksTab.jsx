@@ -18,11 +18,11 @@ export default function MobileLinksTab() {
             </div>
             <ExternalLink className="w-4 h-4 text-slate-400" />
           </a>
-          <a href="https://werknemer.loket.nl" target="_blank" rel="noopener noreferrer"
+          <a href="https://mijn.loket.nl" target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100">
             <div className="flex items-center gap-2">
               <User className="w-5 h-5 text-blue-600" />
-              <span className="text-sm font-medium">Werknemersloket</span>
+              <span className="text-sm font-medium">Mijnloket</span>
             </div>
             <ExternalLink className="w-4 h-4 text-slate-400" />
           </a>
