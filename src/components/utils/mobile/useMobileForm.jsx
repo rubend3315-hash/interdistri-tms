@@ -102,8 +102,8 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       return;
     }
 
-    setIsSaving(true);
     const timer = setTimeout(async () => {
+      setIsSaving(true);
       try {
         // 1. Save to localStorage (instant)
         const key = getStorageKey(formData.date);
