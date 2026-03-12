@@ -20,18 +20,11 @@ export default function TIRekenmodule() {
   const [aantalStops, setAantalStops] = useState("");
   const [rijtijdMinuten, setRijtijdMinuten] = useState(20);
   const [opstarttijdMinuten, setOpstarttijdMinuten] = useState(10);
-  const [routeFilter, setRouteFilter] = useState("active");
 
-  const { data: allTiRoutes = [], isLoading } = useQuery({
+  const { data: tiRoutes = [], isLoading } = useQuery({
     queryKey: ['tiModelRoutes'],
-    queryFn: () => base44.entities.TIModelRoute.list(),
+    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true }),
   });
-
-  const tiRoutes = useMemo(() => {
-    if (routeFilter === "active") return allTiRoutes.filter(r => r.is_active !== false);
-    if (routeFilter === "inactive") return allTiRoutes.filter(r => r.is_active === false);
-    return allTiRoutes;
-  }, [allTiRoutes, routeFilter]);
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
