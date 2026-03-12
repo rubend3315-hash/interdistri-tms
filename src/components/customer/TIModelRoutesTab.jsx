@@ -11,6 +11,7 @@ import TIModelRouteForm from "./TIModelRouteForm";
 export default function TIModelRoutesTab({ customerId }) {
   const [showForm, setShowForm] = useState(false);
   const [editingRoute, setEditingRoute] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("active");
   const queryClient = useQueryClient();
 
   const { data: routes = [] } = useQuery({
