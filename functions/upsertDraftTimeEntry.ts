@@ -80,7 +80,12 @@ Deno.serve(async (req) => {
         }
       }
     } else {
-      // 3. Geen bestaande entry → maak nieuw aan
+      // 3. Geen bestaande entry → alleen aanmaken als er inhoudelijke data is
+      const hasContent = entryData.start_time || entryData.end_time;
+      if (!hasContent) {
+        console.log(`[upsertDraft] Skipped creation — no start_time or end_time for employee=${employee_id} date=${date}`);
+        return Response.json({ success: true, id: null, skipped: true });
+      }
       const created = await svc.entities.TimeEntry.create({
         ...entryData,
         status: 'Concept',
