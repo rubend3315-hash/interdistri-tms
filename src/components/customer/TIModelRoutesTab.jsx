@@ -227,14 +227,18 @@ export default function TIModelRoutesTab({ customerId }) {
   return (
     <div className="space-y-4">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         <div className="bg-white rounded-lg border p-3">
-          <p className="text-xs text-slate-600 mb-1">Totaal ritten</p>
-          <p className="text-2xl font-bold text-slate-900">{routes.length}</p>
+          <p className="text-xs text-slate-600 mb-1">Contractritten</p>
+          <p className="text-2xl font-bold text-slate-900">{contractRoutes.length}</p>
         </div>
         <div className="bg-white rounded-lg border p-3">
           <p className="text-xs text-slate-600 mb-1">Totaal stops</p>
           <p className="text-2xl font-bold text-slate-900">{totalStops}</p>
+        </div>
+        <div className="bg-white rounded-lg border p-3">
+          <p className="text-xs text-slate-600 mb-1">Gem. stops/route</p>
+          <p className="text-2xl font-bold text-slate-900">{avgStopsPerRoute.toFixed(1)}</p>
         </div>
         <div className="bg-white rounded-lg border p-3">
           <p className="text-xs text-slate-600 mb-1">Totaal stuks</p>
