@@ -68,6 +68,7 @@ import Dashboard from './pages/Dashboard';
 import DataMigration from './pages/DataMigration';
 import DeploymentStatus from './pages/DeploymentStatus';
 import Documents from './pages/Documents';
+import DraftCleanup from './pages/DraftCleanup';
 import EditTimeEntry from './pages/EditTimeEntry';
 import EmployeeReport from './pages/EmployeeReport';
 import Employees from './pages/Employees';
@@ -116,7 +117,6 @@ import Trips from './pages/Trips';
 import Trust from './pages/Trust';
 import Users from './pages/Users';
 import Vehicles from './pages/Vehicles';
-import DraftCleanup from './pages/DraftCleanup';
 import __Layout from './Layout.jsx';
 
 
@@ -142,6 +142,7 @@ export const PAGES = {
     "DataMigration": DataMigration,
     "DeploymentStatus": DeploymentStatus,
     "Documents": Documents,
+    "DraftCleanup": DraftCleanup,
     "EditTimeEntry": EditTimeEntry,
     "EmployeeReport": EmployeeReport,
     "Employees": Employees,
@@ -190,7 +191,6 @@ export const PAGES = {
     "Trust": Trust,
     "Users": Users,
     "Vehicles": Vehicles,
-    "DraftCleanup": DraftCleanup,
 }
 
 export const pagesConfig = {

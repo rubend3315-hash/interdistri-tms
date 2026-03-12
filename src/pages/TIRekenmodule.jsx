@@ -20,6 +20,7 @@ export default function TIRekenmodule() {
   const [aantalStops, setAantalStops] = useState("");
   const [rijtijdMinuten, setRijtijdMinuten] = useState(20);
   const [opstarttijdMinuten, setOpstarttijdMinuten] = useState(10);
+  const [routeFilter, setRouteFilter] = useState("active");
 
   const { data: tiRoutes = [], isLoading } = useQuery({
     queryKey: ['tiModelRoutes'],
