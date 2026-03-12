@@ -649,34 +649,58 @@ Deno.serve(async (req) => {
     const yr = isoYear(payload.date);
 
     // ========================================
-    // 7. CREATE TIMEENTRY DIRECTLY AS "Ingediend"
+    // 7. UPSERT TIMEENTRY: Update existing draft OR create new
     // ========================================
-    // No Concept→Ingediend two-step. UNIQUE constraint on submission_id
-    // prevents duplicate creation. If a race condition causes a duplicate key
-    // error, we treat it as an idempotent hit.
+    // Strategy: If a Concept draft exists for this employee+date, update it
+    // to "Ingediend" instead of creating a new record. This prevents
+    // orphaned drafts and overlap-validation failures.
+    // UNIQUE constraint on submission_id still prevents true duplicates.
     const tCreate = Date.now();
     let te;
+    const primaryDraft = existingDrafts.length > 0 ? existingDrafts[0] : null;
+
+    const timeEntryData = {
+      employee_id: empId,
+      date: payload.date,
+      end_date: endD,
+      week_number: wk,
+      year: yr,
+      start_time: payload.start_time,
+      end_time: payload.end_time,
+      break_minutes: brk,
+      break_manual: isManualBreak,
+      break_staffel_id: breakStaffelId,
+      calculated_dienst_minutes: dienstMinutes,
+      total_hours: totalHours,
+      shift_type: st,
+      notes: (payload.notes || '').slice(0, 2000) || null,
+      status: 'Ingediend',
+      signature_url: payload.signature_url || null,
+      submission_id: payload.submission_id,
+    };
 
     try {
-      te = await svc.entities.TimeEntry.create({
-        employee_id: empId,
-        date: payload.date,
-        end_date: endD,
-        week_number: wk,
-        year: yr,
-        start_time: payload.start_time,
-        end_time: payload.end_time,
-        break_minutes: brk,
-        break_manual: isManualBreak,
-        break_staffel_id: breakStaffelId,
-        calculated_dienst_minutes: dienstMinutes,
-        total_hours: totalHours,
-        shift_type: st,
-        notes: (payload.notes || '').slice(0, 2000) || null,
-        status: 'Ingediend',
-        signature_url: payload.signature_url || null,
-        submission_id: payload.submission_id,
-      });
+      if (primaryDraft) {
+        // UPDATE existing Concept draft → Ingediend
+        console.log(`[SUBMIT] Updating existing Concept draft ${primaryDraft.id} → Ingediend`);
+        await svc.entities.TimeEntry.update(primaryDraft.id, timeEntryData);
+        te = { ...primaryDraft, ...timeEntryData, id: primaryDraft.id };
+        console.log(`[SUBMIT] TimeEntry submitted using existing draft: ${primaryDraft.id}`);
+
+        // Safety net: delete any remaining duplicate Concept drafts for same employee+date
+        for (let i = 1; i < existingDrafts.length; i++) {
+          try {
+            await svc.entities.TimeEntry.delete(existingDrafts[i].id);
+            console.log(`[SUBMIT] Deleted duplicate Concept draft: ${existingDrafts[i].id}`);
+          } catch (delErr) {
+            console.error(`[SUBMIT] Failed to delete duplicate draft ${existingDrafts[i].id}: ${delErr.message}`);
+          }
+        }
+      } else {
+        // No draft exists → create new TimeEntry as Ingediend
+        console.log(`[SUBMIT] No Concept draft found, creating new TimeEntry as Ingediend`);
+        te = await svc.entities.TimeEntry.create(timeEntryData);
+      }
     } catch (createErr) {
       // Check if this is a UNIQUE constraint violation (duplicate submission_id)
       const errMsg = (createErr.message || '').toLowerCase();
