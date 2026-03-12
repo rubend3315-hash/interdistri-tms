@@ -22,10 +22,16 @@ export default function TIRekenmodule() {
   const [opstarttijdMinuten, setOpstarttijdMinuten] = useState(10);
   const [routeFilter, setRouteFilter] = useState("active");
 
-  const { data: tiRoutes = [], isLoading } = useQuery({
+  const { data: allTiRoutes = [], isLoading } = useQuery({
     queryKey: ['tiModelRoutes'],
-    queryFn: () => base44.entities.TIModelRoute.filter({ status: 'Actief' }),
+    queryFn: () => base44.entities.TIModelRoute.list(),
   });
+
+  const tiRoutes = useMemo(() => {
+    if (routeFilter === "active") return allTiRoutes.filter(r => r.is_active !== false);
+    if (routeFilter === "inactive") return allTiRoutes.filter(r => r.is_active === false);
+    return allTiRoutes;
+  }, [allTiRoutes, routeFilter]);
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
