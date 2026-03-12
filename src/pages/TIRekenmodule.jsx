@@ -99,23 +99,10 @@ export default function TIRekenmodule() {
           <h1 className="text-3xl font-bold text-slate-900">TI Rekenmodule</h1>
           <p className="text-slate-500 mt-1">Bereken rittijd en besteltijd op basis van modelroutes en aantal stops</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Select value={routeFilter} onValueChange={(v) => { setRouteFilter(v); setSelectedRouteId(""); }}>
-            <SelectTrigger className="w-48">
-              <span className="text-slate-500 mr-1">Status:</span>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Actief</SelectItem>
-              <SelectItem value="inactive">Inactief</SelectItem>
-              <SelectItem value="all">Alles</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={handleReset}>
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Reset
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleReset}>
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Reset
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
