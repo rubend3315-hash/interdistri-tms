@@ -108,7 +108,8 @@ export default function TIRekenmodule() {
         </div>
         <div className="flex items-center gap-3">
           <Select value={routeFilter} onValueChange={(v) => { setRouteFilter(v); setSelectedRouteId(""); }}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-48">
+              <span className="text-slate-500 mr-1">Status:</span>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
