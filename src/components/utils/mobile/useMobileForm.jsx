@@ -102,6 +102,10 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
       return;
     }
 
+    // GUARD: skip autosave if form has no meaningful content
+    const hasContent = !!(formData.start_time || formData.end_time || dienstRegels.length > 0);
+    if (!hasContent) return;
+
     const timer = setTimeout(async () => {
       setIsSaving(true);
       try {
