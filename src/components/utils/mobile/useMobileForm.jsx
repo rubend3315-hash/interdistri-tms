@@ -342,6 +342,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         // Only mark loaded if we're still on the same date
         if (currentDateRef.current === targetDate) {
           setDraftLoaded(true);
+          isInitialMount.current = false;
         }
       }
     };
