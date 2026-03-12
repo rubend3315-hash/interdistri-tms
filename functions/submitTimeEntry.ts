@@ -553,7 +553,7 @@ Deno.serve(async (req) => {
     }
 
     // ========================================
-    // 5. OVERLAP DETECTION + BREAK STAFFEL (PARALLEL)
+    // 5. OVERLAP DETECTION + BREAK STAFFEL + DRAFT LOOKUP (PARALLEL)
     // ========================================
     const entryEnd = payload.end_date || payload.date;
     const queryStart = addDays(payload.date, -1);
@@ -561,18 +561,25 @@ Deno.serve(async (req) => {
     const isManualBreak = payload.break_manual === true;
     const endD = payload.end_date || null;
 
-    console.log('[STEP] Fetching entries + break schedules for employee:', empId);
+    console.log('[STEP] Fetching entries + break schedules + draft lookup for employee:', empId);
     const tOverlap = Date.now();
 
-    const [rangedCandidates, breakSchedulesRaw] = await Promise.all([
+    const [rangedCandidates, breakSchedulesRaw, existingDrafts] = await Promise.all([
       svc.entities.TimeEntry.filter({
         employee_id: empId,
         status: { $in: ['Ingediend', 'Goedgekeurd'] },
         date: { $gte: queryStart, $lte: queryEnd },
       }),
       isManualBreak ? Promise.resolve([]) : getBreakSchedules(svc),
+      // Lookup existing Concept draft for this employee+date
+      svc.entities.TimeEntry.filter({
+        employee_id: empId,
+        date: payload.date,
+        status: 'Concept',
+      }),
     ]);
     perf.overlap_and_break_fetch = Date.now() - tOverlap;
+    console.log(`[STEP] Found ${existingDrafts.length} Concept draft(s) for employee=${empId} date=${payload.date}`);
     console.log('[STEP] Found', rangedCandidates.length, 'entries in range', queryStart, '-', queryEnd);
 
     console.log('[OVERLAP_CHECK]', JSON.stringify({
