@@ -96,9 +96,8 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     if (!draftLoaded) return;
     if (!currentEmployee?.id) return;
 
-    // Skip the first autosave trigger after mount or date change (data hydration)
+    // Skip autosave until draft hydration is complete (mount + date change)
     if (isInitialMount.current) {
-      isInitialMount.current = false;
       return;
     }
 
