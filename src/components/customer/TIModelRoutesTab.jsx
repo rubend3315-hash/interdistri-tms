@@ -242,7 +242,20 @@ export default function TIModelRoutesTab({ customerId }) {
 
       {/* Header with Buttons */}
       <div className="flex justify-between items-center">
-        <h3 className="font-semibold text-slate-900">TI Model Ritten</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="font-semibold text-slate-900">TI Model Ritten</h3>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-36 h-8 text-xs">
+              <Filter className="w-3 h-3 mr-1 text-slate-400" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Actief</SelectItem>
+              <SelectItem value="inactive">Inactief</SelectItem>
+              <SelectItem value="all">Alles</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={exportToPDF}>
             <Download className="w-4 h-4 mr-2" />
