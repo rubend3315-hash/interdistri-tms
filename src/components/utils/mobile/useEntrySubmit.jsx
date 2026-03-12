@@ -214,6 +214,7 @@ export function useEntrySubmit() {
       const regels = dienstRegels || [...(trips || []).map(t => ({ ...t, type: 'rit' })), ...(standplaatsWerk || []).map(s => ({ ...s, type: 'standplaats' }))];
       if (regels.length > 0) {
         await base44.functions.invoke('saveDraftServiceRules', {
+          time_entry_id: result.id,
           employee_id: employeeId,
           date: formData.date,
           dienstRegels: regels,
