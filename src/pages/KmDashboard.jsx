@@ -24,53 +24,7 @@ export default function KmDashboard() {
 
   const cOpts = { staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
-  const { data: trips = [], isLoading: loadingTrips } = useQuery({
-    queryKey: ['km-trips', dateRange.from, dateRange.to],
-    queryFn: () => base44.entities.Trip.filter({
-      date: { $gte: dateRange.from, $lte: dateRange.to }
-    }, '-date', 500),
-    ...cOpts,
-  });
-
-  const { data: vehicles = [] } = useQuery({
-    queryKey: ['vehicles'],
-    queryFn: () => base44.entities.Vehicle.list(),
-    ...cOpts,
-  });
-
-  const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list(),
-    ...cOpts,
-  });
-
-  const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list(),
-    staleTime: 24 * 60 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-
-  const vehicleMap = useMemo(() => {
-    const m = {};
-    vehicles.forEach(v => { m[v.id] = v; });
-    return m;
-  }, [vehicles]);
-
-  const employeeMap = useMemo(() => {
-    const m = {};
-    employees.forEach(e => { m[e.id] = e; });
-    return m;
-  }, [employees]);
-
-  const customerMap = useMemo(() => {
-    const m = {};
-    customers.forEach(c => { m[c.id] = c; });
-    return m;
-  }, [customers]);
-
-  // Compute date range
+  // Compute date range (must be before queries that use it)
   const dateRange = useMemo(() => {
     if (periodType === "day") {
       return { from: selectedDate, to: selectedDate };
