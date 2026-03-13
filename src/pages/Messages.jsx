@@ -22,6 +22,7 @@ import {
   Bell,
   FileText
 } from "lucide-react";
+import { toast } from "sonner";
 import EmailTemplateManager from "../components/email/EmailTemplateManager";
 import SendEmailDialog from "../components/email/SendEmailDialog";
 import EmailLogOverview from "../components/email/EmailLogOverview";
