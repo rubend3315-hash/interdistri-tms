@@ -14,6 +14,7 @@ const menuItems = [
   { id: "declaratie", title: "Declaraties", desc: "Dien kosten in", icon: FileText, color: "text-purple-600 bg-purple-50" },
   { id: "overzicht", title: "Overzicht", desc: "Goedgekeurde diensten", icon: CheckCircle, color: "text-teal-600 bg-teal-50" },
   { id: "planning", title: "Mijn Planning", desc: "Bekijk je weekrooster", icon: CalendarDays, color: "text-indigo-600 bg-indigo-50" },
+  { id: "berichten", title: "Berichten", desc: "Lees en stuur berichten", icon: Mail, color: "text-orange-600 bg-orange-50" },
   { id: "links", title: "Snelle Links", desc: "Handige links", icon: ExternalLink, color: "text-slate-600 bg-slate-100" },
 ];
 
