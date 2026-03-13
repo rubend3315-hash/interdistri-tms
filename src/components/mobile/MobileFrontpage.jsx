@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
   Clock, Truck, ClipboardCheck, FileText,
-  CheckCircle, CalendarDays, ExternalLink, ChevronRight
+  CheckCircle, CalendarDays, Mail, ExternalLink, ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
