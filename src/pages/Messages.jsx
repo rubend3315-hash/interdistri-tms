@@ -69,6 +69,10 @@ export default function Messages() {
         content: "",
         priority: "Normaal"
       });
+      toast.success("Bericht verzonden");
+    },
+    onError: (error) => {
+      toast.error("Bericht versturen mislukt: " + (error?.message || "Onbekende fout"));
     }
   });
 
