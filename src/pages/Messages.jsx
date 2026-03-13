@@ -92,13 +92,19 @@ export default function Messages() {
 
   const handleSendMessage = () => {
     if (!newMessage.to_employee_id || !newMessage.content) {
-      alert('Selecteer een ontvanger en voer een bericht in');
+      toast.error('Selecteer een ontvanger en voer een bericht in');
+      return;
+    }
+
+    const fromId = currentEmployee?.id || currentUser?.id;
+    if (!fromId) {
+      toast.error('Kan afzender niet bepalen. Probeer opnieuw in te loggen.');
       return;
     }
 
     createMessageMutation.mutate({
       ...newMessage,
-      from_employee_id: currentEmployee?.id
+      from_employee_id: fromId
     });
   };
 
