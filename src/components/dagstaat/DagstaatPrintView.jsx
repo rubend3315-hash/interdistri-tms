@@ -207,7 +207,7 @@ export default function DagstaatPrintView({
         {/* Ritten & Kilometerstanden */}
         <div className="mb-2">
           <h2 style={{ fontSize: "7pt", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px", color: "#475569" }}>
-            Rittenregistratie & Kilometerstanden <span style={{ fontWeight: "normal", fontSize: "6pt", textTransform: "none", letterSpacing: "normal", color: "#64748b" }}>— De rittijden moeten tussen de starttijd en eindtijd tijdregistratie liggen.</span>
+            Standplaatswerk, Rittenregistratie & Kilometerstanden <span style={{ fontWeight: "normal", fontSize: "6pt", textTransform: "none", letterSpacing: "normal", color: "#64748b" }}>— De rittijden moeten tussen de starttijd en eindtijd tijdregistratie liggen.</span>
           </h2>
           <table className="dagstaat-table w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
