@@ -8,19 +8,23 @@ function timeMin(t) {
   return h * 60 + m;
 }
 
-// Format minutes since midnight → "HH:MM"
+// Format minutes → "HH:MM" (handles values > 1440)
 function minToTime(m) {
   const normalized = ((m % 1440) + 1440) % 1440;
-  const h = Math.floor(normalized / 60);
-  const min = normalized % 60;
-  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  return `${String(Math.floor(normalized / 60)).padStart(2, '0')}:${String(normalized % 60).padStart(2, '0')}`;
 }
 
-// Normalize a time relative to an anchor (dienst start).
-// Maps all times into a 24h window [anchor, anchor+1440).
-function normalizeToAnchor(anchor, timeMinVal) {
-  const offset = ((timeMinVal - anchor) % 1440 + 1440) % 1440;
-  return anchor + offset;
+// Parse "YYYY-MM-DD" + "HH:MM" → absolute minutes from epoch-ish reference
+// Using day-offset from a fixed reference so we get a linear timeline
+function toAbsoluteMinutes(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return null;
+  const mins = timeMin(timeStr);
+  if (mins === null) return null;
+  const d = new Date(dateStr + 'T12:00:00Z');
+  // Days since 2020-01-01 as a stable reference
+  const ref = new Date('2020-01-01T12:00:00Z');
+  const dayOffset = Math.round((d - ref) / 86400000);
+  return dayOffset * 1440 + mins;
 }
 
 Deno.serve(async (req) => {
@@ -50,78 +54,105 @@ Deno.serve(async (req) => {
   }
 
   const te = timeEntries[0];
-  const teStart = timeMin(te.start_time);
-  const teEnd = timeMin(te.end_time);
+  const teStartMin = timeMin(te.start_time);
+  const teEndMin = timeMin(te.end_time);
 
-  if (teStart === null || teEnd === null) {
-    return Response.json({ gaps: [], message: 'TimeEntry has no valid start/end time' });
+  if (teStartMin === null || teEndMin === null) {
+    return Response.json({ gaps: [], total_gap_minutes: 0, message: 'TimeEntry has no valid start/end time' });
   }
 
-  // Use dienst-start as anchor for overnight normalization
-  const anchor = teStart;
-  const teEndN = normalizeToAnchor(anchor, teEnd);
+  // Build absolute start/end for the TimeEntry
+  const teStartAbs = toAbsoluteMinutes(te.date, te.start_time);
+  // end_date determines the calendar day of end_time
+  const teEndDate = te.end_date || te.date;
+  let teEndAbs = toAbsoluteMinutes(teEndDate, te.end_time);
+  // Safety: if end <= start (no end_date set but overnight), add 1 day
+  if (teEndAbs <= teStartAbs) teEndAbs += 1440;
 
-  // Build unified activity list with normalized times
+  // Build unified activity list with absolute datetime minutes
   const activities = [];
 
   for (const trip of trips) {
     const s = timeMin(trip.departure_time);
     const e = timeMin(trip.arrival_time);
     if (s === null || e === null) continue;
-    const sN = normalizeToAnchor(anchor, s);
-    let eN = normalizeToAnchor(anchor, e);
-    if (eN <= sN) eN += 1440;
-    activities.push({ start: sN, end: eN, type: 'trip', label: trip.route_name || 'Rit' });
+
+    const actDate = trip.date || te.date;
+    const startAbs = toAbsoluteMinutes(actDate, trip.departure_time);
+    let endAbs = toAbsoluteMinutes(actDate, trip.arrival_time);
+    // If end_time < start_time, activity crosses midnight → +1 day
+    if (endAbs <= startAbs) endAbs += 1440;
+
+    activities.push({ startAbs, endAbs, type: 'trip', label: trip.route_name || 'Rit' });
   }
 
   for (const spw of spwRecords) {
     const s = timeMin(spw.start_time);
     const e = timeMin(spw.end_time);
     if (s === null || e === null) continue;
-    const sN = normalizeToAnchor(anchor, s);
-    let eN = normalizeToAnchor(anchor, e);
-    if (eN <= sN) eN += 1440;
-    activities.push({ start: sN, end: eN, type: 'standplaats', label: 'Standplaatswerk' });
+
+    const actDate = spw.date || te.date;
+    const startAbs = toAbsoluteMinutes(actDate, spw.start_time);
+    let endAbs = toAbsoluteMinutes(actDate, spw.end_time);
+    if (endAbs <= startAbs) endAbs += 1440;
+
+    activities.push({ startAbs, endAbs, type: 'standplaats', label: 'Standplaatswerk' });
   }
 
-  // Sort by start time
-  activities.sort((a, b) => a.start - b.start);
+  // Sort chronologically by absolute start datetime
+  activities.sort((a, b) => a.startAbs - b.startAbs);
 
-  // Detect gaps
-  const gaps = [];
-  let cursor = anchor; // start at dienst-start
-
+  // Merge overlapping/adjacent activities into consolidated intervals
+  const merged = [];
   for (const act of activities) {
-    if (act.start > cursor + 5) {
-      // Gap found: cursor → act.start
+    if (merged.length === 0) {
+      merged.push({ start: act.startAbs, end: act.endAbs });
+    } else {
+      const last = merged[merged.length - 1];
+      if (act.startAbs <= last.end) {
+        // Overlapping or adjacent → extend
+        last.end = Math.max(last.end, act.endAbs);
+      } else {
+        merged.push({ start: act.startAbs, end: act.endAbs });
+      }
+    }
+  }
+
+  // Detect gaps (>5 minutes)
+  const gaps = [];
+  let cursor = teStartAbs;
+
+  for (const interval of merged) {
+    const gapDuration = interval.start - cursor;
+    if (gapDuration > 5) {
       gaps.push({
         start: minToTime(cursor),
-        end: minToTime(act.start),
-        duration_minutes: act.start - cursor,
+        end: minToTime(interval.start),
+        duration_minutes: gapDuration,
       });
     }
-    // Advance cursor to the end of this activity (or keep if already further)
-    if (act.end > cursor) {
-      cursor = act.end;
-    }
+    cursor = Math.max(cursor, interval.end);
   }
 
-  // Check gap between last activity and dienst-end
-  if (teEndN > cursor + 5) {
+  // Gap between last activity and dienst-end
+  const finalGap = teEndAbs - cursor;
+  if (finalGap > 5) {
     gaps.push({
       start: minToTime(cursor),
-      end: minToTime(teEndN),
-      duration_minutes: teEndN - cursor,
+      end: minToTime(teEndAbs),
+      duration_minutes: finalGap,
     });
   }
 
-  console.log(`[detectTimeEntryGaps] TE=${time_entry_id} dienst=${te.start_time}-${te.end_time} activities=${activities.length} gaps=${gaps.length}`);
+  const totalGapMinutes = gaps.reduce((sum, g) => sum + g.duration_minutes, 0);
+
+  console.log(`[detectTimeEntryGaps] TE=${time_entry_id} dienst=${te.start_time}-${te.end_time} (${te.date}→${teEndDate}) activities=${activities.length} merged=${merged.length} gaps=${gaps.length} total_gap=${totalGapMinutes}min`);
 
   return Response.json({
     time_entry_id,
     dienst: { start: te.start_time, end: te.end_time, date: te.date, end_date: te.end_date },
     activity_count: activities.length,
     gaps,
-    total_gap_minutes: gaps.reduce((sum, g) => sum + g.duration_minutes, 0),
+    total_gap_minutes: totalGapMinutes,
   });
 });
