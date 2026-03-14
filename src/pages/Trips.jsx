@@ -411,7 +411,26 @@ export default function Trips() {
     if (selectedTrip) {
       updateMutation.mutate({ id: selectedTrip.id, data: submitData });
     } else {
-      createMutation.mutate(submitData);
+      // Auto-link to TimeEntry if departure_time and arrival_time are set
+      if (submitData.employee_id && submitData.date && submitData.departure_time && submitData.arrival_time && !submitData.time_entry_id) {
+        base44.functions.invoke('linkActivityToTimeEntry', {
+          employee_id: submitData.employee_id,
+          activity_date: submitData.date,
+          activity_start_time: submitData.departure_time,
+          activity_end_time: submitData.arrival_time,
+          existing_time_entry_id: submitData.time_entry_id || null,
+        }).then(res => {
+          if (res?.data?.time_entry_id) {
+            submitData.time_entry_id = res.data.time_entry_id;
+          }
+          createMutation.mutate(submitData);
+        }).catch(() => {
+          // If auto-link fails, still create the trip without link
+          createMutation.mutate(submitData);
+        });
+      } else {
+        createMutation.mutate(submitData);
+      }
     }
   };
 

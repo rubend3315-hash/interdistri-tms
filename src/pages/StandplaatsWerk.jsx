@@ -272,7 +272,26 @@ export default function StandplaatsWerk() {
     if (selectedRecord) {
       updateMutation.mutate({ id: selectedRecord.id, data: submitData });
     } else {
-      createMutation.mutate(submitData);
+      // Auto-link to TimeEntry if start_time and end_time are set
+      if (submitData.employee_id && submitData.date && submitData.start_time && submitData.end_time && !submitData.time_entry_id) {
+        base44.functions.invoke('linkActivityToTimeEntry', {
+          employee_id: submitData.employee_id,
+          activity_date: submitData.date,
+          activity_start_time: submitData.start_time,
+          activity_end_time: submitData.end_time,
+          existing_time_entry_id: submitData.time_entry_id || null,
+        }).then(res => {
+          if (res?.data?.time_entry_id) {
+            submitData.time_entry_id = res.data.time_entry_id;
+          }
+          createMutation.mutate(submitData);
+        }).catch(() => {
+          // If auto-link fails, still create the record without link
+          createMutation.mutate(submitData);
+        });
+      } else {
+        createMutation.mutate(submitData);
+      }
     }
   };
 
