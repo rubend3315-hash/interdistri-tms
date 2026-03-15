@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertTriangle, Shield, Smartphone, Bug, Lightbulb, Clock, Wifi, Eye, RefreshCw, FileText, ChevronDown, ChevronRight } from "lucide-react";
+import { AlertTriangle, Shield, Smartphone, Bug, Lightbulb, Clock, Wifi, Eye, RefreshCw, FileText, ChevronDown, ChevronRight, Signal, Star } from "lucide-react";
 import { useState } from "react";
 
 const Section = ({ icon: Icon, title, children, defaultOpen = false }) => {
