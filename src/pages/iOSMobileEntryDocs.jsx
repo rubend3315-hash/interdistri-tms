@@ -132,6 +132,17 @@ export default function IOSMobileEntryDocs() {
           risk="Middel"
           improvement="visibilitychange listener die sessie valideert wanneer tab weer zichtbaar wordt."
         />
+
+        <IssueCard
+          title={<span className="flex items-center gap-2">📶 "Ghost Offline" — Netwerk lijkt actief maar is het niet</span>}
+          description="De iPhone rapporteert navigator.onLine = true terwijl er feitelijk geen werkende verbinding is. API-requests worden verzonden maar hangen 30-60 seconden of falen met timeout. Komt zeer frequent voor bij chauffeurs die constant wisselen tussen WiFi, 4G/5G, tunnels en industriegebieden."
+          cause="iOS probeert bij netwerkwisseling (WiFi → 4G, slechte dekking → herstel) de verbinding te herstellen. Tijdens dit herstelproces blijft navigator.onLine op true staan, maar TCP/HTTP-verbindingen falen. Safari houdt oude requests soms vast in een wachtrij totdat de verbinding daadwerkelijk hersteld is."
+          logs="REQUEST_START zonder response, gevolgd door CLIENT_TIMEOUT of NETWORK_ERROR na 25-60s. Geen directe 401/auth fout."
+          impact="App 'reageert niet' vanuit gebruikersperspectief. Kan leiden tot dubbele submits als gebruiker herhaaldelijk probeert. Wordt vaak gemeld als 'de app werkte niet' terwijl het een netwerkprobleem is."
+          handling="useEntrySubmit heeft een 25s timeout (safariHardenedFetch). Bij timeout wordt NETWORK_ERROR of CLIENT_TIMEOUT gelogd. Gebruiker krijgt een foutmelding."
+          risk="Hoog"
+          improvement="Pre-submit connectivity check: een snelle HEAD request naar een known endpoint om te verifiëren dat er daadwerkelijk verbinding is vóórdat de zware submit-flow start. Bij falen: duidelijke melding 'Geen verbinding — controleer je internet' in plaats van een langzame timeout."
+        />
       </Section>
 
       {/* 2. iOS/Safari browsergedrag analyse */}
