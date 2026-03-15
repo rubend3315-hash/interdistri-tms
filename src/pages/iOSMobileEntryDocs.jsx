@@ -346,8 +346,76 @@ export default function IOSMobileEntryDocs() {
         />
       </Section>
 
-      {/* 6. Praktische samenvatting voor support */}
-      <Section icon={FileText} title="6. Praktische samenvatting voor support & debugging" defaultOpen={true}>
+      {/* 6. iOS Risicoanalyse — overzicht alle bekende risico's */}
+      <Section icon={Signal} title="6. iOS Risicoanalyse — Alle bekende risico's voor MobileEntry">
+        <p className="text-sm text-slate-600 mb-4">
+          Overzicht van de 6 belangrijkste iOS-specifieke risico's voor de MobileEntry chauffeurs-app, gerangschikt op waarschijnlijkheid.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="bg-slate-100 border-b-2 border-slate-300">
+                <th className="text-left py-2.5 px-3 font-semibold text-slate-900">#</th>
+                <th className="text-left py-2.5 px-3 font-semibold text-slate-900">Probleem</th>
+                <th className="text-left py-2.5 px-3 font-semibold text-slate-900">Kans</th>
+                <th className="text-left py-2.5 px-3 font-semibold text-slate-900">Impact</th>
+                <th className="text-left py-2.5 px-3 font-semibold text-slate-900">Status</th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-700">
+              <tr className="border-b border-slate-200">
+                <td className="py-2.5 px-3 font-mono text-xs">1</td>
+                <td className="py-2.5 px-3 font-medium">Safari tab freeze</td>
+                <td className="py-2.5 px-3">⭐⭐⭐⭐⭐</td>
+                <td className="py-2.5 px-3"><span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-xs font-semibold">Middel</span></td>
+                <td className="py-2.5 px-3 text-xs">Gedocumenteerd. Visibilitychange check op backlog.</td>
+              </tr>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <td className="py-2.5 px-3 font-mono text-xs">2</td>
+                <td className="py-2.5 px-3 font-medium">Sessies verlopen (ongemerkt)</td>
+                <td className="py-2.5 px-3">⭐⭐⭐⭐⭐</td>
+                <td className="py-2.5 px-3"><span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-xs font-semibold">Middel</span></td>
+                <td className="py-2.5 px-3 text-xs">Afgevangen in useMobileSubmit. Redirect na 3s.</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="py-2.5 px-3 font-mono text-xs">3</td>
+                <td className="py-2.5 px-3 font-medium">Netwerk wissel (WiFi ↔ 4G)</td>
+                <td className="py-2.5 px-3">⭐⭐⭐⭐</td>
+                <td className="py-2.5 px-3"><span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-xs font-semibold">Middel</span></td>
+                <td className="py-2.5 px-3 text-xs">Deels afgevangen via timeout. Geen proactieve detectie.</td>
+              </tr>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <td className="py-2.5 px-3 font-mono text-xs">4</td>
+                <td className="py-2.5 px-3 font-medium">Ghost Offline netwerk</td>
+                <td className="py-2.5 px-3">⭐⭐⭐⭐</td>
+                <td className="py-2.5 px-3"><span className="px-2 py-0.5 bg-red-100 text-red-800 rounded text-xs font-semibold">Hoog</span></td>
+                <td className="py-2.5 px-3 text-xs">Gedocumenteerd. Pre-submit check op backlog.</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="py-2.5 px-3 font-mono text-xs">5</td>
+                <td className="py-2.5 px-3 font-medium">JavaScript timers stoppen</td>
+                <td className="py-2.5 px-3">⭐⭐⭐</td>
+                <td className="py-2.5 px-3"><span className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs font-semibold">Laag</span></td>
+                <td className="py-2.5 px-3 text-xs">Bekend gedrag. Geen directe impact op submit-flow.</td>
+              </tr>
+              <tr className="bg-slate-50">
+                <td className="py-2.5 px-3 font-mono text-xs">6</td>
+                <td className="py-2.5 px-3 font-medium">Home screen PWA gedrag</td>
+                <td className="py-2.5 px-3">⭐⭐⭐</td>
+                <td className="py-2.5 px-3"><span className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs font-semibold">Laag</span></td>
+                <td className="py-2.5 px-3 text-xs">App wordt niet als PWA gedistribueerd. Beperkt risico.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 text-[13px] text-blue-800">
+          <strong>Toelichting kans:</strong> De kans-score is gebaseerd op hoe vaak het probleem voorkomt bij chauffeurs die de MobileEntry app dagelijks gebruiken op iOS/Safari in een mobiel netwerk-omgeving (magazijn WiFi → 4G/5G → slechte dekking → tunnels/industriegebieden).
+        </div>
+      </Section>
+
+      {/* 7. Praktische samenvatting voor support */}
+      <Section icon={FileText} title="7. Praktische samenvatting voor support & debugging" defaultOpen={true}>
         <div className="space-y-4 text-sm">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-semibold text-blue-900 mb-2">Hoe herken je een iOS sessie-probleem?</h4>
