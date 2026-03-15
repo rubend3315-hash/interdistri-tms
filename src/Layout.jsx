@@ -401,6 +401,7 @@ export default function Layout({ children, currentPageName }) {
       'MobileHandleiding': '__public__',
       'DailyPayrollExportDocs': '__public__',
       'MobileEntryFiles': PERMISSIONS.GOVERNANCE_MANAGE,
+      'iOSMobileEntryDocs': PERMISSIONS.GOVERNANCE_MANAGE,
       'SecureDownload': '__public__',
 
       // Mobiel
