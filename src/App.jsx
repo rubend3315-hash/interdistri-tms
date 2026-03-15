@@ -59,6 +59,11 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/iOSMobileEntryDocs" element={
+        <LayoutWrapper currentPageName="iOSMobileEntryDocs">
+          <IOSMobileEntryDocs />
+        </LayoutWrapper>
+      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
