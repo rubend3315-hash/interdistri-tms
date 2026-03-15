@@ -334,6 +334,16 @@ export default function IOSMobileEntryDocs() {
           title="UX verbetering: visuele sessie-indicator"
           description="Toon een subtiele indicator (bijv. in de MobileHeader) wanneer de sessie binnenkort verloopt, of wanneer de laatste sessiecheck langer dan X minuten geleden is."
         />
+        <BacklogItem
+          priority="hoog"
+          title="Pre-submit connectivity check (Ghost Offline)"
+          description="Voeg een snelle HEAD request toe aan een known endpoint vóór de submit-flow start. Bij timeout (bijv. 3s): blokkeer submit en toon duidelijke melding 'Geen verbinding — controleer je internet'. Voorkomt langzame timeouts en dubbele submit-pogingen bij chauffeurs met wisselende dekking."
+        />
+        <BacklogItem
+          priority="middel"
+          title="Netwerk recovery detectie"
+          description="Luister naar 'online' events en navigator.connection change events. Na detectie van netwerkwisseling, voer automatisch een lichtgewicht connectivity check uit. Toon banner 'Verbinding hersteld' of 'Geen verbinding' in MobileHeader."
+        />
       </Section>
 
       {/* 6. Praktische samenvatting voor support */}
