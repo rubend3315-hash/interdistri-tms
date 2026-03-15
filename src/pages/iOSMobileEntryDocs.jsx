@@ -468,8 +468,18 @@ export default function IOSMobileEntryDocs() {
                 </tr>
                 <tr className="border-b border-slate-200">
                   <td className="py-1.5">FAILED + CLIENT_TIMEOUT</td>
-                  <td className="py-1.5">Trage verbinding</td>
+                  <td className="py-1.5">Trage verbinding / Ghost Offline</td>
                   <td className="py-1.5">Betere verbinding, opnieuw proberen</td>
+                </tr>
+                <tr className="border-b border-slate-200">
+                  <td className="py-1.5">Request hangt 30-60s</td>
+                  <td className="py-1.5">Ghost Offline (navigator.onLine=true maar geen verbinding)</td>
+                  <td className="py-1.5">WiFi uit/aan, wacht op 4G, opnieuw proberen</td>
+                </tr>
+                <tr className="border-b border-slate-200">
+                  <td className="py-1.5">"App reageert niet"</td>
+                  <td className="py-1.5">Ghost Offline of tab freeze</td>
+                  <td className="py-1.5">Check logs: timeout=netwerk, geen logs=tab freeze</td>
                 </tr>
                 <tr>
                   <td className="py-1.5">Gebruiker: "data kwijt"</td>
