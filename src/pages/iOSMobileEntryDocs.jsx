@@ -63,7 +63,7 @@ export default function IOSMobileEntryDocs() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900">MobileEntry – iOS / Safari Behaviour, Issues & Improvements</h1>
-            <p className="text-sm text-slate-500">Technische referentie · Versie 1.0 · {new Date().toLocaleDateString('nl-NL')}</p>
+            <p className="text-sm text-slate-500">Technische referentie · Versie 1.1 · {new Date().toLocaleDateString('nl-NL')}</p>
           </div>
         </div>
         <p className="text-sm text-slate-600 mt-3 leading-relaxed">
