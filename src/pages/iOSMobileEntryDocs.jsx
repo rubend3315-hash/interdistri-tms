@@ -428,6 +428,18 @@ export default function IOSMobileEntryDocs() {
             </ul>
           </div>
 
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h4 className="font-semibold text-purple-900 mb-2">Hoe herken je een Ghost Offline netwerkprobleem?</h4>
+            <ul className="list-disc ml-5 space-y-1 text-purple-800">
+              <li>MobileEntrySubmissionLog met <strong>CLIENT_TIMEOUT</strong> of <strong>NETWORK_ERROR</strong> (niet AUTH_ERROR)</li>
+              <li>Hoge latency (25s+) in <code className="bg-purple-100 px-1 rounded text-xs">latency_ms</code> — de request hing lang</li>
+              <li>User-Agent bevat "iPhone" en gebruiker was onderweg (chauffeur)</li>
+              <li>Gebruiker meldt "de app reageerde niet" of "het duurde heel lang"</li>
+              <li>Geen 401 fout — sessie was nog geldig, alleen het netwerk niet</li>
+              <li>Soms gevolgd door succesvolle submit kort erna (verbinding hersteld)</li>
+            </ul>
+          </div>
+
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <h4 className="font-semibold text-green-900 mb-2">Wat te doen bij een support-melding?</h4>
             <ol className="list-decimal ml-5 space-y-1 text-green-800">
