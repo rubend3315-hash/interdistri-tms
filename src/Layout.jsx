@@ -255,6 +255,7 @@ const menuItems = [
       { name: "Handleiding Mobiele App", icon: Smartphone, page: "MobileHandleiding" },
       { name: "Payroll Export Docs", icon: FileSpreadsheet, page: "DailyPayrollExportDocs" },
       { name: "MobileEntry Bestanden", icon: Smartphone, page: "MobileEntryFiles" },
+      { name: "iOS/Safari Issues", icon: Smartphone, page: "iOSMobileEntryDocs" },
     ]
   },
   {
