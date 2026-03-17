@@ -4,7 +4,7 @@
 // ║ Auth: User session (any authenticated employee)                  ║
 // ║ v3 — re-deployed 2026-03-01                                     ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   try {
