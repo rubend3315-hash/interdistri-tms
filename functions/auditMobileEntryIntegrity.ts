@@ -115,8 +115,14 @@ Deno.serve(async (req) => {
       }
     }
 
+    const onlyStaleDrafts = report.length > 0 && report.every(r => r.issues.length === 1 && r.issues[0].startsWith('Stale draft'));
+    const hasOrphans = trueOrphanTrips.length > 0 || trueOrphanSpw.length > 0;
+    const overallStatus = report.length === 0 && !hasOrphans ? 'OK'
+      : onlyStaleDrafts && !hasOrphans ? 'WARNING'
+      : 'ISSUES_FOUND';
+
     const result = {
-      status: report.length === 0 && trueOrphanTrips.length === 0 && trueOrphanSpw.length === 0 ? 'OK' : 'ISSUES_FOUND',
+      status: overallStatus,
       since_date: sinceDate,
       total_entries_checked: entries.length,
       inconsistent_entries: report,
