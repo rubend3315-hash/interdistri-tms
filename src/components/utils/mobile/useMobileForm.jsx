@@ -10,6 +10,9 @@ import { applyPostnlOffset, formatMinutes } from "./timePolicy";
 export function useMobileForm({ isMultiDay = false, currentEmployee, businessMode = "HANDMATIG" }) {
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
+  // Guard: prevents autosave from creating new Concepts after a successful submit
+  const isSubmittedRef = useRef(false);
+
   // Per-datum storage key
   const getStorageKey = (date) => {
     const empId = currentEmployee?.id || 'unknown';
