@@ -387,6 +387,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     setFormData(makeEmptyForm(todayStr));
     currentDateRef.current = todayStr;
     draftTimeEntryIdRef.current = null;
+    isSubmittedRef.current = false; // Reset guard so new entries can autosave
     try { localStorage.removeItem(getStorageKey(dateToReset)); } catch {}
   }, [todayStr, isMultiDay, formData.date, currentEmployee?.id]);
 
