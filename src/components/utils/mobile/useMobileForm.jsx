@@ -3,10 +3,6 @@ import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { applyPostnlOffset, formatMinutes } from "./timePolicy";
 
-// Shared ref so useMobileSubmit can set it after successful submit
-let _isSubmittedRef = null;
-export function getIsSubmittedRef() { return _isSubmittedRef; }
-
 /**
  * useMobileForm — Form state, localStorage autosave, and server draft loading.
  * Date-aware: switching date in WeekHeader resets form + loads correct draft.
