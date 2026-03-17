@@ -415,8 +415,8 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      trip_ids: createdTripIds,
-      standplaats_werk_ids: createdSpwIds,
+      trip_ids: finalTripIds,
+      standplaats_werk_ids: finalSpwIds,
       perf,
     });
 
