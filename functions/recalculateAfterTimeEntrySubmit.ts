@@ -100,29 +100,74 @@ Deno.serve(async (req) => {
     console.log(`[RECALC] Starting for TE=${time_entry_id} sub=${submission_id}`);
 
     const perf = {};
-    const createdTripIds = [];
-    const createdSpwIds = [];
+    const finalTripIds = [];
+    const finalSpwIds = [];
 
     // ========================================
-    // 1. CREATE TRIPS (with km continuity check)
+    // 1. IDEMPOTENT TRIPS: fetch existing → update or create
     // ========================================
     const tTrips = Date.now();
-    if (Array.isArray(trips) && trips.length > 0) {
-      // Collect unique vehicle IDs for km continuity check
-      const vehicleIds = [...new Set(trips.filter(t => t.vehicle_id).map(t => t.vehicle_id))];
-      
-      // Fetch last known trip per vehicle (for km continuity) — single bulk query
+
+    // 1a. Fetch ALL existing trips linked to this time_entry_id
+    const existingTrips = await svc.entities.Trip.filter({ time_entry_id });
+    console.log(`[RECALC] Found ${existingTrips.length} existing trips for TE=${time_entry_id}`);
+
+    if (existingTrips.length > 0) {
+      // 1b. UPDATE existing trips to Voltooid + enrich with km warnings
+      const vehicleIds = [...new Set(existingTrips.filter(t => t.vehicle_id).map(t => t.vehicle_id))];
       const lastTripByVehicle = {};
       if (vehicleIds.length > 0) {
         try {
           const allVehicleTrips = await svc.entities.Trip.filter({
             vehicle_id: { $in: vehicleIds },
           }, '-date', 50);
-          // Determine the most recent trip per vehicle in memory
+          for (const vt of allVehicleTrips) {
+            if (!vt.vehicle_id || vt.time_entry_id === time_entry_id) continue;
+            const ex = lastTripByVehicle[vt.vehicle_id];
+            if (!ex || vt.date > ex.date || (vt.date === ex.date && vt.created_date > ex.created_date)) {
+              lastTripByVehicle[vt.vehicle_id] = vt;
+            }
+          }
+        } catch (e) { console.error('[KM_CHECK] Failed to fetch vehicle history:', e.message); }
+      }
+
+      for (const et of existingTrips) {
+        // Calculate km warning for existing trip
+        let kmWarning = null;
+        const totalKm = (et.start_km != null && et.end_km != null) ? Math.max(0, Number(et.end_km) - Number(et.start_km)) : null;
+        const warnings = [];
+        if (totalKm != null && totalKm > 400) warnings.push(`Rode afwijking: ${totalKm} km gereden (>400 km)`);
+        else if (totalKm != null && totalKm > 250) warnings.push(`Gele afwijking: ${totalKm} km gereden (>250 km)`);
+        if (et.vehicle_id && et.start_km != null && lastTripByVehicle[et.vehicle_id]) {
+          const lt = lastTripByVehicle[et.vehicle_id];
+          if (lt.end_km != null) {
+            const gap = Math.abs(Number(et.start_km) - Number(lt.end_km));
+            if (gap > 50) warnings.push(`KM-gat: begin ${et.start_km} vs vorige eind ${lt.end_km} (verschil ${gap} km)`);
+          }
+        }
+        if (warnings.length > 0) kmWarning = warnings.join(' | ');
+
+        await svc.entities.Trip.update(et.id, {
+          status: 'Voltooid',
+          total_km: totalKm,
+          km_warning: kmWarning,
+        });
+        finalTripIds.push(et.id);
+        console.log(`[RECALC] Updated existing trip ${et.id} → Voltooid`);
+      }
+    } else if (Array.isArray(trips) && trips.length > 0) {
+      // 1c. No existing trips — CREATE from payload (fresh submit, no drafts saved)
+      const vehicleIds = [...new Set(trips.filter(t => t.vehicle_id).map(t => t.vehicle_id))];
+      const lastTripByVehicle = {};
+      if (vehicleIds.length > 0) {
+        try {
+          const allVehicleTrips = await svc.entities.Trip.filter({
+            vehicle_id: { $in: vehicleIds },
+          }, '-date', 50);
           for (const vt of allVehicleTrips) {
             if (!vt.vehicle_id) continue;
-            const existing = lastTripByVehicle[vt.vehicle_id];
-            if (!existing || vt.date > existing.date || (vt.date === existing.date && vt.created_date > existing.created_date)) {
+            const ex = lastTripByVehicle[vt.vehicle_id];
+            if (!ex || vt.date > ex.date || (vt.date === ex.date && vt.created_date > ex.created_date)) {
               lastTripByVehicle[vt.vehicle_id] = vt;
             }
           }
@@ -130,30 +175,18 @@ Deno.serve(async (req) => {
       }
 
       for (const trip of trips) {
-        // KM continuity warning
         let kmWarning = null;
         const totalKm = (trip.start_km != null && trip.end_km != null) ? Math.max(0, Number(trip.end_km) - Number(trip.start_km)) : null;
-        
         const warnings = [];
-        
-        // Check 1: absolute km distance
-        if (totalKm != null && totalKm > 400) {
-          warnings.push(`Rode afwijking: ${totalKm} km gereden (>400 km)`);
-        } else if (totalKm != null && totalKm > 250) {
-          warnings.push(`Gele afwijking: ${totalKm} km gereden (>250 km)`);
-        }
-        
-        // Check 2: km continuity with previous trip on same vehicle
+        if (totalKm != null && totalKm > 400) warnings.push(`Rode afwijking: ${totalKm} km gereden (>400 km)`);
+        else if (totalKm != null && totalKm > 250) warnings.push(`Gele afwijking: ${totalKm} km gereden (>250 km)`);
         if (trip.vehicle_id && trip.start_km != null && lastTripByVehicle[trip.vehicle_id]) {
-          const lastTrip = lastTripByVehicle[trip.vehicle_id];
-          if (lastTrip.end_km != null) {
-            const gap = Math.abs(Number(trip.start_km) - Number(lastTrip.end_km));
-            if (gap > 50) {
-              warnings.push(`KM-gat: begin ${trip.start_km} vs vorige eind ${lastTrip.end_km} (verschil ${gap} km, voertuig ${trip.vehicle_id}, vorige rit ${lastTrip.date})`);
-            }
+          const lt = lastTripByVehicle[trip.vehicle_id];
+          if (lt.end_km != null) {
+            const gap = Math.abs(Number(trip.start_km) - Number(lt.end_km));
+            if (gap > 50) warnings.push(`KM-gat: begin ${trip.start_km} vs vorige eind ${lt.end_km} (verschil ${gap} km, voertuig ${trip.vehicle_id}, vorige rit ${lt.date})`);
           }
         }
-        
         if (warnings.length > 0) kmWarning = warnings.join(' | ');
 
         const t = await svc.entities.Trip.create({
@@ -176,19 +209,31 @@ Deno.serve(async (req) => {
           status: 'Voltooid',
           km_warning: kmWarning,
         });
-        createdTripIds.push(t.id);
-        
-        // Update lastTripByVehicle for sequential trips on same vehicle in same submission
+        finalTripIds.push(t.id);
         if (trip.vehicle_id) lastTripByVehicle[trip.vehicle_id] = { end_km: trip.end_km != null ? Number(trip.end_km) : null, date };
       }
     }
-    perf.trips_create_ms = Date.now() - tTrips;
+    perf.trips_ms = Date.now() - tTrips;
 
     // ========================================
-    // 2. CREATE STANDPLAATSWERK
+    // 2. IDEMPOTENT STANDPLAATSWERK: fetch existing → update or create
     // ========================================
     const tSpw = Date.now();
-    if (Array.isArray(standplaats_werk) && standplaats_werk.length > 0) {
+
+    const existingSpw = await svc.entities.StandplaatsWerk.filter({ time_entry_id });
+    console.log(`[RECALC] Found ${existingSpw.length} existing SPW for TE=${time_entry_id}`);
+
+    if (existingSpw.length > 0) {
+      // 2b. UPDATE existing SPW to Definitief
+      for (const es of existingSpw) {
+        if (es.status !== 'Definitief') {
+          await svc.entities.StandplaatsWerk.update(es.id, { status: 'Definitief' });
+          console.log(`[RECALC] Updated existing SPW ${es.id} → Definitief`);
+        }
+        finalSpwIds.push(es.id);
+      }
+    } else if (Array.isArray(standplaats_werk) && standplaats_werk.length > 0) {
+      // 2c. No existing SPW — CREATE from payload
       for (const spw of standplaats_werk) {
         if (spw.customer_id || spw.activity_id) {
           const s = await svc.entities.StandplaatsWerk.create({
@@ -201,41 +246,35 @@ Deno.serve(async (req) => {
             notes: (spw.notes || '').slice(0, 2000) || null,
             status: 'Definitief',
           });
-          createdSpwIds.push(s.id);
+          finalSpwIds.push(s.id);
         }
       }
     }
-    perf.spw_create_ms = Date.now() - tSpw;
+    perf.spw_ms = Date.now() - tSpw;
 
     // ========================================
-    // 2b. CLEANUP DRAFT ACTIVITIES (Gepland trips + Concept SPW)
+    // 2d. CLEANUP ORPHAN DRAFTS (different time_entry_id)
     // ========================================
     const tDraftCleanup = Date.now();
     try {
-      // Cleanup draft trips (status=Gepland) for this employee+date
+      // Orphan draft trips: same employee+date, Gepland status, different time_entry_id
       const draftTrips = await svc.entities.Trip.filter({
-        employee_id,
-        date,
-        status: 'Gepland',
+        employee_id, date, status: 'Gepland',
       });
-      if (draftTrips.length > 0) {
-        console.log(`[RECALC] Cleaning up ${draftTrips.length} draft trips (Gepland) for employee=${employee_id} date=${date}`);
-        for (const dt of draftTrips) {
-          await safeDelete(svc.entities.Trip, dt.id, 'draft-trip');
-        }
+      const orphanTrips = draftTrips.filter(dt => dt.time_entry_id !== time_entry_id);
+      if (orphanTrips.length > 0) {
+        console.log(`[RECALC] Cleaning up ${orphanTrips.length} orphan draft trips`);
+        for (const dt of orphanTrips) await safeDelete(svc.entities.Trip, dt.id, 'orphan-trip');
       }
 
-      // Cleanup draft SPW (status=Concept) for this employee+date
+      // Orphan draft SPW: same employee+date, Concept status, different time_entry_id
       const draftSpw = await svc.entities.StandplaatsWerk.filter({
-        employee_id,
-        date,
-        status: 'Concept',
+        employee_id, date, status: 'Concept',
       });
-      if (draftSpw.length > 0) {
-        console.log(`[RECALC] Cleaning up ${draftSpw.length} draft SPW (Concept) for employee=${employee_id} date=${date}`);
-        for (const ds of draftSpw) {
-          await safeDelete(svc.entities.StandplaatsWerk, ds.id, 'draft-spw');
-        }
+      const orphanSpw = draftSpw.filter(ds => ds.time_entry_id !== time_entry_id);
+      if (orphanSpw.length > 0) {
+        console.log(`[RECALC] Cleaning up ${orphanSpw.length} orphan draft SPW`);
+        for (const ds of orphanSpw) await safeDelete(svc.entities.StandplaatsWerk, ds.id, 'orphan-spw');
       }
     } catch (draftCleanupErr) {
       console.error('[RECALC DRAFT CLEANUP] Non-critical:', draftCleanupErr.message);
