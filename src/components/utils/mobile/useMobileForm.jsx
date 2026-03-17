@@ -113,6 +113,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     if (!hasContent) return;
 
     const timer = setTimeout(async () => {
+      // Double-check guard inside timer callback (timer may have been queued before ref was set)
+      if (isSubmittedRef.current) return;
+
       setIsSaving(true);
       try {
         // 1. Save to localStorage (instant)
