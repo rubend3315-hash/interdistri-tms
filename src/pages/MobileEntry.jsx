@@ -95,6 +95,7 @@ export default function MobileEntry({ currentUser }) {
     resetForm: form.resetForm, setActiveTab, queryClient: data.queryClient,
     geenRit: MOBILE_ENTRY_V2 ? geenRit : false,
     geenRitReden: MOBILE_ENTRY_V2 ? geenRitReden : "",
+    isSubmittedRef: form.isSubmittedRef,
   });
 
   const menuItems = useMemo(() =>
