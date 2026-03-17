@@ -49,6 +49,17 @@ Deno.serve(async (req) => {
       }
     }
 
+    // SAFETY NET: Block draft creation if an Ingediend/Goedgekeurd entry already exists for this employee+date
+    const committedEntries = await svc.entities.TimeEntry.filter({
+      employee_id,
+      date,
+      status: { $in: ['Ingediend', 'Goedgekeurd'] },
+    });
+    if (committedEntries.length > 0) {
+      console.log(`[upsertDraft] BLOCKED — already committed entry exists for employee=${employee_id} date=${date} (${committedEntries[0].id}, status=${committedEntries[0].status})`);
+      return Response.json({ success: true, id: null, blocked: true, reason: 'committed_entry_exists' });
+    }
+
     // 1. Zoek alle bestaande Concept entries voor employee_id + date
     const existing = await svc.entities.TimeEntry.filter({
       employee_id,
