@@ -15,7 +15,7 @@ export function useMobileSubmit({
   formData, trips, standplaatsWerk, dienstRegels = [], signature, setSignature,
   currentEmployee, isMultiDay, resetForm, setActiveTab, queryClient,
   geenRit = false, geenRitReden = "",
-  isSubmittedRef = null,
+  markSubmitted = null,
 }) {
   const { submitEntry, saveDraft, isSubmitting, submittingRef } = useEntrySubmit();
 
@@ -184,7 +184,7 @@ export function useMobileSubmit({
 
     if (result.success) {
       // CRITICAL: Block autosave BEFORE resetForm to prevent race condition
-      if (isSubmittedRef) isSubmittedRef.current = true;
+      if (markSubmitted) markSubmitted();
 
       const hasDamage = trips.some(t => t.damage_occurred === "Ja");
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });

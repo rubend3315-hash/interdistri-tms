@@ -13,6 +13,11 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   // Guard: prevents autosave from creating new Concepts after a successful submit
   const isSubmittedRef = useRef(false);
 
+  // Expose as function call — no cross-hook ref dependency
+  const markSubmitted = useCallback(() => {
+    isSubmittedRef.current = true;
+  }, []);
+
   // Per-datum storage key
   const getStorageKey = (date) => {
     const empId = currentEmployee?.id || 'unknown';
@@ -405,6 +410,6 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     storageKey: getStorageKey(formData.date),
     generateAutoRit,
     autoRitDismissed,
-    isSubmittedRef,
+    markSubmitted,
   };
 }
