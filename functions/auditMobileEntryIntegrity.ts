@@ -20,6 +20,10 @@ Deno.serve(async (req) => {
     const payload = await req.json().catch(() => ({}));
     const sinceDate = payload.since_date || '2026-03-15';
 
+    const staleCutoff = 24 * 60 * 60 * 1000; // 24 hours
+    const now = Date.now();
+    const isRecent = (dateStr) => dateStr && (now - new Date(dateStr).getTime()) < staleCutoff;
+
     console.log(`[AUDIT] Starting integrity audit since ${sinceDate}`);
 
     // 1. Fetch all TimeEntries since date
@@ -33,6 +37,11 @@ Deno.serve(async (req) => {
 
     // 2. Check each TimeEntry for consistency
     for (const te of entries) {
+      // Skip active drafts (updated within last 24h) — normal autosave behavior
+      if (te.status === 'Concept' && isRecent(te.updated_date)) {
+        continue;
+      }
+
       const [trips, spw] = await Promise.all([
         svc.entities.Trip.filter({ time_entry_id: te.id }),
         svc.entities.StandplaatsWerk.filter({ time_entry_id: te.id }),
@@ -53,9 +62,9 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Concept with linked records (potential ghost draft)
-      if (te.status === 'Concept' && (trips.length > 0 || spw.length > 0)) {
-        issues.push(`Concept heeft ${trips.length} trips en ${spw.length} SPW gekoppeld`);
+      // Stale Concept (>24h old)
+      if (te.status === 'Concept') {
+        issues.push(`Stale draft (>24h) — laatste update: ${te.updated_date || 'onbekend'}`);
       }
 
       // No trips AND no SPW for submitted entry (unless notes contain GEEN_RIT)
