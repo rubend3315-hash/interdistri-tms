@@ -99,6 +99,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     if (!draftLoaded) return;
     if (!currentEmployee?.id) return;
 
+    // GUARD: block autosave after successful submit (prevents orphaned Concepts)
+    if (isSubmittedRef.current) return;
+
     // Skip the first autosave trigger after mount or date change (data hydration)
     if (isInitialMount.current) {
       isInitialMount.current = false;
