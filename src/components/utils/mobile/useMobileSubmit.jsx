@@ -14,7 +14,8 @@ import { createClientSubmitLogger } from "./clientSubmitLogger";
 export function useMobileSubmit({
   formData, trips, standplaatsWerk, dienstRegels = [], signature, setSignature,
   currentEmployee, isMultiDay, resetForm, setActiveTab, queryClient,
-  geenRit = false, geenRitReden = ""
+  geenRit = false, geenRitReden = "",
+  isSubmittedRef = null,
 }) {
   const { submitEntry, saveDraft, isSubmitting, submittingRef } = useEntrySubmit();
 
