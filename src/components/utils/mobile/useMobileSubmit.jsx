@@ -183,6 +183,9 @@ export function useMobileSubmit({
     }
 
     if (result.success) {
+      // CRITICAL: Block autosave BEFORE resetForm to prevent race condition
+      if (isSubmittedRef) isSubmittedRef.current = true;
+
       const hasDamage = trips.some(t => t.damage_occurred === "Ja");
       queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
 
