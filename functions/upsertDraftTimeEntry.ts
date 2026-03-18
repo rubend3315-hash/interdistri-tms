@@ -4,7 +4,7 @@
 // ║ Auth: User session (any authenticated employee)                  ║
 // ║ v3 — re-deployed 2026-03-01                                     ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   try {
@@ -49,23 +49,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // SAFETY NET: Block draft creation if an Ingediend/Goedgekeurd entry already exists for this employee+date
-    const committedEntries = await svc.entities.TimeEntry.filter({
-      employee_id,
-      date,
-      status: { $in: ['Ingediend', 'Goedgekeurd'] },
-    });
+    // SINGLE QUERY: fetch all TimeEntries for employee+date, then split in-code
+    const allEntries = await svc.entities.TimeEntry.filter({ employee_id, date });
+    const committedEntries = allEntries.filter(e => e.status === 'Ingediend' || e.status === 'Goedgekeurd');
+    const existing = allEntries.filter(e => e.status === 'Concept');
+
+    // SAFETY NET: Block draft creation if an Ingediend/Goedgekeurd entry already exists
     if (committedEntries.length > 0) {
       console.log(`[upsertDraft] BLOCKED — already committed entry exists for employee=${employee_id} date=${date} (${committedEntries[0].id}, status=${committedEntries[0].status})`);
       return Response.json({ success: true, id: null, blocked: true, reason: 'committed_entry_exists' });
     }
-
-    // 1. Zoek alle bestaande Concept entries voor employee_id + date
-    const existing = await svc.entities.TimeEntry.filter({
-      employee_id,
-      date,
-      status: 'Concept',
-    });
 
     console.log(`[upsertDraft] Found ${existing.length} Concept entries for employee=${employee_id} date=${date}`);
 
