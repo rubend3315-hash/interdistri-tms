@@ -18,6 +18,16 @@
 
 export const CHANGELOG = [
   {
+    version: "2.1.1",
+    date: "2026-03-18",
+    title: "Versiehistorie & Changelog Pagina",
+    type: "minor",
+    changes: [
+      { category: "Feature", description: "RecentChanges pagina omgebouwd naar echte code changelog met timeline, zoekfunctie en bestandsverwijzingen", files: ["pages/RecentChanges", "components/changelog/changelogData"] },
+      { category: "UI", description: "Versiehistorie toont nu alle releases met categorieën, type-badges en gewijzigde bestanden per release", files: ["pages/RecentChanges"] },
+    ],
+  },
+  {
     version: "2.1.0",
     date: "2026-02-23",
     title: "ID Document Private Storage Hardening",

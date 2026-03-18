@@ -1,7 +1,6 @@
-
-export const APP_VERSION = "2.1.0";
-export const RELEASE_DATE = "2026-02-23";
-export const RELEASE_NAME = "ID Document Private Storage Hardening";
+export const APP_VERSION = "2.1.1";
+export const RELEASE_DATE = "2026-03-18";
+export const RELEASE_NAME = "Versiehistorie & Changelog Pagina";
 
 // Security Release Tag
 export const SECURITY_VERSION = "RBAC_ENTERPRISE_2026_03";
