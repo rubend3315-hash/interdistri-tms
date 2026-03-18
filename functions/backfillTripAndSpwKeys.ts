@@ -28,7 +28,8 @@ Deno.serve(async (req) => {
     const svc = base44.asServiceRole;
     const payload = await req.json().catch(() => ({}));
     const dryRun = payload.dry_run === true;
-    const batchSize = payload.batch_size || 100;
+    const batchSize = payload.batch_size || 50;
+    const maxRecords = payload.max_records || 500; // Limit per run to avoid timeout
 
     console.log(`[BACKFILL] Starting backfill (dry_run=${dryRun}, batch_size=${batchSize})`);
 
@@ -43,7 +44,7 @@ Deno.serve(async (req) => {
     let tripOffset = 0;
     let hasMoreTrips = true;
 
-    while (hasMoreTrips) {
+    while (hasMoreTrips && result.trips.scanned < maxRecords) {
       const trips = await svc.entities.Trip.filter({}, '-created_date', batchSize, tripOffset);
       
       if (trips.length === 0) {
@@ -52,6 +53,7 @@ Deno.serve(async (req) => {
       }
 
       for (const trip of trips) {
+        if (result.trips.scanned >= maxRecords) break;
         result.trips.scanned++;
 
         // Only backfill if trip_key is missing or empty
@@ -83,7 +85,7 @@ Deno.serve(async (req) => {
     let spwOffset = 0;
     let hasMoreSpw = true;
 
-    while (hasMoreSpw) {
+    while (hasMoreSpw && result.spw.scanned < maxRecords) {
       const spwRecords = await svc.entities.StandplaatsWerk.filter({}, '-created_date', batchSize, spwOffset);
       
       if (spwRecords.length === 0) {
@@ -92,6 +94,7 @@ Deno.serve(async (req) => {
       }
 
       for (const spw of spwRecords) {
+        if (result.spw.scanned >= maxRecords) break;
         result.spw.scanned++;
 
         // Only backfill if spw_key is missing or empty
