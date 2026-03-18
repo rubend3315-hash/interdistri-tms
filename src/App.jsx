@@ -8,6 +8,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import IOSMobileEntryDocs from './pages/iOSMobileEntryDocs';
+import RecentChanges from './pages/RecentChanges';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -59,6 +60,11 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/RecentChanges" element={
+        <LayoutWrapper currentPageName="RecentChanges">
+          <RecentChanges />
+        </LayoutWrapper>
+      } />
       <Route path="/iOSMobileEntryDocs" element={
         <LayoutWrapper currentPageName="iOSMobileEntryDocs">
           <IOSMobileEntryDocs />
