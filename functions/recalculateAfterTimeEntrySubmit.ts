@@ -220,26 +220,64 @@ Deno.serve(async (req) => {
     // ========================================
     const tSpw = Date.now();
 
+    // 2a. Update any existing SPW already linked to this time_entry_id
     const existingSpw = await svc.entities.StandplaatsWerk.filter({ time_entry_id });
     console.log(`[RECALC] Found ${existingSpw.length} existing SPW for TE=${time_entry_id}`);
 
-    if (existingSpw.length > 0) {
-      // 2b. UPDATE existing SPW to Definitief
-      for (const es of existingSpw) {
-        if (es.status !== 'Definitief') {
-          await svc.entities.StandplaatsWerk.update(es.id, { status: 'Definitief' });
-          console.log(`[RECALC] Updated existing SPW ${es.id} → Definitief`);
-        }
-        finalSpwIds.push(es.id);
+    for (const es of existingSpw) {
+      if (es.status !== 'Definitief') {
+        await svc.entities.StandplaatsWerk.update(es.id, { status: 'Definitief' });
+        console.log(`[RECALC] Updated linked SPW ${es.id} → Definitief`);
       }
-    } else if (Array.isArray(standplaats_werk) && standplaats_werk.length > 0) {
-      // 2c. No existing SPW — CREATE from payload
+      finalSpwIds.push(es.id);
+    }
+
+    // 2b. Per-record matching: for each payload item, find existing by employee+date+times
+    if (Array.isArray(standplaats_werk) && standplaats_werk.length > 0) {
       for (const spw of standplaats_werk) {
-        if (spw.customer_id || spw.activity_id) {
+        if (!spw.customer_id && !spw.activity_id) continue;
+
+        const spwStartTime = isTime(spw.start_time) ? spw.start_time : null;
+        const spwEndTime = isTime(spw.end_time) ? spw.end_time : null;
+
+        // Skip if already handled in 2a (linked to this TE)
+        const alreadyLinked = existingSpw.find(es =>
+          es.start_time === spwStartTime && es.end_time === spwEndTime
+        );
+        if (alreadyLinked) {
+          console.log(`[RECALC] SPW ${alreadyLinked.id} already linked, skipping`);
+          continue;
+        }
+
+        // Search for unlinked or differently-linked match by employee+date+start+end
+        const matchFilter = { employee_id, date };
+        if (spwStartTime) matchFilter.start_time = spwStartTime;
+        if (spwEndTime) matchFilter.end_time = spwEndTime;
+        const candidates = await svc.entities.StandplaatsWerk.filter(matchFilter);
+        const match = candidates.find(c =>
+          !finalSpwIds.includes(c.id) &&
+          c.start_time === spwStartTime &&
+          c.end_time === spwEndTime
+        );
+
+        if (match) {
+          // Update existing record: claim it for this TE
+          await svc.entities.StandplaatsWerk.update(match.id, {
+            time_entry_id,
+            customer_id: spw.customer_id || match.customer_id || null,
+            project_id: spw.project_id || match.project_id || null,
+            activity_id: spw.activity_id || match.activity_id || null,
+            notes: (spw.notes || match.notes || '').slice(0, 2000) || null,
+            status: 'Definitief',
+          });
+          finalSpwIds.push(match.id);
+          console.log(`[RECALC] Claimed existing SPW ${match.id} → TE=${time_entry_id}, Definitief`);
+        } else {
+          // No match found — create new
           const s = await svc.entities.StandplaatsWerk.create({
             employee_id, time_entry_id, date,
-            start_time: isTime(spw.start_time) ? spw.start_time : null,
-            end_time: isTime(spw.end_time) ? spw.end_time : null,
+            start_time: spwStartTime,
+            end_time: spwEndTime,
             customer_id: spw.customer_id || null,
             project_id: spw.project_id || null,
             activity_id: spw.activity_id || null,
@@ -247,9 +285,34 @@ Deno.serve(async (req) => {
             status: 'Definitief',
           });
           finalSpwIds.push(s.id);
+          console.log(`[RECALC] Created new SPW ${s.id}`);
         }
       }
     }
+
+    // 2c. Cleanup duplicates: same employee+date+start_time+end_time, keep newest
+    try {
+      const allSpwForDay = await svc.entities.StandplaatsWerk.filter({ employee_id, date });
+      const seen = new Map(); // key → { id, created_date }
+      const toDelete = [];
+      // Sort by created_date DESC so first encountered = newest
+      allSpwForDay.sort((a, b) => (b.created_date || '').localeCompare(a.created_date || ''));
+      for (const s of allSpwForDay) {
+        const key = `${s.start_time || ''}|${s.end_time || ''}|${s.customer_id || ''}|${s.activity_id || ''}`;
+        if (seen.has(key)) {
+          toDelete.push(s.id);
+        } else {
+          seen.set(key, s.id);
+        }
+      }
+      if (toDelete.length > 0) {
+        console.log(`[RECALC] Cleaning up ${toDelete.length} duplicate SPW records`);
+        for (const did of toDelete) await safeDelete(svc.entities.StandplaatsWerk, did, 'dup-spw');
+      }
+    } catch (dupErr) {
+      console.error('[RECALC SPW DEDUP] Non-critical:', dupErr.message);
+    }
+
     perf.spw_ms = Date.now() - tSpw;
 
     // ========================================
