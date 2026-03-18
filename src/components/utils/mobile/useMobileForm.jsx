@@ -17,6 +17,11 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   // Expose as function call — no cross-hook ref dependency
   const markSubmitted = useCallback(() => {
     isSubmittedRef.current = true;
+    // Cancel any pending autosave timer to prevent post-submit draft calls
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
   }, []);
 
   // Per-datum storage key
