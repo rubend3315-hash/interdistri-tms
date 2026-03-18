@@ -7,7 +7,7 @@
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-const MIN_APP_VERSION = "2.1.0";
+const MIN_APP_VERSION = "2.1.1";
 
 // ============================================================
 // submitTimeEntry v7.0.0 — Draft-upsert strategy (2026-03-12)
