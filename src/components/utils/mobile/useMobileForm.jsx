@@ -98,6 +98,8 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   const draftTimeEntryIdRef = useRef(null);
   // Guard: skip autosave on initial mount and after date change (hydration cycle)
   const isInitialMount = useRef(true);
+  // Debounce ref: ensures only ONE timer is active at any time
+  const debounceRef = useRef(null);
 
   useEffect(() => {
     // CRITICAL: Don't autosave until server draft has been loaded/attempted
