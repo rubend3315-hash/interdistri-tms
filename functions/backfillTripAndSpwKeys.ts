@@ -64,6 +64,8 @@ Deno.serve(async (req) => {
             try {
               await svc.entities.Trip.update(trip.id, { trip_key });
               result.trips.updated++;
+              // Small delay to avoid rate limiting
+              await new Promise(r => setTimeout(r, 100));
             } catch (e) {
               result.trips.errors.push({ id: trip.id, error: e.message });
             }
@@ -105,6 +107,8 @@ Deno.serve(async (req) => {
             try {
               await svc.entities.StandplaatsWerk.update(spw.id, { spw_key });
               result.spw.updated++;
+              // Small delay to avoid rate limiting
+              await new Promise(r => setTimeout(r, 100));
             } catch (e) {
               result.spw.errors.push({ id: spw.id, error: e.message });
             }
