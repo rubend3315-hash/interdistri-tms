@@ -264,6 +264,7 @@ const menuItems = [
     items: [
       { name: "Deployment Status", icon: Server, page: "DeploymentStatus" },
       { name: "Draft Cleanup", icon: Wrench, page: "DraftCleanup" },
+      { name: "Versiehistorie", icon: Clock, page: "RecentChanges" },
     ]
   },
 ];
