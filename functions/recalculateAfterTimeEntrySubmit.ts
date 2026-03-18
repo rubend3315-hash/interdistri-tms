@@ -5,7 +5,7 @@
 // ║ PURPOSE: Upsert Trips/SPW, write-verify, post-commit guard      ║
 // ║ IDEMPOTENT: safe to call multiple times for same time_entry_id   ║
 // ║ NEVER affects the original SUCCESS status of the submission.     ║
-// ║ v2 — idempotent upsert — 2026-03-17                              ║
+// ║ v3 — per-record SPW matching + dedup — 2026-03-18                 ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
