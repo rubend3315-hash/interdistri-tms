@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { addToSyncQueue } from '@/components/utils/offlineStorage';
 import { createClientSubmitLogger } from './clientSubmitLogger';
 import { invokeWithRetry, checkPayloadSize } from './safariHardenedFetch';
+import { APP_VERSION } from '@/components/utils/appVersion';
 
 /**
  * useEntrySubmit — Atomic time entry submission hook.
@@ -57,6 +58,7 @@ export function useEntrySubmit() {
       const submissionId = crypto.randomUUID();
 
       const payload = {
+        appVersion: APP_VERSION,
         submission_id: submissionId,
         date: formData.date,
         end_date: formData.end_date || null,
@@ -160,6 +162,11 @@ export function useEntrySubmit() {
       if (error?.response) {
         const status = error.response.status;
         const data = error.response.data;
+        // UPDATE_REQUIRED: force reload to get latest app version
+        if (data?.error === 'UPDATE_REQUIRED') {
+          window.location.reload(true);
+          return { success: false, error: 'UPDATE_REQUIRED' };
+        }
         if (status === 409) return { success: false, error: data?.error || 'DUPLICATE_SUBMISSION', message: data?.message || 'Conflict gedetecteerd', details: data?.details || [] };
         if (status === 422) return { success: false, error: data?.error || 'VALIDATION_ERROR', message: data?.message || 'Validatiefout', details: data?.details || [] };
         if (status === 401 || status === 403) return { success: false, error: data?.error || 'UNAUTHORIZED', message: 'Sessie verlopen — log opnieuw in' };
@@ -196,6 +203,7 @@ export function useEntrySubmit() {
 
       // 1. Save TimeEntry
       const response = await base44.functions.invoke('upsertDraftTimeEntry', {
+        appVersion: APP_VERSION,
         employee_id: employeeId,
         date: formData.date,
         end_date: formData.end_date || null,
@@ -223,6 +231,11 @@ export function useEntrySubmit() {
 
       return { success: true, id: result.id };
     } catch (error) {
+      // UPDATE_REQUIRED: force reload to get latest app version
+      if (error?.response?.data?.error === 'UPDATE_REQUIRED') {
+        window.location.reload(true);
+        return { success: false, error: 'UPDATE_REQUIRED' };
+      }
       return { success: false, error: error?.message || 'Opslaan mislukt' };
     } finally {
       submittingRef.current = false;

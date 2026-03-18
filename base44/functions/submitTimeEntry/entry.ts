@@ -5,7 +5,9 @@
 // ║ DO NOT USE RAW ENTITY CALLS — USE tenantService for tenant data  ║
 // ║ Do not mix user session and service role access.                 ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+
+const MIN_APP_VERSION = "2.1.0";
 
 // ============================================================
 // submitTimeEntry v7.0.0 — Draft-upsert strategy (2026-03-12)
@@ -388,6 +390,13 @@ Deno.serve(async (req) => {
     // 2. PARSE & VALIDATE
     // ========================================
     let payload = parsedBody;
+
+    // --- APP VERSION CHECK ---
+    if (!payload || !payload.appVersion || payload.appVersion !== MIN_APP_VERSION) {
+      console.warn(`[SUBMIT] Outdated app version blocked: ${payload?.appVersion || 'missing'} (required: ${MIN_APP_VERSION})`);
+      return Response.json({ success: false, error: 'UPDATE_REQUIRED', message: 'Je gebruikt een verouderde versie van de app. Vernieuw de pagina.' }, { status: 426 });
+    }
+
     if (!payload) {
       await logSubmission(svc, {
         ...submissionLog,

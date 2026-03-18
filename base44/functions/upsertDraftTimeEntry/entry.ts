@@ -6,6 +6,8 @@
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+const MIN_APP_VERSION = "2.1.0";
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -16,6 +18,13 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
+
+    // --- APP VERSION CHECK ---
+    if (!payload.appVersion || payload.appVersion !== MIN_APP_VERSION) {
+      console.warn(`[upsertDraft] Outdated app version blocked: ${payload.appVersion || 'missing'} (required: ${MIN_APP_VERSION})`);
+      return Response.json({ success: false, error: 'UPDATE_REQUIRED', message: 'Je gebruikt een verouderde versie van de app. Vernieuw de pagina.' }, { status: 426 });
+    }
+
     const { employee_id, date } = payload;
 
     if (!employee_id || !date) {

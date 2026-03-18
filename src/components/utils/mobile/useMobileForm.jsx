@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { applyPostnlOffset, formatMinutes } from "./timePolicy";
+import { APP_VERSION } from "@/components/utils/appVersion";
 
 /**
  * useMobileForm — Form state, localStorage autosave, and server draft loading.
@@ -137,6 +138,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
 
         // 2. Save TimeEntry to server
         const upsertRes = await base44.functions.invoke('upsertDraftTimeEntry', {
+          appVersion: APP_VERSION,
           employee_id: currentEmployee.id,
           date: formData.date,
           start_time: formData.start_time || '',
@@ -173,6 +175,11 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         // 4. Only show "Concept opgeslagen" after all server writes succeed
         setLastSavedAt(Date.now());
       } catch (e) {
+        // UPDATE_REQUIRED: force reload to get latest app version
+        if (e?.response?.data?.error === 'UPDATE_REQUIRED') {
+          window.location.reload(true);
+          return;
+        }
         console.error('[useMobileForm] Autosave failed:', e?.message);
       }
       setIsSaving(false);
