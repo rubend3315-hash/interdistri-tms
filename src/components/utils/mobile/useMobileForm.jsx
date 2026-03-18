@@ -175,9 +175,9 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         // 4. Only show "Concept opgeslagen" after all server writes succeed
         setLastSavedAt(Date.now());
       } catch (e) {
-        // UPDATE_REQUIRED: force reload to get latest app version
+        // UPDATE_REQUIRED: stop autosave silently (no reload to prevent infinite loop)
         if (e?.response?.data?.error === 'UPDATE_REQUIRED') {
-          window.location.reload(true);
+          console.warn('[useMobileForm] UPDATE_REQUIRED — autosave gestopt, geen reload');
           return;
         }
         console.error('[useMobileForm] Autosave failed:', e?.message);
