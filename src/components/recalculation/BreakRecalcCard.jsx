@@ -11,12 +11,14 @@ export default function BreakRecalcCard() {
   const [dryRun, setDryRun] = useState(true);
   const [includeConcept, setIncludeConcept] = useState(true);
   const [includeIngediend, setIncludeIngediend] = useState(true);
+  const [includeGoedgekeurd, setIncludeGoedgekeurd] = useState(false);
   const [result, setResult] = useState(null);
 
   const handleExecute = async () => {
     const statuses = [];
     if (includeConcept) statuses.push("Concept");
     if (includeIngediend) statuses.push("Ingediend");
+    if (includeGoedgekeurd) statuses.push("Goedgekeurd");
     if (statuses.length === 0) return;
 
     setLoading(true);
@@ -41,8 +43,9 @@ export default function BreakRecalcCard() {
           <div className="p-4">
             <p className="text-xs font-semibold text-slate-500 mb-1">Beschrijving</p>
             <p className="text-sm text-slate-700">
-              Herberekent de pauze van alle nog niet goedgekeurde diensten op basis van de actuele pauze-staffel.
+              Herberekent de pauze van diensten op basis van de actuele pauze-staffel.
               Alleen diensten met <strong>automatische pauze</strong> (niet handmatig) worden aangepast.
+              Optioneel ook goedgekeurde diensten meenemen.
             </p>
           </div>
 
@@ -80,6 +83,13 @@ export default function BreakRecalcCard() {
                 <Checkbox checked={includeIngediend} onCheckedChange={setIncludeIngediend} />
                 <span className="text-sm text-slate-700">Ingediend</span>
               </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox checked={includeGoedgekeurd} onCheckedChange={setIncludeGoedgekeurd} />
+                <span className="text-sm text-red-700 font-medium">Goedgekeurd</span>
+              </label>
+              {includeGoedgekeurd && (
+                <p className="text-[10px] text-red-600 ml-6">⚠️ Let op: dit wijzigt reeds goedgekeurde diensten!</p>
+              )}
             </div>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -91,7 +101,7 @@ export default function BreakRecalcCard() {
               size="sm"
               className={`w-full ${dryRun ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-600 hover:bg-red-700'} text-white`}
               onClick={handleExecute}
-              disabled={loading || (!includeConcept && !includeIngediend)}
+              disabled={loading || (!includeConcept && !includeIngediend && !includeGoedgekeurd)}
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
               {loading ? "Bezig..." : dryRun ? "Simuleren" : "Definitief uitvoeren"}
