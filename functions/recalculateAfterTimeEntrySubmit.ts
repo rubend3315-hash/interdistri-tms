@@ -5,7 +5,7 @@
 // ║ PURPOSE: Upsert Trips/SPW, write-verify, post-commit guard      ║
 // ║ IDEMPOTENT: safe to call multiple times for same time_entry_id   ║
 // ║ NEVER affects the original SUCCESS status of the submission.     ║
-// ║ v3 — per-record SPW matching + dedup — 2026-03-18                 ║
+// ║ v4 — key-based matching (trip_key, spw_key) + fallback — 2026-03-18 ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
@@ -24,6 +24,15 @@ function effectiveEndDate(service) {
   const s = timeMin(service.start_time), e = timeMin(service.end_time);
   if (s !== null && e !== null && e <= s) return addDays(service.date, 1);
   return service.date;
+}
+
+// --- KEY GENERATORS ---
+function generateTripKey(employee_id, date, departure_time, arrival_time) {
+  return `${employee_id || ''}_${date || ''}_${departure_time || ''}_${arrival_time || ''}`;
+}
+
+function generateSpwKey(employee_id, date, start_time, end_time, type = 'standplaats') {
+  return `${employee_id || ''}_${date || ''}_${start_time || ''}_${end_time || ''}_${type}`;
 }
 
 function servicesOverlap(existing, incoming) {
@@ -147,10 +156,14 @@ Deno.serve(async (req) => {
         }
         if (warnings.length > 0) kmWarning = warnings.join(' | ');
 
+        // Generate trip_key if missing
+        const trip_key = et.trip_key || generateTripKey(et.employee_id, et.date, et.departure_time, et.arrival_time);
+
         await svc.entities.Trip.update(et.id, {
           status: 'Voltooid',
           total_km: totalKm,
           km_warning: kmWarning,
+          trip_key,
         });
         finalTripIds.push(et.id);
         console.log(`[RECALC] Updated existing trip ${et.id} → Voltooid`);
@@ -189,8 +202,13 @@ Deno.serve(async (req) => {
         }
         if (warnings.length > 0) kmWarning = warnings.join(' | ');
 
+        const departure_time = isTime(trip.start_time) ? trip.start_time : null;
+        const arrival_time = isTime(trip.end_time) ? trip.end_time : null;
+        const trip_key = generateTripKey(employee_id, date, departure_time, arrival_time);
+
         const t = await svc.entities.Trip.create({
           employee_id, time_entry_id, date,
+          trip_key,
           vehicle_id: trip.vehicle_id,
           customer_id: trip.customer_id || null,
           route_name: trip.route_name ? String(trip.route_name).slice(0, 200) : null,
@@ -202,8 +220,8 @@ Deno.serve(async (req) => {
           adblue_liters: trip.adblue_liters != null ? Math.max(0, Math.min(9999, Number(trip.adblue_liters) || 0)) : null,
           fuel_km: trip.fuel_km != null ? Math.max(0, Math.min(9999999, Number(trip.fuel_km) || 0)) : null,
           charging_kwh: trip.charging_kwh != null ? Math.max(0, Math.min(9999, Number(trip.charging_kwh) || 0)) : null,
-          departure_time: isTime(trip.start_time) ? trip.start_time : null,
-          arrival_time: isTime(trip.end_time) ? trip.end_time : null,
+          departure_time,
+          arrival_time,
           departure_location: (trip.departure_location || '').slice(0, 200) || null,
           notes: (trip.notes || '').slice(0, 2000) || null,
           status: 'Voltooid',
@@ -225,45 +243,53 @@ Deno.serve(async (req) => {
     console.log(`[RECALC] Found ${existingSpw.length} existing SPW for TE=${time_entry_id}`);
 
     for (const es of existingSpw) {
-      if (es.status !== 'Definitief') {
-        await svc.entities.StandplaatsWerk.update(es.id, { status: 'Definitief' });
-        console.log(`[RECALC] Updated linked SPW ${es.id} → Definitief`);
-      }
+      // Generate spw_key if missing
+      const spw_key = es.spw_key || generateSpwKey(es.employee_id, es.date, es.start_time, es.end_time, 'standplaats');
+      const updateData = { spw_key };
+      if (es.status !== 'Definitief') updateData.status = 'Definitief';
+      
+      await svc.entities.StandplaatsWerk.update(es.id, updateData);
+      console.log(`[RECALC] Updated linked SPW ${es.id} → Definitief`);
       finalSpwIds.push(es.id);
     }
 
-    // 2b. Per-record matching: for each payload item, find existing by employee+date+times
+    // 2b. Per-record matching: for each payload item, find existing by spw_key OR employee+date+times (fallback)
     if (Array.isArray(standplaats_werk) && standplaats_werk.length > 0) {
       for (const spw of standplaats_werk) {
         if (!spw.customer_id && !spw.activity_id) continue;
 
         const spwStartTime = isTime(spw.start_time) ? spw.start_time : null;
         const spwEndTime = isTime(spw.end_time) ? spw.end_time : null;
+        const spw_key = generateSpwKey(employee_id, date, spwStartTime, spwEndTime, 'standplaats');
 
         // Skip if already handled in 2a (linked to this TE)
         const alreadyLinked = existingSpw.find(es =>
-          es.start_time === spwStartTime && es.end_time === spwEndTime
+          (es.spw_key && es.spw_key === spw_key) ||
+          (es.start_time === spwStartTime && es.end_time === spwEndTime)
         );
         if (alreadyLinked) {
           console.log(`[RECALC] SPW ${alreadyLinked.id} already linked, skipping`);
           continue;
         }
 
-        // Search for unlinked or differently-linked match by employee+date+start+end
+        // Search for unlinked or differently-linked match by spw_key OR employee+date+start+end (fallback)
         const matchFilter = { employee_id, date };
         if (spwStartTime) matchFilter.start_time = spwStartTime;
         if (spwEndTime) matchFilter.end_time = spwEndTime;
         const candidates = await svc.entities.StandplaatsWerk.filter(matchFilter);
+        
+        // Priority: match by spw_key first, then fallback to time-based matching
         const match = candidates.find(c =>
           !finalSpwIds.includes(c.id) &&
-          c.start_time === spwStartTime &&
-          c.end_time === spwEndTime
+          ((c.spw_key && c.spw_key === spw_key) ||
+           (c.start_time === spwStartTime && c.end_time === spwEndTime))
         );
 
         if (match) {
-          // Update existing record: claim it for this TE
+          // Update existing record: claim it for this TE + ensure spw_key is set
           await svc.entities.StandplaatsWerk.update(match.id, {
             time_entry_id,
+            spw_key,
             customer_id: spw.customer_id || match.customer_id || null,
             project_id: spw.project_id || match.project_id || null,
             activity_id: spw.activity_id || match.activity_id || null,
@@ -271,11 +297,12 @@ Deno.serve(async (req) => {
             status: 'Definitief',
           });
           finalSpwIds.push(match.id);
-          console.log(`[RECALC] Claimed existing SPW ${match.id} → TE=${time_entry_id}, Definitief`);
+          console.log(`[RECALC] Claimed existing SPW ${match.id} → TE=${time_entry_id}, spw_key=${spw_key}, Definitief`);
         } else {
-          // No match found — create new
+          // No match found — create new with spw_key
           const s = await svc.entities.StandplaatsWerk.create({
             employee_id, time_entry_id, date,
+            spw_key,
             start_time: spwStartTime,
             end_time: spwEndTime,
             customer_id: spw.customer_id || null,
@@ -285,7 +312,7 @@ Deno.serve(async (req) => {
             status: 'Definitief',
           });
           finalSpwIds.push(s.id);
-          console.log(`[RECALC] Created new SPW ${s.id}`);
+          console.log(`[RECALC] Created new SPW ${s.id} with spw_key=${spw_key}`);
         }
       }
     }
