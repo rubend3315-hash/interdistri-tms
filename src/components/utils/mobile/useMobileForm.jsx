@@ -119,7 +119,11 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
     const hasContent = !!(formData.start_time || formData.end_time || dienstRegels.length > 0);
     if (!hasContent) return;
 
-    const timer = setTimeout(async () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(async () => {
       // Double-check guard inside timer callback (timer may have been queued before ref was set)
       if (isSubmittedRef.current) return;
 
@@ -172,8 +176,13 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         console.error('[useMobileForm] Autosave failed:', e?.message);
       }
       setIsSaving(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    }, 3000);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
   }, [formData, dienstRegels, draftLoaded, currentEmployee?.id]);
 
   // =============================================
