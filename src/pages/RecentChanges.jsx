@@ -72,17 +72,15 @@ export default function RecentChanges() {
   const [hoursBack, setHoursBack] = useState(48);
   const [expandedIds, setExpandedIds] = useState(new Set());
 
-  const cutoff = useMemo(() => subHours(new Date(), hoursBack).toISOString(), [hoursBack]);
+  const cutoff = useMemo(() => subHours(new Date(), hoursBack), [hoursBack]);
 
   const { data: logs = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ["recentChanges", hoursBack],
     queryFn: async () => {
-      const all = await base44.entities.AuditLog.filter(
-        { created_date: { $gte: cutoff } },
-        "-created_date",
-        200
-      );
-      return all;
+      const all = await base44.entities.AuditLog.list("-created_date", 200);
+      // Client-side date filter (server filter on created_date niet betrouwbaar)
+      const cutoffDate = subHours(new Date(), hoursBack);
+      return all.filter(log => new Date(log.created_date) >= cutoffDate);
     },
     refetchInterval: 30000,
   });
