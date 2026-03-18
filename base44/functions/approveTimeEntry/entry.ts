@@ -76,45 +76,6 @@ Deno.serve(async (req) => {
       if (edit_data.edit_history) {
         updatePayload.edit_history = edit_data.edit_history;
       }
-
-      // --- Break staffel recalculation if times were edited ---
-      const timesEdited = edit_data.start_time !== undefined || edit_data.end_time !== undefined
-        || edit_data.date !== undefined;
-      const isManualBreak = edit_data.break_manual === true || (edit_data.break_manual === undefined && entry.break_manual === true);
-      const finalStartTime = edit_data.start_time || entry.start_time;
-      const finalEndTime = edit_data.end_time || entry.end_time;
-      const finalDate = edit_data.date || entry.date;
-      const finalEndDate = edit_data.end_date !== undefined ? edit_data.end_date : (entry.end_date || null);
-
-      if (timesEdited && !isManualBreak && finalStartTime && finalEndTime) {
-        try {
-          const breakSchedules = await svc.entities.BreakSchedule.filter({ status: 'Actief' });
-          const [sH, sM] = finalStartTime.split(':').map(Number);
-          const [eH, eM] = finalEndTime.split(':').map(Number);
-          let dienstMin = (eH * 60 + eM) - (sH * 60 + sM);
-          if (finalEndDate && finalEndDate !== finalDate) {
-            const d1 = new Date(finalDate + 'T12:00:00Z');
-            const d2 = new Date(finalEndDate + 'T12:00:00Z');
-            dienstMin += Math.round((d2 - d1) / 864e5) * 1440;
-          } else if (dienstMin < 0) {
-            dienstMin += 1440;
-          }
-          const dienstHours = dienstMin / 60;
-          const sorted = breakSchedules.sort((a, b) => a.min_hours - b.min_hours);
-          const match = sorted.find(s => dienstHours >= s.min_hours && (s.max_hours == null || dienstHours < s.max_hours));
-          if (match) {
-            updatePayload.break_minutes = match.break_minutes;
-            updatePayload.break_staffel_id = match.id;
-            updatePayload.break_manual = false;
-            updatePayload.calculated_dienst_minutes = dienstMin;
-            const netMin = Math.max(0, dienstMin - match.break_minutes);
-            updatePayload.total_hours = Math.round(netMin / 60 * 100) / 100;
-            console.log(`[approveTE] Break recalc: ${dienstHours.toFixed(2)}h → staffel ${match.description} → ${match.break_minutes}min, total=${updatePayload.total_hours}`);
-          }
-        } catch (e) {
-          console.warn('[approveTE] Break recalc failed (non-blocking):', e?.message);
-        }
-      }
     }
 
     await svc.entities.TimeEntry.update(time_entry_id, updatePayload);

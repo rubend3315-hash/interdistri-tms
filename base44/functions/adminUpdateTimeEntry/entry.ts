@@ -5,7 +5,7 @@
 // ║ Purpose: Update TimeEntry WITH overlap validation (excl self)    ║
 // ║ Uses same overlap engine as submitTimeEntry v5.1                 ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // --- Shared overlap engine (identical to submitTimeEntry v5.1) ---
 
@@ -149,44 +149,6 @@ Deno.serve(async (req) => {
           message: overlapResult.errorMsg,
           details: [`Bestaande dienst: ${overlapResult.existingId}`]
         }, { status: 409 });
-      }
-    }
-
-    // --- Break staffel recalculation (only if times changed and not manual) ---
-    const timesChanged = (data.start_time !== undefined && data.start_time !== entry.start_time)
-      || (data.end_time !== undefined && data.end_time !== entry.end_time)
-      || (data.date !== undefined && data.date !== entry.date)
-      || (data.end_date !== undefined && data.end_date !== entry.end_date);
-
-    const isManualBreak = data.break_manual === true || (data.break_manual === undefined && entry.break_manual === true);
-
-    if (timesChanged && !isManualBreak && finalStartTime && finalEndTime) {
-      try {
-        const breakSchedules = await svc.entities.BreakSchedule.filter({ status: 'Actief' });
-        const [sH, sM] = finalStartTime.split(':').map(Number);
-        const [eH, eM] = finalEndTime.split(':').map(Number);
-        let dienstMin = (eH * 60 + eM) - (sH * 60 + sM);
-        if (finalEndDate && finalEndDate !== finalDate) {
-          const d1 = new Date(finalDate + 'T12:00:00Z');
-          const d2 = new Date(finalEndDate + 'T12:00:00Z');
-          dienstMin += Math.round((d2 - d1) / 864e5) * 1440;
-        } else if (dienstMin < 0) {
-          dienstMin += 1440;
-        }
-        const dienstHours = dienstMin / 60;
-        const sorted = breakSchedules.sort((a, b) => a.min_hours - b.min_hours);
-        const match = sorted.find(s => dienstHours >= s.min_hours && (s.max_hours == null || dienstHours < s.max_hours));
-        if (match) {
-          data.break_minutes = match.break_minutes;
-          data.break_staffel_id = match.id;
-          data.break_manual = false;
-          data.calculated_dienst_minutes = dienstMin;
-          const netMin = Math.max(0, dienstMin - match.break_minutes);
-          data.total_hours = Math.round(netMin / 60 * 100) / 100;
-          console.log(`[adminUpdate] Break recalc: ${dienstHours.toFixed(2)}h → staffel ${match.description} → ${match.break_minutes}min, total_hours=${data.total_hours}`);
-        }
-      } catch (e) {
-        console.warn('[adminUpdate] Break recalc failed (non-blocking):', e?.message);
       }
     }
 
