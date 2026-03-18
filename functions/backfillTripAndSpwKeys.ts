@@ -29,7 +29,8 @@ Deno.serve(async (req) => {
     const payload = await req.json().catch(() => ({}));
     const dryRun = payload.dry_run === true;
     const batchSize = payload.batch_size || 50;
-    const maxRecords = payload.max_records || 500; // Limit per run to avoid timeout
+    const maxRecords = payload.max_records || 200;
+    const delayMs = payload.delay_ms || 250;
 
     console.log(`[BACKFILL] Starting backfill (dry_run=${dryRun}, batch_size=${batchSize})`);
 
@@ -64,8 +65,7 @@ Deno.serve(async (req) => {
             try {
               await svc.entities.Trip.update(trip.id, { trip_key });
               result.trips.updated++;
-              // Small delay to avoid rate limiting
-              await new Promise(r => setTimeout(r, 100));
+              await new Promise(r => setTimeout(r, delayMs));
             } catch (e) {
               result.trips.errors.push({ id: trip.id, error: e.message });
             }
@@ -107,8 +107,7 @@ Deno.serve(async (req) => {
             try {
               await svc.entities.StandplaatsWerk.update(spw.id, { spw_key });
               result.spw.updated++;
-              // Small delay to avoid rate limiting
-              await new Promise(r => setTimeout(r, 100));
+              await new Promise(r => setTimeout(r, delayMs));
             } catch (e) {
               result.spw.errors.push({ id: spw.id, error: e.message });
             }
