@@ -6,7 +6,7 @@
 // ║ Do not mix user session and service role access.                 ║
 // ║ Redeployed: 2026-02-28                                           ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   try {
