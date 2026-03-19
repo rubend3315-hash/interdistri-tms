@@ -242,9 +242,11 @@ Deno.serve(async (req) => {
           })),
           long_stops_count: longStops.length,
           long_stops_total_min: longStops.reduce((s, t) => s + t.duration_min, 0),
-          long_stops_detail: longStops.map(t => ({
-            start: t.start, stop: t.stop, dur: t.duration_min, lat: t.lat, lon: t.lon
-          })),
+          long_stops_detail: longStops.map(t => {
+            const s = t.start.split('T')[1]?.slice(0,5);
+            const e = t.stop.split('T')[1]?.slice(0,5);
+            return `${s}-${e} (${t.duration_min}m) @${t.lat},${t.lon}`;
+          }),
           standplaats_stops: standplaatsStops.length,
           standplaats_detail: standplaatsStops.map(t => ({
             start: t.start, stop: t.stop, dur: t.duration_min
