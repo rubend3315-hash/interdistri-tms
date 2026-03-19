@@ -100,8 +100,8 @@ export default function TripSync() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Naiton Rittenimport</h1>
-          <p className="text-sm text-slate-500">Synchroniseer GPS-ritdata vanuit Naiton</p>
+          <h1 className="text-2xl font-bold text-slate-900">GPS Buddy Import</h1>
+          <p className="text-sm text-slate-500">Synchroniseer GPS-ritdata vanuit GPS Buddy</p>
         </div>
         <Button
           onClick={handleSync}

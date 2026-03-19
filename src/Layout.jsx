@@ -152,7 +152,7 @@ const menuItems = [
       { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
       { name: "Tijdregistratie", icon: Clock, page: "TimeTracking" },
       { name: "Goedkeuringen", icon: CheckSquare, page: "Approvals" },
-      { name: "Naiton Import", icon: RefreshCw, page: "TripSync" },
+      { name: "GPS Buddy Import", icon: RefreshCw, page: "TripSync" },
       { name: "Ritten", icon: Truck, page: "Trips" },
       { name: "Standplaatswerk", icon: Package, page: "StandplaatsWerk" },
       { name: "Planning", icon: CalendarDays, page: "Planning" },
