@@ -166,6 +166,56 @@ export default function Approvals() {
     staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false,
   });
 
+  // Fetch TripRecords (GPS Buddy) for pending entries via employee_id + date matching
+  const pendingDates = useMemo(() => {
+    const dates = new Set();
+    pendingRaw.forEach(e => { if (e.date) dates.add(e.date); });
+    return Array.from(dates);
+  }, [pendingRaw]);
+
+  const pendingEmployeeIds = useMemo(() => {
+    const ids = new Set();
+    pendingRaw.forEach(e => { if (e.employee_id) ids.add(e.employee_id); });
+    return Array.from(ids);
+  }, [pendingRaw]);
+
+  const { data: tripRecordLinks = [] } = useQuery({
+    queryKey: ['tripRecordLinks', pendingEmployeeIds, pendingDates],
+    queryFn: () => base44.entities.TripRecordLink.filter({
+      employee_id: { $in: pendingEmployeeIds },
+      date: { $in: pendingDates },
+    }),
+    enabled: pendingEmployeeIds.length > 0 && pendingDates.length > 0,
+    staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false,
+  });
+
+  const tripRecordIds = useMemo(() => tripRecordLinks.map(l => l.trip_record_id).filter(Boolean), [tripRecordLinks]);
+
+  const { data: tripRecords = [] } = useQuery({
+    queryKey: ['tripRecords-approvals', tripRecordIds],
+    queryFn: () => base44.entities.TripRecord.filter({ id: { $in: tripRecordIds } }),
+    enabled: tripRecordIds.length > 0,
+    staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false,
+  });
+
+  // Map TripRecords per employee+date for quick lookup
+  const tripRecordsByEmployeeDate = useMemo(() => {
+    const linkMap = {};
+    tripRecordLinks.forEach(l => {
+      if (!l.employee_id || !l.date || !l.trip_record_id) return;
+      const key = `${l.employee_id}_${l.date}`;
+      if (!linkMap[key]) linkMap[key] = [];
+      linkMap[key].push(l.trip_record_id);
+    });
+    const recordMap = {};
+    tripRecords.forEach(r => { recordMap[r.id] = r; });
+    const result = {};
+    for (const [key, ids] of Object.entries(linkMap)) {
+      result[key] = ids.map(id => recordMap[id]).filter(Boolean);
+    }
+    return result;
+  }, [tripRecordLinks, tripRecords]);
+
   const tripsByTimeEntry = useMemo(() => {
     const map = {};
     linkedTrips.forEach(t => {
