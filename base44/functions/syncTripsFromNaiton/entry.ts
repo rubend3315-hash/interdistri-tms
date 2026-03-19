@@ -19,6 +19,13 @@ const STANDPLAATS_LON = 3.9716;
 const STANDPLAATS_RADIUS_M = 500; // 500m radius = standplaats
 const SHORT_STOP_THRESHOLD_MIN = 5;  // >5 min telt als stilstand
 
+// PostNL depot locaties in Goes
+const DEPOT_LOCATIONS = [
+  { name: 'PostNL Sorteercentrum Goes', lat: 51.4943, lon: 3.8778 },  // Verrijn Stuartweg 5
+  { name: 'PostNL Pakketten Goes', lat: 51.4846, lon: 3.8898 },       // Columbusweg 62
+];
+const DEPOT_RADIUS_M = 300; // 300m radius = depot
+
 // Haversine distance in meters between two GPS points
 function gpsDistanceM(lat1, lon1, lat2, lon2) {
   const R = 6371000;
