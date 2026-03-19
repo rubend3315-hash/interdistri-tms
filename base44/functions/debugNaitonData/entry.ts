@@ -35,109 +35,49 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
 
     // ═══════════════════════════════════════════════════════
-    // Fetch assets, users, and trackergroups in parallel
+    // Fetch currentpositions — focus on groupsjson + personjson
     // ═══════════════════════════════════════════════════════
-    const [assetsJson, usersJson, trackergroupsJson] = await Promise.all([
-      naitonCall([{
-        name: "dataexchange_assets",
-        arguments: [{ name: "inactiveAttributes", value: true }]
-      }]),
-      naitonCall([{
-        name: "dataexchange_users"
-      }]),
-      naitonCall([{
-        name: "dataexchange_trackergroups"
-      }]).catch(e => ({ error: e.message })),
-    ]);
+    const positionsJson = await naitonCall([{
+      name: "dataexchange_currentpositions",
+      arguments: []
+    }]);
 
-    const assets = assetsJson.dataexchange_assets || [];
-    const users = usersJson.dataexchange_users || [];
+    const positions = positionsJson.dataexchange_currentpositions || [];
 
-    // ═══════════════════════════════════════════════════════
-    // Trackergroups analysis
-    // ═══════════════════════════════════════════════════════
-    let trackergroupsResult;
-    if (trackergroupsJson.error) {
-      trackergroupsResult = { status: 'ERROR', error: String(trackergroupsJson.error).slice(0, 500) };
-    } else {
-      const tgData = trackergroupsJson.dataexchange_trackergroups;
-      if (!tgData) {
-        trackergroupsResult = { status: 'NO_DATA_KEY', rawKeys: Object.keys(trackergroupsJson), rawPreview: JSON.stringify(trackergroupsJson).slice(0, 1000) };
-      } else if (!Array.isArray(tgData)) {
-        trackergroupsResult = { status: 'NOT_ARRAY', type: typeof tgData, preview: JSON.stringify(tgData).slice(0, 1000) };
-      } else {
-        // Group by trackergrouptypeid
-        const byType = {};
-        for (const tg of tgData) {
-          const typeId = tg.trackergrouptypeid || 'unknown';
-          if (!byType[typeId]) byType[typeId] = { count: 0, typeName: tg.trackergrouptype || '', samples: [] };
-          byType[typeId].count++;
-          if (byType[typeId].samples.length < 3) byType[typeId].samples.push(tg);
-        }
-
-        // Driver groups (typeid=2 based on Naiton UI convention)
-        const driverGroups = tgData.filter(tg => tg.trackergrouptypeid === 2 || (tg.trackergrouptype || '').toLowerCase().includes('driver'));
-
-        // For each driver group, show which assets (vehicles) are linked
-        const driverGroupDetails = driverGroups.slice(0, 10).map(dg => ({
-          trackergroupid: dg.trackergroupid,
-          trackergroupname: dg.trackergroupname,
-          trackergrouptypeid: dg.trackergrouptypeid,
-          trackergrouptype: dg.trackergrouptype,
-          // Look for asset references
-          assets: dg.assets || dg.gpsassetids || dg.trackers || null,
-          allKeys: Object.keys(dg),
-          fullData: dg,
-        }));
-
-        trackergroupsResult = {
-          status: 'OK',
-          total: tgData.length,
-          allKeys: tgData[0] ? Object.keys(tgData[0]) : [],
-          byType,
-          driverGroups: {
-            count: driverGroups.length,
-            details: driverGroupDetails,
-          },
-        };
+    // Log ALL positions with their groupsjson and personjson
+    const positionDetails = positions.map(p => {
+      let groupsParsed = null;
+      if (p.groupsjson) {
+        try { groupsParsed = typeof p.groupsjson === 'string' ? JSON.parse(p.groupsjson) : p.groupsjson; }
+        catch { groupsParsed = 'PARSE_ERROR'; }
       }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // Assets: check trackergroupjson field for driver links
-    // ═══════════════════════════════════════════════════════
-    const assetDriverLinks = assets.slice(0, 10).map(a => {
-      let tgParsed = null;
-      if (a.trackergroupjson) {
-        try { tgParsed = typeof a.trackergroupjson === 'string' ? JSON.parse(a.trackergroupjson) : a.trackergroupjson; }
-        catch { tgParsed = 'PARSE_ERROR'; }
+      let personParsed = null;
+      if (p.personjson) {
+        try { personParsed = typeof p.personjson === 'string' ? JSON.parse(p.personjson) : p.personjson; }
+        catch { personParsed = 'PARSE_ERROR'; }
       }
       return {
-        assetid: a.assetid,
-        gpsassetid: a.gpsassetid,
-        assetname: a.assetname,
-        licenceplate: a.licenceplate,
-        trackergroupids: a.trackergroupids,
-        trackergroup: a.trackergroup,
-        trackergroupjson: tgParsed,
+        gpsassetid: p.gpsassetid,
+        gpsassetname: p.gpsassetname,
+        licenceplate: p.licenceplate,
+        groupsjson: groupsParsed,
+        personjson: personParsed,
+        flagsjson: p.flagsjson || null,
+        displayvaluesjson: p.displayvaluesjson ? String(p.displayvaluesjson).slice(0, 300) : null,
       };
     });
 
-    // User samples
-    const userSamples = users.slice(0, 5).map(u => ({
-      personid: u.personid,
-      firstname: u.firstname,
-      lastname: u.lastname,
-      tachocardnumber: u.tachocardnumber,
-      tagid: u.tagid,
-      isdriver: u.isdriver,
-    }));
+    // Stats
+    const withGroups = positions.filter(p => p.groupsjson).length;
+    const withPerson = positions.filter(p => p.personjson).length;
+    const withFlags = positions.filter(p => p.flagsjson).length;
 
     return Response.json({
-      trackergroups: trackergroupsResult,
-      asset_driver_links: assetDriverLinks,
-      users: { total: users.length, samples: userSamples },
-      assets_total: assets.length,
+      total_positions: positions.length,
+      with_groupsjson: withGroups,
+      with_personjson: withPerson,
+      with_flagsjson: withFlags,
+      all_positions: positionDetails,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
