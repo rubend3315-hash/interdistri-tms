@@ -240,11 +240,11 @@ export function useEntrySubmit() {
       return { success: false, error: error?.message || 'Opslaan mislukt' };
     } finally {
       submittingRef.current = false;
-      setIsSubmitting(false);
+      setIsSavingDraft(false);
     }
   }, []);
 
-  return { submitEntry, saveDraft, isSubmitting, submittingRef };
+  return { submitEntry, saveDraft, isSubmitting, isSavingDraft, submittingRef };
 }
 
 // --- Abort detection (page unload / tab close) ---
