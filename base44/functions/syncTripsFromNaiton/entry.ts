@@ -538,7 +538,7 @@ Deno.serve(async (req) => {
     // STEP 7: Transport API import (1 bulk call)
     // ═══════════════════════════════════════════════════════
     const tripPayloads = [];
-    for (const r of tripRecords) {
+    for (const r of realTripRecords) {
       if (!r.plate || !r.start_time) continue;
       const refId = `${r.gpsassetid}_${r.start_time}`;
       const startTime = r.start_time.includes('T') ? r.start_time.split('T')[1]?.slice(0, 5) : '';
