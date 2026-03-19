@@ -120,7 +120,8 @@ Deno.serve(async (req) => {
     const driverMap = {}; // gpsassetid → drivername
 
     // Source 1: driverhistory (most reliable — contains historical driver assignments)
-    const driverHistoryEntries_read = driverHistoryJson.dataexchange_driverhistory || [];
+    // Try both possible response keys
+    const driverHistoryEntries_read = driverHistoryJson.dataexchange_getdriverhistory || driverHistoryJson.dataexchange_driverhistory || [];
     addLog(`driverhistory: ${driverHistoryEntries_read.length} entries`);
     if (driverHistoryEntries_read.length > 0) {
       addLog(`driverhistory sample: ${JSON.stringify(driverHistoryEntries_read[0]).slice(0, 500)}`);
