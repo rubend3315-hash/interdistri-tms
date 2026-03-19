@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     const CLIENT_ID = Deno.env.get('NAITON_CLIENT_ID');
     const CLIENT_SECRET = Deno.env.get('NAITON_CLIENT_SECRET');
 
-    const { date } = await req.json();
+    const { date, plate } = await req.json();
     const dateFrom = date || '2026-03-18';
     const dateTo = new Date(dateFrom);
     dateTo.setDate(dateTo.getDate() + 1);
