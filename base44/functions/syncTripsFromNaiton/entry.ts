@@ -161,11 +161,21 @@ Deno.serve(async (req) => {
     const allSegments = tripsJson.dataexchange_trips || [];
     addLog(`${allSegments.length} trip segmenten opgehaald`);
 
-    // DEBUG: log eerste segment om driver-velden te zien
+    // DEBUG: log segment driver info
     if (allSegments.length > 0) {
       const sample = allSegments[0];
       addLog(`Segment sample keys: ${JSON.stringify(Object.keys(sample))}`);
-      addLog(`Segment sample: ${JSON.stringify(sample).slice(0, 800)}`);
+      // Check welke segmenten een driver veld hebben
+      const withDriver = allSegments.filter(s => s.driver);
+      const withAdditional = allSegments.filter(s => s.additionaldata);
+      addLog(`Segments with driver field: ${withDriver.length}/${allSegments.length}`);
+      addLog(`Segments with additionaldata: ${withAdditional.length}/${allSegments.length}`);
+      if (withDriver.length > 0) {
+        addLog(`Driver sample: ${withDriver[0].driver}`);
+      }
+      if (withAdditional.length > 0) {
+        addLog(`Additional sample: ${JSON.stringify(withAdditional[0].additionaldata).slice(0, 500)}`);
+      }
     }
 
     if (allSegments.length === 0) {
