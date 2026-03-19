@@ -269,7 +269,7 @@ function TripRecordCard({ rec, formatTime }) {
               {rec.long_stops_minutes > 0 && (
                 <span className="flex items-center gap-1 text-orange-500">
                   <Timer className="w-3.5 h-3.5" />
-                  {rec.long_stops_minutes}m stilstand
+                  {rec.long_stops_count || '?'}x / {rec.long_stops_minutes}m stilstand
                 </span>
               )}
             </div>
