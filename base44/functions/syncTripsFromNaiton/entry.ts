@@ -315,12 +315,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Filter rides to only include dates within the requested range (not the extended API stoptime)
-    const filteredRides = rides.filter(r => r.date >= date_from && r.date <= date_to);
-    if (filteredRides.length < rides.length) {
-      addLog(`${rides.length} ritten gevonden, ${filteredRides.length} binnen bereik ${date_from}→${date_to}`);
-    }
-    addLog(`${filteredRides.length} ritten samengesteld uit ${allSegments.length} segmenten`);
+    // Filter rides:
+    // 1. Only dates within the requested range
+    // 2. Only COMPLETE rides (ended at standplaats) — skip open-ended rides
+    const todayStr = new Date().toISOString().split('T')[0];
+    let openRides = 0;
+    const filteredRides = rides.filter(r => {
+      if (r.date < date_from || r.date > date_to) return false;
+      // Check if ride ended at standplaats (last segment is a stop at standplaats)
+      const lastSeg = r.segments[r.segments.length - 1];
+      const endedAtStandplaats = (lastSeg.type || '').toLowerCase() === 'stop' && isStandplaats(lastSeg);
+      if (!endedAtStandplaats) {
+        openRides++;
+        return false; // Skip incomplete rides
+      }
+      return true;
+    });
+    if (openRides > 0) addLog(`${openRides} onafgeronde ritten overgeslagen (niet terug bij standplaats)`);
+    addLog(`${filteredRides.length} voltooide ritten van ${rides.length} totaal`);
     if (filteredRides.length > 0) {
       const first = filteredRides[0];
       addLog(`Eerste rit: asset=${first.gpsassetid}, date=${first.date}, segments=${first.segments.length}`);
