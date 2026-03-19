@@ -526,8 +526,8 @@ Deno.serve(async (req) => {
       created, skipped, linked,
       drivers_resolved: driversResolved,
       naiton_calls: {
-        assets: 1, trips: 1, positions: 1,
-        driverHistory: driverHistoryEntries.length > 0 ? 1 : 0,
+        assets: 1, trips: 1, positions: 1, driverHistoryRead: 1,
+        driverHistoryWrite: driverHistoryEntries.length > 0 ? 1 : 0,
         locations: 1,
         transport: tripPayloads.length > 0 ? 1 : 0
       },
