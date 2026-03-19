@@ -296,7 +296,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    addLog(`${rides.length} ritten samengesteld uit ${allSegments.length} segmenten`);
+    // Filter rides to only include dates within the requested range (not the extended API stoptime)
+    const filteredRides = rides.filter(r => r.date >= date_from && r.date <= date_to);
+    if (filteredRides.length < rides.length) {
+      addLog(`${rides.length} ritten gevonden, ${filteredRides.length} binnen bereik ${date_from}→${date_to}`);
+    }
+    addLog(`${filteredRides.length} ritten samengesteld uit ${allSegments.length} segmenten`);
     if (rides.length > 0) {
       const first = rides[0];
       addLog(`Eerste rit: asset=${first.gpsassetid}, date=${first.date}, segments=${first.segments.length}`);
