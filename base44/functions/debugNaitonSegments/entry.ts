@@ -47,50 +47,70 @@ Deno.serve(async (req) => {
     const tripsJson = await tripsRes.json();
     const segments = tripsJson.dataexchange_trips || [];
 
-    // Collect all stop segments with their addresses
+    // Haversine distance in meters
+    const gpsDistanceM = (lat1, lon1, lat2, lon2) => {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+    const STANDPLAATS_LAT = 51.4945;
+    const STANDPLAATS_LON = 3.9595;
+
+    // Collect all stop segments with their GPS coordinates
     const stops = segments
       .filter(s => (s.type || '').toLowerCase() === 'stop')
-      .map(s => ({
-        address: s.address || null,
-        location: s.location || null,
-        locationname: s.locationname || null,
-        city: s.city || null,
-        street: s.street || null,
-        postalcode: s.postalcode || null,
-        lat: s.latitude || s.lat || null,
-        lng: s.longitude || s.lng || s.lon || null,
-        gpsassetid: s.gpsassetid,
-        start: s.start,
-        stop: s.stop,
-      }));
+      .map(s => {
+        const stopLat = Number(s.stoplat || 0);
+        const stopLon = Number(s.stoplon || 0);
+        const startLat = Number(s.startlat || 0);
+        const startLon = Number(s.startlon || 0);
+        const lat = stopLat || startLat;
+        const lon = stopLon || startLon;
+        const dist = (lat && lon) ? Math.round(gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON)) : null;
+        return {
+          gpsassetid: s.gpsassetid,
+          start: s.start,
+          stop: s.stop,
+          startlat: startLat || null,
+          startlon: startLon || null,
+          stoplat: stopLat || null,
+          stoplon: stopLon || null,
+          distance_to_standplaats_m: dist,
+          is_standplaats: dist !== null && dist <= 500,
+        };
+      });
 
-    // Find unique addresses
-    const uniqueAddresses = {};
+    // Stats
+    const withCoords = stops.filter(s => s.stoplat || s.startlat);
+    const nearStandplaats = stops.filter(s => s.is_standplaats);
+
+    // Group by distance ranges
+    const distRanges = { '0-100m': 0, '100-500m': 0, '500-1000m': 0, '1-5km': 0, '5km+': 0, 'no_coords': 0 };
     for (const s of stops) {
-      const key = `${s.address || ''}|${s.location || ''}|${s.street || ''}|${s.city || ''}`;
-      if (!uniqueAddresses[key]) {
-        uniqueAddresses[key] = { ...s, count: 0 };
-      }
-      uniqueAddresses[key].count++;
+      const d = s.distance_to_standplaats_m;
+      if (d === null) distRanges['no_coords']++;
+      else if (d <= 100) distRanges['0-100m']++;
+      else if (d <= 500) distRanges['100-500m']++;
+      else if (d <= 1000) distRanges['500-1000m']++;
+      else if (d <= 5000) distRanges['1-5km']++;
+      else distRanges['5km+']++;
     }
 
     // Get all field names from first segment 
     const sampleSeg = segments[0] || {};
     const allFields = Object.keys(sampleSeg);
 
-    // Find segments that might be standplaats (fleerbos/kapelle)
-    const standplaatsMatches = stops.filter(s => {
-      const all = JSON.stringify(s).toLowerCase();
-      return all.includes('fleerbos') || all.includes('kapelle');
-    });
-
     return Response.json({
       total_segments: segments.length,
       total_stops: stops.length,
-      unique_addresses: Object.values(uniqueAddresses).sort((a, b) => b.count - a.count).slice(0, 30),
-      standplaats_matches: standplaatsMatches.slice(0, 10),
+      stops_with_coords: withCoords.length,
+      stops_near_standplaats: nearStandplaats.length,
+      distance_distribution: distRanges,
       sample_segment_fields: allFields,
-      sample_stop: stops[0] || null,
+      sample_stops: stops.slice(0, 5),
+      standplaats_stops: nearStandplaats.slice(0, 10),
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
