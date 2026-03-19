@@ -5,8 +5,9 @@
 // ║ PURPOSE: Upsert Trips/SPW to final status, write-verify         ║
 // ║ IDEMPOTENT: safe to call multiple times for same time_entry_id   ║
 // ║ NEVER affects the original SUCCESS status of the submission.     ║
-// ║ v5 — LEAN: removed heavy cleanup/overlap/vehicle-history        ║
-// ║      + SPW single-query Map index — 2026-03-19                  ║
+// ║ v6 — SELF-HEALING RECONCILIATION: fetch→match→claim→update      ║
+// ║      Fixes race condition where trips stayed "Gepland"           ║
+// ║      Sequential updates for CPU stability — 2026-03-19          ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
