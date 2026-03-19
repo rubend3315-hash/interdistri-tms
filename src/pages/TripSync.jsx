@@ -119,21 +119,34 @@ export default function TripSync() {
       {/* Sync result banner */}
       {syncResult && (
         <Card className={syncResult.created > 0 ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200"}>
-          <CardContent className="px-4 py-3 flex items-center gap-3">
-            <CheckCircle2 className={`w-5 h-5 ${syncResult.created > 0 ? 'text-emerald-600' : 'text-blue-600'}`} />
-            <div className="text-sm flex flex-wrap gap-x-2 gap-y-0.5">
-              {syncResult.assets != null && <span className="text-slate-500">{syncResult.assets} assets</span>}
-              {syncResult.segments != null && <span className="text-slate-500">· {syncResult.segments} segmenten</span>}
-              {syncResult.rides != null && <span className="text-slate-500">· {syncResult.rides} ritten</span>}
-              <span className="text-slate-500">·</span>
-              <span className="font-medium">{syncResult.created} nieuw</span>
-              <span className="text-slate-500">·</span>
-              <span>{syncResult.skipped} overgeslagen</span>
-              <span className="text-slate-500">·</span>
-              <span>{syncResult.linked} gekoppeld</span>
-              <span className="text-slate-500">·</span>
-              <span className="text-slate-400">{syncResult.ms}ms</span>
+          <CardContent className="px-4 py-3 space-y-2">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className={`w-5 h-5 flex-shrink-0 ${syncResult.created > 0 ? 'text-emerald-600' : 'text-blue-600'}`} />
+              <div className="text-sm flex flex-wrap gap-x-2 gap-y-0.5">
+                {syncResult.assets != null && <span className="text-slate-500">{syncResult.assets} assets</span>}
+                {syncResult.segments != null && <span className="text-slate-500">· {syncResult.segments} segmenten</span>}
+                {syncResult.rides != null && <span className="text-slate-500">· {syncResult.rides} ritten</span>}
+                <span className="text-slate-500">·</span>
+                <span className="font-medium text-emerald-700">{syncResult.created} nieuw</span>
+                <span className="text-slate-500">·</span>
+                <span>{syncResult.skipped} overgeslagen</span>
+                <span className="text-slate-500">·</span>
+                <span>{syncResult.linked} gekoppeld</span>
+                {syncResult.drivers_resolved != null && (
+                  <><span className="text-slate-500">·</span><span>{syncResult.drivers_resolved} chauffeurs herkend</span></>
+                )}
+                <span className="text-slate-500">·</span>
+                <span className="text-slate-400">{syncResult.ms}ms</span>
+              </div>
             </div>
+            {syncResult.log && syncResult.log.length > 0 && (
+              <details className="text-xs text-slate-500">
+                <summary className="cursor-pointer hover:text-slate-700">Sync log ({syncResult.log.length} stappen)</summary>
+                <ul className="mt-1 space-y-0.5 pl-4 list-disc">
+                  {syncResult.log.map((l, i) => <li key={i}>{l}</li>)}
+                </ul>
+              </details>
+            )}
           </CardContent>
         </Card>
       )}
