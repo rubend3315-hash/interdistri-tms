@@ -236,8 +236,11 @@ Deno.serve(async (req) => {
     addLog('Step 3: Grouping segments into rides (standplaats→standplaats)...');
 
     const isStandplaats = (seg) => {
-      const addr = (seg.address || seg.location || '').toLowerCase();
-      return STANDPLAATS_KEYWORDS.every(kw => addr.includes(kw));
+      // Use stop coordinates (stoplon/stoplat) to check if within radius of standplaats
+      const lat = Number(seg.stoplat || seg.stoplon ? seg.stoplat : seg.startlat || 0);
+      const lon = Number(seg.stoplon || seg.stoplat ? seg.stoplon : seg.startlon || 0);
+      if (!lat || !lon) return false;
+      return gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M;
     };
 
     // Sort by gpsassetid then by start time
