@@ -151,6 +151,13 @@ Deno.serve(async (req) => {
     const allSegments = tripsJson.dataexchange_trips || [];
     addLog(`${allSegments.length} trip segmenten opgehaald`);
 
+    // DEBUG: log eerste segment om driver-velden te zien
+    if (allSegments.length > 0) {
+      const sample = allSegments[0];
+      addLog(`Segment sample keys: ${JSON.stringify(Object.keys(sample))}`);
+      addLog(`Segment sample: ${JSON.stringify(sample).slice(0, 800)}`);
+    }
+
     if (allSegments.length === 0) {
       return Response.json({
         success: true, message: 'Geen ritten gevonden in deze periode',
