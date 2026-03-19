@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       const tolerance = 5;
 
       // minimaal 1 tijd moet bestaan
-      const hasTime = tStart != null || tEnd != null;
+      const hasTime = tStart != null && tEnd != null;
       // check start indien aanwezig
       const startOk = tStart == null || (sStart != null && tStart >= (sStart - tolerance));
       // check end indien aanwezig
@@ -131,6 +131,11 @@ Deno.serve(async (req) => {
 
     // 1d. Fallback: no existing trips matched → CREATE from payload
     if (relevantTrips.length === 0 && Array.isArray(trips) && trips.length > 0) {
+      const alreadyExistsForTE = allTripsForDay.some(t => t.time_entry_id === time_entry_id);
+
+      if (alreadyExistsForTE) {
+        console.warn('[RECALC] Skip create — trips already exist for this TE');
+      } else {
       console.warn(`[RECALC] No existing trips matched → fallback create from payload`);
       for (const trip of trips) {
         let kmWarning = null;
@@ -167,6 +172,7 @@ Deno.serve(async (req) => {
         });
         finalTripIds.push(t.id);
       }
+      } // end else (not alreadyExistsForTE)
     }
     perf.trips_ms = Date.now() - tTrips;
 
