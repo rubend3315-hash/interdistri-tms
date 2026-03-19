@@ -173,8 +173,8 @@ Deno.serve(async (req) => {
         const spw_key = generateSpwKey(employee_id, date, spwStartTime, spwEndTime, 'standplaats');
 
         // Skip if already handled in 2c — O(1) via linkedIndex
-        const lookupKey = `${spwStartTime || ''}_${spwEndTime || ''}_${spw.customer_id || ''}_${spw.activity_id || ''}`;
-        const alreadyHandled = linkedIndex.get(spw_key) || linkedIndex.get(lookupKey);
+        const linkedLookupKey = `${spwStartTime || ''}_${spwEndTime || ''}_${spw.customer_id || ''}_${spw.activity_id || ''}`;
+        const alreadyHandled = linkedIndex.get(spw_key) || linkedIndex.get(linkedLookupKey);
         if (alreadyHandled) {
           if (!usedSpwIds.has(alreadyHandled.id)) {
             finalSpwIds.push(alreadyHandled.id);
