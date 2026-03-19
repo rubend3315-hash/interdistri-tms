@@ -1,12 +1,10 @@
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║ syncTripsFromNaiton v22 — Production GPS Buddy / Naiton integration ║
+// ║ syncTripsFromNaiton v24 — Production GPS Buddy / Naiton integration ║
 // ║ Auth: Admin-only                                                     ║
-// ║ CHANGES vs v21:                                                      ║
-// ║  - Rit = standplaats→standplaats (Fleerbosseweg 19, Kapelle)         ║
-// ║    → rit begint bij VERTREK van standplaats                          ║
-// ║    → rit eindigt bij AANKOMST op standplaats                         ║
-// ║  - Stilstand: alleen stops BINNEN de rit (tussen vertrek/aankomst)   ║
-// ║  - Depot-tijd: stops op PostNL/depot locaties binnen de rit          ║
+// ║ CHANGES vs v22:                                                      ║
+// ║  - Driver mapping via dataexchange_users (tachocardnumber/tagid)     ║
+// ║  - Trip segments matched via tachocardnumber/tagid/personid fields   ║
+// ║  - personjson fallback removed (unreliable)                          ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
