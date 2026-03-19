@@ -1,11 +1,12 @@
 // ╔══════════════════════════════════════════════════════════════════╗
-// ║ syncTripsFromNaiton — Haal ritdata op van Naiton API           ║
+// ║ syncTripsFromNaiton v3 — GPS Buddy / Naiton trip sync          ║
 // ║ Auth: Admin-only                                                ║
-// ║ Stap 1: dataexchange_assets → voertuiglijst                    ║
-// ║ Stap 2: dataexchange_trips → ritdata per asset                 ║
-// ║ Stap 3: Combineer Drive+Stop, bereken uren/km/stilstand        ║
-// ║ Stap 4: Sla op in TripRecord (idempotent: gpsassetid+start)   ║
-// ║ Stap 5: Match driver met Employee → TripRecordLink             ║
+// ║ Endpoint: POST /datad/execute                                   ║
+// ║ 1. dataexchange_assets → voertuiglijst                         ║
+// ║ 2. dataexchange_trips → Drive+Stop segmenten                   ║
+// ║ 3. Combineer Drive + eerstvolgende Stop → 1 rit                ║
+// ║ 4. Sla op in TripRecord (dedup: gpsassetid + start_time)       ║
+// ║ 5. Match driver met Employee → TripRecordLink                  ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
@@ -16,13 +17,13 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
     if (user?.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const svc = base44.asServiceRole;
-    const payload = await req.json();
-    const { date_from, date_to } = payload;
+    const { date_from, date_to } = await req.json();
 
     if (!date_from || !date_to) {
       return Response.json({ error: 'date_from en date_to zijn verplicht' }, { status: 400 });
@@ -31,7 +32,7 @@ Deno.serve(async (req) => {
     const CLIENT_ID = Deno.env.get('NAITON_CLIENT_ID');
     const CLIENT_SECRET = Deno.env.get('NAITON_CLIENT_SECRET');
     if (!CLIENT_ID || !CLIENT_SECRET) {
-      return Response.json({ error: 'Naiton API credentials niet geconfigureerd (NAITON_CLIENT_ID / NAITON_CLIENT_SECRET)' }, { status: 500 });
+      return Response.json({ error: 'Naiton API credentials niet geconfigureerd' }, { status: 500 });
     }
 
     const headers = {
@@ -40,177 +41,129 @@ Deno.serve(async (req) => {
       'ClientSecret': CLIENT_SECRET,
     };
 
-    // ── Step 1: Fetch assets ──
+    // ── Step 1: Fetch assets via /datad/execute ──
     console.log('[NAITON] Fetching assets...');
-    const assetsRes = await fetch(`${BASE_URL}/dataexchange_assets`, { method: 'GET', headers });
+    const assetsRes = await fetch(`${BASE_URL}/datad/execute`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify([{
+        name: "dataexchange_assets",
+        arguments: [{ name: "inactiveAttributes", value: true }]
+      }])
+    });
+
     if (!assetsRes.ok) {
       const errText = await assetsRes.text();
       console.error('[NAITON] Assets fetch failed:', assetsRes.status, errText);
       return Response.json({ error: `Assets API fout: ${assetsRes.status}`, details: errText }, { status: 502 });
     }
-    const assets = await assetsRes.json();
+
+    const assetsJson = await assetsRes.json();
+    const assets = assetsJson.dataexchange_assets || [];
     console.log(`[NAITON] ${assets.length} assets opgehaald`);
 
-    // Build asset lookup by gpsassetid
+    // Build asset lookup
     const assetMap = {};
-    for (const asset of assets) {
-      const id = String(asset.gpsassetid || asset.GpsAssetId || asset.id || '');
-      if (id) {
-        assetMap[id] = {
-          vehicle: asset.name || asset.Name || asset.vehicle || '',
-          plate: asset.plate || asset.Plate || asset.licenseplate || asset.LicensePlate || '',
-          driver: asset.driver || asset.Driver || asset.drivername || asset.DriverName || '',
-        };
-      }
+    for (const a of assets) {
+      if (!a.gpsassetid) continue;
+      assetMap[a.gpsassetid] = {
+        vehicle: a.assetname || '',
+        plate: a.licenceplate || '',
+      };
     }
 
-    // ── Step 2: Fetch trips per asset ──
-    console.log(`[NAITON] Fetching trips from ${date_from} to ${date_to}...`);
-    const allTrips = [];
+    const gpsIds = Object.keys(assetMap);
+    if (gpsIds.length === 0) {
+      return Response.json({ success: true, message: 'Geen GPS assets gevonden', created: 0, skipped: 0, linked: 0, ms: Date.now() - t0 });
+    }
 
-    // Try bulk endpoint first
-    const tripsUrl = `${BASE_URL}/dataexchange_trips?from=${encodeURIComponent(date_from)}&to=${encodeURIComponent(date_to)}`;
-    const tripsRes = await fetch(tripsUrl, { method: 'GET', headers });
-    
-    if (tripsRes.ok) {
-      const tripsData = await tripsRes.json();
-      const tripsArray = Array.isArray(tripsData) ? tripsData : (tripsData.trips || tripsData.data || []);
-      allTrips.push(...tripsArray);
-      console.log(`[NAITON] ${allTrips.length} trip records opgehaald (bulk)`);
-    } else {
-      // Fallback: fetch per asset
-      console.log('[NAITON] Bulk fetch failed, trying per-asset...');
-      for (const assetId of Object.keys(assetMap)) {
-        const url = `${BASE_URL}/dataexchange_trips?gpsassetid=${encodeURIComponent(assetId)}&from=${encodeURIComponent(date_from)}&to=${encodeURIComponent(date_to)}`;
-        const res = await fetch(url, { method: 'GET', headers });
-        if (res.ok) {
-          const data = await res.json();
-          const arr = Array.isArray(data) ? data : (data.trips || data.data || []);
-          allTrips.push(...arr);
+    // ── Step 2: Fetch trips via /datad/execute ──
+    console.log(`[NAITON] Fetching trips from ${date_from} to ${date_to} for ${gpsIds.length} assets...`);
+    const tripsRes = await fetch(`${BASE_URL}/datad/execute`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify([{
+        name: "dataexchange_trips",
+        arguments: [
+          { name: "gpsassetids", value: gpsIds },
+          { name: "starttime", value: date_from },
+          { name: "stoptime", value: date_to },
+          { name: "includeallattributes", value: true }
+        ]
+      }])
+    });
+
+    if (!tripsRes.ok) {
+      const errText = await tripsRes.text();
+      console.error('[NAITON] Trips fetch failed:', tripsRes.status, errText);
+      return Response.json({ error: `Trips API fout: ${tripsRes.status}`, details: errText }, { status: 502 });
+    }
+
+    const tripsJson = await tripsRes.json();
+    const trips = tripsJson.dataexchange_trips || [];
+    console.log(`[NAITON] ${trips.length} trip segmenten opgehaald`);
+
+    if (trips.length === 0) {
+      return Response.json({ success: true, message: 'Geen trips gevonden in deze periode', created: 0, skipped: 0, linked: 0, ms: Date.now() - t0 });
+    }
+
+    // ── Step 3: Combine Drive + eerstvolgende Stop → 1 rit ──
+    // Sort by gpsassetid + start time to ensure correct ordering
+    trips.sort((a, b) => {
+      const aId = a.gpsassetid || '';
+      const bId = b.gpsassetid || '';
+      if (aId !== bId) return aId < bId ? -1 : 1;
+      return new Date(a.start || 0) - new Date(b.start || 0);
+    });
+
+    const rides = [];
+    let currentDrive = null;
+
+    for (const t of trips) {
+      const type = (t.type || '').toLowerCase();
+
+      if (type === 'drive') {
+        // If there was a previous drive without a matching stop, save it standalone
+        if (currentDrive) {
+          rides.push(finalizeDrive(currentDrive, null, assetMap));
         }
+        currentDrive = t;
+      } else if (type === 'stop' && currentDrive && t.gpsassetid === currentDrive.gpsassetid) {
+        // Match this stop to the current drive
+        rides.push(finalizeDrive(currentDrive, t, assetMap));
+        currentDrive = null;
       }
-      console.log(`[NAITON] ${allTrips.length} trip records opgehaald (per-asset)`);
+      // Ignore stops without a preceding drive
     }
 
-    if (allTrips.length === 0) {
-      return Response.json({ success: true, message: 'Geen ritten gevonden in deze periode', created: 0, skipped: 0, linked: 0, ms: Date.now() - t0 });
+    // Handle trailing drive without stop
+    if (currentDrive) {
+      rides.push(finalizeDrive(currentDrive, null, assetMap));
     }
 
-    // ── Step 3: Group by gpsassetid + combine Drive/Stop segments ──
-    // Group trips by gpsassetid and date into logical "rit" units
-    const ritMap = {};
-    for (const trip of allTrips) {
-      const assetId = String(trip.gpsassetid || trip.GpsAssetId || trip.assetId || '');
-      const tripType = (trip.type || trip.Type || trip.triptype || '').toLowerCase();
-      const startStr = trip.start || trip.Start || trip.starttime || trip.StartTime || '';
-      const endStr = trip.end || trip.End || trip.endtime || trip.EndTime || '';
-      
-      if (!assetId || !startStr) continue;
+    console.log(`[NAITON] ${rides.length} ritten samengesteld uit ${trips.length} segmenten`);
 
-      const startDate = new Date(startStr);
-      const dateKey = startDate.toISOString().split('T')[0];
-      const ritKey = `${assetId}_${dateKey}`;
-
-      if (!ritMap[ritKey]) {
-        ritMap[ritKey] = {
-          gpsassetid: assetId,
-          date: dateKey,
-          segments: [],
-          driver: trip.driver || trip.Driver || trip.drivername || trip.DriverName || assetMap[assetId]?.driver || '',
-          vehicle: assetMap[assetId]?.vehicle || '',
-          plate: assetMap[assetId]?.plate || trip.plate || trip.Plate || '',
-        };
-      }
-      ritMap[ritKey].segments.push({
-        type: tripType,
-        start: startStr,
-        end: endStr,
-        startKm: Number(trip.startmileage || trip.StartMileage || trip.startkm || 0),
-        endKm: Number(trip.endmileage || trip.EndMileage || trip.endkm || 0),
-        distance: Number(trip.distance || trip.Distance || 0),
-        duration: Number(trip.duration || trip.Duration || 0),
-        address: trip.address || trip.Address || trip.location || '',
-      });
-    }
-
-    // ── Step 4: Calculate totals and save TripRecords ──
-    // Fetch existing records for dedup
+    // ── Step 4: Save TripRecords (dedup via gpsassetid + start_time) ──
     const existingRecords = await svc.entities.TripRecord.filter({
       date: { $gte: date_from, $lte: date_to }
     });
-    const existingKeys = new Set(existingRecords.map(r => `${r.gpsassetid}_${r.start_time}`));
+    const existingKeys = new Set(
+      existingRecords.map(r => `${r.gpsassetid}_${r.start_time}`)
+    );
 
     let created = 0, skipped = 0;
-    const newRecordIds = []; // { id, driver, date }
+    const newRecordIds = [];
 
-    for (const [key, rit] of Object.entries(ritMap)) {
-      const segments = rit.segments.sort((a, b) => new Date(a.start) - new Date(b.start));
-      
-      const firstStart = segments[0]?.start;
-      const lastEnd = segments[segments.length - 1]?.end || segments[segments.length - 1]?.start;
-
-      // Dedup check
-      const dedupKey = `${rit.gpsassetid}_${firstStart}`;
+    for (const r of rides) {
+      const dedupKey = `${r.gpsassetid}_${r.start_time}`;
       if (existingKeys.has(dedupKey)) {
         skipped++;
         continue;
       }
 
-      // Calculate total hours
-      let totalMs = 0;
-      if (firstStart && lastEnd) {
-        totalMs = new Date(lastEnd) - new Date(firstStart);
-      }
-      const totalHours = Math.round((totalMs / 3600000) * 100) / 100;
-
-      // Calculate km
-      const allKms = segments.filter(s => s.startKm > 0 || s.endKm > 0);
-      const startKm = allKms.length > 0 ? Math.min(...allKms.map(s => s.startKm).filter(k => k > 0)) : null;
-      const endKm = allKms.length > 0 ? Math.max(...allKms.map(s => s.endKm).filter(k => k > 0)) : null;
-      const totalKm = (startKm != null && endKm != null && endKm > startKm) ? endKm - startKm : 
-                       segments.reduce((sum, s) => sum + s.distance, 0);
-
-      // Detect long stops (>5 min between segments)
-      let longStopsMin = 0;
-      const stopSegments = segments.filter(s => s.type === 'stop' || s.type === 'idle');
-      for (const seg of stopSegments) {
-        if (seg.start && seg.end) {
-          const durMin = (new Date(seg.end) - new Date(seg.start)) / 60000;
-          if (durMin > 5) longStopsMin += durMin;
-        }
-      }
-      longStopsMin = Math.round(longStopsMin);
-
-      // Detect depot time (PostNL location keywords)
-      let depotMin = 0;
-      const depotKeywords = ['postnl', 'depot', 'sorteer', 'hub', 'distributie'];
-      for (const seg of segments) {
-        if (seg.address && depotKeywords.some(kw => seg.address.toLowerCase().includes(kw))) {
-          if (seg.start && seg.end) {
-            depotMin += (new Date(seg.end) - new Date(seg.start)) / 60000;
-          }
-        }
-      }
-      depotMin = Math.round(depotMin);
-
-      const record = await svc.entities.TripRecord.create({
-        driver: rit.driver,
-        vehicle: rit.vehicle,
-        plate: rit.plate,
-        gpsassetid: rit.gpsassetid,
-        start_time: firstStart,
-        end_time: lastEnd || null,
-        total_hours: totalHours,
-        start_km: startKm,
-        end_km: endKm,
-        total_km: totalKm > 0 ? totalKm : null,
-        depot_time_minutes: depotMin || null,
-        long_stops_minutes: longStopsMin || null,
-        date: rit.date,
-      });
-
+      const record = await svc.entities.TripRecord.create(r);
       existingKeys.add(dedupKey);
-      newRecordIds.push({ id: record.id, driver: rit.driver, date: rit.date });
+      newRecordIds.push({ id: record.id, driver: r.driver, date: r.date });
       created++;
     }
 
@@ -220,16 +173,14 @@ Deno.serve(async (req) => {
     let linked = 0;
     if (newRecordIds.length > 0) {
       const employees = await svc.entities.Employee.filter({ status: 'Actief' });
-      
-      // Build name lookup (normalize: lowercase, trim)
+
       const empByName = {};
       for (const emp of employees) {
-        const fullName = `${emp.first_name || ''} ${emp.prefix || ''} ${emp.last_name || ''}`.replace(/\s+/g, ' ').trim().toLowerCase();
-        const shortName = `${emp.first_name || ''} ${emp.last_name || ''}`.replace(/\s+/g, ' ').trim().toLowerCase();
-        empByName[fullName] = emp;
-        empByName[shortName] = emp;
-        // Also try last_name first_name order
+        const full = `${emp.first_name || ''} ${emp.prefix || ''} ${emp.last_name || ''}`.replace(/\s+/g, ' ').trim().toLowerCase();
+        const short = `${emp.first_name || ''} ${emp.last_name || ''}`.replace(/\s+/g, ' ').trim().toLowerCase();
         const reversed = `${emp.last_name || ''} ${emp.first_name || ''}`.replace(/\s+/g, ' ').trim().toLowerCase();
+        empByName[full] = emp;
+        empByName[short] = emp;
         empByName[reversed] = emp;
       }
 
@@ -237,7 +188,7 @@ Deno.serve(async (req) => {
         if (!rec.driver) continue;
         const driverNorm = rec.driver.replace(/\s+/g, ' ').trim().toLowerCase();
         const matchedEmp = empByName[driverNorm];
-        
+
         if (matchedEmp) {
           await svc.entities.TripRecordLink.create({
             trip_record_id: rec.id,
@@ -257,7 +208,8 @@ Deno.serve(async (req) => {
       created,
       skipped,
       linked,
-      total_fetched: allTrips.length,
+      total_segments: trips.length,
+      total_rides: rides.length,
       ms: Date.now() - t0,
     });
 
@@ -266,3 +218,36 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+/**
+ * Combine a Drive segment + optional Stop segment into a single ride record.
+ */
+function finalizeDrive(drive, stop, assetMap) {
+  const assetId = drive.gpsassetid;
+  const startTime = drive.start;
+  const endTime = stop ? stop.stop : (drive.stop || drive.end || null);
+
+  const startKm = Number(drive.odometerstartkm || 0);
+  const endKm = stop ? Number(stop.odometerstopkm || 0) : Number(drive.odometerstopkm || 0);
+
+  let totalHours = null;
+  if (startTime && endTime) {
+    totalHours = Number(((new Date(endTime) - new Date(startTime)) / 3600000).toFixed(2));
+  }
+
+  const totalKm = (endKm > 0 && startKm > 0 && endKm > startKm) ? endKm - startKm : null;
+
+  return {
+    gpsassetid: assetId,
+    driver: drive.driver || '',
+    vehicle: assetMap[assetId]?.vehicle || '',
+    plate: assetMap[assetId]?.plate || '',
+    start_time: startTime,
+    end_time: endTime,
+    start_km: startKm > 0 ? startKm : null,
+    end_km: endKm > 0 ? endKm : null,
+    total_km: totalKm,
+    total_hours: totalHours,
+    date: startTime ? startTime.split('T')[0] : null,
+  };
+}
