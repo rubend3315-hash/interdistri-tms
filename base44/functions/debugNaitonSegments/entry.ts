@@ -20,15 +20,40 @@ Deno.serve(async (req) => {
     dateTo.setDate(dateTo.getDate() + 1);
     const dateToStr = dateTo.toISOString().split('T')[0];
 
-    // Get assets
-    const assetsRes = await fetch(`${BASE_URL}/datad/execute`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'ClientId': CLIENT_ID, 'ClientSecret': CLIENT_SECRET },
-      body: JSON.stringify([{ name: "dataexchange_assets", arguments: [{ name: "inactiveAttributes", value: true }] }]),
-    });
+    // Get assets + locations in parallel
+    const [assetsRes, locationsRes] = await Promise.all([
+      fetch(`${BASE_URL}/datad/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'ClientId': CLIENT_ID, 'ClientSecret': CLIENT_SECRET },
+        body: JSON.stringify([{ name: "dataexchange_assets", arguments: [{ name: "inactiveAttributes", value: true }] }]),
+      }),
+      fetch(`${BASE_URL}/datad/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'ClientId': CLIENT_ID, 'ClientSecret': CLIENT_SECRET },
+        body: JSON.stringify([{ name: "locationmanager_getlocations", arguments: [] }]),
+      }).catch(err => ({ ok: false, error: err.message })),
+    ]);
     const assetsJson = await assetsRes.json();
     const assets = assetsJson.dataexchange_assets || [];
     const gpsIds = assets.filter(a => a.gpsassetid).map(a => a.gpsassetid);
+
+    let locations = [];
+    try {
+      if (locationsRes.ok) {
+        const locJson = await locationsRes.json();
+        locations = locJson.locationmanager_getlocations || locJson.locations || [];
+        // Try all possible root keys
+        if (locations.length === 0) {
+          const keys = Object.keys(locJson);
+          for (const k of keys) {
+            if (Array.isArray(locJson[k]) && locJson[k].length > 0) {
+              locations = locJson[k];
+              break;
+            }
+          }
+        }
+      }
+    } catch {};
 
     // Get trips
     const tripsRes = await fetch(`${BASE_URL}/datad/execute`, {
