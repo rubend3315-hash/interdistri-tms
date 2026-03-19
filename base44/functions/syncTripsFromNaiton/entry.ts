@@ -409,15 +409,74 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Driver: trip segment field → driverMap (currentpositions) → null
+      // Driver resolution: tachocardnumber → tagid → personid → planning → null
       let driver = '';
-      // Check alle drive-segmenten voor een driver veld
-      for (const s of segs) {
-        if (s.driver) { driver = s.driver; break; }
+      // Debug: log first segment fields for driver analysis
+      if (rides.indexOf(ride) === 0) {
+        const sample = segs[0];
+        console.log('[NAITON] Trip segment sample fields:', JSON.stringify({
+          tachocardnumber: sample.tachocardnumber,
+          tagid: sample.tagid,
+          personid: sample.personid,
+          driver: sample.driver,
+          additionaldata: sample.additionaldata,
+          // Log all keys to discover driver-related fields
+          allKeys: Object.keys(sample),
+        }));
       }
-      // Fallback: currentpositions driverMap
+
+      // Priority 1: tachocardnumber on trip segments
+      for (const s of segs) {
+        if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]) {
+          driver = userByTacho[String(s.tachocardnumber)];
+          break;
+        }
+      }
+      // Priority 2: tagid on trip segments
       if (!driver) {
-        driver = driverMap[ride.gpsassetid] || '';
+        for (const s of segs) {
+          if (s.tagid && userByTag[String(s.tagid)]) {
+            driver = userByTag[String(s.tagid)];
+            break;
+          }
+        }
+      }
+      // Priority 3: personid on trip segments
+      if (!driver) {
+        for (const s of segs) {
+          if (s.personid && userByPersonId[String(s.personid)]) {
+            driver = userByPersonId[String(s.personid)];
+            break;
+          }
+        }
+      }
+      // Priority 4: additionaldata may contain tachocardnumber or tagid
+      if (!driver) {
+        for (const s of segs) {
+          if (s.additionaldata) {
+            try {
+              const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
+              if (ad.tachocardnumber && userByTacho[String(ad.tachocardnumber)]) {
+                driver = userByTacho[String(ad.tachocardnumber)];
+                break;
+              }
+              if (ad.tagid && userByTag[String(ad.tagid)]) {
+                driver = userByTag[String(ad.tagid)];
+                break;
+              }
+            } catch { /* ignore */ }
+          }
+        }
+      }
+      // Priority 5: direct driver field on segment
+      if (!driver) {
+        for (const s of segs) {
+          if (s.driver) { driver = s.driver; break; }
+        }
+      }
+      // Priority 6: planning fallback (Trip entity match)
+      if (!driver) {
+        driver = planningDriverMap[ride.gpsassetid] || '';
       }
 
       tripRecords.push({
