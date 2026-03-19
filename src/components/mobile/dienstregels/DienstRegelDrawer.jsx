@@ -262,8 +262,15 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
   const [showExtra, setShowExtra] = useState(false);
   const isOpen = draft.openRit && !draft.end_time;
 
+  // Defensieve validatie: als vehicle_id geen geldig voertuig-ID is, reset naar ""
+  const vehicleIds = new Set((vehicles || []).map(v => v.id));
+  const safeVehicleId = (draft.vehicle_id && vehicleIds.has(draft.vehicle_id)) ? draft.vehicle_id : "";
+  if (draft.vehicle_id && draft.vehicle_id !== safeVehicleId) {
+    console.warn(`[RitFields] Invalid vehicle_id "${draft.vehicle_id}" reset to "". Available: ${vehicles?.length || 0} vehicles.`);
+  }
+
   // Bekende km-stand van geselecteerd voertuig
-  const selectedVehicle = draft.vehicle_id ? (vehicles || []).find(v => v.id === draft.vehicle_id) : null;
+  const selectedVehicle = safeVehicleId ? (vehicles || []).find(v => v.id === safeVehicleId) : null;
   const vehicleMileage = selectedVehicle?.current_mileage;
 
   return (
@@ -271,7 +278,7 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
       {/* Kenteken */}
       <div>
         <Label className="text-[11px] text-slate-500 mb-0.5">Kenteken *</Label>
-        <Select value={draft.vehicle_id || ""} onValueChange={(v) => update('vehicle_id', v)}>
+        <Select value={safeVehicleId} onValueChange={(v) => update('vehicle_id', v)}>
           <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue placeholder="Selecteer voertuig" /></SelectTrigger>
           <SelectContent>{(vehicles || []).map(v => <SelectItem key={v.id} value={v.id}>{v.license_plate}</SelectItem>)}</SelectContent>
         </Select>
