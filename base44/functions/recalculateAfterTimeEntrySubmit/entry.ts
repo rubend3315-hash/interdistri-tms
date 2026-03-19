@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
 
     // 1d. Fallback: no existing trips matched → CREATE from payload
     if (relevantTrips.length === 0 && Array.isArray(trips) && trips.length > 0) {
-      const alreadyExistsForTE = allTripsForDay.some(t => t.time_entry_id === time_entry_id);
+      const alreadyExistsForTE = relevantTrips.length > 0;
 
       if (alreadyExistsForTE) {
         console.warn('[RECALC] Skip create — trips already exist for this TE');
