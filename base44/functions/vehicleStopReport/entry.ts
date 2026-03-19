@@ -164,7 +164,8 @@ Deno.serve(async (req) => {
       if (type === 'drive' && !rideStart) {
         rideStart = entry;
       }
-      if (type === 'stop' && isStandplaats) {
+      if (type === 'stop' && isStandplaats && rideStart) {
+        // Only set rideEnd after ride has started (skip pre-departure standplaats)
         rideEnd = entry;
       }
 
