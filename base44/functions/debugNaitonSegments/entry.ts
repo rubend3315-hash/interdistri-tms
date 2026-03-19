@@ -234,21 +234,21 @@ Deno.serve(async (req) => {
         asset_id: assetId,
         asset_name: matchedAsset.assetname,
         total_segments: vehicleSegs.length,
-        // Only include timeline if < 30 segments, otherwise too large
-        timeline: vehicleSegs.length <= 30 ? timeline : timeline.filter(t => t.classification !== 'RIJDEN' && t.classification !== 'STILSTAND_KORT'),
         summary: {
           depot_stops: depotStopsV.length,
           depot_total_min: depotStopsV.reduce((s, t) => s + t.duration_min, 0),
-          long_stops: longStops.length,
+          depot_detail: depotStopsV.map(t => ({
+            start: t.start, stop: t.stop, dur: t.duration_min, name: t.depot_name
+          })),
+          long_stops_count: longStops.length,
           long_stops_total_min: longStops.reduce((s, t) => s + t.duration_min, 0),
           long_stops_detail: longStops.map(t => ({
-            start: t.start,
-            stop: t.stop,
-            duration_min: t.duration_min,
-            lat: t.lat,
-            lon: t.lon,
+            start: t.start, stop: t.stop, dur: t.duration_min, lat: t.lat, lon: t.lon
           })),
           standplaats_stops: standplaatsStops.length,
+          standplaats_detail: standplaatsStops.map(t => ({
+            start: t.start, stop: t.stop, dur: t.duration_min
+          })),
         }
       });
     }
