@@ -197,7 +197,7 @@ export function useEntrySubmit() {
   const saveDraft = useCallback(async ({ formData, trips, standplaatsWerk, employeeId, dienstRegels }) => {
     if (submittingRef.current) return { success: false };
     submittingRef.current = true;
-    setIsSubmitting(true);
+    setIsSavingDraft(true);
 
     try {
       const hours = calculateHoursSimple(formData.start_time, formData.end_time, formData.break_minutes);
