@@ -338,6 +338,7 @@ export default function Layout({ children, currentPageName }) {
       'Planning': PERMISSIONS.PLANNING_MANAGE,
       'ShiftTime': PERMISSIONS.PLANNING_MANAGE,
       'Dagstaat': PERMISSIONS.TRIPS_MANAGE,
+      'VehicleStopReport': PERMISSIONS.TRIPS_MANAGE,
 
       // HR
       'Employees': PERMISSIONS.EMPLOYEES_MANAGE,
