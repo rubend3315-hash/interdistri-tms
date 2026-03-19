@@ -454,7 +454,8 @@ export default function Approvals() {
     const overlaps = getEntryOverlaps(entry);
     const entryTrips = showActions ? (tripsByTimeEntry[entry.id] || []) : [];
     const entrySpw = showActions ? (spwByTimeEntry[entry.id] || []) : [];
-    const hasLinked = entryTrips.length > 0 || entrySpw.length > 0;
+    const entryTripRecords = showActions ? (tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.date}`] || []) : [];
+    const hasLinked = entryTrips.length > 0 || entrySpw.length > 0 || entryTripRecords.length > 0;
 
     return (
       <div key={entry.id}>
@@ -582,6 +583,7 @@ export default function Approvals() {
           <LinkedActivitiesPanel
             trips={entryTrips}
             standplaatsWerk={entrySpw}
+            tripRecords={entryTripRecords}
             vehicles={vehicles}
             customers={customers}
             projects={projects}
