@@ -62,7 +62,10 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
   // --- DienstRegels (unified rit + standplaats) ---
   const [dienstRegels, setDienstRegels] = useState(() => {
     const draft = loadLocalDraft(todayStr);
-    if (draft?.dienstRegels?.length) return draft.dienstRegels;
+    if (draft?.dienstRegels?.length) {
+      console.log('[DEBUG_TRACE] INIT dienstRegels FROM localStorage:', JSON.stringify(draft.dienstRegels.map(r => ({ id: r.id, type: r.type, vehicle_id: r.vehicle_id, customer_id: r.customer_id, route_name: r.route_name }))));
+      return draft.dienstRegels;
+    }
     return [];
   });
 
@@ -374,6 +377,7 @@ export function useMobileForm({ isMultiDay = false, currentEmployee, businessMod
         }
         // CRITICAL: Replace (not merge) — prevents duplication from localStorage + server
         if (loadedRegels.length > 0) {
+          console.log('[DEBUG_TRACE] LOADED dienstRegels FROM SERVER:', JSON.stringify(loadedRegels.map(r => ({ id: r.id, type: r.type, vehicle_id: r.vehicle_id, customer_id: r.customer_id, route_name: r.route_name, _existingId: r._existingId }))));
           setDienstRegels(loadedRegels);
           // Update lastSavedRef so autosave doesn't immediately re-save identical data
           lastSavedRegelsRef.current = JSON.stringify(loadedRegels);
