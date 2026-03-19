@@ -150,6 +150,108 @@ Deno.serve(async (req) => {
       return /depot|postnl/i.test(raw);
     });
 
+    // If plate filter provided, show detailed timeline for that vehicle
+    if (plate) {
+      const normPlate = plate.replace(/[-\s]/g, '').toLowerCase();
+      const matchedAsset = assets.find(a => 
+        a.licenceplate && a.licenceplate.replace(/[-\s]/g, '').toLowerCase() === normPlate
+      );
+      if (!matchedAsset) {
+        return Response.json({ error: `Kenteken ${plate} niet gevonden in assets` }, { status: 404 });
+      }
+      const assetId = matchedAsset.gpsassetid;
+      
+      // Get ALL segments for this asset, sorted by time
+      const vehicleSegs = segments
+        .filter(s => s.gpsassetid === assetId)
+        .sort((a, b) => new Date(a.start || a.stop) - new Date(b.start || b.stop));
+      
+      const DEPOT_LOCATIONS = [
+        { name: 'PostNL Sorteercentrum Goes', lat: 51.4943, lon: 3.8778 },
+        { name: 'PostNL Pakketten Goes', lat: 51.4846, lon: 3.8898 },
+      ];
+      const DEPOT_RADIUS = 300;
+      
+      const timeline = vehicleSegs.map(s => {
+        const type = (s.type || '').toLowerCase();
+        const lat = Number(s.stoplat || s.startlat || 0);
+        const lon = Number(s.stoplon || s.startlon || 0);
+        const startT = new Date(s.start);
+        const stopT = new Date(s.stop || s.end || s.start);
+        const durMin = Math.round((stopT - startT) / 60000);
+        
+        const distStandplaats = (lat && lon) ? Math.round(gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON)) : null;
+        const isStandplaats = distStandplaats !== null && distStandplaats <= 500;
+        
+        let depotMatch = null;
+        if (lat && lon) {
+          for (const d of DEPOT_LOCATIONS) {
+            if (gpsDistanceM(lat, lon, d.lat, d.lon) <= DEPOT_RADIUS) {
+              depotMatch = d.name;
+              break;
+            }
+          }
+        }
+        
+        let classification = type === 'drive' ? 'RIJDEN' : 'STOP';
+        if (type === 'stop') {
+          if (isStandplaats) classification = 'STANDPLAATS';
+          else if (depotMatch) classification = 'DEPOT';
+          else if (durMin > 5) classification = 'STILSTAND_LANG';
+          else classification = 'STILSTAND_KORT';
+        }
+        
+        return {
+          type,
+          start: s.start,
+          stop: s.stop,
+          duration_min: durMin,
+          lat: lat || null,
+          lon: lon || null,
+          dist_standplaats_m: distStandplaats,
+          classification,
+          depot_name: depotMatch,
+          odometer_start: s.odometerstartkm || null,
+          odometer_stop: s.odometerstopkm || null,
+        };
+      });
+      
+      // Summary
+      const inRideSegs = timeline.filter(t => {
+        const h = new Date(t.start).getUTCHours();
+        const m = new Date(t.start).getUTCMinutes();
+        const timeVal = h * 60 + m;
+        // Between 06:00 and 18:00 UTC (rough working hours)
+        return timeVal >= 360 && timeVal <= 1080;
+      });
+      
+      const longStops = timeline.filter(t => t.classification === 'STILSTAND_LANG');
+      const depotStopsV = timeline.filter(t => t.classification === 'DEPOT');
+      const standplaatsStops = timeline.filter(t => t.classification === 'STANDPLAATS');
+      
+      return Response.json({
+        plate,
+        asset_id: assetId,
+        asset_name: matchedAsset.assetname,
+        total_segments: vehicleSegs.length,
+        timeline,
+        summary: {
+          depot_stops: depotStopsV.length,
+          depot_total_min: depotStopsV.reduce((s, t) => s + t.duration_min, 0),
+          long_stops: longStops.length,
+          long_stops_total_min: longStops.reduce((s, t) => s + t.duration_min, 0),
+          long_stops_detail: longStops.map(t => ({
+            start: t.start,
+            stop: t.stop,
+            duration_min: t.duration_min,
+            lat: t.lat,
+            lon: t.lon,
+          })),
+          standplaats_stops: standplaatsStops.length,
+        }
+      });
+    }
+
     return Response.json({
       total_segments: segments.length,
       total_stops: stops.length,
