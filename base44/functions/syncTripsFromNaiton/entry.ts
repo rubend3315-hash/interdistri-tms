@@ -13,11 +13,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 const BASE_URL = 'https://dawa-prod.naiton.com';
 const INSERT_BATCH_SIZE = 50;
 const MAX_DAYS = 31;
-// Standplaats = Fleerbosseweg 19, 4421 RR Kapelle
-const STANDPLAATS_KEYWORDS = ['fleerbos', 'kapelle'];
-// PostNL depot keywords (for depot_time calculation within a ride)
-const DEPOT_KEYWORDS = ['postnl', 'depot', 'hub', 'sorteer', 'distributie'];
+// Standplaats = Fleerbosseweg 19, 4421 RR Kapelle (GPS coords)
+const STANDPLAATS_LAT = 51.4945;
+const STANDPLAATS_LON = 3.9595;
+const STANDPLAATS_RADIUS_M = 500; // 500m radius = standplaats
 const SHORT_STOP_THRESHOLD_MIN = 5;  // >5 min telt als stilstand
+
+// Haversine distance in meters between two GPS points
+function gpsDistanceM(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 Deno.serve(async (req) => {
   const t0 = Date.now();
