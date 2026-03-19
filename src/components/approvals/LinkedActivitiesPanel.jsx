@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Truck, Package, Clock, Building2 } from "lucide-react";
+import { Truck, Package, Clock, Building2, Satellite, Gauge, CircleParking, Clock4 } from "lucide-react";
 
 function TripCard({ trip, vehicle, customer }) {
   const totalKm = trip.start_km != null && trip.end_km != null
@@ -113,9 +113,79 @@ function timelineSortKey(timeStr) {
   return mins < 360 ? mins + 1440 : mins; // < 06:00 → +24h
 }
 
+function TripRecordCard({ record }) {
+  const formatTime = (dt) => {
+    if (!dt) return '-';
+    try {
+      const d = new Date(dt);
+      return d.toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' });
+    } catch { return '-'; }
+  };
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 bg-white border border-emerald-200 rounded-lg">
+      <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Satellite className="w-4 h-4 text-emerald-600" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium text-slate-900 truncate">
+            {record.vehicle || record.plate || "GPS Rit"}
+          </span>
+          <Badge className="text-[10px] px-1.5 py-0 leading-4 bg-emerald-50 text-emerald-700">
+            GPS Buddy
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+          {record.plate && (
+            <span className="flex items-center gap-1">
+              <Truck className="w-3 h-3 text-slate-400" />
+              {record.plate}
+            </span>
+          )}
+          {record.start_time && record.end_time && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3 text-slate-400" />
+              {formatTime(record.start_time)} – {formatTime(record.end_time)}
+            </span>
+          )}
+          {record.start_km != null && record.end_km != null && (
+            <span>{record.start_km} – {record.end_km} km</span>
+          )}
+          {record.total_km > 0 && (
+            <span className="flex items-center gap-1">
+              <Gauge className="w-3 h-3 text-slate-400" />
+              <span className="font-medium text-slate-700">{record.total_km} km</span>
+            </span>
+          )}
+          {record.total_hours > 0 && (
+            <span className="font-medium text-emerald-600">{record.total_hours}u</span>
+          )}
+          {record.depot_time_minutes > 0 && (
+            <span className="flex items-center gap-1 text-amber-600">
+              <CircleParking className="w-3 h-3" />
+              {record.depot_stops_count || '?'}x/{record.depot_time_minutes}m depot
+            </span>
+          )}
+          {record.long_stops_minutes > 0 && (
+            <span className="flex items-center gap-1 text-orange-500">
+              <Clock4 className="w-3 h-3" />
+              {record.long_stops_count || '?'}x/{record.long_stops_minutes}m stilstand
+            </span>
+          )}
+        </div>
+        {record.driver && (
+          <p className="text-[11px] text-slate-400 mt-0.5">Chauffeur: {record.driver}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function LinkedActivitiesPanel({
   trips = [],
   standplaatsWerk = [],
+  tripRecords = [],
   vehicles = [],
   customers = [],
   projects = [],
