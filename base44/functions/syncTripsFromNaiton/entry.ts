@@ -242,12 +242,22 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════════════════
     addLog('Step 3: Grouping segments into rides (standplaats→standplaats)...');
 
+    const getStopCoords = (seg) => {
+      const lat = Number(seg.stoplat || seg.startlat || 0);
+      const lon = Number(seg.stoplon || seg.startlon || 0);
+      return { lat, lon };
+    };
+
     const isStandplaats = (seg) => {
-      // Use stop coordinates (stoplon/stoplat) to check if within radius of standplaats
-      const lat = Number(seg.stoplat || seg.stoplon ? seg.stoplat : seg.startlat || 0);
-      const lon = Number(seg.stoplon || seg.stoplat ? seg.stoplon : seg.startlon || 0);
+      const { lat, lon } = getStopCoords(seg);
       if (!lat || !lon) return false;
       return gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M;
+    };
+
+    const isDepot = (seg) => {
+      const { lat, lon } = getStopCoords(seg);
+      if (!lat || !lon) return false;
+      return DEPOT_LOCATIONS.some(d => gpsDistanceM(lat, lon, d.lat, d.lon) <= DEPOT_RADIUS_M);
     };
 
     // Sort by gpsassetid then by start time
