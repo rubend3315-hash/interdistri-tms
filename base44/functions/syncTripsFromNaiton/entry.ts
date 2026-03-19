@@ -14,8 +14,8 @@ const BASE_URL = 'https://dawa-prod.naiton.com';
 const INSERT_BATCH_SIZE = 50;
 const MAX_DAYS = 31;
 // Standplaats = Fleerbosseweg 19, 4421 RR Kapelle (GPS coords)
-const STANDPLAATS_LAT = 51.4945;
-const STANDPLAATS_LON = 3.9595;
+const STANDPLAATS_LAT = 51.4700;
+const STANDPLAATS_LON = 3.9716;
 const STANDPLAATS_RADIUS_M = 500; // 500m radius = standplaats
 const SHORT_STOP_THRESHOLD_MIN = 5;  // >5 min telt als stilstand
 
