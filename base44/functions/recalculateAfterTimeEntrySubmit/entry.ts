@@ -58,41 +58,15 @@ Deno.serve(async (req) => {
     console.log(`[RECALC] Found ${existingTrips.length} existing trips for TE=${time_entry_id}`);
 
     if (existingTrips.length > 0) {
-      // 1b. UPDATE existing trips to Voltooid + enrich with km warnings
-      const vehicleIds = [...new Set(existingTrips.filter(t => t.vehicle_id).map(t => t.vehicle_id))];
-      const lastTripByVehicle = {};
-      if (vehicleIds.length > 0) {
-        try {
-          const allVehicleTrips = await svc.entities.Trip.filter({
-            vehicle_id: { $in: vehicleIds },
-          }, '-date', 50);
-          for (const vt of allVehicleTrips) {
-            if (!vt.vehicle_id || vt.time_entry_id === time_entry_id) continue;
-            const ex = lastTripByVehicle[vt.vehicle_id];
-            if (!ex || vt.date > ex.date || (vt.date === ex.date && vt.created_date > ex.created_date)) {
-              lastTripByVehicle[vt.vehicle_id] = vt;
-            }
-          }
-        } catch (e) { console.error('[KM_CHECK] Failed to fetch vehicle history:', e.message); }
-      }
-
+      // 1b. UPDATE existing trips to Voltooid + KM warnings (no vehicle history lookup)
       for (const et of existingTrips) {
-        // Calculate km warning for existing trip
         let kmWarning = null;
         const totalKm = (et.start_km != null && et.end_km != null) ? Math.max(0, Number(et.end_km) - Number(et.start_km)) : null;
         const warnings = [];
         if (totalKm != null && totalKm > 400) warnings.push(`Rode afwijking: ${totalKm} km gereden (>400 km)`);
         else if (totalKm != null && totalKm > 250) warnings.push(`Gele afwijking: ${totalKm} km gereden (>250 km)`);
-        if (et.vehicle_id && et.start_km != null && lastTripByVehicle[et.vehicle_id]) {
-          const lt = lastTripByVehicle[et.vehicle_id];
-          if (lt.end_km != null) {
-            const gap = Math.abs(Number(et.start_km) - Number(lt.end_km));
-            if (gap > 50) warnings.push(`KM-gat: begin ${et.start_km} vs vorige eind ${lt.end_km} (verschil ${gap} km)`);
-          }
-        }
         if (warnings.length > 0) kmWarning = warnings.join(' | ');
 
-        // Generate trip_key if missing
         const trip_key = et.trip_key || generateTripKey(et.employee_id, et.date, et.departure_time, et.arrival_time);
 
         await svc.entities.Trip.update(et.id, {
@@ -105,37 +79,13 @@ Deno.serve(async (req) => {
         console.log(`[RECALC] Updated existing trip ${et.id} → Voltooid`);
       }
     } else if (Array.isArray(trips) && trips.length > 0) {
-      // 1c. No existing trips — CREATE from payload (fresh submit, no drafts saved)
-      const vehicleIds = [...new Set(trips.filter(t => t.vehicle_id).map(t => t.vehicle_id))];
-      const lastTripByVehicle = {};
-      if (vehicleIds.length > 0) {
-        try {
-          const allVehicleTrips = await svc.entities.Trip.filter({
-            vehicle_id: { $in: vehicleIds },
-          }, '-date', 50);
-          for (const vt of allVehicleTrips) {
-            if (!vt.vehicle_id) continue;
-            const ex = lastTripByVehicle[vt.vehicle_id];
-            if (!ex || vt.date > ex.date || (vt.date === ex.date && vt.created_date > ex.created_date)) {
-              lastTripByVehicle[vt.vehicle_id] = vt;
-            }
-          }
-        } catch (e) { console.error('[KM_CHECK] Failed to fetch vehicle history:', e.message); }
-      }
-
+      // 1c. No existing trips — CREATE from payload (no vehicle history lookup)
       for (const trip of trips) {
         let kmWarning = null;
         const totalKm = (trip.start_km != null && trip.end_km != null) ? Math.max(0, Number(trip.end_km) - Number(trip.start_km)) : null;
         const warnings = [];
         if (totalKm != null && totalKm > 400) warnings.push(`Rode afwijking: ${totalKm} km gereden (>400 km)`);
         else if (totalKm != null && totalKm > 250) warnings.push(`Gele afwijking: ${totalKm} km gereden (>250 km)`);
-        if (trip.vehicle_id && trip.start_km != null && lastTripByVehicle[trip.vehicle_id]) {
-          const lt = lastTripByVehicle[trip.vehicle_id];
-          if (lt.end_km != null) {
-            const gap = Math.abs(Number(trip.start_km) - Number(lt.end_km));
-            if (gap > 50) warnings.push(`KM-gat: begin ${trip.start_km} vs vorige eind ${lt.end_km} (verschil ${gap} km, voertuig ${trip.vehicle_id}, vorige rit ${lt.date})`);
-          }
-        }
         if (warnings.length > 0) kmWarning = warnings.join(' | ');
 
         const departure_time = isTime(trip.start_time) ? trip.start_time : null;
@@ -164,7 +114,6 @@ Deno.serve(async (req) => {
           km_warning: kmWarning,
         });
         finalTripIds.push(t.id);
-        if (trip.vehicle_id) lastTripByVehicle[trip.vehicle_id] = { end_km: trip.end_km != null ? Number(trip.end_km) : null, date };
       }
     }
     perf.trips_ms = Date.now() - tTrips;
