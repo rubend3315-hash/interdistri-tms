@@ -171,7 +171,6 @@ Deno.serve(async (req) => {
         });
         finalTripIds.push(t.id);
       }
-      } // end else (not alreadyExistsForTE)
     }
     perf.trips_ms = Date.now() - tTrips;
 
