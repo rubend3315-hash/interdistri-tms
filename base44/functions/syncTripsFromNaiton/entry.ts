@@ -459,30 +459,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Filter out "ghost rides" — vehicles parked at standplaats with minimal movement
-    // Criteria: < 10 km AND > 2 hours = not a real trip (just parked with GPS noise)
+    // Filter out non-trips:
+    // 1. No plate AND no km data = GPS tag on standplaats, not a vehicle trip
+    // 2. Duration < 5 minutes = micro-movement on terrain, not a real trip
+    // 3. > 2 hours with < 10 km = parked vehicle with GPS noise
+    // 4. Very low avg speed (< 2 km/h) over > 1 hour = not really driving
+    const MIN_TRIP_MINUTES = 5;
     const MIN_KM_FOR_LONG_RIDE = 10;
     const MIN_HOURS_THRESHOLD = 2;
-    const MIN_AVG_SPEED = 2; // km/h — below this with > 1 hour is not a trip
+    const MIN_AVG_SPEED = 2; // km/h
     let ghostFiltered = 0;
+    const ghostReasons = {};
     const realTripRecords = tripRecords.filter(r => {
       const km = r.total_km || 0;
       const hours = r.total_hours || 0;
-      // Short rides (< 2 hours) are always kept — could be quick depot runs
-      if (hours <= MIN_HOURS_THRESHOLD) return true;
+      const minutes = hours * 60;
+      const reason = (msg) => { ghostFiltered++; ghostReasons[msg] = (ghostReasons[msg] || 0) + 1; return false; };
+
+      // No plate AND no km = GPS tag, not a real vehicle
+      if (!r.plate && !km) return reason('geen kenteken + geen km');
+      // Micro-trips < 5 min = terrain movement
+      if (minutes < MIN_TRIP_MINUTES) return reason('< 5 min');
       // Long rides with very low km = parked vehicle
-      if (km < MIN_KM_FOR_LONG_RIDE) {
-        ghostFiltered++;
-        return false;
-      }
+      if (hours > MIN_HOURS_THRESHOLD && km < MIN_KM_FOR_LONG_RIDE) return reason('> 2u met < 10 km');
       // Very low average speed = not really driving
-      if (hours > 1 && km / hours < MIN_AVG_SPEED) {
-        ghostFiltered++;
-        return false;
-      }
+      if (hours > 1 && km > 0 && km / hours < MIN_AVG_SPEED) return reason('gem. snelheid < 2 km/u');
       return true;
     });
-    if (ghostFiltered > 0) addLog(`${ghostFiltered} spookritten gefilterd (geparkeerd voertuig met minimale GPS-beweging)`);
+    if (ghostFiltered > 0) {
+      const reasonStr = Object.entries(ghostReasons).map(([k, v]) => `${v}x ${k}`).join(', ');
+      addLog(`${ghostFiltered} spookritten gefilterd: ${reasonStr}`);
+    }
 
     const driversResolved = realTripRecords.filter(r => r.driver).length;
     addLog(`${realTripRecords.length} echte trip records (van ${tripRecords.length}), ${driversResolved} met driver`);
