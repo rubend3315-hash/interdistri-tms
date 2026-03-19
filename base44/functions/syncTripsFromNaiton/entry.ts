@@ -302,8 +302,8 @@ Deno.serve(async (req) => {
       addLog(`${rides.length} ritten gevonden, ${filteredRides.length} binnen bereik ${date_from}→${date_to}`);
     }
     addLog(`${filteredRides.length} ritten samengesteld uit ${allSegments.length} segmenten`);
-    if (rides.length > 0) {
-      const first = rides[0];
+    if (filteredRides.length > 0) {
+      const first = filteredRides[0];
       addLog(`Eerste rit: asset=${first.gpsassetid}, date=${first.date}, segments=${first.segments.length}`);
     }
 
@@ -314,7 +314,7 @@ Deno.serve(async (req) => {
 
     const tripRecords = [];
 
-    for (const ride of rides) {
+    for (const ride of filteredRides) {
       const segs = ride.segments;
       if (segs.length === 0) continue;
 
@@ -556,7 +556,7 @@ Deno.serve(async (req) => {
       success: true,
       assets: gpsIds.length,
       segments: allSegments.length,
-      rides: rides.length,
+      rides: filteredRides.length,
       created, skipped, linked,
       drivers_resolved: driversResolved,
       naiton_calls: {
