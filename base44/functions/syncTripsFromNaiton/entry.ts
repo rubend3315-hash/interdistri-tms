@@ -422,8 +422,10 @@ Deno.serve(async (req) => {
         const durMin = (sEnd - sStart) / 60000;
         if (isDepot(s)) {
           depotMin += Math.round(durMin);
+          depotStopsCount++;
         } else if (durMin > SHORT_STOP_THRESHOLD_MIN) {
           longStopsMin += Math.round(durMin);
+          longStopsCount++;
         }
       }
 
