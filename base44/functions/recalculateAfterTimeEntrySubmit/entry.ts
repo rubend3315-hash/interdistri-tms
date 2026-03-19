@@ -2,29 +2,17 @@
 // ║ FUNCTION TYPE: BACKGROUND / FIRE-AND-FORGET                     ║
 // ║ Called by: submitTimeEntry (fire-and-forget, not awaited)        ║
 // ║ Auth: Service role (called from backend function)                ║
-// ║ PURPOSE: Upsert Trips/SPW, write-verify, post-commit guard      ║
+// ║ PURPOSE: Upsert Trips/SPW to final status, write-verify         ║
 // ║ IDEMPOTENT: safe to call multiple times for same time_entry_id   ║
 // ║ NEVER affects the original SUCCESS status of the submission.     ║
-// ║ v4 — key-based matching (trip_key, spw_key) + fallback — 2026-03-18 ║
+// ║ v5 — LEAN: removed heavy cleanup/overlap/vehicle-history        ║
+// ║      + SPW single-query Map index — 2026-03-19                  ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-// --- TIME HELPERS (duplicated from submitTimeEntry for independence) ---
+// --- TIME HELPERS ---
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function isTime(t) { return typeof t === 'string' && TIME_RE.test(t); }
-function timeMin(t) { if (!isTime(t)) return null; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
-function addDays(dateStr, days) {
-  const d = new Date(dateStr + 'T12:00:00Z');
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function effectiveEndDate(service) {
-  if (service.end_date) return service.end_date;
-  const s = timeMin(service.start_time), e = timeMin(service.end_time);
-  if (s !== null && e !== null && e <= s) return addDays(service.date, 1);
-  return service.date;
-}
 
 // --- KEY GENERATORS ---
 function generateTripKey(employee_id, date, departure_time, arrival_time) {
@@ -33,58 +21,6 @@ function generateTripKey(employee_id, date, departure_time, arrival_time) {
 
 function generateSpwKey(employee_id, date, start_time, end_time, type = 'standplaats') {
   return `${employee_id || ''}_${date || ''}_${start_time || ''}_${end_time || ''}_${type}`;
-}
-
-function servicesOverlap(existing, incoming) {
-  const exStart = existing.date;
-  const exEnd = effectiveEndDate(existing);
-  const newStart = incoming.date;
-  const newEnd = effectiveEndDate(incoming);
-  if (exEnd < newStart || newEnd < exStart) return false;
-  if (exStart === exEnd && newStart === newEnd && exStart === newStart) {
-    const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
-    const es = timeMin(existing.start_time), ee = timeMin(existing.end_time);
-    if (ns === null || ne === null || es === null || ee === null) return false;
-    return ns < ee && ne > es;
-  }
-  if (exStart < newEnd && exEnd > newStart) return true;
-  const ns = timeMin(incoming.start_time), ne = timeMin(incoming.end_time);
-  const es = timeMin(existing.start_time), ee = timeMin(existing.end_time);
-  if (exEnd === newStart && ee !== null && ns !== null) return ee > ns;
-  if (newEnd === exStart && ne !== null && es !== null) return ne > es;
-  return false;
-}
-
-function validateTimeEntryOverlap(existingEntries, employeeId, date, endDate, startTime, endTime) {
-  const incomingEntry = { date, end_date: endDate || null, start_time: startTime, end_time: endTime };
-  const newEffEnd = effectiveEndDate(incomingEntry);
-  const committed = existingEntries.filter(e => {
-    if (e.employee_id !== employeeId) return false;
-    if (e.status !== 'Ingediend' && e.status !== 'Goedgekeurd') return false;
-    const exEffEnd = effectiveEndDate(e);
-    return exEffEnd >= date && e.date <= newEffEnd;
-  });
-  for (const ex of committed) {
-    if (servicesOverlap(ex, incomingEntry)) {
-      const exEnd = ex.end_date || ex.date;
-      const isSameDay = !endDate && !ex.end_date && date === ex.date;
-      return {
-        overlaps: true,
-        errorCode: isSameDay ? 'TIME_OVERLAP' : 'DATE_OVERLAP',
-        errorMsg: isSameDay
-          ? `Overlapt met dienst ${ex.start_time}-${ex.end_time} op ${ex.date}`
-          : `Overlapt met dienst ${ex.date} t/m ${exEnd}`,
-        existingId: ex.id,
-      };
-    }
-  }
-  return { overlaps: false };
-}
-
-// --- SAFE DELETE ---
-async function safeDelete(entity, id, label) {
-  try { await entity.delete(id); }
-  catch (e) { console.error(`Failed to delete ${label} ${id}: ${e.message}`); }
 }
 
 Deno.serve(async (req) => {
