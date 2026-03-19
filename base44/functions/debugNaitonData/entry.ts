@@ -33,71 +33,103 @@ Deno.serve(async (req) => {
     };
 
     const body = await req.json().catch(() => ({}));
-    const date_from = body.date_from || '2026-03-19';
-    const date_to = body.date_to || '2026-03-19';
+    const mode = body.mode || 'explore'; // 'explore' = read-only discovery
 
-    // Fetch assets first to get gpsassetids
-    const assetsJson = await naitonCall([{
-      name: "dataexchange_assets",
-      arguments: [{ name: "inactiveAttributes", value: true }]
-    }]);
-    const assets = assetsJson.dataexchange_assets || [];
-    const gpsIds = assets.filter(a => a.gpsassetid).map(a => a.gpsassetid);
-
-    // Try multiple driverhistory call variants in parallel
-    const [dh1, dh2, dh3, dh4] = await Promise.all([
-      // Variant 1: with gpsassetids + date range
+    // ═══════════════════════════════════════════════════════
+    // STEP 1: Fetch assets + users in parallel
+    // ═══════════════════════════════════════════════════════
+    const [assetsJson, usersJson] = await Promise.all([
       naitonCall([{
-        name: "dataexchange_driverhistory",
-        arguments: [
-          { name: "gpsassetids", value: gpsIds },
-          { name: "starttime", value: date_from },
-          { name: "stoptime", value: date_to },
-        ]
-      }]).catch(e => ({ error: `variant1: ${e.message}` })),
-      // Variant 2: without gpsassetids
+        name: "dataexchange_assets",
+        arguments: [{ name: "inactiveAttributes", value: true }]
+      }]),
       naitonCall([{
-        name: "dataexchange_driverhistory",
-        arguments: [
-          { name: "starttime", value: date_from },
-          { name: "stoptime", value: date_to },
-        ]
-      }]).catch(e => ({ error: `variant2: ${e.message}` })),
-      // Variant 3: no arguments at all
-      naitonCall([{
-        name: "dataexchange_driverhistory"
-      }]).catch(e => ({ error: `variant3: ${e.message}` })),
-      // Variant 4: with startdatetime/stopdatetime naming
-      naitonCall([{
-        name: "dataexchange_driverhistory",
-        arguments: [
-          { name: "startdatetime", value: date_from },
-          { name: "stopdatetime", value: date_to },
-        ]
-      }]).catch(e => ({ error: `variant4: ${e.message}` })),
+        name: "dataexchange_users"
+      }]),
     ]);
 
-    // Process results
-    const processResult = (label, json) => {
-      if (json.error) return { status: 'ERROR', error: String(json.error).slice(0, 500) };
-      const data = json.dataexchange_driverhistory;
-      if (!data) return { status: 'NO_DATA_KEY', rawKeys: Object.keys(json), rawPreview: JSON.stringify(json).slice(0, 500) };
-      if (!Array.isArray(data)) return { status: 'NOT_ARRAY', type: typeof data, preview: JSON.stringify(data).slice(0, 500) };
-      return {
-        status: 'OK',
-        count: data.length,
-        samples: data.slice(0, 5),
-        allKeys: data[0] ? Object.keys(data[0]) : [],
-      };
-    };
+    const assets = assetsJson.dataexchange_assets || [];
+    const users = usersJson.dataexchange_users || [];
+
+    // Asset samples with all UUIDs
+    const assetSamples = assets.slice(0, 8).map(a => ({
+      assetid: a.assetid,
+      gpsassetid: a.gpsassetid,
+      assetname: a.assetname,
+      licenceplate: a.licenceplate,
+      allKeys: Object.keys(a),
+    }));
+
+    // User samples — focus on uuid/id fields for linkasset compatibility
+    const userSamples = users.slice(0, 8).map(u => ({
+      personid: u.personid,
+      personassetuuid: u.personassetuuid,
+      firstname: u.firstname,
+      lastname: u.lastname,
+      tachocardnumber: u.tachocardnumber,
+      tagid: u.tagid,
+      isdriver: u.isdriver,
+      allKeys: Object.keys(u),
+    }));
+
+    // Stats
+    const usersWithPersonAssetUuid = users.filter(u => u.personassetuuid).length;
+    const usersWithPersonId = users.filter(u => u.personid).length;
+    const assetsWithAssetId = assets.filter(a => a.assetid).length;
+    const assetsWithGpsAssetId = assets.filter(a => a.gpsassetid).length;
+
+    // ═══════════════════════════════════════════════════════
+    // STEP 2: Test if dataexchange_linkasset endpoint exists
+    //         Use a DUMMY call with invalid UUID to check availability
+    //         (will return error but confirms endpoint exists)
+    // ═══════════════════════════════════════════════════════
+    const linkAssetTest = await naitonCall([{
+      name: "dataexchange_linkasset",
+      arguments: [
+        { name: "assetuuid", value: "00000000-0000-0000-0000-000000000000" },
+        { name: "startdatum", value: "2026-03-19T00:00:00" },
+        { name: "einddatum", value: "2026-03-19T23:59:59" },
+      ]
+    }]).catch(e => ({ error: e.message }));
+
+    // Determine if the endpoint exists (even if the call fails with bad data)
+    const linkAssetEndpointExists = !linkAssetTest.error?.includes('does not exist');
+
+    // ═══════════════════════════════════════════════════════
+    // STEP 3: If mode=link and assetuuid provided, do actual link
+    // ═══════════════════════════════════════════════════════
+    let linkResult = null;
+    if (mode === 'link' && body.assetuuid) {
+      linkResult = await naitonCall([{
+        name: "dataexchange_linkasset",
+        arguments: [
+          { name: "assetuuid", value: body.assetuuid },
+          { name: "startdatum", value: body.startdatum || new Date().toISOString() },
+          { name: "einddatum", value: body.einddatum || new Date(Date.now() + 86400000).toISOString() },
+        ]
+      }]).catch(e => ({ error: e.message }));
+    }
 
     return Response.json({
-      date_range: { date_from, date_to },
-      assets_count: gpsIds.length,
-      variant1_with_assets_and_dates: processResult('v1', dh1),
-      variant2_dates_only: processResult('v2', dh2),
-      variant3_no_args: processResult('v3', dh3),
-      variant4_alt_date_names: processResult('v4', dh4),
+      assets: {
+        total: assets.length,
+        withAssetId: assetsWithAssetId,
+        withGpsAssetId: assetsWithGpsAssetId,
+        samples: assetSamples,
+      },
+      users: {
+        total: users.length,
+        withPersonAssetUuid: usersWithPersonAssetUuid,
+        withPersonId: usersWithPersonId,
+        samples: userSamples,
+      },
+      linkasset_endpoint: {
+        exists: linkAssetEndpointExists,
+        test_response: linkAssetTest.error
+          ? { status: 'ERROR', error: String(linkAssetTest.error).slice(0, 500) }
+          : { status: 'OK', rawKeys: Object.keys(linkAssetTest), preview: JSON.stringify(linkAssetTest).slice(0, 500) },
+      },
+      link_result: linkResult,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
