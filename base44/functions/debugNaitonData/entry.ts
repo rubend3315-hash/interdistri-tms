@@ -38,26 +38,52 @@ Deno.serve(async (req) => {
       naitonCall([{ name: "dataexchange_driverlogin", arguments: [] }]).catch(e => ({ error: e.message })),
     ]);
 
-    // Extract first 3 positions with full detail
+    // Extract positions — focus on driver-related fields
     const positions = positionsJson.dataexchange_currentpositions || [];
-    const positionSamples = positions.slice(0, 3).map(p => {
-      // Parse personjson if present
+    const withPerson = positions.filter(p => p.personjson);
+    const positionSamples = positions.slice(0, 5).map(p => {
       let personParsed = null;
       if (p.personjson) {
-        try {
-          personParsed = typeof p.personjson === 'string' ? JSON.parse(p.personjson) : p.personjson;
-        } catch { personParsed = 'PARSE_ERROR'; }
+        try { personParsed = typeof p.personjson === 'string' ? JSON.parse(p.personjson) : p.personjson; }
+        catch { personParsed = 'PARSE_ERROR'; }
       }
-      return { ...p, personjson_parsed: personParsed, allKeys: Object.keys(p) };
+      return {
+        gpsassetid: p.gpsassetid,
+        gpsassetname: p.gpsassetname,
+        licenceplate: p.licenceplate,
+        personjson_raw: p.personjson ? String(p.personjson).slice(0, 300) : null,
+        personjson_parsed: personParsed,
+      };
     });
+    // Also get ALL positions with personjson populated
+    const withPersonSamples = withPerson.slice(0, 5).map(p => {
+      let personParsed = null;
+      try { personParsed = typeof p.personjson === 'string' ? JSON.parse(p.personjson) : p.personjson; }
+      catch { personParsed = 'PARSE_ERROR'; }
+      return {
+        gpsassetid: p.gpsassetid,
+        gpsassetname: p.gpsassetname,
+        licenceplate: p.licenceplate,
+        personjson_parsed: personParsed,
+      };
+    });
+
+    // driverlogin
+    const driverLoginData = driverLoginJson.dataexchange_driverlogin || driverLoginJson;
+    const driverLoginSamples = Array.isArray(driverLoginData) ? driverLoginData.slice(0, 3) : driverLoginData;
 
     return Response.json({
       currentpositions: {
         total: positions.length,
-        samples: positionSamples,
-        allKeysFromFirst: positions[0] ? Object.keys(positions[0]) : [],
+        withPersonCount: withPerson.length,
+        firstFiveSamples: positionSamples,
+        withPersonSamples,
+        allKeys: positions[0] ? Object.keys(positions[0]) : [],
       },
-      driverlogin: driverLoginJson,
+      driverlogin: {
+        raw_keys: driverLoginJson ? Object.keys(driverLoginJson) : [],
+        samples: driverLoginSamples,
+      },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
