@@ -211,7 +211,6 @@ Deno.serve(async (req) => {
 
     if (!verifyEntry) {
       console.error(`[RECALC] CRITICAL: TimeEntry ${time_entry_id} not found or not Ingediend in write verification`);
-      // Log but do NOT rollback — the TimeEntry was already committed
       try {
         await svc.entities.MobileEntrySubmissionLog.create({
           submission_id, user_id: '', email: '', employee_id,
@@ -226,94 +225,14 @@ Deno.serve(async (req) => {
       } catch (_) {}
     }
 
-    // ========================================
-    // 4. POST-COMMIT OVERLAP GUARD
-    // ========================================
-    const tPostCommit = Date.now();
-    if (date && start_time && end_time) {
-      const entryEnd = end_date || date;
-      const queryStart = addDays(date, -1);
-      const queryEnd = addDays(entryEnd, 1);
-
-      const postCommitAll = await svc.entities.TimeEntry.filter({
-        employee_id,
-        date: { $gte: queryStart, $lte: queryEnd },
-      });
-      const postCommitCandidates = postCommitAll.filter(e =>
-        e.id !== time_entry_id
-      );
-
-      const postOverlap = validateTimeEntryOverlap(
-        postCommitCandidates, employee_id, date, end_date || null, start_time, end_time
-      );
-
-      if (postOverlap.overlaps) {
-        const existingEntry = postCommitCandidates.find(e => e.id === postOverlap.existingId);
-        if (existingEntry && existingEntry.created_date < verifyEntry?.created_date) {
-          console.log(`[RECALC POST-COMMIT OVERLAP] Rejecting ${time_entry_id}, older entry ${postOverlap.existingId} wins`);
-          await svc.entities.TimeEntry.update(time_entry_id, {
-            status: 'Afgekeurd',
-            rejection_reason: `Automatisch afgekeurd: overlap gedetecteerd met bestaande dienst ${postOverlap.existingId} (${postOverlap.errorMsg})`,
-          });
-
-          await svc.entities.MobileEntrySubmissionLog.create({
-            submission_id, user_id: '', email: '', employee_id,
-            timestamp_received: new Date().toISOString(),
-            status: 'VALIDATION_FAILED', failure_type: 'BUSINESS',
-            http_status: 409,
-            error_code: 'ASYNC_POST_COMMIT_' + postOverlap.errorCode,
-            error_message: `Async overlap: ${postOverlap.errorMsg}`,
-            timestamp_completed: new Date().toISOString(),
-            latency_ms: Date.now() - t0,
-          });
-
-          perf.post_commit_guard_ms = Date.now() - tPostCommit;
-          perf.total_ms = Date.now() - t0;
-          console.log('[RECALC PERF]', JSON.stringify(perf));
-          return Response.json({ success: false, error: 'POST_COMMIT_OVERLAP', rolled_back: true });
-        }
-      }
-    }
-    perf.post_commit_guard_ms = Date.now() - tPostCommit;
+    // NOTE: Sections removed in v5 (moved to future async cron jobs):
+    // - Post-commit overlap guard (was section 4)
+    // - Old draft cleanup (was section 5)
+    // - Duplicate SPW cleanup (was section 2c)
+    // - Orphan draft cleanup (was section 2d)
 
     // ========================================
-    // 5. CLEANUP OLD DRAFTS
-    // ========================================
-    const tCleanup = Date.now();
-    try {
-      if (date) {
-        const entryEnd = end_date || date;
-        const cleanupStart = addDays(date, -1);
-        const cleanupEnd = addDays(entryEnd, 1);
-        const allEntries = await svc.entities.TimeEntry.filter({
-          employee_id,
-          date: { $gte: cleanupStart, $lte: cleanupEnd },
-        });
-        const oldDrafts = allEntries.filter(e => {
-          if (e.status !== 'Concept' || e.id === time_entry_id) return false;
-          const draftEnd = e.end_date || e.date;
-          return e.date <= entryEnd && draftEnd >= date;
-        });
-        for (const draft of oldDrafts) {
-          console.log(`[RECALC CLEANUP] Removing draft ${draft.id}`);
-          const [dTrips, dSpw] = await Promise.all([
-            svc.entities.Trip.filter({ time_entry_id: draft.id }),
-            svc.entities.StandplaatsWerk.filter({ time_entry_id: draft.id }),
-          ]);
-          await Promise.all([
-            ...dTrips.map(t => safeDelete(svc.entities.Trip, t.id, 'cleanup-trip')),
-            ...dSpw.map(s => safeDelete(svc.entities.StandplaatsWerk, s.id, 'cleanup-spw')),
-          ]);
-          await safeDelete(svc.entities.TimeEntry, draft.id, 'cleanup-te');
-        }
-      }
-    } catch (cleanupErr) {
-      console.error('[RECALC CLEANUP] Non-critical:', cleanupErr.message);
-    }
-    perf.cleanup_ms = Date.now() - tCleanup;
-
-    // ========================================
-    // 6. PRE-RESOLVE RECEIVED SIBLING
+    // 4. PRE-RESOLVE RECEIVED SIBLING
     // ========================================
     try {
       const receivedSiblings = await svc.entities.MobileEntrySubmissionLog.filter({
