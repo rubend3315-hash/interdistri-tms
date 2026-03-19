@@ -51,35 +51,55 @@ Deno.serve(async (req) => {
     const usedSpwIds = new Set();
 
     // ========================================
-    // 1. IDEMPOTENT TRIPS: fetch existing → update or create
+    // 1. SELF-HEALING TRIPS: fetch→match→claim→update
     // ========================================
     const tTrips = Date.now();
 
-    // 1a. Fetch ALL existing trips linked to this time_entry_id
-    const existingTrips = await svc.entities.Trip.filter({ time_entry_id });
-    console.log(`[RECALC] Found ${existingTrips.length} existing trips for TE=${time_entry_id}`);
+    // 1a. Fetch ALL trips for this employee+date (broad fetch)
+    const allTripsForDay = await svc.entities.Trip.filter({ employee_id, date });
+    console.log(`[RECALC] Found ${allTripsForDay.length} trips for employee=${employee_id} date=${date}`);
 
-    if (existingTrips.length > 0) {
-      // 1b. UPDATE existing trips to Voltooid + KM warnings — PARALLEL
-      await Promise.all(existingTrips.map(et => {
-        const totalKm = (et.start_km != null && et.end_km != null) ? Math.max(0, Number(et.end_km) - Number(et.start_km)) : null;
-        let kmWarning = null;
-        if (totalKm != null && totalKm > 400) kmWarning = `Rode afwijking: ${totalKm} km gereden (>400 km)`;
-        else if (totalKm != null && totalKm > 250) kmWarning = `Gele afwijking: ${totalKm} km gereden (>250 km)`;
+    // 1b. Smart filter: linked to this TE OR unlinked + matching time
+    const relevantTrips = allTripsForDay.filter(t => {
+      // Already linked to this TimeEntry → always include
+      if (t.time_entry_id === time_entry_id) return true;
+      // Linked to a DIFFERENT TimeEntry → skip (belongs to another shift)
+      if (t.time_entry_id && t.time_entry_id !== time_entry_id) return false;
+      // Unlinked trip → include if time matches
+      const matchesTime =
+        (!t.departure_time || !start_time || t.departure_time === start_time) &&
+        (!t.arrival_time || !end_time || t.arrival_time === end_time);
+      return matchesTime;
+    });
 
-        const trip_key = et.trip_key || generateTripKey(et.employee_id, et.date, et.departure_time, et.arrival_time);
-        finalTripIds.push(et.id);
+    console.log(`[RECALC] Filtered to ${relevantTrips.length} relevant trips (linked or time-matched)`);
 
-        return svc.entities.Trip.update(et.id, {
-          status: 'Voltooid',
-          total_km: totalKm,
-          km_warning: kmWarning,
-          trip_key,
-        });
-      }));
-      console.log(`[RECALC] Updated ${existingTrips.length} existing trips → Voltooid (parallel)`);
-    } else if (Array.isArray(trips) && trips.length > 0) {
-      // 1c. No existing trips — CREATE from payload (no vehicle history lookup)
+    // 1c. Update + claim — SEQUENTIAL for CPU stability
+    for (const et of relevantTrips) {
+      const totalKm = (et.start_km != null && et.end_km != null) ? Math.max(0, Number(et.end_km) - Number(et.start_km)) : null;
+      let kmWarning = null;
+      if (totalKm != null && totalKm > 400) kmWarning = `Rode afwijking: ${totalKm} km gereden (>400 km)`;
+      else if (totalKm != null && totalKm > 250) kmWarning = `Gele afwijking: ${totalKm} km gereden (>250 km)`;
+
+      const trip_key = et.trip_key || generateTripKey(et.employee_id, et.date, et.departure_time, et.arrival_time);
+
+      await svc.entities.Trip.update(et.id, {
+        time_entry_id, // Claim the trip
+        status: 'Voltooid',
+        total_km: totalKm,
+        km_warning: kmWarning,
+        trip_key,
+      });
+      finalTripIds.push(et.id);
+    }
+
+    if (relevantTrips.length > 0) {
+      console.log(`[RECALC] Claimed+updated ${relevantTrips.length} trips → Voltooid (sequential)`);
+    }
+
+    // 1d. Fallback: no existing trips matched → CREATE from payload
+    if (relevantTrips.length === 0 && Array.isArray(trips) && trips.length > 0) {
+      console.warn(`[RECALC] No existing trips matched → fallback create from payload`);
       for (const trip of trips) {
         let kmWarning = null;
         const totalKm = (trip.start_km != null && trip.end_km != null) ? Math.max(0, Number(trip.end_km) - Number(trip.start_km)) : null;
