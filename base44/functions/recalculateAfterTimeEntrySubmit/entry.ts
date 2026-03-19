@@ -151,6 +151,15 @@ Deno.serve(async (req) => {
     }
 
     // 2d. Match payload items against index — no extra DB queries
+    // Build linkedIndex for O(1) "already handled" lookups
+    const linkedIndex = new Map();
+    for (const ls of linkedSpw) {
+      const byKey = ls.spw_key || generateSpwKey(ls.employee_id, ls.date, ls.start_time, ls.end_time, 'standplaats');
+      const byTime = `${ls.start_time || ''}_${ls.end_time || ''}`;
+      if (!linkedIndex.has(byKey)) linkedIndex.set(byKey, ls);
+      if (!linkedIndex.has(byTime)) linkedIndex.set(byTime, ls);
+    }
+
     if (Array.isArray(standplaats_werk) && standplaats_werk.length > 0) {
       for (const spw of standplaats_werk) {
         if (!spw.customer_id && !spw.activity_id) continue;
@@ -163,14 +172,13 @@ Deno.serve(async (req) => {
 
         const spw_key = generateSpwKey(employee_id, date, spwStartTime, spwEndTime, 'standplaats');
 
-        // Skip if already handled in 2c (clean check against linkedSpw)
-        const alreadyHandled = linkedSpw.find(ls =>
-          (ls.spw_key && ls.spw_key === spw_key) ||
-          (ls.start_time === spwStartTime && ls.end_time === spwEndTime)
-        );
+        // Skip if already handled in 2c — O(1) via linkedIndex
+        const alreadyHandled = linkedIndex.get(spw_key) || linkedIndex.get(`${spwStartTime || ''}_${spwEndTime || ''}`);
         if (alreadyHandled) {
-          usedSpwIds.add(alreadyHandled.id);
-          if (!finalSpwIds.includes(alreadyHandled.id)) finalSpwIds.push(alreadyHandled.id);
+          if (!usedSpwIds.has(alreadyHandled.id)) {
+            finalSpwIds.push(alreadyHandled.id);
+            usedSpwIds.add(alreadyHandled.id);
+          }
           continue;
         }
 
