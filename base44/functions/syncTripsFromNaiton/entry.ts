@@ -492,7 +492,7 @@ Deno.serve(async (req) => {
     //         (opslaan van ONZE bepaalde drivers, niet als bron)
     // ═══════════════════════════════════════════════════════
     const driverHistoryEntries = [];
-    for (const r of tripRecords) {
+    for (const r of realTripRecords) {
       if (!r.driver || !r.plate || !r.start_time) continue;
       driverHistoryEntries.push({
         assetname: r.plate,
