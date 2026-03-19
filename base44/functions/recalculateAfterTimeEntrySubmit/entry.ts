@@ -173,8 +173,8 @@ Deno.serve(async (req) => {
         const spw_key = generateSpwKey(employee_id, date, spwStartTime, spwEndTime, 'standplaats');
 
         // Skip if already handled in 2c — O(1) via linkedIndex
-        const linkedLookupKey = `${spwStartTime || ''}_${spwEndTime || ''}_${spw.customer_id || ''}_${spw.activity_id || ''}`;
-        const alreadyHandled = linkedIndex.get(spw_key) || linkedIndex.get(linkedLookupKey);
+        const lookupKey = `${spwStartTime || ''}_${spwEndTime || ''}_${spw.customer_id || ''}_${spw.activity_id || ''}`;
+        const alreadyHandled = linkedIndex.get(spw_key) || linkedIndex.get(lookupKey);
         if (alreadyHandled) {
           if (!usedSpwIds.has(alreadyHandled.id)) {
             finalSpwIds.push(alreadyHandled.id);
@@ -184,7 +184,6 @@ Deno.serve(async (req) => {
         }
 
         // Lookup from in-memory index — O(1)
-        const lookupKey = `${spwStartTime || ''}_${spwEndTime || ''}_${spw.customer_id || ''}_${spw.activity_id || ''}`;
         const matches = spwIndex.get(lookupKey) || [];
         const match = matches.find(m => !usedSpwIds.has(m.id));
 
