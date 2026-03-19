@@ -133,6 +133,83 @@ Deno.serve(async (req) => {
     }
     if (positionDrivers > 0) addLog(`Drivers from currentpositions: ${positionDrivers}`);
 
+    // Source 3: Planning (Schedule entity) — match vehicle_id per dag → employee
+    try {
+      // Get vehicles to build plate → vehicle_id mapping
+      const vehicles = await svc.entities.Vehicle.filter({});
+      const plateToVehicleId = {};
+      const vehicleIdToPlate = {};
+      for (const v of vehicles) {
+        if (v.license_plate) {
+          const normPlate = v.license_plate.replace(/[-\s]/g, '').toLowerCase();
+          plateToVehicleId[normPlate] = v.id;
+          vehicleIdToPlate[v.id] = v.license_plate;
+        }
+      }
+
+      // Calculate week numbers for the date range
+      const startDate = new Date(date_from);
+      const endDate = new Date(date_to);
+      const weekNumbers = new Set();
+      const year = startDate.getFullYear();
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const jan1 = new Date(d.getFullYear(), 0, 1);
+        const weekNum = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+        weekNumbers.add(weekNum);
+      }
+
+      // Fetch schedules for those weeks
+      const schedules = [];
+      for (const wn of weekNumbers) {
+        const weekSchedules = await svc.entities.Schedule.filter({ week_number: wn, year });
+        schedules.push(...weekSchedules);
+      }
+
+      // Build: date+vehicleId → employee mapping
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const employees = await svc.entities.Employee.filter({ status: 'Actief' });
+      const empById = {};
+      for (const emp of employees) {
+        empById[emp.id] = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
+      }
+
+      // Map: plate (normalized) → { date → employeeName }
+      const planningDriverMap = {}; // gpsassetid → drivername (per date, latest match)
+      let planningMatches = 0;
+
+      for (const sch of schedules) {
+        if (!sch.employee_id) continue;
+        const empName = empById[sch.employee_id];
+        if (!empName) continue;
+
+        // Check each day in the schedule week
+        for (const dayName of dayNames) {
+          const vehicleId = sch[`${dayName}_vehicle_id`];
+          if (!vehicleId) continue;
+
+          const plate = vehicleIdToPlate[vehicleId];
+          if (!plate) continue;
+          const normPlate = plate.replace(/[-\s]/g, '').toLowerCase();
+
+          // Find the gpsassetid for this plate
+          let matchGpsId = null;
+          for (const [gid, info] of Object.entries(assetMap)) {
+            if (info.plate && info.plate.replace(/[-\s]/g, '').toLowerCase() === normPlate) {
+              matchGpsId = gid;
+              break;
+            }
+          }
+          if (matchGpsId && !driverMap[matchGpsId]) {
+            driverMap[matchGpsId] = empName;
+            planningMatches++;
+          }
+        }
+      }
+      if (planningMatches > 0) addLog(`Drivers from planning: ${planningMatches}`);
+    } catch (err) {
+      addLog(`Planning driver lookup failed (non-critical): ${err.message.slice(0, 150)}`);
+    }
+
     const gpsIds = Object.keys(assetMap);
     addLog(`${assets.length} assets, ${gpsIds.length} met gpsassetid, ${Object.keys(driverMap).length} drivers totaal`);
 
