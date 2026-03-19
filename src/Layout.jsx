@@ -153,12 +153,12 @@ const menuItems = [
       { name: "Tijdregistratie", icon: Clock, page: "TimeTracking" },
       { name: "Goedkeuringen", icon: CheckSquare, page: "Approvals" },
       { name: "GPS Buddy Import", icon: RefreshCw, page: "TripSync" },
+      { name: "Stoprapport", icon: CircleDot, page: "VehicleStopReport" },
       { name: "Ritten", icon: Truck, page: "Trips" },
       { name: "Standplaatswerk", icon: Package, page: "StandplaatsWerk" },
       { name: "Planning", icon: CalendarDays, page: "Planning" },
       { name: "Dienst-Shifttijd", icon: CircleDot, page: "ShiftTime" },
       { name: "Dagstaat", icon: ClipboardList, page: "Dagstaat" },
-      { name: "Stoprapport", icon: CircleDot, page: "VehicleStopReport" },
     ]
   },
   {
