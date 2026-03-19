@@ -88,15 +88,8 @@ Deno.serve(async (req) => {
         addLog(`currentpositions failed (non-critical): ${err.message}`);
         return {};
       }),
-      // Try multiple possible driver-related APIs in parallel
-      Promise.any([
-        naitonCall([{ name: "dataexchange_driverhistory", arguments: [{ name: "starttime", value: date_from }, { name: "stoptime", value: date_to }] }]),
-        naitonCall([{ name: "dataexchange_drivers", arguments: [] }]),
-        naitonCall([{ name: "dataexchange_persons", arguments: [] }]),
-      ]).catch(err => {
-        addLog(`No driver read API found (tried driverhistory, drivers, persons)`);
-        return {};
-      })
+      // driverhistory read not available in Naiton — resolved as empty
+      Promise.resolve({})
     ]);
 
     // 1a. Asset mapping: gpsassetid → { vehicle, plate }
