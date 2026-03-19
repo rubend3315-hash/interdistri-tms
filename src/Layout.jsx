@@ -158,7 +158,7 @@ const menuItems = [
       { name: "Planning", icon: CalendarDays, page: "Planning" },
       { name: "Dienst-Shifttijd", icon: CircleDot, page: "ShiftTime" },
       { name: "Dagstaat", icon: ClipboardList, page: "Dagstaat" },
-      { name: "Stoprapport", icon: Timer, page: "VehicleStopReport" },
+      { name: "Stoprapport", icon: CircleDot, page: "VehicleStopReport" },
     ]
   },
   {
