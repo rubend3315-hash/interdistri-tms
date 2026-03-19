@@ -10,6 +10,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import IOSMobileEntryDocs from './pages/iOSMobileEntryDocs';
 import RecentChanges from './pages/RecentChanges';
 import TripSync from './pages/TripSync';
+import VehicleStopReport from './pages/VehicleStopReport';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -69,6 +70,11 @@ const AuthenticatedApp = () => {
       <Route path="/RecentChanges" element={
         <LayoutWrapper currentPageName="RecentChanges">
           <RecentChanges />
+        </LayoutWrapper>
+      } />
+      <Route path="/VehicleStopReport" element={
+        <LayoutWrapper currentPageName="VehicleStopReport">
+          <VehicleStopReport />
         </LayoutWrapper>
       } />
       <Route path="/iOSMobileEntryDocs" element={
