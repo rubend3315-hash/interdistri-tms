@@ -119,16 +119,25 @@ Deno.serve(async (req) => {
     perf.trips_ms = Date.now() - tTrips;
 
     // ========================================
-    // 2. IDEMPOTENT STANDPLAATSWERK: fetch existing → update or create
+    // 2. IDEMPOTENT STANDPLAATSWERK: single-query + Map index
     // ========================================
     const tSpw = Date.now();
 
-    // 2a. Update any existing SPW already linked to this time_entry_id
-    const existingSpw = await svc.entities.StandplaatsWerk.filter({ time_entry_id });
-    console.log(`[RECALC] Found ${existingSpw.length} existing SPW for TE=${time_entry_id}`);
+    // 2a. ONE query: fetch ALL SPW for this employee+date
+    const allSpwForDay = await svc.entities.StandplaatsWerk.filter({ employee_id, date });
+    console.log(`[RECALC] Fetched ${allSpwForDay.length} total SPW for employee=${employee_id} date=${date}`);
 
-    for (const es of existingSpw) {
-      // Generate spw_key if missing
+    // 2b. Build multi-map index for O(1) lookups (key → array of records)
+    const spwIndex = new Map();
+    for (const s of allSpwForDay) {
+      const key = `${s.start_time || ''}_${s.end_time || ''}_${s.customer_id || ''}_${s.activity_id || ''}`;
+      if (!spwIndex.has(key)) spwIndex.set(key, []);
+      spwIndex.get(key).push(s);
+    }
+
+    // 2c. Update SPW already linked to this time_entry_id → Definitief
+    const linkedSpw = allSpwForDay.filter(s => s.time_entry_id === time_entry_id);
+    for (const es of linkedSpw) {
       const spw_key = es.spw_key || generateSpwKey(es.employee_id, es.date, es.start_time, es.end_time, 'standplaats');
       const updateData = { spw_key };
       if (es.status !== 'Definitief') updateData.status = 'Definitief';
@@ -138,7 +147,7 @@ Deno.serve(async (req) => {
       finalSpwIds.push(es.id);
     }
 
-    // 2b. Per-record matching: for each payload item, find existing by spw_key OR employee+date+times (fallback)
+    // 2d. Match payload items against index — no extra DB queries
     if (Array.isArray(standplaats_werk) && standplaats_werk.length > 0) {
       for (const spw of standplaats_werk) {
         if (!spw.customer_id && !spw.activity_id) continue;
@@ -146,32 +155,21 @@ Deno.serve(async (req) => {
         const spwStartTime = isTime(spw.start_time) ? spw.start_time : null;
         const spwEndTime = isTime(spw.end_time) ? spw.end_time : null;
         const spw_key = generateSpwKey(employee_id, date, spwStartTime, spwEndTime, 'standplaats');
+        const lookupKey = `${spwStartTime || ''}_${spwEndTime || ''}_${spw.customer_id || ''}_${spw.activity_id || ''}`;
 
-        // Skip if already handled in 2a (linked to this TE)
-        const alreadyLinked = existingSpw.find(es =>
-          (es.spw_key && es.spw_key === spw_key) ||
-          (es.start_time === spwStartTime && es.end_time === spwEndTime)
-        );
-        if (alreadyLinked) {
-          console.log(`[RECALC] SPW ${alreadyLinked.id} already linked, skipping`);
+        // Skip if already handled in 2c (linked to this TE)
+        if (finalSpwIds.some(id => linkedSpw.find(ls => ls.id === id &&
+          ((ls.spw_key && ls.spw_key === spw_key) ||
+           (ls.start_time === spwStartTime && ls.end_time === spwEndTime))
+        ))) {
           continue;
         }
 
-        // Search for unlinked or differently-linked match by spw_key OR employee+date+start+end (fallback)
-        const matchFilter = { employee_id, date };
-        if (spwStartTime) matchFilter.start_time = spwStartTime;
-        if (spwEndTime) matchFilter.end_time = spwEndTime;
-        const candidates = await svc.entities.StandplaatsWerk.filter(matchFilter);
-        
-        // Priority: match by spw_key first, then fallback to time-based matching
-        const match = candidates.find(c =>
-          !finalSpwIds.includes(c.id) &&
-          ((c.spw_key && c.spw_key === spw_key) ||
-           (c.start_time === spwStartTime && c.end_time === spwEndTime))
-        );
+        // Lookup from in-memory index — O(1)
+        const matches = spwIndex.get(lookupKey) || [];
+        const match = matches.find(m => !finalSpwIds.includes(m.id));
 
         if (match) {
-          // Update existing record: claim it for this TE + ensure spw_key is set
           await svc.entities.StandplaatsWerk.update(match.id, {
             time_entry_id,
             spw_key,
@@ -182,9 +180,8 @@ Deno.serve(async (req) => {
             status: 'Definitief',
           });
           finalSpwIds.push(match.id);
-          console.log(`[RECALC] Claimed existing SPW ${match.id} → TE=${time_entry_id}, spw_key=${spw_key}, Definitief`);
+          console.log(`[RECALC] Claimed existing SPW ${match.id} → TE=${time_entry_id}, Definitief`);
         } else {
-          // No match found — create new with spw_key
           const s = await svc.entities.StandplaatsWerk.create({
             employee_id, time_entry_id, date,
             spw_key,
@@ -197,64 +194,12 @@ Deno.serve(async (req) => {
             status: 'Definitief',
           });
           finalSpwIds.push(s.id);
-          console.log(`[RECALC] Created new SPW ${s.id} with spw_key=${spw_key}`);
+          console.log(`[RECALC] Created new SPW ${s.id}`);
         }
       }
-    }
-
-    // 2c. Cleanup duplicates: same employee+date+start_time+end_time, keep newest
-    try {
-      const allSpwForDay = await svc.entities.StandplaatsWerk.filter({ employee_id, date });
-      const seen = new Map(); // key → { id, created_date }
-      const toDelete = [];
-      // Sort by created_date DESC so first encountered = newest
-      allSpwForDay.sort((a, b) => (b.created_date || '').localeCompare(a.created_date || ''));
-      for (const s of allSpwForDay) {
-        const key = `${s.start_time || ''}|${s.end_time || ''}|${s.customer_id || ''}|${s.activity_id || ''}`;
-        if (seen.has(key)) {
-          toDelete.push(s.id);
-        } else {
-          seen.set(key, s.id);
-        }
-      }
-      if (toDelete.length > 0) {
-        console.log(`[RECALC] Cleaning up ${toDelete.length} duplicate SPW records`);
-        for (const did of toDelete) await safeDelete(svc.entities.StandplaatsWerk, did, 'dup-spw');
-      }
-    } catch (dupErr) {
-      console.error('[RECALC SPW DEDUP] Non-critical:', dupErr.message);
     }
 
     perf.spw_ms = Date.now() - tSpw;
-
-    // ========================================
-    // 2d. CLEANUP ORPHAN DRAFTS (different time_entry_id)
-    // ========================================
-    const tDraftCleanup = Date.now();
-    try {
-      // Orphan draft trips: same employee+date, Gepland status, different time_entry_id
-      const draftTrips = await svc.entities.Trip.filter({
-        employee_id, date, status: 'Gepland',
-      });
-      const orphanTrips = draftTrips.filter(dt => dt.time_entry_id !== time_entry_id);
-      if (orphanTrips.length > 0) {
-        console.log(`[RECALC] Cleaning up ${orphanTrips.length} orphan draft trips`);
-        for (const dt of orphanTrips) await safeDelete(svc.entities.Trip, dt.id, 'orphan-trip');
-      }
-
-      // Orphan draft SPW: same employee+date, Concept status, different time_entry_id
-      const draftSpw = await svc.entities.StandplaatsWerk.filter({
-        employee_id, date, status: 'Concept',
-      });
-      const orphanSpw = draftSpw.filter(ds => ds.time_entry_id !== time_entry_id);
-      if (orphanSpw.length > 0) {
-        console.log(`[RECALC] Cleaning up ${orphanSpw.length} orphan draft SPW`);
-        for (const ds of orphanSpw) await safeDelete(svc.entities.StandplaatsWerk, ds.id, 'orphan-spw');
-      }
-    } catch (draftCleanupErr) {
-      console.error('[RECALC DRAFT CLEANUP] Non-critical:', draftCleanupErr.message);
-    }
-    perf.draft_cleanup_ms = Date.now() - tDraftCleanup;
 
     // ========================================
     // 3. WRITE VERIFICATION
