@@ -65,17 +65,24 @@ Deno.serve(async (req) => {
       if (t.time_entry_id === time_entry_id) return true;
       // Linked to a DIFFERENT TimeEntry → skip (belongs to another shift)
       if (t.time_entry_id && t.time_entry_id !== time_entry_id) return false;
-      // Unlinked trip → include if time matches
+      // Unlinked trip → include only if times positively match
       const matchesTime =
-        (!t.departure_time || !start_time || t.departure_time === start_time) &&
-        (!t.arrival_time || !end_time || t.arrival_time === end_time);
+        (!t.departure_time || (start_time && t.departure_time === start_time)) &&
+        (!t.arrival_time || (end_time && t.arrival_time === end_time));
       return matchesTime;
     });
 
     console.log(`[RECALC] Filtered to ${relevantTrips.length} relevant trips (linked or time-matched)`);
 
-    // 1c. Update + claim — SEQUENTIAL for CPU stability
+    // 1c. Update + claim — SEQUENTIAL, skip if already correct
     for (const et of relevantTrips) {
+      finalTripIds.push(et.id);
+
+      // Skip write if already fully correct
+      if (et.time_entry_id === time_entry_id && et.status === 'Voltooid' && et.trip_key) {
+        continue;
+      }
+
       const totalKm = (et.start_km != null && et.end_km != null) ? Math.max(0, Number(et.end_km) - Number(et.start_km)) : null;
       let kmWarning = null;
       if (totalKm != null && totalKm > 400) kmWarning = `Rode afwijking: ${totalKm} km gereden (>400 km)`;
@@ -84,13 +91,12 @@ Deno.serve(async (req) => {
       const trip_key = et.trip_key || generateTripKey(et.employee_id, et.date, et.departure_time, et.arrival_time);
 
       await svc.entities.Trip.update(et.id, {
-        time_entry_id, // Claim the trip
+        time_entry_id,
         status: 'Voltooid',
         total_km: totalKm,
         km_warning: kmWarning,
         trip_key,
       });
-      finalTripIds.push(et.id);
     }
 
     if (relevantTrips.length > 0) {
