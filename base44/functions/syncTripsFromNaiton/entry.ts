@@ -1,22 +1,22 @@
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║ syncTripsFromNaiton v21 — Production GPS Buddy / Naiton integration ║
+// ║ syncTripsFromNaiton v22 — Production GPS Buddy / Naiton integration ║
 // ║ Auth: Admin-only                                                     ║
-// ║ CHANGES vs v20:                                                      ║
-// ║  - Driver: driverhistory READ als primaire bron (assetname→driver)   ║
-// ║  - Driver: currentpositions personjson als secondary                  ║
-// ║  - driverhistory WRITE: juiste _payload format (JSON string)         ║
-// ║  - Rit opbouw: depot-based grouping (niet 1 per segment)             ║
-// ║    → rit eindigt bij depot-stop, >120min stilstand, of dagwissel     ║
-// ║  - KM: odometer primair, distance fallback                           ║
-// ║  - Stilstand: som van stop-segmenten >5min binnen gegroepeerde rit   ║
+// ║ CHANGES vs v21:                                                      ║
+// ║  - Rit = standplaats→standplaats (Fleerbosseweg 19, Kapelle)         ║
+// ║    → rit begint bij VERTREK van standplaats                          ║
+// ║    → rit eindigt bij AANKOMST op standplaats                         ║
+// ║  - Stilstand: alleen stops BINNEN de rit (tussen vertrek/aankomst)   ║
+// ║  - Depot-tijd: stops op PostNL/depot locaties binnen de rit          ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const BASE_URL = 'https://dawa-prod.naiton.com';
 const INSERT_BATCH_SIZE = 50;
 const MAX_DAYS = 31;
-const DEPOT_KEYWORDS = ['postnl', 'depot', 'hub', 'sorteer', 'distributie', 'kapelle', 'fleerbos'];
-const LONG_STOP_THRESHOLD_MIN = 120; // 2 uur = einde rit
+// Standplaats = Fleerbosseweg 19, 4421 RR Kapelle
+const STANDPLAATS_KEYWORDS = ['fleerbos', 'kapelle'];
+// PostNL depot keywords (for depot_time calculation within a ride)
+const DEPOT_KEYWORDS = ['postnl', 'depot', 'hub', 'sorteer', 'distributie'];
 const SHORT_STOP_THRESHOLD_MIN = 5;  // >5 min telt als stilstand
 
 Deno.serve(async (req) => {
