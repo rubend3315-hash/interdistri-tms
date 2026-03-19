@@ -1,23 +1,22 @@
 // ╔══════════════════════════════════════════════════════════════════╗
-// ║ syncTripsFromNaiton v3 — GPS Buddy / Naiton trip sync          ║
+// ║ syncTripsFromNaiton v7 — GPS Buddy / Naiton trip sync          ║
 // ║ Auth: Admin-only                                                ║
 // ║ Endpoint: POST /datad/execute                                   ║
-// ║ 1. dataexchange_assets → voertuiglijst                         ║
-// ║ 2. dataexchange_trips → Drive+Stop segmenten                   ║
-// ║ 3. Combineer Drive + eerstvolgende Stop → 1 rit                ║
-// ║ 4. Sla op in TripRecord (dedup: gpsassetid + start_time)       ║
-// ║ 5. Match driver met Employee → TripRecordLink                  ║
+// ║ Batching: max 10 assets per API call, max 50 records per insert ║
+// ║ Max range: 31 dagen                                             ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const BASE_URL = 'https://dawa-prod.naiton.com';
+const ASSET_BATCH_SIZE = 10;
+const INSERT_BATCH_SIZE = 50;
+const MAX_DAYS = 31;
 
 Deno.serve(async (req) => {
   const t0 = Date.now();
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
     if (user?.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
@@ -27,6 +26,15 @@ Deno.serve(async (req) => {
 
     if (!date_from || !date_to) {
       return Response.json({ error: 'date_from en date_to zijn verplicht' }, { status: 400 });
+    }
+
+    // Validate max range
+    const diffDays = Math.ceil((new Date(date_to) - new Date(date_from)) / 86400000);
+    if (diffDays > MAX_DAYS) {
+      return Response.json({ error: `Maximaal ${MAX_DAYS} dagen per synchronisatie (opgegeven: ${diffDays} dagen)` }, { status: 400 });
+    }
+    if (diffDays < 0) {
+      return Response.json({ error: 'date_from moet vóór date_to liggen' }, { status: 400 });
     }
 
     const CLIENT_ID = Deno.env.get('NAITON_CLIENT_ID');
@@ -41,11 +49,10 @@ Deno.serve(async (req) => {
       'ClientSecret': CLIENT_SECRET,
     };
 
-    // ── Step 1: Fetch assets via /datad/execute ──
+    // ── Step 1: Fetch assets ──
     console.log('[NAITON] Fetching assets...');
     const assetsRes = await fetch(`${BASE_URL}/datad/execute`, {
-      method: 'POST',
-      headers,
+      method: 'POST', headers,
       body: JSON.stringify([{
         name: "dataexchange_assets",
         arguments: [{ name: "inactiveAttributes", value: true }]
@@ -60,9 +67,7 @@ Deno.serve(async (req) => {
 
     const assetsJson = await assetsRes.json();
     const assets = assetsJson.dataexchange_assets || [];
-    console.log(`[NAITON] ${assets.length} assets opgehaald`);
 
-    // Build asset lookup
     const assetMap = {};
     for (const a of assets) {
       if (!a.gpsassetid) continue;
@@ -73,77 +78,93 @@ Deno.serve(async (req) => {
     }
 
     const gpsIds = Object.keys(assetMap);
+    console.log(`[NAITON] ${assets.length} assets, ${gpsIds.length} met gpsassetid`);
+
     if (gpsIds.length === 0) {
-      return Response.json({ success: true, message: 'Geen GPS assets gevonden', created: 0, skipped: 0, linked: 0, ms: Date.now() - t0 });
+      return Response.json({ error: 'Geen GPS assets gevonden in Naiton' }, { status: 404 });
     }
 
-    // ── Step 2: Fetch trips via /datad/execute ──
-    console.log(`[NAITON] Fetching trips from ${date_from} to ${date_to} for ${gpsIds.length} assets...`);
-    const tripsRes = await fetch(`${BASE_URL}/datad/execute`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify([{
-        name: "dataexchange_trips",
-        arguments: [
-          { name: "gpsassetids", value: gpsIds },
-          { name: "starttime", value: date_from },
-          { name: "stoptime", value: date_to },
-          { name: "includeallattributes", value: true }
-        ]
-      }])
-    });
+    // ── Step 2: Fetch trips in batches of ASSET_BATCH_SIZE ──
+    console.log(`[NAITON] Fetching trips ${date_from} → ${date_to}, ${gpsIds.length} assets in batches of ${ASSET_BATCH_SIZE}...`);
+    const allTrips = [];
 
-    if (!tripsRes.ok) {
-      const errText = await tripsRes.text();
-      console.error('[NAITON] Trips fetch failed:', tripsRes.status, errText);
-      return Response.json({ error: `Trips API fout: ${tripsRes.status}`, details: errText }, { status: 502 });
+    for (let i = 0; i < gpsIds.length; i += ASSET_BATCH_SIZE) {
+      const chunk = gpsIds.slice(i, i + ASSET_BATCH_SIZE);
+      console.log(`[NAITON] Batch ${Math.floor(i / ASSET_BATCH_SIZE) + 1}: ${chunk.length} assets`);
+
+      const tripsRes = await fetch(`${BASE_URL}/datad/execute`, {
+        method: 'POST', headers,
+        body: JSON.stringify([{
+          name: "dataexchange_trips",
+          arguments: [
+            { name: "gpsassetids", value: chunk },
+            { name: "starttime", value: date_from },
+            { name: "stoptime", value: date_to },
+            { name: "includeallattributes", value: true }
+          ]
+        }])
+      });
+
+      if (!tripsRes.ok) {
+        const errText = await tripsRes.text();
+        console.error(`[NAITON] Trips batch failed:`, tripsRes.status, errText);
+        continue; // skip failed batch, process the rest
+      }
+
+      const tripsJson = await tripsRes.json();
+      const batchTrips = tripsJson.dataexchange_trips || [];
+      allTrips.push(...batchTrips);
     }
 
-    const tripsJson = await tripsRes.json();
-    const trips = tripsJson.dataexchange_trips || [];
-    console.log(`[NAITON] ${trips.length} trip segmenten opgehaald`);
+    console.log(`[NAITON] ${allTrips.length} trip segmenten totaal opgehaald`);
 
-    if (trips.length === 0) {
-      return Response.json({ success: true, message: 'Geen trips gevonden in deze periode', created: 0, skipped: 0, linked: 0, ms: Date.now() - t0 });
+    if (allTrips.length === 0) {
+      return Response.json({
+        success: true, message: 'Geen ritten gevonden in deze periode',
+        assets: gpsIds.length, segments: 0, rides: 0, created: 0, skipped: 0, linked: 0, ms: Date.now() - t0
+      });
     }
 
-    // ── Step 3: Combine Drive + eerstvolgende Stop → 1 rit ──
-    // Sort by gpsassetid + start time to ensure correct ordering
-    trips.sort((a, b) => {
-      const aId = a.gpsassetid || '';
-      const bId = b.gpsassetid || '';
+    // ── Step 3: Sort segments by asset + time ──
+    allTrips.sort((a, b) => {
+      const aId = String(a.gpsassetid || '');
+      const bId = String(b.gpsassetid || '');
       if (aId !== bId) return aId < bId ? -1 : 1;
-      return new Date(a.start || 0) - new Date(b.start || 0);
+      const aTime = a.start || a.stop || '';
+      const bTime = b.start || b.stop || '';
+      return new Date(aTime) - new Date(bTime);
     });
 
+    // ── Step 4: Combine Drive + next Stop → 1 ride ──
     const rides = [];
-    let currentDrive = null;
+    let idx = 0;
 
-    for (const t of trips) {
+    while (idx < allTrips.length) {
+      const t = allTrips[idx];
       const type = (t.type || '').toLowerCase();
 
       if (type === 'drive') {
-        // If there was a previous drive without a matching stop, save it standalone
-        if (currentDrive) {
-          rides.push(finalizeDrive(currentDrive, null, assetMap));
+        const drive = t;
+        let stop = null;
+
+        // Look ahead for matching stop on same asset
+        if (idx + 1 < allTrips.length) {
+          const next = allTrips[idx + 1];
+          if ((next.type || '').toLowerCase() === 'stop' && next.gpsassetid === drive.gpsassetid) {
+            stop = next;
+            idx++; // consume the stop
+          }
         }
-        currentDrive = t;
-      } else if (type === 'stop' && currentDrive && t.gpsassetid === currentDrive.gpsassetid) {
-        // Match this stop to the current drive
-        rides.push(finalizeDrive(currentDrive, t, assetMap));
-        currentDrive = null;
+
+        rides.push(buildRide(drive, stop, assetMap));
       }
-      // Ignore stops without a preceding drive
+      // Skip orphan stops
+      idx++;
     }
 
-    // Handle trailing drive without stop
-    if (currentDrive) {
-      rides.push(finalizeDrive(currentDrive, null, assetMap));
-    }
+    console.log(`[NAITON] ${rides.length} ritten samengesteld uit ${allTrips.length} segmenten`);
 
-    console.log(`[NAITON] ${rides.length} ritten samengesteld uit ${trips.length} segmenten`);
-
-    // ── Step 4: Save TripRecords (dedup via gpsassetid + start_time) ──
+    // ── Step 5: Dedup against existing records ──
     const existingRecords = await svc.entities.TripRecord.filter({
       date: { $gte: date_from, $lte: date_to }
     });
@@ -151,25 +172,40 @@ Deno.serve(async (req) => {
       existingRecords.map(r => `${r.gpsassetid}_${r.start_time}`)
     );
 
-    let created = 0, skipped = 0;
-    const newRecordIds = [];
+    const toInsert = [];
+    let skipped = 0;
 
     for (const r of rides) {
-      const dedupKey = `${r.gpsassetid}_${r.start_time}`;
-      if (existingKeys.has(dedupKey)) {
+      const key = `${r.gpsassetid}_${r.start_time}`;
+      if (existingKeys.has(key)) {
         skipped++;
         continue;
       }
-
-      const record = await svc.entities.TripRecord.create(r);
-      existingKeys.add(dedupKey);
-      newRecordIds.push({ id: record.id, driver: r.driver, date: r.date });
-      created++;
+      existingKeys.add(key);
+      toInsert.push(r);
     }
 
-    console.log(`[NAITON] Created: ${created}, Skipped (dedup): ${skipped}`);
+    // ── Step 6: Insert in batches of INSERT_BATCH_SIZE ──
+    let created = 0;
+    const newRecordIds = [];
 
-    // ── Step 5: Match drivers to employees → TripRecordLink ──
+    for (let i = 0; i < toInsert.length; i += INSERT_BATCH_SIZE) {
+      const batch = toInsert.slice(i, i + INSERT_BATCH_SIZE);
+      const results = await svc.entities.TripRecord.bulkCreate(batch);
+
+      for (let j = 0; j < results.length; j++) {
+        newRecordIds.push({
+          id: results[j].id,
+          driver: batch[j].driver,
+          date: batch[j].date,
+        });
+      }
+      created += results.length;
+    }
+
+    console.log(`[NAITON] Created: ${created}, Skipped: ${skipped}`);
+
+    // ── Step 7: Match drivers → employees → TripRecordLink ──
     let linked = 0;
     if (newRecordIds.length > 0) {
       const employees = await svc.entities.Employee.filter({ status: 'Actief' });
@@ -184,32 +220,40 @@ Deno.serve(async (req) => {
         empByName[reversed] = emp;
       }
 
+      const linksToCreate = [];
       for (const rec of newRecordIds) {
         if (!rec.driver) continue;
-        const driverNorm = rec.driver.replace(/\s+/g, ' ').trim().toLowerCase();
-        const matchedEmp = empByName[driverNorm];
-
-        if (matchedEmp) {
-          await svc.entities.TripRecordLink.create({
+        const norm = rec.driver.replace(/\s+/g, ' ').trim().toLowerCase();
+        const emp = empByName[norm];
+        if (emp) {
+          linksToCreate.push({
             trip_record_id: rec.id,
-            employee_id: matchedEmp.id,
-            employee_name: `${matchedEmp.first_name || ''} ${matchedEmp.last_name || ''}`.trim(),
+            employee_id: emp.id,
+            employee_name: `${emp.first_name || ''} ${emp.last_name || ''}`.trim(),
             date: rec.date,
             approved: false,
           });
-          linked++;
         }
       }
+
+      // Bulk insert links
+      for (let i = 0; i < linksToCreate.length; i += INSERT_BATCH_SIZE) {
+        const batch = linksToCreate.slice(i, i + INSERT_BATCH_SIZE);
+        await svc.entities.TripRecordLink.bulkCreate(batch);
+        linked += batch.length;
+      }
+
       console.log(`[NAITON] Linked ${linked} records to employees`);
     }
 
     return Response.json({
       success: true,
+      assets: gpsIds.length,
+      segments: allTrips.length,
+      rides: rides.length,
       created,
       skipped,
       linked,
-      total_segments: trips.length,
-      total_rides: rides.length,
       ms: Date.now() - t0,
     });
 
@@ -220,26 +264,64 @@ Deno.serve(async (req) => {
 });
 
 /**
- * Combine a Drive segment + optional Stop segment into a single ride record.
+ * Build a ride from a Drive segment + optional Stop segment.
  */
-function finalizeDrive(drive, stop, assetMap) {
+function buildRide(drive, stop, assetMap) {
   const assetId = drive.gpsassetid;
   const startTime = drive.start;
-  const endTime = stop ? stop.stop : (drive.stop || drive.end || null);
+  const endTime = stop ? (stop.stop || stop.end) : (drive.stop || drive.end || null);
 
   const startKm = Number(drive.odometerstartkm || 0);
-  const endKm = stop ? Number(stop.odometerstopkm || 0) : Number(drive.odometerstopkm || 0);
+  const endKm = stop
+    ? Number(stop.odometerstopkm || 0)
+    : Number(drive.odometerstopkm || 0);
 
+  // total_hours
   let totalHours = null;
   if (startTime && endTime) {
     totalHours = Number(((new Date(endTime) - new Date(startTime)) / 3600000).toFixed(2));
   }
 
-  const totalKm = (endKm > 0 && startKm > 0 && endKm > startKm) ? endKm - startKm : null;
+  // total_km: odometer first, fallback distance/1000
+  let totalKm = null;
+  if (endKm > 0 && startKm > 0 && endKm > startKm) {
+    totalKm = endKm - startKm;
+  } else {
+    const dist = Number(drive.distance || 0);
+    if (dist > 0) totalKm = Number((dist / 1000).toFixed(1));
+  }
+
+  // Driver: direct field or parse additionaldata
+  let driver = drive.driver || '';
+  if (!driver && drive.additionaldata) {
+    try {
+      const ad = typeof drive.additionaldata === 'string'
+        ? JSON.parse(drive.additionaldata)
+        : drive.additionaldata;
+      driver = ad.driver || ad.drivername || ad.Driver || '';
+    } catch { /* ignore */ }
+  }
+
+  // Long stops & depot time
+  let longStopsMin = 0;
+  let depotMin = 0;
+  if (stop) {
+    const stopStart = stop.start || stop.stop;
+    const stopEnd = stop.stop || stop.end;
+    if (stopStart && stopEnd) {
+      const durMin = (new Date(stopEnd) - new Date(stopStart)) / 60000;
+      if (durMin > 5) longStopsMin = Math.round(durMin);
+
+      const addr = (stop.address || stop.location || '').toLowerCase();
+      if (['postnl', 'depot', 'hub', 'sorteer', 'distributie'].some(kw => addr.includes(kw))) {
+        depotMin = Math.round(durMin);
+      }
+    }
+  }
 
   return {
     gpsassetid: assetId,
-    driver: drive.driver || '',
+    driver,
     vehicle: assetMap[assetId]?.vehicle || '',
     plate: assetMap[assetId]?.plate || '',
     start_time: startTime,
@@ -248,6 +330,8 @@ function finalizeDrive(drive, stop, assetMap) {
     end_km: endKm > 0 ? endKm : null,
     total_km: totalKm,
     total_hours: totalHours,
+    depot_time_minutes: depotMin || null,
+    long_stops_minutes: longStopsMin || null,
     date: startTime ? startTime.split('T')[0] : null,
   };
 }
