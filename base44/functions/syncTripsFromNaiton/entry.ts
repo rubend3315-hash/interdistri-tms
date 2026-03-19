@@ -407,7 +407,9 @@ Deno.serve(async (req) => {
 
       // Stilstand: classificeer stops als depot of overige stilstand
       let longStopsMin = 0;  // stilstand >5 min buiten depot (en buiten standplaats)
+      let longStopsCount = 0;
       let depotMin = 0;      // stilstand op PostNL depot
+      let depotStopsCount = 0;
       for (let si = 0; si < segs.length; si++) {
         const s = segs[si];
         if ((s.type || '').toLowerCase() !== 'stop') continue;
