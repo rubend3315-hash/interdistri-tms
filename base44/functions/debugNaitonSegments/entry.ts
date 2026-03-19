@@ -55,8 +55,8 @@ Deno.serve(async (req) => {
       const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
-    const STANDPLAATS_LAT = 51.4945;
-    const STANDPLAATS_LON = 3.9595;
+    const STANDPLAATS_LAT = 51.4700;
+    const STANDPLAATS_LON = 3.9716;
 
     // Collect all stop segments with their GPS coordinates
     const stops = segments
