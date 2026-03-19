@@ -447,6 +447,7 @@ Deno.serve(async (req) => {
         end_km: endKm > 0 ? endKm : null,
         total_km: totalKm,
         total_hours: totalHours,
+        depot_time_minutes: depotMin > 0 ? depotMin : null,
         long_stops_minutes: longStopsMin > 0 ? longStopsMin : null,
         date: ride.date,
       });
