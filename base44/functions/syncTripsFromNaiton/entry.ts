@@ -262,6 +262,9 @@ Deno.serve(async (req) => {
 
     const rides = [];
 
+    let standplaatsHits = 0;
+    let totalStops = 0;
+
     for (const [assetId, segments] of Object.entries(segmentsByAsset)) {
       // State machine: 
       //   IDLE = at standplaats, waiting for departure (first drive segment away)
