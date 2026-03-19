@@ -405,18 +405,22 @@ Deno.serve(async (req) => {
         if (totalDist > 0) totalKm = Number((totalDist / 1000).toFixed(1));
       }
 
-      // Stilstand: som van stop-segmenten >5 min (exclusief standplaats-stop aan einde rit)
-      let longStopsMin = 0;
-      let depotMin = 0;
+      // Stilstand: classificeer stops als depot of overige stilstand
+      let longStopsMin = 0;  // stilstand >5 min buiten depot (en buiten standplaats)
+      let depotMin = 0;      // stilstand op PostNL depot
       for (let si = 0; si < segs.length; si++) {
         const s = segs[si];
         if ((s.type || '').toLowerCase() !== 'stop') continue;
         // Skip de laatste stop als dat de standplaats is (terugkomst)
         if (si === segs.length - 1 && isStandplaats(s)) continue;
+        // Skip stops op de standplaats zelf (bijv. tussenstop thuis)
+        if (isStandplaats(s)) continue;
         const sStart = new Date(s.start || s.stop);
         const sEnd = new Date(s.stop || s.end || s.start);
         const durMin = (sEnd - sStart) / 60000;
-        if (durMin > SHORT_STOP_THRESHOLD_MIN) {
+        if (isDepot(s)) {
+          depotMin += Math.round(durMin);
+        } else if (durMin > SHORT_STOP_THRESHOLD_MIN) {
           longStopsMin += Math.round(durMin);
         }
       }
