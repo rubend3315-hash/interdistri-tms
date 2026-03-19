@@ -121,13 +121,17 @@ export default function TripSync() {
         <Card className={syncResult.created > 0 ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200"}>
           <CardContent className="px-4 py-3 flex items-center gap-3">
             <CheckCircle2 className={`w-5 h-5 ${syncResult.created > 0 ? 'text-emerald-600' : 'text-blue-600'}`} />
-            <div className="text-sm">
+            <div className="text-sm flex flex-wrap gap-x-2 gap-y-0.5">
+              {syncResult.assets != null && <span className="text-slate-500">{syncResult.assets} assets</span>}
+              {syncResult.segments != null && <span className="text-slate-500">· {syncResult.segments} segmenten</span>}
+              {syncResult.rides != null && <span className="text-slate-500">· {syncResult.rides} ritten</span>}
+              <span className="text-slate-500">·</span>
               <span className="font-medium">{syncResult.created} nieuw</span>
-              <span className="text-slate-500 mx-2">·</span>
-              <span>{syncResult.skipped} overgeslagen (dedup)</span>
-              <span className="text-slate-500 mx-2">·</span>
+              <span className="text-slate-500">·</span>
+              <span>{syncResult.skipped} overgeslagen</span>
+              <span className="text-slate-500">·</span>
               <span>{syncResult.linked} gekoppeld</span>
-              <span className="text-slate-500 mx-2">·</span>
+              <span className="text-slate-500">·</span>
               <span className="text-slate-400">{syncResult.ms}ms</span>
             </div>
           </CardContent>
