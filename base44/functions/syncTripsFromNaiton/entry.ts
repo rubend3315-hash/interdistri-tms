@@ -583,7 +583,7 @@ Deno.serve(async (req) => {
     const toInsert = [];
     let skipped = 0;
 
-    for (const r of tripRecords) {
+    for (const r of realTripRecords) {
       const key = `${r.gpsassetid}_${r.date}_${r.start_time}`;
       if (existingKeys.has(key)) { skipped++; continue; }
       existingKeys.add(key);
