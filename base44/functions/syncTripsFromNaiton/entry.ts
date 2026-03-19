@@ -452,7 +452,9 @@ Deno.serve(async (req) => {
         total_km: totalKm,
         total_hours: totalHours,
         depot_time_minutes: depotMin > 0 ? depotMin : null,
+        depot_stops_count: depotStopsCount > 0 ? depotStopsCount : null,
         long_stops_minutes: longStopsMin > 0 ? longStopsMin : null,
+        long_stops_count: longStopsCount > 0 ? longStopsCount : null,
         date: ride.date,
       });
     }
