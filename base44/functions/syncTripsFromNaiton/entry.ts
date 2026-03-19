@@ -391,14 +391,11 @@ Deno.serve(async (req) => {
     }
 
     if (driverHistoryEntries.length > 0) {
-      addLog(`Step 5: Writing ${driverHistoryEntries.length} driver history entries (WRITE ONLY)...`);
+      addLog(`Step 5: Writing ${driverHistoryEntries.length} driver history entries...`);
       try {
         await naitonCall([{
           name: "dataexchange_driverhistoryupsert",
-          arguments: driverHistoryEntries.map(e => ({
-            name: "entry",
-            value: e
-          }))
+          arguments: [{ name: "_payload", value: JSON.stringify(driverHistoryEntries) }]
         }]);
         addLog('Driver history write OK');
       } catch (err) {
