@@ -336,6 +336,7 @@ Deno.serve(async (req) => {
       }
       return true;
     });
+    addLog(`Standplaats detectie: ${standplaatsHits}/${totalStops} stops herkend als standplaats (radius ${STANDPLAATS_RADIUS_M}m)`);
     if (openRides > 0) addLog(`${openRides} onafgeronde ritten overgeslagen (niet terug bij standplaats)`);
     addLog(`${filteredRides.length} voltooide ritten van ${rides.length} totaal`);
     if (filteredRides.length > 0) {
