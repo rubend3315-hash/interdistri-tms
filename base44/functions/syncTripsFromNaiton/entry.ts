@@ -1,20 +1,22 @@
-// ╔══════════════════════════════════════════════════════════════════╗
-// ║ syncTripsFromNaiton v16 — Full GPS Buddy / Naiton integration  ║
-// ║ Auth: Admin-only                                                ║
-// ║ 1. dataexchange_assets → voertuig mapping                      ║
-// ║ 2. dataexchange_trips → Drive+Stop segmenten                   ║
-// ║ 3. dataexchange_currentpositions → driver mapping (personjson)  ║
-// ║ 4. Combine Drive+Stop → ritten, resolve drivers                ║
-// ║ 5. dataexchange_driverhistoryupsert (1 bulk call)              ║
-// ║ 6. locationmanager_addupdatelocations (1 call)                 ║
-// ║ 7. transportapi_importorders (1 call)                          ║
-// ║ 8. Save to TripRecord + TripRecordLink (batch insert)          ║
-// ╚══════════════════════════════════════════════════════════════════╝
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║ syncTripsFromNaiton v20 — Production GPS Buddy / Naiton integration ║
+// ║ Auth: Admin-only                                                     ║
+// ║ CHANGES vs v16:                                                      ║
+// ║  - Driver: currentpositions ONLY as source (personjson parsing)      ║
+// ║  - driverhistory = WRITE ONLY (niet als lookup)                      ║
+// ║  - Rit opbouw: depot-based grouping (niet 1 per segment)             ║
+// ║    → rit eindigt bij depot-stop, >120min stilstand, of dagwissel     ║
+// ║  - KM: odometer primair, distance fallback                           ║
+// ║  - Stilstand: som van stop-segmenten >5min binnen gegroepeerde rit   ║
+// ╚══════════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const BASE_URL = 'https://dawa-prod.naiton.com';
 const INSERT_BATCH_SIZE = 50;
 const MAX_DAYS = 31;
+const DEPOT_KEYWORDS = ['postnl', 'depot', 'hub', 'sorteer', 'distributie', 'kapelle', 'fleerbos'];
+const LONG_STOP_THRESHOLD_MIN = 120; // 2 uur = einde rit
+const SHORT_STOP_THRESHOLD_MIN = 5;  // >5 min telt als stilstand
 
 Deno.serve(async (req) => {
   const t0 = Date.now();
@@ -55,10 +57,10 @@ Deno.serve(async (req) => {
       'ClientSecret': CLIENT_SECRET,
     };
 
-    // Helper for /datad/execute calls
     const naitonCall = async (functions) => {
       const res = await fetch(`${BASE_URL}/datad/execute`, {
-        method: 'POST', headers: apiHeaders,
+        method: 'POST',
+        headers: apiHeaders,
         body: JSON.stringify(functions),
       });
       if (!res.ok) {
@@ -68,10 +70,10 @@ Deno.serve(async (req) => {
       return res.json();
     };
 
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════
     // STEP 1: Fetch assets + currentpositions (parallel)
-    // ═══════════════════════════════════════════
-    addLog('Fetching assets + currentpositions...');
+    // ═══════════════════════════════════════════════════════
+    addLog('Step 1: Fetching assets + currentpositions...');
 
     const [assetsJson, positionsJson] = await Promise.all([
       naitonCall([{
@@ -87,10 +89,8 @@ Deno.serve(async (req) => {
       })
     ]);
 
+    // 1a. Asset mapping: gpsassetid → { vehicle, plate }
     const assets = assetsJson.dataexchange_assets || [];
-    const positions = positionsJson.dataexchange_currentpositions || [];
-
-    // 3.1 Asset mapping: gpsassetid → { vehicle, plate }
     const assetMap = {};
     for (const a of assets) {
       if (!a.gpsassetid) continue;
@@ -100,34 +100,35 @@ Deno.serve(async (req) => {
       };
     }
 
-    // 3.2 Driver mapping from currentpositions: gpsassetid → "Voornaam Achternaam"
+    // 1b. Driver mapping from currentpositions ONLY (= enige bron)
+    const positions = positionsJson.dataexchange_currentpositions || [];
     const driverMap = {};
     for (const p of positions) {
       const id = p.gpsassetid;
       if (!id) continue;
-      let driverName = '';
       if (p.personjson) {
         try {
           const person = typeof p.personjson === 'string' ? JSON.parse(p.personjson) : p.personjson;
-          const fn = person.firstname || person.Firstname || person.voornaam || '';
-          const ln = person.lastname || person.Lastname || person.achternaam || '';
-          driverName = `${fn} ${ln}`.trim();
+          const fn = person.FirstName || person.firstname || person.Firstname || person.voornaam || '';
+          const ln = person.LastName || person.lastname || person.Lastname || person.achternaam || '';
+          const name = `${fn} ${ln}`.trim();
+          if (name) driverMap[id] = name;
         } catch { /* ignore parse errors */ }
       }
-      if (driverName) driverMap[id] = driverName;
     }
 
     const gpsIds = Object.keys(assetMap);
-    addLog(`${assets.length} assets, ${gpsIds.length} met gpsassetid, ${Object.keys(driverMap).length} drivers via positions`);
+    addLog(`${assets.length} assets, ${gpsIds.length} met gpsassetid`);
+    addLog(`DRIVER MAP: ${Object.keys(driverMap).length} entries → ${JSON.stringify(driverMap).slice(0, 500)}`);
 
     if (gpsIds.length === 0) {
       return Response.json({ error: 'Geen GPS assets gevonden in Naiton' }, { status: 404 });
     }
 
-    // ═══════════════════════════════════════════
-    // STEP 2: Fetch trips (bulk, all assets at once)
-    // ═══════════════════════════════════════════
-    addLog(`Fetching trips ${date_from} → ${date_to}...`);
+    // ═══════════════════════════════════════════════════════
+    // STEP 2: Fetch trip segments (bulk, all assets at once)
+    // ═══════════════════════════════════════════════════════
+    addLog(`Step 2: Fetching trips ${date_from} → ${date_to}...`);
 
     const tripsJson = await naitonCall([{
       name: "dataexchange_trips",
@@ -139,54 +140,192 @@ Deno.serve(async (req) => {
       ]
     }]);
 
-    const allTrips = tripsJson.dataexchange_trips || [];
-    addLog(`${allTrips.length} trip segmenten opgehaald`);
+    const allSegments = tripsJson.dataexchange_trips || [];
+    addLog(`${allSegments.length} trip segmenten opgehaald`);
 
-    if (allTrips.length === 0) {
+    if (allSegments.length === 0) {
       return Response.json({
         success: true, message: 'Geen ritten gevonden in deze periode',
         assets: gpsIds.length, segments: 0, rides: 0, created: 0, skipped: 0, linked: 0, ms: Date.now() - t0, log
       });
     }
 
-    // ═══════════════════════════════════════════
-    // STEP 3: Sort + Combine Drive+Stop → rides
-    // ═══════════════════════════════════════════
-    allTrips.sort((a, b) => {
+    // ═══════════════════════════════════════════════════════
+    // STEP 3: Sort segments per asset + time, then group
+    //         into rides (depot-based, >120min stop, dagwissel)
+    // ═══════════════════════════════════════════════════════
+    addLog('Step 3: Grouping segments into rides...');
+
+    // Sort by gpsassetid then by start time
+    allSegments.sort((a, b) => {
       const aId = String(a.gpsassetid || '');
       const bId = String(b.gpsassetid || '');
       if (aId !== bId) return aId < bId ? -1 : 1;
       return new Date(a.start || a.stop || 0) - new Date(b.start || b.stop || 0);
     });
 
-    const rides = [];
-    let idx = 0;
-    while (idx < allTrips.length) {
-      const t = allTrips[idx];
-      const type = (t.type || '').toLowerCase();
-
-      if (type === 'drive') {
-        const drive = t;
-        let stop = null;
-        if (idx + 1 < allTrips.length) {
-          const next = allTrips[idx + 1];
-          if ((next.type || '').toLowerCase() === 'stop' && next.gpsassetid === drive.gpsassetid) {
-            stop = next;
-            idx++;
-          }
-        }
-        rides.push(buildRide(drive, stop, assetMap, driverMap));
-      }
-      idx++;
+    // Group per asset first
+    const segmentsByAsset = {};
+    for (const seg of allSegments) {
+      const aid = seg.gpsassetid;
+      if (!aid) continue;
+      if (!segmentsByAsset[aid]) segmentsByAsset[aid] = [];
+      segmentsByAsset[aid].push(seg);
     }
 
-    addLog(`${rides.length} ritten samengesteld`);
+    const rides = [];
 
-    // ═══════════════════════════════════════════
-    // STEP 4: Driver history upsert (1 bulk call)
-    // ═══════════════════════════════════════════
+    for (const [assetId, segments] of Object.entries(segmentsByAsset)) {
+      let currentRide = null;
+
+      for (const seg of segments) {
+        const type = (seg.type || '').toLowerCase();
+        const segDate = (seg.start || seg.stop || '').split('T')[0];
+
+        // Dagwissel: als het segment op een andere dag start dan de huidige rit, sluit de rit af
+        if (currentRide && segDate !== currentRide.date) {
+          rides.push(currentRide);
+          currentRide = null;
+        }
+
+        if (type === 'drive') {
+          if (!currentRide) {
+            currentRide = {
+              gpsassetid: assetId,
+              date: segDate,
+              segments: [],
+            };
+          }
+          currentRide.segments.push(seg);
+        }
+
+        if (type === 'stop') {
+          if (currentRide) {
+            currentRide.segments.push(seg);
+
+            // Check of dit een rit-eindigende stop is
+            const stopStart = new Date(seg.start || seg.stop);
+            const stopEnd = new Date(seg.stop || seg.end || seg.start);
+            const stopMinutes = (stopEnd - stopStart) / 60000;
+
+            const addr = (seg.address || seg.location || '').toLowerCase();
+            const isDepot = DEPOT_KEYWORDS.some(kw => addr.includes(kw));
+            const isLongStop = stopMinutes > LONG_STOP_THRESHOLD_MIN;
+
+            if (isDepot || isLongStop) {
+              rides.push(currentRide);
+              currentRide = null;
+            }
+          }
+          // Als er geen currentRide is, negeer losse stops
+        }
+      }
+
+      // Laatste open rit afsluiten voor dit asset
+      if (currentRide && currentRide.segments.length > 0) {
+        rides.push(currentRide);
+      }
+    }
+
+    addLog(`${rides.length} ritten samengesteld uit ${allSegments.length} segmenten`);
+    if (rides.length > 0) {
+      const first = rides[0];
+      addLog(`Eerste rit: asset=${first.gpsassetid}, date=${first.date}, segments=${first.segments.length}`);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // STEP 4: Build TripRecord objects from grouped rides
+    // ═══════════════════════════════════════════════════════
+    addLog('Step 4: Building TripRecord objects...');
+
+    const tripRecords = [];
+
+    for (const ride of rides) {
+      const segs = ride.segments;
+      if (segs.length === 0) continue;
+
+      const firstSeg = segs[0];
+      const lastSeg = segs[segs.length - 1];
+
+      // Times
+      const startTime = firstSeg.start;
+      const endTime = lastSeg.stop || lastSeg.end || lastSeg.start;
+
+      // Hours
+      let totalHours = null;
+      if (startTime && endTime) {
+        totalHours = Number(((new Date(endTime) - new Date(startTime)) / 3600000).toFixed(2));
+      }
+
+      // KM: odometer primair, distance fallback
+      const startKm = Number(firstSeg.odometerstartkm || 0);
+      const endKm = Number(lastSeg.odometerstopkm || lastSeg.odometerstartkm || 0);
+      let totalKm = null;
+      if (endKm > startKm && startKm > 0) {
+        totalKm = Number((endKm - startKm).toFixed(1));
+      } else {
+        // Fallback: som van alle distance velden (in meters)
+        let totalDist = 0;
+        for (const s of segs) {
+          totalDist += Number(s.distance || 0);
+        }
+        if (totalDist > 0) totalKm = Number((totalDist / 1000).toFixed(1));
+      }
+
+      // Stilstand: som van stop-segmenten >5 min
+      let longStopsMin = 0;
+      let depotMin = 0;
+      for (const s of segs) {
+        if ((s.type || '').toLowerCase() !== 'stop') continue;
+        const sStart = new Date(s.start || s.stop);
+        const sEnd = new Date(s.stop || s.end || s.start);
+        const durMin = (sEnd - sStart) / 60000;
+        if (durMin > SHORT_STOP_THRESHOLD_MIN) {
+          longStopsMin += Math.round(durMin);
+          const addr = (s.address || s.location || '').toLowerCase();
+          if (DEPOT_KEYWORDS.some(kw => addr.includes(kw))) {
+            depotMin += Math.round(durMin);
+          }
+        }
+      }
+
+      // Driver: trip segment field → driverMap (currentpositions) → null
+      let driver = '';
+      // Check alle drive-segmenten voor een driver veld
+      for (const s of segs) {
+        if (s.driver) { driver = s.driver; break; }
+      }
+      // Fallback: currentpositions driverMap
+      if (!driver) {
+        driver = driverMap[ride.gpsassetid] || '';
+      }
+
+      tripRecords.push({
+        gpsassetid: ride.gpsassetid,
+        driver: driver || null,
+        vehicle: assetMap[ride.gpsassetid]?.vehicle || '',
+        plate: assetMap[ride.gpsassetid]?.plate || '',
+        start_time: startTime,
+        end_time: endTime,
+        start_km: startKm > 0 ? startKm : null,
+        end_km: endKm > 0 ? endKm : null,
+        total_km: totalKm,
+        total_hours: totalHours,
+        depot_time_minutes: depotMin > 0 ? depotMin : null,
+        long_stops_minutes: longStopsMin > 0 ? longStopsMin : null,
+        date: ride.date,
+      });
+    }
+
+    const driversResolved = tripRecords.filter(r => r.driver).length;
+    addLog(`${tripRecords.length} trip records gebouwd, ${driversResolved} met driver`);
+
+    // ═══════════════════════════════════════════════════════
+    // STEP 5: Driver history upsert — WRITE ONLY
+    //         (opslaan van ONZE bepaalde drivers, niet als bron)
+    // ═══════════════════════════════════════════════════════
     const driverHistoryEntries = [];
-    for (const r of rides) {
+    for (const r of tripRecords) {
       if (!r.driver || !r.plate || !r.start_time) continue;
       driverHistoryEntries.push({
         assetname: r.plate,
@@ -197,7 +336,7 @@ Deno.serve(async (req) => {
     }
 
     if (driverHistoryEntries.length > 0) {
-      addLog(`Upserting ${driverHistoryEntries.length} driver history entries...`);
+      addLog(`Step 5: Writing ${driverHistoryEntries.length} driver history entries (WRITE ONLY)...`);
       try {
         await naitonCall([{
           name: "dataexchange_driverhistoryupsert",
@@ -206,84 +345,54 @@ Deno.serve(async (req) => {
             value: e
           }))
         }]);
-        addLog('Driver history upsert OK');
+        addLog('Driver history write OK');
       } catch (err) {
-        addLog(`Driver history upsert failed (non-critical): ${err.message}`);
+        addLog(`Driver history write failed (non-critical): ${err.message}`);
       }
     }
 
-    // ═══════════════════════════════════════════
-    // STEP 5: Locations (standplaats + depot)
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════
+    // STEP 6: Locations upsert (standplaats + depot)
+    // ═══════════════════════════════════════════════════════
     const locations = [
-      {
-        referencenumber: "standplaats_kapelle",
-        name: "Standplaats Kapelle",
-        address: "Fleerbosseweg 19",
-        city: "Kapelle",
-        country: "NL"
-      },
-      {
-        referencenumber: "postnl_depot",
-        name: "PostNL Depot",
-        address: "",
-        city: "",
-        country: "NL"
-      }
+      { referencenumber: "standplaats_kapelle", name: "Standplaats Kapelle", address: "Fleerbosseweg 19", city: "Kapelle", country: "NL" },
+      { referencenumber: "postnl_depot", name: "PostNL Depot", address: "", city: "", country: "NL" }
     ];
 
-    addLog('Upserting locations...');
+    addLog('Step 6: Upserting locations...');
     try {
-      const formData = new FormData();
-      formData.append('_locationsstr', JSON.stringify(locations));
-      await fetch(`${BASE_URL}/datad/execute`, {
-        method: 'POST',
-        headers: { 'ClientId': CLIENT_ID, 'ClientSecret': CLIENT_SECRET },
-        body: (() => {
-          // Use JSON call instead of multipart if possible
-          return JSON.stringify([{
-            name: "locationmanager_addupdatelocations",
-            arguments: [{ name: "_locationsstr", value: JSON.stringify(locations) }]
-          }]);
-        })(),
-      }).then(async res => {
-        // Re-set content-type for this call
-        if (!res.ok) addLog(`Locations upsert returned ${res.status}`);
-        else addLog('Locations upsert OK');
-      });
+      await naitonCall([{
+        name: "locationmanager_addupdatelocations",
+        arguments: [{ name: "_locationsstr", value: JSON.stringify(locations) }]
+      }]);
+      addLog('Locations upsert OK');
     } catch (err) {
       addLog(`Locations upsert failed (non-critical): ${err.message}`);
     }
 
-    // ═══════════════════════════════════════════
-    // STEP 6: Transport API import (1 bulk call)
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════
+    // STEP 7: Transport API import (1 bulk call)
+    // ═══════════════════════════════════════════════════════
     const tripPayloads = [];
-    for (const r of rides) {
+    for (const r of tripRecords) {
       if (!r.plate || !r.start_time) continue;
-
       const refId = `${r.gpsassetid}_${r.start_time}`;
-      const startDate = r.date;
       const startTime = r.start_time.includes('T') ? r.start_time.split('T')[1]?.slice(0, 5) : '';
-
-      // Build stops: Standplaats → Depot → Standplaats
-      const stops = [
-        { startLocationRefId: "standplaats_kapelle", stopLocationRefId: "postnl_depot", sequenceId: 1 },
-        { startLocationRefId: "postnl_depot", stopLocationRefId: "standplaats_kapelle", sequenceId: 2 },
-      ];
-
       tripPayloads.push({
         refId,
         name: "GPS Import",
         licensePlate: r.plate,
-        startDate,
+        startDate: r.date,
         startTime,
-        stops,
+        stops: [
+          { startLocationRefId: "standplaats_kapelle", stopLocationRefId: "postnl_depot", sequenceId: 1 },
+          { startLocationRefId: "postnl_depot", stopLocationRefId: "standplaats_kapelle", sequenceId: 2 },
+        ],
       });
     }
 
     if (tripPayloads.length > 0) {
-      addLog(`Importing ${tripPayloads.length} trips to transport API...`);
+      addLog(`Step 7: Importing ${tripPayloads.length} trips to transport API...`);
       try {
         await naitonCall([{
           name: "transportapi_importorders",
@@ -295,21 +404,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ═══════════════════════════════════════════
-    // STEP 7: Save to TripRecord (dedup + batch)
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════
+    // STEP 8: Save to TripRecord (dedup + batch)
+    // ═══════════════════════════════════════════════════════
+    addLog('Step 8: Saving TripRecords...');
+
     const existingRecords = await svc.entities.TripRecord.filter({
       date: { $gte: date_from, $lte: date_to }
     });
     const existingKeys = new Set(
-      existingRecords.map(r => `${r.gpsassetid}_${r.start_time}`)
+      existingRecords.map(r => `${r.gpsassetid}_${r.date}_${r.start_time}`)
     );
 
     const toInsert = [];
     let skipped = 0;
 
-    for (const r of rides) {
-      const key = `${r.gpsassetid}_${r.start_time}`;
+    for (const r of tripRecords) {
+      const key = `${r.gpsassetid}_${r.date}_${r.start_time}`;
       if (existingKeys.has(key)) { skipped++; continue; }
       existingKeys.add(key);
       toInsert.push(r);
@@ -329,11 +440,12 @@ Deno.serve(async (req) => {
 
     addLog(`Created: ${created}, Skipped: ${skipped}`);
 
-    // ═══════════════════════════════════════════
-    // STEP 8: Match drivers → employees → TripRecordLink
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════
+    // STEP 9: Match drivers → employees → TripRecordLink
+    // ═══════════════════════════════════════════════════════
     let linked = 0;
     if (newRecordIds.length > 0) {
+      addLog('Step 9: Matching drivers to employees...');
       const employees = await svc.entities.Employee.filter({ status: 'Actief' });
       const empByName = {};
       for (const emp of employees) {
@@ -372,11 +484,16 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       assets: gpsIds.length,
-      segments: allTrips.length,
+      segments: allSegments.length,
       rides: rides.length,
       created, skipped, linked,
-      drivers_resolved: rides.filter(r => r.driver).length,
-      naiton_calls: { assets: 1, trips: 1, positions: 1, driverHistory: driverHistoryEntries.length > 0 ? 1 : 0, locations: 1, transport: tripPayloads.length > 0 ? 1 : 0 },
+      drivers_resolved: driversResolved,
+      naiton_calls: {
+        assets: 1, trips: 1, positions: 1,
+        driverHistory: driverHistoryEntries.length > 0 ? 1 : 0,
+        locations: 1,
+        transport: tripPayloads.length > 0 ? 1 : 0
+      },
       ms: Date.now() - t0,
       log,
     });
@@ -386,70 +503,3 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message, log }, { status: 500 });
   }
 });
-
-/**
- * Build a ride from Drive + optional Stop segment.
- * Driver priority: trip.driver → driverMap[gpsassetid] → additionaldata → null
- */
-function buildRide(drive, stop, assetMap, driverMap) {
-  const assetId = drive.gpsassetid;
-  const startTime = drive.start;
-  const endTime = stop ? (stop.stop || stop.end) : (drive.stop || drive.end || null);
-
-  const startKm = Number(drive.odometerstartkm || 0);
-  const endKm = stop ? Number(stop.odometerstopkm || 0) : Number(drive.odometerstopkm || 0);
-
-  let totalHours = null;
-  if (startTime && endTime) {
-    totalHours = Number(((new Date(endTime) - new Date(startTime)) / 3600000).toFixed(2));
-  }
-
-  let totalKm = null;
-  if (endKm > 0 && startKm > 0 && endKm > startKm) {
-    totalKm = endKm - startKm;
-  } else {
-    const dist = Number(drive.distance || 0);
-    if (dist > 0) totalKm = Number((dist / 1000).toFixed(1));
-  }
-
-  // Driver resolution: trip field → positions map → additionaldata
-  let driver = drive.driver || '';
-  if (!driver) driver = driverMap[assetId] || '';
-  if (!driver && drive.additionaldata) {
-    try {
-      const ad = typeof drive.additionaldata === 'string' ? JSON.parse(drive.additionaldata) : drive.additionaldata;
-      driver = ad.driver || ad.drivername || ad.Driver || '';
-    } catch { /* ignore */ }
-  }
-
-  // Stop metrics
-  let longStopsMin = 0, depotMin = 0;
-  if (stop) {
-    const stopStart = stop.start || stop.stop;
-    const stopEnd = stop.stop || stop.end;
-    if (stopStart && stopEnd) {
-      const durMin = (new Date(stopEnd) - new Date(stopStart)) / 60000;
-      if (durMin > 5) longStopsMin = Math.round(durMin);
-      const addr = (stop.address || stop.location || '').toLowerCase();
-      if (['postnl', 'depot', 'hub', 'sorteer', 'distributie'].some(kw => addr.includes(kw))) {
-        depotMin = Math.round(durMin);
-      }
-    }
-  }
-
-  return {
-    gpsassetid: assetId,
-    driver,
-    vehicle: assetMap[assetId]?.vehicle || '',
-    plate: assetMap[assetId]?.plate || '',
-    start_time: startTime,
-    end_time: endTime,
-    start_km: startKm > 0 ? startKm : null,
-    end_km: endKm > 0 ? endKm : null,
-    total_km: totalKm,
-    total_hours: totalHours,
-    depot_time_minutes: depotMin || null,
-    long_stops_minutes: longStopsMin || null,
-    date: startTime ? startTime.split('T')[0] : null,
-  };
-}
