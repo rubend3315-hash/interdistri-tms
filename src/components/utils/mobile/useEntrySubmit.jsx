@@ -15,6 +15,7 @@ import { APP_VERSION } from '@/components/utils/appVersion';
 export function useEntrySubmit() {
   const submittingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const timeoutRef = useRef(null);
 
   const submitEntry = useCallback(async ({
