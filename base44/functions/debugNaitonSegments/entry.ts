@@ -234,7 +234,8 @@ Deno.serve(async (req) => {
         asset_id: assetId,
         asset_name: matchedAsset.assetname,
         total_segments: vehicleSegs.length,
-        timeline,
+        // Only include timeline if < 30 segments, otherwise too large
+        timeline: vehicleSegs.length <= 30 ? timeline : timeline.filter(t => t.classification !== 'RIJDEN' && t.classification !== 'STILSTAND_KORT'),
         summary: {
           depot_stops: depotStopsV.length,
           depot_total_min: depotStopsV.reduce((s, t) => s + t.duration_min, 0),
