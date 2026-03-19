@@ -104,13 +104,23 @@ Deno.serve(async (req) => {
     const positions = positionsJson.dataexchange_currentpositions || [];
     const driverMap = {};
 
-    // DEBUG: log eerste 3 positions om structuur te zien
+    // DEBUG: log positions met en zonder personjson
     addLog(`Positions count: ${positions.length}`);
-    if (positions.length > 0) {
-      addLog(`Position sample keys: ${JSON.stringify(Object.keys(positions[0]))}`);
-      addLog(`Position sample [0]: ${JSON.stringify(positions[0]).slice(0, 800)}`);
-      if (positions.length > 1) addLog(`Position sample [1]: ${JSON.stringify(positions[1]).slice(0, 500)}`);
+    const withPerson = positions.filter(p => p.personjson);
+    const withoutPerson = positions.filter(p => !p.personjson);
+    addLog(`Positions with personjson: ${withPerson.length}, without: ${withoutPerson.length}`);
+    if (withPerson.length > 0) {
+      addLog(`Person sample: ${JSON.stringify(withPerson[0].personjson).slice(0, 500)}`);
+      addLog(`Person asset: ${withPerson[0].gpsassetname} / ${withPerson[0].gpsassetid}`);
     }
+    // Also check ALL driver-related fields across positions
+    const allPersonData = positions.map(p => ({
+      name: p.gpsassetname,
+      id: p.gpsassetid,
+      person: p.personjson,
+      plate: p.licenceplate
+    })).filter(p => p.person || p.plate);
+    addLog(`Positions met person/plate data: ${allPersonData.length} → ${JSON.stringify(allPersonData).slice(0, 1000)}`);
     for (const p of positions) {
       const id = p.gpsassetid;
       if (!id) continue;
