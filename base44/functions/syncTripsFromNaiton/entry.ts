@@ -103,6 +103,14 @@ Deno.serve(async (req) => {
     // 1b. Driver mapping from currentpositions ONLY (= enige bron)
     const positions = positionsJson.dataexchange_currentpositions || [];
     const driverMap = {};
+
+    // DEBUG: log eerste 3 positions om structuur te zien
+    addLog(`Positions count: ${positions.length}`);
+    if (positions.length > 0) {
+      addLog(`Position sample keys: ${JSON.stringify(Object.keys(positions[0]))}`);
+      addLog(`Position sample [0]: ${JSON.stringify(positions[0]).slice(0, 800)}`);
+      if (positions.length > 1) addLog(`Position sample [1]: ${JSON.stringify(positions[1]).slice(0, 500)}`);
+    }
     for (const p of positions) {
       const id = p.gpsassetid;
       if (!id) continue;
