@@ -88,6 +88,16 @@ Deno.serve(async (req) => {
       return matchesTime;
     });
 
+    // DIAGNOSE: log alle trips zodat we kunnen zien waarom sommige niet matchen
+    console.log('[RECALC DIAGNOSE] time_entry_id gezocht:', time_entry_id);
+    console.log('[RECALC DIAGNOSE] shift start_time:', start_time, 'end_time:', end_time);
+    console.log('[RECALC DIAGNOSE] Alle trips voor deze dag:', JSON.stringify(allTripsForDay.map(t => ({
+      id: t.id,
+      time_entry_id: t.time_entry_id,
+      status: t.status,
+      departure_time: t.departure_time,
+      arrival_time: t.arrival_time,
+    }))));
     console.log(`[RECALC] Filtered to ${relevantTrips.length} relevant trips (linked or time-matched)`);
 
     // 1c. Update + claim — SEQUENTIAL, skip if already correct
