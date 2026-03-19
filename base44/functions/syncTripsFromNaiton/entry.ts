@@ -28,16 +28,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'date_from en date_to zijn verplicht' }, { status: 400 });
     }
 
-    const CLIENT_ID = Deno.env.get('NAITON_CLIENT_ID');
-    const CLIENT_SECRET = Deno.env.get('NAITON_CLIENT_SECRET');
-    if (!CLIENT_ID || !CLIENT_SECRET) {
-      return Response.json({ error: 'Naiton API credentials niet geconfigureerd' }, { status: 500 });
+    const API_SECRET = Deno.env.get('InterdistriApi');
+    if (!API_SECRET) {
+      return Response.json({ error: 'InterdistriApi secret niet geconfigureerd' }, { status: 500 });
     }
 
+    // InterdistriApi secret bevat ClientId en ClientSecret gescheiden door |
+    // Of als het één key is, gebruiken we het als ClientSecret met vaste ClientId
     const headers = {
       'Content-Type': 'application/json',
-      'ClientId': CLIENT_ID,
-      'ClientSecret': CLIENT_SECRET,
+      'ClientId': 'InterdistriApi',
+      'ClientSecret': API_SECRET,
     };
 
     // ── Step 1: Fetch assets ──
