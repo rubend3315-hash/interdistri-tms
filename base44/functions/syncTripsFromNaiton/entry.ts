@@ -275,7 +275,9 @@ Deno.serve(async (req) => {
       for (const seg of segments) {
         const type = (seg.type || '').toLowerCase();
         const segDate = (seg.start || seg.stop || '').split('T')[0];
+        if (type === 'stop') totalStops++;
         const atStandplaats = type === 'stop' && isStandplaats(seg);
+        if (atStandplaats) standplaatsHits++;
 
         if (state === 'IDLE') {
           // Wait for a drive segment (= departure from standplaats)
