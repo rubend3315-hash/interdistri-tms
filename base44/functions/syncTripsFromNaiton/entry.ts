@@ -112,27 +112,8 @@ Deno.serve(async (req) => {
     const driverMap = {}; // gpsassetid → drivername
 
     // Source 1: driverhistory (most reliable — contains historical driver assignments)
-    // Try all possible response keys from whichever API succeeded
-    const driverHistoryEntries_read = driverHistoryJson.dataexchange_driverhistory
-      || driverHistoryJson.dataexchange_drivers
-      || driverHistoryJson.dataexchange_persons || [];
-    addLog(`Driver API response keys: ${JSON.stringify(Object.keys(driverHistoryJson)).slice(0, 300)}`);
-    addLog(`driverhistory: ${driverHistoryEntries_read.length} entries`);
-    if (driverHistoryEntries_read.length > 0) {
-      addLog(`driverhistory sample: ${JSON.stringify(driverHistoryEntries_read[0]).slice(0, 500)}`);
-    }
-    for (const dh of driverHistoryEntries_read) {
-      const assetName = (dh.assetname || '').toLowerCase();
-      const driverName = dh.drivername || '';
-      if (!driverName || !assetName) continue;
-      // Map assetname → gpsassetid via reverse lookup
-      const gpsId = nameToGpsId[assetName] || plateToGpsId[assetName];
-      if (gpsId) {
-        // Keep latest entry (entries should be sorted, but overwrite = latest wins)
-        driverMap[gpsId] = driverName;
-      }
-    }
-    addLog(`Drivers from driverhistory: ${Object.keys(driverMap).length}`);
+    // Naiton driverhistory read API not available — skip
+    addLog('Naiton driverhistory read: niet beschikbaar (alleen upsert/write)');
 
     // Source 2: currentpositions personjson (secondary, fills gaps)
     const positions = positionsJson.dataexchange_currentpositions || [];
