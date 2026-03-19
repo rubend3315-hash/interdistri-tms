@@ -221,9 +221,15 @@ Deno.serve(async (req) => {
 
     // ═══════════════════════════════════════════════════════
     // STEP 3: Sort segments per asset + time, then group
-    //         into rides (depot-based, >120min stop, dagwissel)
+    //         into rides: standplaats → standplaats
+    //         (Fleerbosseweg 19, 4421 RR Kapelle)
     // ═══════════════════════════════════════════════════════
-    addLog('Step 3: Grouping segments into rides...');
+    addLog('Step 3: Grouping segments into rides (standplaats→standplaats)...');
+
+    const isStandplaats = (seg) => {
+      const addr = (seg.address || seg.location || '').toLowerCase();
+      return STANDPLAATS_KEYWORDS.every(kw => addr.includes(kw));
+    };
 
     // Sort by gpsassetid then by start time
     allSegments.sort((a, b) => {
@@ -245,52 +251,53 @@ Deno.serve(async (req) => {
     const rides = [];
 
     for (const [assetId, segments] of Object.entries(segmentsByAsset)) {
+      // State machine: 
+      //   IDLE = at standplaats, waiting for departure (first drive segment away)
+      //   RIDING = collecting segments until return to standplaats
+      let state = 'IDLE';
       let currentRide = null;
 
       for (const seg of segments) {
         const type = (seg.type || '').toLowerCase();
         const segDate = (seg.start || seg.stop || '').split('T')[0];
+        const atStandplaats = type === 'stop' && isStandplaats(seg);
 
-        // Dagwissel: als het segment op een andere dag start dan de huidige rit, sluit de rit af
-        if (currentRide && segDate !== currentRide.date) {
-          rides.push(currentRide);
-          currentRide = null;
-        }
-
-        if (type === 'drive') {
-          if (!currentRide) {
+        if (state === 'IDLE') {
+          // Wait for a drive segment (= departure from standplaats)
+          if (type === 'drive') {
             currentRide = {
               gpsassetid: assetId,
               date: segDate,
-              segments: [],
+              segments: [seg],
             };
+            state = 'RIDING';
           }
+          // Stops at standplaats while IDLE are ignored (vehicle parked)
+        } else if (state === 'RIDING') {
+          // Dagwissel safety: close ride if segment is on a different day
+          if (segDate !== currentRide.date) {
+            if (currentRide.segments.length > 0) rides.push(currentRide);
+            // Start new ride on the new day
+            currentRide = {
+              gpsassetid: assetId,
+              date: segDate,
+              segments: [seg],
+            };
+            continue;
+          }
+
           currentRide.segments.push(seg);
-        }
 
-        if (type === 'stop') {
-          if (currentRide) {
-            currentRide.segments.push(seg);
-
-            // Check of dit een rit-eindigende stop is
-            const stopStart = new Date(seg.start || seg.stop);
-            const stopEnd = new Date(seg.stop || seg.end || seg.start);
-            const stopMinutes = (stopEnd - stopStart) / 60000;
-
-            const addr = (seg.address || seg.location || '').toLowerCase();
-            const isDepot = DEPOT_KEYWORDS.some(kw => addr.includes(kw));
-            const isLongStop = stopMinutes > LONG_STOP_THRESHOLD_MIN;
-
-            if (isDepot || isLongStop) {
-              rides.push(currentRide);
-              currentRide = null;
-            }
+          // If this is a stop at standplaats → ride is complete
+          if (atStandplaats) {
+            rides.push(currentRide);
+            currentRide = null;
+            state = 'IDLE';
           }
-          // Als er geen currentRide is, negeer losse stops
         }
       }
 
-      // Laatste open rit afsluiten voor dit asset
+      // Close any open ride at end of day (vehicle didn't return to standplaats)
       if (currentRide && currentRide.segments.length > 0) {
         rides.push(currentRide);
       }
