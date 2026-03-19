@@ -35,49 +35,55 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
 
     // ═══════════════════════════════════════════════════════
-    // Fetch currentpositions — focus on groupsjson + personjson
+    // Fetch assets with includeallattributes=true
     // ═══════════════════════════════════════════════════════
-    const positionsJson = await naitonCall([{
-      name: "dataexchange_currentpositions",
-      arguments: []
+    const assetsJson = await naitonCall([{
+      name: "dataexchange_assets",
+      arguments: [{ name: "inactiveAttributes", value: true }]
     }]);
 
-    const positions = positionsJson.dataexchange_currentpositions || [];
+    const assets = assetsJson.dataexchange_assets || [];
 
-    // Log ALL positions with their groupsjson and personjson
-    const positionDetails = positions.map(p => {
-      let groupsParsed = null;
-      if (p.groupsjson) {
-        try { groupsParsed = typeof p.groupsjson === 'string' ? JSON.parse(p.groupsjson) : p.groupsjson; }
-        catch { groupsParsed = 'PARSE_ERROR'; }
+    // Target fields to search for
+    const TARGET_FIELDS = ['personassetuuid', 'personid', 'driver', 'linkedperson', 'tagid', 'person', 'driverid', 'drivername', 'personname', 'userid', 'username'];
+
+    // Analyze ALL keys across all assets
+    const allKeysSet = new Set();
+    for (const a of assets) {
+      for (const k of Object.keys(a)) allKeysSet.add(k);
+    }
+    const allKeys = [...allKeysSet].sort();
+
+    // Check which target fields exist
+    const foundTargetFields = {};
+    for (const field of TARGET_FIELDS) {
+      const matchingAssets = assets.filter(a => a[field] !== undefined && a[field] !== null);
+      if (matchingAssets.length > 0) {
+        foundTargetFields[field] = {
+          count: matchingAssets.length,
+          samples: matchingAssets.slice(0, 3).map(a => ({ gpsassetid: a.gpsassetid, assetname: a.assetname, licenceplate: a.licenceplate, [field]: a[field] })),
+        };
       }
-      let personParsed = null;
-      if (p.personjson) {
-        try { personParsed = typeof p.personjson === 'string' ? JSON.parse(p.personjson) : p.personjson; }
-        catch { personParsed = 'PARSE_ERROR'; }
-      }
-      return {
-        gpsassetid: p.gpsassetid,
-        gpsassetname: p.gpsassetname,
-        licenceplate: p.licenceplate,
-        groupsjson: groupsParsed,
-        personjson: personParsed,
-        flagsjson: p.flagsjson || null,
-        displayvaluesjson: p.displayvaluesjson ? String(p.displayvaluesjson).slice(0, 300) : null,
-      };
+    }
+
+    // Also scan for any key containing 'person', 'driver', 'user', 'linked' (case-insensitive)
+    const driverRelatedKeys = allKeys.filter(k => {
+      const lower = k.toLowerCase();
+      return lower.includes('person') || lower.includes('driver') || lower.includes('user') || lower.includes('linked') || lower.includes('tag');
     });
 
-    // Stats
-    const withGroups = positions.filter(p => p.groupsjson).length;
-    const withPerson = positions.filter(p => p.personjson).length;
-    const withFlags = positions.filter(p => p.flagsjson).length;
+    // Full dump of first 3 assets with licence plates (real vehicles, not tags)
+    const vehicleAssets = assets.filter(a => a.licenceplate);
+    const fullDump = vehicleAssets.slice(0, 3).map(a => a);
 
     return Response.json({
-      total_positions: positions.length,
-      with_groupsjson: withGroups,
-      with_personjson: withPerson,
-      with_flagsjson: withFlags,
-      all_positions: positionDetails,
+      total_assets: assets.length,
+      total_with_plate: vehicleAssets.length,
+      all_keys: allKeys,
+      driver_related_keys: driverRelatedKeys,
+      target_fields_found: foundTargetFields,
+      target_fields_missing: TARGET_FIELDS.filter(f => !foundTargetFields[f]),
+      full_asset_dump_3_vehicles: fullDump,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
