@@ -1,9 +1,10 @@
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║ syncTripsFromNaiton v20 — Production GPS Buddy / Naiton integration ║
+// ║ syncTripsFromNaiton v21 — Production GPS Buddy / Naiton integration ║
 // ║ Auth: Admin-only                                                     ║
-// ║ CHANGES vs v16:                                                      ║
-// ║  - Driver: currentpositions ONLY as source (personjson parsing)      ║
-// ║  - driverhistory = WRITE ONLY (niet als lookup)                      ║
+// ║ CHANGES vs v20:                                                      ║
+// ║  - Driver: driverhistory READ als primaire bron (assetname→driver)   ║
+// ║  - Driver: currentpositions personjson als secondary                  ║
+// ║  - driverhistory WRITE: juiste _payload format (JSON string)         ║
 // ║  - Rit opbouw: depot-based grouping (niet 1 per segment)             ║
 // ║    → rit eindigt bij depot-stop, >120min stilstand, of dagwissel     ║
 // ║  - KM: odometer primair, distance fallback                           ║
