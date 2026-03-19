@@ -263,7 +263,7 @@ function TripRecordCard({ rec, formatTime }) {
               {rec.depot_time_minutes > 0 && (
                 <span className="flex items-center gap-1 text-amber-600">
                   <ParkingSquare className="w-3.5 h-3.5" />
-                  {rec.depot_time_minutes}m depot
+                  {rec.depot_stops_count || '?'}x / {rec.depot_time_minutes}m depot
                 </span>
               )}
               {rec.long_stops_minutes > 0 && (
