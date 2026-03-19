@@ -459,8 +459,33 @@ Deno.serve(async (req) => {
       });
     }
 
-    const driversResolved = tripRecords.filter(r => r.driver).length;
-    addLog(`${tripRecords.length} trip records gebouwd, ${driversResolved} met driver`);
+    // Filter out "ghost rides" — vehicles parked at standplaats with minimal movement
+    // Criteria: < 10 km AND > 2 hours = not a real trip (just parked with GPS noise)
+    const MIN_KM_FOR_LONG_RIDE = 10;
+    const MIN_HOURS_THRESHOLD = 2;
+    const MIN_AVG_SPEED = 2; // km/h — below this with > 1 hour is not a trip
+    let ghostFiltered = 0;
+    const realTripRecords = tripRecords.filter(r => {
+      const km = r.total_km || 0;
+      const hours = r.total_hours || 0;
+      // Short rides (< 2 hours) are always kept — could be quick depot runs
+      if (hours <= MIN_HOURS_THRESHOLD) return true;
+      // Long rides with very low km = parked vehicle
+      if (km < MIN_KM_FOR_LONG_RIDE) {
+        ghostFiltered++;
+        return false;
+      }
+      // Very low average speed = not really driving
+      if (hours > 1 && km / hours < MIN_AVG_SPEED) {
+        ghostFiltered++;
+        return false;
+      }
+      return true;
+    });
+    if (ghostFiltered > 0) addLog(`${ghostFiltered} spookritten gefilterd (geparkeerd voertuig met minimale GPS-beweging)`);
+
+    const driversResolved = realTripRecords.filter(r => r.driver).length;
+    addLog(`${realTripRecords.length} echte trip records (van ${tripRecords.length}), ${driversResolved} met driver`);
 
     // ═══════════════════════════════════════════════════════
     // STEP 5: Driver history upsert — WRITE ONLY
