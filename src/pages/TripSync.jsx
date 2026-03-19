@@ -21,8 +21,8 @@ import {
   Loader2,
   CheckCircle2,
   AlertTriangle,
-  ParkingSquare,
-  Timer
+  CircleParking,
+  Clock4
 } from "lucide-react";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
 import { toast } from "sonner";
