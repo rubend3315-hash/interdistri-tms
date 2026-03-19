@@ -109,6 +109,22 @@ Deno.serve(async (req) => {
     const sampleSeg = segments[0] || {};
     const allFields = Object.keys(sampleSeg);
 
+    // Find stops near PostNL depot (Columbusweg 62, Goes)
+    const DEPOT_LAT = 51.4846;
+    const DEPOT_LON = 3.8898;
+    const depotStops = stops.filter(s => {
+      const lat = s.stoplat || s.startlat;
+      const lon = s.stoplon || s.startlon;
+      if (!lat || !lon) return false;
+      return gpsDistanceM(lat, lon, DEPOT_LAT, DEPOT_LON) <= 500;
+    });
+
+    // Also find stops with "depot" or "postnl" in additionaldata
+    const depotNameStops = stops.filter(s => {
+      const raw = s.raw_additionaldata || '';
+      return /depot|postnl/i.test(raw);
+    });
+
     return Response.json({
       total_segments: segments.length,
       total_stops: stops.length,
@@ -116,8 +132,10 @@ Deno.serve(async (req) => {
       stops_near_standplaats: nearStandplaats.length,
       distance_distribution: distRanges,
       sample_segment_fields: allFields,
-      sample_stops: stops.slice(0, 5),
-      standplaats_stops: nearStandplaats.slice(0, 10),
+      sample_stops_with_additionaldata: stops.filter(s => s.additionaldata || s.raw_additionaldata).slice(0, 10),
+      depot_stops_by_coords: depotStops.slice(0, 10),
+      depot_stops_by_name: depotNameStops.slice(0, 10),
+      standplaats_stops: nearStandplaats.slice(0, 5),
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
