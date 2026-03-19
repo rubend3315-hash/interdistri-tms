@@ -78,11 +78,15 @@ Deno.serve(async (req) => {
       const tolerance = 5;
 
       // minimaal 1 tijd moet bestaan
-      const hasTime = tStart != null && tEnd != null;
-      // check start indien aanwezig
-      const startOk = tStart == null || (sStart != null && tStart >= (sStart - tolerance));
-      // check end indien aanwezig
-      const endOk = tEnd == null || (sEnd != null && tEnd <= (sEnd + tolerance));
+      const hasTime = tStart != null || tEnd != null;
+      // check start indien aanwezig (moet binnen dienst window vallen)
+      const startOk = tStart == null || (sStart != null && sEnd != null &&
+        tStart >= (sStart - tolerance) &&
+        tStart <= (sEnd + tolerance));
+      // check end indien aanwezig (moet binnen dienst window vallen)
+      const endOk = tEnd == null || (sStart != null && sEnd != null &&
+        tEnd >= (sStart - tolerance) &&
+        tEnd <= (sEnd + tolerance));
 
       const matchesTime = hasTime && startOk && endOk;
       return matchesTime;
