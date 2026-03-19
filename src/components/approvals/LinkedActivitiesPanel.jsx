@@ -196,10 +196,22 @@ export default function LinkedActivitiesPanel({
   const getProjectName = (id) => projects.find((p) => p.id === id)?.name;
   const getActiviteitName = (id) => activiteiten.find((a) => a.id === id)?.name;
 
-  // Combine trips + standplaatswerk into one sorted timeline (display-only)
+  // Combine trips + standplaatswerk + tripRecords into one sorted timeline
+  const tripRecordSortKey = (rec) => {
+    if (!rec.start_time) return 9999;
+    try {
+      const d = new Date(rec.start_time);
+      const h = d.getHours();
+      const m = d.getMinutes();
+      const mins = h * 60 + m;
+      return mins < 360 ? mins + 1440 : mins;
+    } catch { return 9999; }
+  };
+
   const timelineItems = [
     ...trips.map((t) => ({ type: "trip", data: t, sortKey: timelineSortKey(t.departure_time) })),
     ...standplaatsWerk.map((s) => ({ type: "spw", data: s, sortKey: timelineSortKey(s.start_time) })),
+    ...tripRecords.map((r) => ({ type: "tripRecord", data: r, sortKey: tripRecordSortKey(r) })),
   ].sort((a, b) => a.sortKey - b.sortKey);
 
   if (timelineItems.length === 0) {
@@ -214,7 +226,7 @@ export default function LinkedActivitiesPanel({
     <div className="ml-4 pl-4 border-l-2 border-slate-200 pb-1 mt-1">
       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
         <Clock className="w-3.5 h-3.5" />
-        Tijdlijn ({trips.length} rit{trips.length !== 1 ? "ten" : ""}, {standplaatsWerk.length} standplaats)
+        Tijdlijn ({trips.length} rit{trips.length !== 1 ? "ten" : ""}, {standplaatsWerk.length} standplaats{tripRecords.length > 0 ? `, ${tripRecords.length} GPS` : ''})
       </p>
       <div className="space-y-1.5">
         {timelineItems.map((item) =>
@@ -224,6 +236,11 @@ export default function LinkedActivitiesPanel({
               trip={item.data}
               vehicle={getVehicle(item.data.vehicle_id)}
               customer={getCustomer(item.data.customer_id)}
+            />
+          ) : item.type === "tripRecord" ? (
+            <TripRecordCard
+              key={`tr-${item.data.id}`}
+              record={item.data}
             />
           ) : (
             <SpwCard
