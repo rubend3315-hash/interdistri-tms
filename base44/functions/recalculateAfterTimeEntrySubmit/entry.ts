@@ -14,6 +14,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 // --- TIME HELPERS ---
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function isTime(t) { return typeof t === 'string' && TIME_RE.test(t); }
+function toMin(t) {
+  if (!t || !TIME_RE.test(t)) return null;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
 
 // --- KEY GENERATORS ---
 function generateTripKey(employee_id, date, departure_time, arrival_time) {
@@ -65,10 +70,21 @@ Deno.serve(async (req) => {
       if (t.time_entry_id === time_entry_id) return true;
       // Linked to a DIFFERENT TimeEntry → skip (belongs to another shift)
       if (t.time_entry_id && t.time_entry_id !== time_entry_id) return false;
-      // Unlinked trip → include only if times positively match
-      const matchesTime =
-        (!t.departure_time || (start_time && t.departure_time === start_time)) &&
-        (!t.arrival_time || (end_time && t.arrival_time === end_time));
+      // Unlinked trip → include only if times fall within shift ±5min tolerance
+      const tStart = toMin(t.departure_time);
+      const tEnd = toMin(t.arrival_time);
+      const sStart = toMin(start_time);
+      const sEnd = toMin(end_time);
+      const tolerance = 5;
+
+      // minimaal 1 tijd moet bestaan
+      const hasTime = tStart != null || tEnd != null;
+      // check start indien aanwezig
+      const startOk = tStart == null || (sStart != null && tStart >= (sStart - tolerance));
+      // check end indien aanwezig
+      const endOk = tEnd == null || (sEnd != null && tEnd <= (sEnd + tolerance));
+
+      const matchesTime = hasTime && startOk && endOk;
       return matchesTime;
     });
 
