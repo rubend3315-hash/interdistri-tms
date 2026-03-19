@@ -133,81 +133,49 @@ Deno.serve(async (req) => {
     }
     if (positionDrivers > 0) addLog(`Drivers from currentpositions: ${positionDrivers}`);
 
-    // Source 3: Planning (Schedule entity) — match vehicle_id per dag → employee
+    // Source 3: Trip entity — match vehicle (plate) + date → employee_id → name
+    // Trips worden achteraf aangemaakt met chauffeur + voertuig koppeling
     try {
-      // Get vehicles to build plate → vehicle_id mapping
-      const vehicles = await svc.entities.Vehicle.filter({});
-      const plateToVehicleId = {};
-      const vehicleIdToPlate = {};
-      for (const v of vehicles) {
-        if (v.license_plate) {
-          const normPlate = v.license_plate.replace(/[-\s]/g, '').toLowerCase();
-          plateToVehicleId[normPlate] = v.id;
-          vehicleIdToPlate[v.id] = v.license_plate;
-        }
-      }
-
-      // Calculate week numbers for the date range
-      const startDate = new Date(date_from);
-      const endDate = new Date(date_to);
-      const weekNumbers = new Set();
-      const year = startDate.getFullYear();
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const jan1 = new Date(d.getFullYear(), 0, 1);
-        const weekNum = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
-        weekNumbers.add(weekNum);
-      }
-
-      // Fetch schedules for those weeks
-      const schedules = [];
-      for (const wn of weekNumbers) {
-        const weekSchedules = await svc.entities.Schedule.filter({ week_number: wn, year });
-        schedules.push(...weekSchedules);
-      }
-
-      // Build: date+vehicleId → employee mapping
-      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const tripRecordsExisting = await svc.entities.Trip.filter({
+        date: { $gte: date_from, $lte: date_to }
+      });
       const employees = await svc.entities.Employee.filter({ status: 'Actief' });
       const empById = {};
       for (const emp of employees) {
         empById[emp.id] = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
       }
 
-      // Map: plate (normalized) → { date → employeeName }
-      const planningDriverMap = {}; // gpsassetid → drivername (per date, latest match)
-      let planningMatches = 0;
+      // Build vehicle_id → plate lookup
+      const vehicles = await svc.entities.Vehicle.filter({});
+      const vehicleIdToPlate = {};
+      for (const v of vehicles) {
+        if (v.license_plate) vehicleIdToPlate[v.id] = v.license_plate;
+      }
 
-      for (const sch of schedules) {
-        if (!sch.employee_id) continue;
-        const empName = empById[sch.employee_id];
+      let tripDriverMatches = 0;
+      for (const trip of tripRecordsExisting) {
+        if (!trip.employee_id || !trip.vehicle_id) continue;
+        const empName = empById[trip.employee_id];
         if (!empName) continue;
 
-        // Check each day in the schedule week
-        for (const dayName of dayNames) {
-          const vehicleId = sch[`${dayName}_vehicle_id`];
-          if (!vehicleId) continue;
+        const plate = vehicleIdToPlate[trip.vehicle_id];
+        if (!plate) continue;
+        const normPlate = plate.replace(/[-\s]/g, '').toLowerCase();
 
-          const plate = vehicleIdToPlate[vehicleId];
-          if (!plate) continue;
-          const normPlate = plate.replace(/[-\s]/g, '').toLowerCase();
-
-          // Find the gpsassetid for this plate
-          let matchGpsId = null;
-          for (const [gid, info] of Object.entries(assetMap)) {
-            if (info.plate && info.plate.replace(/[-\s]/g, '').toLowerCase() === normPlate) {
-              matchGpsId = gid;
-              break;
+        // Find the gpsassetid for this plate
+        for (const [gid, info] of Object.entries(assetMap)) {
+          if (info.plate && info.plate.replace(/[-\s]/g, '').toLowerCase() === normPlate) {
+            if (!driverMap[gid]) {
+              driverMap[gid] = empName;
+              tripDriverMatches++;
             }
-          }
-          if (matchGpsId && !driverMap[matchGpsId]) {
-            driverMap[matchGpsId] = empName;
-            planningMatches++;
+            break;
           }
         }
       }
-      if (planningMatches > 0) addLog(`Drivers from planning: ${planningMatches}`);
+      if (tripDriverMatches > 0) addLog(`Drivers from Trip entity: ${tripDriverMatches}`);
     } catch (err) {
-      addLog(`Planning driver lookup failed (non-critical): ${err.message.slice(0, 150)}`);
+      addLog(`Trip driver lookup failed (non-critical): ${err.message.slice(0, 150)}`);
     }
 
     const gpsIds = Object.keys(assetMap);
