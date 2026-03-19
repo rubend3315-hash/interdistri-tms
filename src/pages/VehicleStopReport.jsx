@@ -157,21 +157,6 @@ export default function VehicleStopReport() {
             </CardContent>
           </Card>
 
-          {/* Standplaats */}
-          {report.standplaats.count > 0 && (
-            <Card>
-              <CardHeader className="px-4 py-3 pb-1">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Home className="w-4 h-4 text-slate-500" />
-                  Standplaats ({report.standplaats.count}x)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 py-2">
-                <StopTable stops={report.standplaats.stops} showCoords={false} />
-              </CardContent>
-            </Card>
-          )}
-
           {/* Depot */}
           <Card>
             <CardHeader className="px-4 py-3 pb-1">
