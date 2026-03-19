@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
     const perf = {};
     const finalTripIds = [];
     const finalSpwIds = [];
+    const usedSpwIds = new Set();
 
     // ========================================
     // 1. IDEMPOTENT TRIPS: fetch existing → update or create
@@ -58,26 +59,24 @@ Deno.serve(async (req) => {
     console.log(`[RECALC] Found ${existingTrips.length} existing trips for TE=${time_entry_id}`);
 
     if (existingTrips.length > 0) {
-      // 1b. UPDATE existing trips to Voltooid + KM warnings (no vehicle history lookup)
-      for (const et of existingTrips) {
-        let kmWarning = null;
+      // 1b. UPDATE existing trips to Voltooid + KM warnings — PARALLEL
+      await Promise.all(existingTrips.map(et => {
         const totalKm = (et.start_km != null && et.end_km != null) ? Math.max(0, Number(et.end_km) - Number(et.start_km)) : null;
-        const warnings = [];
-        if (totalKm != null && totalKm > 400) warnings.push(`Rode afwijking: ${totalKm} km gereden (>400 km)`);
-        else if (totalKm != null && totalKm > 250) warnings.push(`Gele afwijking: ${totalKm} km gereden (>250 km)`);
-        if (warnings.length > 0) kmWarning = warnings.join(' | ');
+        let kmWarning = null;
+        if (totalKm != null && totalKm > 400) kmWarning = `Rode afwijking: ${totalKm} km gereden (>400 km)`;
+        else if (totalKm != null && totalKm > 250) kmWarning = `Gele afwijking: ${totalKm} km gereden (>250 km)`;
 
         const trip_key = et.trip_key || generateTripKey(et.employee_id, et.date, et.departure_time, et.arrival_time);
+        finalTripIds.push(et.id);
 
-        await svc.entities.Trip.update(et.id, {
+        return svc.entities.Trip.update(et.id, {
           status: 'Voltooid',
           total_km: totalKm,
           km_warning: kmWarning,
           trip_key,
         });
-        finalTripIds.push(et.id);
-        console.log(`[RECALC] Updated existing trip ${et.id} → Voltooid`);
-      }
+      }));
+      console.log(`[RECALC] Updated ${existingTrips.length} existing trips → Voltooid (parallel)`);
     } else if (Array.isArray(trips) && trips.length > 0) {
       // 1c. No existing trips — CREATE from payload (no vehicle history lookup)
       for (const trip of trips) {
@@ -135,16 +134,20 @@ Deno.serve(async (req) => {
       spwIndex.get(key).push(s);
     }
 
-    // 2c. Update SPW already linked to this time_entry_id → Definitief
+    // 2c. Update SPW already linked to this time_entry_id → Definitief — PARALLEL
     const linkedSpw = allSpwForDay.filter(s => s.time_entry_id === time_entry_id);
-    for (const es of linkedSpw) {
-      const spw_key = es.spw_key || generateSpwKey(es.employee_id, es.date, es.start_time, es.end_time, 'standplaats');
-      const updateData = { spw_key };
-      if (es.status !== 'Definitief') updateData.status = 'Definitief';
-      
-      await svc.entities.StandplaatsWerk.update(es.id, updateData);
-      console.log(`[RECALC] Updated linked SPW ${es.id} → Definitief`);
-      finalSpwIds.push(es.id);
+    if (linkedSpw.length > 0) {
+      await Promise.all(linkedSpw.map(es => {
+        const spw_key = es.spw_key || generateSpwKey(es.employee_id, es.date, es.start_time, es.end_time, 'standplaats');
+        const updateData = { spw_key };
+        if (es.status !== 'Definitief') updateData.status = 'Definitief';
+
+        finalSpwIds.push(es.id);
+        usedSpwIds.add(es.id);
+
+        return svc.entities.StandplaatsWerk.update(es.id, updateData);
+      }));
+      console.log(`[RECALC] Updated ${linkedSpw.length} linked SPW → Definitief (parallel)`);
     }
 
     // 2d. Match payload items against index — no extra DB queries
@@ -154,20 +157,27 @@ Deno.serve(async (req) => {
 
         const spwStartTime = isTime(spw.start_time) ? spw.start_time : null;
         const spwEndTime = isTime(spw.end_time) ? spw.end_time : null;
-        const spw_key = generateSpwKey(employee_id, date, spwStartTime, spwEndTime, 'standplaats');
-        const lookupKey = `${spwStartTime || ''}_${spwEndTime || ''}_${spw.customer_id || ''}_${spw.activity_id || ''}`;
 
-        // Skip if already handled in 2c (linked to this TE)
-        if (finalSpwIds.some(id => linkedSpw.find(ls => ls.id === id &&
-          ((ls.spw_key && ls.spw_key === spw_key) ||
-           (ls.start_time === spwStartTime && ls.end_time === spwEndTime))
-        ))) {
+        // Guard: skip null-time items to prevent vague lookupKey matches
+        if (!spwStartTime && !spwEndTime) continue;
+
+        const spw_key = generateSpwKey(employee_id, date, spwStartTime, spwEndTime, 'standplaats');
+
+        // Skip if already handled in 2c (clean check against linkedSpw)
+        const alreadyHandled = linkedSpw.find(ls =>
+          (ls.spw_key && ls.spw_key === spw_key) ||
+          (ls.start_time === spwStartTime && ls.end_time === spwEndTime)
+        );
+        if (alreadyHandled) {
+          usedSpwIds.add(alreadyHandled.id);
+          if (!finalSpwIds.includes(alreadyHandled.id)) finalSpwIds.push(alreadyHandled.id);
           continue;
         }
 
         // Lookup from in-memory index — O(1)
+        const lookupKey = `${spwStartTime || ''}_${spwEndTime || ''}_${spw.customer_id || ''}_${spw.activity_id || ''}`;
         const matches = spwIndex.get(lookupKey) || [];
-        const match = matches.find(m => !finalSpwIds.includes(m.id));
+        const match = matches.find(m => !usedSpwIds.has(m.id));
 
         if (match) {
           await svc.entities.StandplaatsWerk.update(match.id, {
@@ -180,6 +190,7 @@ Deno.serve(async (req) => {
             status: 'Definitief',
           });
           finalSpwIds.push(match.id);
+          usedSpwIds.add(match.id);
           console.log(`[RECALC] Claimed existing SPW ${match.id} → TE=${time_entry_id}, Definitief`);
         } else {
           const s = await svc.entities.StandplaatsWerk.create({
@@ -194,6 +205,7 @@ Deno.serve(async (req) => {
             status: 'Definitief',
           });
           finalSpwIds.push(s.id);
+          usedSpwIds.add(s.id);
           console.log(`[RECALC] Created new SPW ${s.id}`);
         }
       }
