@@ -359,8 +359,13 @@ Deno.serve(async (req) => {
       const lastSeg = segs[segs.length - 1];
 
       // Times
+      // startTime = start of first drive segment (departure from standplaats)
       const startTime = firstSeg.start;
-      const endTime = lastSeg.stop || lastSeg.end || lastSeg.start;
+      // endTime = ARRIVAL at standplaats = start of last stop segment (not its stop, which is when vehicle departs again)
+      const lastSegType = (lastSeg.type || '').toLowerCase();
+      const endTime = (lastSegType === 'stop' && isStandplaats(lastSeg))
+        ? (lastSeg.start || lastSeg.stop || lastSeg.end)
+        : (lastSeg.stop || lastSeg.end || lastSeg.start);
 
       // Hours
       let totalHours = null;
