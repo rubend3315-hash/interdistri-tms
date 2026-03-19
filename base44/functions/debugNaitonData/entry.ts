@@ -33,12 +33,11 @@ Deno.serve(async (req) => {
     };
 
     const body = await req.json().catch(() => ({}));
-    const mode = body.mode || 'explore'; // 'explore' = read-only discovery
 
     // ═══════════════════════════════════════════════════════
-    // STEP 1: Fetch assets + users in parallel
+    // Fetch assets, users, and trackergroups in parallel
     // ═══════════════════════════════════════════════════════
-    const [assetsJson, usersJson] = await Promise.all([
+    const [assetsJson, usersJson, trackergroupsJson] = await Promise.all([
       naitonCall([{
         name: "dataexchange_assets",
         arguments: [{ name: "inactiveAttributes", value: true }]
@@ -46,90 +45,99 @@ Deno.serve(async (req) => {
       naitonCall([{
         name: "dataexchange_users"
       }]),
+      naitonCall([{
+        name: "dataexchange_trackergroups"
+      }]).catch(e => ({ error: e.message })),
     ]);
 
     const assets = assetsJson.dataexchange_assets || [];
     const users = usersJson.dataexchange_users || [];
 
-    // Asset samples with all UUIDs
-    const assetSamples = assets.slice(0, 8).map(a => ({
-      assetid: a.assetid,
-      gpsassetid: a.gpsassetid,
-      assetname: a.assetname,
-      licenceplate: a.licenceplate,
-      allKeys: Object.keys(a),
-    }));
+    // ═══════════════════════════════════════════════════════
+    // Trackergroups analysis
+    // ═══════════════════════════════════════════════════════
+    let trackergroupsResult;
+    if (trackergroupsJson.error) {
+      trackergroupsResult = { status: 'ERROR', error: String(trackergroupsJson.error).slice(0, 500) };
+    } else {
+      const tgData = trackergroupsJson.dataexchange_trackergroups;
+      if (!tgData) {
+        trackergroupsResult = { status: 'NO_DATA_KEY', rawKeys: Object.keys(trackergroupsJson), rawPreview: JSON.stringify(trackergroupsJson).slice(0, 1000) };
+      } else if (!Array.isArray(tgData)) {
+        trackergroupsResult = { status: 'NOT_ARRAY', type: typeof tgData, preview: JSON.stringify(tgData).slice(0, 1000) };
+      } else {
+        // Group by trackergrouptypeid
+        const byType = {};
+        for (const tg of tgData) {
+          const typeId = tg.trackergrouptypeid || 'unknown';
+          if (!byType[typeId]) byType[typeId] = { count: 0, typeName: tg.trackergrouptype || '', samples: [] };
+          byType[typeId].count++;
+          if (byType[typeId].samples.length < 3) byType[typeId].samples.push(tg);
+        }
 
-    // User samples — focus on uuid/id fields for linkasset compatibility
-    const userSamples = users.slice(0, 8).map(u => ({
+        // Driver groups (typeid=2 based on Naiton UI convention)
+        const driverGroups = tgData.filter(tg => tg.trackergrouptypeid === 2 || (tg.trackergrouptype || '').toLowerCase().includes('driver'));
+
+        // For each driver group, show which assets (vehicles) are linked
+        const driverGroupDetails = driverGroups.slice(0, 10).map(dg => ({
+          trackergroupid: dg.trackergroupid,
+          trackergroupname: dg.trackergroupname,
+          trackergrouptypeid: dg.trackergrouptypeid,
+          trackergrouptype: dg.trackergrouptype,
+          // Look for asset references
+          assets: dg.assets || dg.gpsassetids || dg.trackers || null,
+          allKeys: Object.keys(dg),
+          fullData: dg,
+        }));
+
+        trackergroupsResult = {
+          status: 'OK',
+          total: tgData.length,
+          allKeys: tgData[0] ? Object.keys(tgData[0]) : [],
+          byType,
+          driverGroups: {
+            count: driverGroups.length,
+            details: driverGroupDetails,
+          },
+        };
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Assets: check trackergroupjson field for driver links
+    // ═══════════════════════════════════════════════════════
+    const assetDriverLinks = assets.slice(0, 10).map(a => {
+      let tgParsed = null;
+      if (a.trackergroupjson) {
+        try { tgParsed = typeof a.trackergroupjson === 'string' ? JSON.parse(a.trackergroupjson) : a.trackergroupjson; }
+        catch { tgParsed = 'PARSE_ERROR'; }
+      }
+      return {
+        assetid: a.assetid,
+        gpsassetid: a.gpsassetid,
+        assetname: a.assetname,
+        licenceplate: a.licenceplate,
+        trackergroupids: a.trackergroupids,
+        trackergroup: a.trackergroup,
+        trackergroupjson: tgParsed,
+      };
+    });
+
+    // User samples
+    const userSamples = users.slice(0, 5).map(u => ({
       personid: u.personid,
-      personassetuuid: u.personassetuuid,
       firstname: u.firstname,
       lastname: u.lastname,
       tachocardnumber: u.tachocardnumber,
       tagid: u.tagid,
       isdriver: u.isdriver,
-      allKeys: Object.keys(u),
     }));
 
-    // Stats
-    const usersWithPersonAssetUuid = users.filter(u => u.personassetuuid).length;
-    const usersWithPersonId = users.filter(u => u.personid).length;
-    const assetsWithAssetId = assets.filter(a => a.assetid).length;
-    const assetsWithGpsAssetId = assets.filter(a => a.gpsassetid).length;
-
-    // ═══════════════════════════════════════════════════════
-    // STEP 2: Test if dataexchange_linkasset endpoint exists
-    //         Use a DUMMY call with invalid UUID to check availability
-    //         (will return error but confirms endpoint exists)
-    // ═══════════════════════════════════════════════════════
-    const linkAssetTest = await naitonCall([{
-      name: "dataexchange_linkasset",
-      arguments: [
-        { name: "assetuuid", value: "00000000-0000-0000-0000-000000000000" },
-        { name: "startdatum", value: "2026-03-19T00:00:00" },
-        { name: "einddatum", value: "2026-03-19T23:59:59" },
-      ]
-    }]).catch(e => ({ error: e.message }));
-
-    // Determine if the endpoint exists (even if the call fails with bad data)
-    const linkAssetEndpointExists = !linkAssetTest.error?.includes('does not exist');
-
-    // ═══════════════════════════════════════════════════════
-    // STEP 3: If mode=link and assetuuid provided, do actual link
-    // ═══════════════════════════════════════════════════════
-    let linkResult = null;
-    if (mode === 'link' && body.assetuuid) {
-      linkResult = await naitonCall([{
-        name: "dataexchange_linkasset",
-        arguments: [
-          { name: "assetuuid", value: body.assetuuid },
-          { name: "startdatum", value: body.startdatum || new Date().toISOString() },
-          { name: "einddatum", value: body.einddatum || new Date(Date.now() + 86400000).toISOString() },
-        ]
-      }]).catch(e => ({ error: e.message }));
-    }
-
     return Response.json({
-      assets: {
-        total: assets.length,
-        withAssetId: assetsWithAssetId,
-        withGpsAssetId: assetsWithGpsAssetId,
-        samples: assetSamples,
-      },
-      users: {
-        total: users.length,
-        withPersonAssetUuid: usersWithPersonAssetUuid,
-        withPersonId: usersWithPersonId,
-        samples: userSamples,
-      },
-      linkasset_endpoint: {
-        exists: linkAssetEndpointExists,
-        test_response: linkAssetTest.error
-          ? { status: 'ERROR', error: String(linkAssetTest.error).slice(0, 500) }
-          : { status: 'OK', rawKeys: Object.keys(linkAssetTest), preview: JSON.stringify(linkAssetTest).slice(0, 500) },
-      },
-      link_result: linkResult,
+      trackergroups: trackergroupsResult,
+      asset_driver_links: assetDriverLinks,
+      users: { total: users.length, samples: userSamples },
+      assets_total: assets.length,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
