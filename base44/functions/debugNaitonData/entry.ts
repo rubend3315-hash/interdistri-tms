@@ -32,10 +32,49 @@ Deno.serve(async (req) => {
       return res.json();
     };
 
-    // Fetch currentpositions and try driverlogin in parallel
-    const [positionsJson, driverLoginJson] = await Promise.all([
-      naitonCall([{ name: "dataexchange_currentpositions", arguments: [] }]),
-      naitonCall([{ name: "dataexchange_driverlogin", arguments: [] }]).catch(e => ({ error: e.message })),
+    const body = await req.json().catch(() => ({}));
+    const date_from = body.date_from || '2026-03-19';
+    const date_to = body.date_to || '2026-03-19';
+
+    // Fetch assets first to get gpsassetids
+    const assetsJson = await naitonCall([{
+      name: "dataexchange_assets",
+      arguments: [{ name: "inactiveAttributes", value: true }]
+    }]);
+    const assets = assetsJson.dataexchange_assets || [];
+    const gpsIds = assets.filter(a => a.gpsassetid).map(a => a.gpsassetid);
+
+    // Try multiple driverhistory call variants in parallel
+    const [dh1, dh2, dh3, dh4] = await Promise.all([
+      // Variant 1: with gpsassetids + date range
+      naitonCall([{
+        name: "dataexchange_driverhistory",
+        arguments: [
+          { name: "gpsassetids", value: gpsIds },
+          { name: "starttime", value: date_from },
+          { name: "stoptime", value: date_to },
+        ]
+      }]).catch(e => ({ error: `variant1: ${e.message}` })),
+      // Variant 2: without gpsassetids
+      naitonCall([{
+        name: "dataexchange_driverhistory",
+        arguments: [
+          { name: "starttime", value: date_from },
+          { name: "stoptime", value: date_to },
+        ]
+      }]).catch(e => ({ error: `variant2: ${e.message}` })),
+      // Variant 3: no arguments at all
+      naitonCall([{
+        name: "dataexchange_driverhistory"
+      }]).catch(e => ({ error: `variant3: ${e.message}` })),
+      // Variant 4: with startdatetime/stopdatetime naming
+      naitonCall([{
+        name: "dataexchange_driverhistory",
+        arguments: [
+          { name: "startdatetime", value: date_from },
+          { name: "stopdatetime", value: date_to },
+        ]
+      }]).catch(e => ({ error: `variant4: ${e.message}` })),
     ]);
 
     // Extract positions — focus on driver-related fields
