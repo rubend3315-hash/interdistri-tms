@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     const STANDPLAATS_LAT = 51.4700;
     const STANDPLAATS_LON = 3.9716;
 
-    // Collect all stop segments with their GPS coordinates
+    // Collect all stop segments with their GPS coordinates and additionaldata
     const stops = segments
       .filter(s => (s.type || '').toLowerCase() === 'stop')
       .map(s => {
@@ -69,6 +69,11 @@ Deno.serve(async (req) => {
         const lat = stopLat || startLat;
         const lon = stopLon || startLon;
         const dist = (lat && lon) ? Math.round(gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON)) : null;
+        // Parse additionaldata for location info
+        let additionalParsed = null;
+        if (s.additionaldata) {
+          try { additionalParsed = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata; } catch {}
+        }
         return {
           gpsassetid: s.gpsassetid,
           start: s.start,
@@ -79,6 +84,8 @@ Deno.serve(async (req) => {
           stoplon: stopLon || null,
           distance_to_standplaats_m: dist,
           is_standplaats: dist !== null && dist <= 500,
+          additionaldata: additionalParsed,
+          raw_additionaldata: s.additionaldata ? String(s.additionaldata).slice(0, 500) : null,
         };
       });
 
