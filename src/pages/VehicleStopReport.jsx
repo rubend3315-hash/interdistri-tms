@@ -15,8 +15,8 @@ import {
   MapPin,
   Gauge,
   Loader2,
-  ParkingSquare,
-  Timer,
+  CircleParking,
+  Clock4,
   Home,
   FileText,
 } from "lucide-react";
