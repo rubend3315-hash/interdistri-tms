@@ -77,52 +77,27 @@ Deno.serve(async (req) => {
       }]).catch(e => ({ error: `variant4: ${e.message}` })),
     ]);
 
-    // Extract positions — focus on driver-related fields
-    const positions = positionsJson.dataexchange_currentpositions || [];
-    const withPerson = positions.filter(p => p.personjson);
-    const positionSamples = positions.slice(0, 5).map(p => {
-      let personParsed = null;
-      if (p.personjson) {
-        try { personParsed = typeof p.personjson === 'string' ? JSON.parse(p.personjson) : p.personjson; }
-        catch { personParsed = 'PARSE_ERROR'; }
-      }
+    // Process results
+    const processResult = (label, json) => {
+      if (json.error) return { status: 'ERROR', error: String(json.error).slice(0, 500) };
+      const data = json.dataexchange_driverhistory;
+      if (!data) return { status: 'NO_DATA_KEY', rawKeys: Object.keys(json), rawPreview: JSON.stringify(json).slice(0, 500) };
+      if (!Array.isArray(data)) return { status: 'NOT_ARRAY', type: typeof data, preview: JSON.stringify(data).slice(0, 500) };
       return {
-        gpsassetid: p.gpsassetid,
-        gpsassetname: p.gpsassetname,
-        licenceplate: p.licenceplate,
-        personjson_raw: p.personjson ? String(p.personjson).slice(0, 300) : null,
-        personjson_parsed: personParsed,
+        status: 'OK',
+        count: data.length,
+        samples: data.slice(0, 5),
+        allKeys: data[0] ? Object.keys(data[0]) : [],
       };
-    });
-    // Also get ALL positions with personjson populated
-    const withPersonSamples = withPerson.slice(0, 5).map(p => {
-      let personParsed = null;
-      try { personParsed = typeof p.personjson === 'string' ? JSON.parse(p.personjson) : p.personjson; }
-      catch { personParsed = 'PARSE_ERROR'; }
-      return {
-        gpsassetid: p.gpsassetid,
-        gpsassetname: p.gpsassetname,
-        licenceplate: p.licenceplate,
-        personjson_parsed: personParsed,
-      };
-    });
-
-    // driverlogin
-    const driverLoginData = driverLoginJson.dataexchange_driverlogin || driverLoginJson;
-    const driverLoginSamples = Array.isArray(driverLoginData) ? driverLoginData.slice(0, 3) : driverLoginData;
+    };
 
     return Response.json({
-      currentpositions: {
-        total: positions.length,
-        withPersonCount: withPerson.length,
-        firstFiveSamples: positionSamples,
-        withPersonSamples,
-        allKeys: positions[0] ? Object.keys(positions[0]) : [],
-      },
-      driverlogin: {
-        raw_keys: driverLoginJson ? Object.keys(driverLoginJson) : [],
-        samples: driverLoginSamples,
-      },
+      date_range: { date_from, date_to },
+      assets_count: gpsIds.length,
+      variant1_with_assets_and_dates: processResult('v1', dh1),
+      variant2_dates_only: processResult('v2', dh2),
+      variant3_no_args: processResult('v3', dh3),
+      variant4_alt_date_names: processResult('v4', dh4),
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
