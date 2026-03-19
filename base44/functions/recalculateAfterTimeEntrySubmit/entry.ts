@@ -155,9 +155,9 @@ Deno.serve(async (req) => {
     const linkedIndex = new Map();
     for (const ls of linkedSpw) {
       const byKey = ls.spw_key || generateSpwKey(ls.employee_id, ls.date, ls.start_time, ls.end_time, 'standplaats');
-      const byTime = `${ls.start_time || ''}_${ls.end_time || ''}`;
+      const byFull = `${ls.start_time || ''}_${ls.end_time || ''}_${ls.customer_id || ''}_${ls.activity_id || ''}`;
       if (!linkedIndex.has(byKey)) linkedIndex.set(byKey, ls);
-      if (!linkedIndex.has(byTime)) linkedIndex.set(byTime, ls);
+      if (!linkedIndex.has(byFull)) linkedIndex.set(byFull, ls);
     }
 
     if (Array.isArray(standplaats_werk) && standplaats_werk.length > 0) {
@@ -173,7 +173,8 @@ Deno.serve(async (req) => {
         const spw_key = generateSpwKey(employee_id, date, spwStartTime, spwEndTime, 'standplaats');
 
         // Skip if already handled in 2c — O(1) via linkedIndex
-        const alreadyHandled = linkedIndex.get(spw_key) || linkedIndex.get(`${spwStartTime || ''}_${spwEndTime || ''}`);
+        const lookupKey = `${spwStartTime || ''}_${spwEndTime || ''}_${spw.customer_id || ''}_${spw.activity_id || ''}`;
+        const alreadyHandled = linkedIndex.get(spw_key) || linkedIndex.get(lookupKey);
         if (alreadyHandled) {
           if (!usedSpwIds.has(alreadyHandled.id)) {
             finalSpwIds.push(alreadyHandled.id);
