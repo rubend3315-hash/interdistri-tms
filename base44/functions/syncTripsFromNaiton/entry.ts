@@ -86,69 +86,57 @@ Deno.serve(async (req) => {
     };
 
     // ═══════════════════════════════════════════════════════
-    // STEP 1: Fetch assets + currentpositions + driverhistory (parallel)
+    // STEP 1: Fetch assets + users (parallel)
     // ═══════════════════════════════════════════════════════
-    addLog('Step 1: Fetching assets, currentpositions, driverhistory...');
+    addLog('Step 1: Fetching assets + users...');
 
-    const [assetsJson, positionsJson, driverHistoryJson] = await Promise.all([
+    const [assetsJson, usersJson] = await Promise.all([
       naitonCall([{
         name: "dataexchange_assets",
         arguments: [{ name: "inactiveAttributes", value: true }]
       }]),
       naitonCall([{
-        name: "dataexchange_currentpositions",
-        arguments: []
-      }]).catch(err => {
-        addLog(`currentpositions failed (non-critical): ${err.message}`);
-        return {};
-      }),
-      // driverhistory read not available in Naiton — resolved as empty
-      Promise.resolve({})
+        name: "dataexchange_users"
+      }]),
     ]);
 
     // 1a. Asset mapping: gpsassetid → { vehicle, plate }
     const assets = assetsJson.dataexchange_assets || [];
     const assetMap = {};
-    // Also build reverse lookup: assetname/plate → gpsassetid
-    const plateToGpsId = {};
-    const nameToGpsId = {};
     for (const a of assets) {
       if (!a.gpsassetid) continue;
       assetMap[a.gpsassetid] = {
         vehicle: a.assetname || '',
         plate: a.licenceplate || '',
       };
-      if (a.licenceplate) plateToGpsId[a.licenceplate.toLowerCase()] = a.gpsassetid;
-      if (a.assetname) nameToGpsId[a.assetname.toLowerCase()] = a.gpsassetid;
     }
 
-    // 1b. Driver mapping — driverhistory as PRIMARY source
-    const driverMap = {}; // gpsassetid → drivername
-
-    // Source 1: driverhistory (most reliable — contains historical driver assignments)
-    // Naiton driverhistory read API not available — skip
-    addLog('Naiton driverhistory read: niet beschikbaar (alleen upsert/write)');
-
-    // Source 2: currentpositions personjson (secondary, fills gaps)
-    const positions = positionsJson.dataexchange_currentpositions || [];
-    let positionDrivers = 0;
-    for (const p of positions) {
-      const id = p.gpsassetid;
-      if (!id || driverMap[id]) continue; // don't overwrite driverhistory
-      if (p.personjson) {
-        try {
-          const person = typeof p.personjson === 'string' ? JSON.parse(p.personjson) : p.personjson;
-          const fn = person.FirstName || person.firstname || person.Firstname || person.voornaam || '';
-          const ln = person.LastName || person.lastname || person.Lastname || person.achternaam || '';
-          const name = `${fn} ${ln}`.trim();
-          if (name) { driverMap[id] = name; positionDrivers++; }
-        } catch { /* ignore parse errors */ }
-      }
+    // 1b. User mapping: tachocardnumber/tagid/personid → fullname
+    const naitonUsers = usersJson.dataexchange_users || [];
+    const userByTacho = {};   // tachocardnumber → fullname
+    const userByTag = {};     // tagid → fullname
+    const userByPersonId = {}; // personid → fullname
+    for (const u of naitonUsers) {
+      const fullname = `${u.firstname || ''} ${u.lastname || ''}`.trim();
+      if (!fullname) continue;
+      if (u.tachocardnumber) userByTacho[String(u.tachocardnumber)] = fullname;
+      if (u.tagid) userByTag[String(u.tagid)] = fullname;
+      if (u.personid) userByPersonId[String(u.personid)] = fullname;
     }
-    if (positionDrivers > 0) addLog(`Drivers from currentpositions: ${positionDrivers}`);
+    addLog(`Users loaded: ${naitonUsers.length} total, ${Object.keys(userByTacho).length} tacho, ${Object.keys(userByTag).length} tag, ${Object.keys(userByPersonId).length} personid`);
 
-    // Source 3: Trip entity — match vehicle (plate) + date → employee_id → name
-    // Trips worden achteraf aangemaakt met chauffeur + voertuig koppeling
+    // Debug: log user map sample
+    const userMapSample = naitonUsers.slice(0, 5).map(u => ({
+      name: `${u.firstname} ${u.lastname}`,
+      tachocardnumber: u.tachocardnumber,
+      tagid: u.tagid,
+      personid: u.personid,
+      isdriver: u.isdriver,
+    }));
+    console.log('[NAITON] userMap sample:', JSON.stringify(userMapSample));
+
+    // 1c. Planning fallback: Trip entity → employee name by plate+date
+    const planningDriverMap = {}; // gpsassetid → drivername
     try {
       const tripRecordsExisting = await svc.entities.Trip.filter({
         date: { $gte: date_from, $lte: date_to }
@@ -158,42 +146,36 @@ Deno.serve(async (req) => {
       for (const emp of employees) {
         empById[emp.id] = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
       }
-
-      // Build vehicle_id → plate lookup
       const vehicles = await svc.entities.Vehicle.filter({});
       const vehicleIdToPlate = {};
       for (const v of vehicles) {
         if (v.license_plate) vehicleIdToPlate[v.id] = v.license_plate;
       }
-
       let tripDriverMatches = 0;
       for (const trip of tripRecordsExisting) {
         if (!trip.employee_id || !trip.vehicle_id) continue;
         const empName = empById[trip.employee_id];
         if (!empName) continue;
-
         const plate = vehicleIdToPlate[trip.vehicle_id];
         if (!plate) continue;
         const normPlate = plate.replace(/[-\s]/g, '').toLowerCase();
-
-        // Find the gpsassetid for this plate
         for (const [gid, info] of Object.entries(assetMap)) {
           if (info.plate && info.plate.replace(/[-\s]/g, '').toLowerCase() === normPlate) {
-            if (!driverMap[gid]) {
-              driverMap[gid] = empName;
+            if (!planningDriverMap[gid]) {
+              planningDriverMap[gid] = empName;
               tripDriverMatches++;
             }
             break;
           }
         }
       }
-      if (tripDriverMatches > 0) addLog(`Drivers from Trip entity: ${tripDriverMatches}`);
+      if (tripDriverMatches > 0) addLog(`Planning fallback drivers: ${tripDriverMatches}`);
     } catch (err) {
-      addLog(`Trip driver lookup failed (non-critical): ${err.message.slice(0, 150)}`);
+      addLog(`Planning driver lookup failed (non-critical): ${err.message.slice(0, 150)}`);
     }
 
     const gpsIds = Object.keys(assetMap);
-    addLog(`${assets.length} assets, ${gpsIds.length} met gpsassetid, ${Object.keys(driverMap).length} drivers totaal`);
+    addLog(`${assets.length} assets, ${gpsIds.length} met gpsassetid`);
 
     if (gpsIds.length === 0) {
       return Response.json({ error: 'Geen GPS assets gevonden in Naiton' }, { status: 404 });
