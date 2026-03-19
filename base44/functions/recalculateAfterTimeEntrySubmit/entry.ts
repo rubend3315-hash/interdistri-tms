@@ -65,10 +65,10 @@ Deno.serve(async (req) => {
       if (t.time_entry_id === time_entry_id) return true;
       // Linked to a DIFFERENT TimeEntry → skip (belongs to another shift)
       if (t.time_entry_id && t.time_entry_id !== time_entry_id) return false;
-      // Unlinked trip → include only if BOTH times positively match (strict)
+      // Unlinked trip → include only if times positively match
       const matchesTime =
-        (!!t.departure_time && !!start_time && t.departure_time === start_time) &&
-        (!!t.arrival_time && !!end_time && t.arrival_time === end_time);
+        (!t.departure_time || (start_time && t.departure_time === start_time)) &&
+        (!t.arrival_time || (end_time && t.arrival_time === end_time));
       return matchesTime;
     });
 
