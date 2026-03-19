@@ -89,13 +89,13 @@ Deno.serve(async (req) => {
         return {};
       }),
       naitonCall([{
-        name: "dataexchange_driverhistory",
+        name: "dataexchange_getdriverhistory",
         arguments: [
           { name: "starttime", value: date_from },
           { name: "stoptime", value: date_to }
         ]
       }]).catch(err => {
-        addLog(`driverhistory read failed (non-critical): ${err.message}`);
+        addLog(`driverhistory read failed: ${err.message.slice(0, 200)}`);
         return {};
       })
     ]);
