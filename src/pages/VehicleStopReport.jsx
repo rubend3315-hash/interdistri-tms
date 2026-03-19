@@ -176,7 +176,7 @@ export default function VehicleStopReport() {
           <Card>
             <CardHeader className="px-4 py-3 pb-1">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <ParkingSquare className="w-4 h-4 text-amber-500" />
+                <CircleParking className="w-4 h-4 text-amber-500" />
                 Depot
                 <Badge className="bg-amber-100 text-amber-700 text-xs ml-1">
                   {report.depot.count}x — {report.depot.total_minutes} min
@@ -196,7 +196,7 @@ export default function VehicleStopReport() {
           <Card>
             <CardHeader className="px-4 py-3 pb-1">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Timer className="w-4 h-4 text-orange-500" />
+                <Clock4 className="w-4 h-4 text-orange-500" />
                 Stilstand &gt;5 min
                 <Badge className="bg-orange-100 text-orange-700 text-xs ml-1">
                   {report.stilstand.count}x — {report.stilstand.total_minutes} min
