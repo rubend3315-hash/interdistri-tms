@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       }]),
       naitonCall([{
         name: "dataexchange_currentpositions",
-        arguments: [{ name: "includeFields", value: "personjson" }]
+        arguments: []
       }]).catch(err => {
         addLog(`currentpositions failed (non-critical): ${err.message}`);
         return {};
