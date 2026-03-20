@@ -210,13 +210,10 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════════════════
     // STEP 2: Fetch trip segments (bulk, all assets at once)
     // ═══════════════════════════════════════════════════════
-    // Naiton API returns 0 segments when starttime==stoptime, so add +1 day to stoptime for the API call
-    let apiStopTime = date_to;
-    if (date_from === date_to) {
-      const d = new Date(date_to);
-      d.setDate(d.getDate() + 1);
-      apiStopTime = d.toISOString().split('T')[0];
-    }
+    // Naiton API stoptime is exclusive — always add +1 day to include the last day's data
+    const apiStopDate = new Date(date_to);
+    apiStopDate.setDate(apiStopDate.getDate() + 1);
+    const apiStopTime = apiStopDate.toISOString().split('T')[0];
     addLog(`Step 2: Fetching trips ${date_from} → ${apiStopTime}...`);
 
     const tripsJson = await naitonCall([{
