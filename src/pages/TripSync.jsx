@@ -199,7 +199,7 @@ export default function TripSync() {
             <>
               {unlinked > 0 && (
                 <Badge className="text-[11px] bg-amber-100 text-amber-700">
-                  <UserX className="w-3 h-3 mr-1" /> {unlinked} onbekoppeld
+                  <UserX className="w-3 h-3 mr-1" /> {unlinked} zonder correcte Tag-id koppeling
                 </Badge>
               )}
               {manual > 0 && (
