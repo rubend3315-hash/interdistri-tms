@@ -290,7 +290,10 @@ Deno.serve(async (req) => {
           // Merge: extend last to include first's end, remove first
           last.stop_utc = first.stop_utc;
           last.stop_local = first.stop_local;
-          last.duration_min = Math.round((new Date(last.stop_utc) - new Date(last.start_utc)) / 60000);
+          // Duration crosses midnight — calculate correctly
+          let durMs = new Date(last.stop_utc).getTime() - new Date(last.start_utc).getTime();
+          if (durMs < 0) durMs += 24 * 60 * 60 * 1000; // add 24h for overnight
+          last.duration_min = Math.round(durMs / 60000);
           merged.shift(); // remove the first entry (now absorbed into last)
         }
       }
