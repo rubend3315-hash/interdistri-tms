@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export default function FuelSettingsDialog({ open, onClose, settings, onSave, customers }) {
   const [form, setForm] = useState({
     customer_id: '',
+    vehicle_type: '',
     base_fuel_price: '',
     calculation_method: 'km',
-    fuel_consumption_per_km: '0.1',
+    fuel_consumption_per_km: '0.143',
     fuel_consumption_per_hour: '2.5',
   });
 
@@ -18,17 +19,19 @@ export default function FuelSettingsDialog({ open, onClose, settings, onSave, cu
     if (settings) {
       setForm({
         customer_id: settings.customer_id || '',
+        vehicle_type: settings.vehicle_type || '',
         base_fuel_price: String(settings.base_fuel_price || ''),
         calculation_method: settings.calculation_method || 'km',
-        fuel_consumption_per_km: String(settings.fuel_consumption_per_km || '0.1'),
+        fuel_consumption_per_km: String(settings.fuel_consumption_per_km || '0.143'),
         fuel_consumption_per_hour: String(settings.fuel_consumption_per_hour || '2.5'),
       });
     } else {
       setForm({
         customer_id: '',
+        vehicle_type: '',
         base_fuel_price: '',
         calculation_method: 'km',
-        fuel_consumption_per_km: '0.1',
+        fuel_consumption_per_km: '0.143',
         fuel_consumption_per_hour: '2.5',
       });
     }
@@ -38,7 +41,7 @@ export default function FuelSettingsDialog({ open, onClose, settings, onSave, cu
     onSave({
       ...form,
       base_fuel_price: parseFloat(form.base_fuel_price) || 0,
-      fuel_consumption_per_km: parseFloat(form.fuel_consumption_per_km) || 0.1,
+      fuel_consumption_per_km: parseFloat(form.fuel_consumption_per_km) || 0.143,
       fuel_consumption_per_hour: parseFloat(form.fuel_consumption_per_hour) || 2.5,
       is_active: true,
     });
@@ -59,6 +62,18 @@ export default function FuelSettingsDialog({ open, onClose, settings, onSave, cu
                 {customers.map(c => (
                   <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Voertuigtype</Label>
+            <Select value={form.vehicle_type} onValueChange={(v) => setForm(f => ({ ...f, vehicle_type: v }))}>
+              <SelectTrigger><SelectValue placeholder="Selecteer voertuigtype" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Bestelbus">Bestelbus</SelectItem>
+                <SelectItem value="Vrachtwagen">Vrachtwagen</SelectItem>
+                <SelectItem value="Personenauto">Personenauto</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -111,7 +126,7 @@ export default function FuelSettingsDialog({ open, onClose, settings, onSave, cu
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Annuleren</Button>
-          <Button onClick={handleSave} disabled={!form.customer_id || !form.base_fuel_price}>Opslaan</Button>
+          <Button onClick={handleSave} disabled={!form.customer_id || !form.vehicle_type || !form.base_fuel_price}>Opslaan</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -26,6 +26,7 @@ export default function FuelSettingsTable({ settings, customerMap, onEdit, onDel
             <TableHeader>
               <TableRow>
                 <TableHead>Klant</TableHead>
+                <TableHead>Voertuigtype</TableHead>
                 <TableHead className="text-right">Basisprijs (€/ltr)</TableHead>
                 <TableHead>Methode</TableHead>
                 <TableHead className="text-right">Verbruiksfactor</TableHead>
@@ -35,7 +36,7 @@ export default function FuelSettingsTable({ settings, customerMap, onEdit, onDel
             <TableBody>
               {settings.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-slate-400 py-8">
+                  <TableCell colSpan={6} className="text-center text-slate-400 py-8">
                     Nog geen klant-instellingen. Voeg een klant toe om te beginnen.
                   </TableCell>
                 </TableRow>
@@ -45,6 +46,7 @@ export default function FuelSettingsTable({ settings, customerMap, onEdit, onDel
                 return (
                   <TableRow key={s.id}>
                     <TableCell className="font-medium">{customer?.company_name || 'Onbekend'}</TableCell>
+                    <TableCell>{s.vehicle_type || '-'}</TableCell>
                     <TableCell className="text-right tabular-nums">€ {s.base_fuel_price?.toFixed(4)}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
