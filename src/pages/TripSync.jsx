@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   RefreshCw,
   Truck,
@@ -25,11 +26,13 @@ import {
   Clock4,
   UserX,
   UserCheck,
-  Pencil
+  Pencil,
+  Settings
 } from "lucide-react";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
 import { toast } from "sonner";
 import DriverReassignDialog from "@/components/tripsync/DriverReassignDialog";
+import GpsLocationSettings from "@/components/tripsync/GpsLocationSettings";
 
 const DEFAULT_FROM = format(subDays(new Date(), 1), 'yyyy-MM-dd');
 const TODAY = format(new Date(), 'yyyy-MM-dd');
