@@ -46,6 +46,15 @@ export default function KmDashboard() {
     ...cOpts,
   });
 
+  // GPS TripRecords als fallback voor brandstofkosten
+  const { data: tripRecords = [] } = useQuery({
+    queryKey: ['km-triprecords', dateRange.from, dateRange.to],
+    queryFn: () => base44.entities.TripRecord.filter({
+      date: { $gte: dateRange.from, $lte: dateRange.to }
+    }, '-date', 1000),
+    ...cOpts,
+  });
+
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => base44.entities.Vehicle.list(),
@@ -184,7 +193,9 @@ export default function KmDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <KmFuelCostCard
               trips={filteredTrips}
+              tripRecords={tripRecords}
               vehicleMap={vehicleMap}
+              vehicles={vehicles}
               dieselData={dieselData}
               dieselLoading={dieselLoading}
               dieselError={!dieselData && !dieselLoading}
