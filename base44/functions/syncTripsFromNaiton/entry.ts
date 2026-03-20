@@ -1,10 +1,10 @@
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║ syncTripsFromNaiton v24 — Production GPS Buddy / Naiton integration ║
+// ║ syncTripsFromNaiton v25 — Production GPS Buddy / Naiton integration ║
 // ║ Auth: Admin-only                                                     ║
-// ║ CHANGES vs v22:                                                      ║
-// ║  - Driver mapping via dataexchange_users (tachocardnumber/tagid)     ║
-// ║  - Trip segments matched via tachocardnumber/tagid/personid fields   ║
-// ║  - personjson fallback removed (unreliable)                          ║
+// ║ CHANGES vs v24:                                                      ║
+// ║  - Stilstand-samenvoeging: opeenvolgende stops <200m worden          ║
+// ║    samengevoegd tot één logische stop (compenseert ontbrekend         ║
+// ║    ignition-signaal in API)                                          ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
