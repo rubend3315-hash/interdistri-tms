@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
         name: "dataexchange_trips",
         arguments: [
           { name: "gpsassetids", value: [gpsassetid] },
-          { name: "includefields", value: ["odometerstartam", "odometerstopam", "totalfuelconstart", "totalfuelconsumption", "startaddress", "stopaddress", "gpsdata", "address", "location", "driver", "startam", "trucktrailer", "gpsdatawithsensors"] },
+          { name: "includefields", value: ["driver"] },
           { name: "starttime", value: starttime },
           { name: "stoptime", value: stoptime },
           { name: "includeallattributes", value: true },
