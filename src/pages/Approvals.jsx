@@ -457,10 +457,28 @@ export default function Approvals() {
     const overlaps = getEntryOverlaps(entry);
     const entryTrips = showActions ? (tripsByTimeEntry[entry.id] || []) : [];
     const entrySpw = showActions ? (spwByTimeEntry[entry.id] || []) : [];
-    const entryTripRecords = showActions ? [
-      ...(tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.date}`] || []),
-      ...(entry.end_date && entry.end_date !== entry.date ? (tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.end_date}`] || []) : []),
-    ] : [];
+    const entryTripRecords = showActions ? (() => {
+      const allRecords = [
+        ...(tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.date}`] || []),
+        ...(entry.end_date && entry.end_date !== entry.date ? (tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.end_date}`] || []) : []),
+      ];
+      // Filter GPS records to only those within the shift time window (±15min tolerance)
+      if (!entry.start_time || !entry.end_time || allRecords.length === 0) return allRecords;
+      const [sH, sM] = entry.start_time.split(':').map(Number);
+      const [eH, eM] = entry.end_time.split(':').map(Number);
+      let shiftStart = sH * 60 + sM - 15; // 15min tolerance before
+      let shiftEnd = eH * 60 + eM + 15;   // 15min tolerance after
+      if (shiftEnd <= shiftStart) shiftEnd += 1440; // overnight
+      return allRecords.filter(r => {
+        if (!r.start_time) return true; // keep records without times
+        try {
+          const d = new Date(r.start_time);
+          const rMins = d.getHours() * 60 + d.getMinutes();
+          const rNorm = rMins < shiftStart ? rMins + 1440 : rMins;
+          return rNorm >= shiftStart && rNorm <= shiftEnd;
+        } catch { return true; }
+      });
+    })() : [];
     const hasLinked = entryTrips.length > 0 || entrySpw.length > 0 || entryTripRecords.length > 0;
 
     return (
