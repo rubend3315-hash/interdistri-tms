@@ -126,89 +126,67 @@ function TripRecordCard({ record, fuelCost }) {
   const hasFuel = fuelCost && !fuelCost.noSettings && !fuelCost.noPrice;
 
   return (
-    <div className="px-4 py-3 bg-white border border-emerald-200 rounded-lg space-y-2">
-      {/* Header row */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 bg-emerald-50 rounded-md flex items-center justify-center flex-shrink-0">
-            <Satellite className="w-3.5 h-3.5 text-emerald-600" />
-          </div>
-          <span className="text-sm font-semibold text-slate-900 truncate">
-            {record.plate || record.vehicle || "GPS Rit"}
+    <div className="flex items-center gap-3 px-3 py-2 bg-white border border-emerald-200 rounded-lg">
+      <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Satellite className="w-4 h-4 text-emerald-600" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium text-slate-900 truncate">
+            {record.vehicle || record.plate || "GPS Rit"}
           </span>
-          <Badge className="text-[10px] px-1.5 py-0 leading-4 bg-emerald-50 text-emerald-700 flex-shrink-0">
+          <Badge className="text-[10px] px-1.5 py-0 leading-4 bg-emerald-50 text-emerald-700">
             GPS Buddy
           </Badge>
-          {record.driver && (
-            <span className="text-xs text-slate-400 truncate">
-              {record.driver}
+        </div>
+        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+          {record.plate && (
+            <span className="flex items-center gap-1">
+              <Truck className="w-3 h-3 text-slate-400" />
+              {record.plate}
+            </span>
+          )}
+          {record.start_time && record.end_time && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3 text-slate-400" />
+              {formatTime(record.start_time)} – {formatTime(record.end_time)}
+            </span>
+          )}
+          {record.start_km != null && record.end_km != null && (
+            <span>{record.start_km} – {record.end_km}</span>
+          )}
+          {record.total_km > 0 && (
+            <span className="flex items-center gap-1">
+              <Gauge className="w-3 h-3 text-slate-400" />
+              <span className="font-medium text-slate-700">{record.total_km} km</span>
+            </span>
+          )}
+          {record.total_hours > 0 && (
+            <span className="font-medium text-emerald-600">{record.total_hours}u</span>
+          )}
+          {record.depot_time_minutes > 0 && (
+            <span className="flex items-center gap-1 text-amber-600">
+              <CircleParking className="w-3 h-3" />
+              {record.depot_stops_count || '?'}x/{record.depot_time_minutes}m depot
+            </span>
+          )}
+          {record.long_stops_minutes > 0 && (
+            <span className="flex items-center gap-1 text-orange-500">
+              <Clock4 className="w-3 h-3" />
+              {record.long_stops_count || '?'}x/{record.long_stops_minutes}m stilstand
+            </span>
+          )}
+          {hasFuel && (
+            <span className="flex items-center gap-1 text-emerald-600">
+              <Fuel className="w-3 h-3" />
+              <span className="font-medium">€{fmt(fuelCost.costPerKm)}/km</span>
             </span>
           )}
         </div>
+        {record.driver && (
+          <span className="text-[11px] text-slate-400 mt-0.5 block">Chauffeur: {record.driver}</span>
+        )}
       </div>
-
-      {/* Data grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1.5 text-xs">
-        <div>
-          <span className="text-slate-400 block">Tijd</span>
-          <span className="text-slate-700 font-medium">
-            {formatTime(record.start_time)} – {formatTime(record.end_time)}
-            {record.total_hours > 0 && <span className="text-emerald-600 ml-1">({record.total_hours}u)</span>}
-          </span>
-        </div>
-        <div>
-          <span className="text-slate-400 block">Afstand</span>
-          <span className="text-slate-700 font-medium">
-            {record.total_km > 0 ? `${record.total_km} km` : '-'}
-            {record.start_km != null && record.end_km != null && (
-              <span className="text-slate-400 ml-1 font-normal">{record.start_km}–{record.end_km}</span>
-            )}
-          </span>
-        </div>
-        <div>
-          <span className="text-slate-400 block">Depot</span>
-          <span className={record.depot_time_minutes > 0 ? "text-amber-600 font-medium" : "text-slate-400"}>
-            {record.depot_time_minutes > 0
-              ? `${record.depot_stops_count || '?'}× / ${record.depot_time_minutes}m`
-              : '-'}
-          </span>
-        </div>
-        <div>
-          <span className="text-slate-400 block">Stilstand</span>
-          <span className={record.long_stops_minutes > 0 ? "text-orange-500 font-medium" : "text-slate-400"}>
-            {record.long_stops_minutes > 0
-              ? `${record.long_stops_count || '?'}× / ${record.long_stops_minutes}m`
-              : '-'}
-          </span>
-        </div>
-      </div>
-
-      {/* Fuel cost row */}
-      {hasFuel && (
-        <div className="flex items-center gap-1.5 pt-1 border-t border-emerald-100 text-xs">
-          <Fuel className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-0.5 flex-1">
-            <div>
-              <span className="text-slate-400">Per km</span>
-              <span className="text-emerald-700 font-semibold ml-1.5">€{fmt(fuelCost.costPerKm)}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Per uur</span>
-              <span className="text-emerald-700 font-semibold ml-1.5">€{fmt(fuelCost.costPerHour)}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Totaal</span>
-              <span className="text-slate-800 font-semibold ml-1.5">€{fmt(fuelCost.totalCost)}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Toeslag</span>
-              <span className={`font-semibold ml-1.5 ${fuelCost.surcharge >= 0 ? 'text-amber-600' : 'text-green-600'}`}>
-                {fuelCost.surcharge >= 0 ? '+' : ''}€{fmt(fuelCost.surcharge)}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
