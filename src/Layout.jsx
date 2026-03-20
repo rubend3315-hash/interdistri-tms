@@ -385,6 +385,7 @@ export default function Layout({ children, currentPageName }) {
       'DataMigration': PERMISSIONS.GOVERNANCE_MANAGE,
       'Vehicles': PERMISSIONS.PLANNING_MANAGE,
       'KmDashboard': PERMISSIONS.PLANNING_MANAGE,
+      'FuelSurcharge': PERMISSIONS.CUSTOMERS_MANAGE,
       'NiwoPermits': PERMISSIONS.PLANNING_MANAGE,
       'Users': PERMISSIONS.USERS_MANAGE,
 
