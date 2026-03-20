@@ -253,7 +253,8 @@ export default function Approvals() {
       let empId = linkEmployeeMap[r.id];
       // Fallback: match by driver name
       if (!empId && r.driver) {
-        const driverLower = (r.driver || '').trim().toLowerCase();
+        // Strip trailing " (1234)" suffix from Naiton driver names
+        const driverLower = (r.driver || '').replace(/\s*\(\d+\)\s*$/, '').trim().toLowerCase();
         empId = nameToEmpId[driverLower];
       }
       if (!empId || !r.date) return;
