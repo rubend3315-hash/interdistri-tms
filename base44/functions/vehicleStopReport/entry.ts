@@ -326,6 +326,10 @@ Deno.serve(async (req) => {
       };
     };
 
+    // Temporary debug section
+    const { section } = await req.json().catch(() => ({}));
+    if (false) { /* placeholder to parse section from original body */ }
+    
     return Response.json({
       plate,
       asset_name: assetName,
