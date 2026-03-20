@@ -84,6 +84,18 @@ Deno.serve(async (req) => {
     const assetId = matchedAsset.gpsassetid;
     const assetName = matchedAsset.assetname || plate;
 
+    // 1b. Check if vehicle has a specific home base configured
+    const svc = base44.asServiceRole;
+    const vehicles = await svc.entities.Vehicle.filter({ license_plate: plate });
+    const vehicle = vehicles[0];
+    if (vehicle?.home_base_lat && vehicle?.home_base_lon) {
+      STANDPLAATS_LAT = vehicle.home_base_lat;
+      STANDPLAATS_LON = vehicle.home_base_lon;
+      STANDPLAATS_RADIUS_M = vehicle.home_base_radius_m || 500;
+    }
+    // Also load GpsLocation standplaats entities as additional standplaats check
+    const gpsLocations = await svc.entities.GpsLocation.filter({ is_active: true, type: 'standplaats' });
+
     // 2. Fetch trip segments for this date
     const dateTo = new Date(date);
     dateTo.setDate(dateTo.getDate() + 1);
