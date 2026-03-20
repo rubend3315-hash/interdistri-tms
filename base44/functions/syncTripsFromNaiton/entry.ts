@@ -11,18 +11,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 const BASE_URL = 'https://dawa-prod.naiton.com';
 const INSERT_BATCH_SIZE = 50;
 const MAX_DAYS = 31;
-// Standplaats = Fleerbosseweg 19, 4421 RR Kapelle (GPS coords)
-const STANDPLAATS_LAT = 51.4700;
-const STANDPLAATS_LON = 3.9716;
-const STANDPLAATS_RADIUS_M = 500; // 500m radius = standplaats
 const SHORT_STOP_THRESHOLD_MIN = 5;  // >5 min telt als stilstand
 
-// PostNL depot locaties in Goes
-const DEPOT_LOCATIONS = [
-  { name: 'PostNL Sorteercentrum Goes', lat: 51.4943, lon: 3.8778 },  // Verrijn Stuartweg 5
-  { name: 'PostNL Pakketten Goes', lat: 51.4846, lon: 3.8898 },       // Columbusweg 62
+// Fallback hardcoded waarden (gebruikt als GpsLocation entity leeg is)
+const FALLBACK_STANDPLAATS = [{ name: 'Fleerbosseweg 19 Kapelle', lat: 51.4700, lon: 3.9716, radius_m: 500 }];
+const FALLBACK_DEPOTS = [
+  { name: 'PostNL Sorteercentrum Goes', lat: 51.4943, lon: 3.8778, radius_m: 300 },
+  { name: 'PostNL Pakketten Goes', lat: 51.4846, lon: 3.8898, radius_m: 300 },
 ];
-const DEPOT_RADIUS_M = 300; // 300m radius = depot
 
 // Haversine distance in meters between two GPS points
 function gpsDistanceM(lat1, lon1, lat2, lon2) {
