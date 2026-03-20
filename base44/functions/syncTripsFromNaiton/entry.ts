@@ -230,12 +230,10 @@ Deno.serve(async (req) => {
       ]
     }]);
 
-    const allSegments = tripsJson.dataexchange_trips || [];
-    addLog(`${allSegments.length} trip segmenten opgehaald`);
+    const rawSegments = tripsJson.dataexchange_trips || [];
+    addLog(`${rawSegments.length} trip segmenten opgehaald`);
 
-
-
-    if (allSegments.length === 0) {
+    if (rawSegments.length === 0) {
       return Response.json({
         success: true, message: 'Geen ritten gevonden in deze periode',
         assets: gpsIds.length, segments: 0, rides: 0, created: 0, skipped: 0, linked: 0, ms: Date.now() - t0, log
