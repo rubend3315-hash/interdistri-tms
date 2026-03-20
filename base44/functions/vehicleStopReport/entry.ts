@@ -143,6 +143,12 @@ Deno.serve(async (req) => {
         else classification = 'KORTE_STOP';
       }
 
+      // For drive segments, track start+stop coords separately for standplaats merge logic
+      const startLat = Number(seg.startlat || 0);
+      const startLon = Number(seg.startlon || 0);
+      const stopLat = Number(seg.stoplat || 0);
+      const stopLon = Number(seg.stoplon || 0);
+
       const entry = {
         type,
         start_utc: seg.start,
@@ -152,6 +158,10 @@ Deno.serve(async (req) => {
         duration_min: durMin,
         lat: lat || null,
         lon: lon || null,
+        startLat: startLat || null,
+        startLon: startLon || null,
+        stopLat: stopLat || null,
+        stopLon: stopLon || null,
         classification,
         depot_name: depotMatch,
         odometer_start: seg.odometerstartkm ? Number(seg.odometerstartkm) : null,
