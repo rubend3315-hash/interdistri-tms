@@ -136,7 +136,10 @@ Deno.serve(async (req) => {
       const stopT = new Date(seg.stop || seg.end || seg.start);
       const durMin = Math.round((stopT - startT) / 60000);
 
-      const isStandplaats = (lat && lon) ? gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M : false;
+      const isStandplaats = (lat && lon) ? (
+        gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M ||
+        gpsLocations.some(loc => gpsDistanceM(lat, lon, loc.lat, loc.lon) <= (loc.radius_m || 500))
+      ) : false;
       let depotMatch = null;
       if (lat && lon) {
         for (const d of DEPOT_LOCATIONS) {
