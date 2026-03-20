@@ -166,14 +166,15 @@ export default function Approvals() {
     staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false,
   });
 
-  // Fetch TripRecords (GPS Buddy) for pending entries via employee_id + date matching
+  // Fetch TripRecords (GPS Buddy) for pending entries
+  // Strategy: fetch by date range directly (covers all records, not just linked ones)
   const pendingDates = useMemo(() => {
     const dates = new Set();
     pendingRaw.forEach(e => {
       if (e.date) dates.add(e.date);
       if (e.end_date && e.end_date !== e.date) dates.add(e.end_date);
     });
-    return Array.from(dates);
+    return Array.from(dates).sort();
   }, [pendingRaw]);
 
   const pendingEmployeeIds = useMemo(() => {
@@ -182,6 +183,7 @@ export default function Approvals() {
     return Array.from(ids);
   }, [pendingRaw]);
 
+  // Fetch TripRecordLinks for employee→driver name matching
   const { data: tripRecordLinks = [] } = useQuery({
     queryKey: ['tripRecordLinks', pendingEmployeeIds, pendingDates],
     queryFn: () => base44.entities.TripRecordLink.filter({
@@ -192,32 +194,64 @@ export default function Approvals() {
     staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false,
   });
 
-  const tripRecordIds = useMemo(() => tripRecordLinks.map(l => l.trip_record_id).filter(Boolean), [tripRecordLinks]);
-
+  // Also fetch TripRecords directly by date range (catches records without links)
   const { data: tripRecords = [] } = useQuery({
-    queryKey: ['tripRecords-approvals', tripRecordIds],
-    queryFn: () => base44.entities.TripRecord.filter({ id: { $in: tripRecordIds } }),
-    enabled: tripRecordIds.length > 0,
+    queryKey: ['tripRecords-approvals', pendingDates],
+    queryFn: () => {
+      if (pendingDates.length === 0) return [];
+      return base44.entities.TripRecord.filter({
+        date: { $in: pendingDates },
+      });
+    },
+    enabled: pendingDates.length > 0,
     staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false,
   });
 
-  // Map TripRecords per employee+date for quick lookup
+  // Build employee→plate mapping from linked trips + employee data
   const tripRecordsByEmployeeDate = useMemo(() => {
-    const linkMap = {};
+    // Step 1: map linked trip_record_id → employee_id
+    const linkEmployeeMap = {};
     tripRecordLinks.forEach(l => {
-      if (!l.employee_id || !l.date || !l.trip_record_id) return;
-      const key = `${l.employee_id}_${l.date}`;
-      if (!linkMap[key]) linkMap[key] = [];
-      linkMap[key].push(l.trip_record_id);
+      if (l.trip_record_id && l.employee_id) {
+        linkEmployeeMap[l.trip_record_id] = l.employee_id;
+      }
     });
-    const recordMap = {};
-    tripRecords.forEach(r => { recordMap[r.id] = r; });
+
+    // Step 2: build employee name lookup from employees for driver name matching
+    const empNameMap = {};
+    employees.forEach(emp => {
+      const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim().toLowerCase();
+      empNameMap[emp.id] = fullName;
+    });
+    // Reverse: name → employee_id
+    const nameToEmpId = {};
+    employees.forEach(emp => {
+      const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim().toLowerCase();
+      nameToEmpId[fullName] = emp.id;
+      // Also try without prefix
+      const simple = `${emp.first_name || ''} ${emp.last_name || ''}`.trim().toLowerCase();
+      if (!nameToEmpId[simple]) nameToEmpId[simple] = emp.id;
+    });
+
+    // Step 3: assign each TripRecord to an employee
     const result = {};
-    for (const [key, ids] of Object.entries(linkMap)) {
-      result[key] = ids.map(id => recordMap[id]).filter(Boolean);
-    }
+    tripRecords.forEach(r => {
+      let empId = linkEmployeeMap[r.id];
+      // Fallback: match by driver name
+      if (!empId && r.driver) {
+        const driverLower = (r.driver || '').trim().toLowerCase();
+        empId = nameToEmpId[driverLower];
+      }
+      if (!empId || !r.date) return;
+      const key = `${empId}_${r.date}`;
+      if (!result[key]) result[key] = [];
+      // Deduplicate by id
+      if (!result[key].some(existing => existing.id === r.id)) {
+        result[key].push(r);
+      }
+    });
     return result;
-  }, [tripRecordLinks, tripRecords]);
+  }, [tripRecordLinks, tripRecords, employees]);
 
   const tripsByTimeEntry = useMemo(() => {
     const map = {};
