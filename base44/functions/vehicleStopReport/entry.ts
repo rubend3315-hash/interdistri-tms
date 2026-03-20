@@ -143,10 +143,10 @@ Deno.serve(async (req) => {
     nextDayDate.setDate(nextDayDate.getDate() + 1);
     const dayEndUtc = toUtcMidnight(nextDayDate.toISOString().split('T')[0]);
 
-    // Helper: does a segment overlap with the requested date?
-    const segOverlapsDate = (seg) => {
-      const sStart = new Date(seg.start || seg.stop).getTime();
-      const sEnd = new Date(seg.stop || seg.end || seg.start).getTime();
+    // Helper: does a timeline entry overlap with the requested date?
+    const segOverlapsDate = (entry) => {
+      const sStart = new Date(entry.start_utc).getTime();
+      const sEnd = new Date(entry.stop_utc).getTime();
       return sStart < dayEndUtc && sEnd > dayStartUtc;
     };
 
