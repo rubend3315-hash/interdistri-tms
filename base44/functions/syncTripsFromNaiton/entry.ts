@@ -174,6 +174,26 @@ Deno.serve(async (req) => {
       addLog(`Planning driver lookup failed (non-critical): ${err.message.slice(0, 150)}`);
     }
 
+    // 1c. Vehicle home bases: fetch vehicles with home_base_lat/lon for alternative standplaats detection
+    const allVehicles = await svc.entities.Vehicle.filter({});
+    const homeBaseByGpsAssetId = {}; // gpsassetid → { lat, lon, radius }
+    for (const v of allVehicles) {
+      if (!v.home_base_lat || !v.home_base_lon || !v.license_plate) continue;
+      const normPlate = v.license_plate.replace(/[-\s]/g, '').toLowerCase();
+      for (const [gid, info] of Object.entries(assetMap)) {
+        if (info.plate && info.plate.replace(/[-\s]/g, '').toLowerCase() === normPlate) {
+          homeBaseByGpsAssetId[gid] = {
+            lat: v.home_base_lat,
+            lon: v.home_base_lon,
+            radius: v.home_base_radius_m || 500,
+          };
+          break;
+        }
+      }
+    }
+    const homeBaseCount = Object.keys(homeBaseByGpsAssetId).length;
+    if (homeBaseCount > 0) addLog(`${homeBaseCount} voertuigen met thuisbasis-locatie`);
+
     const gpsIds = Object.keys(assetMap);
     addLog(`${assets.length} assets, ${gpsIds.length} met gpsassetid`);
 
