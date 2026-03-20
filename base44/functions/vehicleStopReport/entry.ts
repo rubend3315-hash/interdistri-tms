@@ -343,18 +343,6 @@ Deno.serve(async (req) => {
       };
     };
 
-    if (debug_section === 'standplaats') {
-      const spResult = computeStandplaats();
-      return Response.json({ 
-        date, 
-        standplaats: spResult,
-        _debug: {
-          dayStartUtc_iso: spResult._dayStartUtc,
-          dayEndUtc_iso: spResult._dayEndUtc,
-          raw_standplaats_utc: standplaatsStops.map(s => ({ start: s.start_utc, stop: s.stop_utc })),
-        }
-      });
-    }
 
     return Response.json({
       plate,
