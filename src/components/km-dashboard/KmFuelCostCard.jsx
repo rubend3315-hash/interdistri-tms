@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Fuel, TrendingUp, Loader2, AlertTriangle } from "lucide-react";
+import { Fuel, Loader2, AlertTriangle, Satellite } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Verbruik mapping: kenteken → km per liter (1:X)
 const CONSUMPTION_OVERRIDES = {
@@ -19,7 +20,11 @@ function getKmPerLiter(plate) {
   return DEFAULT_KM_PER_LITER;
 }
 
-export default function KmFuelCostCard({ trips, vehicleMap, dieselData, dieselLoading, dieselError }) {
+function normPlate(p) {
+  return (p || '').replace(/[-\s]/g, '').toUpperCase();
+}
+
+export default function KmFuelCostCard({ trips, tripRecords = [], vehicleMap, vehicles = [], dieselData, dieselLoading, dieselError }) {
   if (dieselLoading) {
     return (
       <Card>
@@ -45,31 +50,75 @@ export default function KmFuelCostCard({ trips, vehicleMap, dieselData, dieselLo
   const price = dieselData.latest.price;
   const priceDate = dieselData.latest.date;
 
-  // Group by vehicle
-  const byVehicle = {};
-  trips.forEach(t => {
-    if (!byVehicle[t.vehicle_id]) {
-      byVehicle[t.vehicle_id] = { totalKm: 0, trips: 0 };
-    }
-    byVehicle[t.vehicle_id].totalKm += t.total_km || 0;
-    byVehicle[t.vehicle_id].trips++;
-  });
+  // Build plate → vehicle_id mapping
+  const plateToVehicleId = useMemo(() => {
+    const m = {};
+    vehicles.forEach(v => {
+      if (v.license_plate) m[normPlate(v.license_plate)] = v.id;
+    });
+    return m;
+  }, [vehicles]);
 
-  const totalKm = trips.reduce((s, t) => s + (t.total_km || 0), 0);
+  // Group manual Trip km by vehicle_id
+  const tripKmByVehicle = useMemo(() => {
+    const m = {};
+    trips.forEach(t => {
+      if (!t.vehicle_id) return;
+      if (!m[t.vehicle_id]) m[t.vehicle_id] = 0;
+      m[t.vehicle_id] += t.total_km || 0;
+    });
+    return m;
+  }, [trips]);
 
-  const rows = Object.entries(byVehicle)
-    .map(([id, data]) => {
-      const vehicle = vehicleMap[id];
-      const plate = vehicle?.license_plate || '?';
-      const fuelType = vehicle?.fuel_type;
-      const kmPerLiter = getKmPerLiter(plate);
-      const liters = data.totalKm / kmPerLiter;
-      const cost = liters * price;
-      return { id, plate, fuelType, totalKm: data.totalKm, trips: data.trips, kmPerLiter, liters, cost };
-    })
-    .filter(r => r.fuelType !== 'Elektrisch') // Elektrische voertuigen uitsluiten
-    .sort((a, b) => b.cost - a.cost);
+  // Group GPS TripRecord km by vehicle_id (matched via plate)
+  const gpsKmByVehicle = useMemo(() => {
+    const m = {};
+    tripRecords.forEach(tr => {
+      if (!tr.plate || !tr.total_km) return;
+      const vid = plateToVehicleId[normPlate(tr.plate)];
+      if (!vid) return;
+      if (!m[vid]) m[vid] = 0;
+      m[vid] += tr.total_km || 0;
+    });
+    return m;
+  }, [tripRecords, plateToVehicleId]);
 
+  // Combine: all vehicle_ids that appear in either source
+  const allVehicleIds = useMemo(() => {
+    const ids = new Set([...Object.keys(tripKmByVehicle), ...Object.keys(gpsKmByVehicle)]);
+    return Array.from(ids);
+  }, [tripKmByVehicle, gpsKmByVehicle]);
+
+  const rows = useMemo(() => {
+    return allVehicleIds
+      .map(id => {
+        const vehicle = vehicleMap[id];
+        const plate = vehicle?.license_plate || '?';
+        const fuelType = vehicle?.fuel_type;
+
+        // Skip electric vehicles
+        if (fuelType === 'Elektrisch') return null;
+
+        const manualKm = tripKmByVehicle[id] || 0;
+        const gpsKm = gpsKmByVehicle[id] || 0;
+
+        // Use the highest value — manual trips or GPS
+        const totalKm = Math.max(manualKm, gpsKm);
+        const source = manualKm >= gpsKm ? 'manual' : 'gps';
+
+        if (totalKm <= 0) return null;
+
+        const kmPerLiter = getKmPerLiter(plate);
+        const liters = totalKm / kmPerLiter;
+        const cost = liters * price;
+
+        return { id, plate, totalKm, source, manualKm, gpsKm, kmPerLiter, liters, cost };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.cost - a.cost);
+  }, [allVehicleIds, vehicleMap, tripKmByVehicle, gpsKmByVehicle, price]);
+
+  const totalKm = rows.reduce((s, r) => s + r.totalKm, 0);
   const totalLiters = rows.reduce((s, r) => s + r.liters, 0);
   const totalCost = rows.reduce((s, r) => s + r.cost, 0);
 
@@ -110,6 +159,18 @@ export default function KmFuelCostCard({ trips, vehicleMap, dieselData, dieselLo
                     <span className="font-medium">{r.plate}</span>
                     {r.kmPerLiter !== DEFAULT_KM_PER_LITER && (
                       <Badge className="ml-2 text-[10px] bg-orange-100 text-orange-700">1:{r.kmPerLiter}</Badge>
+                    )}
+                    {r.source === 'gps' && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Satellite className="w-3.5 h-3.5 ml-1.5 text-blue-500 inline-block" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">GPS data (geen handmatige rit ingevoerd)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{r.totalKm.toLocaleString('nl-NL')}</TableCell>
