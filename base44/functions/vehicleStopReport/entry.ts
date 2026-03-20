@@ -271,27 +271,6 @@ Deno.serve(async (req) => {
       };
     };
 
-    // Debug mode: return only standplaats data
-    if (section === 'standplaats_debug') {
-      return Response.json({
-        plate,
-        standplaats_raw: standplaatsStops.map(s => ({
-          start: s.start_local, stop: s.stop_local, dur: s.duration_min
-        })),
-        standplaats_merged: computeStandplaats(),
-        home_base_radius: STANDPLAATS_RADIUS_M,
-        drives_between_standplaats: timeline.filter(t => {
-          if (t.type !== 'drive') return false;
-          // Only drives between first and last standplaats
-          return true;
-        }).slice(-10).map(t => ({
-          start: t.start_local, stop: t.stop_local,
-          startLat: t.startLat, startLon: t.startLon,
-          stopLat: t.stopLat, stopLon: t.stopLon,
-        })),
-      });
-    }
-
     return Response.json({
       plate,
       asset_name: assetName,
