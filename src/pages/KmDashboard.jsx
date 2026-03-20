@@ -11,6 +11,7 @@ import KmSummaryCards from "@/components/km-dashboard/KmSummaryCards";
 import KmTripTable from "@/components/km-dashboard/KmTripTable";
 import KmVehicleSummary from "@/components/km-dashboard/KmVehicleSummary";
 import KmRouteSummary from "@/components/km-dashboard/KmRouteSummary";
+import KmFuelCostCard from "@/components/km-dashboard/KmFuelCostCard";
 
 export default function KmDashboard() {
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -60,6 +61,17 @@ export default function KmDashboard() {
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list(),
     ...cOpts,
+  });
+
+  const { data: dieselData, isLoading: dieselLoading, error: dieselError } = useQuery({
+    queryKey: ['dieselPrice'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('fetchDieselPrice', {});
+      return res.data;
+    },
+    staleTime: 60 * 60 * 1000, // 1 uur cache
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   const vehicleMap = useMemo(() => {
@@ -161,6 +173,14 @@ export default function KmDashboard() {
             <KmVehicleSummary trips={filteredTrips} vehicleMap={vehicleMap} />
             <KmRouteSummary trips={filteredTrips} />
           </div>
+
+          <KmFuelCostCard
+            trips={filteredTrips}
+            vehicleMap={vehicleMap}
+            dieselData={dieselData}
+            dieselLoading={dieselLoading}
+            dieselError={dieselError}
+          />
 
           <KmTripTable
             trips={filteredTrips}
