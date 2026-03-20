@@ -8,7 +8,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 const VEHICLE_TYPE_MAP = {
   'Bestelbus': 'Bestelbus',
   'Vrachtwagen': 'Vrachtwagen',
-  'Personenauto': 'Personenauto',
+  'Personenauto': 'Kleine bestelbus',
   'Aanhanger': null, // skip trailers
 };
 
