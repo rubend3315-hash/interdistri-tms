@@ -412,21 +412,25 @@ Deno.serve(async (req) => {
 
       // Driver resolution: additionaldata.Driver → tachocardnumber → tagid → personid → planning → null
       let driver = '';
+      let driverSource = '';
 
       // Priority 0 (best source): additionaldata.Driver from Naiton includefields=["driver"]
       if (!driver) {
         for (const s of segs) {
           if (s.additionaldata) {
             const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
-            if (ad.Driver) { driver = ad.Driver; break; }
+            if (ad.Driver) { driver = ad.Driver; driverSource = 'additionaldata.Driver'; break; }
           }
         }
       }
       // Priority 1: tachocardnumber on trip segments
-      for (const s of segs) {
-        if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]) {
-          driver = userByTacho[String(s.tachocardnumber)];
-          break;
+      if (!driver) {
+        for (const s of segs) {
+          if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]) {
+            driver = userByTacho[String(s.tachocardnumber)];
+            driverSource = 'tachocardnumber';
+            break;
+          }
         }
       }
       // Priority 2: tagid on trip segments
@@ -434,6 +438,7 @@ Deno.serve(async (req) => {
         for (const s of segs) {
           if (s.tagid && userByTag[String(s.tagid)]) {
             driver = userByTag[String(s.tagid)];
+            driverSource = 'tagid';
             break;
           }
         }
@@ -443,6 +448,7 @@ Deno.serve(async (req) => {
         for (const s of segs) {
           if (s.personid && userByPersonId[String(s.personid)]) {
             driver = userByPersonId[String(s.personid)];
+            driverSource = 'personid';
             break;
           }
         }
@@ -455,10 +461,12 @@ Deno.serve(async (req) => {
               const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
               if (ad.tachocardnumber && userByTacho[String(ad.tachocardnumber)]) {
                 driver = userByTacho[String(ad.tachocardnumber)];
+                driverSource = 'additionaldata.tachocardnumber';
                 break;
               }
               if (ad.tagid && userByTag[String(ad.tagid)]) {
                 driver = userByTag[String(ad.tagid)];
+                driverSource = 'additionaldata.tagid';
                 break;
               }
             } catch { /* ignore */ }
@@ -468,12 +476,13 @@ Deno.serve(async (req) => {
       // Priority 5: direct driver field on segment
       if (!driver) {
         for (const s of segs) {
-          if (s.driver) { driver = s.driver; break; }
+          if (s.driver) { driver = s.driver; driverSource = 'segment.driver'; break; }
         }
       }
       // Priority 6: planning fallback (Trip entity match)
       if (!driver) {
         driver = planningDriverMap[ride.gpsassetid] || '';
+        if (driver) driverSource = 'planning fallback';
       }
 
       tripRecords.push({
