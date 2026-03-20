@@ -387,12 +387,13 @@ Deno.serve(async (req) => {
       asset_id: assetId,
       date,
       ride: {
-        start: rideStartLocal,
-        end: rideEndLocal,
-        total_km: totalKm,
-        start_km: startKm,
-        end_km: endKm,
+        start: ridesSummary.length > 0 ? ridesSummary[0].start : null,
+        end: ridesSummary.length > 0 ? ridesSummary[ridesSummary.length - 1].end : null,
+        total_km: globalTotalKm,
+        start_km: globalStartKm,
+        end_km: globalEndKm,
       },
+      rides: ridesSummary,
       depot: {
         count: depotStops.length,
         total_minutes: totalDepotMin,
