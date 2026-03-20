@@ -222,43 +222,8 @@ Deno.serve(async (req) => {
     const endKm = lastSeg ? Number(lastSeg.odometerstopkm || lastSeg.odometerstartkm || 0) : null;
     const totalKm = (startKm && endKm && endKm > startKm) ? Math.round((endKm - startKm) * 10) / 10 : null;
 
-    // Debug: return only a specific section if requested
-    if (section === 'standplaats_debug') {
-      asset_id: assetId,
-      date,
-      ride: {
-        start: rideStartLocal,
-        end: rideEndLocal,
-        total_km: totalKm,
-        start_km: startKm,
-        end_km: endKm,
-      },
-      depot: {
-        count: depotStops.length,
-        total_minutes: totalDepotMin,
-        stops: depotStops.map((s, i) => ({
-          nr: i + 1,
-          start: s.start_local,
-          stop: s.stop_local,
-          duration_min: s.duration_min,
-          name: s.depot_name,
-          lat: s.lat,
-          lon: s.lon,
-        })),
-      },
-      stilstand: {
-        count: longStops.length,
-        total_minutes: totalStilstandMin,
-        stops: longStops.map((s, i) => ({
-          nr: i + 1,
-          start: s.start_local,
-          stop: s.stop_local,
-          duration_min: s.duration_min,
-          lat: s.lat,
-          lon: s.lon,
-        })),
-      },
-      standplaats: (() => {
+    // Standplaats merge logic (used for both debug and normal response)
+    const computeStandplaats = () => {
         // Merge consecutive standplaats stops into single logical stops.
         // E.g. 14:17–00:59 + 01:00–01:00 + 01:00–07:29 → 14:17–07:29
         // "Consecutive" = no REAL drive between them. GPS noise on the standplaats
