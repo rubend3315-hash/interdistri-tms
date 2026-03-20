@@ -270,7 +270,9 @@ Deno.serve(async (req) => {
             const tStop = new Date(t.stop_utc).getTime();
             if (tStart < prevStopTime || tStop > currStartTime) return false;
             // Real drive = at least one endpoint outside standplaats
-            return !isPointNearStandplaats(t.lat, t.lon);
+            const startNear = isPointNearStandplaats(t.startLat, t.startLon);
+            const stopNear = isPointNearStandplaats(t.stopLat, t.stopLon);
+            return !startNear || !stopNear;
           });
           if (hasRealDriveBetween) {
             merged.push({ ...s });
