@@ -260,6 +260,41 @@ Deno.serve(async (req) => {
           prev.duration_min = Math.round((new Date(prev.stop_utc) - new Date(prev.start_utc)) / 60000);
         }
       }
+      // Wrap-around merge: if last and first are also consecutive standplaats
+      // (Naiton splits nights at midnight), merge them into one entry
+      if (merged.length >= 2) {
+        const last = merged[merged.length - 1];
+        const first = merged[0];
+        const lastStopTime = new Date(last.stop_utc).getTime();
+        const firstStartTime = new Date(first.start_utc).getTime();
+        // Check: last stop → first start, no real drive between
+        // Since this wraps around the day boundary, check if there's any real drive
+        // between last.stop_utc and end-of-data, OR between start-of-data and first.start_utc
+        const hasRealDriveAfterLast = timeline.some(t => {
+          if (t.type !== 'drive') return false;
+          const tStart = new Date(t.start_utc).getTime();
+          if (tStart < lastStopTime) return false;
+          const startNear = isPointNearStandplaats(t.startLat, t.startLon);
+          const stopNear = isPointNearStandplaats(t.stopLat, t.stopLon);
+          return !startNear || !stopNear;
+        });
+        const hasRealDriveBeforeFirst = timeline.some(t => {
+          if (t.type !== 'drive') return false;
+          const tStop = new Date(t.stop_utc).getTime();
+          if (tStop > firstStartTime) return false;
+          const startNear = isPointNearStandplaats(t.startLat, t.startLon);
+          const stopNear = isPointNearStandplaats(t.stopLat, t.stopLon);
+          return !startNear || !stopNear;
+        });
+        if (!hasRealDriveAfterLast && !hasRealDriveBeforeFirst) {
+          // Merge: extend last to include first's end, remove first
+          last.stop_utc = first.stop_utc;
+          last.stop_local = first.stop_local;
+          last.duration_min = Math.round((new Date(last.stop_utc) - new Date(last.start_utc)) / 60000);
+          merged.shift(); // remove the first entry (now absorbed into last)
+        }
+      }
+
       return {
         count: merged.length,
         stops: merged.map((s, i) => ({
