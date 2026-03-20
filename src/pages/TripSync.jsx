@@ -31,7 +31,7 @@ import Pagination, { usePagination } from "@/components/ui/Pagination";
 import { toast } from "sonner";
 import DriverReassignDialog from "@/components/tripsync/DriverReassignDialog";
 
-const DEFAULT_FROM = format(subDays(new Date(), 7), 'yyyy-MM-dd');
+const DEFAULT_FROM = format(subDays(new Date(), 1), 'yyyy-MM-dd');
 const TODAY = format(new Date(), 'yyyy-MM-dd');
 
 export default function TripSync() {
