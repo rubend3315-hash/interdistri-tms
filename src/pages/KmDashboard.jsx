@@ -64,16 +64,22 @@ export default function KmDashboard() {
     ...cOpts,
   });
 
-  const { data: dieselData, isLoading: dieselLoading, error: dieselError } = useQuery({
-    queryKey: ['dieselPrice'],
-    queryFn: async () => {
-      const res = await base44.functions.invoke('fetchDieselPrice', {});
-      return res.data;
-    },
-    staleTime: 60 * 60 * 1000, // 1 uur cache
+  // Diesel prices from database (synced daily from TLN)
+  const { data: allDieselPrices = [], isLoading: dieselLoading } = useQuery({
+    queryKey: ['dieselPrices'],
+    queryFn: () => base44.entities.DieselPrice.filter({}, '-date', 2000),
+    staleTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: 1,
   });
+
+  const dieselData = useMemo(() => {
+    if (!allDieselPrices.length) return null;
+    const sorted = [...allDieselPrices].sort((a, b) => b.date.localeCompare(a.date));
+    return {
+      latest: { date: sorted[0].date, price: sorted[0].price },
+      recent: sorted.slice(0, 90),
+    };
+  }, [allDieselPrices]);
 
   const vehicleMap = useMemo(() => {
     const m = {};
@@ -181,12 +187,11 @@ export default function KmDashboard() {
               vehicleMap={vehicleMap}
               dieselData={dieselData}
               dieselLoading={dieselLoading}
-              dieselError={dieselError}
+              dieselError={!dieselData && !dieselLoading}
             />
             <KmDieselPriceChart
-              dieselData={dieselData}
-              dieselLoading={dieselLoading}
-              dieselError={dieselError}
+              allPrices={allDieselPrices}
+              pricesLoading={dieselLoading}
             />
           </div>
 
