@@ -1,10 +1,10 @@
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║ syncTripsFromNaiton v26 — Production GPS Buddy / Naiton integration ║
+// ║ syncTripsFromNaiton v25 — Production GPS Buddy / Naiton integration ║
 // ║ Auth: Admin-only                                                     ║
-// ║ CHANGES vs v25:                                                      ║
-// ║  - Fetch +1 extra dag om overnight-ritten correct te detecteren      ║
-// ║  - Open-ended ritten (niet terug bij standplaats) worden nu ook      ║
-// ║    opgeslagen, met end_time = laatste segment einde                   ║
+// ║ CHANGES vs v24:                                                      ║
+// ║  - Stilstand-samenvoeging: opeenvolgende stops <200m worden          ║
+// ║    samengevoegd tot één logische stop (compenseert ontbrekend         ║
+// ║    ignition-signaal in API)                                          ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
