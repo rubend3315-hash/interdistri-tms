@@ -462,20 +462,25 @@ export default function Approvals() {
         ...(tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.date}`] || []),
         ...(entry.end_date && entry.end_date !== entry.date ? (tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.end_date}`] || []) : []),
       ];
-      // Filter GPS records to only those within the shift time window (±15min tolerance)
-      if (!entry.start_time || !entry.end_time || allRecords.length === 0) return allRecords;
+      // Filter GPS records: only those whose start_time falls within the shift window
+      // Use absolute datetime comparison (not just HH:MM) to avoid cross-night ambiguity
+      if (!entry.start_time || !entry.end_time || !entry.date || allRecords.length === 0) return allRecords;
       const [sH, sM] = entry.start_time.split(':').map(Number);
       const [eH, eM] = entry.end_time.split(':').map(Number);
-      let shiftStart = sH * 60 + sM - 15; // 15min tolerance before
-      let shiftEnd = eH * 60 + eM + 15;   // 15min tolerance after
-      if (shiftEnd <= shiftStart) shiftEnd += 1440; // overnight
+      // Build absolute shift start/end as Date objects
+      const shiftStartDate = new Date(`${entry.date}T${entry.start_time}:00`);
+      const isOvernight = eH < sH || (eH === sH && eM <= sM);
+      const endDateStr = isOvernight ? (entry.end_date || entry.date) : entry.date;
+      const shiftEndDate = new Date(`${endDateStr}T${entry.end_time}:00`);
+      // If overnight and no end_date, add 1 day to end
+      if (isOvernight && !entry.end_date) shiftEndDate.setDate(shiftEndDate.getDate() + 1);
+      const tolerance = 15 * 60 * 1000; // 15 min in ms
       return allRecords.filter(r => {
-        if (!r.start_time) return true; // keep records without times
+        if (!r.start_time) return true;
         try {
-          const d = new Date(r.start_time);
-          const rMins = d.getHours() * 60 + d.getMinutes();
-          const rNorm = rMins < shiftStart ? rMins + 1440 : rMins;
-          return rNorm >= shiftStart && rNorm <= shiftEnd;
+          const rStart = new Date(r.start_time);
+          return rStart >= new Date(shiftStartDate.getTime() - tolerance) &&
+                 rStart <= new Date(shiftEndDate.getTime() + tolerance);
         } catch { return true; }
       });
     })() : [];
