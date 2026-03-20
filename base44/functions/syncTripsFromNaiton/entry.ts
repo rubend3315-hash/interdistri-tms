@@ -249,10 +249,15 @@ Deno.serve(async (req) => {
       return { lat, lon };
     };
 
-    const isStandplaats = (seg) => {
+    const isStandplaats = (seg, assetId) => {
       const { lat, lon } = getStopCoords(seg);
       if (!lat || !lon) return false;
-      return gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M;
+      // Check main standplaats
+      if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M) return true;
+      // Check vehicle-specific home base
+      const hb = assetId ? homeBaseByGpsAssetId[assetId] : null;
+      if (hb && gpsDistanceM(lat, lon, hb.lat, hb.lon) <= hb.radius) return true;
+      return false;
     };
 
     const isDepot = (seg) => {
