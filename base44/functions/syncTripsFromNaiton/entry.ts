@@ -352,7 +352,7 @@ Deno.serve(async (req) => {
       if (r.date < date_from || r.date > date_to) return false;
       // Check if ride ended at standplaats (last segment is a stop at standplaats)
       const lastSeg = r.segments[r.segments.length - 1];
-      const endedAtStandplaats = (lastSeg.type || '').toLowerCase() === 'stop' && isStandplaats(lastSeg);
+      const endedAtStandplaats = (lastSeg.type || '').toLowerCase() === 'stop' && isStandplaats(lastSeg, r.gpsassetid);
       if (!endedAtStandplaats) {
         openRides++;
         return false; // Skip incomplete rides
