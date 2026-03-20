@@ -230,29 +230,11 @@ Deno.serve(async (req) => {
       const depotStopsV = timeline.filter(t => t.classification === 'DEPOT');
       const standplaatsStops = timeline.filter(t => t.classification === 'STANDPLAATS');
       
-      // Collect ALL unique additionaldata keys across all segments
-      const adKeys = new Set();
-      for (const s of vehicleSegs) {
-        if (s.additionaldata) {
-          const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
-          for (const k of Object.keys(ad)) adKeys.add(k);
-        }
-      }
-      // Also collect all top-level segment keys
-      const topKeys = new Set();
-      for (const s of vehicleSegs) {
-        for (const k of Object.keys(s)) topKeys.add(k);
-      }
-
       return Response.json({
         plate,
         asset_id: assetId,
         asset_name: matchedAsset.assetname,
         total_segments: vehicleSegs.length,
-        all_top_level_keys: [...topKeys].sort(),
-        all_additionaldata_keys: [...adKeys].sort(),
-        ignition_candidates: [...topKeys, ...adKeys].filter(k => /ignit|contact|engine|acc|power|on|off|status|volt|batt/i.test(k)).sort(),
-        sample_additionaldata: vehicleSegs.slice(0, 3).map(s => s.additionaldata),
         summary: {
           depot_stops: depotStopsV.length,
           depot_total_min: depotStopsV.reduce((s, t) => s + t.duration_min, 0),
