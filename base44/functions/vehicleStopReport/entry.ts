@@ -265,24 +265,32 @@ Deno.serve(async (req) => {
       }
 
       // Step 2: Determine the requested date's local midnight boundaries in UTC
-      // E.g. date="2026-03-19" → dayStartUTC = 2026-03-18T23:00:00Z (CET) or 2026-03-18T22:00:00Z (CEST)
-      const localMidnightStart = new Date(`${date}T00:00:00`);
-      const dayStartMs = localMidnightStart.getTime();
-      // Use Intl to find the exact UTC offset for this date in Amsterdam
-      const getAmsterdamOffset = (d) => {
+      // CET = UTC+1 → midnight 19 march CET = 2026-03-18T23:00:00Z
+      // CEST = UTC+2 → midnight 19 march CEST = 2026-03-18T22:00:00Z
+      // Use Intl to find the UTC offset for Amsterdam on this date
+      const toUtcMidnight = (localDateStr) => {
+        // Find what UTC offset Amsterdam has at noon on this date (avoids DST boundary issues)
+        const noonUtc = new Date(`${localDateStr}T12:00:00Z`);
         const parts = new Intl.DateTimeFormat('en', {
           timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
           hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-        }).formatToParts(d);
+        }).formatToParts(noonUtc);
         const p = {};
         parts.forEach(({ type, value }) => { p[type] = value; });
-        const localStr = `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`;
-        return d.getTime() - new Date(localStr).getTime();
+        // At noonUtc, Amsterdam shows time p.hour:p.minute
+        // offset in ms = (Amsterdam hour - UTC hour) expressed in ms
+        const utcHour = noonUtc.getUTCHours();
+        const localHour = parseInt(p.hour, 10);
+        const offsetHours = localHour - utcHour;
+        // Midnight local in UTC = midnight - offset
+        return new Date(`${localDateStr}T00:00:00Z`).getTime() - offsetHours * 3600000;
       };
-      const offsetMs = getAmsterdamOffset(new Date(`${date}T12:00:00Z`));
-      // dayStart in UTC = local midnight minus the offset
-      const dayStartUtc = new Date(`${date}T00:00:00Z`).getTime() - offsetMs;
-      const dayEndUtc = dayStartUtc + 24 * 60 * 60 * 1000;
+      const dayStartUtc = toUtcMidnight(date);
+      // For dayEnd, compute next day's midnight
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const nextDayStr = nextDay.toISOString().split('T')[0];
+      const dayEndUtc = toUtcMidnight(nextDayStr);
 
       // Step 3: Clip each merged period to the requested date
       const clipped = [];
