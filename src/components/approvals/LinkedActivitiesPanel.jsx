@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Truck, Package, Clock, Building2, Satellite, Gauge, CircleParking, Clock4 } from "lucide-react";
+import { Truck, Package, Clock, Building2, Satellite, Gauge, CircleParking, Clock4, Fuel } from "lucide-react";
 
 function TripCard({ trip, vehicle, customer }) {
   const totalKm = trip.start_km != null && trip.end_km != null
@@ -113,7 +113,8 @@ function timelineSortKey(timeStr) {
   return mins < 360 ? mins + 1440 : mins; // < 06:00 → +24h
 }
 
-function TripRecordCard({ record }) {
+function TripRecordCard({ record, fuelCost }) {
+  const fmt = (n) => n?.toFixed(2) ?? '-';
   const formatTime = (dt) => {
     if (!dt) return '-';
     try {
@@ -174,8 +175,24 @@ function TripRecordCard({ record }) {
             </span>
           )}
         </div>
-        {record.driver && (
-          <p className="text-[11px] text-slate-400 mt-0.5">Chauffeur: {record.driver}</p>
+        {(record.driver || (fuelCost && !fuelCost.noSettings && !fuelCost.noPrice)) && (
+          <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+            {record.driver && (
+              <span className="text-[11px] text-slate-400">Chauffeur: {record.driver}</span>
+            )}
+            {fuelCost && !fuelCost.noSettings && !fuelCost.noPrice && (
+              <span className="flex items-center gap-1 text-[11px] text-emerald-600">
+                <Fuel className="w-3 h-3" />
+                <span className="font-medium">€{fmt(fuelCost.costPerKm)}/km</span>
+                <span className="text-slate-400">·</span>
+                <span className="font-medium">€{fmt(fuelCost.costPerHour)}/uur</span>
+                <span className="text-slate-600 font-medium">totaal €{fmt(fuelCost.totalCost)}</span>
+                <span className={`font-medium ${fuelCost.surcharge >= 0 ? 'text-amber-600' : 'text-green-600'}`}>
+                  toeslag {fuelCost.surcharge >= 0 ? '+' : ''}€{fmt(fuelCost.surcharge)}
+                </span>
+              </span>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -189,7 +206,8 @@ export default function LinkedActivitiesPanel({
   vehicles = [],
   customers = [],
   projects = [],
-  activiteiten = []
+  activiteiten = [],
+  getTripFuelCost
 }) {
   const getVehicle = (id) => vehicles.find((v) => v.id === id);
   const getCustomer = (id) => customers.find((c) => c.id === id);
@@ -241,6 +259,7 @@ export default function LinkedActivitiesPanel({
             <TripRecordCard
               key={`tr-${item.data.id}`}
               record={item.data}
+              fuelCost={getTripFuelCost ? getTripFuelCost(item.data) : null}
             />
           ) : (
             <SpwCard
