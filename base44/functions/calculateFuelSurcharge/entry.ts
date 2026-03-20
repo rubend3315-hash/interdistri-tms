@@ -175,7 +175,11 @@ Deno.serve(async (req) => {
       surcharge_amount: surchargeAmount,
       base_cost: Math.round(totalBaseCost * 100) / 100,
       actual_cost: Math.round(totalActualCost * 100) / 100,
-      calculation_method: 'mixed', // multiple types possible
+      calculation_method: (() => {
+        const methods = new Set(allSettings.map(s => s.calculation_method || 'km'));
+        if (methods.size === 1) return [...methods][0];
+        return 'mixed';
+      })(),
       fuel_consumption_factor: null,
       trip_details: tripDetails,
       status: 'Concept',
