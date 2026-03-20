@@ -551,7 +551,7 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════════════════
     // STEP 5: Save to TripRecord (dedup + batch)
     // ═══════════════════════════════════════════════════════
-    addLog('Step 8: Saving TripRecords...');
+    addLog('Step 5: Saving TripRecords...');
 
     const existingRecords = await svc.entities.TripRecord.filter({
       date: { $gte: date_from, $lte: date_to }
