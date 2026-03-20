@@ -61,11 +61,13 @@ export default function KmFuelCostCard({ trips, vehicleMap, dieselData, dieselLo
     .map(([id, data]) => {
       const vehicle = vehicleMap[id];
       const plate = vehicle?.license_plate || '?';
+      const fuelType = vehicle?.fuel_type;
       const kmPerLiter = getKmPerLiter(plate);
       const liters = data.totalKm / kmPerLiter;
       const cost = liters * price;
-      return { id, plate, totalKm: data.totalKm, trips: data.trips, kmPerLiter, liters, cost };
+      return { id, plate, fuelType, totalKm: data.totalKm, trips: data.trips, kmPerLiter, liters, cost };
     })
+    .filter(r => r.fuelType !== 'Elektrisch') // Elektrische voertuigen uitsluiten
     .sort((a, b) => b.cost - a.cost);
 
   const totalLiters = rows.reduce((s, r) => s + r.liters, 0);
