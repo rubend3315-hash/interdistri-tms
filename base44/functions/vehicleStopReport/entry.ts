@@ -97,17 +97,23 @@ Deno.serve(async (req) => {
     // Also load GpsLocation standplaats entities as additional standplaats check
     const gpsLocations = await svc.entities.GpsLocation.filter({ is_active: true, type: 'standplaats' });
 
-    // 2. Fetch trip segments for this date
-    const dateTo = new Date(date);
-    dateTo.setDate(dateTo.getDate() + 1);
-    const dateToStr = dateTo.toISOString().split('T')[0];
+    // 2. Fetch trip segments: request previous day + this day + next day
+    // Naiton splits data at ~00:00 UTC (= 01:00 CET / 02:00 CEST), so overnight standplaats
+    // periods are fragmented across two API-days. By requesting prev+current+next we capture
+    // all data that might overlap with the local calendar day.
+    const prevDay = new Date(date);
+    prevDay.setDate(prevDay.getDate() - 1);
+    const prevDayStr = prevDay.toISOString().split('T')[0];
+    const nextNextDay = new Date(date);
+    nextNextDay.setDate(nextNextDay.getDate() + 2);
+    const nextNextDayStr = nextNextDay.toISOString().split('T')[0];
 
     const tripsJson = await naitonCall([{
       name: "dataexchange_trips",
       arguments: [
         { name: "gpsassetids", value: [assetId] },
-        { name: "starttime", value: date },
-        { name: "stoptime", value: dateToStr },
+        { name: "starttime", value: prevDayStr },
+        { name: "stoptime", value: nextNextDayStr },
         { name: "includeallattributes", value: true }
       ]
     }]);
