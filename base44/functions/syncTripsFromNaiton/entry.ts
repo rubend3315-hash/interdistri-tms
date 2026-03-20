@@ -537,7 +537,15 @@ Deno.serve(async (req) => {
     }
 
     const driversResolved = realTripRecords.filter(r => r.driver).length;
+    // Log driver source summary
+    const sourceCounts = {};
+    for (const r of realTripRecords) {
+      const src = r.driver_source || 'geen';
+      sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+    }
+    const sourceStr = Object.entries(sourceCounts).map(([k, v]) => `${v}x ${k}`).join(', ');
     addLog(`${realTripRecords.length} echte trip records (van ${tripRecords.length}), ${driversResolved} met driver`);
+    addLog(`Driver bronnen: ${sourceStr}`);
 
     // ═══════════════════════════════════════════════════════
     // STEP 5: Driver history upsert — WRITE ONLY
