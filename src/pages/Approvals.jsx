@@ -31,6 +31,7 @@ import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
 import ApprovalsFilters from "@/components/approvals/ApprovalsFilters";
 import LinkedActivitiesPanel from "@/components/approvals/LinkedActivitiesPanel";
+import { useTripFuelCost } from "@/components/tripsync/useTripFuelCost";
 
 const DEFAULT_FROM = format(subDays(new Date(), 14), 'yyyy-MM-dd');
 const TODAY = format(new Date(), 'yyyy-MM-dd');
@@ -652,6 +653,7 @@ export default function Approvals() {
             projects={projects}
             activiteiten={activiteiten}
             employees={employees}
+            getTripFuelCost={getTripFuelCost}
           />
         )}
       </div>
