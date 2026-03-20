@@ -234,9 +234,24 @@ Deno.serve(async (req) => {
     // A ride = period between standplaats departure and standplaats arrival
     // If vehicle was already away at start of day, ride starts at midnight
     // If vehicle hasn't returned by end of day, ride ends at midnight
+    // Minimum standplaats duration (minutes) to count as a real "parked at home" break between rides.
+    // Short standplaats stops (e.g. driving past the home base) don't end a ride.
+    const MIN_STANDPLAATS_BREAK_MIN = 30;
+
     const computeRides = () => {
       const daySegments = timeline.filter(segOverlapsDate);
       if (daySegments.length === 0) return [];
+
+      // Determine which standplaats entries are "significant" (long enough to end a ride)
+      const isSignificantStandplaats = (entry, idx) => {
+        if (entry.classification !== 'STANDPLAATS') return false;
+        if (entry.duration_min >= MIN_STANDPLAATS_BREAK_MIN) return true;
+        // Also significant if it's the last segment of the day (vehicle parked for the night)
+        const remaining = daySegments.slice(idx + 1);
+        const hasActivityAfter = remaining.some(e => e.type === 'drive');
+        if (!hasActivityAfter) return true;
+        return false;
+      };
 
       const rides = [];
       let currentRide = null;
@@ -245,18 +260,15 @@ Deno.serve(async (req) => {
       for (let i = 0; i < daySegments.length; i++) {
         const entry = daySegments[i];
 
-        if (entry.classification === 'STANDPLAATS') {
+        if (isSignificantStandplaats(entry, i)) {
           if (currentRide) {
-            // Arrival at standplaats → close ride
             currentRide.end_utc = entry.start_utc;
             rides.push(currentRide);
             currentRide = null;
           }
           sawStandplaatsFirst = true;
-        } else if (entry.type === 'drive' || (entry.type === 'stop' && entry.classification !== 'STANDPLAATS')) {
+        } else if (entry.type === 'drive') {
           if (!currentRide) {
-            // Start a new ride
-            // If we haven't seen standplaats at start of day, vehicle was already away → ride starts at midnight
             const rideStartUtc = sawStandplaatsFirst ? entry.start_utc : new Date(dayStartUtc).toISOString();
             currentRide = {
               start_utc: rideStartUtc,
@@ -266,13 +278,18 @@ Deno.serve(async (req) => {
               open_start: !sawStandplaatsFirst,
             };
           } else {
-            // Continue ride — update end km
             if (entry.odometer_stop) currentRide.end_km = entry.odometer_stop;
           }
+        } else if (entry.type === 'stop' && entry.classification !== 'STANDPLAATS') {
+          // Non-standplaats stop during ride
+          if (currentRide && entry.odometer_stop) {
+            currentRide.end_km = entry.odometer_stop;
+          }
         }
+        // Short standplaats stops are ignored (treated as part of the ride or pre-ride)
       }
 
-      // If ride still open (didn't return to standplaats on this date), clip to midnight
+      // If ride still open → clip to midnight
       if (currentRide) {
         currentRide.end_utc = new Date(dayEndUtc).toISOString();
         currentRide.open_ended = true;
