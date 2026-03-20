@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from "recharts";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, subDays, subMonths, subYears } from "date-fns";
 import { nl } from "date-fns/locale";
+
+const PERIODS = [
+  { key: "7d", label: "7 dagen", days: 7 },
+  { key: "30d", label: "30 dagen", days: 30 },
+  { key: "90d", label: "3 maanden", days: 90 },
+  { key: "6m", label: "6 maanden", days: 183 },
+  { key: "1y", label: "1 jaar", days: 365 },
+  { key: "all", label: "Alles", days: null },
+];
 
 const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
@@ -21,8 +31,19 @@ const CustomTooltip = ({ active, payload }) => {
   );
 };
 
-export default function KmDieselPriceChart({ dieselData, dieselLoading, dieselError }) {
-  if (dieselLoading) {
+export default function KmDieselPriceChart({ allPrices, pricesLoading }) {
+  const [period, setPeriod] = useState("6m");
+
+  const chartData = useMemo(() => {
+    if (!allPrices?.length) return [];
+    const sorted = [...allPrices].sort((a, b) => a.date.localeCompare(b.date));
+    const config = PERIODS.find(p => p.key === period);
+    if (!config?.days) return sorted;
+    const cutoff = format(subDays(new Date(), config.days), 'yyyy-MM-dd');
+    return sorted.filter(d => d.date >= cutoff);
+  }, [allPrices, period]);
+
+  if (pricesLoading) {
     return (
       <Card>
         <CardContent className="p-6 flex items-center gap-3 text-slate-500">
@@ -33,46 +54,68 @@ export default function KmDieselPriceChart({ dieselData, dieselLoading, dieselEr
     );
   }
 
-  if (dieselError || !dieselData?.recent?.length) {
+  if (!chartData.length) {
     return (
       <Card>
         <CardContent className="p-6 flex items-center gap-3 text-amber-600">
           <AlertTriangle className="w-5 h-5" />
-          <span className="text-sm">Prijsgrafiek niet beschikbaar</span>
+          <span className="text-sm">Geen prijsdata beschikbaar</span>
         </CardContent>
       </Card>
     );
   }
 
-  // Recent prices are newest-first from API, reverse for chart (oldest left)
-  const chartData = [...dieselData.recent].reverse();
-  const latestPrice = dieselData.latest.price;
+  const latestPrice = chartData[chartData.length - 1]?.price || 0;
   const prices = chartData.map(d => d.price);
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const avgPrice = prices.reduce((s, p) => s + p, 0) / prices.length;
 
-  // Trend: compare latest vs 7 days ago
-  const weekAgoPrice = chartData.length >= 7 ? chartData[chartData.length - 7]?.price : null;
+  // Trend: latest vs 7 days ago
+  const weekAgoIdx = Math.max(0, chartData.length - 8);
+  const weekAgoPrice = chartData[weekAgoIdx]?.price;
   const trend = weekAgoPrice ? latestPrice - weekAgoPrice : null;
+
+  // Determine tick format based on period
+  const tickFormat = (d) => {
+    if (period === "7d") return format(parseISO(d), "d MMM");
+    if (period === "30d") return format(parseISO(d), "d MMM");
+    if (period === "90d") return format(parseISO(d), "d MMM");
+    return format(parseISO(d), "MMM yyyy");
+  };
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-          Dieselprijs verloop
-          <Badge variant="outline" className="text-[10px] font-normal">
-            excl. BTW · TLN Brandstofmonitor
-          </Badge>
-        </CardTitle>
-        <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            Dieselprijs verloop
+            <Badge variant="outline" className="text-[10px] font-normal">
+              excl. BTW · TLN Brandstofmonitor
+            </Badge>
+          </CardTitle>
+          <div className="flex gap-1">
+            {PERIODS.map(p => (
+              <Button
+                key={p.key}
+                variant={period === p.key ? "default" : "ghost"}
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setPeriod(p.key)}
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-xs text-slate-500 mt-1 flex-wrap">
           <span>
             Actueel: <strong className="text-lg text-slate-900">€ {latestPrice.toFixed(4)}</strong>
           </span>
           {trend !== null && (
             <span className={`flex items-center gap-0.5 ${trend > 0 ? 'text-red-600' : 'text-green-600'}`}>
               {trend > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-              {trend > 0 ? '+' : ''}{trend.toFixed(4)} vs 7d geleden
+              {trend > 0 ? '+' : ''}{trend.toFixed(4)} vs 7d
             </span>
           )}
           <span>Gem: € {avgPrice.toFixed(4)}</span>
@@ -81,7 +124,7 @@ export default function KmDieselPriceChart({ dieselData, dieselLoading, dieselEr
         </div>
       </CardHeader>
       <CardContent className="pb-4">
-        <div className="h-52">
+        <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
               <defs>
@@ -94,9 +137,9 @@ export default function KmDieselPriceChart({ dieselData, dieselLoading, dieselEr
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 11, fill: '#94a3b8' }}
-                tickFormatter={(d) => format(parseISO(d), 'd MMM')}
+                tickFormatter={tickFormat}
                 interval="preserveStartEnd"
-                minTickGap={40}
+                minTickGap={50}
               />
               <YAxis
                 domain={[
@@ -127,7 +170,7 @@ export default function KmDieselPriceChart({ dieselData, dieselLoading, dieselEr
           </ResponsiveContainer>
         </div>
         <p className="text-[10px] text-slate-400 text-right mt-1">
-          Bron: TLN Brandstofmonitor · Laatste {chartData.length} dagen
+          Bron: TLN Brandstofmonitor · {chartData.length} datapunten
         </p>
       </CardContent>
     </Card>
