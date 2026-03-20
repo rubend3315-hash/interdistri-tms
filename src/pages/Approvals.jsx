@@ -457,7 +457,10 @@ export default function Approvals() {
     const overlaps = getEntryOverlaps(entry);
     const entryTrips = showActions ? (tripsByTimeEntry[entry.id] || []) : [];
     const entrySpw = showActions ? (spwByTimeEntry[entry.id] || []) : [];
-    const entryTripRecords = showActions ? (tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.date}`] || []) : [];
+    const entryTripRecords = showActions ? [
+      ...(tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.date}`] || []),
+      ...(entry.end_date && entry.end_date !== entry.date ? (tripRecordsByEmployeeDate[`${entry.employee_id}_${entry.end_date}`] || []) : []),
+    ] : [];
     const hasLinked = entryTrips.length > 0 || entrySpw.length > 0 || entryTripRecords.length > 0;
 
     return (
