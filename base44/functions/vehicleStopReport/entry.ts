@@ -265,10 +265,14 @@ Deno.serve(async (req) => {
         // "Consecutive" = no REAL drive between them. GPS noise on the standplaats
         // can produce short drive segments — those are not real departures.
         // A "real drive" = a drive segment where at least one endpoint is outside standplaats radius.
+        // For merge logic, use a minimum radius of 200m to account for GPS drift
+        // (vehicle home_base_radius can be as small as 34m which is too strict for drive segments)
+        const MERGE_MIN_RADIUS = 200;
+        const mergeRadius = Math.max(STANDPLAATS_RADIUS_M, MERGE_MIN_RADIUS);
         const isPointNearStandplaats = (lat, lon) => {
           if (!lat || !lon) return true; // if no coords, assume still at standplaats
-          if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M) return true;
-          return gpsLocations.some(loc => gpsDistanceM(lat, lon, loc.lat, loc.lon) <= (loc.radius_m || 500));
+          if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= mergeRadius) return true;
+          return gpsLocations.some(loc => gpsDistanceM(lat, lon, loc.lat, loc.lon) <= Math.max(loc.radius_m || 500, MERGE_MIN_RADIUS));
         };
         const merged = [];
         for (const s of standplaatsStops) {
