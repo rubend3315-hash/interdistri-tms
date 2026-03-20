@@ -207,7 +207,7 @@ export default function VehicleStopReport() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 py-2">
-                <StandplaatsTable stops={report.standplaats.stops} />
+                <StandplaatsTable stops={report.standplaats.stops} reportDate={report.date} />
               </CardContent>
             </Card>
           )}
