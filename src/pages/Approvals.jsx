@@ -150,6 +150,19 @@ export default function Approvals() {
     staleTime: 24 * 60 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false,
   });
 
+  // Fuel cost data for GPS records
+  const fuelCacheOpts = { staleTime: 30 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
+  const { data: fuelSettings = [] } = useQuery({
+    queryKey: ['fuelSettings-approvals'], queryFn: () => base44.entities.CustomerFuelSettings.filter({ is_active: true }), ...fuelCacheOpts,
+  });
+  const { data: dieselPrices = [] } = useQuery({
+    queryKey: ['dieselPrices-approvals'], queryFn: () => base44.entities.DieselPrice.filter({}, '-date', 500), ...fuelCacheOpts,
+  });
+  const { data: cbsPrices = [] } = useQuery({
+    queryKey: ['cbsPrices-approvals'], queryFn: () => base44.entities.CbsDieselPrice.filter({}, '-date', 500), ...fuelCacheOpts,
+  });
+  const getTripFuelCost = useTripFuelCost({ vehicles, fuelSettings, dieselPrices, cbsPrices });
+
   // Fetch linked trips and standplaatswerk for pending entries
   const pendingIds = useMemo(() => pendingRaw.map(e => e.id), [pendingRaw]);
 
