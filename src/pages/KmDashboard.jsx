@@ -13,6 +13,7 @@ import KmVehicleSummary from "@/components/km-dashboard/KmVehicleSummary";
 import KmRouteSummary from "@/components/km-dashboard/KmRouteSummary";
 import KmFuelCostCard from "@/components/km-dashboard/KmFuelCostCard";
 import KmDieselPriceChart from "@/components/km-dashboard/KmDieselPriceChart";
+import CbsPriceChart from "@/components/fuel-surcharge/CbsPriceChart";
 
 export default function KmDashboard() {
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -77,6 +78,13 @@ export default function KmDashboard() {
   const { data: allDieselPrices = [], isLoading: dieselLoading } = useQuery({
     queryKey: ['dieselPrices'],
     queryFn: () => base44.entities.DieselPrice.filter({}, '-date', 2000),
+    staleTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: cbsPrices = [], isLoading: cbsLoading } = useQuery({
+    queryKey: ['cbsDieselPrices'],
+    queryFn: () => base44.entities.CbsDieselPrice.filter({}, '-date', 2000),
     staleTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -205,6 +213,8 @@ export default function KmDashboard() {
               pricesLoading={dieselLoading}
             />
           </div>
+
+          <CbsPriceChart cbsPrices={cbsPrices} loading={cbsLoading} />
 
           <KmTripTable
             trips={filteredTrips}
