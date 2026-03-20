@@ -111,6 +111,25 @@ export default function TripSync() {
           <h1 className="text-2xl font-bold text-slate-900">GPS Buddy Import</h1>
           <p className="text-sm text-slate-500">Synchroniseer GPS-ritdata vanuit GPS Buddy</p>
         </div>
+      </div>
+
+      <Tabs defaultValue="ritten">
+        <TabsList>
+          <TabsTrigger value="ritten" className="gap-1.5">
+            <Truck className="w-4 h-4" /> Ritten
+          </TabsTrigger>
+          <TabsTrigger value="instellingen" className="gap-1.5">
+            <Settings className="w-4 h-4" /> Instellingen
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="instellingen" className="mt-4">
+          <GpsLocationSettings />
+        </TabsContent>
+
+        <TabsContent value="ritten" className="mt-4 space-y-4">
+
+      <div className="flex justify-end">
         <Button
           onClick={handleSync}
           disabled={syncing}
