@@ -1,6 +1,5 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Fuel, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, parseISO, getISOWeek } from "date-fns";
@@ -26,6 +25,20 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
     typeGroups[type].push(t);
   });
 
+  const colStyle = {
+    datum: { width: '10%', textAlign: 'left' },
+    klant: { width: '10%', textAlign: 'left' },
+    route: { width: '14%', textAlign: 'left' },
+    kenteken: { width: '11%', textAlign: 'left' },
+    type: { width: '11%', textAlign: 'left' },
+    km: { width: '8%', textAlign: 'right' },
+    basis: { width: '18%', textAlign: 'right' },
+    actueel: { width: '18%', textAlign: 'right' },
+  };
+
+  const thClass = "px-3 py-2 text-xs font-medium text-slate-600 whitespace-nowrap";
+  const tdClass = "px-3 py-1.5 text-sm whitespace-nowrap";
+
   return (
     <Card className="print:shadow-none print:border-0">
       <CardHeader className="pb-3">
@@ -48,38 +61,31 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <Table className="table-fixed w-full">
-            <colgroup>
-              <col className="w-[90px]" />
-              <col className="w-[90px]" />
-              <col />
-              <col className="w-[90px]" />
-              <col className="w-[90px]" />
-              <col className="w-[60px]" />
-              <col className="w-[110px]" />
-              <col className="w-[110px]" />
-            </colgroup>
-            <TableHeader>
-              <TableRow className="bg-slate-700 hover:bg-slate-700 border-0">
-                <TableHead colSpan={3} className="text-white font-medium text-xs py-2" />
-                <TableHead className="text-white font-medium text-xs py-2" />
-                <TableHead className="text-white font-medium text-xs py-2" />
-                <TableHead className="text-white font-medium text-xs text-right py-2">KM</TableHead>
-                <TableHead className="text-white font-medium text-xs text-right py-2">Brandstofprijs in tarief</TableHead>
-                <TableHead className="text-white font-medium text-xs text-right py-2">Nacalculatie brandstofprijs</TableHead>
-              </TableRow>
-              <TableRow className="bg-slate-100 text-xs">
-                <TableHead className="py-1.5 text-slate-600">Datum</TableHead>
-                <TableHead className="py-1.5 text-slate-600">Klant</TableHead>
-                <TableHead className="py-1.5 text-slate-600">Route</TableHead>
-                <TableHead className="py-1.5 text-slate-600">Kenteken</TableHead>
-                <TableHead className="py-1.5 text-slate-600">Type</TableHead>
-                <TableHead className="py-1.5 text-slate-600 text-right">KM</TableHead>
-                <TableHead className="py-1.5 text-slate-600 text-right">Kosten per dag</TableHead>
-                <TableHead className="py-1.5 text-slate-600 text-right">Kosten per dag</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <table className="w-full border-collapse text-sm">
+            {/* Top group header */}
+            <thead>
+              <tr className="bg-slate-700">
+                <th style={colStyle.datum} className="px-3 py-2 text-left text-white text-xs font-medium" />
+                <th style={colStyle.klant} className="px-3 py-2 text-left text-white text-xs font-medium" />
+                <th style={colStyle.route} className="px-3 py-2 text-left text-white text-xs font-medium" />
+                <th style={colStyle.kenteken} className="px-3 py-2 text-left text-white text-xs font-medium">Kenteken</th>
+                <th style={colStyle.type} className="px-3 py-2 text-left text-white text-xs font-medium" />
+                <th style={colStyle.km} className="px-3 py-2 text-right text-white text-xs font-medium">KM</th>
+                <th style={colStyle.basis} className="px-3 py-2 text-right text-white text-xs font-medium">Brandstofprijs in tarief</th>
+                <th style={colStyle.actueel} className="px-3 py-2 text-right text-white text-xs font-medium">Nacalculatie brandstofprijs</th>
+              </tr>
+              <tr className="bg-slate-100 border-b border-slate-200">
+                <th style={colStyle.datum} className={thClass}>Datum</th>
+                <th style={colStyle.klant} className={thClass}>Klant</th>
+                <th style={colStyle.route} className={thClass}>Route</th>
+                <th style={colStyle.kenteken} className={thClass}>Kenteken</th>
+                <th style={colStyle.type} className={thClass}>Type</th>
+                <th style={{ ...colStyle.km, textAlign: 'right' }} className={thClass + " text-right"}>KM</th>
+                <th style={{ ...colStyle.basis, textAlign: 'right' }} className={thClass + " text-right"}>Kosten per dag</th>
+                <th style={{ ...colStyle.actueel, textAlign: 'right' }} className={thClass + " text-right"}>Kosten per dag</th>
+              </tr>
+            </thead>
+            <tbody>
               {Object.entries(typeGroups).map(([type, trips]) => {
                 const groupKm = trips.reduce((s, t) => s + (t.km || 0), 0);
                 const groupBase = trips.reduce((s, t) => s + (t.base_cost || 0), 0);
@@ -87,42 +93,44 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
 
                 return (
                   <React.Fragment key={type}>
-                    {/* Type group header */}
-                    <TableRow className="bg-slate-600 hover:bg-slate-600 border-0">
-                      <TableCell colSpan={8} className="text-white text-sm font-medium py-1.5">{type}</TableCell>
-                    </TableRow>
+                    {/* Vehicle type group header */}
+                    <tr className="bg-slate-600">
+                      <td colSpan={8} className="px-3 py-1.5 text-white text-sm font-medium">{type}</td>
+                    </tr>
                     {trips.map((t, i) => (
-                      <TableRow key={i} className="text-sm">
-                        <TableCell className="tabular-nums py-1.5">{t.date ? format(parseISO(t.date), 'dd-MM-yyyy') : '-'}</TableCell>
-                        <TableCell className="py-1.5">{customerName}</TableCell>
-                        <TableCell className="py-1.5">{t.route || '-'}</TableCell>
-                        <TableCell className="font-mono text-xs py-1.5">{t.vehicle_plate}</TableCell>
-                        <TableCell className="text-xs py-1.5">{t.vehicle_type || '-'}</TableCell>
-                        <TableCell className="text-right tabular-nums py-1.5">{t.km}</TableCell>
-                        <TableCell className="text-right tabular-nums py-1.5">€ {fmt(t.base_cost)}</TableCell>
-                        <TableCell className="text-right tabular-nums py-1.5 text-amber-700">€ {fmt(t.actual_cost)}</TableCell>
-                      </TableRow>
+                      <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
+                        <td style={colStyle.datum} className={tdClass + " tabular-nums"}>{t.date ? format(parseISO(t.date), 'dd-MM-yyyy') : '-'}</td>
+                        <td style={colStyle.klant} className={tdClass}>{customerName}</td>
+                        <td style={colStyle.route} className={tdClass}>{t.route || '-'}</td>
+                        <td style={colStyle.kenteken} className={tdClass + " font-mono text-xs"}>{t.vehicle_plate}</td>
+                        <td style={colStyle.type} className={tdClass + " text-xs"}>{t.vehicle_type || '-'}</td>
+                        <td style={colStyle.km} className={tdClass + " text-right tabular-nums"}>{t.km}</td>
+                        <td style={colStyle.basis} className={tdClass + " text-right tabular-nums"}>€ {fmt(t.base_cost)}</td>
+                        <td style={colStyle.actueel} className={tdClass + " text-right tabular-nums text-amber-700"}>€ {fmt(t.actual_cost)}</td>
+                      </tr>
                     ))}
-                    {/* Group subtotal */}
-                    <TableRow className="bg-slate-50 border-t text-sm font-medium">
-                      <TableCell colSpan={5} className="text-right text-xs text-slate-500 py-1.5">Subtotaal {type}</TableCell>
-                      <TableCell className="text-right tabular-nums py-1.5">{Math.round(groupKm * 10) / 10}</TableCell>
-                      <TableCell className="text-right tabular-nums py-1.5">€ {fmt(groupBase)}</TableCell>
-                      <TableCell className="text-right tabular-nums py-1.5 text-amber-700">€ {fmt(groupActual)}</TableCell>
-                    </TableRow>
+                    {/* Subtotal per type */}
+                    {Object.keys(typeGroups).length > 1 && (
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <td colSpan={5} className="px-3 py-1.5 text-right text-xs text-slate-500 font-medium">Subtotaal {type}</td>
+                        <td className="px-3 py-1.5 text-right tabular-nums text-sm font-medium">{Math.round(groupKm)}</td>
+                        <td className="px-3 py-1.5 text-right tabular-nums text-sm font-medium">€ {fmt(groupBase)}</td>
+                        <td className="px-3 py-1.5 text-right tabular-nums text-sm font-medium text-amber-700">€ {fmt(groupActual)}</td>
+                      </tr>
+                    )}
                   </React.Fragment>
                 );
               })}
 
-              {/* Grand total */}
-              <TableRow className="bg-slate-100 font-bold border-t-2 text-sm">
-                <TableCell colSpan={5} className="py-2" />
-                <TableCell className="text-right tabular-nums py-2">{total_km}</TableCell>
-                <TableCell className="text-right tabular-nums py-2">€ {fmt(base_cost)}</TableCell>
-                <TableCell className="text-right tabular-nums py-2 text-amber-700">€ {fmt(actual_cost)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+              {/* Grand total row */}
+              <tr className="bg-slate-100 border-t-2 border-slate-300 font-bold">
+                <td colSpan={5} className="px-3 py-2" />
+                <td className="px-3 py-2 text-right tabular-nums">{total_km}</td>
+                <td className="px-3 py-2 text-right tabular-nums">€ {fmt(base_cost)}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-amber-700">€ {fmt(actual_cost)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         {/* Totals */}
@@ -134,7 +142,7 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
           <div className="flex justify-end gap-4 text-xs text-slate-500">
             <span>Basisprijs: € {base_fuel_price?.toFixed(4)}/ltr</span>
             <span>Gem. actueel: € {actual_fuel_price?.toFixed(4)}/ltr</span>
-            <span>Methode: {calculation_method === 'km' ? 'per KM' : calculation_method === 'hour' ? 'per uur' : 'gemengd'}</span>
+            <span>Methode: {calculation_method === 'km' ? 'per KM' : 'per uur'}</span>
           </div>
         </div>
       </CardContent>
