@@ -286,7 +286,7 @@ Deno.serve(async (req) => {
 
     // Build ride summary
     const ridesSummary = rides.map((r, i) => {
-      const startLocal = toLocalTime(r.start_utc);
+      const startLocal = r.open_start ? 'middernacht' : toLocalTime(r.start_utc);
       const endLocal = r.open_ended ? 'middernacht' : toLocalTime(r.end_utc);
       const startKm = r.start_km;
       const endKm = r.end_km;
