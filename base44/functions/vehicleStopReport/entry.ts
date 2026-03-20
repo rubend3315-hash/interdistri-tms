@@ -230,42 +230,44 @@ Deno.serve(async (req) => {
     const totalDepotMin = depotStops.reduce((s, e) => s + e.duration_min, 0);
     const totalStilstandMin = longStops.reduce((s, e) => s + e.duration_min, 0);
 
-    // Ride info: find MULTIPLE rides on this date
-    // A ride = sequence of segments between standplaats departures/arrivals
-    // We detect rides by finding standplaats stops on this date boundary and drives between them
+    // Ride info: find rides on this date
+    // A ride = period between standplaats departure and standplaats arrival
+    // If vehicle was already away at start of day, ride starts at midnight
+    // If vehicle hasn't returned by end of day, ride ends at midnight
     const computeRides = () => {
-      // Filter segments that overlap with the requested date, sorted by time
       const daySegments = timeline.filter(segOverlapsDate);
       if (daySegments.length === 0) return [];
 
       const rides = [];
       let currentRide = null;
+      let sawStandplaatsFirst = false;
 
-      for (const entry of daySegments) {
+      for (let i = 0; i < daySegments.length; i++) {
+        const entry = daySegments[i];
+
         if (entry.classification === 'STANDPLAATS') {
-          // If we have an active ride, close it
           if (currentRide) {
-            currentRide.end_utc = entry.start_utc; // arrival at standplaats
+            // Arrival at standplaats → close ride
+            currentRide.end_utc = entry.start_utc;
             rides.push(currentRide);
             currentRide = null;
           }
-          // Don't start a new ride yet — wait for next drive
-        } else if (entry.type === 'drive') {
+          sawStandplaatsFirst = true;
+        } else if (entry.type === 'drive' || (entry.type === 'stop' && entry.classification !== 'STANDPLAATS')) {
           if (!currentRide) {
+            // Start a new ride
+            // If we haven't seen standplaats at start of day, vehicle was already away → ride starts at midnight
+            const rideStartUtc = sawStandplaatsFirst ? entry.start_utc : new Date(dayStartUtc).toISOString();
             currentRide = {
-              start_utc: entry.start_utc,
+              start_utc: rideStartUtc,
               end_utc: null,
               start_km: entry.odometer_start,
               end_km: entry.odometer_stop,
+              open_start: !sawStandplaatsFirst,
             };
           } else {
-            // Update end km as we progress
+            // Continue ride — update end km
             if (entry.odometer_stop) currentRide.end_km = entry.odometer_stop;
-          }
-        } else {
-          // Non-standplaats stop during ride — update end km
-          if (currentRide && entry.odometer_stop) {
-            currentRide.end_km = entry.odometer_stop;
           }
         }
       }
