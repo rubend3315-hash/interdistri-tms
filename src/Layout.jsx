@@ -38,7 +38,8 @@ import {
   ClipboardList,
   HardDrive,
   LifeBuoy,
-  Gauge
+  Gauge,
+  Fuel
 } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
