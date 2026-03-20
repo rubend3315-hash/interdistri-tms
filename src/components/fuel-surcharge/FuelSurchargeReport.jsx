@@ -40,36 +40,28 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        {/* Customer info bar */}
-        <div className="bg-slate-700 text-white px-4 py-2 text-sm font-medium">
-          Bestelbus
-        </div>
-        <div className="bg-slate-100 px-4 py-1.5 flex items-center justify-between text-xs font-medium text-slate-600 border-b">
-          <div className="flex gap-8">
-            <span className="w-24">Datum</span>
-            <span className="w-32">Klant</span>
-            <span className="w-40">Route</span>
-            <span className="w-24">Kenteken</span>
-            <span className="w-16 text-right">KM</span>
-          </div>
-          <div className="flex gap-8 text-right">
-            <span className="w-28">Brandstofprijs in tarief</span>
-            <span className="w-28">Nacalculatie brandstofprijs</span>
-          </div>
-        </div>
-
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="text-xs">
-                <TableHead className="w-24">Datum</TableHead>
-                <TableHead className="w-32">Klant</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead className="w-24">Kenteken</TableHead>
-                <TableHead className="w-24">Type</TableHead>
-                <TableHead className="text-right w-16">KM</TableHead>
-                <TableHead className="text-right w-28">Kosten per dag</TableHead>
-                <TableHead className="text-right w-28">Kosten per dag</TableHead>
+              {/* Group header row */}
+              <TableRow className="bg-slate-700 hover:bg-slate-700 border-0">
+                <TableHead colSpan={4} className="text-white font-medium text-sm py-2">Datum / Klant / Route</TableHead>
+                <TableHead className="text-white font-medium text-sm py-2">Kenteken</TableHead>
+                <TableHead className="text-white font-medium text-sm py-2">Type</TableHead>
+                <TableHead className="text-white font-medium text-sm text-right py-2">KM</TableHead>
+                <TableHead className="text-white font-medium text-sm text-right py-2">Brandstofprijs in tarief</TableHead>
+                <TableHead className="text-white font-medium text-sm text-right py-2">Nacalculatie brandstofprijs</TableHead>
+              </TableRow>
+              {/* Sub header row */}
+              <TableRow className="bg-slate-100 text-xs">
+                <TableHead className="w-24 py-1.5">Datum</TableHead>
+                <TableHead className="w-24 py-1.5">Klant</TableHead>
+                <TableHead className="py-1.5">Route</TableHead>
+                <TableHead className="w-24 py-1.5">Kenteken</TableHead>
+                <TableHead className="w-20 py-1.5">Type</TableHead>
+                <TableHead className="w-16 text-right py-1.5">KM</TableHead>
+                <TableHead className="w-28 text-right py-1.5" colSpan="1">Kosten per dag</TableHead>
+                <TableHead className="w-28 text-right py-1.5" colSpan="1">Kosten per dag</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
