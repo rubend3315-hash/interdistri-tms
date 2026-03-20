@@ -262,6 +262,9 @@ export default function TripSync() {
         </>
       )}
 
+      </TabsContent>
+      </Tabs>
+
       {/* Driver reassign dialog */}
       <DriverReassignDialog
         tripRecord={reassignRecord}
@@ -269,9 +272,6 @@ export default function TripSync() {
         onOpenChange={(open) => { if (!open) setReassignRecord(null); }}
         onSuccess={() => setReassignRecord(null)}
       />
-
-      </TabsContent>
-      </Tabs>
     </div>
   );
 }
