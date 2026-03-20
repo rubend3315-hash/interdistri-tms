@@ -336,24 +336,13 @@ Deno.serve(async (req) => {
     };
 
     if (debug_section === 'standplaats') {
+      const spResult = computeStandplaats();
       return Response.json({ 
         date, 
-        standplaats: computeStandplaats(),
+        standplaats: spResult,
         _debug: {
-          dayStartUtc_iso: new Date((() => {
-            const getAmsterdamOffset2 = (d) => {
-              const parts = new Intl.DateTimeFormat('en', {
-                timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-              }).formatToParts(d);
-              const p = {};
-              parts.forEach(({ type, value }) => { p[type] = value; });
-              const localStr = `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`;
-              return d.getTime() - new Date(localStr).getTime();
-            };
-            const offsetMs = getAmsterdamOffset2(new Date(`${date}T12:00:00Z`));
-            return new Date(`${date}T00:00:00Z`).getTime() - offsetMs;
-          })()).toISOString(),
+          dayStartUtc_iso: spResult._dayStartUtc,
+          dayEndUtc_iso: spResult._dayEndUtc,
           raw_standplaats_utc: standplaatsStops.map(s => ({ start: s.start_utc, stop: s.stop_utc })),
         }
       });
