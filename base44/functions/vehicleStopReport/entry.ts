@@ -230,38 +230,74 @@ Deno.serve(async (req) => {
     const totalDepotMin = depotStops.reduce((s, e) => s + e.duration_min, 0);
     const totalStilstandMin = longStops.reduce((s, e) => s + e.duration_min, 0);
 
-    // Ride info: find rides on this date
-    // A ride = period between standplaats departure and standplaats arrival
-    // If vehicle was already away at start of day, ride starts at midnight
-    // If vehicle hasn't returned by end of day, ride ends at midnight
-    // Minimum standplaats duration (minutes) to count as a real "parked at home" break between rides.
-    // Short standplaats stops (e.g. driving past the home base) don't end a ride.
-    const MIN_STANDPLAATS_BREAK_MIN = 30;
+    // Ride info: use merged standplaats periods to find rides.
+    // First compute merged standplaats periods, then derive rides as gaps between them.
+    const computeMergedStandplaatsRaw = () => {
+      const MERGE_MIN_RADIUS = 200;
+      const mergeRadius = Math.max(STANDPLAATS_RADIUS_M, MERGE_MIN_RADIUS);
+      const isPointNearStandplaats = (lat, lon) => {
+        if (!lat || !lon) return true;
+        if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= mergeRadius) return true;
+        return gpsLocations.some(loc => gpsDistanceM(lat, lon, loc.lat, loc.lon) <= Math.max(loc.radius_m || 500, MERGE_MIN_RADIUS));
+      };
+      const merged = [];
+      for (const s of standplaatsStops) {
+        if (merged.length === 0) { merged.push({ start_utc: s.start_utc, stop_utc: s.stop_utc }); continue; }
+        const prev = merged[merged.length - 1];
+        const prevStopTime = new Date(prev.stop_utc).getTime();
+        const currStartTime = new Date(s.start_utc).getTime();
+        const hasRealDriveBetween = timeline.some(t => {
+          if (t.type !== 'drive') return false;
+          const tStart = new Date(t.start_utc).getTime();
+          const tStop = new Date(t.stop_utc).getTime();
+          if (tStart < prevStopTime || tStop > currStartTime) return false;
+          return !isPointNearStandplaats(t.startLat, t.startLon) || !isPointNearStandplaats(t.stopLat, t.stopLon);
+        });
+        if (hasRealDriveBetween) {
+          merged.push({ start_utc: s.start_utc, stop_utc: s.stop_utc });
+        } else {
+          prev.stop_utc = s.stop_utc;
+        }
+      }
+      return merged;
+    };
+
+    const mergedStandplaatsPeriods = computeMergedStandplaatsRaw();
 
     const computeRides = () => {
       const daySegments = timeline.filter(segOverlapsDate);
       if (daySegments.length === 0) return [];
 
-      // Determine which standplaats entries are "significant" (long enough to end a ride)
-      const isSignificantStandplaats = (entry, idx) => {
-        if (entry.classification !== 'STANDPLAATS') return false;
-        if (entry.duration_min >= MIN_STANDPLAATS_BREAK_MIN) return true;
-        // Also significant if it's the last segment of the day (vehicle parked for the night)
-        const remaining = daySegments.slice(idx + 1);
-        const hasActivityAfter = remaining.some(e => e.type === 'drive');
-        if (!hasActivityAfter) return true;
-        return false;
+      // Check if a UTC timestamp falls within any merged standplaats period
+      const isInStandplaats = (utcMs) => {
+        return mergedStandplaatsPeriods.some(sp => {
+          const spStart = new Date(sp.start_utc).getTime();
+          const spEnd = new Date(sp.stop_utc).getTime();
+          return utcMs >= spStart && utcMs <= spEnd;
+        });
+      };
+
+      // Find the merged standplaats period that contains this timestamp
+      const getStandplaatsPeriod = (utcMs) => {
+        return mergedStandplaatsPeriods.find(sp => {
+          const spStart = new Date(sp.start_utc).getTime();
+          const spEnd = new Date(sp.stop_utc).getTime();
+          return utcMs >= spStart && utcMs <= spEnd;
+        });
       };
 
       const rides = [];
       let currentRide = null;
       let sawStandplaatsFirst = false;
 
-      for (let i = 0; i < daySegments.length; i++) {
-        const entry = daySegments[i];
+      for (const entry of daySegments) {
+        const entryStartMs = new Date(entry.start_utc).getTime();
+        const entryInStandplaats = isInStandplaats(entryStartMs);
 
-        if (isSignificantStandplaats(entry, i)) {
+        if (entryInStandplaats) {
           if (currentRide) {
+            // Vehicle arrived at standplaats — close the ride
+            // Use the start of the standplaats period that contains this entry as the arrival time
             currentRide.end_utc = entry.start_utc;
             rides.push(currentRide);
             currentRide = null;
@@ -269,9 +305,18 @@ Deno.serve(async (req) => {
           sawStandplaatsFirst = true;
         } else if (entry.type === 'drive') {
           if (!currentRide) {
-            const rideStartUtc = sawStandplaatsFirst ? entry.start_utc : new Date(dayStartUtc).toISOString();
+            // Departing: find when the standplaats period ended to get the departure time
+            let departureUtc;
+            if (sawStandplaatsFirst) {
+              // Find the most recent standplaats period before this drive
+              const beforePeriods = mergedStandplaatsPeriods.filter(sp => new Date(sp.stop_utc).getTime() <= entryStartMs);
+              const lastSp = beforePeriods[beforePeriods.length - 1];
+              departureUtc = lastSp ? lastSp.stop_utc : entry.start_utc;
+            } else {
+              departureUtc = new Date(dayStartUtc).toISOString();
+            }
             currentRide = {
-              start_utc: rideStartUtc,
+              start_utc: departureUtc,
               end_utc: null,
               start_km: entry.odometer_start,
               end_km: entry.odometer_stop,
@@ -280,13 +325,12 @@ Deno.serve(async (req) => {
           } else {
             if (entry.odometer_stop) currentRide.end_km = entry.odometer_stop;
           }
-        } else if (entry.type === 'stop' && entry.classification !== 'STANDPLAATS') {
+        } else {
           // Non-standplaats stop during ride
           if (currentRide && entry.odometer_stop) {
             currentRide.end_km = entry.odometer_stop;
           }
         }
-        // Short standplaats stops are ignored (treated as part of the ride or pre-ride)
       }
 
       // If ride still open → clip to midnight
