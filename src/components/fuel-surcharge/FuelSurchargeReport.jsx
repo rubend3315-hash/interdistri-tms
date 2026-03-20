@@ -65,7 +65,8 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
                 <TableHead className="w-24">Datum</TableHead>
                 <TableHead className="w-32">Klant</TableHead>
                 <TableHead>Route</TableHead>
-                <TableHead className="w-28">Kenteken</TableHead>
+                <TableHead className="w-24">Kenteken</TableHead>
+                <TableHead className="w-24">Type</TableHead>
                 <TableHead className="text-right w-16">KM</TableHead>
                 <TableHead className="text-right w-28">Kosten per dag</TableHead>
                 <TableHead className="text-right w-28">Kosten per dag</TableHead>
@@ -78,6 +79,7 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
                   <TableCell>{customerName}</TableCell>
                   <TableCell>{t.route || '-'}</TableCell>
                   <TableCell className="font-mono text-xs">{t.vehicle_plate}</TableCell>
+                  <TableCell className="text-xs">{t.vehicle_type || '-'}</TableCell>
                   <TableCell className="text-right tabular-nums">{t.km}</TableCell>
                   <TableCell className="text-right tabular-nums">€ {fmt(t.base_cost)}</TableCell>
                   <TableCell className="text-right tabular-nums">€ {fmt(t.actual_cost)}</TableCell>
@@ -85,7 +87,7 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
               ))}
               {trip_details.length > 0 && (
                 <TableRow className="bg-slate-50 font-semibold border-t-2 text-sm">
-                  <TableCell colSpan={4}></TableCell>
+                  <TableCell colSpan={5}></TableCell>
                   <TableCell className="text-right tabular-nums">{total_km}</TableCell>
                   <TableCell className="text-right tabular-nums">€ {fmt(base_cost)}</TableCell>
                   <TableCell className="text-right tabular-nums">€ {fmt(actual_cost)}</TableCell>
