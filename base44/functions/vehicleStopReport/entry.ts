@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
       timeline.push(entry);
 
       // Classify stops (only for segments that overlap with the requested date)
-      if (type === 'stop' && segOverlapsDate(seg)) {
+      if (type === 'stop' && segOverlapsDate(entry)) {
         if (depotMatch && durMin > 0) {
           depotStops.push(entry);
         } else if (!isStandplaats && durMin > SHORT_STOP_THRESHOLD_MIN) {
