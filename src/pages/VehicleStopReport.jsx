@@ -139,21 +139,44 @@ export default function VehicleStopReport() {
                   <p className="text-sm text-slate-500">{report.asset_name} — {format(new Date(report.date), "EEEE d MMMM yyyy", { locale: nl })}</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-4 text-sm">
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <span>Rit: <strong>{report.ride.start || '?'} – {report.ride.end || '?'}</strong></span>
+              {/* Show individual rides if available, otherwise fallback to single ride */}
+              {report.rides && report.rides.length > 0 ? (
+                <div className="space-y-1.5">
+                  {report.rides.map((r) => (
+                    <div key={r.nr} className="flex flex-wrap gap-4 text-sm">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-slate-400" />
+                        <span>Rit {report.rides.length > 1 ? `${r.nr}: ` : ''}<strong>{r.start || '?'} – {r.end || '?'}</strong></span>
+                      </div>
+                      {r.total_km && (
+                        <div className="flex items-center gap-1.5">
+                          <Gauge className="w-4 h-4 text-slate-400" />
+                          <span><strong>{r.total_km} km</strong></span>
+                          {r.start_km && r.end_km && (
+                            <span className="text-slate-400">({r.start_km} → {r.end_km})</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                {report.ride.total_km && (
+              ) : (
+                <div className="flex flex-wrap gap-4 text-sm">
                   <div className="flex items-center gap-1.5">
-                    <Gauge className="w-4 h-4 text-slate-400" />
-                    <span><strong>{report.ride.total_km} km</strong></span>
-                    {report.ride.start_km && report.ride.end_km && (
-                      <span className="text-slate-400">({report.ride.start_km} → {report.ride.end_km})</span>
-                    )}
+                    <Clock className="w-4 h-4 text-slate-400" />
+                    <span>Rit: <strong>{report.ride.start || '?'} – {report.ride.end || '?'}</strong></span>
                   </div>
-                )}
-              </div>
+                  {report.ride.total_km && (
+                    <div className="flex items-center gap-1.5">
+                      <Gauge className="w-4 h-4 text-slate-400" />
+                      <span><strong>{report.ride.total_km} km</strong></span>
+                      {report.ride.start_km && report.ride.end_km && (
+                        <span className="text-slate-400">({report.ride.start_km} → {report.ride.end_km})</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
