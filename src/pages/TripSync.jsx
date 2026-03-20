@@ -146,7 +146,17 @@ export default function TripSync() {
       </div>
 
       {/* Sync result banner */}
-      {syncResult && (
+      {syncResult && syncResult.error && (
+        <Card className="bg-red-50 border-red-200">
+          <CardContent className="px-4 py-3">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <p className="text-sm font-medium text-red-700">{syncResult.message}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {syncResult && !syncResult.error && (
         <Card className={syncResult.created > 0 ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200"}>
           <CardContent className="px-4 py-3 space-y-2">
             <div className="flex items-center gap-3">
