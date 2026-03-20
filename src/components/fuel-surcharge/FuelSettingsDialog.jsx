@@ -73,6 +73,7 @@ export default function FuelSettingsDialog({ open, onClose, settings, onSave, cu
               <SelectContent>
                 <SelectItem value="Bestelbus">Bestelbus</SelectItem>
                 <SelectItem value="Vrachtwagen">Vrachtwagen</SelectItem>
+                <SelectItem value="Kleine vrachtwagen">Kleine vrachtwagen</SelectItem>
                 <SelectItem value="Kleine bestelbus">Kleine bestelbus</SelectItem>
               </SelectContent>
             </Select>
