@@ -270,7 +270,7 @@ export default function TripSync() {
         onSuccess={() => setReassignRecord(null)}
       />
 
-        </TabsContent>
+      </TabsContent>
       </Tabs>
     </div>
   );
