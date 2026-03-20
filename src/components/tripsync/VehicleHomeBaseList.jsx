@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -99,7 +99,7 @@ function VehicleHomeBaseDialog({ vehicle, open, onOpenChange, onSuccess }) {
   const [radius, setRadius] = useState(500);
   const queryClient = useQueryClient();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open && vehicle) {
       setLat(vehicle.home_base_lat ?? '');
       setLon(vehicle.home_base_lon ?? '');
