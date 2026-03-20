@@ -299,7 +299,7 @@ Deno.serve(async (req) => {
         const type = (seg.type || '').toLowerCase();
         const segDate = (seg.start || seg.stop || '').split('T')[0];
         if (type === 'stop') totalStops++;
-        const atStandplaats = type === 'stop' && isStandplaats(seg);
+        const atStandplaats = type === 'stop' && isStandplaats(seg, assetId);
         if (atStandplaats) standplaatsHits++;
 
         if (state === 'IDLE') {
