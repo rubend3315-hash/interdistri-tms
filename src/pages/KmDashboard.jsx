@@ -12,6 +12,7 @@ import KmTripTable from "@/components/km-dashboard/KmTripTable";
 import KmVehicleSummary from "@/components/km-dashboard/KmVehicleSummary";
 import KmRouteSummary from "@/components/km-dashboard/KmRouteSummary";
 import KmFuelCostCard from "@/components/km-dashboard/KmFuelCostCard";
+import KmDieselPriceChart from "@/components/km-dashboard/KmDieselPriceChart";
 
 export default function KmDashboard() {
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -174,13 +175,20 @@ export default function KmDashboard() {
             <KmRouteSummary trips={filteredTrips} />
           </div>
 
-          <KmFuelCostCard
-            trips={filteredTrips}
-            vehicleMap={vehicleMap}
-            dieselData={dieselData}
-            dieselLoading={dieselLoading}
-            dieselError={dieselError}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <KmFuelCostCard
+              trips={filteredTrips}
+              vehicleMap={vehicleMap}
+              dieselData={dieselData}
+              dieselLoading={dieselLoading}
+              dieselError={dieselError}
+            />
+            <KmDieselPriceChart
+              dieselData={dieselData}
+              dieselLoading={dieselLoading}
+              dieselError={dieselError}
+            />
+          </div>
 
           <KmTripTable
             trips={filteredTrips}
