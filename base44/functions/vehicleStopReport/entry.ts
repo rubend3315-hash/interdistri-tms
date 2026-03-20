@@ -451,6 +451,7 @@ Deno.serve(async (req) => {
       },
       standplaats: computeStandplaats(),
       total_segments: allSegments.length,
+      _debug_day_segments: daySegsDebug,
     });
   } catch (error) {
     console.error('[vehicleStopReport]', error);
