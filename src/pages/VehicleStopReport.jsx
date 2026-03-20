@@ -222,13 +222,18 @@ export default function VehicleStopReport() {
   );
 }
 
-function StandplaatsTable({ stops }) {
+function StandplaatsTable({ stops, reportDate }) {
   const formatDuration = (min) => {
     if (min < 60) return `${min} min`;
     const h = Math.floor(min / 60);
     const m = min % 60;
     return m > 0 ? `${h}u ${m}m` : `${h}u`;
   };
+  // Format report date to same dd-mm-yyyy format as stop dates for comparison
+  const reportDateFormatted = reportDate 
+    ? format(new Date(reportDate), "dd-MM-yyyy") 
+    : null;
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -245,12 +250,10 @@ function StandplaatsTable({ stops }) {
             <tr key={s.nr} className="border-b border-slate-50 hover:bg-slate-50">
               <td className="py-2 pr-3 text-slate-400 font-mono text-xs">{s.nr}</td>
               <td className="py-2 pr-3 font-medium">
-                {s.start}
-                {s.start_date && <span className="text-xs text-slate-400 ml-1">({s.start_date})</span>}
+                {s.start === "00:00" ? "middernacht" : s.start}
               </td>
               <td className="py-2 pr-3 font-medium">
-                {s.stop}
-                {s.stop_date && <span className="text-xs text-slate-400 ml-1">({s.stop_date})</span>}
+                {s.stop === "00:00" ? "middernacht" : s.stop}
               </td>
               <td className="py-2 pr-3">
                 <Badge variant="outline" className="text-xs font-mono">
