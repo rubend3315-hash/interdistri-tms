@@ -33,6 +33,8 @@ import Pagination, { usePagination } from "@/components/ui/Pagination";
 import { toast } from "sonner";
 import DriverReassignDialog from "@/components/tripsync/DriverReassignDialog";
 import GpsLocationSettings from "@/components/tripsync/GpsLocationSettings";
+import { useTripFuelCost } from "@/components/tripsync/useTripFuelCost";
+import { Fuel } from "lucide-react";
 
 const DEFAULT_FROM = format(subDays(new Date(), 1), 'yyyy-MM-dd');
 const TODAY = format(new Date(), 'yyyy-MM-dd');
@@ -57,6 +59,22 @@ export default function TripSync() {
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  const cacheOpts = { staleTime: 30 * 60 * 1000, refetchOnWindowFocus: false };
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ['vehicles-fuel'], queryFn: () => base44.entities.Vehicle.filter({}), ...cacheOpts,
+  });
+  const { data: fuelSettings = [] } = useQuery({
+    queryKey: ['fuelSettings-fuel'], queryFn: () => base44.entities.CustomerFuelSettings.filter({ is_active: true }), ...cacheOpts,
+  });
+  const { data: dieselPrices = [] } = useQuery({
+    queryKey: ['dieselPrices-fuel'], queryFn: () => base44.entities.DieselPrice.filter({}, '-date', 500), ...cacheOpts,
+  });
+  const { data: cbsPrices = [] } = useQuery({
+    queryKey: ['cbsPrices-fuel'], queryFn: () => base44.entities.CbsDieselPrice.filter({}, '-date', 500), ...cacheOpts,
+  });
+
+  const getTripFuelCost = useTripFuelCost({ vehicles, fuelSettings, dieselPrices, cbsPrices });
 
   const handleSync = async () => {
     setSyncing(true);
@@ -262,7 +280,7 @@ export default function TripSync() {
         <>
           <div className="space-y-3">
             {paginatedRecords.map(rec => (
-              <TripRecordCard key={rec.id} rec={rec} formatTime={formatTime} onReassign={setReassignRecord} />
+              <TripRecordCard key={rec.id} rec={rec} formatTime={formatTime} onReassign={setReassignRecord} fuelCost={getTripFuelCost(rec)} />
             ))}
           </div>
           <Pagination
@@ -289,7 +307,8 @@ export default function TripSync() {
   );
 }
 
-function TripRecordCard({ rec, formatTime, onReassign }) {
+function TripRecordCard({ rec, formatTime, onReassign, fuelCost }) {
+  const fmt = (n) => n?.toFixed(2) ?? '-';
   return (
     <Card className="hover:shadow-sm transition-shadow">
       <CardContent className="px-4 py-3">
@@ -349,6 +368,15 @@ function TripRecordCard({ rec, formatTime, onReassign }) {
                 <span className="flex items-center gap-1 text-orange-500">
                   <Clock4 className="w-3.5 h-3.5" />
                   {rec.long_stops_count || '?'}x / {rec.long_stops_minutes}m stilstand
+                </span>
+              )}
+              {fuelCost && !fuelCost.noSettings && !fuelCost.noPrice && (
+                <span className="flex items-center gap-1 text-emerald-600">
+                  <Fuel className="w-3.5 h-3.5" />
+                  <span className="font-medium">€{fmt(fuelCost.costPerKm)}/km</span>
+                  <span className="text-slate-400">·</span>
+                  <span className="font-medium">€{fmt(fuelCost.costPerHour)}/uur</span>
+                  <span className="text-slate-300 text-[10px]">(€{fmt(fuelCost.totalCost)})</span>
                 </span>
               )}
             </div>
