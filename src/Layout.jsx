@@ -259,6 +259,7 @@ const menuItems = [
       { name: "Payroll Export Docs", icon: FileSpreadsheet, page: "DailyPayrollExportDocs" },
       { name: "MobileEntry Bestanden", icon: Smartphone, page: "MobileEntryFiles" },
       { name: "iOS/Safari Issues", icon: Smartphone, page: "iOSMobileEntryDocs" },
+      { name: "Naiton API Bevindingen", icon: Server, page: "NaitonApiDocs" },
     ]
   },
   {

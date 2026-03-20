@@ -11,6 +11,7 @@ import IOSMobileEntryDocs from './pages/iOSMobileEntryDocs';
 import RecentChanges from './pages/RecentChanges';
 import TripSync from './pages/TripSync';
 import VehicleStopReport from './pages/VehicleStopReport';
+import NaitonApiDocs from './pages/NaitonApiDocs';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -80,6 +81,11 @@ const AuthenticatedApp = () => {
       <Route path="/iOSMobileEntryDocs" element={
         <LayoutWrapper currentPageName="iOSMobileEntryDocs">
           <IOSMobileEntryDocs />
+        </LayoutWrapper>
+      } />
+      <Route path="/NaitonApiDocs" element={
+        <LayoutWrapper currentPageName="NaitonApiDocs">
+          <NaitonApiDocs />
         </LayoutWrapper>
       } />
       <Route path="*" element={<PageNotFound />} />
