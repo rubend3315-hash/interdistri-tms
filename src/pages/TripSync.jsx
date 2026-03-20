@@ -22,10 +22,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   CircleParking,
-  Clock4
+  Clock4,
+  UserX,
+  UserCheck,
+  Pencil
 } from "lucide-react";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
 import { toast } from "sonner";
+import DriverReassignDialog from "@/components/tripsync/DriverReassignDialog";
 
 const DEFAULT_FROM = format(subDays(new Date(), 7), 'yyyy-MM-dd');
 const TODAY = format(new Date(), 'yyyy-MM-dd');
@@ -36,6 +40,7 @@ export default function TripSync() {
   const [searchTerm, setSearchTerm] = useState("");
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+  const [reassignRecord, setReassignRecord] = useState(null);
   const queryClient = useQueryClient();
   const pageState = usePagination(20);
 
@@ -185,8 +190,26 @@ export default function TripSync() {
       </Card>
 
       {/* Stats */}
-      <div className="flex items-center gap-2 text-sm text-slate-500">
+      <div className="flex items-center gap-3 text-sm text-slate-500">
         <span>{filtered.length} ritten</span>
+        {(() => {
+          const unlinked = filtered.filter(r => !r.driver).length;
+          const manual = filtered.filter(r => r.driver_manually_set).length;
+          return (
+            <>
+              {unlinked > 0 && (
+                <Badge className="text-[11px] bg-amber-100 text-amber-700">
+                  <UserX className="w-3 h-3 mr-1" /> {unlinked} onbekoppeld
+                </Badge>
+              )}
+              {manual > 0 && (
+                <Badge className="text-[11px] bg-blue-100 text-blue-700">
+                  <UserCheck className="w-3 h-3 mr-1" /> {manual} handmatig
+                </Badge>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       {/* Trip records list */}
@@ -204,7 +227,7 @@ export default function TripSync() {
         <>
           <div className="space-y-3">
             {paginatedRecords.map(rec => (
-              <TripRecordCard key={rec.id} rec={rec} formatTime={formatTime} />
+              <TripRecordCard key={rec.id} rec={rec} formatTime={formatTime} onReassign={setReassignRecord} />
             ))}
           </div>
           <Pagination
@@ -216,11 +239,19 @@ export default function TripSync() {
           />
         </>
       )}
+
+      {/* Driver reassign dialog */}
+      <DriverReassignDialog
+        tripRecord={reassignRecord}
+        open={!!reassignRecord}
+        onOpenChange={(open) => { if (!open) setReassignRecord(null); }}
+        onSuccess={() => setReassignRecord(null)}
+      />
     </div>
   );
 }
 
-function TripRecordCard({ rec, formatTime }) {
+function TripRecordCard({ rec, formatTime, onReassign }) {
   return (
     <Card className="hover:shadow-sm transition-shadow">
       <CardContent className="px-4 py-3">
@@ -230,12 +261,22 @@ function TripRecordCard({ rec, formatTime }) {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-semibold text-slate-900 truncate">
+              <h3 className={`text-sm font-semibold truncate ${rec.driver ? 'text-slate-900' : 'text-amber-600'}`}>
                 {rec.driver || 'Onbekende chauffeur'}
               </h3>
               {rec.plate && (
                 <Badge className="text-[11px] px-2 py-0 leading-5 bg-slate-100 text-slate-700">
                   {rec.plate}
+                </Badge>
+              )}
+              {rec.driver_manually_set && (
+                <Badge className="text-[10px] px-1.5 py-0 leading-4 bg-blue-50 text-blue-600">
+                  Handmatig
+                </Badge>
+              )}
+              {!rec.driver && (
+                <Badge className="text-[10px] px-1.5 py-0 leading-4 bg-amber-50 text-amber-600">
+                  <UserX className="w-3 h-3 mr-0.5" /> Niet gekoppeld
                 </Badge>
               )}
             </div>
@@ -274,6 +315,17 @@ function TripRecordCard({ rec, formatTime }) {
               )}
             </div>
           </div>
+          {/* Reassign button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-8 px-2.5 text-xs flex-shrink-0 ${!rec.driver ? 'text-amber-600 hover:bg-amber-50' : 'text-slate-400 hover:text-slate-600'}`}
+            onClick={() => onReassign(rec)}
+            title="Chauffeur koppelen/wijzigen"
+          >
+            <Pencil className="w-3.5 h-3.5 mr-1" />
+            {rec.driver ? 'Wijzig' : 'Koppel'}
+          </Button>
         </div>
       </CardContent>
     </Card>
