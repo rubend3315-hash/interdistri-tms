@@ -124,15 +124,37 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Geen segmenten gevonden voor dit voertuig op deze datum' }, { status: 404 });
     }
 
-    // 3. Process all segments into a timeline
+    // 3. Compute local midnight boundaries for the requested date
+    const toUtcMidnight = (localDateStr) => {
+      const noonUtc = new Date(`${localDateStr}T12:00:00Z`);
+      const parts = new Intl.DateTimeFormat('en', {
+        timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      }).formatToParts(noonUtc);
+      const p = {};
+      parts.forEach(({ type, value }) => { p[type] = value; });
+      const utcHour = noonUtc.getUTCHours();
+      const localHour = parseInt(p.hour, 10);
+      const offsetHours = localHour - utcHour;
+      return new Date(`${localDateStr}T00:00:00Z`).getTime() - offsetHours * 3600000;
+    };
+    const dayStartUtc = toUtcMidnight(date);
+    const nextDayDate = new Date(date);
+    nextDayDate.setDate(nextDayDate.getDate() + 1);
+    const dayEndUtc = toUtcMidnight(nextDayDate.toISOString().split('T')[0]);
+
+    // Helper: does a segment overlap with the requested date?
+    const segOverlapsDate = (seg) => {
+      const sStart = new Date(seg.start || seg.stop).getTime();
+      const sEnd = new Date(seg.stop || seg.end || seg.start).getTime();
+      return sStart < dayEndUtc && sEnd > dayStartUtc;
+    };
+
+    // Process all segments into a timeline
     const timeline = [];
     const depotStops = [];
     const longStops = [];
     const standplaatsStops = [];
-
-    // Find ride boundaries (first drive after standplaats, last standplaats stop)
-    let rideStart = null;
-    let rideEnd = null;
 
     for (const seg of allSegments) {
       const type = (seg.type || '').toLowerCase();
@@ -164,7 +186,6 @@ Deno.serve(async (req) => {
         else classification = 'KORTE_STOP';
       }
 
-      // For drive segments, track start+stop coords separately for standplaats merge logic
       const startLat = Number(seg.startlat || 0);
       const startLon = Number(seg.startlon || 0);
       const stopLat = Number(seg.stoplat || 0);
@@ -191,25 +212,17 @@ Deno.serve(async (req) => {
 
       timeline.push(entry);
 
-      // Track ride boundaries
-      if (type === 'drive' && !rideStart) {
-        rideStart = entry;
-      }
-      if (type === 'stop' && isStandplaats && rideStart) {
-        // Only set rideEnd after ride has started (skip pre-departure standplaats)
-        rideEnd = entry;
-      }
-
-      // Classify stops
-      if (type === 'stop') {
+      // Classify stops (only for segments that overlap with the requested date)
+      if (type === 'stop' && segOverlapsDate(seg)) {
         if (depotMatch && durMin > 0) {
           depotStops.push(entry);
         } else if (!isStandplaats && durMin > SHORT_STOP_THRESHOLD_MIN) {
           longStops.push(entry);
         }
-        if (isStandplaats) {
-          standplaatsStops.push(entry);
-        }
+      }
+      // Standplaats stops: collect ALL (needed for merge+clip logic later)
+      if (type === 'stop' && isStandplaats) {
+        standplaatsStops.push(entry);
       }
     }
 
@@ -217,16 +230,73 @@ Deno.serve(async (req) => {
     const totalDepotMin = depotStops.reduce((s, e) => s + e.duration_min, 0);
     const totalStilstandMin = longStops.reduce((s, e) => s + e.duration_min, 0);
 
-    // Ride info
-    const rideStartLocal = rideStart ? toLocalTime(rideStart.start_utc) : null;
-    const rideEndLocal = rideEnd ? toLocalTime(rideEnd.start_utc) : null;
+    // Ride info: find MULTIPLE rides on this date
+    // A ride = sequence of segments between standplaats departures/arrivals
+    // We detect rides by finding standplaats stops on this date boundary and drives between them
+    const computeRides = () => {
+      // Filter segments that overlap with the requested date, sorted by time
+      const daySegments = timeline.filter(segOverlapsDate);
+      if (daySegments.length === 0) return [];
 
-    // KM
-    const firstDrive = allSegments.find(s => (s.type || '').toLowerCase() === 'drive');
-    const lastSeg = allSegments[allSegments.length - 1];
-    const startKm = firstDrive ? Number(firstDrive.odometerstartkm || 0) : null;
-    const endKm = lastSeg ? Number(lastSeg.odometerstopkm || lastSeg.odometerstartkm || 0) : null;
-    const totalKm = (startKm && endKm && endKm > startKm) ? Math.round((endKm - startKm) * 10) / 10 : null;
+      const rides = [];
+      let currentRide = null;
+
+      for (const entry of daySegments) {
+        if (entry.classification === 'STANDPLAATS') {
+          // If we have an active ride, close it
+          if (currentRide) {
+            currentRide.end_utc = entry.start_utc; // arrival at standplaats
+            rides.push(currentRide);
+            currentRide = null;
+          }
+          // Don't start a new ride yet — wait for next drive
+        } else if (entry.type === 'drive') {
+          if (!currentRide) {
+            currentRide = {
+              start_utc: entry.start_utc,
+              end_utc: null,
+              start_km: entry.odometer_start,
+              end_km: entry.odometer_stop,
+            };
+          } else {
+            // Update end km as we progress
+            if (entry.odometer_stop) currentRide.end_km = entry.odometer_stop;
+          }
+        } else {
+          // Non-standplaats stop during ride — update end km
+          if (currentRide && entry.odometer_stop) {
+            currentRide.end_km = entry.odometer_stop;
+          }
+        }
+      }
+
+      // If ride still open (didn't return to standplaats on this date), clip to midnight
+      if (currentRide) {
+        currentRide.end_utc = new Date(dayEndUtc).toISOString();
+        currentRide.open_ended = true;
+        rides.push(currentRide);
+      }
+
+      return rides;
+    };
+
+    const rides = computeRides();
+
+    // Build ride summary
+    const ridesSummary = rides.map((r, i) => {
+      const startLocal = toLocalTime(r.start_utc);
+      const endLocal = r.open_ended ? 'middernacht' : toLocalTime(r.end_utc);
+      const startKm = r.start_km;
+      const endKm = r.end_km;
+      const totalKm = (startKm && endKm && endKm > startKm) ? Math.round((endKm - startKm) * 10) / 10 : null;
+      return { nr: i + 1, start: startLocal, end: endLocal, start_km: startKm, end_km: endKm, total_km: totalKm };
+    });
+
+    // Global KM from rides
+    const globalStartKm = rides.length > 0 ? rides[0].start_km : null;
+    const globalEndKm = rides.length > 0 ? rides[rides.length - 1].end_km : null;
+    const globalTotalKm = (globalStartKm && globalEndKm && globalEndKm > globalStartKm) 
+      ? Math.round((globalEndKm - globalStartKm) * 10) / 10 : null;
 
     // Standplaats logic: merge consecutive fragments, then split at midnight of the requested date.
     // Naiton API splits data at ~01:00 UTC (which can be midnight CET/CEST).
