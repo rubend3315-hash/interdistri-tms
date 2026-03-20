@@ -258,8 +258,8 @@ Deno.serve(async (req) => {
     const isStandplaats = (seg, assetId) => {
       const { lat, lon } = getStopCoords(seg);
       if (!lat || !lon) return false;
-      // Check main standplaats
-      if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M) return true;
+      // Check configured standplaats locations
+      if (STANDPLAATS_LOCATIONS.some(s => gpsDistanceM(lat, lon, s.lat, s.lon) <= (s.radius_m || 500))) return true;
       // Check vehicle-specific home base
       const hb = assetId ? homeBaseByGpsAssetId[assetId] : null;
       if (hb && gpsDistanceM(lat, lon, hb.lat, hb.lon) <= hb.radius) return true;
@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
     const isDepot = (seg) => {
       const { lat, lon } = getStopCoords(seg);
       if (!lat || !lon) return false;
-      return DEPOT_LOCATIONS.some(d => gpsDistanceM(lat, lon, d.lat, d.lon) <= DEPOT_RADIUS_M);
+      return DEPOT_LOCATIONS.some(d => gpsDistanceM(lat, lon, d.lat, d.lon) <= (d.radius_m || 300));
     };
 
     // Sort by gpsassetid then by start time
