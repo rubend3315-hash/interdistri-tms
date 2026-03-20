@@ -327,6 +327,10 @@ Deno.serve(async (req) => {
       };
     };
 
+    if (debug_section === 'standplaats') {
+      return Response.json({ date, standplaats: computeStandplaats() });
+    }
+
     return Response.json({
       plate,
       asset_name: assetName,
