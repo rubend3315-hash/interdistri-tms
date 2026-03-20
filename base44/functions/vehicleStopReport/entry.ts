@@ -222,60 +222,114 @@ Deno.serve(async (req) => {
     const endKm = lastSeg ? Number(lastSeg.odometerstopkm || lastSeg.odometerstartkm || 0) : null;
     const totalKm = (startKm && endKm && endKm > startKm) ? Math.round((endKm - startKm) * 10) / 10 : null;
 
-    // Standplaats merge logic (used for both debug and normal response)
+    // Standplaats merge logic
     const computeStandplaats = () => {
-        // Merge consecutive standplaats stops into single logical stops.
-        // E.g. 14:17–00:59 + 01:00–01:00 + 01:00–07:29 → 14:17–07:29
-        // "Consecutive" = no REAL drive between them. GPS noise on the standplaats
-        // can produce short drive segments — those are not real departures.
-        // A "real drive" = a drive segment where at least one endpoint is outside standplaats radius.
-        // For merge logic, use a minimum radius of 200m to account for GPS drift
-        // (vehicle home_base_radius can be as small as 34m which is too strict for drive segments)
-        const MERGE_MIN_RADIUS = 200;
-        const mergeRadius = Math.max(STANDPLAATS_RADIUS_M, MERGE_MIN_RADIUS);
-        const isPointNearStandplaats = (lat, lon) => {
-          if (!lat || !lon) return true; // if no coords, assume still at standplaats
-          if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= mergeRadius) return true;
-          return gpsLocations.some(loc => gpsDistanceM(lat, lon, loc.lat, loc.lon) <= Math.max(loc.radius_m || 500, MERGE_MIN_RADIUS));
-        };
-        const merged = [];
-        for (const s of standplaatsStops) {
-          if (merged.length === 0) {
-            merged.push({ ...s });
-            continue;
-          }
-          const prev = merged[merged.length - 1];
-          const prevStopTime = new Date(prev.stop_utc).getTime();
-          const currStartTime = new Date(s.start_utc).getTime();
-          // Check if there's a REAL drive between (leaving the standplaats area)
-          const hasRealDriveBetween = timeline.some(t => {
-            if (t.type !== 'drive') return false;
-            const tStart = new Date(t.start_utc).getTime();
-            const tStop = new Date(t.stop_utc).getTime();
-            if (tStart < prevStopTime || tStop > currStartTime) return false;
-            // Real drive = at least one endpoint outside standplaats
-            const startNear = isPointNearStandplaats(t.startLat, t.startLon);
-            const stopNear = isPointNearStandplaats(t.stopLat, t.stopLon);
-            return !startNear || !stopNear;
-          });
-          if (hasRealDriveBetween) {
-            merged.push({ ...s });
-          } else {
-            prev.stop_utc = s.stop_utc;
-            prev.stop_local = s.stop_local;
-            prev.duration_min = Math.round((new Date(prev.stop_utc) - new Date(prev.start_utc)) / 60000);
-          }
+      // Merge consecutive standplaats stops into single logical stops.
+      // E.g. 14:17–00:59 + 01:00–01:00 + 01:00–07:29 → 14:17–07:29
+      // A "real drive" = a drive segment where at least one endpoint is outside standplaats radius.
+      const MERGE_MIN_RADIUS = 200;
+      const mergeRadius = Math.max(STANDPLAATS_RADIUS_M, MERGE_MIN_RADIUS);
+      const isPointNearStandplaats = (lat, lon) => {
+        if (!lat || !lon) return true;
+        if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= mergeRadius) return true;
+        return gpsLocations.some(loc => gpsDistanceM(lat, lon, loc.lat, loc.lon) <= Math.max(loc.radius_m || 500, MERGE_MIN_RADIUS));
+      };
+      const merged = [];
+      for (const s of standplaatsStops) {
+        if (merged.length === 0) {
+          merged.push({ ...s });
+          continue;
         }
-        return {
-          count: merged.length,
-          stops: merged.map((s, i) => ({
-            nr: i + 1,
-            start: s.start_local,
-            stop: s.stop_local,
-            duration_min: s.duration_min,
-          })),
-        };
-      })(),
+        const prev = merged[merged.length - 1];
+        const prevStopTime = new Date(prev.stop_utc).getTime();
+        const currStartTime = new Date(s.start_utc).getTime();
+        const hasRealDriveBetween = timeline.some(t => {
+          if (t.type !== 'drive') return false;
+          const tStart = new Date(t.start_utc).getTime();
+          const tStop = new Date(t.stop_utc).getTime();
+          if (tStart < prevStopTime || tStop > currStartTime) return false;
+          const startNear = isPointNearStandplaats(t.startLat, t.startLon);
+          const stopNear = isPointNearStandplaats(t.stopLat, t.stopLon);
+          return !startNear || !stopNear;
+        });
+        if (hasRealDriveBetween) {
+          merged.push({ ...s });
+        } else {
+          prev.stop_utc = s.stop_utc;
+          prev.stop_local = s.stop_local;
+          prev.duration_min = Math.round((new Date(prev.stop_utc) - new Date(prev.start_utc)) / 60000);
+        }
+      }
+      return {
+        count: merged.length,
+        stops: merged.map((s, i) => ({
+          nr: i + 1,
+          start: s.start_local,
+          stop: s.stop_local,
+          duration_min: s.duration_min,
+        })),
+      };
+    };
+
+    // Debug mode: return only standplaats data
+    if (section === 'standplaats_debug') {
+      return Response.json({
+        plate,
+        standplaats_raw: standplaatsStops.map(s => ({
+          start: s.start_local, stop: s.stop_local, dur: s.duration_min
+        })),
+        standplaats_merged: computeStandplaats(),
+        home_base_radius: STANDPLAATS_RADIUS_M,
+        drives_between_standplaats: timeline.filter(t => {
+          if (t.type !== 'drive') return false;
+          // Only drives between first and last standplaats
+          return true;
+        }).slice(-10).map(t => ({
+          start: t.start_local, stop: t.stop_local,
+          startLat: t.startLat, startLon: t.startLon,
+          stopLat: t.stopLat, stopLon: t.stopLon,
+        })),
+      });
+    }
+
+    return Response.json({
+      plate,
+      asset_name: assetName,
+      asset_id: assetId,
+      date,
+      ride: {
+        start: rideStartLocal,
+        end: rideEndLocal,
+        total_km: totalKm,
+        start_km: startKm,
+        end_km: endKm,
+      },
+      depot: {
+        count: depotStops.length,
+        total_minutes: totalDepotMin,
+        stops: depotStops.map((s, i) => ({
+          nr: i + 1,
+          start: s.start_local,
+          stop: s.stop_local,
+          duration_min: s.duration_min,
+          name: s.depot_name,
+          lat: s.lat,
+          lon: s.lon,
+        })),
+      },
+      stilstand: {
+        count: longStops.length,
+        total_minutes: totalStilstandMin,
+        stops: longStops.map((s, i) => ({
+          nr: i + 1,
+          start: s.start_local,
+          stop: s.stop_local,
+          duration_min: s.duration_min,
+          lat: s.lat,
+          lon: s.lon,
+        })),
+      },
+      standplaats: computeStandplaats(),
       total_segments: allSegments.length,
     });
   } catch (error) {
