@@ -240,17 +240,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ═══════════════════════════════════════════════════════
-    // STEP 2b: Stilstand-samenvoeging
-    //   Opeenvolgende stop-segmenten van hetzelfde asset die GPS-gewijs
-    //   < 200m van elkaar liggen worden samengevoegd tot één logische stop.
-    //   Dit compenseert het ontbreken van een ignition-signaal: de Naiton API
-    //   fragmenteert stilstand in meerdere korte stop-records terwijl het
-    //   voertuig fysiek op dezelfde plek staat.
-    // ═══════════════════════════════════════════════════════
-    const MERGE_RADIUS_M = 200;
-
-    // Sort raw segments first by asset, then by time
+    // Sort segments by asset, then by time
     rawSegments.sort((a, b) => {
       const aId = String(a.gpsassetid || '');
       const bId = String(b.gpsassetid || '');
@@ -258,53 +248,7 @@ Deno.serve(async (req) => {
       return new Date(a.start || a.stop || 0) - new Date(b.start || b.stop || 0);
     });
 
-    const allSegments = [];
-    let mergedCount = 0;
-    let i = 0;
-    while (i < rawSegments.length) {
-      const seg = rawSegments[i];
-      const type = (seg.type || '').toLowerCase();
-
-      // Only merge consecutive stops of the same asset
-      if (type !== 'stop') {
-        allSegments.push(seg);
-        i++;
-        continue;
-      }
-
-      // Start a merge window: accumulate consecutive stops that are nearby
-      const merged = { ...seg };
-      let j = i + 1;
-      while (j < rawSegments.length) {
-        const next = rawSegments[j];
-        // Must be same asset
-        if (next.gpsassetid !== seg.gpsassetid) break;
-        // Must be a stop
-        if ((next.type || '').toLowerCase() !== 'stop') break;
-        // Must be nearby (< 200m from the original stop)
-        const lat1 = Number(merged.stoplat || merged.startlat || 0);
-        const lon1 = Number(merged.stoplon || merged.startlon || 0);
-        const lat2 = Number(next.startlat || next.stoplat || 0);
-        const lon2 = Number(next.startlon || next.stoplon || 0);
-        if (!lat1 || !lon1 || !lat2 || !lon2) break;
-        if (gpsDistanceM(lat1, lon1, lat2, lon2) > MERGE_RADIUS_M) break;
-
-        // Merge: extend the stop time, keep the latest odometer, preserve additionaldata from first
-        merged.stop = next.stop || next.end || merged.stop;
-        merged.stoplat = next.stoplat || merged.stoplat;
-        merged.stoplon = next.stoplon || merged.stoplon;
-        if (next.odometerstopkm) merged.odometerstopkm = next.odometerstopkm;
-        mergedCount++;
-        j++;
-      }
-
-      allSegments.push(merged);
-      i = j;
-    }
-
-    if (mergedCount > 0) {
-      addLog(`Stilstand-samenvoeging: ${mergedCount} stop-segmenten samengevoegd (${rawSegments.length} → ${allSegments.length})`);
-    }
+    const allSegments = rawSegments;
 
     // ═══════════════════════════════════════════════════════
     // STEP 3: Sort segments per asset + time, then group
