@@ -301,15 +301,16 @@ Deno.serve(async (req) => {
 
     const rides = computeRides();
 
-    // Debug: log day segments for troubleshooting
+    // Debug: day segments for troubleshooting
     const daySegsDebug = timeline.filter(segOverlapsDate).map(e => ({
       type: e.type,
       cls: e.classification,
-      start: e.start_local,
-      stop: e.stop_local,
+      start_utc: e.start_utc,
+      stop_utc: e.stop_utc,
+      start_local: e.start_local,
+      stop_local: e.stop_local,
       dur: e.duration_min,
     }));
-    console.log('[vehicleStopReport] daySegments:', JSON.stringify(daySegsDebug));
 
     // Build ride summary
     const ridesSummary = rides.map((r, i) => {
