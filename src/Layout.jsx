@@ -410,6 +410,7 @@ export default function Layout({ children, currentPageName }) {
       'DailyPayrollExportDocs': '__public__',
       'MobileEntryFiles': PERMISSIONS.GOVERNANCE_MANAGE,
       'iOSMobileEntryDocs': PERMISSIONS.GOVERNANCE_MANAGE,
+      'NaitonApiDocs': PERMISSIONS.GOVERNANCE_MANAGE,
       'SecureDownload': '__public__',
 
       // Mobiel
