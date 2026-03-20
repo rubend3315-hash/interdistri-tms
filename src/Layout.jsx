@@ -200,6 +200,7 @@ const menuItems = [
       { name: "Maandcontrole", icon: FileSpreadsheet, page: "Maandcontrole" },
       { name: "Business Dashboard", icon: LayoutDashboard, page: "BusinessDashboard" },
       { name: "KM Dashboard", icon: Gauge, page: "KmDashboard" },
+      { name: "Brandstoftoeslag", icon: Fuel, page: "FuelSurcharge" },
     ]
   },
   {
