@@ -376,7 +376,7 @@ function TripRecordCard({ rec, formatTime, onReassign, fuelCost }) {
                   <span className="font-medium">€{fmt(fuelCost.costPerKm)}/km</span>
                   <span className="text-slate-400">·</span>
                   <span className="font-medium">€{fmt(fuelCost.costPerHour)}/uur</span>
-                  <span className="text-slate-300 text-[10px]">(€{fmt(fuelCost.totalCost)})</span>
+                  <span className="text-slate-600 text-xs font-medium">(€{fmt(fuelCost.totalCost)})</span>
                 </span>
               )}
             </div>
