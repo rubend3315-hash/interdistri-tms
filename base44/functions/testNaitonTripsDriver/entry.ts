@@ -41,12 +41,17 @@ Deno.serve(async (req) => {
       }])
     });
 
+    const rawText = await withDriverRes.text();
     if (!withDriverRes.ok) {
-      const errText = await withDriverRes.text();
-      return Response.json({ error: `Naiton API error: ${withDriverRes.status}`, details: errText.slice(0, 2000) });
+      return Response.json({ error: `Naiton API error: ${withDriverRes.status}`, details: rawText.slice(0, 2000) });
     }
 
-    const withDriverData = await withDriverRes.json();
+    let withDriverData;
+    try {
+      withDriverData = JSON.parse(rawText);
+    } catch (e) {
+      return Response.json({ error: 'JSON parse failed', raw_start: rawText.slice(0, 500), raw_end: rawText.slice(-200) });
+    }
     const trips = withDriverData.dataexchange_trips || [];
 
     // Extract all unique keys from the trip data
