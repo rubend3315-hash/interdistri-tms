@@ -306,6 +306,16 @@ Deno.serve(async (req) => {
       };
     };
 
+    // Debug: return only standplaats data if requested
+    if (section === 'standplaats_debug') {
+      const spResult = computeStandplaats();
+      return Response.json({
+        plate, date,
+        raw_standplaats: standplaatsStops.map(s => ({ start: s.start_local, stop: s.stop_local, dur: s.duration_min })),
+        merged_standplaats: spResult,
+      });
+    }
+
     return Response.json({
       plate,
       asset_name: assetName,
