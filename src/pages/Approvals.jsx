@@ -169,7 +169,10 @@ export default function Approvals() {
   // Fetch TripRecords (GPS Buddy) for pending entries via employee_id + date matching
   const pendingDates = useMemo(() => {
     const dates = new Set();
-    pendingRaw.forEach(e => { if (e.date) dates.add(e.date); });
+    pendingRaw.forEach(e => {
+      if (e.date) dates.add(e.date);
+      if (e.end_date && e.end_date !== e.date) dates.add(e.end_date);
+    });
     return Array.from(dates);
   }, [pendingRaw]);
 
