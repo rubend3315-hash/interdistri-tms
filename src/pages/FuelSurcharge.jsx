@@ -149,9 +149,13 @@ export default function FuelSurcharge() {
     toast.success('Verwijderd');
   };
 
-  // Customers that have fuel settings configured
+  // Customers that have at least one fuel setting configured (deduplicated)
   const configuredCustomerIds = new Set(fuelSettings.map(s => s.customer_id));
   const customersWithSettings = customers.filter(c => configuredCustomerIds.has(c.id));
+
+  // Count settings per customer for display
+  const settingsCountByCustomer = {};
+  fuelSettings.forEach(s => { settingsCountByCustomer[s.customer_id] = (settingsCountByCustomer[s.customer_id] || 0) + 1; });
 
   return (
     <div className="space-y-6">
@@ -199,7 +203,7 @@ export default function FuelSurcharge() {
                   <Calculator className="w-4 h-4" />
                   <div className="text-left">
                     <div className="font-medium">{c.company_name}</div>
-                    <div className="text-xs text-slate-500">{dateRange.from} — {dateRange.to}</div>
+                    <div className="text-xs text-slate-500">{settingsCountByCustomer[c.id]} voertuigtype(s) · {dateRange.from} — {dateRange.to}</div>
                   </div>
                 </Button>
               ))}
