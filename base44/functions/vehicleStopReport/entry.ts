@@ -363,45 +363,11 @@ Deno.serve(async (req) => {
     const globalTotalKm = (globalStartKm && globalEndKm && globalEndKm > globalStartKm) 
       ? Math.round((globalEndKm - globalStartKm) * 10) / 10 : null;
 
-    // Standplaats logic: merge consecutive fragments, then clip to requested date boundaries
+    // Standplaats: clip merged periods to the requested date
     const computeStandplaats = () => {
-      const MERGE_MIN_RADIUS = 200;
-      const mergeRadius = Math.max(STANDPLAATS_RADIUS_M, MERGE_MIN_RADIUS);
-      const isPointNearStandplaats = (lat, lon) => {
-        if (!lat || !lon) return true;
-        if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= mergeRadius) return true;
-        return gpsLocations.some(loc => gpsDistanceM(lat, lon, loc.lat, loc.lon) <= Math.max(loc.radius_m || 500, MERGE_MIN_RADIUS));
-      };
+      const merged = mergedStandplaatsPeriods;
 
-      // Step 1: Merge consecutive standplaats fragments (no real drive between them)
-      const merged = [];
-      for (const s of standplaatsStops) {
-        if (merged.length === 0) {
-          merged.push({ ...s });
-          continue;
-        }
-        const prev = merged[merged.length - 1];
-        const prevStopTime = new Date(prev.stop_utc).getTime();
-        const currStartTime = new Date(s.start_utc).getTime();
-        const hasRealDriveBetween = timeline.some(t => {
-          if (t.type !== 'drive') return false;
-          const tStart = new Date(t.start_utc).getTime();
-          const tStop = new Date(t.stop_utc).getTime();
-          if (tStart < prevStopTime || tStop > currStartTime) return false;
-          const startNear = isPointNearStandplaats(t.startLat, t.startLon);
-          const stopNear = isPointNearStandplaats(t.stopLat, t.stopLon);
-          return !startNear || !stopNear;
-        });
-        if (hasRealDriveBetween) {
-          merged.push({ ...s });
-        } else {
-          prev.stop_utc = s.stop_utc;
-          prev.stop_local = s.stop_local;
-          prev.duration_min = Math.round((new Date(prev.stop_utc) - new Date(prev.start_utc)) / 60000);
-        }
-      }
-
-      // Step 2: Clip each merged period to the requested date (dayStartUtc/dayEndUtc computed above)
+      // Clip each merged period to the requested date
       const clipped = [];
       for (const s of merged) {
         const sStart = new Date(s.start_utc).getTime();
