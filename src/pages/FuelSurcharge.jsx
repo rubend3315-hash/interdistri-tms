@@ -180,6 +180,10 @@ export default function FuelSurcharge() {
           <p className="text-slate-500 mt-1">Bereken en beheer brandstoftoeslagen per klant</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleTlnSync} disabled={syncingTln} className="gap-2">
+            {syncingTln ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            TLN Sync
+          </Button>
           <Button variant="outline" size="sm" onClick={handleCbsSync} disabled={syncing} className="gap-2">
             {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             CBS Sync
