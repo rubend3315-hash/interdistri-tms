@@ -345,16 +345,7 @@ Deno.serve(async (req) => {
 
     const rides = computeRides();
 
-    // Debug: day segments for troubleshooting
-    const daySegsDebug = timeline.filter(segOverlapsDate).map(e => ({
-      type: e.type,
-      cls: e.classification,
-      start_utc: e.start_utc,
-      stop_utc: e.stop_utc,
-      start_local: e.start_local,
-      stop_local: e.stop_local,
-      dur: e.duration_min,
-    }));
+
 
     // Build ride summary
     const ridesSummary = rides.map((r, i) => {
