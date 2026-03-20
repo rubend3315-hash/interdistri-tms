@@ -267,7 +267,8 @@ Deno.serve(async (req) => {
         // A "real drive" = a drive segment where at least one endpoint is outside standplaats radius.
         const isPointNearStandplaats = (lat, lon) => {
           if (!lat || !lon) return true; // if no coords, assume still at standplaats
-          return gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M;
+          if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M) return true;
+          return gpsLocations.some(loc => gpsDistanceM(lat, lon, loc.lat, loc.lon) <= (loc.radius_m || 500));
         };
         const merged = [];
         for (const s of standplaatsStops) {
