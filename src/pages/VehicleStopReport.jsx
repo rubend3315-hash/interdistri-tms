@@ -222,6 +222,49 @@ export default function VehicleStopReport() {
   );
 }
 
+function StandplaatsTable({ stops }) {
+  const formatDuration = (min) => {
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return m > 0 ? `${h}u ${m}m` : `${h}u`;
+  };
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-slate-100 text-left text-xs text-slate-500">
+            <th className="py-2 pr-3 w-8">#</th>
+            <th className="py-2 pr-3">Van</th>
+            <th className="py-2 pr-3">Tot</th>
+            <th className="py-2 pr-3 w-24">Duur</th>
+          </tr>
+        </thead>
+        <tbody>
+          {stops.map((s) => (
+            <tr key={s.nr} className="border-b border-slate-50 hover:bg-slate-50">
+              <td className="py-2 pr-3 text-slate-400 font-mono text-xs">{s.nr}</td>
+              <td className="py-2 pr-3 font-medium">
+                {s.start}
+                {s.start_date && <span className="text-xs text-slate-400 ml-1">({s.start_date})</span>}
+              </td>
+              <td className="py-2 pr-3 font-medium">
+                {s.stop}
+                {s.stop_date && <span className="text-xs text-slate-400 ml-1">({s.stop_date})</span>}
+              </td>
+              <td className="py-2 pr-3">
+                <Badge variant="outline" className="text-xs font-mono">
+                  {formatDuration(s.duration_min)}
+                </Badge>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function StopTable({ stops, showCoords = true, showName = false }) {
   return (
     <div className="overflow-x-auto">
