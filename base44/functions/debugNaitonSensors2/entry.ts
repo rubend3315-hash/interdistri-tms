@@ -101,8 +101,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Also get fuel data from trips for a vehicle with real trips
-    const tripsAsset = assets.find(a => a.licenseplate && a.gpsassetid);
+    // Also get fuel data from trips for a known vehicle
+    const tripsAsset = assets.find(a => a.assetname?.includes('V-10-LVJ')) || assets.find(a => a.gpsassetid);
     if (tripsAsset) {
       const now = new Date();
       const weekAgo = new Date(now);
