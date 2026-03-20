@@ -31,8 +31,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify([{
         name: "dataexchange_trips",
         arguments: [
-          { name: "gpsassetids", value: JSON.stringify([gpsassetid]) },
-          { name: "includefields", value: JSON.stringify(["odometerstartam", "odometerstopam", "totalfuelconstart", "totalfuelconsumption", "startaddress", "stopaddress", "gpsdata", "address", "location", "driver", "startam", "trucktrailer", "gpsdatawithsensors"]) },
+          { name: "gpsassetids", value: [gpsassetid] },
+          { name: "includefields", value: ["odometerstartam", "odometerstopam", "totalfuelconstart", "totalfuelconsumption", "startaddress", "stopaddress", "gpsdata", "address", "location", "driver", "startam", "trucktrailer", "gpsdatawithsensors"] },
           { name: "starttime", value: starttime },
           { name: "stoptime", value: stoptime },
           { name: "includeallattributes", value: true },
