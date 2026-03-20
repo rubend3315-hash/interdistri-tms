@@ -336,15 +336,7 @@ Deno.serve(async (req) => {
       return DEPOT_LOCATIONS.some(d => gpsDistanceM(lat, lon, d.lat, d.lon) <= (d.radius_m || 300));
     };
 
-    // Sort by gpsassetid then by start time
-    allSegments.sort((a, b) => {
-      const aId = String(a.gpsassetid || '');
-      const bId = String(b.gpsassetid || '');
-      if (aId !== bId) return aId < bId ? -1 : 1;
-      return new Date(a.start || a.stop || 0) - new Date(b.start || b.stop || 0);
-    });
-
-    // Group per asset first
+    // Already sorted in Step 2b — group per asset
     const segmentsByAsset = {};
     for (const seg of allSegments) {
       const aid = seg.gpsassetid;
