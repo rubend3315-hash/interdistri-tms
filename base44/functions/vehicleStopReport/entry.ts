@@ -237,7 +237,13 @@ Deno.serve(async (req) => {
       standplaats: (() => {
         // Merge consecutive standplaats stops into single logical stops.
         // E.g. 14:17–00:59 + 01:00–01:00 + 01:00–07:29 → 14:17–07:29
-        // "Consecutive" = no drive segment between them (only other stops or nothing)
+        // "Consecutive" = no REAL drive between them. GPS noise on the standplaats
+        // can produce short drive segments — those are not real departures.
+        // A "real drive" = a drive segment where at least one endpoint is outside standplaats radius.
+        const isPointNearStandplaats = (lat, lon) => {
+          if (!lat || !lon) return true; // if no coords, assume still at standplaats
+          return gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= STANDPLAATS_RADIUS_M;
+        };
         const merged = [];
         for (const s of standplaatsStops) {
           if (merged.length === 0) {
@@ -245,19 +251,20 @@ Deno.serve(async (req) => {
             continue;
           }
           const prev = merged[merged.length - 1];
-          // Check if there's a drive segment between prev.stop_utc and s.start_utc
           const prevStopTime = new Date(prev.stop_utc).getTime();
           const currStartTime = new Date(s.start_utc).getTime();
-          const hasDriveBetween = timeline.some(t =>
-            t.type === 'drive' &&
-            new Date(t.start_utc).getTime() >= prevStopTime &&
-            new Date(t.stop_utc).getTime() <= currStartTime
-          );
-          if (hasDriveBetween) {
-            // Real departure + return — keep separate
+          // Check if there's a REAL drive between (leaving the standplaats area)
+          const hasRealDriveBetween = timeline.some(t => {
+            if (t.type !== 'drive') return false;
+            const tStart = new Date(t.start_utc).getTime();
+            const tStop = new Date(t.stop_utc).getTime();
+            if (tStart < prevStopTime || tStop > currStartTime) return false;
+            // Real drive = at least one endpoint outside standplaats
+            return !isPointNearStandplaats(t.lat, t.lon);
+          });
+          if (hasRealDriveBetween) {
             merged.push({ ...s });
           } else {
-            // No drive between — merge into previous (extend end time)
             prev.stop_utc = s.stop_utc;
             prev.stop_local = s.stop_local;
             prev.duration_min = Math.round((new Date(prev.stop_utc) - new Date(prev.start_utc)) / 60000);
