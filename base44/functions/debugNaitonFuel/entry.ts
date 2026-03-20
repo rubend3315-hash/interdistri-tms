@@ -31,8 +31,13 @@ Deno.serve(async (req) => {
     const assetsJson = await assetsRes.json();
     const assets = assetsJson.dataexchange_assets || [];
 
-    // Pick V-10-LVJ (known vehicle with trips)
-    const target = assets.find(a => a.assetname?.includes('V-10')) || assets.find(a => a.gpsassetid);
+    // Pick a truck (likely has CAN-bus fuel data) instead of bestelbus
+    // Try 91-BSP-6 or VZD-87-T first, then any vehicle
+    const target = assets.find(a => a.assetname?.includes('BSP')) 
+      || assets.find(a => a.assetname?.includes('VZD'))
+      || assets.find(a => a.assetname?.includes('VZB'))
+      || assets.find(a => a.assetname?.includes('VSN'))
+      || assets.find(a => a.gpsassetid);
     
     const results = {
       target: { name: target.assetname, gpsassetid: target.gpsassetid },
