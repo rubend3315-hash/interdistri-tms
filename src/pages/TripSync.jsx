@@ -269,6 +269,9 @@ export default function TripSync() {
         onOpenChange={(open) => { if (!open) setReassignRecord(null); }}
         onSuccess={() => setReassignRecord(null)}
       />
+
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
