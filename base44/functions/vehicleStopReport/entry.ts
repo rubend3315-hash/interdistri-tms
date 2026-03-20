@@ -338,8 +338,7 @@ Deno.serve(async (req) => {
           stop_date: s.stop_date,
           duration_min: s.duration_min,
         })),
-        _dayStartUtc: new Date(dayStartUtc).toISOString(),
-        _dayEndUtc: new Date(dayEndUtc).toISOString(),
+
       };
     };
 
