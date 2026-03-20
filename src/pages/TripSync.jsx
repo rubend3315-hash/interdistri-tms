@@ -189,6 +189,7 @@ export default function TripSync() {
           </CardContent>
         </Card>
       )}
+      {/* End sync result banners */}
 
       {/* Filters */}
       <Card>
