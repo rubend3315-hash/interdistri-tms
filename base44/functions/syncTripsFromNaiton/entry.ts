@@ -82,6 +82,16 @@ Deno.serve(async (req) => {
     };
 
     // ═══════════════════════════════════════════════════════
+    // STEP 0: Load GPS locations from database
+    // ═══════════════════════════════════════════════════════
+    const gpsLocations = await svc.entities.GpsLocation.filter({ is_active: true });
+    const dbStandplaatsen = gpsLocations.filter(l => l.type === 'standplaats');
+    const dbDepots = gpsLocations.filter(l => l.type === 'depot');
+    const STANDPLAATS_LOCATIONS = dbStandplaatsen.length > 0 ? dbStandplaatsen : FALLBACK_STANDPLAATS;
+    const DEPOT_LOCATIONS = dbDepots.length > 0 ? dbDepots : FALLBACK_DEPOTS;
+    addLog(`Locaties: ${STANDPLAATS_LOCATIONS.length} standplaats(en), ${DEPOT_LOCATIONS.length} depot(s)${dbStandplaatsen.length === 0 ? ' (fallback)' : ''}`);
+
+    // ═══════════════════════════════════════════════════════
     // STEP 1: Fetch assets + users (parallel)
     // ═══════════════════════════════════════════════════════
     addLog('Step 1: Fetching assets + users...');
