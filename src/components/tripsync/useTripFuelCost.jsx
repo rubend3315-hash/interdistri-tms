@@ -82,29 +82,39 @@ export function useTripFuelCost({ vehicles, fuelSettings, dieselPrices, cbsPrice
     const km = rec.total_km || 0;
     const hours = rec.total_hours || 0;
 
+    const basePrice = settings.base_fuel_price || 0;
+
     if (method === 'km') {
       const factor = settings.fuel_consumption_per_km || 0.143;
       const totalLiters = km * factor;
       const totalCost = totalLiters * fuelPrice;
+      const baseCost = totalLiters * basePrice;
+      const surcharge = totalCost - baseCost;
       return {
         costPerKm: km > 0 ? totalCost / km : 0,
         costPerHour: hours > 0 ? totalCost / hours : 0,
         totalCost,
+        surcharge,
         method: 'km',
         factor,
         fuelPrice,
+        basePrice,
       };
     } else {
       const factor = settings.fuel_consumption_per_hour || 2.5;
       const totalLiters = hours * factor;
       const totalCost = totalLiters * fuelPrice;
+      const baseCost = totalLiters * basePrice;
+      const surcharge = totalCost - baseCost;
       return {
         costPerKm: km > 0 ? totalCost / km : 0,
         costPerHour: hours > 0 ? totalCost / hours : 0,
         totalCost,
+        surcharge,
         method: 'hour',
         factor,
         fuelPrice,
+        basePrice,
       };
     }
   };
