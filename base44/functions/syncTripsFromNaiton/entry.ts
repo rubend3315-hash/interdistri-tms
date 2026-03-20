@@ -410,22 +410,18 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Driver resolution: tachocardnumber → tagid → personid → planning → null
+      // Driver resolution: additionaldata.Driver → tachocardnumber → tagid → personid → planning → null
       let driver = '';
-      // Debug: log first segment fields for driver analysis
-      if (rides.indexOf(ride) === 0) {
-        const sample = segs[0];
-        console.log('[NAITON] Trip segment sample fields:', JSON.stringify({
-          tachocardnumber: sample.tachocardnumber,
-          tagid: sample.tagid,
-          personid: sample.personid,
-          driver: sample.driver,
-          additionaldata: sample.additionaldata,
-          // Log all keys to discover driver-related fields
-          allKeys: Object.keys(sample),
-        }));
-      }
 
+      // Priority 0 (best source): additionaldata.Driver from Naiton includefields=["driver"]
+      if (!driver) {
+        for (const s of segs) {
+          if (s.additionaldata) {
+            const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
+            if (ad.Driver) { driver = ad.Driver; break; }
+          }
+        }
+      }
       // Priority 1: tachocardnumber on trip segments
       for (const s of segs) {
         if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]) {
