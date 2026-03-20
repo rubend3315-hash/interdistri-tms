@@ -222,9 +222,8 @@ Deno.serve(async (req) => {
     const endKm = lastSeg ? Number(lastSeg.odometerstopkm || lastSeg.odometerstartkm || 0) : null;
     const totalKm = (startKm && endKm && endKm > startKm) ? Math.round((endKm - startKm) * 10) / 10 : null;
 
-    return Response.json({
-      plate,
-      asset_name: assetName,
+    // Debug: return only a specific section if requested
+    if (section === 'standplaats_debug') {
       asset_id: assetId,
       date,
       ride: {
