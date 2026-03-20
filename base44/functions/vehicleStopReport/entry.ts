@@ -4,9 +4,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const BASE_URL = 'https://dawa-prod.naiton.com';
 
-const STANDPLAATS_LAT = 51.4700;
-const STANDPLAATS_LON = 3.9716;
-const STANDPLAATS_RADIUS_M = 500;
+let STANDPLAATS_LAT = 51.4700;
+let STANDPLAATS_LON = 3.9716;
+let STANDPLAATS_RADIUS_M = 500;
 
 const DEPOT_LOCATIONS = [
   { name: 'PostNL Sorteercentrum Goes', lat: 51.4943, lon: 3.8778 },
