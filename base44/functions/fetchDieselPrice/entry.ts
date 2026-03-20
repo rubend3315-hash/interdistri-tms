@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
         latestPrice = price;
       }
 
-      if (recentPrices.length < 7) {
+      if (recentPrices.length < 90) {
         recentPrices.push({ date: dateStr, price: Math.round(price * 1000000) / 1000000 });
       } else {
         break;
