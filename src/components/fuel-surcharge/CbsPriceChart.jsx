@@ -21,8 +21,7 @@ const CustomTooltip = ({ active, payload }) => {
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-3 py-2 text-sm">
       <p className="font-medium text-slate-900">{format(parseISO(d.date), "EEEE d MMM yyyy", { locale: nl })}</p>
-      <p className="text-blue-700 font-bold mt-0.5">€ {d.price_incl_btw?.toFixed(3)} incl. BTW</p>
-      <p className="text-slate-500 text-xs">€ {d.price_excl_btw?.toFixed(4)} excl. BTW</p>
+      <p className="text-blue-700 font-bold mt-0.5">€ {d.price_excl_btw?.toFixed(4)} excl. BTW</p>
     </div>
   );
 };
@@ -62,13 +61,13 @@ export default function CbsPriceChart({ cbsPrices, loading }) {
   }
 
   const latestPrice = chartData[chartData.length - 1];
-  const prices = chartData.map(d => d.price_incl_btw);
+  const prices = chartData.map(d => d.price_excl_btw);
   const avgPrice = prices.reduce((s, p) => s + p, 0) / prices.length;
 
   // Trend: latest vs 7 days ago
   const weekAgoIdx = Math.max(0, chartData.length - 8);
-  const weekAgoPrice = chartData[weekAgoIdx]?.price_incl_btw;
-  const trend = weekAgoPrice ? latestPrice.price_incl_btw - weekAgoPrice : null;
+  const weekAgoPrice = chartData[weekAgoIdx]?.price_excl_btw;
+  const trend = weekAgoPrice ? latestPrice.price_excl_btw - weekAgoPrice : null;
 
   return (
     <Card>
@@ -76,7 +75,7 @@ export default function CbsPriceChart({ cbsPrices, loading }) {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base flex items-center gap-2">
             CBS Pompprijs diesel
-            <Badge variant="outline" className="text-[10px] font-normal">incl. BTW · CBS/Travelcard</Badge>
+            <Badge variant="outline" className="text-[10px] font-normal">excl. BTW · CBS/Travelcard</Badge>
           </CardTitle>
           <div className="flex gap-1">
             {PERIODS.map(p => (
@@ -88,8 +87,7 @@ export default function CbsPriceChart({ cbsPrices, loading }) {
         </div>
         <div className="flex items-center gap-4 text-xs text-slate-500 mt-1 flex-wrap">
           <span>
-            Laatste: <strong className="text-lg text-slate-900">€ {latestPrice.price_incl_btw?.toFixed(3)}</strong>
-            <span className="text-slate-400 ml-1">(excl. BTW: € {latestPrice.price_excl_btw?.toFixed(4)})</span>
+            Laatste: <strong className="text-lg text-slate-900">€ {latestPrice.price_excl_btw?.toFixed(4)}</strong>
           </span>
           {trend !== null && (
             <span className={`flex items-center gap-0.5 ${trend > 0 ? 'text-red-600' : 'text-green-600'}`}>
@@ -118,7 +116,7 @@ export default function CbsPriceChart({ cbsPrices, loading }) {
                 tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(v) => `€${v.toFixed(2)}`} width={60} />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={avgPrice} stroke="#94a3b8" strokeDasharray="4 4" strokeWidth={1} />
-              <Area type="monotone" dataKey="price_incl_btw" stroke="#3b82f6" strokeWidth={2} fill="url(#cbsGradient)"
+              <Area type="monotone" dataKey="price_excl_btw" stroke="#3b82f6" strokeWidth={2} fill="url(#cbsGradient)"
                 dot={false} activeDot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
