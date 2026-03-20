@@ -1,7 +1,16 @@
 // calculateFuelSurcharge — Calculate fuel surcharge for a customer and period
-// Uses Trip entity (manual entries) + TripRecord (GPS fallback) for km/hours data
+// Supports multiple settings per customer (per vehicle_type: Bestelbus, Vrachtwagen, Personenauto)
+// Uses Trip entity (manual entries) for km/hours data
 // Uses DieselPrice (TLN excl BTW) as primary price source, CbsDieselPrice as fallback
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+
+// Map Vehicle.type to CustomerFuelSettings.vehicle_type
+const VEHICLE_TYPE_MAP = {
+  'Bestelbus': 'Bestelbus',
+  'Vrachtwagen': 'Vrachtwagen',
+  'Personenauto': 'Personenauto',
+  'Aanhanger': null, // skip trailers
+};
 
 Deno.serve(async (req) => {
   try {
@@ -18,12 +27,15 @@ Deno.serve(async (req) => {
 
     const svc = base44.asServiceRole;
 
-    // 1. Get customer fuel settings
-    const settingsArr = await svc.entities.CustomerFuelSettings.filter({ customer_id });
-    const settings = settingsArr[0];
-    if (!settings) {
+    // 1. Get ALL customer fuel settings (multiple per vehicle type)
+    const allSettings = await svc.entities.CustomerFuelSettings.filter({ customer_id, is_active: true });
+    if (!allSettings.length) {
       return Response.json({ error: 'Geen brandstof-instellingen gevonden voor deze klant' }, { status: 404 });
     }
+
+    // Build settings map by vehicle_type
+    const settingsByType = {};
+    allSettings.forEach(s => { settingsByType[s.vehicle_type] = s; });
 
     // 2. Get trips for this customer in the period
     const trips = await svc.entities.Trip.filter({
@@ -31,7 +43,7 @@ Deno.serve(async (req) => {
       date: { $gte: date_from, $lte: date_to }
     }, 'date', 500);
 
-    // 3. Get GPS TripRecords as fallback (we'll need vehicle mapping)
+    // 3. Get vehicles for type mapping
     const vehicles = await svc.entities.Vehicle.filter({});
     const vehicleById = {};
     vehicles.forEach(v => { vehicleById[v.id] = v; });
@@ -42,19 +54,14 @@ Deno.serve(async (req) => {
       svc.entities.CbsDieselPrice.filter({ date: { $gte: date_from, $lte: date_to } }, 'date', 500),
     ]);
 
-    // Build price maps
     const tlnPriceMap = {};
-    tlnPrices.forEach(p => { tlnPriceMap[p.date] = p.price; }); // excl BTW
-
+    tlnPrices.forEach(p => { tlnPriceMap[p.date] = p.price; });
     const cbsPriceMap = {};
-    cbsPrices.forEach(p => { cbsPriceMap[p.date] = p.price_excl_btw; }); // excl BTW (calculated)
+    cbsPrices.forEach(p => { cbsPriceMap[p.date] = p.price_excl_btw; });
 
-    // Get fuel price for a specific date (TLN first, CBS fallback, then nearest)
     const getFuelPrice = (date) => {
       if (tlnPriceMap[date]) return { price: tlnPriceMap[date], source: 'TLN' };
       if (cbsPriceMap[date]) return { price: cbsPriceMap[date], source: 'CBS' };
-
-      // Find nearest available price (look backwards up to 7 days)
       for (let i = 1; i <= 7; i++) {
         const d = new Date(date);
         d.setDate(d.getDate() - i);
@@ -65,18 +72,13 @@ Deno.serve(async (req) => {
       return null;
     };
 
-    // 5. Calculate surcharge per trip
-    const method = settings.calculation_method || 'km';
-    const consumptionFactor = method === 'km'
-      ? (settings.fuel_consumption_per_km || 0.1)
-      : (settings.fuel_consumption_per_hour || 2.5);
-    const basePrice = settings.base_fuel_price;
-
+    // 5. Calculate surcharge per trip, using the correct settings per vehicle type
     const tripDetails = [];
     let totalKm = 0;
     let totalHours = 0;
     let totalBaseCost = 0;
     let totalActualCost = 0;
+    let skippedNoSettings = 0;
 
     for (const trip of trips) {
       const vehicle = vehicleById[trip.vehicle_id];
@@ -85,8 +87,23 @@ Deno.serve(async (req) => {
       // Skip electric vehicles
       if (vehicle?.fuel_type === 'Elektrisch') continue;
 
+      // Determine vehicle type and find matching settings
+      const vehicleType = VEHICLE_TYPE_MAP[vehicle?.type] || null;
+      if (!vehicleType) continue; // skip unmapped types (e.g. trailers)
+
+      const settings = settingsByType[vehicleType];
+      if (!settings) {
+        skippedNoSettings++;
+        continue; // no settings for this vehicle type
+      }
+
+      const method = settings.calculation_method || 'km';
+      const consumptionFactor = method === 'km'
+        ? (settings.fuel_consumption_per_km || 0.143)
+        : (settings.fuel_consumption_per_hour || 2.5);
+      const basePrice = settings.base_fuel_price;
+
       const km = trip.total_km || 0;
-      // Calculate hours from departure/arrival times
       let hours = 0;
       if (trip.departure_time && trip.arrival_time) {
         const [dh, dm] = trip.departure_time.split(':').map(Number);
@@ -97,7 +114,6 @@ Deno.serve(async (req) => {
       const priceData = getFuelPrice(trip.date);
       const actualPrice = priceData?.price || basePrice;
 
-      // Calculate consumption
       const consumption = method === 'km'
         ? km * consumptionFactor
         : hours * consumptionFactor;
@@ -115,28 +131,32 @@ Deno.serve(async (req) => {
         date: trip.date,
         route: trip.route_name || '',
         vehicle_plate: plate,
+        vehicle_type: vehicleType,
         km,
         hours: Math.round(hours * 100) / 100,
         base_cost: Math.round(baseCost * 100) / 100,
         actual_cost: Math.round(actualCost * 100) / 100,
         fuel_price_date: actualPrice,
+        base_fuel_price: basePrice,
+        consumption_factor: consumptionFactor,
       });
     }
 
-    // Average actual price
+    // Weighted average base price and actual price
+    const avgBasePrice = tripDetails.length > 0
+      ? tripDetails.reduce((s, t) => s + t.base_fuel_price, 0) / tripDetails.length
+      : allSettings[0].base_fuel_price;
+
     const avgActualPrice = tripDetails.length > 0
       ? tripDetails.reduce((s, t) => s + t.fuel_price_date, 0) / tripDetails.length
-      : basePrice;
+      : avgBasePrice;
 
     const surchargeAmount = Math.round((totalActualCost - totalBaseCost) * 100) / 100;
 
-    // Determine period_type
     let periodType = 'custom';
     if (date_from === date_to) periodType = 'day';
     else {
-      const fromDate = new Date(date_from);
-      const toDate = new Date(date_to);
-      const diffDays = Math.round((toDate - fromDate) / 86400000);
+      const diffDays = Math.round((new Date(date_to) - new Date(date_from)) / 86400000);
       if (diffDays >= 6 && diffDays <= 7) periodType = 'week';
     }
 
@@ -148,19 +168,22 @@ Deno.serve(async (req) => {
       total_km: Math.round(totalKm * 10) / 10,
       total_hours: Math.round(totalHours * 100) / 100,
       trip_count: tripDetails.length,
-      base_fuel_price: basePrice,
+      base_fuel_price: Math.round(avgBasePrice * 10000) / 10000,
       actual_fuel_price: Math.round(avgActualPrice * 10000) / 10000,
-      price_difference: Math.round((avgActualPrice - basePrice) * 10000) / 10000,
+      price_difference: Math.round((avgActualPrice - avgBasePrice) * 10000) / 10000,
       surcharge_amount: surchargeAmount,
       base_cost: Math.round(totalBaseCost * 100) / 100,
       actual_cost: Math.round(totalActualCost * 100) / 100,
-      calculation_method: method,
-      fuel_consumption_factor: consumptionFactor,
+      calculation_method: 'mixed', // multiple types possible
+      fuel_consumption_factor: null,
       trip_details: tripDetails,
       status: 'Concept',
     };
 
-    // Save if requested
+    if (skippedNoSettings > 0) {
+      result._warnings = [`${skippedNoSettings} rit(ten) overgeslagen: geen instelling voor dat voertuigtype`];
+    }
+
     if (save) {
       const saved = await svc.entities.FuelSurcharge.create(result);
       return Response.json({ success: true, surcharge: { ...result, id: saved.id } });
