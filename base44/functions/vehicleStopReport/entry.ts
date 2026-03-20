@@ -222,11 +222,11 @@ Deno.serve(async (req) => {
     const endKm = lastSeg ? Number(lastSeg.odometerstopkm || lastSeg.odometerstartkm || 0) : null;
     const totalKm = (startKm && endKm && endKm > startKm) ? Math.round((endKm - startKm) * 10) / 10 : null;
 
-    // Standplaats merge logic
+    // Standplaats logic: merge consecutive fragments, then split at midnight of the requested date.
+    // Naiton API splits data at ~01:00 UTC (which can be midnight CET/CEST).
+    // We merge fragments without real drives between them, then clip each merged period
+    // to the requested date's boundaries (00:00–00:00 local time) so each date gets its own portion.
     const computeStandplaats = () => {
-      // Merge consecutive standplaats stops into single logical stops.
-      // E.g. 14:17–00:59 + 01:00–01:00 + 01:00–07:29 → 14:17–07:29
-      // A "real drive" = a drive segment where at least one endpoint is outside standplaats radius.
       const MERGE_MIN_RADIUS = 200;
       const mergeRadius = Math.max(STANDPLAATS_RADIUS_M, MERGE_MIN_RADIUS);
       const isPointNearStandplaats = (lat, lon) => {
@@ -234,6 +234,8 @@ Deno.serve(async (req) => {
         if (gpsDistanceM(lat, lon, STANDPLAATS_LAT, STANDPLAATS_LON) <= mergeRadius) return true;
         return gpsLocations.some(loc => gpsDistanceM(lat, lon, loc.lat, loc.lon) <= Math.max(loc.radius_m || 500, MERGE_MIN_RADIUS));
       };
+
+      // Step 1: Merge consecutive standplaats fragments (no real drive between them)
       const merged = [];
       for (const s of standplaatsStops) {
         if (merged.length === 0) {
@@ -260,50 +262,65 @@ Deno.serve(async (req) => {
           prev.duration_min = Math.round((new Date(prev.stop_utc) - new Date(prev.start_utc)) / 60000);
         }
       }
-      // Wrap-around merge: if last and first are also consecutive standplaats
-      // (Naiton splits nights at midnight), merge them into one entry
-      if (merged.length >= 2) {
-        const last = merged[merged.length - 1];
-        const first = merged[0];
-        const lastStopTime = new Date(last.stop_utc).getTime();
-        const firstStartTime = new Date(first.start_utc).getTime();
-        // Check: last stop → first start, no real drive between
-        // Since this wraps around the day boundary, check if there's any real drive
-        // between last.stop_utc and end-of-data, OR between start-of-data and first.start_utc
-        const hasRealDriveAfterLast = timeline.some(t => {
-          if (t.type !== 'drive') return false;
-          const tStart = new Date(t.start_utc).getTime();
-          if (tStart < lastStopTime) return false;
-          const startNear = isPointNearStandplaats(t.startLat, t.startLon);
-          const stopNear = isPointNearStandplaats(t.stopLat, t.stopLon);
-          return !startNear || !stopNear;
+
+      // Step 2: Determine the requested date's local midnight boundaries in UTC
+      // E.g. date="2026-03-19" → dayStartUTC = 2026-03-18T23:00:00Z (CET) or 2026-03-18T22:00:00Z (CEST)
+      const localMidnightStart = new Date(`${date}T00:00:00`);
+      const dayStartMs = localMidnightStart.getTime();
+      // Use Intl to find the exact UTC offset for this date in Amsterdam
+      const getAmsterdamOffset = (d) => {
+        const parts = new Intl.DateTimeFormat('en', {
+          timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        }).formatToParts(d);
+        const p = {};
+        parts.forEach(({ type, value }) => { p[type] = value; });
+        const localStr = `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`;
+        return d.getTime() - new Date(localStr).getTime();
+      };
+      const offsetMs = getAmsterdamOffset(new Date(`${date}T12:00:00Z`));
+      // dayStart in UTC = local midnight minus the offset
+      const dayStartUtc = new Date(`${date}T00:00:00Z`).getTime() - offsetMs;
+      const dayEndUtc = dayStartUtc + 24 * 60 * 60 * 1000;
+
+      // Step 3: Clip each merged period to the requested date
+      const clipped = [];
+      for (const s of merged) {
+        const sStart = new Date(s.start_utc).getTime();
+        const sEnd = new Date(s.stop_utc).getTime();
+        // Adjust for overnight: if end < start, end is next day
+        const effectiveEnd = sEnd < sStart ? sEnd + 24 * 60 * 60 * 1000 : sEnd;
+
+        // Find overlap with [dayStartUtc, dayEndUtc)
+        const overlapStart = Math.max(sStart, dayStartUtc);
+        const overlapEnd = Math.min(effectiveEnd, dayEndUtc);
+        if (overlapStart >= overlapEnd) continue; // no overlap with this date
+
+        const durMin = Math.round((overlapEnd - overlapStart) / 60000);
+        if (durMin <= 0) continue;
+
+        const clippedStartLocal = new Date(overlapStart).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' });
+        const clippedEndLocal = new Date(overlapEnd).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' });
+        const clippedStartDate = new Date(overlapStart).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit' });
+        const clippedEndDate = new Date(overlapEnd).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit' });
+
+        clipped.push({
+          start_local: clippedStartLocal,
+          stop_local: clippedEndLocal,
+          start_date: clippedStartDate,
+          stop_date: clippedEndDate,
+          duration_min: durMin,
         });
-        const hasRealDriveBeforeFirst = timeline.some(t => {
-          if (t.type !== 'drive') return false;
-          const tStop = new Date(t.stop_utc).getTime();
-          if (tStop > firstStartTime) return false;
-          const startNear = isPointNearStandplaats(t.startLat, t.startLon);
-          const stopNear = isPointNearStandplaats(t.stopLat, t.stopLon);
-          return !startNear || !stopNear;
-        });
-        if (!hasRealDriveAfterLast && !hasRealDriveBeforeFirst) {
-          // Merge: extend last to include first's end, remove first
-          last.stop_utc = first.stop_utc;
-          last.stop_local = first.stop_local;
-          // Duration crosses midnight — calculate correctly
-          let durMs = new Date(last.stop_utc).getTime() - new Date(last.start_utc).getTime();
-          if (durMs < 0) durMs += 24 * 60 * 60 * 1000; // add 24h for overnight
-          last.duration_min = Math.round(durMs / 60000);
-          merged.shift(); // remove the first entry (now absorbed into last)
-        }
       }
 
       return {
-        count: merged.length,
-        stops: merged.map((s, i) => ({
+        count: clipped.length,
+        stops: clipped.map((s, i) => ({
           nr: i + 1,
           start: s.start_local,
           stop: s.stop_local,
+          start_date: s.start_date,
+          stop_date: s.stop_date,
           duration_min: s.duration_min,
         })),
       };
