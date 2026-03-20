@@ -488,6 +488,7 @@ Deno.serve(async (req) => {
       tripRecords.push({
         gpsassetid: ride.gpsassetid,
         driver: driver || null,
+        driver_source: driverSource || null,
         vehicle: assetMap[ride.gpsassetid]?.vehicle || '',
         plate: assetMap[ride.gpsassetid]?.plate || '',
         start_time: startTime,
