@@ -234,15 +234,45 @@ Deno.serve(async (req) => {
           lon: s.lon,
         })),
       },
-      standplaats: {
-        count: standplaatsStops.length,
-        stops: standplaatsStops.map((s, i) => ({
-          nr: i + 1,
-          start: s.start_local,
-          stop: s.stop_local,
-          duration_min: s.duration_min,
-        })),
-      },
+      standplaats: (() => {
+        // Merge consecutive standplaats stops into single logical stops.
+        // E.g. 14:17–00:59 + 01:00–01:00 + 01:00–07:29 → 14:17–07:29
+        // "Consecutive" = no drive segment between them (only other stops or nothing)
+        const merged = [];
+        for (const s of standplaatsStops) {
+          if (merged.length === 0) {
+            merged.push({ ...s });
+            continue;
+          }
+          const prev = merged[merged.length - 1];
+          // Check if there's a drive segment between prev.stop_utc and s.start_utc
+          const prevStopTime = new Date(prev.stop_utc).getTime();
+          const currStartTime = new Date(s.start_utc).getTime();
+          const hasDriveBetween = timeline.some(t =>
+            t.type === 'drive' &&
+            new Date(t.start_utc).getTime() >= prevStopTime &&
+            new Date(t.stop_utc).getTime() <= currStartTime
+          );
+          if (hasDriveBetween) {
+            // Real departure + return — keep separate
+            merged.push({ ...s });
+          } else {
+            // No drive between — merge into previous (extend end time)
+            prev.stop_utc = s.stop_utc;
+            prev.stop_local = s.stop_local;
+            prev.duration_min = Math.round((new Date(prev.stop_utc) - new Date(prev.start_utc)) / 60000);
+          }
+        }
+        return {
+          count: merged.length,
+          stops: merged.map((s, i) => ({
+            nr: i + 1,
+            start: s.start_local,
+            stop: s.stop_local,
+            duration_min: s.duration_min,
+          })),
+        };
+      })(),
       total_segments: allSegments.length,
     });
   } catch (error) {
