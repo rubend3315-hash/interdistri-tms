@@ -43,7 +43,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { plate, date } = await req.json();
+    const body = await req.json();
+    const { plate, date, debug_section } = body;
     if (!plate || !date) {
       return Response.json({ error: 'plate en date zijn verplicht' }, { status: 400 });
     }
