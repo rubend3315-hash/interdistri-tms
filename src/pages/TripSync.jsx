@@ -74,7 +74,9 @@ export default function TripSync() {
         toast.info(res.data?.message || 'Geen nieuwe ritten gevonden');
       }
     } catch (err) {
-      toast.error(`Synchronisatie mislukt: ${err?.response?.data?.error || err.message}`);
+      const errMsg = err?.response?.data?.error || err?.message || 'Onbekende fout';
+      setSyncResult({ error: true, message: errMsg });
+      toast.error(`Synchronisatie mislukt: ${errMsg}`);
     }
     setSyncing(false);
   };
