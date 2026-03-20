@@ -585,11 +585,11 @@ Deno.serve(async (req) => {
     addLog(`Created: ${created}, Skipped: ${skipped}`);
 
     // ═══════════════════════════════════════════════════════
-    // STEP 9: Match drivers → employees → TripRecordLink
+    // STEP 6: Match drivers → employees → TripRecordLink
     // ═══════════════════════════════════════════════════════
     let linked = 0;
     if (newRecordIds.length > 0) {
-      addLog('Step 9: Matching drivers to employees...');
+      addLog('Step 6: Matching drivers to employees...');
       const employees = await svc.entities.Employee.filter({ status: 'Actief' });
       const empByName = {};
       for (const emp of employees) {
@@ -632,12 +632,7 @@ Deno.serve(async (req) => {
       rides: filteredRides.length,
       created, skipped, linked,
       drivers_resolved: driversResolved,
-      naiton_calls: {
-        assets: 1, users: 1, trips: 1,
-        driverHistoryWrite: driverHistoryEntries.length > 0 ? 1 : 0,
-        locations: 1,
-        transport: tripPayloads.length > 0 ? 1 : 0
-      },
+      naiton_calls: { assets: 1, users: 1, trips: 1 },
       ms: Date.now() - t0,
       log,
     });
