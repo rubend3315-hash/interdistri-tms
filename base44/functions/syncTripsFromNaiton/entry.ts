@@ -420,9 +420,9 @@ Deno.serve(async (req) => {
         const s = segs[si];
         if ((s.type || '').toLowerCase() !== 'stop') continue;
         // Skip de laatste stop als dat de standplaats is (terugkomst)
-        if (si === segs.length - 1 && isStandplaats(s)) continue;
+        if (si === segs.length - 1 && isStandplaats(s, ride.gpsassetid)) continue;
         // Skip stops op de standplaats zelf (bijv. tussenstop thuis)
-        if (isStandplaats(s)) continue;
+        if (isStandplaats(s, ride.gpsassetid)) continue;
         const sStart = new Date(s.start || s.stop);
         const sEnd = new Date(s.stop || s.end || s.start);
         const durMin = (sEnd - sStart) / 60000;
