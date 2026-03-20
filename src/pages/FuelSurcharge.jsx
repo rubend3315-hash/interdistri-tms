@@ -89,6 +89,7 @@ export default function FuelSurcharge() {
 
   // CBS Sync
   const [syncing, setSyncing] = useState(false);
+  const [syncingTln, setSyncingTln] = useState(false);
   const handleCbsSync = async () => {
     setSyncing(true);
     try {
@@ -99,6 +100,17 @@ export default function FuelSurcharge() {
       toast.error(`CBS Sync fout: ${err.message}`);
     }
     setSyncing(false);
+  };
+  const handleTlnSync = async () => {
+    setSyncingTln(true);
+    try {
+      const res = await base44.functions.invoke('syncDieselPrices', {});
+      toast.success(`TLN Sync: ${res.data.inserted} nieuwe prijzen opgehaald`);
+      queryClient.invalidateQueries({ queryKey: ['dieselPrices'] });
+    } catch (err) {
+      toast.error(`TLN Sync fout: ${err.message}`);
+    }
+    setSyncingTln(false);
   };
 
   // Calculate surcharge
