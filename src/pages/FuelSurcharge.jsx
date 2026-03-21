@@ -244,8 +244,10 @@ export default function FuelSurcharge() {
             </div>
           )}
 
+          </div>
+
           {calculating && (
-            <div className="flex items-center gap-3 text-slate-500 py-8 justify-center">
+            <div className="flex items-center gap-3 text-slate-500 py-8 justify-center print:hidden">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span>Berekening uitvoeren...</span>
             </div>
