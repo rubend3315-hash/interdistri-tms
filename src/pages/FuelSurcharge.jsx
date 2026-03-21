@@ -171,7 +171,7 @@ export default function FuelSurcharge() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between print:hidden">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
             <Fuel className="w-8 h-8 text-amber-600" />
@@ -192,7 +192,7 @@ export default function FuelSurcharge() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="print:hidden">
           <TabsTrigger value="calculate">Berekenen</TabsTrigger>
           <TabsTrigger value="settings">Instellingen</TabsTrigger>
           <TabsTrigger value="history">Geschiedenis</TabsTrigger>
