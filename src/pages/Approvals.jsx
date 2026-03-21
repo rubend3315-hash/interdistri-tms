@@ -232,20 +232,63 @@ export default function Approvals() {
     });
 
     // Step 2: build employee name lookup from employees for driver name matching
-    const empNameMap = {};
-    employees.forEach(emp => {
-      const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim().toLowerCase();
-      empNameMap[emp.id] = fullName;
-    });
-    // Reverse: name → employee_id
+    // Multiple strategies: full name, without prefix, last name only
     const nameToEmpId = {};
+    const lastNameToEmpIds = {}; // last_name → [employee_id, ...]
     employees.forEach(emp => {
-      const fullName = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim().toLowerCase();
+      const firstName = (emp.first_name || '').trim().toLowerCase();
+      const prefix = (emp.prefix || '').trim().toLowerCase();
+      const lastName = (emp.last_name || '').trim().toLowerCase();
+      
+      // Full name with prefix: "kimberley van broekhoven"
+      const fullName = `${firstName} ${prefix ? prefix + ' ' : ''}${lastName}`.trim();
       nameToEmpId[fullName] = emp.id;
-      // Also try without prefix
-      const simple = `${emp.first_name || ''} ${emp.last_name || ''}`.trim().toLowerCase();
+      // Without prefix: "kimberley broekhoven"
+      const simple = `${firstName} ${lastName}`.trim();
       if (!nameToEmpId[simple]) nameToEmpId[simple] = emp.id;
+      // Without prefix, without middle parts in last_name: "norbert danlowski" for "Szulc Danlowski"
+      const lastParts = lastName.split(/\s+/);
+      if (lastParts.length > 1) {
+        const lastOnly = lastParts[lastParts.length - 1];
+        const simpleLast = `${firstName} ${lastOnly}`.trim();
+        if (!nameToEmpId[simpleLast]) nameToEmpId[simpleLast] = emp.id;
+      }
+      // Index by last name for fuzzy first-name matching
+      if (lastName) {
+        if (!lastNameToEmpIds[lastName]) lastNameToEmpIds[lastName] = [];
+        lastNameToEmpIds[lastName].push({ id: emp.id, firstName });
+        // Also index on last part only
+        if (lastParts.length > 1) {
+          const lastOnly = lastParts[lastParts.length - 1];
+          if (!lastNameToEmpIds[lastOnly]) lastNameToEmpIds[lastOnly] = [];
+          lastNameToEmpIds[lastOnly].push({ id: emp.id, firstName });
+        }
+      }
     });
+    
+    // Fuzzy match: tries exact name lookups first, then last-name + first-name-starts-with
+    const matchDriverToEmployee = (driverName) => {
+      if (!driverName) return null;
+      const clean = driverName.replace(/\s*\(\d+\)\s*$/, '').trim().toLowerCase();
+      // Exact match
+      if (nameToEmpId[clean]) return nameToEmpId[clean];
+      // Split into parts and try last-name matching with first-name prefix
+      const parts = clean.split(/\s+/);
+      if (parts.length >= 2) {
+        const driverFirst = parts[0];
+        const driverLast = parts[parts.length - 1];
+        // Try last name lookup
+        const candidates = lastNameToEmpIds[driverLast];
+        if (candidates) {
+          // Find where employee first name starts with driver first name or vice versa
+          const match = candidates.find(c => 
+            c.firstName.startsWith(driverFirst) || driverFirst.startsWith(c.firstName)
+          );
+          if (match) return match.id;
+        }
+      }
+      return null;
+    };
 
     // Step 3: assign each TripRecord to an employee
     const result = {};
