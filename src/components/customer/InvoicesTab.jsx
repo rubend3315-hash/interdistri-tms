@@ -16,7 +16,7 @@ export default function InvoicesTab({ customerId }) {
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['spotta-invoices', customerId],
-    queryFn: () => base44.entities.SpottaInvoice.filter({ customer_id: customerId }, '-created_date'),
+    queryFn: () => base44.entities.SpottaInvoice.filter({ customer_id: customerId }, '-invoice_date'),
     enabled: !!customerId,
   });
 
