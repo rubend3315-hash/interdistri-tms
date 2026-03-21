@@ -200,7 +200,7 @@ export default function FuelSurcharge() {
         </TabsList>
 
         <TabsContent value="calculate" className="space-y-6 mt-4">
-          <FuelSurchargeFilters
+          <div className="print:hidden"><FuelSurchargeFilters
             periodType={periodType} setPeriodType={setPeriodType}
             selectedDate={selectedDate} setSelectedDate={setSelectedDate}
             weekStart={weekStart} setWeekStart={setWeekStart}
