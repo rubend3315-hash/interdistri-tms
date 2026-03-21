@@ -294,11 +294,9 @@ export default function Approvals() {
     const result = {};
     tripRecords.forEach(r => {
       let empId = linkEmployeeMap[r.id];
-      // Fallback: match by driver name
+      // Fallback: match by driver name (fuzzy)
       if (!empId && r.driver) {
-        // Strip trailing " (1234)" suffix from Naiton driver names
-        const driverLower = (r.driver || '').replace(/\s*\(\d+\)\s*$/, '').trim().toLowerCase();
-        empId = nameToEmpId[driverLower];
+        empId = matchDriverToEmployee(r.driver);
       }
       if (!empId || !r.date) return;
       const key = `${empId}_${r.date}`;
