@@ -289,23 +289,18 @@ Deno.serve(async (req) => {
     }
 
     const rides = [];
-    const MERGE_WINDOW_MIN = 90; // If vehicle returns to standplaats and departs again within 90 min → same ride
 
     let standplaatsHits = 0;
     let totalStops = 0;
-    let mergedCount = 0;
 
     for (const [assetId, segments] of Object.entries(segmentsByAsset)) {
       // State machine: 
       //   IDLE = at standplaats, waiting for departure (first drive segment away)
       //   RIDING = collecting segments until return to standplaats
-      //   MERGE_PENDING = returned to standplaats, waiting to see if vehicle departs again within merge window
       let state = 'IDLE';
       let currentRide = null;
-      let pendingStandplaatsStop = null; // the standplaats stop segment during MERGE_PENDING
 
-      for (let si = 0; si < segments.length; si++) {
-        const seg = segments[si];
+      for (const seg of segments) {
         const type = (seg.type || '').toLowerCase();
         const segDate = (seg.start || seg.stop || '').split('T')[0];
         if (type === 'stop') totalStops++;
@@ -313,6 +308,7 @@ Deno.serve(async (req) => {
         if (atStandplaats) standplaatsHits++;
 
         if (state === 'IDLE') {
+          // Wait for a drive segment (= departure from standplaats)
           if (type === 'drive') {
             currentRide = {
               gpsassetid: assetId,
@@ -321,47 +317,12 @@ Deno.serve(async (req) => {
             };
             state = 'RIDING';
           }
-        } else if (state === 'MERGE_PENDING') {
-          // We're at standplaats — check if vehicle departs again within merge window
-          if (type === 'drive') {
-            // Vehicle is departing again — check time gap
-            const standplaatsStart = new Date(pendingStandplaatsStop.start || pendingStandplaatsStop.stop);
-            const departureTime = new Date(seg.start || seg.stop);
-            const gapMin = (departureTime - standplaatsStart) / 60000;
-
-            if (gapMin <= MERGE_WINDOW_MIN && segDate === currentRide.date) {
-              // Merge: add the standplaats stop + this drive to current ride
-              currentRide.segments.push(pendingStandplaatsStop);
-              currentRide.segments.push(seg);
-              pendingStandplaatsStop = null;
-              state = 'RIDING';
-              mergedCount++;
-            } else {
-              // Gap too long or different day — close current ride, start new one
-              currentRide.segments.push(pendingStandplaatsStop);
-              rides.push(currentRide);
-              pendingStandplaatsStop = null;
-              currentRide = {
-                gpsassetid: assetId,
-                date: segDate,
-                segments: [seg],
-              };
-              state = 'RIDING';
-            }
-          } else if (atStandplaats) {
-            // Another standplaats stop — extend the pending stop (vehicle still parked)
-            pendingStandplaatsStop = seg;
-          } else {
-            // Non-drive, non-standplaats segment during pending — add to ride and continue
-            currentRide.segments.push(pendingStandplaatsStop);
-            currentRide.segments.push(seg);
-            pendingStandplaatsStop = null;
-            state = 'RIDING';
-          }
+          // Stops at standplaats while IDLE are ignored (vehicle parked)
         } else if (state === 'RIDING') {
           // Dagwissel safety: close ride if segment is on a different day
           if (segDate !== currentRide.date) {
             if (currentRide.segments.length > 0) rides.push(currentRide);
+            // Start new ride on the new day
             currentRide = {
               gpsassetid: assetId,
               date: segDate,
@@ -372,26 +333,20 @@ Deno.serve(async (req) => {
 
           currentRide.segments.push(seg);
 
-          // If this is a stop at standplaats → enter merge pending state
+          // If this is a stop at standplaats → ride is complete
           if (atStandplaats) {
-            // Remove the standplaats stop from segments — hold it pending
-            currentRide.segments.pop();
-            pendingStandplaatsStop = seg;
-            state = 'MERGE_PENDING';
+            rides.push(currentRide);
+            currentRide = null;
+            state = 'IDLE';
           }
         }
       }
 
-      // Finalize any pending state
-      if (state === 'MERGE_PENDING' && currentRide) {
-        // Vehicle ended at standplaats — close ride with the standplaats stop
-        currentRide.segments.push(pendingStandplaatsStop);
-        rides.push(currentRide);
-      } else if (currentRide && currentRide.segments.length > 0) {
+      // Close any open ride at end of day (vehicle didn't return to standplaats)
+      if (currentRide && currentRide.segments.length > 0) {
         rides.push(currentRide);
       }
     }
-    if (mergedCount > 0) addLog(`${mergedCount} ritten samengevoegd (tussenstop op standplaats < ${MERGE_WINDOW_MIN} min)`);
 
     // Filter rides:
     // 1. Only dates within the requested range
