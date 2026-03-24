@@ -117,17 +117,18 @@ Deno.serve(async (req) => {
       };
     }
 
-    // 1b. User mapping: tachocardnumber/tagid/personid → fullname
+    // 1b. User mapping: tachocardnumber/tagid/personid → fullname + employeenumber
     const naitonUsers = usersJson.dataexchange_users || [];
-    const userByTacho = {};   // tachocardnumber → fullname
-    const userByTag = {};     // tagid → fullname
-    const userByPersonId = {}; // personid → fullname
+    const userByTacho = {};   // tachocardnumber → { name, employeenumber }
+    const userByTag = {};     // tagid → { name, employeenumber }
+    const userByPersonId = {}; // personid → { name, employeenumber }
     for (const u of naitonUsers) {
       const fullname = `${u.firstname || ''} ${u.lastname || ''}`.trim();
       if (!fullname) continue;
-      if (u.tachocardnumber) userByTacho[String(u.tachocardnumber)] = fullname;
-      if (u.tagid) userByTag[String(u.tagid)] = fullname;
-      if (u.personid) userByPersonId[String(u.personid)] = fullname;
+      const info = { name: fullname, employeenumber: u.employeenumber ? String(u.employeenumber) : null };
+      if (u.tachocardnumber) userByTacho[String(u.tachocardnumber)] = info;
+      if (u.tagid) userByTag[String(u.tagid)] = info;
+      if (u.personid) userByPersonId[String(u.personid)] = info;
     }
     addLog(`Users loaded: ${naitonUsers.length} total, ${Object.keys(userByTacho).length} tacho, ${Object.keys(userByTag).length} tag, ${Object.keys(userByPersonId).length} personid`);
 
