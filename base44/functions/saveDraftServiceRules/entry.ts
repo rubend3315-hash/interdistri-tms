@@ -42,6 +42,18 @@ Deno.serve(async (req) => {
 
     const svc = base44.asServiceRole;
 
+    // ── 0. RACE CONDITION GUARD: Skip if TE is already submitted ──
+    // The mobile app fires saveDraftServiceRules in parallel with submitTimeEntry.
+    // If submitTimeEntry already committed the TE to "Ingediend" or "Goedgekeurd",
+    // creating draft trips here would produce duplicates alongside the "Voltooid" trips
+    // created by recalculateAfterTimeEntrySubmit.
+    const teCheck = await svc.entities.TimeEntry.filter({ id: time_entry_id });
+    const teStatus = teCheck[0]?.status;
+    if (teStatus === 'Ingediend' || teStatus === 'Goedgekeurd') {
+      console.log(`[saveDraftRules] SKIP — TE ${time_entry_id} already ${teStatus}, no drafts needed`);
+      return Response.json({ success: true, skipped: true, reason: 'te_already_submitted' });
+    }
+
     // ── 1. Delete existing draft trips (status=Gepland) for this time_entry_id ──
     const existingTrips = await svc.entities.Trip.filter({
       time_entry_id,
