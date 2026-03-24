@@ -542,6 +542,7 @@ Deno.serve(async (req) => {
         gpsassetid: ride.gpsassetid,
         driver: driver || null,
         driver_source: driverSource || null,
+        driver_employee_number: driverEmployeeNumber || null,
         vehicle: assetMap[ride.gpsassetid]?.vehicle || '',
         plate: assetMap[ride.gpsassetid]?.plate || '',
         start_time: startTime,
