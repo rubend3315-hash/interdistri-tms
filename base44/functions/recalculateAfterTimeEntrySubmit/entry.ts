@@ -48,7 +48,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    console.log(`[RECALC] Starting for TE=${time_entry_id} sub=${submission_id}`);
+    const runId = crypto.randomUUID();
+    console.log('[RECALC START]', { runId, time_entry_id, submission_id, ts: Date.now() });
 
     const perf = {};
     const finalTripIds = [];
@@ -327,6 +328,7 @@ Deno.serve(async (req) => {
     }
 
     perf.total_ms = Date.now() - t0;
+    console.log('[RECALC END]', { runId, time_entry_id, duration: Date.now() - t0 });
     console.log('[RECALC PERF]', JSON.stringify(perf));
 
     return Response.json({

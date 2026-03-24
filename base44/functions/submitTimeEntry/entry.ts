@@ -799,6 +799,11 @@ Deno.serve(async (req) => {
     // ========================================
     // 9. FIRE-AND-FORGET: Async recalculation
     // ========================================
+    console.log('[SUBMIT] invoking recalc', {
+      time_entry_id: te.id,
+      submission_id: payload.submission_id,
+      ts: Date.now(),
+    });
     svc.functions.invoke('recalculateAfterTimeEntrySubmit', {
       time_entry_id: te.id,
       employee_id: empId,
