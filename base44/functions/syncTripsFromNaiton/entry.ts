@@ -440,23 +440,39 @@ Deno.serve(async (req) => {
       }
 
       // Driver resolution: additionaldata.Driver → tachocardnumber → tagid → personid → planning → null
+      // Each lookup now returns { name, employeenumber } — we track both for Step 6 matching
       let driver = '';
       let driverSource = '';
+      let driverEmployeeNumber = null; // Naiton personeelsnummer for direct Employee matching
 
       // Priority 0 (best source): additionaldata.Driver from Naiton includefields=["driver"]
       if (!driver) {
         for (const s of segs) {
           if (s.additionaldata) {
             const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
-            if (ad.Driver) { driver = ad.Driver; driverSource = 'additionaldata.Driver'; break; }
+            if (ad.Driver) {
+              driver = ad.Driver;
+              driverSource = 'additionaldata.Driver';
+              // Try to resolve employeenumber via tacho/tag/personid on same segment
+              if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]?.employeenumber) {
+                driverEmployeeNumber = userByTacho[String(s.tachocardnumber)].employeenumber;
+              } else if (s.tagid && userByTag[String(s.tagid)]?.employeenumber) {
+                driverEmployeeNumber = userByTag[String(s.tagid)].employeenumber;
+              } else if (s.personid && userByPersonId[String(s.personid)]?.employeenumber) {
+                driverEmployeeNumber = userByPersonId[String(s.personid)].employeenumber;
+              }
+              break;
+            }
           }
         }
       }
       // Priority 1: tachocardnumber on trip segments
       if (!driver) {
         for (const s of segs) {
-          if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]) {
-            driver = userByTacho[String(s.tachocardnumber)];
+          const info = s.tachocardnumber ? userByTacho[String(s.tachocardnumber)] : null;
+          if (info) {
+            driver = info.name;
+            driverEmployeeNumber = info.employeenumber;
             driverSource = 'tachocardnumber';
             break;
           }
@@ -465,8 +481,10 @@ Deno.serve(async (req) => {
       // Priority 2: tagid on trip segments
       if (!driver) {
         for (const s of segs) {
-          if (s.tagid && userByTag[String(s.tagid)]) {
-            driver = userByTag[String(s.tagid)];
+          const info = s.tagid ? userByTag[String(s.tagid)] : null;
+          if (info) {
+            driver = info.name;
+            driverEmployeeNumber = info.employeenumber;
             driverSource = 'tagid';
             break;
           }
@@ -475,8 +493,10 @@ Deno.serve(async (req) => {
       // Priority 3: personid on trip segments
       if (!driver) {
         for (const s of segs) {
-          if (s.personid && userByPersonId[String(s.personid)]) {
-            driver = userByPersonId[String(s.personid)];
+          const info = s.personid ? userByPersonId[String(s.personid)] : null;
+          if (info) {
+            driver = info.name;
+            driverEmployeeNumber = info.employeenumber;
             driverSource = 'personid';
             break;
           }
@@ -488,13 +508,17 @@ Deno.serve(async (req) => {
           if (s.additionaldata) {
             try {
               const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
-              if (ad.tachocardnumber && userByTacho[String(ad.tachocardnumber)]) {
-                driver = userByTacho[String(ad.tachocardnumber)];
+              const tachoInfo = ad.tachocardnumber ? userByTacho[String(ad.tachocardnumber)] : null;
+              if (tachoInfo) {
+                driver = tachoInfo.name;
+                driverEmployeeNumber = tachoInfo.employeenumber;
                 driverSource = 'additionaldata.tachocardnumber';
                 break;
               }
-              if (ad.tagid && userByTag[String(ad.tagid)]) {
-                driver = userByTag[String(ad.tagid)];
+              const tagInfo = ad.tagid ? userByTag[String(ad.tagid)] : null;
+              if (tagInfo) {
+                driver = tagInfo.name;
+                driverEmployeeNumber = tagInfo.employeenumber;
                 driverSource = 'additionaldata.tagid';
                 break;
               }
