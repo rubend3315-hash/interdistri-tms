@@ -135,6 +135,7 @@ Deno.serve(async (req) => {
     // Debug: log user map sample
     const userMapSample = naitonUsers.slice(0, 5).map(u => ({
       name: `${u.firstname} ${u.lastname}`,
+      employeenumber: u.employeenumber,
       tachocardnumber: u.tachocardnumber,
       tagid: u.tagid,
       personid: u.personid,
