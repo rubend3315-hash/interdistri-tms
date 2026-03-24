@@ -646,76 +646,55 @@ Deno.serve(async (req) => {
       addLog('Step 6: Matching drivers to employees...');
       const employees = await svc.entities.Employee.filter({ status: 'Actief' });
 
-      // Normalize: lowercase, remove accents, collapse whitespace
-      const normName = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+      // PRIMARY: Index by employee_number (personeelsnummer) — most reliable
+      const empByNumber = {};
+      for (const emp of employees) {
+        if (emp.employee_number) {
+          empByNumber[String(emp.employee_number).trim()] = emp;
+        }
+      }
+      addLog(`Employee index: ${Object.keys(empByNumber).length} met personeelsnummer, ${employees.length} totaal`);
 
-      // Build multiple lookup keys per employee for flexible matching
+      // SECONDARY: Name-based fallback
+      const normName = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
       const empByName = {};
       for (const emp of employees) {
         const fn = emp.first_name || '';
         const pf = emp.prefix || '';
         const ln = emp.last_name || '';
         const variants = [
-          `${fn} ${pf} ${ln}`,        // "Vincent van Eenennaam"
-          `${fn} ${ln}`,              // "Vincent Eenennaam"
-          `${ln} ${fn}`,              // "Eenennaam Vincent"
-          `${ln}, ${fn}`,             // "Eenennaam, Vincent"
-          `${fn} ${pf}${ln}`,         // "Vincent vanEenennaam" (no space after prefix)
-          `${pf} ${ln}, ${fn}`,       // "van Eenennaam, Vincent"
-          `${pf} ${ln} ${fn}`,        // "van Eenennaam Vincent"
+          `${fn} ${pf} ${ln}`, `${fn} ${ln}`, `${ln} ${fn}`,
+          `${ln}, ${fn}`, `${pf} ${ln} ${fn}`, `${pf} ${ln}, ${fn}`,
         ];
         for (const v of variants) {
           const key = normName(v);
           if (key && !empByName[key]) empByName[key] = emp;
         }
-        // Also index by first name initial + last name: "V. van Eenennaam", "V Eenennaam"
-        if (fn && ln) {
-          const initial = fn.charAt(0);
-          const initVariants = [
-            `${initial}. ${pf} ${ln}`,
-            `${initial} ${pf} ${ln}`,
-            `${initial}. ${ln}`,
-            `${initial} ${ln}`,
-          ];
-          for (const v of initVariants) {
-            const key = normName(v);
-            if (key && !empByName[key]) empByName[key] = emp;
-          }
-        }
       }
-
-      // Fuzzy fallback: find best match if exact lookup fails
-      const fuzzyMatch = (driverName) => {
-        const parts = driverName.split(' ').filter(Boolean);
-        if (parts.length < 2) return null;
-        // Try matching on last name + first name starts-with
-        for (const emp of employees) {
-          const eFn = normName(emp.first_name);
-          const eLn = normName(emp.last_name);
-          const ePf = normName(emp.prefix);
-          if (!eLn) continue;
-          // Check if driver name contains the last name
-          if (!driverName.includes(eLn)) continue;
-          // Check if driver name contains first name or starts with same letter
-          if (driverName.includes(eFn) || (eFn && parts[0].charAt(0) === eFn.charAt(0))) {
-            return emp;
-          }
-        }
-        return null;
-      };
 
       const linksToCreate = [];
       const unmatchedDrivers = [];
+      let matchedByNumber = 0;
+      let matchedByName = 0;
+
       for (const rec of newRecordIds) {
         if (!rec.driver) continue;
-        const norm = normName(rec.driver);
-        let emp = empByName[norm];
-        let matchType = 'exact';
-        // Fuzzy fallback
-        if (!emp) {
-          emp = fuzzyMatch(norm);
-          matchType = 'fuzzy';
+
+        let emp = null;
+
+        // Priority 1: Match by personeelsnummer (Naiton employeenumber → Employee.employee_number)
+        if (rec.driver_employee_number) {
+          emp = empByNumber[String(rec.driver_employee_number).trim()];
+          if (emp) matchedByNumber++;
         }
+
+        // Priority 2: Name-based fallback
+        if (!emp) {
+          const norm = normName(rec.driver);
+          emp = empByName[norm];
+          if (emp) matchedByName++;
+        }
+
         if (emp) {
           linksToCreate.push({
             trip_record_id: rec.id,
@@ -725,10 +704,11 @@ Deno.serve(async (req) => {
             approved: false,
           });
         } else {
-          unmatchedDrivers.push(rec.driver);
+          unmatchedDrivers.push(`${rec.driver} (nr: ${rec.driver_employee_number || '?'})`);
         }
       }
 
+      addLog(`Match resultaat: ${matchedByNumber} op personeelsnummer, ${matchedByName} op naam`);
       if (unmatchedDrivers.length > 0) {
         const unique = [...new Set(unmatchedDrivers)];
         addLog(`Ongematchte chauffeurs (${unique.length}): ${unique.join(', ')}`);
