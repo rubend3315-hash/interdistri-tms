@@ -631,7 +631,7 @@ Deno.serve(async (req) => {
       const batch = toInsert.slice(i, i + INSERT_BATCH_SIZE);
       const results = await svc.entities.TripRecord.bulkCreate(batch);
       for (let j = 0; j < results.length; j++) {
-        newRecordIds.push({ id: results[j].id, driver: batch[j].driver, date: batch[j].date });
+        newRecordIds.push({ id: results[j].id, driver: batch[j].driver, driver_employee_number: batch[j].driver_employee_number, date: batch[j].date });
       }
       created += results.length;
     }
