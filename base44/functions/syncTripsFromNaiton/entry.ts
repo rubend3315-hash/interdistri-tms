@@ -122,6 +122,8 @@ Deno.serve(async (req) => {
     const userByTacho = {};   // tachocardnumber → { name, employeenumber }
     const userByTag = {};     // tagid → { name, employeenumber }
     const userByPersonId = {}; // personid → { name, employeenumber }
+    const userByName = {};    // normalized fullname → { name, employeenumber }
+    const normDriverName = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
     for (const u of naitonUsers) {
       const fullname = `${u.firstname || ''} ${u.lastname || ''}`.trim();
       if (!fullname) continue;
@@ -129,8 +131,11 @@ Deno.serve(async (req) => {
       if (u.tachocardnumber) userByTacho[String(u.tachocardnumber)] = info;
       if (u.tagid) userByTag[String(u.tagid)] = info;
       if (u.personid) userByPersonId[String(u.personid)] = info;
+      // Index by normalized name for reverse lookup when only driver name is known
+      const normKey = normDriverName(fullname);
+      if (normKey && !userByName[normKey]) userByName[normKey] = info;
     }
-    addLog(`Users loaded: ${naitonUsers.length} total, ${Object.keys(userByTacho).length} tacho, ${Object.keys(userByTag).length} tag, ${Object.keys(userByPersonId).length} personid`);
+    addLog(`Users loaded: ${naitonUsers.length} total, ${Object.keys(userByTacho).length} tacho, ${Object.keys(userByTag).length} tag, ${Object.keys(userByPersonId).length} personid, ${Object.keys(userByName).length} naam-index`);
 
     // Debug: log user map sample
     const userMapSample = naitonUsers.slice(0, 5).map(u => ({
@@ -461,6 +466,13 @@ Deno.serve(async (req) => {
                 driverEmployeeNumber = userByTag[String(s.tagid)].employeenumber;
               } else if (s.personid && userByPersonId[String(s.personid)]?.employeenumber) {
                 driverEmployeeNumber = userByPersonId[String(s.personid)].employeenumber;
+              }
+              // Fallback: reverse lookup by driver name in Naiton users to get employeenumber
+              if (!driverEmployeeNumber) {
+                const nameMatch = userByName[normDriverName(ad.Driver)];
+                if (nameMatch?.employeenumber) {
+                  driverEmployeeNumber = nameMatch.employeenumber;
+                }
               }
               break;
             }
