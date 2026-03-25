@@ -445,13 +445,13 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Driver resolution: additionaldata.Driver → tachocardnumber → tagid → personid → planning → null
-      // Each lookup now returns { name, employeenumber } — we track both for Step 6 matching
+      // Driver resolution: find driver name + employeenumber from segments
+      // employeenumber is the PRIMARY key for matching to Employee entity
       let driver = '';
       let driverSource = '';
-      let driverEmployeeNumber = null; // Naiton personeelsnummer for direct Employee matching
+      let driverEmployeeNumber = null;
 
-      // Priority 0 (best source): additionaldata.Driver from Naiton includefields=["driver"]
+      // Priority 0: additionaldata.Driver (best source for name)
       if (!driver) {
         for (const s of segs) {
           if (s.additionaldata) {
@@ -459,21 +459,6 @@ Deno.serve(async (req) => {
             if (ad.Driver) {
               driver = ad.Driver;
               driverSource = 'additionaldata.Driver';
-              // Try to resolve employeenumber via tacho/tag/personid on same segment
-              if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]?.employeenumber) {
-                driverEmployeeNumber = userByTacho[String(s.tachocardnumber)].employeenumber;
-              } else if (s.tagid && userByTag[String(s.tagid)]?.employeenumber) {
-                driverEmployeeNumber = userByTag[String(s.tagid)].employeenumber;
-              } else if (s.personid && userByPersonId[String(s.personid)]?.employeenumber) {
-                driverEmployeeNumber = userByPersonId[String(s.personid)].employeenumber;
-              }
-              // Fallback: reverse lookup by driver name in Naiton users to get employeenumber
-              if (!driverEmployeeNumber) {
-                const nameMatch = userByName[normDriverName(ad.Driver)];
-                if (nameMatch?.employeenumber) {
-                  driverEmployeeNumber = nameMatch.employeenumber;
-                }
-              }
               break;
             }
           }
@@ -483,58 +468,33 @@ Deno.serve(async (req) => {
       if (!driver) {
         for (const s of segs) {
           const info = s.tachocardnumber ? userByTacho[String(s.tachocardnumber)] : null;
-          if (info) {
-            driver = info.name;
-            driverEmployeeNumber = info.employeenumber;
-            driverSource = 'tachocardnumber';
-            break;
-          }
+          if (info) { driver = info.name; driverSource = 'tachocardnumber'; driverEmployeeNumber = info.employeenumber; break; }
         }
       }
       // Priority 2: tagid on trip segments
       if (!driver) {
         for (const s of segs) {
           const info = s.tagid ? userByTag[String(s.tagid)] : null;
-          if (info) {
-            driver = info.name;
-            driverEmployeeNumber = info.employeenumber;
-            driverSource = 'tagid';
-            break;
-          }
+          if (info) { driver = info.name; driverSource = 'tagid'; driverEmployeeNumber = info.employeenumber; break; }
         }
       }
       // Priority 3: personid on trip segments
       if (!driver) {
         for (const s of segs) {
           const info = s.personid ? userByPersonId[String(s.personid)] : null;
-          if (info) {
-            driver = info.name;
-            driverEmployeeNumber = info.employeenumber;
-            driverSource = 'personid';
-            break;
-          }
+          if (info) { driver = info.name; driverSource = 'personid'; driverEmployeeNumber = info.employeenumber; break; }
         }
       }
-      // Priority 4: additionaldata may contain tachocardnumber or tagid
+      // Priority 4: additionaldata tachocardnumber or tagid
       if (!driver) {
         for (const s of segs) {
           if (s.additionaldata) {
             try {
               const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
               const tachoInfo = ad.tachocardnumber ? userByTacho[String(ad.tachocardnumber)] : null;
-              if (tachoInfo) {
-                driver = tachoInfo.name;
-                driverEmployeeNumber = tachoInfo.employeenumber;
-                driverSource = 'additionaldata.tachocardnumber';
-                break;
-              }
+              if (tachoInfo) { driver = tachoInfo.name; driverEmployeeNumber = tachoInfo.employeenumber; driverSource = 'additionaldata.tachocardnumber'; break; }
               const tagInfo = ad.tagid ? userByTag[String(ad.tagid)] : null;
-              if (tagInfo) {
-                driver = tagInfo.name;
-                driverEmployeeNumber = tagInfo.employeenumber;
-                driverSource = 'additionaldata.tagid';
-                break;
-              }
+              if (tagInfo) { driver = tagInfo.name; driverEmployeeNumber = tagInfo.employeenumber; driverSource = 'additionaldata.tagid'; break; }
             } catch { /* ignore */ }
           }
         }
@@ -549,6 +509,30 @@ Deno.serve(async (req) => {
       if (!driver) {
         driver = planningDriverMap[ride.gpsassetid] || '';
         if (driver) driverSource = 'planning fallback';
+      }
+
+      // ALWAYS resolve employeenumber via Naiton user name lookup if not yet found
+      // This is critical: personeelsnummer is the primary key for Employee matching
+      if (driver && !driverEmployeeNumber) {
+        // Try segment-level tacho/tag/personid first (any segment in the ride)
+        for (const s of segs) {
+          if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]?.employeenumber) {
+            driverEmployeeNumber = userByTacho[String(s.tachocardnumber)].employeenumber; break;
+          }
+          if (s.tagid && userByTag[String(s.tagid)]?.employeenumber) {
+            driverEmployeeNumber = userByTag[String(s.tagid)].employeenumber; break;
+          }
+          if (s.personid && userByPersonId[String(s.personid)]?.employeenumber) {
+            driverEmployeeNumber = userByPersonId[String(s.personid)].employeenumber; break;
+          }
+        }
+        // Fallback: reverse lookup by driver name in Naiton users
+        if (!driverEmployeeNumber) {
+          const nameMatch = userByName[normDriverName(driver)];
+          if (nameMatch?.employeenumber) {
+            driverEmployeeNumber = nameMatch.employeenumber;
+          }
+        }
       }
 
       tripRecords.push({
