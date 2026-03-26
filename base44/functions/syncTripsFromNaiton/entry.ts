@@ -396,7 +396,7 @@ Deno.serve(async (req) => {
       const startTime = firstSeg.start;
       // endTime = ARRIVAL at standplaats = start of last stop segment (not its stop, which is when vehicle departs again)
       const lastSegType = (lastSeg.type || '').toLowerCase();
-      const endTime = (lastSegType === 'stop' && isStandplaats(lastSeg))
+      const endTime = (lastSegType === 'stop' && isStandplaats(lastSeg, ride.gpsassetid))
         ? (lastSeg.start || lastSeg.stop || lastSeg.end)
         : (lastSeg.stop || lastSeg.end || lastSeg.start);
 
