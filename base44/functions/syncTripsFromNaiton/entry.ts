@@ -127,7 +127,9 @@ Deno.serve(async (req) => {
     for (const u of naitonUsers) {
       const fullname = `${u.firstname || ''} ${u.lastname || ''}`.trim();
       if (!fullname) continue;
-      const info = { name: fullname, employeenumber: u.employeenumber ? String(u.employeenumber) : null };
+      // Naiton API uses "staffnumber" for personeelsnummer (not "employeenumber")
+      const empNr = u.staffnumber || u.employeenumber;
+      const info = { name: fullname, employeenumber: empNr ? String(empNr) : null };
       if (u.tachocardnumber) userByTacho[String(u.tachocardnumber)] = info;
       if (u.tagid) userByTag[String(u.tagid)] = info;
       if (u.personid) userByPersonId[String(u.personid)] = info;
@@ -137,7 +139,22 @@ Deno.serve(async (req) => {
     }
     addLog(`Users loaded: ${naitonUsers.length} total, ${Object.keys(userByTacho).length} tacho, ${Object.keys(userByTag).length} tag, ${Object.keys(userByPersonId).length} personid, ${Object.keys(userByName).length} naam-index`);
 
-    // Debug: log user map sample
+    // Debug: log user map sample + check employeenumber field availability
+    const usersWithEmpNr = naitonUsers.filter(u => u.staffnumber || u.employeenumber);
+    addLog(`Users met employeenumber: ${usersWithEmpNr.length}/${naitonUsers.length}`);
+    // Log all field names from first user to diagnose missing employeenumber
+    if (naitonUsers.length > 0) {
+      const sampleFields = Object.keys(naitonUsers[0]);
+      console.log('[NAITON] User fields:', JSON.stringify(sampleFields));
+      // Check for alternative field names for employee number
+      const altFields = sampleFields.filter(f => /employ|person|nummer|number|staff|pers/i.test(f));
+      if (altFields.length > 0) addLog(`Mogelijke personeelsnummer-velden: ${altFields.join(', ')}`);
+    }
+    // Log Kim specifically if present
+    const kimUser = naitonUsers.find(u => /broekhoven/i.test(`${u.firstname} ${u.lastname}`));
+    if (kimUser) {
+      console.log('[NAITON] Kim van Broekhoven user data:', JSON.stringify(kimUser));
+    }
     const userMapSample = naitonUsers.slice(0, 5).map(u => ({
       name: `${u.firstname} ${u.lastname}`,
       employeenumber: u.employeenumber,
@@ -652,9 +669,10 @@ Deno.serve(async (req) => {
       }
       addLog(`Employee index: ${Object.keys(empByNumber).length} met personeelsnummer, ${employees.length} totaal`);
 
-      // SECONDARY: Name-based fallback
+      // SECONDARY: Name-based fallback (exact + partial/roepnaam matching)
       const normName = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
       const empByName = {};
+      const empByLastAndPartialFirst = []; // for partial first name matching (roepnaam)
       for (const emp of employees) {
         const fn = emp.first_name || '';
         const pf = emp.prefix || '';
@@ -667,7 +685,34 @@ Deno.serve(async (req) => {
           const key = normName(v);
           if (key && !empByName[key]) empByName[key] = emp;
         }
+        // Index for partial first name matching (e.g. "Kim" → "Kimberley")
+        if (fn && ln) {
+          empByLastAndPartialFirst.push({
+            emp,
+            firstName: normName(fn),
+            prefix: normName(pf),
+            lastName: normName(ln),
+          });
+        }
       }
+
+      // Partial name matcher: "Kim van Broekhoven" → matches "Kimberley van Broekhoven"
+      const findByPartialName = (driverName) => {
+        const parts = normName(driverName).split(' ').filter(Boolean);
+        if (parts.length < 2) return null;
+        const driverFirst = parts[0];
+        const driverRest = parts.slice(1).join(' ');
+        for (const entry of empByLastAndPartialFirst) {
+          // Check if last name (with optional prefix) matches the rest of the driver name
+          const empRest = entry.prefix ? `${entry.prefix} ${entry.lastName}` : entry.lastName;
+          if (normName(empRest) !== driverRest && entry.lastName !== driverRest) continue;
+          // Check if employee first name STARTS WITH the driver's first name (roepnaam)
+          if (entry.firstName.startsWith(driverFirst) && driverFirst.length >= 3) {
+            return entry.emp;
+          }
+        }
+        return null;
+      };
 
       const linksToCreate = [];
       const unmatchedDrivers = [];
@@ -685,10 +730,16 @@ Deno.serve(async (req) => {
           if (emp) matchedByNumber++;
         }
 
-        // Priority 2: Name-based fallback
+        // Priority 2: Name-based fallback (exact match)
         if (!emp) {
           const norm = normName(rec.driver);
           emp = empByName[norm];
+          if (emp) matchedByName++;
+        }
+
+        // Priority 3: Partial first name / roepnaam match (e.g. "Kim" → "Kimberley")
+        if (!emp) {
+          emp = findByPartialName(rec.driver);
           if (emp) matchedByName++;
         }
 
