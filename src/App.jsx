@@ -13,6 +13,7 @@ import TripSync from './pages/TripSync';
 import VehicleStopReport from './pages/VehicleStopReport';
 import NaitonApiDocs from './pages/NaitonApiDocs';
 import FuelSurchargePage from './pages/FuelSurcharge';
+import NaitonRawData from './pages/NaitonRawData';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -92,6 +93,11 @@ const AuthenticatedApp = () => {
       <Route path="/FuelSurcharge" element={
         <LayoutWrapper currentPageName="FuelSurcharge">
           <FuelSurchargePage />
+        </LayoutWrapper>
+      } />
+      <Route path="/NaitonRawData" element={
+        <LayoutWrapper currentPageName="NaitonRawData">
+          <NaitonRawData />
         </LayoutWrapper>
       } />
       <Route path="*" element={<PageNotFound />} />
