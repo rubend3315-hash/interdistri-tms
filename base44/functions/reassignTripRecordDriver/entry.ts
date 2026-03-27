@@ -1,5 +1,5 @@
 // reassignTripRecordDriver — Handmatige chauffeur-koppeling + Naiton write-back
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const BASE_URL = 'https://dawa-prod.naiton.com';
 
@@ -44,13 +44,11 @@ Deno.serve(async (req) => {
     // 2. Update or create TripRecordLink
     const existingLinks = await svc.entities.TripRecordLink.filter({ trip_record_id });
     if (existingLinks.length > 0) {
-      // Update existing link
       await svc.entities.TripRecordLink.update(existingLinks[0].id, {
         employee_id: employee.id,
         employee_name: driverName,
       });
     } else {
-      // Create new link
       await svc.entities.TripRecordLink.create({
         trip_record_id,
         employee_id: employee.id,
@@ -60,7 +58,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 3. Write-back to Naiton (best-effort, don't fail if this errors)
+    // 3. Write-back to Naiton (best-effort)
     let naitonResult = null;
     try {
       const CLIENT_ID = Deno.env.get('NAITON_CLIENT_ID');
@@ -73,10 +71,11 @@ Deno.serve(async (req) => {
           { name: "starttime", value: tripRecord.start_time },
           { name: "stoptime", value: tripRecord.end_time },
         ];
-        // Personeelsnummer is de primaire sleutel voor synchronisatie
         if (employee.employee_number) {
           upsertArgs.push({ name: "staffnumber", value: String(employee.employee_number) });
         }
+
+        console.log(`[REASSIGN] Naiton write-back: ${driverName} (nr=${employee.employee_number || '-'}) → asset=${tripRecord.gpsassetid}`);
 
         const res = await fetch(`${BASE_URL}/datad/execute`, {
           method: 'POST',
@@ -91,19 +90,21 @@ Deno.serve(async (req) => {
           }]),
         });
 
+        const resText = await res.text();
+
         if (res.ok) {
           naitonResult = 'success';
-          console.log(`[REASSIGN] Naiton write-back OK for ${tripRecord.gpsassetid} → ${driverName}`);
         } else {
-          const errText = await res.text();
-          naitonResult = `error: ${res.status}`;
-          console.warn(`[REASSIGN] Naiton write-back failed: ${res.status} ${errText.slice(0, 200)}`);
+          // AC003 = Naiton API accepteert momenteel geen write-parameters
+          // Dit vereist configuratie aan GPS Buddy / Naiton-zijde
+          naitonResult = `naiton_api_error: ${res.status} — ${resText.slice(0, 200)}`;
+          console.warn(`[REASSIGN] Naiton write-back failed: ${res.status} ${resText.slice(0, 200)}`);
         }
       } else {
         naitonResult = 'skipped (missing credentials or trip data)';
       }
     } catch (naitonErr) {
-      naitonResult = `error: ${naitonErr.message}`;
+      naitonResult = `exception: ${naitonErr.message}`;
       console.warn(`[REASSIGN] Naiton write-back exception: ${naitonErr.message}`);
     }
 
@@ -111,6 +112,7 @@ Deno.serve(async (req) => {
       success: true,
       driver: driverName,
       employee_id: employee.id,
+      employee_number: employee.employee_number || null,
       naiton_writeback: naitonResult,
     });
 
