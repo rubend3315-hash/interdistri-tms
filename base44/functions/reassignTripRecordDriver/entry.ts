@@ -67,6 +67,17 @@ Deno.serve(async (req) => {
       const CLIENT_SECRET = Deno.env.get('NAITON_CLIENT_SECRET');
 
       if (CLIENT_ID && CLIENT_SECRET && tripRecord.gpsassetid && tripRecord.start_time && tripRecord.end_time) {
+        const upsertArgs = [
+          { name: "gpsassetid", value: tripRecord.gpsassetid },
+          { name: "drivername", value: driverName },
+          { name: "starttime", value: tripRecord.start_time },
+          { name: "stoptime", value: tripRecord.end_time },
+        ];
+        // Personeelsnummer is de primaire sleutel voor synchronisatie
+        if (employee.employee_number) {
+          upsertArgs.push({ name: "staffnumber", value: String(employee.employee_number) });
+        }
+
         const res = await fetch(`${BASE_URL}/datad/execute`, {
           method: 'POST',
           headers: {
@@ -76,12 +87,7 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify([{
             name: "dataexchange_driverhistoryupsert",
-            arguments: [
-              { name: "gpsassetid", value: tripRecord.gpsassetid },
-              { name: "drivername", value: driverName },
-              { name: "starttime", value: tripRecord.start_time },
-              { name: "stoptime", value: tripRecord.end_time },
-            ]
+            arguments: upsertArgs,
           }]),
         });
 
