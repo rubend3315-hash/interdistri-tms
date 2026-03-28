@@ -658,7 +658,18 @@ Deno.serve(async (req) => {
     let linked = 0;
     if (newRecordIds.length > 0) {
       addLog('Step 6: Matching drivers to employees...');
-      const employees = await svc.entities.Employee.filter({ status: 'Actief' }, '-created_date', 500);
+      // SDK bug workaround: list/filter returns corrupted string for >~40 records
+      // Paginate in batches of 20 to ensure proper JSON parsing
+      const employees = [];
+      let empSkip = 0;
+      const EMP_PAGE = 20;
+      while (true) {
+        const page = await svc.entities.Employee.filter({ status: 'Actief' }, '-created_date', EMP_PAGE, empSkip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        employees.push(...page);
+        if (page.length < EMP_PAGE) break;
+        empSkip += EMP_PAGE;
+      }
 
       // PRIMARY: Index by employee_number (personeelsnummer) — most reliable
       const empByNumber = {};
