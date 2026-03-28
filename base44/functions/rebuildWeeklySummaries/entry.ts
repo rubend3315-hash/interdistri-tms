@@ -196,11 +196,26 @@ Deno.serve(async (req) => {
 
     console.log(`[rebuildWeekly] V5 batch: year=${year} weeks ${start_week}-${effectiveEnd}`);
 
+    // Paginated fetch helper — SDK bug workaround
+    async function paginatedFilter(entity, query, sortField) {
+      const all = [];
+      let skip = 0;
+      const PAGE = 20;
+      while (true) {
+        const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        all.push(...page);
+        if (page.length < PAGE) break;
+        skip += PAGE;
+      }
+      return all;
+    }
+
     const [customers, projects, articles, employees] = await Promise.all([
-      svc.entities.Customer.filter({ status: 'Actief' }),
-      svc.entities.Project.filter({ status: 'Actief' }),
-      svc.entities.Article.filter({ status: 'Actief' }),
-      svc.entities.Employee.filter({ status: 'Actief' }),
+      paginatedFilter(svc.entities.Customer, { status: 'Actief' }),
+      paginatedFilter(svc.entities.Project, { status: 'Actief' }),
+      paginatedFilter(svc.entities.Article, { status: 'Actief' }),
+      paginatedFilter(svc.entities.Employee, { status: 'Actief' }),
     ]);
     const custNameMap = {}, projCustMap = {}, empNameMap = {};
     (Array.isArray(customers) ? customers : []).forEach(c => { custNameMap[c.id] = c.company_name; });

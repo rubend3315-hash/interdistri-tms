@@ -20,10 +20,25 @@ Deno.serve(async (req) => {
 
     const svc = base44.asServiceRole;
 
+    // Paginated fetch helper — SDK bug workaround
+    async function paginatedFilter(entity, query, sortField) {
+      const all = [];
+      let skip = 0;
+      const PAGE = 20;
+      while (true) {
+        const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        all.push(...page);
+        if (page.length < PAGE) break;
+        skip += PAGE;
+      }
+      return all;
+    }
+
     // Fetch break schedules + all time entries in parallel
     const [breakSchedules, allEntries] = await Promise.all([
-      svc.entities.BreakSchedule.list(),
-      svc.entities.TimeEntry.list(),
+      paginatedFilter(svc.entities.BreakSchedule, {}),
+      paginatedFilter(svc.entities.TimeEntry, {}),
     ]);
 
     const activeSchedules = breakSchedules

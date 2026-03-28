@@ -28,8 +28,23 @@ Deno.serve(async (req) => {
 
     const svc = base44.asServiceRole;
 
+    // Paginated fetch helper — SDK bug workaround
+    async function paginatedFilter(entity, query, sortField) {
+      const all = [];
+      let skip = 0;
+      const PAGE = 20;
+      while (true) {
+        const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        all.push(...page);
+        if (page.length < PAGE) break;
+        skip += PAGE;
+      }
+      return all;
+    }
+
     // 1. Get ALL customer fuel settings (multiple per vehicle type)
-    const allSettings = await svc.entities.CustomerFuelSettings.filter({ customer_id, is_active: true });
+    const allSettings = await paginatedFilter(svc.entities.CustomerFuelSettings, { customer_id, is_active: true });
     if (!allSettings.length) {
       return Response.json({ error: 'Geen brandstof-instellingen gevonden voor deze klant' }, { status: 404 });
     }
@@ -39,20 +54,17 @@ Deno.serve(async (req) => {
     allSettings.forEach(s => { settingsByType[s.vehicle_type] = s; });
 
     // 2. Get trips for this customer in the period
-    const trips = await svc.entities.Trip.filter({
-      customer_id,
-      date: { $gte: date_from, $lte: date_to }
-    }, 'date', 500);
+    const trips = await paginatedFilter(svc.entities.Trip, { customer_id, date: { $gte: date_from, $lte: date_to } }, 'date');
 
     // 3. Get vehicles for type mapping
-    const vehicles = await svc.entities.Vehicle.filter({});
+    const vehicles = await paginatedFilter(svc.entities.Vehicle, {});
     const vehicleById = {};
     vehicles.forEach(v => { vehicleById[v.id] = v; });
 
     // 4. Get fuel prices: TLN (primary) + CBS (fallback)
     const [tlnPrices, cbsPrices] = await Promise.all([
-      svc.entities.DieselPrice.filter({ date: { $gte: date_from, $lte: date_to } }, 'date', 500),
-      svc.entities.CbsDieselPrice.filter({ date: { $gte: date_from, $lte: date_to } }, 'date', 500),
+      paginatedFilter(svc.entities.DieselPrice, { date: { $gte: date_from, $lte: date_to } }, 'date'),
+      paginatedFilter(svc.entities.CbsDieselPrice, { date: { $gte: date_from, $lte: date_to } }, 'date'),
     ]);
 
     const tlnPriceMap = {};

@@ -17,13 +17,28 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'start_date en end_date zijn verplicht' }, { status: 400 });
     }
 
+    // Paginated fetch helper — SDK bug workaround
+    async function paginatedFilter(entity, query, sortField) {
+      const all = [];
+      let skip = 0;
+      const PAGE = 20;
+      while (true) {
+        const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        all.push(...page);
+        if (page.length < PAGE) break;
+        skip += PAGE;
+      }
+      return all;
+    }
+
     // Fetch all data
     const [employees, timeEntries, trips, vehicles, customers] = await Promise.all([
-      base44.asServiceRole.entities.Employee.filter({}),
-      base44.asServiceRole.entities.TimeEntry.filter({}),
-      base44.asServiceRole.entities.Trip.filter({}),
-      base44.asServiceRole.entities.Vehicle.filter({}),
-      base44.asServiceRole.entities.Customer.filter({}),
+      paginatedFilter(base44.asServiceRole.entities.Employee, {}),
+      paginatedFilter(base44.asServiceRole.entities.TimeEntry, {}),
+      paginatedFilter(base44.asServiceRole.entities.Trip, {}),
+      paginatedFilter(base44.asServiceRole.entities.Vehicle, {}),
+      paginatedFilter(base44.asServiceRole.entities.Customer, {}),
     ]);
 
     const employeeMap = {};

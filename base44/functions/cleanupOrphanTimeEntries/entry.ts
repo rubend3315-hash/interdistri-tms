@@ -30,6 +30,21 @@ Deno.serve(async (req) => {
     const now = Date.now();
     const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
+    // Paginated fetch helper — SDK bug workaround
+    async function paginatedFilter(entity, query, sortField) {
+      const all = [];
+      let skip = 0;
+      const PAGE = 20;
+      while (true) {
+        const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        all.push(...page);
+        if (page.length < PAGE) break;
+        skip += PAGE;
+      }
+      return all;
+    }
+
     const stats = {
       concept_entries_deleted: 0,
       orphan_trips_deleted: 0,
@@ -41,7 +56,7 @@ Deno.serve(async (req) => {
     // 1. FIND & DELETE STALE CONCEPT ENTRIES
     // ========================================
     console.log('[CLEANUP] Fetching Concept TimeEntries...');
-    const conceptEntries = await svc.entities.TimeEntry.filter({ status: 'Concept' });
+    const conceptEntries = await paginatedFilter(svc.entities.TimeEntry, { status: 'Concept' });
     console.log(`[CLEANUP] Found ${conceptEntries.length} Concept entries total`);
 
     for (const entry of conceptEntries) {
@@ -92,7 +107,7 @@ Deno.serve(async (req) => {
     // ========================================
     // Get all Trip records with status Gepland (drafts) older than 24h
     console.log('[CLEANUP] Checking for orphan Trips...');
-    const draftTrips = await svc.entities.Trip.filter({ status: 'Gepland' });
+    const draftTrips = await paginatedFilter(svc.entities.Trip, { status: 'Gepland' });
 
     for (const trip of draftTrips) {
       const createdAt = new Date(trip.created_date).getTime();
@@ -128,7 +143,7 @@ Deno.serve(async (req) => {
     console.log('[CLEANUP] Checking for orphan StandplaatsWerk...');
     // Get StandplaatsWerk records that have a time_entry_id but parent doesn't exist
     // We can't filter by "time_entry_id exists" so we check all recent ones
-    const allSpw = await svc.entities.StandplaatsWerk.list('-created_date', 200);
+    const allSpw = await paginatedFilter(svc.entities.StandplaatsWerk, {}, '-created_date');
 
     for (const spw of allSpw) {
       const createdAt = new Date(spw.created_date).getTime();

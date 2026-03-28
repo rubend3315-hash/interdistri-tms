@@ -48,11 +48,18 @@ Deno.serve(async (req) => {
     }
     console.log(`[syncDiesel] ${xlsPrices.length} prijzen in xlsx vanaf ${CUTOFF_DATE}`);
 
-    // 3. Fetch existing dates from DB
-    const existing = await svc.entities.DieselPrice.filter(
-      { date: { $gte: CUTOFF_DATE } }, 'date', 5000
-    );
-    const existingDates = new Set(existing.map(r => r.date));
+    // 3. Fetch existing dates from DB — paginated to avoid SDK bug
+    const existingAll = [];
+    let _skip = 0;
+    const _PAGE = 20;
+    while (true) {
+      const page = await svc.entities.DieselPrice.filter({ date: { $gte: CUTOFF_DATE } }, 'date', _PAGE, _skip);
+      if (!Array.isArray(page) || page.length === 0) break;
+      existingAll.push(...page);
+      if (page.length < _PAGE) break;
+      _skip += _PAGE;
+    }
+    const existingDates = new Set(existingAll.map(r => r.date));
     console.log(`[syncDiesel] ${existingDates.size} prijzen al in database`);
 
     // 4. Find missing dates

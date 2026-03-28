@@ -202,6 +202,21 @@ function validateReport(report) {
   return errors;
 }
 
+// Paginated fetch helper — SDK bug workaround (>~40 records = corrupted response)
+async function paginatedFilter(entity, query, sortField) {
+  const all = [];
+  let skip = 0;
+  const PAGE = 20;
+  while (true) {
+    const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
+    if (!Array.isArray(page) || page.length === 0) break;
+    all.push(...page);
+    if (page.length < PAGE) break;
+    skip += PAGE;
+  }
+  return all;
+}
+
 const EXPECTED_SCHEMA_VERSION = "2.3";
 
 /** Parse HH:MM times into decimal hours difference */
@@ -245,11 +260,11 @@ Deno.serve(async (req) => {
     }
 
     const [employees, allTimeEntries, trips, standplaatsWerk, customers] = await Promise.all([
-      base44.asServiceRole.entities.Employee.filter({ status: 'Actief' }),
-      base44.asServiceRole.entities.TimeEntry.filter({ date }),
-      base44.asServiceRole.entities.Trip.filter({ date }),
-      base44.asServiceRole.entities.StandplaatsWerk.filter({ date }),
-      base44.asServiceRole.entities.Customer.filter({}),
+      paginatedFilter(base44.asServiceRole.entities.Employee, { status: 'Actief' }),
+      paginatedFilter(base44.asServiceRole.entities.TimeEntry, { date }),
+      paginatedFilter(base44.asServiceRole.entities.Trip, { date }),
+      paginatedFilter(base44.asServiceRole.entities.StandplaatsWerk, { date }),
+      paginatedFilter(base44.asServiceRole.entities.Customer, {}),
     ]);
 
     // Only include approved time entries

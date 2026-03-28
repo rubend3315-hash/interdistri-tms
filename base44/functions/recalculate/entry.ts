@@ -38,14 +38,29 @@ Deno.serve(async (req) => {
   }
 });
 
+// Paginated fetch helper — SDK bug workaround
+async function paginatedFilter(entity, query, sortField) {
+  const all = [];
+  let skip = 0;
+  const PAGE = 20;
+  while (true) {
+    const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
+    if (!Array.isArray(page) || page.length === 0) break;
+    all.push(...page);
+    if (page.length < PAGE) break;
+    skip += PAGE;
+  }
+  return all;
+}
+
 async function recalculateTimeEntries(base44, fromDate, toDate) {
   // Haal alle benodigde data op
   const [allEntries, holidays, employees, caoRules, breakSchedules] = await Promise.all([
-    base44.asServiceRole.entities.TimeEntry.list(),
-    base44.asServiceRole.entities.Holiday.list(),
-    base44.asServiceRole.entities.Employee.list(),
-    base44.asServiceRole.entities.CaoRule.list(),
-    base44.asServiceRole.entities.BreakSchedule.list(),
+    paginatedFilter(base44.asServiceRole.entities.TimeEntry, {}),
+    paginatedFilter(base44.asServiceRole.entities.Holiday, {}),
+    paginatedFilter(base44.asServiceRole.entities.Employee, {}),
+    paginatedFilter(base44.asServiceRole.entities.CaoRule, {}),
+    paginatedFilter(base44.asServiceRole.entities.BreakSchedule, {}),
   ]);
 
   const holidayDates = new Set(holidays.map(h => h.date));
@@ -248,7 +263,7 @@ function calculateSubsistence(departureTime, arrivalTime, tripDate, caoRules) {
 
 async function recalculateProjectPrices(base44, fromDate, toDate) {
   // Haal rapportage ritten op die binnen het datumbereik vallen
-  const allRits = await base44.asServiceRole.entities.RapportageRit.list();
+  const allRits = await paginatedFilter(base44.asServiceRole.entities.RapportageRit, {});
   
   const rits = allRits.filter(r => {
     if (!r.datum) return false;
@@ -268,8 +283,8 @@ async function recalculateProjectPrices(base44, fromDate, toDate) {
 
   // Haal projecten en artikelen op
   const [projects, articles] = await Promise.all([
-    base44.asServiceRole.entities.Project.list(),
-    base44.asServiceRole.entities.Article.list(),
+    paginatedFilter(base44.asServiceRole.entities.Project, {}),
+    paginatedFilter(base44.asServiceRole.entities.Article, {}),
   ]);
 
   // Maak lookup maps
@@ -312,9 +327,9 @@ async function recalculateProjectPrices(base44, fromDate, toDate) {
 
 async function recalculateArticlePrices(base44, fromDate, toDate) {
   // Haal rapportage ritten op met artikelen
-  const allRits = await base44.asServiceRole.entities.RapportageRit.list();
+  const allRits = await paginatedFilter(base44.asServiceRole.entities.RapportageRit, {});
   const [articles] = await Promise.all([
-    base44.asServiceRole.entities.Article.list(),
+    paginatedFilter(base44.asServiceRole.entities.Article, {}),
   ]);
 
   const articleMap = {};

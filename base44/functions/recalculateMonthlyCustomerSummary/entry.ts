@@ -54,8 +54,23 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
     console.log(`[recalcMonthly] Recalculating year=${year} month=${month} force=${force_unlock}`);
 
+    // Paginated fetch helper — SDK bug workaround
+    async function paginatedFilter(entity, query, sortField) {
+      const all = [];
+      let skip = 0;
+      const PAGE = 20;
+      while (true) {
+        const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        all.push(...page);
+        if (page.length < PAGE) break;
+        skip += PAGE;
+      }
+      return all;
+    }
+
     // ── LOCK CHECK ──
-    const existingSummaries = await svc.entities.MonthlyCustomerSummary.filter({ year, month });
+    const existingSummaries = await paginatedFilter(svc.entities.MonthlyCustomerSummary, { year, month });
     const isLocked = existingSummaries.some(s => s.locked === true);
     if (isLocked && !force_unlock) {
       console.log(`[recalcMonthly] Month ${month}/${year} is locked — skipping`);
@@ -70,7 +85,7 @@ Deno.serve(async (req) => {
     let allWeeklySummaries = [];
     let hasLockedWeeks = false;
     for (const w of weeksInMonth) {
-      const weekData = await svc.entities.WeeklyCustomerSummary.filter({ year: w.year, week_number: w.week });
+      const weekData = await paginatedFilter(svc.entities.WeeklyCustomerSummary, { year: w.year, week_number: w.week });
       allWeeklySummaries = allWeeklySummaries.concat(weekData);
       if (weekData.some(s => s.locked === true)) {
         hasLockedWeeks = true;
@@ -104,9 +119,7 @@ Deno.serve(async (req) => {
 
     let invoices = [];
     try {
-      invoices = await svc.entities.SpottaInvoice.filter({
-        invoice_date: { $gte: monthStart, $lte: monthEnd }
-      });
+      invoices = await paginatedFilter(svc.entities.SpottaInvoice, { invoice_date: { $gte: monthStart, $lte: monthEnd } });
     } catch (e) {
       console.warn('[recalcMonthly] Invoice fetch failed:', e?.message);
     }
@@ -199,7 +212,7 @@ Deno.serve(async (req) => {
 
     if (svc && year && month) {
       try {
-        const errSummaries = await svc.entities.MonthlyCustomerSummary.filter({ year, month });
+        const errSummaries = await paginatedFilter(svc.entities.MonthlyCustomerSummary, { year, month });
         for (const s of errSummaries) {
           await svc.entities.MonthlyCustomerSummary.update(s.id, {
             aggregation_status: 'ERROR',
