@@ -5,7 +5,7 @@
 // ║ Purpose: Update TimeEntry WITH overlap validation (excl self)    ║
 // ║ Uses same overlap engine as submitTimeEntry v5.1                 ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 // --- Shared overlap engine (identical to submitTimeEntry v5.1) ---
 
