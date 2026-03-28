@@ -6,7 +6,7 @@
 // ║    samengevoegd tot één logische stop (compenseert ontbrekend         ║
 // ║    ignition-signaal in API)                                          ║
 // ╚══════════════════════════════════════════════════════════════════════╝
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const BASE_URL = 'https://dawa-prod.naiton.com';
 const INSERT_BATCH_SIZE = 50;
@@ -658,7 +658,7 @@ Deno.serve(async (req) => {
     let linked = 0;
     if (newRecordIds.length > 0) {
       addLog('Step 6: Matching drivers to employees...');
-      const employees = await svc.entities.Employee.filter({ status: 'Actief' });
+      const employees = await svc.entities.Employee.filter({ status: 'Actief' }, '-created_date', 500);
 
       // PRIMARY: Index by employee_number (personeelsnummer) — most reliable
       const empByNumber = {};
