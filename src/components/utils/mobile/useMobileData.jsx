@@ -4,6 +4,25 @@ import { base44 } from "@/api/base44Client";
 import { format, getWeek, getYear } from "date-fns";
 
 /**
+ * Paginated fetch helper — SDK bug workaround.
+ * SDK .filter()/.list() returns corrupted string for >~40 records.
+ * This fetches in batches of 20 to guarantee valid arrays.
+ */
+async function paginatedFilter(entity, query = {}, sort = '-created_date') {
+  const all = [];
+  let skip = 0;
+  const PAGE = 20;
+  while (true) {
+    const page = await entity.filter(query, sort, PAGE, skip);
+    if (!Array.isArray(page) || page.length === 0) break;
+    all.push(...page);
+    if (page.length < PAGE) break;
+    skip += PAGE;
+  }
+  return all;
+}
+
+/**
  * useMobileData — Central data fetching hook for mobile entry pages.
  * Zero entity calls in pages/components — all queries live here.
  */
@@ -20,32 +39,32 @@ export function useMobileData(user, selectedDate) {
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['activeVehicles'],
-    queryFn: () => base44.entities.Vehicle.filter({ status: 'Beschikbaar' })
+    queryFn: () => paginatedFilter(base44.entities.Vehicle, { status: 'Beschikbaar' })
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['activeCustomers'],
-    queryFn: () => base44.entities.Customer.filter({ status: 'Actief' })
+    queryFn: () => paginatedFilter(base44.entities.Customer, { status: 'Actief' })
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['activeProjectsMobile'],
-    queryFn: () => base44.entities.Project.filter({ status: 'Actief' })
+    queryFn: () => paginatedFilter(base44.entities.Project, { status: 'Actief' })
   });
 
   const { data: routes = [] } = useQuery({
     queryKey: ['routesMobile'],
-    queryFn: () => base44.entities.Route.filter({ is_active: true })
+    queryFn: () => paginatedFilter(base44.entities.Route, { is_active: true })
   });
 
   const { data: tiModelRoutes = [] } = useQuery({
     queryKey: ['tiModelRoutesMobile'],
-    queryFn: () => base44.entities.TIModelRoute.filter({ is_active: true })
+    queryFn: () => paginatedFilter(base44.entities.TIModelRoute, { is_active: true })
   });
 
   const { data: activiteiten = [] } = useQuery({
     queryKey: ['activiteiten'],
-    queryFn: () => base44.entities.Activiteit.list()
+    queryFn: () => paginatedFilter(base44.entities.Activiteit, {})
   });
 
   const { data: supervisorMessages = [] } = useQuery({
@@ -55,14 +74,14 @@ export function useMobileData(user, selectedDate) {
 
   const { data: myTimeEntries = [], isLoading: loadingEntries } = useQuery({
     queryKey: ['myTimeEntries', user?.email],
-    queryFn: () => base44.entities.TimeEntry.filter({ created_by: user?.email }),
+    queryFn: () => paginatedFilter(base44.entities.TimeEntry, { created_by: user?.email }),
     enabled: !!user?.email
   });
 
   // Also fetch entries created by admin for this employee (employee_id based)
   const { data: employeeTimeEntries = [], isLoading: loadingEmployeeEntries } = useQuery({
     queryKey: ['employeeTimeEntries', currentEmployee?.id],
-    queryFn: () => base44.entities.TimeEntry.filter({ employee_id: currentEmployee.id }),
+    queryFn: () => paginatedFilter(base44.entities.TimeEntry, { employee_id: currentEmployee.id }),
     enabled: !!currentEmployee?.id
   });
 
