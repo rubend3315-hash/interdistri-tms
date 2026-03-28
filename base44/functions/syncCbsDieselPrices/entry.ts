@@ -61,14 +61,19 @@ Deno.serve(async (req) => {
 
     addLog(`Parsed ${cbsPrices.length} valid prices`);
 
-    // Get existing dates
+    // Get existing dates — paginated to work around SDK bug (>~40 records = corrupted response)
     const svc = base44.asServiceRole;
-    const existing = await svc.entities.CbsDieselPrice.filter(
-      { date: { $gte: sinceDate } },
-      '-date',
-      2000
-    );
-    const existingDates = new Set(existing.map(e => e.date));
+    const existingAll = [];
+    let skip = 0;
+    const PAGE = 20;
+    while (true) {
+      const page = await svc.entities.CbsDieselPrice.filter({ date: { $gte: sinceDate } }, '-date', PAGE, skip);
+      if (!Array.isArray(page) || page.length === 0) break;
+      existingAll.push(...page);
+      if (page.length < PAGE) break;
+      skip += PAGE;
+    }
+    const existingDates = new Set(existingAll.map(e => e.date));
 
     // Filter new records
     const toInsert = cbsPrices.filter(p => !existingDates.has(p.date));
