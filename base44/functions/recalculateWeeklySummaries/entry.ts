@@ -82,8 +82,23 @@ Deno.serve(async (req) => {
 
     console.log(`[recalcWeekly] Recalculating year=${year} week=${week_number} (${wsStr} to ${weStr}) force=${force_unlock}`);
 
+    // Paginated fetch helper to work around SDK bug (>~40 records = corrupted response)
+    async function paginatedFilter(entity, query, sortField) {
+      const all = [];
+      let skip = 0;
+      const PAGE = 20;
+      while (true) {
+        const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        all.push(...page);
+        if (page.length < PAGE) break;
+        skip += PAGE;
+      }
+      return all;
+    }
+
     // ── LOCK CHECK ──
-    const existingCustSummaries = await svc.entities.WeeklyCustomerSummary.filter({ year, week_number });
+    const existingCustSummaries = await paginatedFilter(svc.entities.WeeklyCustomerSummary, { year, week_number });
     const isLocked = existingCustSummaries.some(s => s.locked === true);
     if (isLocked && !force_unlock) {
       console.log(`[recalcWeekly] Week ${week_number}/${year} is locked — skipping`);
@@ -91,13 +106,14 @@ Deno.serve(async (req) => {
     }
 
     // ── FETCH ALL DATA (full week, no incremental) ──
+
     const [timeEntries, trips, spws, customers, projects, articles] = await Promise.all([
-      svc.entities.TimeEntry.filter({ week_number, year }),
-      svc.entities.Trip.filter({ date: { $gte: wsStr, $lte: weStr } }),
-      svc.entities.StandplaatsWerk.filter({ date: { $gte: wsStr, $lte: weStr } }),
-      svc.entities.Customer.filter({ status: 'Actief' }),
-      svc.entities.Project.filter({ status: 'Actief' }),
-      svc.entities.Article.filter({ status: 'Actief' }),
+      paginatedFilter(svc.entities.TimeEntry, { week_number, year }, '-date'),
+      paginatedFilter(svc.entities.Trip, { date: { $gte: wsStr, $lte: weStr } }, '-date'),
+      paginatedFilter(svc.entities.StandplaatsWerk, { date: { $gte: wsStr, $lte: weStr } }, '-date'),
+      paginatedFilter(svc.entities.Customer, { status: 'Actief' }),
+      paginatedFilter(svc.entities.Project, { status: 'Actief' }),
+      paginatedFilter(svc.entities.Article, { status: 'Actief' }),
     ]);
 
     const approved = timeEntries.filter(te => te.status === 'Goedgekeurd');
@@ -218,7 +234,7 @@ Deno.serve(async (req) => {
 
       let imports = [];
       try {
-        imports = await svc.entities.PostNLImportResult.filter({ import_datum: { $gte: wsStr, $lte: weStr } });
+        imports = await paginatedFilter(svc.entities.PostNLImportResult, { import_datum: { $gte: wsStr, $lte: weStr } });
       } catch (e) {
         console.warn('[recalcWeekly] PostNL import fetch failed:', e?.message);
       }
@@ -241,7 +257,7 @@ Deno.serve(async (req) => {
 
     // ── EMPLOYEE SUMMARY (full recalc from scratch) ──
     const employeeMap = {};
-    const employees = await svc.entities.Employee.filter({ status: 'Actief' });
+    const employees = await paginatedFilter(svc.entities.Employee, { status: 'Actief' });
     const empNameMap = {};
     employees.forEach(e => { empNameMap[e.id] = `${e.first_name} ${e.prefix ? e.prefix + ' ' : ''}${e.last_name}`; });
 
@@ -334,7 +350,7 @@ Deno.serve(async (req) => {
     }
 
     // ── UPSERT EMPLOYEE SUMMARIES (parallel + bulk) ──
-    const existingEmpSummaries = await svc.entities.WeeklyEmployeeSummary.filter({ year, week_number });
+    const existingEmpSummaries = await paginatedFilter(svc.entities.WeeklyEmployeeSummary, { year, week_number });
     const existingEmpMap = {};
     existingEmpSummaries.forEach(s => { existingEmpMap[s.employee_id] = s; });
 
@@ -415,7 +431,7 @@ Deno.serve(async (req) => {
     // Mark all existing summaries as ERROR
     if (svc && year && week_number) {
       try {
-        const errorSummaries = await svc.entities.WeeklyCustomerSummary.filter({ year, week_number });
+        const errorSummaries = await paginatedFilter(svc.entities.WeeklyCustomerSummary, { year, week_number });
         const errorNow = new Date().toISOString();
         if (errorSummaries.length > 0) {
           await Promise.all(errorSummaries.map(s =>

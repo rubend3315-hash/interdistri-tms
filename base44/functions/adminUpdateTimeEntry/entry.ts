@@ -133,7 +133,17 @@ Deno.serve(async (req) => {
       const queryStart = addDays(finalDate, -1);
       const queryEnd = addDays(effectiveEnd, 1);
 
-      const allEntries = await svc.entities.TimeEntry.filter({ employee_id: finalEmployeeId });
+      // Paginated fetch to work around SDK bug (>~40 records = corrupted response)
+      const allEntries = [];
+      let _skip = 0;
+      const _PAGE = 20;
+      while (true) {
+        const page = await svc.entities.TimeEntry.filter({ employee_id: finalEmployeeId }, '-date', _PAGE, _skip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        allEntries.push(...page);
+        if (page.length < _PAGE) break;
+        _skip += _PAGE;
+      }
       const rangedCandidates = allEntries.filter(e => e.date >= queryStart && e.date <= queryEnd);
 
       const overlapResult = validateTimeEntryOverlap(
