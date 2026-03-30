@@ -62,9 +62,13 @@ Deno.serve(async (req) => {
     vehicles.forEach(v => { vehicleById[v.id] = v; });
 
     // 4. Get fuel prices: TLN (primary) + CBS (fallback)
+    // Fetch wider range: from 14 days before date_from to date_to, so we always have a recent price
+    const priceSearchFrom = new Date(date_from);
+    priceSearchFrom.setDate(priceSearchFrom.getDate() - 14);
+    const priceSearchFromStr = priceSearchFrom.toISOString().split('T')[0];
     const [tlnPrices, cbsPrices] = await Promise.all([
-      paginatedFilter(svc.entities.DieselPrice, { date: { $gte: date_from, $lte: date_to } }, 'date'),
-      paginatedFilter(svc.entities.CbsDieselPrice, { date: { $gte: date_from, $lte: date_to } }, 'date'),
+      paginatedFilter(svc.entities.DieselPrice, { date: { $gte: priceSearchFromStr, $lte: date_to } }, 'date'),
+      paginatedFilter(svc.entities.CbsDieselPrice, { date: { $gte: priceSearchFromStr, $lte: date_to } }, 'date'),
     ]);
 
     const tlnPriceMap = {};
@@ -160,9 +164,22 @@ Deno.serve(async (req) => {
       ? tripDetails.reduce((s, t) => s + t.base_fuel_price, 0) / tripDetails.length
       : allSettings[0].base_fuel_price;
 
-    const avgActualPrice = tripDetails.length > 0
-      ? tripDetails.reduce((s, t) => s + t.fuel_price_date, 0) / tripDetails.length
-      : avgBasePrice;
+    // For actual price: use trip data if available, otherwise get most recent TLN dagprijs
+    let avgActualPrice;
+    if (tripDetails.length > 0) {
+      avgActualPrice = tripDetails.reduce((s, t) => s + t.fuel_price_date, 0) / tripDetails.length;
+    } else {
+      // Find most recent TLN price (sorted desc by date)
+      const sortedTln = [...tlnPrices].sort((a, b) => b.date.localeCompare(a.date));
+      const sortedCbs = [...cbsPrices].sort((a, b) => b.date.localeCompare(a.date));
+      if (sortedTln.length > 0) {
+        avgActualPrice = sortedTln[0].price;
+      } else if (sortedCbs.length > 0) {
+        avgActualPrice = sortedCbs[0].price_excl_btw;
+      } else {
+        avgActualPrice = avgBasePrice;
+      }
+    }
 
     const surchargeAmount = Math.round((totalActualCost - totalBaseCost) * 100) / 100;
 
