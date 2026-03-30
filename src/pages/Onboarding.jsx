@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { UserPlus, Clock, CheckCircle2, Users, Plus, Eye, Trash2 } from "lucide-react";
+import { UserPlus, Clock, CheckCircle2, Users, Plus, Eye, Trash2, Edit } from "lucide-react";
 import OnboardingViewDialog from "../components/onboarding/OnboardingViewDialog";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -46,6 +46,69 @@ export default function Onboarding() {
   const [createdEmployeeId, setCreatedEmployeeId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [viewProcess, setViewProcess] = useState(null);
+  const [resumingProcessId, setResumingProcessId] = useState(null);
+
+  const handleResumeOnboarding = async (proc) => {
+    if (!proc.employee_id) {
+      toast.error("Geen medewerker gekoppeld aan dit onboardingproces");
+      return;
+    }
+    // Load employee data
+    const emps = await base44.entities.Employee.filter({ id: proc.employee_id });
+    const emp = emps[0];
+    if (!emp) {
+      toast.error("Gekoppelde medewerker niet gevonden");
+      return;
+    }
+    // Populate employeeData from existing employee
+    setEmployeeData({
+      first_name: emp.first_name || "", last_name: emp.last_name || "",
+      prefix: emp.prefix || "", initials: emp.initials || "",
+      email: emp.email || "", phone: emp.phone || "",
+      date_of_birth: emp.date_of_birth || "", bsn: emp.bsn || "",
+      bank_account: emp.bank_account || "", address: emp.address || "",
+      postal_code: emp.postal_code || "", city: emp.city || "",
+      department: emp.department || "PakketDistributie", function: emp.function || "",
+      in_service_since: emp.in_service_since || "", employee_number: emp.employee_number || "",
+      mobile_entry_type: emp.mobile_entry_type || "single_day",
+      emergency_contact_name: emp.emergency_contact_name || "",
+      emergency_contact_phone: emp.emergency_contact_phone || "",
+      photo_url: emp.photo_url || "",
+      drivers_license_number: emp.drivers_license_number || "",
+      drivers_license_categories: Array.isArray(emp.drivers_license_categories) ? emp.drivers_license_categories.filter(Boolean).join(', ') : "",
+      drivers_license_expiry: emp.drivers_license_expiry || "",
+      code95_expiry: emp.code95_expiry || "",
+      contract_type: "Tijdelijk", contract_hours: 40,
+      salary_scale: emp.salary_scale || "", hourly_rate: emp.hourly_rate || "",
+      status: emp.status || "concept",
+      is_chauffeur: emp.is_chauffeur ?? true,
+      tonen_in_planner: emp.tonen_in_planner ?? true,
+      opnemen_in_loonrapport: emp.opnemen_in_loonrapport ?? true,
+      id_document_number: emp.id_document_number || "",
+      id_document_expiry: emp.id_document_expiry || "",
+    });
+    // Populate onboarding state from existing process
+    setOnboardingData({
+      pincode_verklaring_signed: proc.pincode_verklaring_signed || false,
+      sleutel_verklaring_signed: proc.sleutel_verklaring_signed || false,
+      sleutel_nummer: proc.sleutel_nummer || "",
+      sleutel_toegang: proc.sleutel_toegang || "",
+      gps_buddy_toestemming: proc.gps_buddy_toestemming || false,
+      dienstbetrekking_signed: proc.dienstbetrekking_signed || false,
+      bedrijfsreglement_ontvangen: proc.bedrijfsreglement_ontvangen || false,
+      contract_generated: proc.contract_generated || false,
+      mobile_invite_sent: proc.mobile_invite_sent || false,
+      employee_signature_url: proc.employee_signature_url || "",
+      loonheffing_toepassen: emp.loonheffing_toepassen || null,
+      loonheffing_datum: emp.loonheffing_datum || null,
+      loonheffing_handtekening_url: emp.loonheffing_handtekening_url || null,
+      id_document: { file_uri: null, file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false, encrypted: false },
+      _temp_employee_id: emp.id, // use existing employee — update instead of create
+    });
+    setResumingProcessId(proc.id);
+    setCurrentStep(proc.current_step || 1);
+    setWizardOpen(true);
+  };
 
   const { data: processes = [], isLoading } = useQuery({
     queryKey: ['onboarding_processes'],
@@ -133,8 +196,8 @@ export default function Onboarding() {
       });
     }
 
-    // 3. Create onboarding process record (no pincode stored here)
-    await base44.entities.OnboardingProcess.create({
+    // 3. Create or update onboarding process record (no pincode stored here)
+    const onboardingRecord = {
       employee_id: employee.id,
       employee_name: employeeName,
       status: "Afgerond",
@@ -151,7 +214,12 @@ export default function Onboarding() {
       mobile_invite_sent: onboardingData.mobile_invite_sent,
       employee_signature_url: onboardingData.employee_signature_url,
       completed_date: new Date().toISOString(),
-    });
+    };
+    if (resumingProcessId) {
+      await base44.entities.OnboardingProcess.update(resumingProcessId, onboardingRecord);
+    } else {
+      await base44.entities.OnboardingProcess.create(onboardingRecord);
+    }
 
     // 4. Auto-create KeylockerPincode if none exists
     const existingPins = await base44.entities.KeylockerPincode.filter({ employee_id: employee.id, active: true });
@@ -186,6 +254,7 @@ export default function Onboarding() {
     setSubmitting(false);
     setWizardOpen(false);
     setCurrentStep(1);
+    setResumingProcessId(null);
     toast.success(`Onboarding voor ${employeeName} is afgerond!`);
 
     // Reset form
@@ -227,6 +296,7 @@ export default function Onboarding() {
           setWizardOpen(false);
           setCurrentStep(1);
           setCreatedEmployeeId(null);
+          setResumingProcessId(null);
           setEmployeeData({
             first_name: "", last_name: "", prefix: "", initials: "", email: "", phone: "",
             date_of_birth: "", bsn: "", bank_account: "", address: "", postal_code: "", city: "",
@@ -426,6 +496,11 @@ export default function Onboarding() {
                     }>{proc.status}</Badge>
                   </td>
                   <td className="py-3 px-4 text-right flex items-center justify-end gap-1">
+                    {proc.status !== "Afgerond" && (
+                      <Button variant="ghost" size="sm" className="h-8 px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 gap-1" onClick={() => handleResumeOnboarding(proc)}>
+                        <Edit className="w-4 h-4" /> Hervatten
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-400 hover:text-blue-600" onClick={() => setViewProcess(proc)}>
                       <Eye className="w-4 h-4" />
                     </Button>
