@@ -566,6 +566,8 @@ function EmployeeForm({ employee, onSubmit, isSubmitting, viewOnly = false, depa
     emergency_contact_relation: '',
     photo_url: '',
     supervisor_notities: '',
+    id_document_number: '',
+    id_document_expiry: '',
     mobile_entry_type: 'single_day',
     mobile_shift_department: '',
     is_chauffeur: true,
