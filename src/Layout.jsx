@@ -155,6 +155,7 @@ const menuItems = [
       { name: "Goedkeuringen", icon: CheckSquare, page: "Approvals" },
       { name: "GPS Buddy Import", icon: RefreshCw, page: "TripSync" },
       { name: "Stoprapport", icon: CircleDot, page: "VehicleStopReport" },
+      { name: "Rit & Tijd Rapportage", icon: FileSpreadsheet, page: "RitTijdRapportage" },
       { name: "Ritten", icon: Truck, page: "Trips" },
       { name: "Standplaatswerk", icon: Package, page: "StandplaatsWerk" },
       { name: "Planning", icon: CalendarDays, page: "Planning" },
@@ -342,6 +343,7 @@ export default function Layout({ children, currentPageName }) {
       'ShiftTime': PERMISSIONS.PLANNING_MANAGE,
       'Dagstaat': PERMISSIONS.TRIPS_MANAGE,
       'VehicleStopReport': PERMISSIONS.TRIPS_MANAGE,
+      'RitTijdRapportage': PERMISSIONS.TRIPS_MANAGE,
 
       // HR
       'Employees': PERMISSIONS.EMPLOYEES_MANAGE,
