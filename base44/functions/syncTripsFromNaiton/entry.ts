@@ -478,10 +478,15 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════════════════
     // STEP 3b: Merge same-day rides for home_base vehicles
     // ═══════════════════════════════════════════════════════
-    // Vehicles with a home_base (depot as standplaats) generate multiple rides
-    // per day: home→depot, depot→route→depot, depot→home.
-    // These should be merged into a single ride per asset per day,
-    // so the total time includes loading/unloading at depot.
+    // Vehicles with a home_base (depot as standplaats) typically generate:
+    //   ride 1: home → depot (commute)
+    //   ride 2: depot → route → depot (work)
+    //   ride 3: depot → home (commute back)
+    // We merge ride 1 + ride 2 into a single work ride (home→depot→route→depot)
+    // so that loading/unloading time at depot is included.
+    // Ride 3 (depot→home) stays separate or gets merged if there's more work after.
+    // Strategy: merge all rides EXCEPT the last one (which is usually the return commute).
+    // If there's only 1 ride, keep it as-is.
     const mergedRides = [];
     const ridesByAssetDate = {};
     for (const ride of rides) {
@@ -502,16 +507,31 @@ Deno.serve(async (req) => {
       }
       // Sort by first segment start time
       dayRides.sort((a, b) => new Date(a.segments[0].start || 0) - new Date(b.segments[0].start || 0));
-      // Merge all segments into one ride
-      const merged = {
-        gpsassetid: dayRides[0].gpsassetid,
-        date: dayRides[0].date,
-        segments: dayRides.flatMap(r => r.segments),
-      };
-      mergedRides.push(merged);
-      mergeCount += dayRides.length - 1;
+
+      if (dayRides.length === 2) {
+        // 2 rides: merge both (home→depot + depot→route→depot = one work ride)
+        const merged = {
+          gpsassetid: dayRides[0].gpsassetid,
+          date: dayRides[0].date,
+          segments: dayRides.flatMap(r => r.segments),
+        };
+        mergedRides.push(merged);
+        mergeCount += 1;
+      } else {
+        // 3+ rides: merge all except the last one (return commute)
+        const workRides = dayRides.slice(0, -1);
+        const returnRide = dayRides[dayRides.length - 1];
+        const merged = {
+          gpsassetid: workRides[0].gpsassetid,
+          date: workRides[0].date,
+          segments: workRides.flatMap(r => r.segments),
+        };
+        mergedRides.push(merged);
+        mergedRides.push(returnRide);
+        mergeCount += workRides.length - 1;
+      }
     }
-    if (mergeCount > 0) addLog(`${mergeCount} ritten samengevoegd (home_base voertuigen, meerdere ritten/dag → 1)`);
+    if (mergeCount > 0) addLog(`${mergeCount} ritten samengevoegd (home_base voertuigen, aanrij+werkrit → 1)`);
 
     // Filter rides:
     // 1. Only dates within the requested range
