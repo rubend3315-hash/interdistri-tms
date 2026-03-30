@@ -89,6 +89,17 @@ Deno.serve(async (req) => {
       return null;
     };
 
+    // 4b. Get GPS TripRecords for same period + plates for cross-reference
+    const tripRecords = await paginatedFilter(svc.entities.TripRecord, { date: { $gte: date_from, $lte: date_to } }, 'date');
+    // Index GPS km by plate+date (sum multiple rides per day)
+    const gpsKmByPlateDate = {};
+    for (const tr of tripRecords) {
+      if (!tr.plate || !tr.date || !tr.total_km) continue;
+      const normPlate = tr.plate.replace(/[-\s]/g, '').toUpperCase();
+      const key = `${normPlate}_${tr.date}`;
+      gpsKmByPlateDate[key] = (gpsKmByPlateDate[key] || 0) + (tr.total_km || 0);
+    }
+
     // 5. Calculate surcharge per trip, using the correct settings per vehicle type
     const tripDetails = [];
     let totalKm = 0;
@@ -96,6 +107,7 @@ Deno.serve(async (req) => {
     let totalBaseCost = 0;
     let totalActualCost = 0;
     let skippedNoSettings = 0;
+    let totalGpsKm = 0;
 
     for (const trip of trips) {
       const vehicle = vehicleById[trip.vehicle_id];
@@ -138,10 +150,16 @@ Deno.serve(async (req) => {
       const baseCost = consumption * basePrice;
       const actualCost = consumption * actualPrice;
 
+      // GPS km lookup for this plate + date
+      const normPlate = plate.replace(/[-\s]/g, '').toUpperCase();
+      const gpsKey = `${normPlate}_${trip.date}`;
+      const gpsKm = gpsKmByPlateDate[gpsKey] || null;
+
       totalKm += km;
       totalHours += hours;
       totalBaseCost += baseCost;
       totalActualCost += actualCost;
+      if (gpsKm) totalGpsKm += gpsKm;
 
       tripDetails.push({
         trip_id: trip.id,
@@ -150,6 +168,7 @@ Deno.serve(async (req) => {
         vehicle_plate: plate,
         vehicle_type: vehicleType,
         km,
+        gps_km: gpsKm ? Math.round(gpsKm * 10) / 10 : null,
         hours: Math.round(hours * 100) / 100,
         base_cost: Math.round(baseCost * 100) / 100,
         actual_cost: Math.round(actualCost * 100) / 100,
@@ -196,6 +215,7 @@ Deno.serve(async (req) => {
       date_to,
       period_type: periodType,
       total_km: Math.round(totalKm * 10) / 10,
+      total_gps_km: totalGpsKm > 0 ? Math.round(totalGpsKm * 10) / 10 : null,
       total_hours: Math.round(totalHours * 100) / 100,
       trip_count: tripDetails.length,
       base_fuel_price: Math.round(avgBasePrice * 10000) / 10000,
