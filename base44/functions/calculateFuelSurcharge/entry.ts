@@ -117,25 +117,37 @@ Deno.serve(async (req) => {
       tripRecordsByPlateDate[key].push(tr);
     }
 
-    // GPS KM lookup function: find the TripRecord that best matches the Trip's time window
-    // Uses start_time/end_time from TripRecord to match against Trip's departure_time/arrival_time
-    // Falls back to odometer range matching (Trip.start_km/end_km vs TripRecord.start_km/end_km)
+    // GPS KM lookup: sum ALL TripRecords whose odometer range falls within the Trip's range
+    // A Trip (manual entry) can span multiple GPS TripRecords (standplaats→standplaats segments)
+    // E.g. Trip 148522→148681 (159 km) covers GPS records 148522→148589 + 148589→148659 + 148659→148681
     const findGpsKmForTrip = (trip, plate) => {
       const normPlate = plate.replace(/[-\s]/g, '').toUpperCase();
       const key = `${normPlate}_${trip.date}`;
       const candidates = tripRecordsByPlateDate[key];
       if (!candidates || candidates.length === 0) return null;
 
-      // If only one TripRecord for this plate+date, use it directly (simple case)
-      if (candidates.length === 1) {
-        const tr = candidates[0];
-        if (tr.start_km != null && tr.end_km != null && tr.end_km > tr.start_km) {
-          return Math.round((tr.end_km - tr.start_km) * 10) / 10;
+      // Strategy 1 (primary): Sum all TripRecords whose odometer falls within Trip range
+      if (trip.start_km && trip.end_km) {
+        let totalGps = 0;
+        let matchCount = 0;
+        for (const tr of candidates) {
+          if (tr.start_km == null || tr.end_km == null || tr.end_km <= tr.start_km) continue;
+          // TripRecord overlaps if its range intersects with Trip range (5 km tolerance)
+          const overlapStart = Math.max(trip.start_km, tr.start_km);
+          const overlapEnd = Math.min(trip.end_km, tr.end_km);
+          if (overlapEnd - overlapStart > -5) {
+            // Use only the portion within the Trip's range
+            const clippedStart = Math.max(trip.start_km, tr.start_km);
+            const clippedEnd = Math.min(trip.end_km, tr.end_km);
+            const km = Math.max(0, clippedEnd - clippedStart);
+            totalGps += km;
+            matchCount++;
+          }
         }
-        return tr.total_km || null;
+        if (matchCount > 0) return Math.round(totalGps * 10) / 10;
       }
 
-      // Multiple TripRecords for same plate+date → match by time window or odometer
+      // Strategy 2 (fallback): Match by time overlap — sum all overlapping TripRecords
       const tripDepH = trip.departure_time ? parseInt(trip.departure_time.split(':')[0]) : null;
       const tripDepM = trip.departure_time ? parseInt(trip.departure_time.split(':')[1]) : null;
       const tripArrH = trip.arrival_time ? parseInt(trip.arrival_time.split(':')[0]) : null;
@@ -143,47 +155,28 @@ Deno.serve(async (req) => {
       const tripDepMin = (tripDepH != null && tripDepM != null) ? tripDepH * 60 + tripDepM : null;
       const tripArrMin = (tripArrH != null && tripArrM != null) ? tripArrH * 60 + tripArrM : null;
 
-      // Strategy 1: Match by odometer overlap (most reliable)
-      if (trip.start_km && trip.end_km) {
-        for (const tr of candidates) {
-          if (tr.start_km == null || tr.end_km == null) continue;
-          // Check if TripRecord odometer overlaps with Trip odometer (within 5 km tolerance)
-          const overlapStart = Math.max(trip.start_km, tr.start_km);
-          const overlapEnd = Math.min(trip.end_km, tr.end_km);
-          if (overlapEnd - overlapStart > -5) {
-            return Math.round((tr.end_km - tr.start_km) * 10) / 10;
-          }
-        }
-      }
-
-      // Strategy 2: Match by time overlap
       if (tripDepMin != null && tripArrMin != null) {
-        let bestMatch = null;
-        let bestOverlap = -Infinity;
+        let totalGps = 0;
+        let matchCount = 0;
         for (const tr of candidates) {
           if (!tr.start_time || !tr.end_time) continue;
           const trStart = new Date(tr.start_time);
           const trEnd = new Date(tr.end_time);
           const trStartMin = trStart.getUTCHours() * 60 + trStart.getUTCMinutes();
           const trEndMin = trEnd.getUTCHours() * 60 + trEnd.getUTCMinutes();
-          // Calculate overlap between trip time window and TripRecord time window
           const overlapStart = Math.max(tripDepMin, trStartMin);
           const overlapEnd = Math.min(tripArrMin, trEndMin);
-          const overlap = overlapEnd - overlapStart;
-          if (overlap > bestOverlap) {
-            bestOverlap = overlap;
-            bestMatch = tr;
+          if (overlapEnd - overlapStart > 0) {
+            const km = (tr.start_km != null && tr.end_km != null && tr.end_km > tr.start_km)
+              ? tr.end_km - tr.start_km
+              : (tr.total_km || 0);
+            totalGps += km;
+            matchCount++;
           }
         }
-        if (bestMatch && bestOverlap > 0) {
-          if (bestMatch.start_km != null && bestMatch.end_km != null && bestMatch.end_km > bestMatch.start_km) {
-            return Math.round((bestMatch.end_km - bestMatch.start_km) * 10) / 10;
-          }
-          return bestMatch.total_km || null;
-        }
+        if (matchCount > 0) return Math.round(totalGps * 10) / 10;
       }
 
-      // Fallback: no match found, return null instead of wrong whole-day value
       return null;
     };
 
