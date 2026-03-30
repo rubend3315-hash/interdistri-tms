@@ -475,12 +475,50 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ═══════════════════════════════════════════════════════
+    // STEP 3b: Merge same-day rides for home_base vehicles
+    // ═══════════════════════════════════════════════════════
+    // Vehicles with a home_base (depot as standplaats) generate multiple rides
+    // per day: home→depot, depot→route→depot, depot→home.
+    // These should be merged into a single ride per asset per day,
+    // so the total time includes loading/unloading at depot.
+    const mergedRides = [];
+    const ridesByAssetDate = {};
+    for (const ride of rides) {
+      const hasHomeBase = !!homeBaseByGpsAssetId[ride.gpsassetid];
+      if (!hasHomeBase) {
+        mergedRides.push(ride);
+        continue;
+      }
+      const key = `${ride.gpsassetid}_${ride.date}`;
+      if (!ridesByAssetDate[key]) ridesByAssetDate[key] = [];
+      ridesByAssetDate[key].push(ride);
+    }
+    let mergeCount = 0;
+    for (const [key, dayRides] of Object.entries(ridesByAssetDate)) {
+      if (dayRides.length <= 1) {
+        mergedRides.push(...dayRides);
+        continue;
+      }
+      // Sort by first segment start time
+      dayRides.sort((a, b) => new Date(a.segments[0].start || 0) - new Date(b.segments[0].start || 0));
+      // Merge all segments into one ride
+      const merged = {
+        gpsassetid: dayRides[0].gpsassetid,
+        date: dayRides[0].date,
+        segments: dayRides.flatMap(r => r.segments),
+      };
+      mergedRides.push(merged);
+      mergeCount += dayRides.length - 1;
+    }
+    if (mergeCount > 0) addLog(`${mergeCount} ritten samengevoegd (home_base voertuigen, meerdere ritten/dag → 1)`);
+
     // Filter rides:
     // 1. Only dates within the requested range
     // 2. Only COMPLETE rides (ended at standplaats) — skip open-ended rides
     const todayStr = new Date().toISOString().split('T')[0];
     let openRides = 0;
-    const filteredRides = rides.filter(r => {
+    const filteredRides = mergedRides.filter(r => {
       if (r.date < date_from || r.date > date_to) return false;
       // Check if ride ended at standplaats (last segment is a stop at standplaats)
       const lastSeg = r.segments[r.segments.length - 1];
@@ -493,7 +531,7 @@ Deno.serve(async (req) => {
     });
     addLog(`Standplaats detectie: ${standplaatsHits}/${totalStops} stops herkend als standplaats`);
     if (openRides > 0) addLog(`${openRides} onafgeronde ritten overgeslagen (niet terug bij standplaats)`);
-    addLog(`${filteredRides.length} voltooide ritten van ${rides.length} totaal`);
+    addLog(`${filteredRides.length} voltooide ritten van ${mergedRides.length} totaal`);
     if (filteredRides.length > 0) {
       const first = filteredRides[0];
       addLog(`Eerste rit: asset=${first.gpsassetid}, date=${first.date}, segments=${first.segments.length}`);
