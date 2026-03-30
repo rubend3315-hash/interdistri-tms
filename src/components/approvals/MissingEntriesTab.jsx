@@ -84,10 +84,17 @@ export default function MissingEntriesTab({ employees = [] }) {
   });
 
   // Build set of employee_id + date that have a TimeEntry (any status)
+  // Also include end_date for overnight shifts (e.g. TimeEntry date=24, end_date=25 covers both days)
   const submittedSet = useMemo(() => {
     const s = new Set();
     timeEntries.forEach((te) => {
-      if (te.employee_id && te.date) s.add(`${te.employee_id}_${te.date}`);
+      if (te.employee_id && te.date) {
+        s.add(`${te.employee_id}_${te.date}`);
+        // Night shifts: end_date covers the next calendar day
+        if (te.end_date && te.end_date !== te.date) {
+          s.add(`${te.employee_id}_${te.end_date}`);
+        }
+      }
     });
     return s;
   }, [timeEntries]);
