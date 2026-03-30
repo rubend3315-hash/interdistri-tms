@@ -29,10 +29,11 @@ Deno.serve(async (req) => {
     const svc = base44.asServiceRole;
 
     // Paginated fetch helper — SDK bug workaround
+    // Use larger page size (100) to reduce pagination issues with large datasets
     async function paginatedFilter(entity, query, sortField) {
       const all = [];
       let skip = 0;
-      const PAGE = 20;
+      const PAGE = 100;
       while (true) {
         const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
         if (!Array.isArray(page) || page.length === 0) break;
