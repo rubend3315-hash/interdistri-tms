@@ -27,16 +27,28 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
 
   const hasGpsData = trip_details.some(t => t.gps_km != null);
 
+  // Calculate correct GPS total (unique per plate+date)
+  const uniqueGpsKm = (() => {
+    const seen = new Set();
+    let sum = 0;
+    trip_details.forEach(t => {
+      if (t.gps_km == null) return;
+      const key = `${t.vehicle_plate}_${t.date}`;
+      if (!seen.has(key)) { seen.add(key); sum += t.gps_km; }
+    });
+    return sum;
+  })();
+
   const colStyle = {
-    datum: { width: '9%', textAlign: 'left' },
-    klant: { width: '8%', textAlign: 'left' },
-    route: { width: '12%', textAlign: 'left' },
-    kenteken: { width: '10%', textAlign: 'left' },
-    type: { width: '10%', textAlign: 'left' },
-    km: { width: '7%', textAlign: 'right' },
-    gpsKm: { width: '7%', textAlign: 'right' },
-    basis: { width: '16%', textAlign: 'right' },
-    actueel: { width: '16%', textAlign: 'right' },
+    datum: { width: '8%', textAlign: 'left' },
+    route: { width: '7%', textAlign: 'left' },
+    kenteken: { width: '9%', textAlign: 'left' },
+    beginKm: { width: '7%', textAlign: 'right' },
+    eindKm: { width: '7%', textAlign: 'right' },
+    km: { width: '6%', textAlign: 'right' },
+    gpsKm: { width: '6%', textAlign: 'right' },
+    basis: { width: '13%', textAlign: 'right' },
+    actueel: { width: '13%', textAlign: 'right' },
   };
 
   const thClass = "px-3 py-2 text-xs font-medium text-slate-600 whitespace-nowrap";
@@ -69,10 +81,10 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
             <thead>
               <tr className="bg-slate-700">
                 <th style={colStyle.datum} className="px-3 py-2 text-left text-white text-xs font-medium" />
-                <th style={colStyle.klant} className="px-3 py-2 text-left text-white text-xs font-medium" />
                 <th style={colStyle.route} className="px-3 py-2 text-left text-white text-xs font-medium" />
                 <th style={colStyle.kenteken} className="px-3 py-2 text-left text-white text-xs font-medium">Kenteken</th>
-                <th style={colStyle.type} className="px-3 py-2 text-left text-white text-xs font-medium" />
+                <th style={colStyle.beginKm} className="px-3 py-2 text-right text-white text-xs font-medium">Begin</th>
+                <th style={colStyle.eindKm} className="px-3 py-2 text-right text-white text-xs font-medium">Eind</th>
                 <th style={colStyle.km} className="px-3 py-2 text-right text-white text-xs font-medium">KM</th>
                 {hasGpsData && <th style={colStyle.gpsKm} className="px-3 py-2 text-right text-white text-xs font-medium">GPS KM</th>}
                 <th style={colStyle.basis} className="px-3 py-2 text-right text-white text-xs font-medium">Brandstofprijs in tarief</th>
@@ -80,10 +92,10 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
               </tr>
               <tr className="bg-slate-100 border-b border-slate-200">
                 <th style={colStyle.datum} className={thClass}>Datum</th>
-                <th style={colStyle.klant} className={thClass}>Klant</th>
                 <th style={colStyle.route} className={thClass}>Route</th>
                 <th style={colStyle.kenteken} className={thClass}>Kenteken</th>
-                <th style={colStyle.type} className={thClass}>Type</th>
+                <th style={{ ...colStyle.beginKm, textAlign: 'right' }} className={thClass + " text-right"}>Begin KM</th>
+                <th style={{ ...colStyle.eindKm, textAlign: 'right' }} className={thClass + " text-right"}>Eind KM</th>
                 <th style={{ ...colStyle.km, textAlign: 'right' }} className={thClass + " text-right"}>KM</th>
                 {hasGpsData && <th style={{ ...colStyle.gpsKm, textAlign: 'right' }} className={thClass + " text-right"}>GPS KM</th>}
                 <th style={{ ...colStyle.basis, textAlign: 'right' }} className={thClass + " text-right"}>Kosten per dag</th>
@@ -93,10 +105,17 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
             <tbody>
               {Object.entries(typeGroups).map(([type, trips]) => {
                 const groupKm = trips.reduce((s, t) => s + (t.km || 0), 0);
-                const groupGpsKm = trips.reduce((s, t) => s + (t.gps_km || 0), 0);
+                // Unique GPS km per plate+date within this type group
+                const gpsSeenInGroup = new Set();
+                let groupGpsKm = 0;
+                trips.forEach(t => {
+                  if (t.gps_km == null) return;
+                  const k = `${t.vehicle_plate}_${t.date}`;
+                  if (!gpsSeenInGroup.has(k)) { gpsSeenInGroup.add(k); groupGpsKm += t.gps_km; }
+                });
                 const groupBase = trips.reduce((s, t) => s + (t.base_cost || 0), 0);
                 const groupActual = trips.reduce((s, t) => s + (t.actual_cost || 0), 0);
-                const colCount = hasGpsData ? 9 : 8;
+                const colCount = hasGpsData ? 10 : 9;
 
                 return (
                   <React.Fragment key={type}>
@@ -128,10 +147,10 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
                         return (
                           <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
                             <td style={colStyle.datum} className={tdClass + " tabular-nums"}>{t.date ? format(parseISO(t.date), 'dd-MM-yyyy') : '-'}</td>
-                            <td style={colStyle.klant} className={tdClass}>{customerName}</td>
                             <td style={colStyle.route} className={tdClass}>{t.route || '-'}</td>
                             <td style={colStyle.kenteken} className={tdClass + " font-mono text-xs"}>{t.vehicle_plate}</td>
-                            <td style={colStyle.type} className={tdClass + " text-xs"}>{t.vehicle_type || '-'}</td>
+                            <td style={colStyle.beginKm} className={tdClass + " text-right tabular-nums text-slate-500 text-xs"}>{t.start_km || '-'}</td>
+                            <td style={colStyle.eindKm} className={tdClass + " text-right tabular-nums text-slate-500 text-xs"}>{t.end_km || '-'}</td>
                             <td style={colStyle.km} className={tdClass + " text-right tabular-nums"}>{t.km}</td>
                             {hasGpsData && (
                               <td style={colStyle.gpsKm} className={tdClass + " text-right tabular-nums " + (showGps && diffWarning ? "text-red-600 font-medium" : "text-slate-500")}>
@@ -154,6 +173,7 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
                         <td className="px-3 py-1.5 text-right tabular-nums text-sm font-medium text-amber-700">€ {fmt(groupActual)}</td>
                       </tr>
                     )}
+                    {/* Daily plate summary rows within the type */}
                   </React.Fragment>
                 );
               })}
@@ -162,7 +182,7 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
               <tr className="bg-slate-100 border-t-2 border-slate-300 font-bold">
                 <td colSpan={5} className="px-3 py-2" />
                 <td className="px-3 py-2 text-right tabular-nums">{total_km}</td>
-                {hasGpsData && <td className="px-3 py-2 text-right tabular-nums text-slate-500">{total_gps_km || '-'}</td>}
+                {hasGpsData && <td className="px-3 py-2 text-right tabular-nums text-slate-500">{Math.round(uniqueGpsKm)}</td>}
                 <td className="px-3 py-2 text-right tabular-nums">€ {fmt(base_cost)}</td>
                 <td className="px-3 py-2 text-right tabular-nums text-amber-700">€ {fmt(actual_cost)}</td>
               </tr>

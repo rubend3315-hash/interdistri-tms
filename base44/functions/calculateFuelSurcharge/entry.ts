@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
     let totalBaseCost = 0;
     let totalActualCost = 0;
     let skippedNoSettings = 0;
-    let totalGpsKm = 0;
+    const seenGpsKeys = new Set(); // track unique plate+date for GPS total
 
     for (const trip of trips) {
       const vehicle = vehicleById[trip.vehicle_id];
@@ -159,7 +159,6 @@ Deno.serve(async (req) => {
       totalHours += hours;
       totalBaseCost += baseCost;
       totalActualCost += actualCost;
-      if (gpsKm) totalGpsKm += gpsKm;
 
       tripDetails.push({
         trip_id: trip.id,
@@ -168,6 +167,8 @@ Deno.serve(async (req) => {
         vehicle_plate: plate,
         vehicle_type: vehicleType,
         km,
+        start_km: trip.start_km || null,
+        end_km: trip.end_km || null,
         gps_km: gpsKm ? Math.round(gpsKm * 10) / 10 : null,
         hours: Math.round(hours * 100) / 100,
         base_cost: Math.round(baseCost * 100) / 100,
@@ -176,6 +177,17 @@ Deno.serve(async (req) => {
         base_fuel_price: basePrice,
         consumption_factor: consumptionFactor,
       });
+    }
+
+    // Calculate unique GPS total (only count each plate+date once)
+    let totalGpsKm = 0;
+    for (const t of tripDetails) {
+      if (t.gps_km == null) continue;
+      const gpsKey = `${t.vehicle_plate}_${t.date}`;
+      if (!seenGpsKeys.has(gpsKey)) {
+        seenGpsKeys.add(gpsKey);
+        totalGpsKm += t.gps_km;
+      }
     }
 
     // Weighted average base price and actual price
