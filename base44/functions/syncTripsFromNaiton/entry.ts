@@ -165,7 +165,56 @@ Deno.serve(async (req) => {
     }));
     console.log('[NAITON] userMap sample:', JSON.stringify(userMapSample));
 
-    // 1c. Planning fallback: Trip entity → employee name by plate+date
+    // 1c. TimeEntry cross-check: fetch submitted entries for the period
+    // Used to validate driver assignment — if a driver submitted a shift on this vehicle+date,
+    // that's a strong signal they were the actual driver (overrides GPS late-login artifacts)
+    const timeEntryDriverMap = {}; // "gpsassetid_date" → { employee_name, employee_id }
+    try {
+      const timeEntries = await svc.entities.TimeEntry.filter({
+        date: { $gte: date_from, $lte: date_to },
+        status: { $in: ['Ingediend', 'Goedgekeurd'] },
+      });
+      // Get trips linked to these time entries to find vehicle
+      const teIds = timeEntries.map(te => te.id).filter(Boolean);
+      let linkedTrips = [];
+      for (let i = 0; i < teIds.length; i += 50) {
+        const batch = teIds.slice(i, i + 50);
+        const trips = await svc.entities.Trip.filter({ time_entry_id: { $in: batch } });
+        linkedTrips.push(...trips);
+      }
+      const employees = await svc.entities.Employee.filter({ status: 'Actief' });
+      const empByIdLocal = {};
+      for (const emp of employees) {
+        empByIdLocal[emp.id] = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
+      }
+      const vehiclesLocal = await svc.entities.Vehicle.filter({});
+      const vehIdToPlateLocal = {};
+      for (const v of vehiclesLocal) { if (v.license_plate) vehIdToPlateLocal[v.id] = v.license_plate; }
+
+      for (const trip of linkedTrips) {
+        if (!trip.employee_id || !trip.vehicle_id || !trip.date) continue;
+        const plate = vehIdToPlateLocal[trip.vehicle_id];
+        if (!plate) continue;
+        const normPlate = plate.replace(/[-\s]/g, '').toLowerCase();
+        for (const [gid, info] of Object.entries(assetMap)) {
+          if (info.plate && info.plate.replace(/[-\s]/g, '').toLowerCase() === normPlate) {
+            const key = `${gid}_${trip.date}`;
+            timeEntryDriverMap[key] = {
+              employee_name: empByIdLocal[trip.employee_id] || '',
+              employee_id: trip.employee_id,
+            };
+            break;
+          }
+        }
+      }
+      if (Object.keys(timeEntryDriverMap).length > 0) {
+        addLog(`TimeEntry cross-check: ${Object.keys(timeEntryDriverMap).length} voertuig+dag combinaties met ingediende dienst`);
+      }
+    } catch (err) {
+      addLog(`TimeEntry cross-check failed (non-critical): ${err.message.slice(0, 150)}`);
+    }
+
+    // 1d. Planning fallback: Trip entity → employee name by plate+date
     const planningDriverMap = {}; // gpsassetid → drivername
     try {
       const tripRecordsExisting = await svc.entities.Trip.filter({
@@ -483,69 +532,98 @@ Deno.serve(async (req) => {
       }
 
       // Driver resolution: find driver name + employeenumber from segments
-      // employeenumber is the PRIMARY key for matching to Employee entity
+      // Strategy: when multiple drivers appear in the same ride (late login),
+      // pick the LAST logged-in driver (= the one who actually drove the route).
+      // The first driver is typically still logged in from a previous shift.
       let driver = '';
       let driverSource = '';
       let driverEmployeeNumber = null;
 
-      // Priority 0: additionaldata.Driver (best source for name)
-      if (!driver) {
-        for (const s of segs) {
-          if (s.additionaldata) {
+      // Collect ALL driver candidates from segments with their km contribution
+      const driverCandidates = []; // { name, source, employeenumber, km, segIndex }
+      for (let si = 0; si < segs.length; si++) {
+        const s = segs[si];
+        let segDriver = null;
+        let segSource = '';
+        let segEmpNr = null;
+
+        // Try additionaldata.Driver first (best name source)
+        if (s.additionaldata) {
+          try {
             const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
-            if (ad.Driver) {
-              driver = ad.Driver;
-              driverSource = 'additionaldata.Driver';
-              break;
+            if (ad.Driver) { segDriver = ad.Driver; segSource = 'additionaldata.Driver'; }
+            if (!segEmpNr && ad.tachocardnumber && userByTacho[String(ad.tachocardnumber)]?.employeenumber) {
+              segEmpNr = userByTacho[String(ad.tachocardnumber)].employeenumber;
             }
-          }
+            if (!segEmpNr && ad.tagid && userByTag[String(ad.tagid)]?.employeenumber) {
+              segEmpNr = userByTag[String(ad.tagid)].employeenumber;
+            }
+          } catch { /* ignore */ }
+        }
+        // Fallback: tachocardnumber → user name
+        if (!segDriver && s.tachocardnumber && userByTacho[String(s.tachocardnumber)]) {
+          const info = userByTacho[String(s.tachocardnumber)];
+          segDriver = info.name; segSource = 'tachocardnumber'; segEmpNr = info.employeenumber;
+        }
+        // Fallback: tagid → user name
+        if (!segDriver && s.tagid && userByTag[String(s.tagid)]) {
+          const info = userByTag[String(s.tagid)];
+          segDriver = info.name; segSource = 'tagid'; segEmpNr = info.employeenumber;
+        }
+        // Fallback: personid → user name
+        if (!segDriver && s.personid && userByPersonId[String(s.personid)]) {
+          const info = userByPersonId[String(s.personid)];
+          segDriver = info.name; segSource = 'personid'; segEmpNr = info.employeenumber;
+        }
+        // Fallback: direct driver field
+        if (!segDriver && s.driver) {
+          segDriver = s.driver; segSource = 'segment.driver';
+        }
+
+        if (segDriver) {
+          const segKm = Number(s.distance || 0) / 1000;
+          driverCandidates.push({ name: segDriver, source: segSource, employeenumber: segEmpNr, km: segKm, segIndex: si });
         }
       }
-      // Priority 1: tachocardnumber on trip segments
-      if (!driver) {
-        for (const s of segs) {
-          const info = s.tachocardnumber ? userByTacho[String(s.tachocardnumber)] : null;
-          if (info) { driver = info.name; driverSource = 'tachocardnumber'; driverEmployeeNumber = info.employeenumber; break; }
+
+      if (driverCandidates.length > 0) {
+        // Check if there are multiple different drivers
+        const uniqueDrivers = [...new Set(driverCandidates.map(c => normDriverName(c.name)))];
+        if (uniqueDrivers.length > 1) {
+          // Multiple drivers on same ride = late login scenario
+          // Take the LAST logged-in driver (highest segIndex = latest segment)
+          const lastCandidate = driverCandidates[driverCandidates.length - 1];
+          driver = lastCandidate.name;
+          driverSource = `${lastCandidate.source} (laatst-ingelogd, ${uniqueDrivers.length} chauffeurs)`;
+          driverEmployeeNumber = lastCandidate.employeenumber;
+          addLog(`Multi-driver rit ${assetMap[ride.gpsassetid]?.plate || ride.gpsassetid} ${ride.date}: ${uniqueDrivers.join(' → ')} → gekozen: ${driver}`);
+        } else {
+          // Single driver — use first candidate
+          driver = driverCandidates[0].name;
+          driverSource = driverCandidates[0].source;
+          driverEmployeeNumber = driverCandidates[0].employeenumber;
         }
       }
-      // Priority 2: tagid on trip segments
-      if (!driver) {
-        for (const s of segs) {
-          const info = s.tagid ? userByTag[String(s.tagid)] : null;
-          if (info) { driver = info.name; driverSource = 'tagid'; driverEmployeeNumber = info.employeenumber; break; }
-        }
-      }
-      // Priority 3: personid on trip segments
-      if (!driver) {
-        for (const s of segs) {
-          const info = s.personid ? userByPersonId[String(s.personid)] : null;
-          if (info) { driver = info.name; driverSource = 'personid'; driverEmployeeNumber = info.employeenumber; break; }
-        }
-      }
-      // Priority 4: additionaldata tachocardnumber or tagid
-      if (!driver) {
-        for (const s of segs) {
-          if (s.additionaldata) {
-            try {
-              const ad = typeof s.additionaldata === 'string' ? JSON.parse(s.additionaldata) : s.additionaldata;
-              const tachoInfo = ad.tachocardnumber ? userByTacho[String(ad.tachocardnumber)] : null;
-              if (tachoInfo) { driver = tachoInfo.name; driverEmployeeNumber = tachoInfo.employeenumber; driverSource = 'additionaldata.tachocardnumber'; break; }
-              const tagInfo = ad.tagid ? userByTag[String(ad.tagid)] : null;
-              if (tagInfo) { driver = tagInfo.name; driverEmployeeNumber = tagInfo.employeenumber; driverSource = 'additionaldata.tagid'; break; }
-            } catch { /* ignore */ }
-          }
-        }
-      }
-      // Priority 5: direct driver field on segment
-      if (!driver) {
-        for (const s of segs) {
-          if (s.driver) { driver = s.driver; driverSource = 'segment.driver'; break; }
-        }
-      }
-      // Priority 6: planning fallback (Trip entity match)
+
+      // Fallback: planning (Trip entity match)
       if (!driver) {
         driver = planningDriverMap[ride.gpsassetid] || '';
         if (driver) driverSource = 'planning fallback';
+      }
+
+      // TimeEntry cross-check: if a driver submitted a shift on this vehicle+date,
+      // use that as the definitive driver (overrides GPS late-login artifacts)
+      const teKey = `${ride.gpsassetid}_${ride.date}`;
+      const teMatch = timeEntryDriverMap[teKey];
+      if (teMatch && teMatch.employee_name) {
+        const teDriverNorm = normDriverName(teMatch.employee_name);
+        const gpsDriverNorm = normDriverName(driver);
+        if (teDriverNorm && teDriverNorm !== gpsDriverNorm) {
+          addLog(`TimeEntry override ${assetMap[ride.gpsassetid]?.plate || ride.gpsassetid} ${ride.date}: GPS="${driver}" → TimeEntry="${teMatch.employee_name}"`);
+          driver = teMatch.employee_name;
+          driverSource = `timeentry-crosscheck (was: ${driverSource})`;
+          driverEmployeeNumber = null; // will be re-resolved via name matching
+        }
       }
 
       // ALWAYS resolve employeenumber via Naiton user name lookup if not yet found
