@@ -28,18 +28,18 @@ Deno.serve(async (req) => {
 
     const svc = base44.asServiceRole;
 
-    // Paginated fetch helper — SDK bug workaround
-    // Use larger page size (100) to reduce pagination issues with large datasets
+    // Paginated fetch helper — SDK returns inconsistent page sizes
+    // so we keep fetching until we get an empty page (not just < PAGE)
     async function paginatedFilter(entity, query, sortField) {
       const all = [];
       let skip = 0;
-      const PAGE = 100;
-      while (true) {
+      const PAGE = 50;
+      const MAX_RECORDS = 2000; // safety limit
+      while (all.length < MAX_RECORDS) {
         const page = await entity.filter(query, sortField || '-created_date', PAGE, skip);
         if (!Array.isArray(page) || page.length === 0) break;
         all.push(...page);
-        if (page.length < PAGE) break;
-        skip += PAGE;
+        skip += page.length;
       }
       return all;
     }
@@ -91,27 +91,56 @@ Deno.serve(async (req) => {
     };
 
     // 4b. Get GPS TripRecords for same period + plates for cross-reference
-    const tripRecords = await paginatedFilter(svc.entities.TripRecord, { date: { $gte: date_from, $lte: date_to } }, 'date');
-    // Index GPS km by plate+date using ODOMETER (max end_km - min start_km) for accuracy
-    const gpsDataByPlateDate = {}; // key → { minStart, maxEnd }
+    // Fetch per-day to avoid SDK pagination issues with large date ranges
+    const tripRecords = [];
+    {
+      const startDate = new Date(date_from);
+      const endDate = new Date(date_to);
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dayStr = d.toISOString().split('T')[0];
+        const dayRecords = await paginatedFilter(svc.entities.TripRecord, { date: dayStr }, '-created_date');
+        tripRecords.push(...dayRecords);
+      }
+    }
+    // Step 1: Build gpsassetid → normalized plate mapping from TripRecords
+    const assetIdToPlate = {};
     for (const tr of tripRecords) {
-      if (!tr.plate || !tr.date) continue;
+      if (!tr.gpsassetid || !tr.plate) continue;
       const normPlate = tr.plate.replace(/[-\s]/g, '').toUpperCase();
-      const key = `${normPlate}_${tr.date}`;
-      if (!gpsDataByPlateDate[key]) {
-        gpsDataByPlateDate[key] = { minStart: tr.start_km || null, maxEnd: tr.end_km || null };
+      assetIdToPlate[tr.gpsassetid] = normPlate;
+    }
+
+    // Step 2: Index GPS km by gpsassetid+date using ODOMETER (max end_km - min start_km)
+    const gpsDataByAssetDate = {}; // gpsassetid_date → { minStart, maxEnd, normPlate }
+    for (const tr of tripRecords) {
+      if (!tr.gpsassetid || !tr.date) continue;
+      const key = `${tr.gpsassetid}_${tr.date}`;
+      if (!gpsDataByAssetDate[key]) {
+        gpsDataByAssetDate[key] = {
+          minStart: tr.start_km ?? null,
+          maxEnd: tr.end_km ?? null,
+          normPlate: assetIdToPlate[tr.gpsassetid] || (tr.plate || '').replace(/[-\s]/g, '').toUpperCase(),
+        };
       } else {
-        const d = gpsDataByPlateDate[key];
-        if (tr.start_km && (d.minStart === null || tr.start_km < d.minStart)) d.minStart = tr.start_km;
-        if (tr.end_km && (d.maxEnd === null || tr.end_km > d.maxEnd)) d.maxEnd = tr.end_km;
+        const d = gpsDataByAssetDate[key];
+        if (tr.start_km != null && (d.minStart === null || tr.start_km < d.minStart)) d.minStart = tr.start_km;
+        if (tr.end_km != null && (d.maxEnd === null || tr.end_km > d.maxEnd)) d.maxEnd = tr.end_km;
       }
     }
+
+    // Step 3: Convert to plate+date based lookup (what trips use)
     const gpsKmByPlateDate = {};
-    for (const [key, d] of Object.entries(gpsDataByPlateDate)) {
+    for (const [key, d] of Object.entries(gpsDataByAssetDate)) {
       if (d.minStart != null && d.maxEnd != null && d.maxEnd > d.minStart) {
-        gpsKmByPlateDate[key] = Math.round((d.maxEnd - d.minStart) * 10) / 10;
+        const plateDateKey = `${d.normPlate}_${key.split('_').slice(1).join('_')}`;
+        const km = Math.round((d.maxEnd - d.minStart) * 10) / 10;
+        // If multiple assets map to same plate+date, take the larger value
+        if (!gpsKmByPlateDate[plateDateKey] || km > gpsKmByPlateDate[plateDateKey]) {
+          gpsKmByPlateDate[plateDateKey] = km;
+        }
       }
     }
+
 
     // 5. Calculate surcharge per trip, using the correct settings per vehicle type
     const tripDetails = [];
