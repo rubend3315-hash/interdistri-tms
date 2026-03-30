@@ -91,13 +91,25 @@ Deno.serve(async (req) => {
 
     // 4b. Get GPS TripRecords for same period + plates for cross-reference
     const tripRecords = await paginatedFilter(svc.entities.TripRecord, { date: { $gte: date_from, $lte: date_to } }, 'date');
-    // Index GPS km by plate+date (sum multiple rides per day)
-    const gpsKmByPlateDate = {};
+    // Index GPS km by plate+date using ODOMETER (max end_km - min start_km) for accuracy
+    const gpsDataByPlateDate = {}; // key → { minStart, maxEnd }
     for (const tr of tripRecords) {
-      if (!tr.plate || !tr.date || !tr.total_km) continue;
+      if (!tr.plate || !tr.date) continue;
       const normPlate = tr.plate.replace(/[-\s]/g, '').toUpperCase();
       const key = `${normPlate}_${tr.date}`;
-      gpsKmByPlateDate[key] = (gpsKmByPlateDate[key] || 0) + (tr.total_km || 0);
+      if (!gpsDataByPlateDate[key]) {
+        gpsDataByPlateDate[key] = { minStart: tr.start_km || null, maxEnd: tr.end_km || null };
+      } else {
+        const d = gpsDataByPlateDate[key];
+        if (tr.start_km && (d.minStart === null || tr.start_km < d.minStart)) d.minStart = tr.start_km;
+        if (tr.end_km && (d.maxEnd === null || tr.end_km > d.maxEnd)) d.maxEnd = tr.end_km;
+      }
+    }
+    const gpsKmByPlateDate = {};
+    for (const [key, d] of Object.entries(gpsDataByPlateDate)) {
+      if (d.minStart != null && d.maxEnd != null && d.maxEnd > d.minStart) {
+        gpsKmByPlateDate[key] = Math.round((d.maxEnd - d.minStart) * 10) / 10;
+      }
     }
 
     // 5. Calculate surcharge per trip, using the correct settings per vehicle type
