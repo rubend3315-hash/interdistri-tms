@@ -31,6 +31,7 @@ import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
 import ApprovalsFilters from "@/components/approvals/ApprovalsFilters";
 import LinkedActivitiesPanel from "@/components/approvals/LinkedActivitiesPanel";
+import MissingEntriesTab from "@/components/approvals/MissingEntriesTab";
 import { useTripFuelCost } from "@/components/tripsync/useTripFuelCost";
 
 const DEFAULT_FROM = format(subDays(new Date(), 14), 'yyyy-MM-dd');
@@ -798,6 +799,10 @@ export default function Approvals() {
             <XCircle className="w-4 h-4" />
             Afgekeurd
           </TabsTrigger>
+          <TabsTrigger value="missing" className="gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            Niet ingevuld
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="mt-4 space-y-3">
@@ -863,6 +868,10 @@ export default function Approvals() {
               />
             </>
           )}
+        </TabsContent>
+
+        <TabsContent value="missing" className="mt-4">
+          <MissingEntriesTab employees={employees} />
         </TabsContent>
       </Tabs>
 
