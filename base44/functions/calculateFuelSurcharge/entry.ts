@@ -117,68 +117,45 @@ Deno.serve(async (req) => {
       tripRecordsByPlateDate[key].push(tr);
     }
 
-    // GPS KM lookup: sum ALL TripRecords whose odometer range falls within the Trip's range
-    // A Trip (manual entry) can span multiple GPS TripRecords (standplaats→standplaats segments)
-    // E.g. Trip 148522→148681 (159 km) covers GPS records 148522→148589 + 148589→148659 + 148659→148681
-    const findGpsKmForTrip = (trip, plate) => {
-      const normPlate = plate.replace(/[-\s]/g, '').toUpperCase();
+    // GPS KM: compute GPS km per plate+date scoped to this customer's trip odometer range
+    // We find the min(start_km) and max(end_km) from all Trips for a plate+date,
+    // then sum only the TripRecords that fall within that odometer window.
+    // This excludes non-customer trips (e.g. DPG night runs on the same vehicle).
+    const ODOM_TOLERANCE = 3; // km tolerance for GPS decimal rounding (e.g. 144632.99 vs 144633)
+
+    // First pass: collect Trip odometer ranges per plate+date for this customer
+    const tripRangeByPlateDate = {}; // "PLATE_date" → { minStart, maxEnd }
+    for (const trip of trips) {
+      const vehicle = vehicleById[trip.vehicle_id];
+      if (!vehicle?.license_plate || !trip.start_km || !trip.end_km) continue;
+      const normPlate = vehicle.license_plate.replace(/[-\s]/g, '').toUpperCase();
       const key = `${normPlate}_${trip.date}`;
-      const candidates = tripRecordsByPlateDate[key];
-      if (!candidates || candidates.length === 0) return null;
-
-      // Strategy 1 (primary): Sum all TripRecords whose odometer falls within Trip range
-      if (trip.start_km && trip.end_km) {
-        let totalGps = 0;
-        let matchCount = 0;
-        for (const tr of candidates) {
-          if (tr.start_km == null || tr.end_km == null || tr.end_km <= tr.start_km) continue;
-          // TripRecord overlaps if its range intersects with Trip range (5 km tolerance)
-          const overlapStart = Math.max(trip.start_km, tr.start_km);
-          const overlapEnd = Math.min(trip.end_km, tr.end_km);
-          if (overlapEnd - overlapStart > -5) {
-            // Use only the portion within the Trip's range
-            const clippedStart = Math.max(trip.start_km, tr.start_km);
-            const clippedEnd = Math.min(trip.end_km, tr.end_km);
-            const km = Math.max(0, clippedEnd - clippedStart);
-            totalGps += km;
-            matchCount++;
-          }
-        }
-        if (matchCount > 0) return Math.round(totalGps * 10) / 10;
+      if (!tripRangeByPlateDate[key]) {
+        tripRangeByPlateDate[key] = { minStart: trip.start_km, maxEnd: trip.end_km };
+      } else {
+        tripRangeByPlateDate[key].minStart = Math.min(tripRangeByPlateDate[key].minStart, trip.start_km);
+        tripRangeByPlateDate[key].maxEnd = Math.max(tripRangeByPlateDate[key].maxEnd, trip.end_km);
       }
+    }
 
-      // Strategy 2 (fallback): Match by time overlap — sum all overlapping TripRecords
-      const tripDepH = trip.departure_time ? parseInt(trip.departure_time.split(':')[0]) : null;
-      const tripDepM = trip.departure_time ? parseInt(trip.departure_time.split(':')[1]) : null;
-      const tripArrH = trip.arrival_time ? parseInt(trip.arrival_time.split(':')[0]) : null;
-      const tripArrM = trip.arrival_time ? parseInt(trip.arrival_time.split(':')[1]) : null;
-      const tripDepMin = (tripDepH != null && tripDepM != null) ? tripDepH * 60 + tripDepM : null;
-      const tripArrMin = (tripArrH != null && tripArrM != null) ? tripArrH * 60 + tripArrM : null;
-
-      if (tripDepMin != null && tripArrMin != null) {
-        let totalGps = 0;
-        let matchCount = 0;
-        for (const tr of candidates) {
-          if (!tr.start_time || !tr.end_time) continue;
-          const trStart = new Date(tr.start_time);
-          const trEnd = new Date(tr.end_time);
-          const trStartMin = trStart.getUTCHours() * 60 + trStart.getUTCMinutes();
-          const trEndMin = trEnd.getUTCHours() * 60 + trEnd.getUTCMinutes();
-          const overlapStart = Math.max(tripDepMin, trStartMin);
-          const overlapEnd = Math.min(tripArrMin, trEndMin);
-          if (overlapEnd - overlapStart > 0) {
-            const km = (tr.start_km != null && tr.end_km != null && tr.end_km > tr.start_km)
-              ? tr.end_km - tr.start_km
-              : (tr.total_km || 0);
-            totalGps += km;
-            matchCount++;
-          }
+    // Second pass: sum TripRecords within the customer's odometer window
+    const gpsDailyKmByPlateDate = {}; // "PLATE_date" → GPS km within customer range
+    for (const [key, records] of Object.entries(tripRecordsByPlateDate)) {
+      const range = tripRangeByPlateDate[key];
+      if (!range) continue; // no Trips for this plate+date in this customer
+      let gpsTotal = 0;
+      for (const tr of records) {
+        if (tr.start_km == null || tr.end_km == null || tr.end_km <= tr.start_km) continue;
+        // TripRecord falls within customer range if it overlaps with [minStart, maxEnd]
+        if (tr.end_km >= range.minStart - ODOM_TOLERANCE && tr.start_km <= range.maxEnd + ODOM_TOLERANCE) {
+          // Clip to customer range to exclude km outside
+          const clippedStart = Math.max(tr.start_km, range.minStart - ODOM_TOLERANCE);
+          const clippedEnd = Math.min(tr.end_km, range.maxEnd + ODOM_TOLERANCE);
+          gpsTotal += Math.max(0, clippedEnd - clippedStart);
         }
-        if (matchCount > 0) return Math.round(totalGps * 10) / 10;
       }
-
-      return null;
-    };
+      gpsDailyKmByPlateDate[key] = Math.round(gpsTotal * 10) / 10;
+    }
 
 
     // 5. Calculate surcharge per trip, using the correct settings per vehicle type
@@ -231,8 +208,10 @@ Deno.serve(async (req) => {
       const baseCost = consumption * basePrice;
       const actualCost = consumption * actualPrice;
 
-      // GPS km lookup: match specific TripRecord to this Trip by time/odometer window
-      const gpsKm = findGpsKmForTrip(trip, plate);
+      // GPS km: daily total per plate (not per-trip, because GPS boundaries don't align with manual entries)
+      const normPlate = plate.replace(/[-\s]/g, '').toUpperCase();
+      const gpsKey = `${normPlate}_${trip.date}`;
+      const gpsKm = gpsDailyKmByPlateDate[gpsKey] || null;
 
       totalKm += km;
       totalHours += hours;
@@ -258,11 +237,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Calculate GPS total: sum all per-trip GPS km values
+    // Calculate GPS total: unique per plate+date (gps_km is daily total per plate)
+    const gpsSeenKeys = new Set();
     let totalGpsKm = 0;
     for (const t of tripDetails) {
       if (t.gps_km == null) continue;
-      totalGpsKm += t.gps_km;
+      const k = `${t.vehicle_plate}_${t.date}`;
+      if (!gpsSeenKeys.has(k)) { gpsSeenKeys.add(k); totalGpsKm += t.gps_km; }
     }
 
     // Weighted average base price and actual price

@@ -27,8 +27,17 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
 
   const hasGpsData = trip_details.some(t => t.gps_km != null);
 
-  // Calculate GPS total (sum of all per-trip GPS km)
-  const uniqueGpsKm = trip_details.reduce((sum, t) => sum + (t.gps_km || 0), 0);
+  // Calculate GPS total: unique per plate+date (since gps_km is a daily total per plate)
+  const uniqueGpsKm = (() => {
+    const seen = new Set();
+    let sum = 0;
+    trip_details.forEach(t => {
+      if (t.gps_km == null) return;
+      const key = `${t.vehicle_plate}_${t.date}`;
+      if (!seen.has(key)) { seen.add(key); sum += t.gps_km; }
+    });
+    return sum;
+  })();
 
   const colStyle = {
     datum: { width: '8%', textAlign: 'left' },
@@ -77,7 +86,7 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
                 <th style={colStyle.beginKm} className="px-3 py-2 text-right text-white text-xs font-medium">Begin</th>
                 <th style={colStyle.eindKm} className="px-3 py-2 text-right text-white text-xs font-medium">Eind</th>
                 <th style={colStyle.km} className="px-3 py-2 text-right text-white text-xs font-medium">KM</th>
-                {hasGpsData && <th style={colStyle.gpsKm} className="px-3 py-2 text-right text-white text-xs font-medium">GPS KM</th>}
+                {hasGpsData && <th style={colStyle.gpsKm} className="px-3 py-2 text-right text-white text-xs font-medium">GPS KM (dag)</th>}
                 <th style={colStyle.basis} className="px-3 py-2 text-right text-white text-xs font-medium">Brandstofprijs in tarief</th>
                 <th style={colStyle.actueel} className="px-3 py-2 text-right text-white text-xs font-medium">Nacalculatie brandstofprijs</th>
               </tr>
@@ -96,7 +105,14 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
             <tbody>
               {Object.entries(typeGroups).map(([type, trips]) => {
                 const groupKm = trips.reduce((s, t) => s + (t.km || 0), 0);
-                const groupGpsKm = trips.reduce((s, t) => s + (t.gps_km || 0), 0);
+                // GPS KM unique per plate+date within this type group
+                const gpsSeenInGroup = new Set();
+                let groupGpsKm = 0;
+                trips.forEach(t => {
+                  if (t.gps_km == null) return;
+                  const k = `${t.vehicle_plate}_${t.date}`;
+                  if (!gpsSeenInGroup.has(k)) { gpsSeenInGroup.add(k); groupGpsKm += t.gps_km; }
+                });
                 const groupBase = trips.reduce((s, t) => s + (t.base_cost || 0), 0);
                 const groupActual = trips.reduce((s, t) => s + (t.actual_cost || 0), 0);
                 const colCount = hasGpsData ? 10 : 9;
@@ -107,8 +123,24 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
                     <tr className="bg-slate-600">
                       <td colSpan={colCount} className="px-3 py-1.5 text-white text-sm font-medium">{type}</td>
                     </tr>
-                    {trips.map((t, i) => {
-                        const kmDiff = t.gps_km != null ? Math.round(t.gps_km - (t.km || 0)) : null;
+                    {(() => {
+                      // GPS KM is a daily total per plate — only show on first row per plate+date
+                      const shownGpsKeys = new Set();
+                      // Sum manual km per plate+date for comparison with GPS daily total
+                      const manualKmByPlateDate = {};
+                      trips.forEach(t => {
+                        const key = `${t.vehicle_plate}_${t.date}`;
+                        manualKmByPlateDate[key] = (manualKmByPlateDate[key] || 0) + (t.km || 0);
+                      });
+
+                      return trips.map((t, i) => {
+                        const plateDateKey = `${t.vehicle_plate}_${t.date}`;
+                        const isFirstForPlateDate = !shownGpsKeys.has(plateDateKey);
+                        if (isFirstForPlateDate && t.gps_km != null) shownGpsKeys.add(plateDateKey);
+
+                        const showGps = isFirstForPlateDate && t.gps_km != null;
+                        const manualTotal = manualKmByPlateDate[plateDateKey] || 0;
+                        const kmDiff = showGps ? Math.round(t.gps_km - manualTotal) : null;
                         const diffWarning = kmDiff != null && Math.abs(kmDiff) > 20;
 
                         return (
@@ -120,15 +152,16 @@ export default function FuelSurchargeReport({ surcharge, customerName }) {
                             <td style={colStyle.eindKm} className={tdClass + " text-right tabular-nums text-slate-500 text-xs"}>{t.end_km || '-'}</td>
                             <td style={colStyle.km} className={tdClass + " text-right tabular-nums"}>{t.km}</td>
                             {hasGpsData && (
-                              <td style={colStyle.gpsKm} className={tdClass + " text-right tabular-nums " + (diffWarning ? "text-red-600 font-medium" : "text-slate-500")}>
-                                {t.gps_km != null ? t.gps_km : '-'}
+                              <td style={colStyle.gpsKm} className={tdClass + " text-right tabular-nums " + (showGps && diffWarning ? "text-red-600 font-medium" : "text-slate-500")}>
+                                {showGps ? t.gps_km : ''}
                               </td>
                             )}
                             <td style={colStyle.basis} className={tdClass + " text-right tabular-nums"}>€ {fmt(t.base_cost)}</td>
                             <td style={colStyle.actueel} className={tdClass + " text-right tabular-nums text-amber-700"}>€ {fmt(t.actual_cost)}</td>
                           </tr>
                         );
-                    })}
+                      });
+                    })()}
                     {/* Subtotal per type */}
                     {Object.keys(typeGroups).length > 1 && (
                       <tr className="bg-slate-50 border-b border-slate-200">
