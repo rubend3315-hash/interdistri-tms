@@ -238,14 +238,19 @@ Deno.serve(async (req) => {
     const apiStopDate = new Date(date_to);
     apiStopDate.setDate(apiStopDate.getDate() + 1);
     const apiStopTime = apiStopDate.toISOString().split('T')[0];
-    addLog(`Step 2: Fetching trips ${date_from} → ${apiStopTime}...`);
+    // For overnight rides: fetch from 1 day BEFORE date_from so rides that started
+    // the previous evening (e.g. 23:30) are included in the segment data
+    const apiStartDate = new Date(date_from);
+    apiStartDate.setDate(apiStartDate.getDate() - 1);
+    const apiStartTime = apiStartDate.toISOString().split('T')[0];
+    addLog(`Step 2: Fetching trips ${apiStartTime} → ${apiStopTime} (incl. overnight buffer)...`);
 
     const tripsJson = await naitonCall([{
       name: "dataexchange_trips",
       arguments: [
         { name: "gpsassetids", value: gpsIds },
         { name: "includefields", value: ["driver"] },
-        { name: "starttime", value: date_from },
+        { name: "starttime", value: apiStartTime },
         { name: "stoptime", value: apiStopTime },
         { name: "includeallattributes", value: true }
       ]
@@ -341,16 +346,21 @@ Deno.serve(async (req) => {
           }
           // Stops at standplaats while IDLE are ignored (vehicle parked)
         } else if (state === 'RIDING') {
-          // Dagwissel safety: close ride if segment is on a different day
+          // Cross-midnight handling: allow ride to span into the next calendar day
+          // Only force-close if >1 day gap (data anomaly), NOT for normal overnight rides
           if (segDate !== currentRide.date) {
-            if (currentRide.segments.length > 0) rides.push(currentRide);
-            // Start new ride on the new day
-            currentRide = {
-              gpsassetid: assetId,
-              date: segDate,
-              segments: [seg],
-            };
-            continue;
+            const rideStart = new Date(currentRide.date);
+            const segStart = new Date(segDate);
+            const dayDiff = Math.round((segStart - rideStart) / 86400000);
+            if (dayDiff > 1) {
+              // >1 day gap = data anomaly, close the ride
+              if (currentRide.segments.length > 0) rides.push(currentRide);
+              currentRide = { gpsassetid: assetId, date: segDate, segments: [seg] };
+              if (type === 'drive') { state = 'RIDING'; } else if (atStandplaats) { state = 'IDLE'; currentRide = null; }
+              else { state = 'RIDING'; }
+              continue;
+            }
+            // Normal overnight: keep building the same ride, date stays as departure date
           }
 
           currentRide.segments.push(seg);
@@ -367,6 +377,16 @@ Deno.serve(async (req) => {
       // Close any open ride at end of day (vehicle didn't return to standplaats)
       if (currentRide && currentRide.segments.length > 0) {
         rides.push(currentRide);
+      }
+    }
+
+    // For overnight rides, update the ride date to the END date (arrival at standplaats)
+    // This ensures night shifts that start at 23:xx on day X get assigned to day X+1
+    for (const r of rides) {
+      const lastSeg = r.segments[r.segments.length - 1];
+      const endDate = (lastSeg.stop || lastSeg.start || '').split('T')[0];
+      if (endDate && endDate !== r.date) {
+        r.date = endDate; // Use arrival date for overnight rides
       }
     }
 
