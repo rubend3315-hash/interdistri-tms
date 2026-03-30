@@ -211,8 +211,9 @@ export default function LinkedActivitiesPanel({
     if (!rec.start_time) return 9999;
     try {
       const d = new Date(rec.start_time);
-      const h = d.getHours();
-      const m = d.getMinutes();
+      // Use CET/CEST timezone for consistent sorting (not browser-local)
+      const cetTime = d.toLocaleString('en-GB', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit', hour12: false });
+      const [h, m] = cetTime.split(':').map(Number);
       const mins = h * 60 + m;
       return mins < 360 ? mins + 1440 : mins;
     } catch { return 9999; }

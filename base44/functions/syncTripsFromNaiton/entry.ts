@@ -20,6 +20,30 @@ const FALLBACK_DEPOTS = [
   { name: 'PostNL Pakketten Goes', lat: 51.4846, lon: 3.8898, radius_m: 300 },
 ];
 
+// Convert UTC ISO timestamp to CET/CEST date string (yyyy-MM-dd)
+// Naiton API returns UTC timestamps, but drivers work in Europe/Amsterdam timezone
+function utcToCetDate(isoStr) {
+  if (!isoStr) return null;
+  try {
+    const d = new Date(isoStr);
+    // Intl.DateTimeFormat with Europe/Amsterdam gives us the correct local date
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+    return parts; // en-CA gives yyyy-MM-dd format
+  } catch {
+    return isoStr.split('T')[0]; // fallback to UTC date
+  }
+}
+
+// Convert UTC ISO timestamp to CET/CEST hour (0-23)
+function utcToCetHour(isoStr) {
+  if (!isoStr) return null;
+  try {
+    const d = new Date(isoStr);
+    const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Amsterdam', hour: '2-digit', hour12: false }).format(d));
+    return h;
+  } catch { return null; }
+}
+
 // Haversine distance in meters between two GPS points
 function gpsDistanceM(lat1, lon1, lat2, lon2) {
   const R = 6371000;
@@ -378,7 +402,7 @@ Deno.serve(async (req) => {
 
       for (const seg of segments) {
         const type = (seg.type || '').toLowerCase();
-        const segDate = (seg.start || seg.stop || '').split('T')[0];
+        const segDate = utcToCetDate(seg.start || seg.stop) || (seg.start || seg.stop || '').split('T')[0];
         if (type === 'stop') totalStops++;
         const atStandplaats = type === 'stop' && isStandplaats(seg, assetId);
         if (atStandplaats) standplaatsHits++;
@@ -429,13 +453,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // For overnight rides, update the ride date to the END date (arrival at standplaats)
-    // This ensures night shifts that start at 23:xx on day X get assigned to day X+1
+    // Nachtrit datum-correctie: gebruik de CET-datum van het vertrek.
+    // Ritten die VOLLEDIG in de vroege ochtend plaatsvinden (start vóór 06:00 CET)
+    // worden toegekend aan de VORIGE kalenderdag (= de dienstdatum van de nachtdienst).
+    // Ritten die starten vóór middernacht CET en doorlopen worden op de startdatum gehouden.
+    const NIGHT_CUTOFF_HOUR = 6; // Ritten die starten voor 06:00 CET behoren bij de vorige dag
     for (const r of rides) {
-      const lastSeg = r.segments[r.segments.length - 1];
-      const endDate = (lastSeg.stop || lastSeg.start || '').split('T')[0];
-      if (endDate && endDate !== r.date) {
-        r.date = endDate; // Use arrival date for overnight rides
+      const firstSeg = r.segments[0];
+      const startTimestamp = firstSeg.start || firstSeg.stop;
+      if (!startTimestamp) continue;
+      const cetDate = utcToCetDate(startTimestamp);
+      const cetHour = utcToCetHour(startTimestamp);
+      if (cetDate) {
+        r.date = cetDate; // Use CET date instead of UTC date
+      }
+      // If ride starts before 06:00 CET, it belongs to the previous day's shift
+      if (cetHour !== null && cetHour < NIGHT_CUTOFF_HOUR) {
+        const prevDay = new Date(r.date);
+        prevDay.setDate(prevDay.getDate() - 1);
+        r.date = prevDay.toISOString().split('T')[0];
       }
     }
 
