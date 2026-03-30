@@ -190,6 +190,8 @@ export default function StamkaartForm({
       // Remove display-only derived fields — not part of Employee entity
       delete saveData._display_contract_type;
       delete saveData._display_contract_hours;
+      delete saveData._manual_contract_type;
+      delete saveData._manual_contract_hours;
       return base44.entities.Employee.update(employee.id, saveData);
     },
     onSuccess: () => {
@@ -379,27 +381,51 @@ export default function StamkaartForm({
         {/* Kolom 2 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <StamkaartRow label="Contract type" compact>
-            <Input
-              className={inputCls}
-              value={data._display_contract_type ? {
-                'Vast': 'Onbepaalde tijd',
-                'Tijdelijk': 'Bepaalde tijd',
-                'Oproep': 'Oproep / 0-uren'
-              }[data._display_contract_type] || data._display_contract_type : '—'}
-              readOnly
-              style={{ backgroundColor: '#f1f5f9', cursor: 'default' }}
-            />
+            {data._display_contract_type ? (
+              <Input
+                className={inputCls}
+                value={{
+                  'Vast': 'Onbepaalde tijd',
+                  'Tijdelijk': 'Bepaalde tijd',
+                  'Oproep': 'Oproep / 0-uren'
+                }[data._display_contract_type] || data._display_contract_type}
+                readOnly
+                style={{ backgroundColor: '#f1f5f9', cursor: 'default' }}
+              />
+            ) : (
+              <Select value={data._manual_contract_type || '_none'} onValueChange={v => update("_manual_contract_type", v === '_none' ? '' : v)}>
+                <SelectTrigger className="h-[30px] text-xs bg-white border border-slate-400/60 shadow-none"><SelectValue placeholder="Selecteer" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none" disabled>Selecteer</SelectItem>
+                  <SelectItem value="Bepaalde tijd">Bepaalde tijd</SelectItem>
+                  <SelectItem value="Onbepaalde tijd">Onbepaalde tijd</SelectItem>
+                  <SelectItem value="Oproep / 0-uren">Oproep / 0-uren</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </StamkaartRow>
           <StamkaartRow label="Contracturen" compact>
-            <Input
-              type="number"
-              className={inputCls}
-              value={data._display_contract_hours != null && data._display_contract_hours !== '' ? data._display_contract_hours : ""}
-              readOnly
-              style={{ backgroundColor: '#f1f5f9', cursor: 'default' }}
-            />
-            {data._display_contract_type === 'Oproep' && (
-              <span className="text-[10px] text-slate-400 ml-1.5 whitespace-nowrap">0-uren</span>
+            {data._display_contract_type ? (
+              <>
+                <Input
+                  type="number"
+                  className={inputCls}
+                  value={data._display_contract_hours != null && data._display_contract_hours !== '' ? data._display_contract_hours : ""}
+                  readOnly
+                  style={{ backgroundColor: '#f1f5f9', cursor: 'default' }}
+                />
+                {data._display_contract_type === 'Oproep' && (
+                  <span className="text-[10px] text-slate-400 ml-1.5 whitespace-nowrap">0-uren</span>
+                )}
+              </>
+            ) : (
+              <Input
+                type="number"
+                className={inputCls}
+                value={data._manual_contract_hours ?? ""}
+                onChange={e => update("_manual_contract_hours", e.target.value ? Number(e.target.value) : "")}
+                placeholder="Uren/week"
+              />
             )}
           </StamkaartRow>
           <StamkaartRow label="Loonschaal" compact>
