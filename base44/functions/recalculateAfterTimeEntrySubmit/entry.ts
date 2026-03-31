@@ -5,9 +5,10 @@
 // ║ PURPOSE: Upsert Trips/SPW to final status, write-verify         ║
 // ║ IDEMPOTENT: safe to call multiple times for same time_entry_id   ║
 // ║ NEVER affects the original SUCCESS status of the submission.     ║
-// ║ v6 — SELF-HEALING RECONCILIATION: fetch→match→claim→update      ║
-// ║      Fixes race condition where trips stayed "Gepland"           ║
-// ║      Sequential updates for CPU stability — 2026-03-19          ║
+// ║ v7 — DUPLICATE PREVENTION + DRAFT CLEANUP — 2026-03-31          ║
+// ║  - Gepland drafts excluded from relevantTrips (cleaned up later)║
+// ║  - trip_key + spw_key duplicate checks before create            ║
+// ║  - Cleanup remaining Gepland trips + Concept SPW after upsert   ║
 // ╚══════════════════════════════════════════════════════════════════╝
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
@@ -66,31 +67,36 @@ Deno.serve(async (req) => {
     console.log(`[RECALC] Found ${allTripsForDay.length} trips for employee=${employee_id} date=${date}`);
 
     // 1b. Smart filter: linked to this TE OR unlinked + matching time
+    // IMPORTANT: Only include non-draft trips (Voltooid/Onderweg) or drafts linked to THIS TE.
+    // We do NOT include "Gepland" drafts from saveDraftServiceRules here — 
+    // they will be cleaned up in step 1e after final trips are established.
     const relevantTrips = allTripsForDay.filter(t => {
-      // Already linked to this TimeEntry → always include
-      if (t.time_entry_id === time_entry_id) return true;
+      // Already linked to this TimeEntry → include if not a draft (Gepland)
+      // Gepland drafts are handled separately: they get cleaned up in step 1e
+      if (t.time_entry_id === time_entry_id) {
+        // Include Voltooid/Onderweg trips (already processed), skip Gepland (draft)
+        return t.status !== 'Gepland';
+      }
       // Linked to a DIFFERENT TimeEntry → skip (belongs to another shift)
       if (t.time_entry_id && t.time_entry_id !== time_entry_id) return false;
-      // Unlinked trip → include only if times fall within shift ±5min tolerance
+      // Skip draft trips not linked to any TE (orphaned drafts)
+      if (t.status === 'Gepland') return false;
+      // Unlinked non-draft trip → include only if times fall within shift ±5min tolerance
       const tStart = toMin(t.departure_time);
       const tEnd = toMin(t.arrival_time);
       const sStart = toMin(start_time);
       const sEnd = toMin(end_time);
       const tolerance = 5;
 
-      // minimaal 1 tijd moet bestaan
       const hasTime = tStart != null || tEnd != null;
-      // check start indien aanwezig (moet binnen dienst window vallen)
       const startOk = tStart == null || (sStart != null && sEnd != null &&
         tStart >= (sStart - tolerance) &&
         tStart <= (sEnd + tolerance));
-      // check end indien aanwezig (moet binnen dienst window vallen)
       const endOk = tEnd == null || (sStart != null && sEnd != null &&
         tEnd >= (sStart - tolerance) &&
         tEnd <= (sEnd + tolerance));
 
-      const matchesTime = hasTime && startOk && endOk;
-      return matchesTime;
+      return hasTime && startOk && endOk;
     });
 
     // DIAGNOSE: log alle trips zodat we kunnen zien waarom sommige niet matchen
@@ -134,20 +140,36 @@ Deno.serve(async (req) => {
       console.log(`[RECALC] Claimed+updated ${relevantTrips.length} trips → Voltooid (sequential)`);
     }
 
-    // 1d. Fallback: no existing trips matched → CREATE from payload
+    // 1d. Fallback: no existing trips matched → CHECK FOR DUPLICATES THEN CREATE from payload
+    // Build trip key index for duplicate prevention
+    const existingTripKeys = new Set(allTripsForDay.map(t => t.trip_key).filter(Boolean));
+    
     if (relevantTrips.length === 0 && Array.isArray(trips) && trips.length > 0) {
       console.warn(`[RECALC] No existing trips matched → fallback create from payload`);
       for (const trip of trips) {
+        const departure_time = isTime(trip.start_time) ? trip.start_time : null;
+        const arrival_time = isTime(trip.end_time) ? trip.end_time : null;
+        const trip_key = generateTripKey(employee_id, date, departure_time, arrival_time);
+
+        // DUPLICATE CHECK: skip if trip_key already exists
+        if (existingTripKeys.has(trip_key)) {
+          console.log(`[RECALC] Skipping duplicate trip_key: ${trip_key}`);
+          // Find and claim the existing trip instead
+          const existingTrip = allTripsForDay.find(t => t.trip_key === trip_key);
+          if (existingTrip && !finalTripIds.includes(existingTrip.id)) {
+            await svc.entities.Trip.update(existingTrip.id, { time_entry_id, status: 'Voltooid' });
+            finalTripIds.push(existingTrip.id);
+            console.log(`[RECALC] Claimed existing trip ${existingTrip.id} by trip_key`);
+          }
+          continue;
+        }
+
         let kmWarning = null;
         const totalKm = (trip.start_km != null && trip.end_km != null) ? Math.max(0, Number(trip.end_km) - Number(trip.start_km)) : null;
         const warnings = [];
         if (totalKm != null && totalKm > 400) warnings.push(`Rode afwijking: ${totalKm} km gereden (>400 km)`);
         else if (totalKm != null && totalKm > 250) warnings.push(`Gele afwijking: ${totalKm} km gereden (>250 km)`);
         if (warnings.length > 0) kmWarning = warnings.join(' | ');
-
-        const departure_time = isTime(trip.start_time) ? trip.start_time : null;
-        const arrival_time = isTime(trip.end_time) ? trip.end_time : null;
-        const trip_key = generateTripKey(employee_id, date, departure_time, arrival_time);
 
         const t = await svc.entities.Trip.create({
           employee_id, time_entry_id, date,
@@ -171,8 +193,21 @@ Deno.serve(async (req) => {
           km_warning: kmWarning,
         });
         finalTripIds.push(t.id);
+        existingTripKeys.add(trip_key); // Prevent duplicates within same batch
       }
     }
+    // 1e. CLEANUP: Delete remaining draft trips (status=Gepland) for this TE that were NOT claimed
+    const remainingDraftTrips = allTripsForDay.filter(t =>
+      t.time_entry_id === time_entry_id && t.status === 'Gepland' && !finalTripIds.includes(t.id)
+    );
+    if (remainingDraftTrips.length > 0) {
+      console.log(`[RECALC] Cleaning up ${remainingDraftTrips.length} remaining Gepland draft trips`);
+      for (const dt of remainingDraftTrips) {
+        try { await svc.entities.Trip.delete(dt.id); }
+        catch (e) { console.error(`[RECALC] Failed to delete draft trip ${dt.id}: ${e.message}`); }
+      }
+    }
+
     perf.trips_ms = Date.now() - tTrips;
 
     // ========================================
@@ -259,21 +294,49 @@ Deno.serve(async (req) => {
           usedSpwIds.add(match.id);
           console.log(`[RECALC] Claimed existing SPW ${match.id} → TE=${time_entry_id}, Definitief`);
         } else {
-          const s = await svc.entities.StandplaatsWerk.create({
-            employee_id, time_entry_id, date,
-            spw_key,
-            start_time: spwStartTime,
-            end_time: spwEndTime,
-            customer_id: spw.customer_id || null,
-            project_id: spw.project_id || null,
-            activity_id: spw.activity_id || null,
-            notes: (spw.notes || '').slice(0, 2000) || null,
-            status: 'Definitief',
-          });
-          finalSpwIds.push(s.id);
-          usedSpwIds.add(s.id);
-          console.log(`[RECALC] Created new SPW ${s.id}`);
+          // DUPLICATE CHECK: look for existing SPW with same spw_key before creating
+          const existingByKey = allSpwForDay.find(s => s.spw_key === spw_key && !usedSpwIds.has(s.id));
+          if (existingByKey) {
+            await svc.entities.StandplaatsWerk.update(existingByKey.id, {
+              time_entry_id,
+              customer_id: spw.customer_id || existingByKey.customer_id || null,
+              project_id: spw.project_id || existingByKey.project_id || null,
+              activity_id: spw.activity_id || existingByKey.activity_id || null,
+              notes: (spw.notes || existingByKey.notes || '').slice(0, 2000) || null,
+              status: 'Definitief',
+            });
+            finalSpwIds.push(existingByKey.id);
+            usedSpwIds.add(existingByKey.id);
+            console.log(`[RECALC] Claimed existing SPW ${existingByKey.id} by spw_key → TE=${time_entry_id}, Definitief`);
+          } else {
+            const s = await svc.entities.StandplaatsWerk.create({
+              employee_id, time_entry_id, date,
+              spw_key,
+              start_time: spwStartTime,
+              end_time: spwEndTime,
+              customer_id: spw.customer_id || null,
+              project_id: spw.project_id || null,
+              activity_id: spw.activity_id || null,
+              notes: (spw.notes || '').slice(0, 2000) || null,
+              status: 'Definitief',
+            });
+            finalSpwIds.push(s.id);
+            usedSpwIds.add(s.id);
+            console.log(`[RECALC] Created new SPW ${s.id}`);
+          }
         }
+      }
+    }
+
+    // 2e. CLEANUP: Delete remaining draft SPW (status=Concept) for this TE that were NOT claimed
+    const remainingDraftSpw = allSpwForDay.filter(s =>
+      s.time_entry_id === time_entry_id && s.status === 'Concept' && !usedSpwIds.has(s.id)
+    );
+    if (remainingDraftSpw.length > 0) {
+      console.log(`[RECALC] Cleaning up ${remainingDraftSpw.length} remaining Concept draft SPW`);
+      for (const ds of remainingDraftSpw) {
+        try { await svc.entities.StandplaatsWerk.delete(ds.id); }
+        catch (e) { console.error(`[RECALC] Failed to delete draft SPW ${ds.id}: ${e.message}`); }
       }
     }
 

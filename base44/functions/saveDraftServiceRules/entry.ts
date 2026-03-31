@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
     }
 
     // ── 1. Delete existing draft trips (status=Gepland) for this time_entry_id ──
+    // IMPORTANT: Only delete drafts linked to THIS time_entry_id — never touch other TEs
     const existingTrips = await svc.entities.Trip.filter({
       time_entry_id,
       status: 'Gepland',
