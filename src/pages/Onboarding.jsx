@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { UserPlus, Clock, CheckCircle2, Users, Plus, Eye, Trash2, Edit } from "lucide-react";
+import { UserPlus, Clock, CheckCircle2, Users, Plus, Eye, Trash2, Edit, Save } from "lucide-react";
 import OnboardingViewDialog from "../components/onboarding/OnboardingViewDialog";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -45,8 +45,103 @@ export default function Onboarding() {
   });
   const [createdEmployeeId, setCreatedEmployeeId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [viewProcess, setViewProcess] = useState(null);
   const [resumingProcessId, setResumingProcessId] = useState(null);
+
+  const handleSaveDraft = async () => {
+    if (!employeeData.first_name || !employeeData.last_name) {
+      toast.error("Voornaam en achternaam zijn verplicht om tussentijds op te slaan");
+      return;
+    }
+    setSaving(true);
+    const empName = `${employeeData.first_name} ${employeeData.prefix ? employeeData.prefix + ' ' : ''}${employeeData.last_name}`.trim();
+
+    // Build employee payload
+    const empPayload = { ...employeeData };
+    if (typeof empPayload.drivers_license_categories === 'string' && empPayload.drivers_license_categories.trim()) {
+      empPayload.drivers_license_categories = empPayload.drivers_license_categories.split(',').map(s => s.trim());
+    } else {
+      empPayload.drivers_license_categories = null;
+    }
+    delete empPayload.lkv_uitkering;
+    delete empPayload.financiele_situatie;
+    const requiredStringFields = ['first_name', 'last_name', 'department'];
+    Object.keys(empPayload).forEach(k => {
+      if (requiredStringFields.includes(k)) return;
+      if (empPayload[k] === '' || empPayload[k] === undefined) empPayload[k] = null;
+    });
+    if (onboardingData.loonheffing_toepassen) empPayload.loonheffing_toepassen = onboardingData.loonheffing_toepassen;
+    if (onboardingData.loonheffing_datum) empPayload.loonheffing_datum = onboardingData.loonheffing_datum;
+    if (onboardingData.loonheffing_handtekening_url) empPayload.loonheffing_handtekening_url = onboardingData.loonheffing_handtekening_url;
+    empPayload.status = "concept";
+
+    let employeeId = onboardingData._temp_employee_id || createdEmployeeId;
+
+    if (employeeId) {
+      await base44.entities.Employee.update(employeeId, empPayload);
+    } else {
+      const created = await base44.entities.Employee.create(empPayload);
+      employeeId = created.id;
+      setCreatedEmployeeId(employeeId);
+      setOnboardingData(prev => ({ ...prev, _temp_employee_id: employeeId }));
+    }
+
+    // Save or update OnboardingProcess
+    const processRecord = {
+      employee_id: employeeId,
+      employee_name: empName,
+      status: "In behandeling",
+      current_step: currentStep,
+      stamkaart_completed: currentStep > 2,
+      pincode_verklaring_signed: onboardingData.pincode_verklaring_signed,
+      sleutel_verklaring_signed: onboardingData.sleutel_verklaring_signed,
+      sleutel_nummer: onboardingData.sleutel_nummer,
+      sleutel_toegang: onboardingData.sleutel_toegang,
+      gps_buddy_toestemming: onboardingData.gps_buddy_toestemming,
+      dienstbetrekking_signed: onboardingData.dienstbetrekking_signed,
+      bedrijfsreglement_ontvangen: onboardingData.bedrijfsreglement_ontvangen,
+      contract_generated: onboardingData.contract_generated,
+      mobile_invite_sent: onboardingData.mobile_invite_sent,
+      employee_signature_url: onboardingData.employee_signature_url,
+    };
+
+    if (resumingProcessId) {
+      await base44.entities.OnboardingProcess.update(resumingProcessId, processRecord);
+    } else {
+      const created = await base44.entities.OnboardingProcess.create(processRecord);
+      setResumingProcessId(created.id);
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['onboarding_processes'] });
+    setSaving(false);
+    toast.success(`Onboarding voor ${empName} tussentijds opgeslagen (stap ${currentStep})`);
+  };
+
+  const handleCloseDraft = () => {
+    setWizardOpen(false);
+    setCurrentStep(1);
+    setCreatedEmployeeId(null);
+    setResumingProcessId(null);
+    setEmployeeData({
+      first_name: "", last_name: "", prefix: "", initials: "", email: "", phone: "",
+      date_of_birth: "", bsn: "", bank_account: "", address: "", postal_code: "", city: "",
+      department: "PakketDistributie", function: "", in_service_since: "", employee_number: "",
+      mobile_entry_type: "single_day", emergency_contact_name: "", emergency_contact_phone: "",
+      photo_url: "", drivers_license_number: "", drivers_license_categories: "",
+      drivers_license_expiry: "", code95_expiry: "", contract_type: "Tijdelijk",
+      contract_hours: 40, salary_scale: "", hourly_rate: "", status: "Actief",
+      is_chauffeur: true, tonen_in_planner: true, opnemen_in_loonrapport: true,
+    });
+    setOnboardingData({
+      pincode_verklaring_signed: false,
+      sleutel_verklaring_signed: false, sleutel_nummer: "", sleutel_toegang: "",
+      gps_buddy_toestemming: false, dienstbetrekking_signed: false,
+      bedrijfsreglement_ontvangen: false, contract_generated: false,
+      mobile_invite_sent: false, employee_signature_url: "",
+      id_document: { file_uri: null, file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false, encrypted: false },
+    });
+  };
 
   const handleResumeOnboarding = async (proc) => {
     if (!proc.employee_id) {
@@ -106,6 +201,7 @@ export default function Onboarding() {
       _temp_employee_id: emp.id, // use existing employee — update instead of create
     });
     setResumingProcessId(proc.id);
+    setCreatedEmployeeId(emp.id);
     setCurrentStep(proc.current_step || 1);
     setWizardOpen(true);
   };
@@ -288,34 +384,19 @@ export default function Onboarding() {
               {employeeName || "Vul de gegevens in om te starten"}
             </p>
           </div>
-          <Button variant="outline" onClick={async () => {
-          // Cleanup temp employee if created during preview
-          if (onboardingData._temp_employee_id) {
-            await base44.entities.Employee.delete(onboardingData._temp_employee_id);
-          }
-          setWizardOpen(false);
-          setCurrentStep(1);
-          setCreatedEmployeeId(null);
-          setResumingProcessId(null);
-          setEmployeeData({
-            first_name: "", last_name: "", prefix: "", initials: "", email: "", phone: "",
-            date_of_birth: "", bsn: "", bank_account: "", address: "", postal_code: "", city: "",
-            department: "PakketDistributie", function: "", in_service_since: "", employee_number: "",
-            mobile_entry_type: "single_day", emergency_contact_name: "", emergency_contact_phone: "",
-            photo_url: "", drivers_license_number: "", drivers_license_categories: "",
-            drivers_license_expiry: "", code95_expiry: "", contract_type: "Tijdelijk",
-            contract_hours: 40, salary_scale: "", hourly_rate: "", status: "Actief",
-            is_chauffeur: true, tonen_in_planner: true, opnemen_in_loonrapport: true,
-          });
-          setOnboardingData({
-            pincode_verklaring_signed: false,
-            sleutel_verklaring_signed: false, sleutel_nummer: "", sleutel_toegang: "",
-            gps_buddy_toestemming: false, dienstbetrekking_signed: false,
-            bedrijfsreglement_ontvangen: false, contract_generated: false,
-            mobile_invite_sent: false, employee_signature_url: "",
-            id_document: { file_uri: null, file_url: null, file_name: null, document_type: "Identiteitsbewijs", contains_bsn: false, encrypted: false },
-          });
-        }}>Annuleren</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="gap-1.5" onClick={handleSaveDraft} disabled={saving}>
+              {saving ? <Clock className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Tussentijds Opslaan
+            </Button>
+            <Button variant="ghost" className="text-slate-500" onClick={async () => {
+              // If not yet saved as draft and a temp employee was created, clean up
+              if (!resumingProcessId && onboardingData._temp_employee_id) {
+                await base44.entities.Employee.delete(onboardingData._temp_employee_id);
+              }
+              handleCloseDraft();
+            }}>Sluiten</Button>
+          </div>
         </div>
 
         <OnboardingStepIndicator currentStep={currentStep} onStepClick={setCurrentStep} />
