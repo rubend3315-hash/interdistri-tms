@@ -63,8 +63,38 @@ Deno.serve(async (req) => {
     const tTrips = Date.now();
 
     // 1a. Fetch ALL trips for this employee+date (broad fetch)
-    const allTripsForDay = await svc.entities.Trip.filter({ employee_id, date });
+    let allTripsForDay = await svc.entities.Trip.filter({ employee_id, date });
     console.log(`[RECALC] Found ${allTripsForDay.length} trips for employee=${employee_id} date=${date}`);
+
+    // 1a-DEDUP: Remove duplicate trips with same trip_key (keep oldest by created_date)
+    // This is a safety net for race conditions in saveDraftServiceRules
+    const tripKeyGroups = {};
+    for (const t of allTripsForDay) {
+      if (!t.trip_key) continue;
+      if (!tripKeyGroups[t.trip_key]) tripKeyGroups[t.trip_key] = [];
+      tripKeyGroups[t.trip_key].push(t);
+    }
+    let dedupedCount = 0;
+    for (const [key, trips] of Object.entries(tripKeyGroups)) {
+      if (trips.length > 1) {
+        // Sort by created_date ascending — keep the oldest
+        trips.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+        for (let i = 1; i < trips.length; i++) {
+          try {
+            await svc.entities.Trip.delete(trips[i].id);
+            dedupedCount++;
+            console.log(`[RECALC DEDUP] Deleted duplicate trip ${trips[i].id} with key=${key}`);
+          } catch (e) {
+            console.error(`[RECALC DEDUP] Failed to delete trip ${trips[i].id}: ${e.message}`);
+          }
+        }
+      }
+    }
+    if (dedupedCount > 0) {
+      console.log(`[RECALC] Deduplicated ${dedupedCount} trips`);
+      // Refresh the list after dedup
+      allTripsForDay = await svc.entities.Trip.filter({ employee_id, date });
+    }
 
     // 1b. Smart filter: linked to this TE OR unlinked + matching time
     // IMPORTANT: Only include non-draft trips (Voltooid/Onderweg) or drafts linked to THIS TE.
@@ -216,8 +246,35 @@ Deno.serve(async (req) => {
     const tSpw = Date.now();
 
     // 2a. ONE query: fetch ALL SPW for this employee+date
-    const allSpwForDay = await svc.entities.StandplaatsWerk.filter({ employee_id, date });
+    let allSpwForDay = await svc.entities.StandplaatsWerk.filter({ employee_id, date });
     console.log(`[RECALC] Fetched ${allSpwForDay.length} total SPW for employee=${employee_id} date=${date}`);
+
+    // 2a-DEDUP: Remove duplicate SPW with same spw_key (keep oldest by created_date)
+    const spwKeyGroups = {};
+    for (const s of allSpwForDay) {
+      if (!s.spw_key) continue;
+      if (!spwKeyGroups[s.spw_key]) spwKeyGroups[s.spw_key] = [];
+      spwKeyGroups[s.spw_key].push(s);
+    }
+    let dedupedSpwCount = 0;
+    for (const [key, spws] of Object.entries(spwKeyGroups)) {
+      if (spws.length > 1) {
+        spws.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+        for (let i = 1; i < spws.length; i++) {
+          try {
+            await svc.entities.StandplaatsWerk.delete(spws[i].id);
+            dedupedSpwCount++;
+            console.log(`[RECALC DEDUP] Deleted duplicate SPW ${spws[i].id} with key=${key}`);
+          } catch (e) {
+            console.error(`[RECALC DEDUP] Failed to delete SPW ${spws[i].id}: ${e.message}`);
+          }
+        }
+      }
+    }
+    if (dedupedSpwCount > 0) {
+      console.log(`[RECALC] Deduplicated ${dedupedSpwCount} SPW`);
+      allSpwForDay = await svc.entities.StandplaatsWerk.filter({ employee_id, date });
+    }
 
     // 2b. Build multi-map index for O(1) lookups (key → array of records)
     const spwIndex = new Map();
