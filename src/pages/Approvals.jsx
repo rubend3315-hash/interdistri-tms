@@ -565,7 +565,7 @@ export default function Approvals() {
       const shiftEndDate = new Date(`${endDateStr}T${entry.end_time}:00`);
       // If overnight and no end_date, add 1 day to end
       if (isOvernight && !entry.end_date) shiftEndDate.setDate(shiftEndDate.getDate() + 1);
-      const tolerance = 15 * 60 * 1000; // 15 min in ms
+      const tolerance = 180 * 60 * 1000; // 3 uur in ms — GPS-rit kan ruim vóór dienst starten (bijv. vrachtwagen vertrekt eerder)
       return allRecords.filter(r => {
         if (!r.start_time) return true;
         try {
