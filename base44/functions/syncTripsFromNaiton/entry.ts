@@ -526,7 +526,9 @@ Deno.serve(async (req) => {
       }
 
       // KM: odometer primair, distance fallback
-      const startKm = Number(firstSeg.odometerstartkm || 0);
+      // Use first drive segment for start KM (skip leading overnight stop segments)
+      const kmRefSeg = firstDriveSeg || firstSeg;
+      const startKm = Number(kmRefSeg.odometerstartkm || 0);
       const endKm = Number(lastSeg.odometerstopkm || lastSeg.odometerstartkm || 0);
       let totalKm = null;
       if (endKm > startKm && startKm > 0) {
@@ -541,11 +543,13 @@ Deno.serve(async (req) => {
       }
 
       // Stilstand: classificeer stops als depot of overige stilstand
+      // Only count stops AFTER the first drive segment (skip overnight depot parking before departure)
       let longStopsMin = 0;  // stilstand >5 min buiten depot (en buiten standplaats)
       let longStopsCount = 0;
       let depotMin = 0;      // stilstand op PostNL depot
       let depotStopsCount = 0;
-      for (let si = 0; si < segs.length; si++) {
+      const firstDriveIdx = firstDriveSeg ? segs.indexOf(firstDriveSeg) : 0;
+      for (let si = firstDriveIdx; si < segs.length; si++) {
         const s = segs[si];
         if ((s.type || '').toLowerCase() !== 'stop') continue;
         // Skip de laatste stop als dat de standplaats is (terugkomst)
