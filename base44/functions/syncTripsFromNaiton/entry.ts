@@ -334,21 +334,39 @@ Deno.serve(async (req) => {
           }
           // Stops at standplaats while IDLE are ignored (vehicle parked)
         } else if (state === 'RIDING') {
-          // Cross-midnight handling: allow ride to span into the next calendar day
-          // Only force-close if >1 day gap (data anomaly), NOT for normal overnight rides
+          // Cross-midnight handling: detect day boundaries and decide whether to split
           if (segDate !== currentRide.date) {
             const rideStart = new Date(currentRide.date);
             const segStart = new Date(segDate);
             const dayDiff = Math.round((segStart - rideStart) / 86400000);
-            if (dayDiff > 1) {
-              // >1 day gap = data anomaly, close the ride
+            
+            // >1 day gap = data anomaly, always close
+            // dayDiff === 1 = next calendar day. The Naiton API splits overnight stops at midnight:
+            //   segment N: stop 14:54 → 23:59:59 (prev day)
+            //   segment N+1: stop 00:00:00 → 06:11 (next day)
+            // If the first segment of the new day is a STOP (vehicle was parked overnight),
+            // close the previous ride and start fresh. This catches vehicles that park at
+            // a depot or anywhere else overnight (not returning to standplaats).
+            // Exception: if it's a standplaats stop, the normal standplaats detection handles it.
+            let forceClose = dayDiff > 1;
+            if (!forceClose && dayDiff === 1) {
+              // Check if this is a midnight-split stop (vehicle parked overnight)
+              const segStartTime = (seg.start || '').slice(11, 19); // "HH:MM:SS"
+              if (type === 'stop' && segStartTime === '00:00:00') {
+                // Vehicle was parked at midnight → new workday, close previous ride
+                forceClose = true;
+              }
+            }
+            
+            if (forceClose) {
+              // Close the current ride and start a new one
               if (currentRide.segments.length > 0) rides.push(currentRide);
               currentRide = { gpsassetid: assetId, date: segDate, segments: [seg] };
               if (type === 'drive') { state = 'RIDING'; } else if (atStandplaats) { state = 'IDLE'; currentRide = null; }
               else { state = 'RIDING'; }
               continue;
             }
-            // Normal overnight: keep building the same ride, date stays as departure date
+            // Normal overnight (e.g. night shift crossing midnight): keep building the same ride
           }
 
           currentRide.segments.push(seg);
@@ -368,21 +386,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Nachtrit datum-correctie: gebruik de CET-datum van het vertrek.
-    // Ritten die VOLLEDIG in de vroege ochtend plaatsvinden (start vóór 06:00 CET)
+    // Nachtrit datum-correctie: gebruik de CET-datum van het VERTREK (eerste drive segment).
+    // Ritten die VOLLEDIG in de vroege ochtend plaatsvinden (vertrek vóór 06:00 CET)
     // worden toegekend aan de VORIGE kalenderdag (= de dienstdatum van de nachtdienst).
     // Ritten die starten vóór middernacht CET en doorlopen worden op de startdatum gehouden.
+    // IMPORTANT: Use the first DRIVE segment, not the first segment overall. Midnight-split
+    // stop segments (00:00:00) from overnight depot parking should not determine the ride date.
     const NIGHT_CUTOFF_HOUR = 6; // Ritten die starten voor 06:00 CET behoren bij de vorige dag
     for (const r of rides) {
-      const firstSeg = r.segments[0];
-      const startTimestamp = firstSeg.start || firstSeg.stop;
+      // Find the first drive segment as the real departure point
+      const firstDrive = r.segments.find(s => (s.type || '').toLowerCase() === 'drive');
+      const refSeg = firstDrive || r.segments[0];
+      const startTimestamp = refSeg.start || refSeg.stop;
       if (!startTimestamp) continue;
       const cetDate = utcToCetDate(startTimestamp);
       const cetHour = utcToCetHour(startTimestamp);
       if (cetDate) {
         r.date = cetDate; // Use CET date instead of UTC date
       }
-      // If ride starts before 06:00 CET, it belongs to the previous day's shift
+      // If ride departs before 06:00 CET, it belongs to the previous day's shift
       if (cetHour !== null && cetHour < NIGHT_CUTOFF_HOUR) {
         const prevDay = new Date(r.date);
         prevDay.setDate(prevDay.getDate() - 1);
@@ -487,8 +509,10 @@ Deno.serve(async (req) => {
       const lastSeg = segs[segs.length - 1];
 
       // Times
-      // startTime = start of first drive segment (departure from standplaats)
-      const startTime = firstSeg.start;
+      // startTime = start of first DRIVE segment (departure from standplaats/depot)
+      // Skip any leading stop segments (e.g. midnight-split overnight depot stops)
+      const firstDriveSeg = segs.find(s => (s.type || '').toLowerCase() === 'drive');
+      const startTime = firstDriveSeg ? firstDriveSeg.start : firstSeg.start;
       // endTime = ARRIVAL at standplaats = start of last stop segment (not its stop, which is when vehicle departs again)
       const lastSegType = (lastSeg.type || '').toLowerCase();
       const endTime = (lastSegType === 'stop' && isStandplaats(lastSeg, ride.gpsassetid))
