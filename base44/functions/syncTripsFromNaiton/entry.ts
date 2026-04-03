@@ -189,140 +189,8 @@ Deno.serve(async (req) => {
     }));
     console.log('[NAITON] userMap sample:', JSON.stringify(userMapSample));
 
-    // 1c. TimeEntry cross-check: fetch submitted entries for the period
-    // Used to validate driver assignment — matches GPS rides to the TimeEntry whose
-    // shift times best overlap with the GPS ride times.
-    // Stores MULTIPLE candidates per gpsassetid+date (to handle shared vehicles)
-    const timeEntryDriverList = {}; // "gpsassetid_date" → [{ employee_name, employee_id, start_time, end_time, date, end_date }]
-    try {
-      const timeEntries = await svc.entities.TimeEntry.filter({
-        date: { $gte: date_from, $lte: date_to },
-        status: { $in: ['Ingediend', 'Goedgekeurd'] },
-      });
-      // Build TE lookup by id for shift times
-      const teById = {};
-      for (const te of timeEntries) { teById[te.id] = te; }
-      // Get trips linked to these time entries to find vehicle
-      const teIds = timeEntries.map(te => te.id).filter(Boolean);
-      let linkedTrips = [];
-      for (let i = 0; i < teIds.length; i += 50) {
-        const batch = teIds.slice(i, i + 50);
-        const trips = await svc.entities.Trip.filter({ time_entry_id: { $in: batch } });
-        linkedTrips.push(...trips);
-      }
-      const employees = await svc.entities.Employee.filter({ status: 'Actief' });
-      const empByIdLocal = {};
-      for (const emp of employees) {
-        empByIdLocal[emp.id] = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
-      }
-      const vehiclesLocal = await svc.entities.Vehicle.filter({});
-      const vehIdToPlateLocal = {};
-      for (const v of vehiclesLocal) { if (v.license_plate) vehIdToPlateLocal[v.id] = v.license_plate; }
-
-      for (const trip of linkedTrips) {
-        if (!trip.employee_id || !trip.vehicle_id || !trip.date) continue;
-        const te = teById[trip.time_entry_id];
-        if (!te) continue;
-        const plate = vehIdToPlateLocal[trip.vehicle_id];
-        if (!plate) continue;
-        const normPlate = plate.replace(/[-\s]/g, '').toLowerCase();
-        for (const [gid, info] of Object.entries(assetMap)) {
-          if (info.plate && info.plate.replace(/[-\s]/g, '').toLowerCase() === normPlate) {
-            const key = `${gid}_${trip.date}`;
-            if (!timeEntryDriverList[key]) timeEntryDriverList[key] = [];
-            // Avoid duplicates (same employee+shift already in list)
-            const alreadyAdded = timeEntryDriverList[key].some(e => e.employee_id === trip.employee_id);
-            if (!alreadyAdded) {
-              timeEntryDriverList[key].push({
-                employee_name: empByIdLocal[trip.employee_id] || '',
-                employee_id: trip.employee_id,
-                start_time: te.start_time || null,
-                end_time: te.end_time || null,
-                date: te.date || null,
-                end_date: te.end_date || null,
-              });
-            }
-            break;
-          }
-        }
-      }
-      const totalCandidates = Object.values(timeEntryDriverList).reduce((s, arr) => s + arr.length, 0);
-      if (totalCandidates > 0) {
-        addLog(`TimeEntry cross-check: ${Object.keys(timeEntryDriverList).length} voertuig+dag combinaties, ${totalCandidates} chauffeur-kandidaten`);
-      }
-    } catch (err) {
-      addLog(`TimeEntry cross-check failed (non-critical): ${err.message.slice(0, 150)}`);
-    }
-
-    // Helper: compute overlap in minutes between a GPS ride (UTC timestamps) and a TimeEntry shift
-    function computeShiftOverlap(gpsStartUtc, gpsEndUtc, teStartTime, teEndTime, teDate, teEndDate) {
-      if (!gpsStartUtc || !gpsEndUtc || !teStartTime || !teEndTime || !teDate) return 0;
-      // Build absolute shift start/end as Date objects (CET/CEST)
-      const shiftStartStr = `${teDate}T${teStartTime}:00`;
-      const shiftStart = new Date(shiftStartStr);
-      // Determine shift end date
-      const isOvernight = (() => {
-        const [sH, sM] = teStartTime.split(':').map(Number);
-        const [eH, eM] = teEndTime.split(':').map(Number);
-        return eH < sH || (eH === sH && eM <= sM);
-      })();
-      const endDateStr = teEndDate || (isOvernight ? (() => {
-        const d = new Date(teDate); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0];
-      })() : teDate);
-      const shiftEnd = new Date(`${endDateStr}T${teEndTime}:00`);
-      // GPS times are UTC, shift times are CET — approximate by adding 1-2h offset
-      // For simplicity, compare in UTC: shift times are ~1-2h ahead of UTC
-      // This is a rough heuristic but sufficient for overlap detection
-      const gpsStart = new Date(gpsStartUtc);
-      const gpsEnd = new Date(gpsEndUtc);
-      // CET offset: +1h (winter) or +2h (summer). Use 2h for NL April (CEST)
-      const cetOffsetMs = 2 * 3600000;
-      const shiftStartUtc = new Date(shiftStart.getTime() - cetOffsetMs);
-      const shiftEndUtc = new Date(shiftEnd.getTime() - cetOffsetMs);
-      // Calculate overlap
-      const overlapStart = Math.max(gpsStart.getTime(), shiftStartUtc.getTime());
-      const overlapEnd = Math.min(gpsEnd.getTime(), shiftEndUtc.getTime());
-      return Math.max(0, (overlapEnd - overlapStart) / 60000); // minutes
-    }
-
-    // 1d. Planning fallback: Trip entity → employee name by plate+date
-    const planningDriverMap = {}; // gpsassetid → drivername
-    try {
-      const tripRecordsExisting = await svc.entities.Trip.filter({
-        date: { $gte: date_from, $lte: date_to }
-      });
-      const employees = await svc.entities.Employee.filter({ status: 'Actief' });
-      const empById = {};
-      for (const emp of employees) {
-        empById[emp.id] = `${emp.first_name || ''} ${emp.prefix ? emp.prefix + ' ' : ''}${emp.last_name || ''}`.trim();
-      }
-      const vehicles = await svc.entities.Vehicle.filter({});
-      const vehicleIdToPlate = {};
-      for (const v of vehicles) {
-        if (v.license_plate) vehicleIdToPlate[v.id] = v.license_plate;
-      }
-      let tripDriverMatches = 0;
-      for (const trip of tripRecordsExisting) {
-        if (!trip.employee_id || !trip.vehicle_id) continue;
-        const empName = empById[trip.employee_id];
-        if (!empName) continue;
-        const plate = vehicleIdToPlate[trip.vehicle_id];
-        if (!plate) continue;
-        const normPlate = plate.replace(/[-\s]/g, '').toLowerCase();
-        for (const [gid, info] of Object.entries(assetMap)) {
-          if (info.plate && info.plate.replace(/[-\s]/g, '').toLowerCase() === normPlate) {
-            if (!planningDriverMap[gid]) {
-              planningDriverMap[gid] = empName;
-              tripDriverMatches++;
-            }
-            break;
-          }
-        }
-      }
-      if (tripDriverMatches > 0) addLog(`Planning fallback drivers: ${tripDriverMatches}`);
-    } catch (err) {
-      addLog(`Planning driver lookup failed (non-critical): ${err.message.slice(0, 150)}`);
-    }
+    // Geen TimeEntry cross-check of planning fallback meer.
+    // Personeelsnummer uit Naiton (staffnumber via tagid/tachocardnumber/personid) is de enige bron van waarheid.
 
     // 1c. Vehicle home bases: fetch vehicles with home_base_lat/lon for alternative standplaats detection
     const allVehicles = await svc.entities.Vehicle.filter({});
@@ -746,65 +614,9 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Fallback: planning (Trip entity match)
-      if (!driver) {
-        driver = planningDriverMap[ride.gpsassetid] || '';
-        if (driver) driverSource = 'planning fallback';
-      }
-
-      // TimeEntry cross-check: if driver(s) submitted a shift on this vehicle+date,
-      // pick the one whose shift times best overlap with the GPS ride times.
-      // This correctly handles shared vehicles (e.g. Laurien 20:30-00:30, Martin 23:30-03:45)
-      const teKey = `${ride.gpsassetid}_${ride.date}`;
-      const teCandidates = timeEntryDriverList[teKey];
-      if (teCandidates && teCandidates.length > 0) {
-        let bestMatch = null;
-        let bestOverlap = -1;
-        for (const candidate of teCandidates) {
-          const overlap = computeShiftOverlap(startTime, endTime, candidate.start_time, candidate.end_time, candidate.date, candidate.end_date);
-          if (overlap > bestOverlap) {
-            bestOverlap = overlap;
-            bestMatch = candidate;
-          }
-        }
-        // Only apply cross-check if there's meaningful overlap (> 0 min)
-        // or if there's exactly one candidate (backward compatibility)
-        if (bestMatch && (bestOverlap > 0 || teCandidates.length === 1)) {
-          const teDriverNorm = normDriverName(bestMatch.employee_name);
-          const gpsDriverNorm = normDriverName(driver);
-          if (teDriverNorm && teDriverNorm !== gpsDriverNorm) {
-            const overlapStr = bestOverlap > 0 ? `, overlap ${Math.round(bestOverlap)}min` : '';
-            addLog(`TimeEntry override ${assetMap[ride.gpsassetid]?.plate || ride.gpsassetid} ${ride.date}: GPS="${driver}" → TimeEntry="${bestMatch.employee_name}" (${teCandidates.length} kandidaten${overlapStr})`);
-            driver = bestMatch.employee_name;
-            driverSource = `timeentry-crosscheck (was: ${driverSource})`;
-            driverEmployeeNumber = null; // will be re-resolved via name matching
-          }
-        }
-      }
-
-      // ALWAYS resolve employeenumber via Naiton user name lookup if not yet found
-      // This is critical: personeelsnummer is the primary key for Employee matching
-      if (driver && !driverEmployeeNumber) {
-        // Try segment-level tacho/tag/personid first (any segment in the ride)
-        for (const s of segs) {
-          if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]?.employeenumber) {
-            driverEmployeeNumber = userByTacho[String(s.tachocardnumber)].employeenumber; break;
-          }
-          if (s.tagid && userByTag[String(s.tagid)]?.employeenumber) {
-            driverEmployeeNumber = userByTag[String(s.tagid)].employeenumber; break;
-          }
-          if (s.personid && userByPersonId[String(s.personid)]?.employeenumber) {
-            driverEmployeeNumber = userByPersonId[String(s.personid)].employeenumber; break;
-          }
-        }
-        // Fallback: reverse lookup by driver name in Naiton users
-        if (!driverEmployeeNumber) {
-          const nameMatch = userByName[normDriverName(driver)];
-          if (nameMatch?.employeenumber) {
-            driverEmployeeNumber = nameMatch.employeenumber;
-          }
-        }
-      }
+      // Personeelsnummer is de ENIGE betrouwbare koppelsleutel.
+      // Geen planning-fallback of TimeEntry cross-check — die werken op naam en zijn onbetrouwbaar.
+      // Als er geen personeelsnummer uit Naiton komt, blijft de rit ongelinkt.
 
       tripRecords.push({
         gpsassetid: ride.gpsassetid,
@@ -956,7 +768,8 @@ Deno.serve(async (req) => {
         empSkip += EMP_PAGE;
       }
 
-      // PRIMARY: Index by employee_number (personeelsnummer) — most reliable
+      // ALLEEN matchen op personeelsnummer (Naiton staffnumber → Employee.employee_number)
+      // Geen naam-matching — personeelsnummer is uniek en betrouwbaar.
       const empByNumber = {};
       for (const emp of employees) {
         if (emp.employee_number) {
@@ -965,81 +778,19 @@ Deno.serve(async (req) => {
       }
       addLog(`Employee index: ${Object.keys(empByNumber).length} met personeelsnummer, ${employees.length} totaal`);
 
-      // SECONDARY: Name-based fallback (exact + partial/roepnaam matching)
-      const normName = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
-      const empByName = {};
-      const empByLastAndPartialFirst = []; // for partial first name matching (roepnaam)
-      for (const emp of employees) {
-        const fn = emp.first_name || '';
-        const pf = emp.prefix || '';
-        const ln = emp.last_name || '';
-        const variants = [
-          `${fn} ${pf} ${ln}`, `${fn} ${ln}`, `${ln} ${fn}`,
-          `${ln}, ${fn}`, `${pf} ${ln} ${fn}`, `${pf} ${ln}, ${fn}`,
-        ];
-        for (const v of variants) {
-          const key = normName(v);
-          if (key && !empByName[key]) empByName[key] = emp;
-        }
-        // Index for partial first name matching (e.g. "Kim" → "Kimberley")
-        if (fn && ln) {
-          empByLastAndPartialFirst.push({
-            emp,
-            firstName: normName(fn),
-            prefix: normName(pf),
-            lastName: normName(ln),
-          });
-        }
-      }
-
-      // Partial name matcher: "Kim van Broekhoven" → matches "Kimberley van Broekhoven"
-      const findByPartialName = (driverName) => {
-        const parts = normName(driverName).split(' ').filter(Boolean);
-        if (parts.length < 2) return null;
-        const driverFirst = parts[0];
-        const driverRest = parts.slice(1).join(' ');
-        for (const entry of empByLastAndPartialFirst) {
-          // Check if last name (with optional prefix) matches the rest of the driver name
-          const empRest = entry.prefix ? `${entry.prefix} ${entry.lastName}` : entry.lastName;
-          if (normName(empRest) !== driverRest && entry.lastName !== driverRest) continue;
-          // Check if employee first name STARTS WITH the driver's first name (roepnaam)
-          if (entry.firstName.startsWith(driverFirst) && driverFirst.length >= 3) {
-            return entry.emp;
-          }
-        }
-        return null;
-      };
-
       const linksToCreate = [];
       const unmatchedDrivers = [];
       let matchedByNumber = 0;
-      let matchedByName = 0;
 
       for (const rec of newRecordIds) {
-        if (!rec.driver) continue;
-
-        let emp = null;
-
-        // Priority 1: Match by personeelsnummer (Naiton employeenumber → Employee.employee_number)
-        if (rec.driver_employee_number) {
-          emp = empByNumber[String(rec.driver_employee_number).trim()];
-          if (emp) matchedByNumber++;
+        if (!rec.driver_employee_number) {
+          unmatchedDrivers.push(`${rec.driver || '?'} (geen personeelsnummer uit Naiton)`);
+          continue;
         }
 
-        // Priority 2: Name-based fallback (exact match)
-        if (!emp) {
-          const norm = normName(rec.driver);
-          emp = empByName[norm];
-          if (emp) matchedByName++;
-        }
-
-        // Priority 3: Partial first name / roepnaam match (e.g. "Kim" → "Kimberley")
-        if (!emp) {
-          emp = findByPartialName(rec.driver);
-          if (emp) matchedByName++;
-        }
-
+        const emp = empByNumber[String(rec.driver_employee_number).trim()];
         if (emp) {
+          matchedByNumber++;
           linksToCreate.push({
             trip_record_id: rec.id,
             employee_id: emp.id,
@@ -1048,11 +799,11 @@ Deno.serve(async (req) => {
             approved: false,
           });
         } else {
-          unmatchedDrivers.push(`${rec.driver} (nr: ${rec.driver_employee_number || '?'})`);
+          unmatchedDrivers.push(`${rec.driver || '?'} (nr: ${rec.driver_employee_number} — niet gevonden in Employee)`);
         }
       }
 
-      addLog(`Match resultaat: ${matchedByNumber} op personeelsnummer, ${matchedByName} op naam`);
+      addLog(`Match resultaat: ${matchedByNumber} op personeelsnummer`);
       if (unmatchedDrivers.length > 0) {
         const unique = [...new Set(unmatchedDrivers)];
         addLog(`Ongematchte chauffeurs (${unique.length}): ${unique.join(', ')}`);
