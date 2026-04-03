@@ -190,14 +190,18 @@ Deno.serve(async (req) => {
     console.log('[NAITON] userMap sample:', JSON.stringify(userMapSample));
 
     // 1c. TimeEntry cross-check: fetch submitted entries for the period
-    // Used to validate driver assignment — if a driver submitted a shift on this vehicle+date,
-    // that's a strong signal they were the actual driver (overrides GPS late-login artifacts)
-    const timeEntryDriverMap = {}; // "gpsassetid_date" → { employee_name, employee_id }
+    // Used to validate driver assignment — matches GPS rides to the TimeEntry whose
+    // shift times best overlap with the GPS ride times.
+    // Stores MULTIPLE candidates per gpsassetid+date (to handle shared vehicles)
+    const timeEntryDriverList = {}; // "gpsassetid_date" → [{ employee_name, employee_id, start_time, end_time, date, end_date }]
     try {
       const timeEntries = await svc.entities.TimeEntry.filter({
         date: { $gte: date_from, $lte: date_to },
         status: { $in: ['Ingediend', 'Goedgekeurd'] },
       });
+      // Build TE lookup by id for shift times
+      const teById = {};
+      for (const te of timeEntries) { teById[te.id] = te; }
       // Get trips linked to these time entries to find vehicle
       const teIds = timeEntries.map(te => te.id).filter(Boolean);
       let linkedTrips = [];
@@ -217,25 +221,68 @@ Deno.serve(async (req) => {
 
       for (const trip of linkedTrips) {
         if (!trip.employee_id || !trip.vehicle_id || !trip.date) continue;
+        const te = teById[trip.time_entry_id];
+        if (!te) continue;
         const plate = vehIdToPlateLocal[trip.vehicle_id];
         if (!plate) continue;
         const normPlate = plate.replace(/[-\s]/g, '').toLowerCase();
         for (const [gid, info] of Object.entries(assetMap)) {
           if (info.plate && info.plate.replace(/[-\s]/g, '').toLowerCase() === normPlate) {
             const key = `${gid}_${trip.date}`;
-            timeEntryDriverMap[key] = {
-              employee_name: empByIdLocal[trip.employee_id] || '',
-              employee_id: trip.employee_id,
-            };
+            if (!timeEntryDriverList[key]) timeEntryDriverList[key] = [];
+            // Avoid duplicates (same employee+shift already in list)
+            const alreadyAdded = timeEntryDriverList[key].some(e => e.employee_id === trip.employee_id);
+            if (!alreadyAdded) {
+              timeEntryDriverList[key].push({
+                employee_name: empByIdLocal[trip.employee_id] || '',
+                employee_id: trip.employee_id,
+                start_time: te.start_time || null,
+                end_time: te.end_time || null,
+                date: te.date || null,
+                end_date: te.end_date || null,
+              });
+            }
             break;
           }
         }
       }
-      if (Object.keys(timeEntryDriverMap).length > 0) {
-        addLog(`TimeEntry cross-check: ${Object.keys(timeEntryDriverMap).length} voertuig+dag combinaties met ingediende dienst`);
+      const totalCandidates = Object.values(timeEntryDriverList).reduce((s, arr) => s + arr.length, 0);
+      if (totalCandidates > 0) {
+        addLog(`TimeEntry cross-check: ${Object.keys(timeEntryDriverList).length} voertuig+dag combinaties, ${totalCandidates} chauffeur-kandidaten`);
       }
     } catch (err) {
       addLog(`TimeEntry cross-check failed (non-critical): ${err.message.slice(0, 150)}`);
+    }
+
+    // Helper: compute overlap in minutes between a GPS ride (UTC timestamps) and a TimeEntry shift
+    function computeShiftOverlap(gpsStartUtc, gpsEndUtc, teStartTime, teEndTime, teDate, teEndDate) {
+      if (!gpsStartUtc || !gpsEndUtc || !teStartTime || !teEndTime || !teDate) return 0;
+      // Build absolute shift start/end as Date objects (CET/CEST)
+      const shiftStartStr = `${teDate}T${teStartTime}:00`;
+      const shiftStart = new Date(shiftStartStr);
+      // Determine shift end date
+      const isOvernight = (() => {
+        const [sH, sM] = teStartTime.split(':').map(Number);
+        const [eH, eM] = teEndTime.split(':').map(Number);
+        return eH < sH || (eH === sH && eM <= sM);
+      })();
+      const endDateStr = teEndDate || (isOvernight ? (() => {
+        const d = new Date(teDate); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0];
+      })() : teDate);
+      const shiftEnd = new Date(`${endDateStr}T${teEndTime}:00`);
+      // GPS times are UTC, shift times are CET — approximate by adding 1-2h offset
+      // For simplicity, compare in UTC: shift times are ~1-2h ahead of UTC
+      // This is a rough heuristic but sufficient for overlap detection
+      const gpsStart = new Date(gpsStartUtc);
+      const gpsEnd = new Date(gpsEndUtc);
+      // CET offset: +1h (winter) or +2h (summer). Use 2h for NL April (CEST)
+      const cetOffsetMs = 2 * 3600000;
+      const shiftStartUtc = new Date(shiftStart.getTime() - cetOffsetMs);
+      const shiftEndUtc = new Date(shiftEnd.getTime() - cetOffsetMs);
+      // Calculate overlap
+      const overlapStart = Math.max(gpsStart.getTime(), shiftStartUtc.getTime());
+      const overlapEnd = Math.min(gpsEnd.getTime(), shiftEndUtc.getTime());
+      return Math.max(0, (overlapEnd - overlapStart) / 60000); // minutes
     }
 
     // 1d. Planning fallback: Trip entity → employee name by plate+date
@@ -705,18 +752,33 @@ Deno.serve(async (req) => {
         if (driver) driverSource = 'planning fallback';
       }
 
-      // TimeEntry cross-check: if a driver submitted a shift on this vehicle+date,
-      // use that as the definitive driver (overrides GPS late-login artifacts)
+      // TimeEntry cross-check: if driver(s) submitted a shift on this vehicle+date,
+      // pick the one whose shift times best overlap with the GPS ride times.
+      // This correctly handles shared vehicles (e.g. Laurien 20:30-00:30, Martin 23:30-03:45)
       const teKey = `${ride.gpsassetid}_${ride.date}`;
-      const teMatch = timeEntryDriverMap[teKey];
-      if (teMatch && teMatch.employee_name) {
-        const teDriverNorm = normDriverName(teMatch.employee_name);
-        const gpsDriverNorm = normDriverName(driver);
-        if (teDriverNorm && teDriverNorm !== gpsDriverNorm) {
-          addLog(`TimeEntry override ${assetMap[ride.gpsassetid]?.plate || ride.gpsassetid} ${ride.date}: GPS="${driver}" → TimeEntry="${teMatch.employee_name}"`);
-          driver = teMatch.employee_name;
-          driverSource = `timeentry-crosscheck (was: ${driverSource})`;
-          driverEmployeeNumber = null; // will be re-resolved via name matching
+      const teCandidates = timeEntryDriverList[teKey];
+      if (teCandidates && teCandidates.length > 0) {
+        let bestMatch = null;
+        let bestOverlap = -1;
+        for (const candidate of teCandidates) {
+          const overlap = computeShiftOverlap(startTime, endTime, candidate.start_time, candidate.end_time, candidate.date, candidate.end_date);
+          if (overlap > bestOverlap) {
+            bestOverlap = overlap;
+            bestMatch = candidate;
+          }
+        }
+        // Only apply cross-check if there's meaningful overlap (> 0 min)
+        // or if there's exactly one candidate (backward compatibility)
+        if (bestMatch && (bestOverlap > 0 || teCandidates.length === 1)) {
+          const teDriverNorm = normDriverName(bestMatch.employee_name);
+          const gpsDriverNorm = normDriverName(driver);
+          if (teDriverNorm && teDriverNorm !== gpsDriverNorm) {
+            const overlapStr = bestOverlap > 0 ? `, overlap ${Math.round(bestOverlap)}min` : '';
+            addLog(`TimeEntry override ${assetMap[ride.gpsassetid]?.plate || ride.gpsassetid} ${ride.date}: GPS="${driver}" → TimeEntry="${bestMatch.employee_name}" (${teCandidates.length} kandidaten${overlapStr})`);
+            driver = bestMatch.employee_name;
+            driverSource = `timeentry-crosscheck (was: ${driverSource})`;
+            driverEmployeeNumber = null; // will be re-resolved via name matching
+          }
         }
       }
 
@@ -822,16 +884,47 @@ Deno.serve(async (req) => {
 
     const toInsert = [];
     let skipped = 0;
+    let driverUpdated = 0;
+    const newRecordIds = []; // Records that need (re-)linking in Step 6
+
+    // Index existing records by dedup key for driver update checks
+    const existingByKey = {};
+    for (const r of existingRecords) {
+      existingByKey[`${r.gpsassetid}_${r.date}_${r.start_time}`] = r;
+    }
 
     for (const r of realTripRecords) {
       const key = `${r.gpsassetid}_${r.date}_${r.start_time}`;
-      if (existingKeys.has(key)) { skipped++; continue; }
+      if (existingKeys.has(key)) {
+        // Record exists — check if driver needs updating (e.g. timeentry-crosscheck found better match)
+        const existing = existingByKey[key];
+        if (existing && r.driver && existing.driver !== r.driver && !existing.driver_manually_set) {
+          try {
+            await svc.entities.TripRecord.update(existing.id, {
+              driver: r.driver,
+              driver_source: r.driver_source,
+            });
+            driverUpdated++;
+            addLog(`Driver updated: ${existing.plate || existing.gpsassetid} ${existing.date} "${existing.driver}" → "${r.driver}"`);
+            // Delete old TripRecordLink so a new correct one is created in Step 6
+            const oldLinks = await svc.entities.TripRecordLink.filter({ trip_record_id: existing.id });
+            for (const ol of oldLinks) {
+              await svc.entities.TripRecordLink.delete(ol.id);
+            }
+            // Add to newRecordIds so Step 6 creates the correct link
+            newRecordIds.push({ id: existing.id, driver: r.driver, driver_employee_number: r.driver_employee_number, date: r.date });
+          } catch (e) {
+            addLog(`Driver update failed: ${e.message?.slice(0, 100)}`);
+          }
+        }
+        skipped++;
+        continue;
+      }
       existingKeys.add(key);
       toInsert.push(r);
     }
 
     let created = 0;
-    const newRecordIds = [];
 
     for (let i = 0; i < toInsert.length; i += INSERT_BATCH_SIZE) {
       const batch = toInsert.slice(i, i + INSERT_BATCH_SIZE);
@@ -842,7 +935,7 @@ Deno.serve(async (req) => {
       created += results.length;
     }
 
-    addLog(`Created: ${created}, Skipped: ${skipped}`);
+    addLog(`Created: ${created}, Skipped: ${skipped}, Driver updated: ${driverUpdated}`);
 
     // ═══════════════════════════════════════════════════════
     // STEP 6: Match drivers → employees → TripRecordLink
