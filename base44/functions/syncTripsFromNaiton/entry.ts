@@ -616,7 +616,30 @@ Deno.serve(async (req) => {
 
       // Personeelsnummer is de ENIGE betrouwbare koppelsleutel.
       // Geen planning-fallback of TimeEntry cross-check — die werken op naam en zijn onbetrouwbaar.
-      // Als er geen personeelsnummer uit Naiton komt, blijft de rit ongelinkt.
+      // Als er geen personeelsnummer uit Naiton komt, probeer het alsnog te resolven
+      // via de Naiton user-index (driver naam → staffnumber in hetzelfde Naiton systeem).
+      if (driver && !driverEmployeeNumber) {
+        // Try segment-level tacho/tag/personid first (any segment in the ride)
+        for (const s of segs) {
+          if (s.tachocardnumber && userByTacho[String(s.tachocardnumber)]?.employeenumber) {
+            driverEmployeeNumber = userByTacho[String(s.tachocardnumber)].employeenumber; break;
+          }
+          if (s.tagid && userByTag[String(s.tagid)]?.employeenumber) {
+            driverEmployeeNumber = userByTag[String(s.tagid)].employeenumber; break;
+          }
+          if (s.personid && userByPersonId[String(s.personid)]?.employeenumber) {
+            driverEmployeeNumber = userByPersonId[String(s.personid)].employeenumber; break;
+          }
+        }
+        // Fallback: reverse lookup by driver name in Naiton users (NOT Employee — same Naiton system)
+        if (!driverEmployeeNumber) {
+          const nameMatch = userByName[normDriverName(driver)];
+          if (nameMatch?.employeenumber) {
+            driverEmployeeNumber = nameMatch.employeenumber;
+            addLog(`Personeelsnummer via Naiton naam-lookup: "${driver}" → nr ${nameMatch.employeenumber}`);
+          }
+        }
+      }
 
       tripRecords.push({
         gpsassetid: ride.gpsassetid,
