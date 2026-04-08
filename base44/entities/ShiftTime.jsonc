@@ -1,0 +1,115 @@
+{
+  "name": "ShiftTime",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Datum"
+    },
+    "department": {
+      "type": "string",
+      "enum": [
+        "Management",
+        "Transport",
+        "PakketDistributie",
+        "Charters",
+        "Dagspecial Netwerk"
+      ],
+      "description": "Afdeling"
+    },
+    "service_start_time": {
+      "type": "string",
+      "description": "Start dienst"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Shifttijd van"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "Shifttijd tot"
+    },
+    "message": {
+      "type": "string",
+      "description": "Bericht voor medewerkers"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Aangemaakt door"
+    }
+  },
+  "required": [
+    "date",
+    "department",
+    "service_start_time"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "PLANNER"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "OPERATIONS_MANAGER"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "PLANNER"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "OPERATIONS_MANAGER"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "PLANNER"
+          }
+        }
+      ]
+    }
+  }
+}

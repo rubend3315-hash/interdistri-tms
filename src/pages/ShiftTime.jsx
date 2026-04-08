@@ -276,6 +276,7 @@ export default function ShiftTime() {
                   <SelectItem value="Transport">Transport</SelectItem>
                   <SelectItem value="PakketDistributie">PakketDistributie</SelectItem>
                   <SelectItem value="Charters">Charters</SelectItem>
+                  <SelectItem value="Dagspecial Netwerk">Dagspecial Netwerk</SelectItem>
                 </SelectContent>
               </Select>
             </div>
