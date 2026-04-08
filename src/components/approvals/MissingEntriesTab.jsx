@@ -24,7 +24,7 @@ import { nl } from "date-fns/locale";
 const qOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
 
 export default function MissingEntriesTab({ employees = [] }) {
-  const [daysBack, setDaysBack] = useState(7);
+  const [daysBack, setDaysBack] = useState(7); // default 7 for full work week
   const [search, setSearch] = useState("");
   const [expandedEmployees, setExpandedEmployees] = useState(new Set());
 
@@ -39,6 +39,7 @@ export default function MissingEntriesTab({ employees = [] }) {
         date: { $gte: dateFrom, $lte: dateTo },
       }),
     ...qOpts,
+    staleTime: 0, // Always refetch on mount/refetch to ensure fresh data
   });
 
   // Fetch TripRecords for km/hours data
@@ -65,6 +66,7 @@ export default function MissingEntriesTab({ employees = [] }) {
     },
     enabled: linkRecordIds.length > 0,
     ...qOpts,
+    staleTime: 0,
   });
 
   const tripRecordMap = useMemo(() => {
@@ -74,13 +76,14 @@ export default function MissingEntriesTab({ employees = [] }) {
   }, [tripRecords]);
 
   // Fetch TimeEntries for the period to check who HAS submitted
-  const { data: timeEntries = [], isLoading: loadingEntries } = useQuery({
+  const { data: timeEntries = [], isLoading: loadingEntries, refetch: refetchEntries } = useQuery({
     queryKey: ["missingEntries-timeentries", dateFrom, dateTo],
     queryFn: () =>
       base44.entities.TimeEntry.filter({
         date: { $gte: dateFrom, $lte: dateTo },
       }),
     ...qOpts,
+    staleTime: 0,
   });
 
   // Build set of employee_id + date that have a TimeEntry (any status)
@@ -214,7 +217,7 @@ export default function MissingEntriesTab({ employees = [] }) {
           size="sm"
           variant="outline"
           className="h-8 gap-1.5"
-          onClick={() => refetchLinks()}
+          onClick={() => { refetchLinks(); refetchEntries(); }}
           disabled={isLoading}
         >
           {isLoading ? (
