@@ -457,7 +457,7 @@ Deno.serve(async (req) => {
         const gapMinutes = (thisStart - prevEnd) / 60000;
 
         // Merge if gap is short (e.g. < 30 min) indicating continuous work
-        if (gapMinutes < 30) {
+        if (gapMinutes < 5) {
           currentMerge.segments.push(...thisRide.segments);
           mergeCount++;
         } else {
