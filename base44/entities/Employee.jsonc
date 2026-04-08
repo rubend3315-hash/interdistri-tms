@@ -1,0 +1,389 @@
+{
+  "name": "Employee",
+  "type": "object",
+  "properties": {
+    "employee_number": {
+      "type": "string",
+      "description": "Personeelsnummer"
+    },
+    "initials": {
+      "type": "string",
+      "description": "Voorletters"
+    },
+    "first_name": {
+      "type": "string",
+      "description": "Voornaam"
+    },
+    "prefix": {
+      "type": "string",
+      "description": "Tussenvoegsel (bijv. van, de, van der)"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Achternaam"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "Pasfoto URL"
+    },
+    "email": {
+      "type": "string",
+      "description": "E-mailadres"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefoonnummer"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "Geboortedatum"
+    },
+    "in_service_since": {
+      "type": "string",
+      "format": "date",
+      "description": "In dienst sinds"
+    },
+    "out_of_service_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Uit dienst datum"
+    },
+    "address": {
+      "type": "string",
+      "description": "Adres"
+    },
+    "postal_code": {
+      "type": "string",
+      "description": "Postcode"
+    },
+    "city": {
+      "type": "string",
+      "description": "Woonplaats"
+    },
+    "emergency_contact_name": {
+      "type": "string",
+      "description": "Noodcontact naam"
+    },
+    "emergency_contact_phone": {
+      "type": "string",
+      "description": "Noodcontact telefoon"
+    },
+    "emergency_contact_relation": {
+      "type": "string",
+      "description": "Relatie noodcontact"
+    },
+    "department": {
+      "type": "string",
+      "enum": [
+        "Management",
+        "Transport",
+        "PakketDistributie",
+        "Charters",
+        "Dagspecial Netwerk"
+      ],
+      "description": "Afdeling"
+    },
+    "function": {
+      "type": "string",
+      "description": "Functie"
+    },
+    "default_shift": {
+      "type": "string",
+      "enum": [
+        "Dag",
+        "Avond",
+        "Nacht",
+        "Dag en Avond",
+        "Avond en Nacht"
+      ],
+      "description": "Standaard shift voor voorplanning"
+    },
+    "shift_template": {
+      "type": "object",
+      "description": "Opgeslagen shift-template per dag voor voorplanning (bijv. {monday: 'Dag', tuesday: 'Avond en Nacht', ...})"
+    },
+    "charter_company_id": {
+      "type": "string",
+      "description": "Gekoppeld charterbedrijf ID"
+    },
+    "drivers_license_number": {
+      "type": "string",
+      "description": "Rijbewijsnummer"
+    },
+    "drivers_license_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Rijbewijscategorie\u00ebn"
+    },
+    "drivers_license_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "Rijbewijs vervaldatum"
+    },
+    "code95_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "Code 95 vervaldatum"
+    },
+    "id_document_number": {
+      "type": "string",
+      "description": "Nummer ID-kaart of paspoort"
+    },
+    "id_document_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "Geldigheidsdatum ID-kaart of paspoort"
+    },
+    "contract_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Contract startdatum"
+    },
+    "contract_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Contract einddatum"
+    },
+    "hourly_rate": {
+      "type": "number",
+      "description": "Uurloon"
+    },
+    "salary_scale": {
+      "type": "string",
+      "description": "Loonschaal"
+    },
+    "travel_allowance_per_km": {
+      "type": "number",
+      "description": "Reiskostenvergoeding per km"
+    },
+    "travel_distance_km": {
+      "type": "number",
+      "description": "Reisafstand enkele reis in km"
+    },
+    "travel_allowance_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Reiskosten startdatum"
+    },
+    "travel_allowance_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Reiskosten einddatum"
+    },
+    "week_schedule": {
+      "type": "object",
+      "description": "Tweewekelijks rooster"
+    },
+    "contractregels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "startdatum": {
+            "type": "string",
+            "format": "date"
+          },
+          "einddatum": {
+            "type": "string",
+            "format": "date"
+          },
+          "type_contract": {
+            "type": "string"
+          },
+          "loonschaal": {
+            "type": "string"
+          },
+          "uren_per_week": {
+            "type": "number"
+          },
+          "week1": {
+            "type": "object"
+          },
+          "week2": {
+            "type": "object"
+          },
+          "reiskostenvergoeding": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Contractregels \u2014 single source of truth voor contracttype en uren"
+    },
+    "reiskostenregels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "startdatum": {
+            "type": "string",
+            "format": "date"
+          },
+          "einddatum": {
+            "type": "string",
+            "format": "date"
+          },
+          "afstand_km": {
+            "type": "number"
+          },
+          "vergoeding_per_dag": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Reiskostenregels"
+    },
+    "supervisor_notities": {
+      "type": "string",
+      "description": "Supervisor notities"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Actief",
+        "Inactief",
+        "Uit dienst",
+        "concept"
+      ],
+      "default": "Actief"
+    },
+    "bsn": {
+      "type": "string",
+      "description": "BSN nummer"
+    },
+    "bank_account": {
+      "type": "string",
+      "description": "IBAN"
+    },
+    "mobile_entry_type": {
+      "type": "string",
+      "enum": [
+        "single_day",
+        "multi_day"
+      ],
+      "default": "single_day",
+      "description": "Type mobiele tijdregistratie app"
+    },
+    "is_chauffeur": {
+      "type": "boolean",
+      "default": true,
+      "description": "Chauffeur - bepaalt of nachttoeslag berekend wordt"
+    },
+    "tonen_in_planner": {
+      "type": "boolean",
+      "default": true,
+      "description": "Medewerker tonen in planner"
+    },
+    "opnemen_in_loonrapport": {
+      "type": "boolean",
+      "default": true,
+      "description": "Medewerker opnemen in loonrapport"
+    },
+    "loonheffing_toepassen": {
+      "type": "string",
+      "description": "Loonheffingskorting toepassen: ja of nee"
+    },
+    "loonheffing_datum": {
+      "type": "string",
+      "format": "date",
+      "description": "Datum loonheffingskorting vanaf"
+    },
+    "loonheffing_handtekening_url": {
+      "type": "string",
+      "description": "Handtekening loonheffingsverklaring URL"
+    },
+    "mobile_shift_department": {
+      "type": "string",
+      "enum": [
+        "Management",
+        "Transport",
+        "PakketDistributie",
+        "Charters",
+        "Dagspecial Netwerk"
+      ],
+      "description": "Afdeling voor shifttijden in mobiele app (overschrijft primaire afdeling)"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Gekoppelde tenant ID (fase 1: nullable, geen filtering)"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name",
+    "department"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "HR_MANAGER"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "id": "{{user.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "HR_MANAGER"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "OPERATIONS_MANAGER"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "SUPERVISOR"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "id": "{{user.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "business_role": "HR_MANAGER"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
