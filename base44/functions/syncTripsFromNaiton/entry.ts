@@ -445,30 +445,30 @@ Deno.serve(async (req) => {
       // Sort by first segment start time
       dayRides.sort((a, b) => new Date(a.segments[0].start || 0) - new Date(b.segments[0].start || 0));
 
-      if (dayRides.length === 2) {
-        // 2 rides: merge both (home→depot + depot→route→depot = one work ride)
-        const merged = {
-          gpsassetid: dayRides[0].gpsassetid,
-          date: dayRides[0].date,
-          segments: dayRides.flatMap(r => r.segments),
-        };
-        mergedRides.push(merged);
-        mergeCount += 1;
-      } else {
-        // 3+ rides: merge all except the last one (return commute)
-        const workRides = dayRides.slice(0, -1);
-        const returnRide = dayRides[dayRides.length - 1];
-        const merged = {
-          gpsassetid: workRides[0].gpsassetid,
-          date: workRides[0].date,
-          segments: workRides.flatMap(r => r.segments),
-        };
-        mergedRides.push(merged);
-        mergedRides.push(returnRide);
-        mergeCount += workRides.length - 1;
+      // Merge CONSECUTIVE rides for home_base vehicles
+      const tempMerged = [];
+      let currentMerge = dayRides[0];
+
+      for (let i = 1; i < dayRides.length; i++) {
+        const prevRide = currentMerge;
+        const thisRide = dayRides[i];
+        const prevEnd = new Date(prevRide.segments[prevRide.segments.length-1].stop || 0);
+        const thisStart = new Date(thisRide.segments[0].start || 0);
+        const gapMinutes = (thisStart - prevEnd) / 60000;
+
+        // Merge if gap is short (e.g. < 30 min) indicating continuous work
+        if (gapMinutes < 30) {
+          currentMerge.segments.push(...thisRide.segments);
+          mergeCount++;
+        } else {
+          tempMerged.push(currentMerge);
+          currentMerge = thisRide;
+        }
       }
+      tempMerged.push(currentMerge); // push the last ride
+      mergedRides.push(...tempMerged);
     }
-    if (mergeCount > 0) addLog(`${mergeCount} ritten samengevoegd (home_base voertuigen, aanrij+werkrit → 1)`);
+    if (mergeCount > 0) addLog(`${mergeCount} ritten samengevoegd (home_base voertuigen, opeenvolgend)`);
 
     // Filter rides:
     // 1. Only dates within the requested range
