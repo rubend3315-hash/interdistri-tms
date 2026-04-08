@@ -68,15 +68,13 @@ export default function MissingEntriesTab({ employees = [] }) {
         body,
         from_name: "Interdistri TMS",
       });
-      // Send copy to sender
-      if (currentUser?.email) {
-        await base44.integrations.Core.SendEmail({
-          to: currentUser.email,
-          subject: `[Kopie] ${subject} — ${item.employeeName}`,
-          body,
-          from_name: "Interdistri TMS",
-        });
-      }
+      // Send copy to admin
+      await base44.integrations.Core.SendEmail({
+        to: "ruben@interdistri.nl",
+        subject: `[Kopie] ${subject} — ${item.employeeName}`,
+        body,
+        from_name: "Interdistri TMS",
+      });
       setSentMails(prev => new Set(prev).add(item.employeeId));
       toast.success(`Herinnering verstuurd naar ${emp.first_name || item.employeeName} (+ kopie)`);
     } catch (err) {
