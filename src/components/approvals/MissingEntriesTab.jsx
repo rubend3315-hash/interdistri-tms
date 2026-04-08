@@ -17,16 +17,57 @@ import {
   Loader2,
   ChevronDown,
   ChevronRight,
+  Mail,
+  Check,
 } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { nl } from "date-fns/locale";
+import { toast } from "sonner";
 
 const qOpts = { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false };
 
 export default function MissingEntriesTab({ employees = [] }) {
-  const [daysBack, setDaysBack] = useState(7); // default 7 for full work week
+  const [daysBack, setDaysBack] = useState(7);
   const [search, setSearch] = useState("");
   const [expandedEmployees, setExpandedEmployees] = useState(new Set());
+  const [sendingMail, setSendingMail] = useState(null); // employeeId currently sending
+  const [sentMails, setSentMails] = useState(new Set()); // employeeIds already sent
+
+  const empMap = useMemo(() => {
+    const m = {};
+    employees.forEach((e) => { m[e.id] = e; });
+    return m;
+  }, [employees]);
+
+  const sendReminder = async (item, e) => {
+    e.stopPropagation();
+    const emp = empMap[item.employeeId];
+    if (!emp?.email) {
+      toast.error("Geen e-mailadres bekend voor deze medewerker.");
+      return;
+    }
+    setSendingMail(item.employeeId);
+    const datesStr = item.dates.map(d => format(new Date(d.date), "EEEE d MMMM", { locale: nl })).join(", ");
+    const body = `<p>Beste ${emp.first_name || item.employeeName},</p>
+<p>Volgens onze GPS-registratie heb je op de volgende ${item.missingDays === 1 ? "dag" : "dagen"} gereden maar nog geen tijdregistratie ingediend:</p>
+<p><strong>${datesStr}</strong></p>
+<p>Wil je dit zo snel mogelijk invullen via de mobiele app?</p>
+<p>Met vriendelijke groet,<br/>Interdistri TMS</p>`;
+    try {
+      await base44.integrations.Core.SendEmail({
+        to: emp.email,
+        subject: `Herinnering: ${item.missingDays} ${item.missingDays === 1 ? "dag" : "dagen"} niet ingevuld`,
+        body,
+        from_name: "Interdistri TMS",
+      });
+      setSentMails(prev => new Set(prev).add(item.employeeId));
+      toast.success(`Herinnering verstuurd naar ${emp.first_name || item.employeeName}`);
+    } catch (err) {
+      toast.error("Fout bij versturen: " + (err.message || "onbekend"));
+    } finally {
+      setSendingMail(null);
+    }
+  };
 
   const dateFrom = format(subDays(new Date(), daysBack), "yyyy-MM-dd");
   const dateTo = format(new Date(), "yyyy-MM-dd"); // include today
@@ -115,9 +156,7 @@ export default function MissingEntriesTab({ employees = [] }) {
       grouped[link.employee_id][link.date].push(link);
     });
 
-    // Build display list
-    const empMap = {};
-    employees.forEach((e) => { empMap[e.id] = e; });
+    // Build display list (empMap defined at component level)
 
     const result = [];
     for (const [empId, dates] of Object.entries(grouped)) {
@@ -294,7 +333,25 @@ export default function MissingEntriesTab({ employees = [] }) {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={(e) => sendReminder(item, e)}
+                        disabled={sendingMail === item.employeeId || sentMails.has(item.employeeId)}
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                          sentMails.has(item.employeeId)
+                            ? "bg-green-100 text-green-600"
+                            : "hover:bg-blue-50 text-slate-400 hover:text-blue-600"
+                        }`}
+                        title={sentMails.has(item.employeeId) ? "Verstuurd" : "Stuur herinnering"}
+                      >
+                        {sendingMail === item.employeeId ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : sentMails.has(item.employeeId) ? (
+                          <Check className="w-3.5 h-3.5" />
+                        ) : (
+                          <Mail className="w-3.5 h-3.5" />
+                        )}
+                      </button>
                       <Badge className="bg-amber-100 text-amber-700 text-xs">
                         {item.missingDays}
                       </Badge>
