@@ -61,19 +61,12 @@ export default function MissingEntriesTab({ employees = [] }) {
 <p>Wil je dit zo snel mogelijk invullen via de mobiele app?</p>
 <p>Met vriendelijke groet,<br/>Interdistri TMS</p>`;
     try {
-      // Send to employee
-      await base44.integrations.Core.SendEmail({
+      // Send via Gmail with CC
+      await base44.functions.invoke('sendReminderEmail', {
         to: emp.email,
         subject,
         body,
-        from_name: "Interdistri TMS",
-      });
-      // Send copy to admin
-      await base44.integrations.Core.SendEmail({
-        to: "ruben@interdistri.nl",
-        subject: `[Kopie] ${subject} — ${item.employeeName}`,
-        body,
-        from_name: "Interdistri TMS",
+        cc: "ruben@interdistri.nl",
       });
       setSentMails(prev => new Set(prev).add(item.employeeId));
       toast.success(`Herinnering verstuurd naar ${emp.first_name || item.employeeName} (+ kopie)`);
