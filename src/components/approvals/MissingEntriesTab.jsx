@@ -29,7 +29,7 @@ export default function MissingEntriesTab({ employees = [] }) {
   const [expandedEmployees, setExpandedEmployees] = useState(new Set());
 
   const dateFrom = format(subDays(new Date(), daysBack), "yyyy-MM-dd");
-  const dateTo = format(subDays(new Date(), 1), "yyyy-MM-dd"); // exclude today
+  const dateTo = format(new Date(), "yyyy-MM-dd"); // include today
 
   // Fetch TripRecordLinks for the period (driver → GPS ride associations)
   const { data: tripLinks = [], isLoading: loadingLinks, refetch: refetchLinks } = useQuery({
