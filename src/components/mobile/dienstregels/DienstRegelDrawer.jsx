@@ -280,7 +280,12 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
         <Label className="text-[11px] text-slate-500 mb-0.5">Kenteken *</Label>
         <Select value={safeVehicleId} onValueChange={(v) => update('vehicle_id', v)}>
           <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue placeholder="Selecteer voertuig" /></SelectTrigger>
-          <SelectContent>{(vehicles || []).map(v => <SelectItem key={v.id} value={v.id}>{v.license_plate}</SelectItem>)}</SelectContent>
+          <SelectContent>{[...(vehicles || [])].sort((a, b) => {
+            // VFD-04-V altijd onderaan (Safari gebruiker)
+            if (a.license_plate === 'VFD-04-V') return 1;
+            if (b.license_plate === 'VFD-04-V') return -1;
+            return (a.license_plate || '').localeCompare(b.license_plate || '');
+          }).map(v => <SelectItem key={v.id} value={v.id}>{v.license_plate}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       {/* Begin km + Eind km naast elkaar */}
