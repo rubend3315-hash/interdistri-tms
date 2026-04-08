@@ -2,7 +2,7 @@
 // Supports multiple settings per customer (per vehicle_type: Bestelbus, Vrachtwagen, Personenauto)
 // Uses Trip entity (manual entries) for km/hours data
 // Uses DieselPrice (TLN excl BTW) as primary price source, CbsDieselPrice as fallback
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 // Map Vehicle.type to CustomerFuelSettings.vehicle_type
 const VEHICLE_TYPE_MAP = {
@@ -190,7 +190,8 @@ Deno.serve(async (req) => {
         : (settings.fuel_consumption_per_hour || 2.5);
       const basePrice = settings.base_fuel_price;
 
-      const km = trip.total_km || 0;
+      // Calculate km: prefer total_km, fallback to end_km - start_km
+      const km = trip.total_km || (trip.end_km && trip.start_km ? trip.end_km - trip.start_km : 0);
       let hours = 0;
       if (trip.departure_time && trip.arrival_time) {
         const [dh, dm] = trip.departure_time.split(':').map(Number);
