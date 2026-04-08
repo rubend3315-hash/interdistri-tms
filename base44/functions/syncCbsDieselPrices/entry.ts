@@ -1,11 +1,12 @@
 // syncCbsDieselPrices — Sync daily diesel prices from CBS Open Data (dataset 80416ENG)
 // CBS prices are INCL BTW (pompprijs). We also calculate excl BTW (21%).
 // Admin only.
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const CBS_API_URL = 'https://opendata.cbs.nl/ODataApi/odata/80416ENG/TypedDataSet';
 const BTW_RATE = 0.21;
 const BATCH_SIZE = 50;
+const DEFAULT_LOOKBACK_DAYS = 14; // Scheduled runs: only check last 14 days to avoid rate limits
 
 function cbsPeriodToDate(period) {
   // CBS format: "20260301" → "2026-03-01"
@@ -26,7 +27,11 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const sinceDate = body.since || '2024-01-01';
+    // Default: only last 14 days (prevents rate limits on scheduled runs)
+    // Pass since='2024-01-01' explicitly for a full backfill
+    const defaultSince = new Date();
+    defaultSince.setDate(defaultSince.getDate() - DEFAULT_LOOKBACK_DAYS);
+    const sinceDate = body.since || defaultSince.toISOString().split('T')[0];
 
     addLog(`Fetching CBS diesel prices since ${sinceDate}...`);
 
