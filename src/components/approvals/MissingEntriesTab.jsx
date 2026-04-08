@@ -33,6 +33,12 @@ export default function MissingEntriesTab({ employees = [] }) {
   const [sendingMail, setSendingMail] = useState(null); // employeeId currently sending
   const [sentMails, setSentMails] = useState(new Set()); // employeeIds already sent
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const empMap = useMemo(() => {
     const m = {};
     employees.forEach((e) => { m[e.id] = e; });
@@ -48,20 +54,31 @@ export default function MissingEntriesTab({ employees = [] }) {
     }
     setSendingMail(item.employeeId);
     const datesStr = item.dates.map(d => format(new Date(d.date), "EEEE d MMMM", { locale: nl })).join(", ");
+    const subject = `Herinnering: ${item.missingDays} ${item.missingDays === 1 ? "dag" : "dagen"} niet ingevuld`;
     const body = `<p>Beste ${emp.first_name || item.employeeName},</p>
 <p>Volgens onze GPS-registratie heb je op de volgende ${item.missingDays === 1 ? "dag" : "dagen"} gereden maar nog geen tijdregistratie ingediend:</p>
 <p><strong>${datesStr}</strong></p>
 <p>Wil je dit zo snel mogelijk invullen via de mobiele app?</p>
 <p>Met vriendelijke groet,<br/>Interdistri TMS</p>`;
     try {
+      // Send to employee
       await base44.integrations.Core.SendEmail({
         to: emp.email,
-        subject: `Herinnering: ${item.missingDays} ${item.missingDays === 1 ? "dag" : "dagen"} niet ingevuld`,
+        subject,
         body,
         from_name: "Interdistri TMS",
       });
+      // Send copy to sender
+      if (currentUser?.email) {
+        await base44.integrations.Core.SendEmail({
+          to: currentUser.email,
+          subject: `[Kopie] ${subject} — ${item.employeeName}`,
+          body,
+          from_name: "Interdistri TMS",
+        });
+      }
       setSentMails(prev => new Set(prev).add(item.employeeId));
-      toast.success(`Herinnering verstuurd naar ${emp.first_name || item.employeeName}`);
+      toast.success(`Herinnering verstuurd naar ${emp.first_name || item.employeeName} (+ kopie)`);
     } catch (err) {
       toast.error("Fout bij versturen: " + (err.message || "onbekend"));
     } finally {
