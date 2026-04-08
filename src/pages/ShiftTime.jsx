@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus,
   Clock,
@@ -114,7 +115,10 @@ export default function ShiftTime() {
     }
   };
 
+  const [activeTab, setActiveTab] = useState("PakketDistributie");
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+  
+  const DEPARTMENTS = ["PakketDistributie", "Dagspecial Netwerk", "Transport", "Charters", "Management"];
   
   // Groepeer shifttimes per afdeling
   const shiftsByDepartment = shiftTimes.reduce((acc, shift) => {
@@ -138,109 +142,119 @@ export default function ShiftTime() {
         </Button>
       </div>
 
-      {/* Shift List - Grouped by Department */}
-      <Card>
-        <CardContent className="p-4">
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
-            </div>
-          ) : shiftTimes.length === 0 ? (
-            <div className="text-center py-8">
-              <Clock className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-sm font-medium text-slate-900">Nog geen shifttijden</h3>
-              <p className="text-xs text-slate-500 mt-1">Voeg een shifttijd toe om te beginnen.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {Object.entries(shiftsByDepartment).map(([department, shifts]) => (
-                <div key={department}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="text-xs font-semibold px-2.5 py-0.5">
-                      {department}
-                    </Badge>
-                    <span className="text-xs text-slate-400">({shifts.length})</span>
-                  </div>
-                  <div className="space-y-2 pl-3 border-l-2 border-slate-200">
-                    {shifts.map(shift => (
-                      <div 
-                        key={shift.id}
-                        className={`px-4 py-3 rounded-xl border transition-colors ${
-                          shift.date === todayStr 
-                            ? 'bg-blue-50 border-blue-200' 
-                            : 'bg-white border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                              shift.date === todayStr ? 'bg-blue-100' : 'bg-slate-100'
-                            }`}>
-                              <Clock className={`w-[18px] h-[18px] ${
-                                shift.date === todayStr ? 'text-blue-600' : 'text-slate-600'
-                              }`} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-lg leading-tight text-slate-900">
-                                  {shift.service_start_time}
-                                </span>
-                                {shift.date === todayStr && (
-                                  <Badge className="bg-blue-600 text-[11px] px-2 py-0 leading-5">Vandaag</Badge>
-                                )}
-                                {shift.start_time && shift.end_time && (
-                                  <span className="text-xs text-slate-400">({shift.start_time}–{shift.end_time})</span>
-                                )}
+      {/* Shift List - Tabs per Department */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-3">
+          {DEPARTMENTS.map(dept => (
+            <TabsTrigger key={dept} value={dept} className="text-xs">
+              {dept}
+              {(shiftsByDepartment[dept]?.length || 0) > 0 && (
+                <span className="ml-1.5 text-[10px] bg-slate-200 text-slate-600 rounded-full px-1.5 py-0">
+                  {shiftsByDepartment[dept].length}
+                </span>
+              )}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {DEPARTMENTS.map(dept => {
+          const shifts = shiftsByDepartment[dept] || [];
+          return (
+            <TabsContent key={dept} value={dept}>
+              <Card>
+                <CardContent className="p-4">
+                  {isLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
+                    </div>
+                  ) : shifts.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Clock className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                      <h3 className="text-sm font-medium text-slate-900">Geen shifttijden voor {dept}</h3>
+                      <p className="text-xs text-slate-500 mt-1">Voeg een shifttijd toe om te beginnen.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {shifts.map(shift => (
+                        <div 
+                          key={shift.id}
+                          className={`px-4 py-3 rounded-xl border transition-colors ${
+                            shift.date === todayStr 
+                              ? 'bg-blue-50 border-blue-200' 
+                              : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                shift.date === todayStr ? 'bg-blue-100' : 'bg-slate-100'
+                              }`}>
+                                <Clock className={`w-[18px] h-[18px] ${
+                                  shift.date === todayStr ? 'text-blue-600' : 'text-slate-600'
+                                }`} />
                               </div>
-                              <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                  {format(new Date(shift.date), "EEE d MMM", { locale: nl })}
-                                </span>
-                                {shift.message && (
-                                  <span className="hidden md:flex items-center gap-1 truncate max-w-[280px]" title={shift.message}>
-                                    <MessageSquare className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                    {shift.message}
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-lg leading-tight text-slate-900">
+                                    {shift.service_start_time}
                                   </span>
-                                )}
+                                  {shift.date === todayStr && (
+                                    <Badge className="bg-blue-600 text-[11px] px-2 py-0 leading-5">Vandaag</Badge>
+                                  )}
+                                  {shift.start_time && shift.end_time && (
+                                    <span className="text-xs text-slate-400">({shift.start_time}–{shift.end_time})</span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                    {format(new Date(shift.date), "EEE d MMM", { locale: nl })}
+                                  </span>
+                                  {shift.message && (
+                                    <span className="hidden md:flex items-center gap-1 truncate max-w-[280px]" title={shift.message}>
+                                      <MessageSquare className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                                      {shift.message}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <button 
+                                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
+                                onClick={() => openEditDialog(shift)}
+                              >
+                                <Edit className="w-4 h-4 text-slate-500" />
+                              </button>
+                              <button 
+                                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors"
+                                onClick={() => {
+                                  if (confirm('Weet je zeker dat je deze shifttijd wilt verwijderen?')) {
+                                    deleteMutation.mutate(shift.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </button>
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <button 
-                              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
-                              onClick={() => openEditDialog(shift)}
-                            >
-                              <Edit className="w-4 h-4 text-slate-500" />
-                            </button>
-                            <button 
-                              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors"
-                              onClick={() => {
-                                if (confirm('Weet je zeker dat je deze shifttijd wilt verwijderen?')) {
-                                  deleteMutation.mutate(shift.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </button>
-                          </div>
+                          {shift.message && (
+                            <p className="md:hidden text-[11px] text-slate-500 mt-1.5 bg-slate-50 rounded px-2 py-1 truncate">
+                              {shift.message}
+                            </p>
+                          )}
                         </div>
-                        
-                        {shift.message && (
-                          <p className="md:hidden text-[11px] text-slate-500 mt-1.5 bg-slate-50 rounded px-2 py-1 truncate">
-                            {shift.message}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          );
+        })}
+      </Tabs>
 
       {/* Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
