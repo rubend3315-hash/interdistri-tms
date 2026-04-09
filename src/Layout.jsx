@@ -203,6 +203,7 @@ const menuItems = [
       { name: "Business Dashboard", icon: LayoutDashboard, page: "BusinessDashboard" },
       { name: "KM Dashboard", icon: Gauge, page: "KmDashboard" },
       { name: "Brandstoftoeslag", icon: Fuel, page: "FuelSurcharge" },
+      { name: "Uren per Project", icon: FileSpreadsheet, page: "ProjectHours" },
     ]
   },
   {
@@ -388,6 +389,7 @@ export default function Layout({ children, currentPageName }) {
       'Vehicles': PERMISSIONS.PLANNING_MANAGE,
       'KmDashboard': PERMISSIONS.PLANNING_MANAGE,
       'FuelSurcharge': PERMISSIONS.CUSTOMERS_MANAGE,
+      'ProjectHours': PERMISSIONS.CUSTOMERS_MANAGE,
       'NiwoPermits': PERMISSIONS.PLANNING_MANAGE,
       'Users': PERMISSIONS.USERS_MANAGE,
 

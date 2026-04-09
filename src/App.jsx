@@ -15,6 +15,7 @@ import NaitonApiDocs from './pages/NaitonApiDocs';
 import FuelSurchargePage from './pages/FuelSurcharge';
 import NaitonRawData from './pages/NaitonRawData';
 import RitTijdRapportage from './pages/RitTijdRapportage';
+import ProjectHours from './pages/ProjectHours';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -104,6 +105,11 @@ const AuthenticatedApp = () => {
       <Route path="/RitTijdRapportage" element={
         <LayoutWrapper currentPageName="RitTijdRapportage">
           <RitTijdRapportage />
+        </LayoutWrapper>
+      } />
+      <Route path="/ProjectHours" element={
+        <LayoutWrapper currentPageName="ProjectHours">
+          <ProjectHours />
         </LayoutWrapper>
       } />
       <Route path="*" element={<PageNotFound />} />
