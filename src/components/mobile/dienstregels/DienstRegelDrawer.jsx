@@ -62,6 +62,12 @@ export default function DienstRegelDrawer({
   const handleSave = () => {
     const sMin = timeToMinutes(draft.start_time);
 
+    // 0. Kenteken verplicht voor rit
+    if (isRit && !draft.vehicle_id) {
+      toast.error("Selecteer eerst een kenteken.");
+      return;
+    }
+
     // 1. Start time always required
     if (sMin === null) {
       toast.error("Vul een starttijd in.");
@@ -261,6 +267,7 @@ export default function DienstRegelDrawer({
 function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiModelRoutes }) {
   const [showExtra, setShowExtra] = useState(false);
   const isOpen = draft.openRit && !draft.end_time;
+  const missingVehicle = !draft.vehicle_id;
 
   // Defensieve validatie: als vehicle_id geen geldig voertuig-ID is, reset naar ""
   const vehicleIds = new Set((vehicles || []).map(v => v.id));
@@ -277,9 +284,9 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
     <div className="space-y-1.5">
       {/* Kenteken */}
       <div>
-        <Label className="text-[11px] text-slate-500 mb-0.5">Kenteken *</Label>
+        <Label className={`text-[11px] mb-0.5 ${missingVehicle ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>Kenteken *</Label>
         <Select value={safeVehicleId} onValueChange={(v) => update('vehicle_id', v)}>
-          <SelectTrigger className="h-[40px] bg-white text-[16px]"><SelectValue placeholder="Selecteer voertuig" /></SelectTrigger>
+          <SelectTrigger className={`h-[40px] bg-white text-[16px] ${missingVehicle ? 'border-red-400 ring-1 ring-red-300' : ''}`}><SelectValue placeholder="Selecteer voertuig" /></SelectTrigger>
           <SelectContent>{[...(vehicles || [])].sort((a, b) => {
             // VFD-04-V altijd onderaan (Safari gebruiker)
             if (a.license_plate === 'VFD-04-V') return 1;
@@ -287,6 +294,9 @@ function RitFields({ draft, update, setDraft, vehicles, customers, routes, tiMod
             return (a.license_plate || '').localeCompare(b.license_plate || '');
           }).map(v => <SelectItem key={v.id} value={v.id}>{v.license_plate}</SelectItem>)}</SelectContent>
         </Select>
+        {missingVehicle && (
+          <p className="text-[11px] text-red-600 mt-0.5 font-medium">⚠ Selecteer een kenteken om door te gaan</p>
+        )}
       </div>
       {/* Begin km + Eind km naast elkaar */}
       <div className="grid grid-cols-2 gap-2">
