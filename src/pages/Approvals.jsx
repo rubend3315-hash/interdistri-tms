@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, subDays } from "date-fns";
+import { format, subDays, addDays as addDaysUtil } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,9 @@ import {
   Eye,
   Edit,
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { getBreakMinutesForHours } from "@/components/utils/breakScheduleUtils";
 import { isDateInDefinitiefPeriode } from "@/components/utils/loonperiodeUtils";
@@ -47,6 +49,7 @@ export default function Approvals() {
   const [activeTab, setActiveTab] = useState("pending");
   const [isManualBreak, setIsManualBreak] = useState(false);
   const [approvingIds, setApprovingIds] = useState(new Set());
+  const [pendingDayFilter, setPendingDayFilter] = useState(TODAY);
   const queryClient = useQueryClient();
   const pendingPage = usePagination(20);
   const approvedPage = usePagination(20);
@@ -513,7 +516,10 @@ export default function Approvals() {
     return result;
   };
 
-  const pendingEntries = sortByDateDesc(applyClientFilters(pendingRaw));
+  const pendingEntriesAll = sortByDateDesc(applyClientFilters(pendingRaw));
+  const pendingEntries = pendingDayFilter
+    ? pendingEntriesAll.filter(e => e.date === pendingDayFilter)
+    : pendingEntriesAll;
   const approvedEntries = sortByDateDesc(
     applyClientFilters(historyRaw.filter(e => e?.status === 'Goedgekeurd'))
   );
@@ -806,6 +812,33 @@ export default function Approvals() {
         </TabsList>
 
         <TabsContent value="pending" className="mt-4 space-y-3">
+          {/* Day filter */}
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="h-8 px-2.5 text-xs"
+              onClick={() => setPendingDayFilter(format(addDaysUtil(new Date(pendingDayFilter || TODAY), -1), 'yyyy-MM-dd'))}>
+              <ChevronLeft className="w-3.5 h-3.5 mr-1" />Vorige dag
+            </Button>
+            <button
+              onClick={() => setPendingDayFilter(TODAY)}
+              className={`h-8 px-3 rounded-md text-xs font-medium transition-colors ${
+                pendingDayFilter === TODAY ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              Vandaag
+            </button>
+            <Button size="sm" variant="outline" className="h-8 px-2.5 text-xs"
+              onClick={() => setPendingDayFilter(format(addDaysUtil(new Date(pendingDayFilter || TODAY), 1), 'yyyy-MM-dd'))}>
+              Volgende dag<ChevronRight className="w-3.5 h-3.5 ml-1" />
+            </Button>
+            <span className="text-sm text-slate-600 ml-2">
+              {(() => { try { return format(new Date(pendingDayFilter), "EEEE d MMMM", { locale: nl }); } catch { return pendingDayFilter; } })()}
+            </span>
+            {pendingDayFilter && (
+              <button onClick={() => setPendingDayFilter("")} className="text-xs text-slate-400 hover:text-slate-600 ml-auto">
+                Alle dagen tonen ({pendingEntriesAll.length})
+              </button>
+            )}
+          </div>
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}
