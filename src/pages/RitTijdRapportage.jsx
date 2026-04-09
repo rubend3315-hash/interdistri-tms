@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { format, subDays } from "date-fns";
+import { format, subDays, startOfWeek, endOfWeek, addWeeks, subWeeks, getISOWeek, getYear } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,17 +9,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Search, RotateCcw, Users, Clock, Truck, Download } from "lucide-react";
+import { FileText, Search, RotateCcw, Users, Clock, Truck, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import Pagination, { usePagination } from "@/components/ui/Pagination";
 import RitTijdEmployeeCard from "@/components/rit-tijd-rapportage/RitTijdEmployeeCard";
 import { useTripFuelCost } from "@/components/tripsync/useTripFuelCost";
 
-const DEFAULT_FROM = format(subDays(new Date(), 7), 'yyyy-MM-dd');
-const TODAY = format(new Date(), 'yyyy-MM-dd');
+const getWeekRange = (date) => {
+  const start = startOfWeek(date, { weekStartsOn: 1 });
+  const end = endOfWeek(date, { weekStartsOn: 1 });
+  return { from: format(start, 'yyyy-MM-dd'), to: format(end, 'yyyy-MM-dd'), weekNr: getISOWeek(start), year: getYear(start), ref: start };
+};
+
+const currentWeek = getWeekRange(new Date());
 
 export default function RitTijdRapportage() {
-  const [dateFrom, setDateFrom] = useState(DEFAULT_FROM);
-  const [dateTo, setDateTo] = useState(TODAY);
+  const [selectedWeek, setSelectedWeek] = useState(currentWeek.ref);
+  const weekInfo = useMemo(() => getWeekRange(selectedWeek), [selectedWeek]);
+  const [dateFrom, setDateFrom] = useState(weekInfo.from);
+  const [dateTo, setDateTo] = useState(weekInfo.to);
   const [filterEmployee, setFilterEmployee] = useState("all");
   const [filterDepartment, setFilterDepartment] = useState("all");
   const [filterProject, setFilterProject] = useState("all");
@@ -272,8 +279,9 @@ export default function RitTijdRapportage() {
   , [projects]);
 
   const resetFilters = () => {
-    setDateFrom(DEFAULT_FROM);
-    setDateTo(TODAY);
+    setSelectedWeek(currentWeek.ref);
+    setDateFrom(currentWeek.from);
+    setDateTo(currentWeek.to);
     setFilterEmployee("all");
     setFilterDepartment("all");
     setFilterProject("all");
@@ -320,6 +328,29 @@ export default function RitTijdRapportage() {
       <Card>
         <CardContent className="pt-4 pb-3">
           <div className="flex flex-wrap items-end gap-3">
+            {/* Week navigation */}
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-500">Week</Label>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => {
+                  const prev = subWeeks(selectedWeek, 1);
+                  const r = getWeekRange(prev);
+                  setSelectedWeek(prev); setDateFrom(r.from); setDateTo(r.to); page.resetPage();
+                }}>
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <div className="h-9 px-3 flex items-center border rounded-md bg-white text-sm font-medium text-slate-700 min-w-[100px] justify-center">
+                  Wk {weekInfo.weekNr} · {weekInfo.year}
+                </div>
+                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => {
+                  const next = addWeeks(selectedWeek, 1);
+                  const r = getWeekRange(next);
+                  setSelectedWeek(next); setDateFrom(r.from); setDateTo(r.to); page.resetPage();
+                }}>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
             <div className="space-y-1">
               <Label className="text-xs text-slate-500">Van</Label>
               <Input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); page.resetPage(); }} className="w-36 h-9 text-sm" />
