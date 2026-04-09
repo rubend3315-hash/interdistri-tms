@@ -231,10 +231,12 @@ export default function RitTijdRapportage() {
       result = result.filter(g => g.employee?.department === filterDepartment);
     }
     if (filterProject !== "all") {
+      const proj = projects.find(p => p.id === filterProject);
+      const projCustomerId = proj?.customer_id;
       result = result.filter(g =>
-        g.trips.some(t => t.project_id === filterProject) ||
+        g.trips.some(t => t.project_id === filterProject || (projCustomerId && t.customer_id === projCustomerId)) ||
         g.spws.some(s => s.project_id === filterProject) ||
-        g.timeEntries.some(te => te.project_id === filterProject)
+        g.timeEntries.some(te => te.project_id === filterProject || (projCustomerId && te.customer_id === projCustomerId))
       );
     }
     if (searchQuery.trim()) {
