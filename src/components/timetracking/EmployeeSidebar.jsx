@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronRight, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const departments = ["Management", "Transport", "PakketDistributie", "Charters", "Dagspecial Netwerk"];
+const departments = ["Management", "Transport", "PakketDistributie", "Dagspecial Netwerk", "Charters"];
 
 export default function EmployeeSidebar({ employees, selectedEmployeeId, onSelectEmployee }) {
   const [search, setSearch] = React.useState("");
