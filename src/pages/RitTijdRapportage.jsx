@@ -22,6 +22,7 @@ export default function RitTijdRapportage() {
   const [dateTo, setDateTo] = useState(TODAY);
   const [filterEmployee, setFilterEmployee] = useState("all");
   const [filterDepartment, setFilterDepartment] = useState("all");
+  const [filterProject, setFilterProject] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const page = usePagination(20);
 
@@ -229,6 +230,13 @@ export default function RitTijdRapportage() {
     if (filterDepartment !== "all") {
       result = result.filter(g => g.employee?.department === filterDepartment);
     }
+    if (filterProject !== "all") {
+      result = result.filter(g =>
+        g.trips.some(t => t.project_id === filterProject) ||
+        g.spws.some(s => s.project_id === filterProject) ||
+        g.timeEntries.some(te => te.project_id === filterProject)
+      );
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(g => {
@@ -237,7 +245,7 @@ export default function RitTijdRapportage() {
       });
     }
     return result;
-  }, [groupedData, filterEmployee, filterDepartment, searchQuery]);
+  }, [groupedData, filterEmployee, filterDepartment, filterProject, searchQuery]);
 
   // Stats
   const stats = useMemo(() => {
@@ -259,11 +267,16 @@ export default function RitTijdRapportage() {
       `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
     ), [employees]);
 
+  const activeProjects = useMemo(() =>
+    projects.filter(p => p.status === 'Actief').sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+  , [projects]);
+
   const resetFilters = () => {
     setDateFrom(DEFAULT_FROM);
     setDateTo(TODAY);
     setFilterEmployee("all");
     setFilterDepartment("all");
+    setFilterProject("all");
     setSearchQuery("");
     page.resetPage();
   };
@@ -322,6 +335,16 @@ export default function RitTijdRapportage() {
                 <SelectContent>
                   <SelectItem value="all">Alle afdelingen</SelectItem>
                   {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-500">Project</Label>
+              <Select value={filterProject} onValueChange={v => { setFilterProject(v); page.resetPage(); }}>
+                <SelectTrigger className="w-48 h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle projecten</SelectItem>
+                  {activeProjects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
