@@ -14,6 +14,7 @@ import AutoSaveIndicator from "@/components/mobile/AutoSaveIndicator";
 import { validateDienstRegels } from "@/components/utils/mobile/dienstRegelValidation";
 import MobileStepIndicator from "@/components/mobile/MobileStepIndicator";
 import ActivityTimelinePanel from "@/components/mobile/ActivityTimelinePanel";
+import ShiftTimeFieldWrapper from "@/components/mobile/ShiftTimeFieldWrapper";
 
 
 const TimeInput = ({ value, onChange, placeholder }) => (
@@ -36,7 +37,8 @@ export default function MobileDienstTab({
   onSubmit, onSaveDraft, setActiveTab,
   geenRit = false, setGeenRit, geenRitReden = "", setGeenRitReden, v2 = false,
   postNLAuto = false, setPostNLAuto,
-  customers = [], activiteiten = []
+  customers = [], activiteiten = [],
+  todayShift = null
 }) {
   // Only show multi-day toggle for authorized employees; default ON for multi_day employees
   const [multiDayEnabled, setMultiDayEnabled] = useState(isMultiDayAllowed);
@@ -178,7 +180,9 @@ export default function MobileDienstTab({
               )}
               <div>
                 <Label className="text-[11px] text-slate-500 mb-0.5">Start dienst *</Label>
-                <TimeInput value={formData.start_time} onChange={(v) => setFormData(prev => ({ ...prev, start_time: v }))} placeholder="08:30" />
+                <ShiftTimeFieldWrapper enteredStartTime={formData.start_time} shiftStartTime={todayShift?.service_start_time}>
+                  <TimeInput value={formData.start_time} onChange={(v) => setFormData(prev => ({ ...prev, start_time: v }))} placeholder="08:30" />
+                </ShiftTimeFieldWrapper>
               </div>
             </>
           ) : (
@@ -193,7 +197,9 @@ export default function MobileDienstTab({
               </div>
               <div>
                 <Label className="text-[11px] text-slate-500 mb-0.5">Start dienst *</Label>
-                <TimeInput value={formData.start_time} onChange={(v) => setFormData(prev => ({ ...prev, start_time: v }))} placeholder="08:30" />
+                <ShiftTimeFieldWrapper enteredStartTime={formData.start_time} shiftStartTime={todayShift?.service_start_time}>
+                  <TimeInput value={formData.start_time} onChange={(v) => setFormData(prev => ({ ...prev, start_time: v }))} placeholder="08:30" />
+                </ShiftTimeFieldWrapper>
               </div>
             </div>
           )}
