@@ -16,7 +16,7 @@ import { validateShiftTime } from '@/lib/timeUtils';
 export default function ShiftTimeFieldWrapper({
   enteredStartTime,
   shiftStartTime,
-  tolerance = 5,
+  tolerance = 1,
   children,
   messageFormatter
 }) {
