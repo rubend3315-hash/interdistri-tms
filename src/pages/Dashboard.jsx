@@ -61,6 +61,14 @@ export default function Dashboard({ currentUser }) {
     ...queryOpts
   });
 
+  const { data: pendingEntries = [] } = useQuery({
+    queryKey: ['pendingApprovals'],
+    queryFn: () => base44.entities.TimeEntry.filter({ status: 'Ingediend' }),
+    enabled: isAdmin,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
   const todayStr = format(today, 'yyyy-MM-dd');
   const { data: trips = [], isLoading: loadingTrips } = useQuery({
     queryKey: ['trips-today', todayStr],
@@ -88,7 +96,7 @@ export default function Dashboard({ currentUser }) {
   // Calculate statistics
   const activeEmployees = employees.filter(e => e.status === 'Actief').length;
   const availableVehicles = vehicles.filter(v => v.status === 'Beschikbaar').length;
-  const pendingApprovals = timeEntries.filter(t => t.status === 'Ingediend').length;
+  const pendingApprovals = pendingEntries.length;
   const todayTrips = trips.length;
 
   // Build notification items from expiring documents + system alerts
