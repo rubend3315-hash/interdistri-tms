@@ -53,3 +53,36 @@ export function timeToMinutes(time) {
 
   return h * 60 + m;
 }
+
+/**
+ * Validate shift-time deviation.
+ * Pure function — no React dependencies.
+ */
+export function validateShiftTime({
+  enteredStartTime,
+  shiftStartTime,
+  tolerance = 5
+}) {
+  const normalizedEntered = normalizeTime(enteredStartTime);
+  const normalizedShift = normalizeTime(shiftStartTime);
+
+  let diff = 0;
+  let isWarning = false;
+
+  if (normalizedEntered && normalizedShift) {
+    const enteredMin = timeToMinutes(normalizedEntered);
+    const shiftMin = timeToMinutes(normalizedShift);
+
+    if (enteredMin !== null && shiftMin !== null) {
+      diff = Math.abs(enteredMin - shiftMin);
+      isWarning = diff >= tolerance;
+    }
+  }
+
+  return {
+    isWarning,
+    diff,
+    normalizedEntered,
+    normalizedShift
+  };
+}

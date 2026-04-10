@@ -1,7 +1,7 @@
 import React from 'react';
 import ShiftTimeWarning from './ShiftTimeWarning';
 import { cn } from '@/lib/utils';
-import { useShiftTimeValidation } from '@/hooks/useShiftTimeValidation';
+import { validateShiftTime } from '@/lib/timeUtils';
 
 /**
  * Wrapper component that adds shift-time deviation feedback to any input field.
@@ -25,7 +25,7 @@ export default function ShiftTimeFieldWrapper({
     return children;
   }
 
-  const { isWarning, diff, normalizedEntered, normalizedShift } = useShiftTimeValidation({
+  const { isWarning, diff, normalizedEntered, normalizedShift } = validateShiftTime({
     enteredStartTime,
     shiftStartTime,
     tolerance
