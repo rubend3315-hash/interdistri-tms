@@ -49,7 +49,7 @@ export default function Approvals() {
   const [activeTab, setActiveTab] = useState("pending");
   const [isManualBreak, setIsManualBreak] = useState(false);
   const [approvingIds, setApprovingIds] = useState(new Set());
-  const [pendingDayFilter, setPendingDayFilter] = useState(TODAY);
+  const [pendingDayFilter, setPendingDayFilter] = useState("");
   const queryClient = useQueryClient();
   const pendingPage = usePagination(20);
   const approvedPage = usePagination(20);
