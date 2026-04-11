@@ -4,7 +4,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const DAYS_BACK = 3;
-const CC_EMAIL = 'ruben@interdistri.nl';
+const CC_EMAILS = ['ruben@interdistri.nl', 'martien@interdistri.nl'];
 
 async function paginatedFilter(entity, query, sort = '-created_date') {
   const all = [];
@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
       const mimeLines = [
         `From: me`,
         `To: ${emp.email}`,
-        `Cc: ${CC_EMAIL}`,
+        `Cc: ${CC_EMAILS.join(', ')}`,
         `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
         `MIME-Version: 1.0`,
         `Content-Type: text/html; charset="UTF-8"`,
