@@ -16,7 +16,6 @@ import FuelSurchargePage from './pages/FuelSurcharge';
 import NaitonRawData from './pages/NaitonRawData';
 import RitTijdRapportage from './pages/RitTijdRapportage';
 import ProjectHours from './pages/ProjectHours';
-import LeaveManagement from './pages/LeaveManagement';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -111,11 +110,6 @@ const AuthenticatedApp = () => {
       <Route path="/ProjectHours" element={
         <LayoutWrapper currentPageName="ProjectHours">
           <ProjectHours />
-        </LayoutWrapper>
-      } />
-      <Route path="/LeaveManagement" element={
-        <LayoutWrapper currentPageName="LeaveManagement">
-          <LeaveManagement />
         </LayoutWrapper>
       } />
       <Route path="*" element={<PageNotFound />} />
