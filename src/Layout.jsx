@@ -39,7 +39,8 @@ import {
   HardDrive,
   LifeBuoy,
   Gauge,
-  Fuel
+  Fuel,
+  CalendarDays as CalendarDaysIcon
 } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import { APP_VERSION } from "./components/utils/appVersion";
@@ -172,6 +173,7 @@ const menuItems = [
       { name: "Stamkaart", icon: FileText, page: "Stamkaart" },
       { name: "Contracten", icon: FileText, page: "Contracts" },
       { name: "Contractwijzigingen", icon: FileText, page: "ContractWijzigingen" },
+      { name: "Verlof & Ziekte", icon: CalendarDaysIcon, page: "LeaveManagement" },
       { name: "Contract Analytics", icon: FileSpreadsheet, page: "ContractAnalytics" },
       { name: "Afgeronde Contracten", icon: CheckSquare, page: "CompletedContracts" },
       { name: "Bedrijfsreglement", icon: BookOpen, page: "Bedrijfsreglement" },
@@ -352,6 +354,7 @@ export default function Layout({ children, currentPageName }) {
       'Stamkaart': PERMISSIONS.EMPLOYEES_MANAGE,
       'Contracts': PERMISSIONS.CONTRACTS_MANAGE,
       'ContractWijzigingen': PERMISSIONS.CONTRACTS_MANAGE,
+      'LeaveManagement': PERMISSIONS.EMPLOYEES_MANAGE,
       'ContractAnalytics': PERMISSIONS.CONTRACTS_MANAGE,
       'CompletedContracts': PERMISSIONS.CONTRACTS_MANAGE,
       'Bedrijfsreglement': PERMISSIONS.EMPLOYEES_MANAGE,
