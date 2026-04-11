@@ -23,6 +23,7 @@ import MobileOverviewTab from "@/components/mobile/tabs/MobileOverviewTab";
 import MobileMessagesTab from "@/components/mobile/tabs/MobileMessagesTab";
 import MobilePlanningTab from "@/components/mobile/MobilePlanningTab";
 import MobileLinksTab from "@/components/mobile/tabs/MobileLinksTab";
+import MobileLeaveTab from "@/components/mobile/tabs/MobileLeaveTab";
 import { Toaster } from "@/components/ui/sonner";
 import { useMobileEntryMode } from "@/components/hooks/useMobileEntryMode";
 import { useBusinessMode } from "@/components/utils/mobile/useBusinessMode";
@@ -43,11 +44,12 @@ const MENU_ITEMS = [
   { id: "berichten", label: "Berichten", icon: Mail },
   { id: "reglement", label: "Bedrijfsreglement", icon: FileText },
   { id: "contracten", label: "Mijn Contracten", icon: FileText, isLink: true },
+  { id: "verlof", label: "Verlof & Ziekte", icon: CalendarDays },
   { id: "links", label: "Links", icon: ExternalLink },
   { id: "handleiding", label: "Handleiding", icon: FileText }
 ];
 
-const TAB_ORDER = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "berichten", "reglement", "links"];
+const TAB_ORDER = ["home", "dienst", "ritten", "inspectie", "declaratie", "overzicht", "planning", "berichten", "verlof", "reglement", "links"];
 
 export default function MobileEntry({ currentUser }) {
   const [activeTab, setActiveTab] = useState("home");
@@ -182,6 +184,7 @@ export default function MobileEntry({ currentUser }) {
         {activeTab === "planning" && <MobilePlanningTab schedules={data.schedules} currentEmployee={data.currentEmployee} routes={data.routes} tiModelRoutes={data.tiModelRoutes} vehicles={data.vehicles} />}
         {activeTab === "reglement" && <MobileReglementTab />}
         {activeTab === "handleiding" && <MobileHandleidingTab />}
+        {activeTab === "verlof" && <MobileLeaveTab currentEmployee={data.currentEmployee} />}
         {activeTab === "links" && <MobileLinksTab />}
       </motion.div>
 
