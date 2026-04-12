@@ -361,8 +361,32 @@ Deno.serve(async (req) => {
               // Check if this is a midnight-split stop (vehicle parked overnight)
               const segStartTime = (seg.start || '').slice(11, 19); // "HH:MM:SS"
               if (type === 'stop' && segStartTime === '00:00:00') {
-                // Vehicle was parked at midnight → new workday, close previous ride
-                forceClose = true;
+                // For home_base vehicles: the Naiton API sometimes reports incorrect
+                // GPS coordinates in the pre-midnight segment of an overnight stop.
+                // The post-midnight continuation segment has the corrected coordinates.
+                // Don't force-close if the vehicle is at a depot or near home_base —
+                // let the ride continue so the corrected coordinates close it properly.
+                const hasHomeBase = !!homeBaseByGpsAssetId[assetId];
+                if (hasHomeBase) {
+                  // Check if this midnight segment is at/near home_base or depot
+                  const { lat: mLat, lon: mLon } = getStopCoords(seg);
+                  const hb = homeBaseByGpsAssetId[assetId];
+                  const nearHome = mLat && mLon && hb && gpsDistanceM(mLat, mLon, hb.lat, hb.lon) <= hb.radius;
+                  const atDepot = isDepot(seg);
+                  if (nearHome) {
+                    // Post-midnight segment is at home_base → standplaats detection will handle it
+                    // Don't force close — let the normal flow close the ride via atStandplaats check
+                    forceClose = false;
+                  } else if (atDepot) {
+                    // Still at depot after midnight — don't close, wait for morning drive home
+                    forceClose = false;
+                  } else {
+                    forceClose = true;
+                  }
+                } else {
+                  // Non-home_base vehicle: always close at midnight
+                  forceClose = true;
+                }
               }
             }
             
