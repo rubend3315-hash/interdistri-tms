@@ -220,8 +220,10 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════════════════
-    // STEP 2: Fetch trip segments (bulk, all assets at once)
+    // STEP 2: Fetch trip segments (batched per asset)
     // ═══════════════════════════════════════════════════════
+    // Naiton API has an undocumented limit on the number of gpsassetids per call.
+    // Passing all 23+ assets at once returns 0 segments. Batch in groups of 5.
     // Naiton API stoptime is exclusive — always add +1 day to include the last day's data
     const apiStopDate = new Date(date_to);
     apiStopDate.setDate(apiStopDate.getDate() + 1);
@@ -233,19 +235,25 @@ Deno.serve(async (req) => {
     const apiStartTime = apiStartDate.toISOString().split('T')[0];
     addLog(`Step 2: Fetching trips ${apiStartTime} → ${apiStopTime} (incl. overnight buffer)...`);
 
-    const tripsJson = await naitonCall([{
-      name: "dataexchange_trips",
-      arguments: [
-        { name: "gpsassetids", value: gpsIds },
-        { name: "includefields", value: ["driver"] },
-        { name: "starttime", value: apiStartTime },
-        { name: "stoptime", value: apiStopTime },
-        { name: "includeallattributes", value: true }
-      ]
-    }]);
-
-    const rawSegments = tripsJson.dataexchange_trips || [];
-    addLog(`${rawSegments.length} trip segmenten opgehaald`);
+    // Batch gpsassetids in groups of 5 to avoid Naiton API empty-response bug
+    const ASSET_BATCH_SIZE = 5;
+    const rawSegments = [];
+    for (let bi = 0; bi < gpsIds.length; bi += ASSET_BATCH_SIZE) {
+      const batchIds = gpsIds.slice(bi, bi + ASSET_BATCH_SIZE);
+      const tripsJson = await naitonCall([{
+        name: "dataexchange_trips",
+        arguments: [
+          { name: "gpsassetids", value: batchIds },
+          { name: "includefields", value: ["driver"] },
+          { name: "starttime", value: apiStartTime },
+          { name: "stoptime", value: apiStopTime },
+          { name: "includeallattributes", value: true }
+        ]
+      }]);
+      const batchSegments = tripsJson.dataexchange_trips || [];
+      rawSegments.push(...batchSegments);
+    }
+    addLog(`${rawSegments.length} trip segmenten opgehaald (${Math.ceil(gpsIds.length / ASSET_BATCH_SIZE)} batches)`);
 
     if (rawSegments.length === 0) {
       return Response.json({

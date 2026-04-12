@@ -50,18 +50,23 @@ Deno.serve(async (req) => {
     const gpsIds = assets.filter(a => a.gpsassetid).map(a => a.gpsassetid);
     const naitonUsers = usersJson.dataexchange_users || [];
 
-    const tripsJson = await naitonCall([{
-      name: "dataexchange_trips",
-      arguments: [
-        { name: "gpsassetids", value: gpsIds },
-        { name: "includefields", value: ["driver"] },
-        { name: "starttime", value: date },
-        { name: "stoptime", value: stopDateStr },
-        { name: "includeallattributes", value: true },
-      ]
-    }]);
-
-    const segments = tripsJson.dataexchange_trips || [];
+    // Batch gpsassetids in groups of 5 to avoid Naiton API empty-response bug
+    const ASSET_BATCH_SIZE = 5;
+    const segments = [];
+    for (let bi = 0; bi < gpsIds.length; bi += ASSET_BATCH_SIZE) {
+      const batchIds = gpsIds.slice(bi, bi + ASSET_BATCH_SIZE);
+      const tripsJson = await naitonCall([{
+        name: "dataexchange_trips",
+        arguments: [
+          { name: "gpsassetids", value: batchIds },
+          { name: "includefields", value: ["driver"] },
+          { name: "starttime", value: date },
+          { name: "stoptime", value: stopDateStr },
+          { name: "includeallattributes", value: true },
+        ]
+      }]);
+      segments.push(...(tripsJson.dataexchange_trips || []));
+    }
 
     // Build asset lookup
     const assetMap = {};
